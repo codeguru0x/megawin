@@ -1,12 +1,13 @@
 "use client";
 
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { DollarSign, Percent, Settings2 } from "lucide-react";
+import { DollarSign, Percent, Settings2, ShieldAlert } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { OpsSection } from "./_lib/ops-section";
 import { PlayRulesSection } from "./_lib/play-rules-section";
 import { PrizesSection } from "./_lib/prizes-section";
 import { RatesSection } from "./_lib/rates-section";
@@ -27,7 +28,7 @@ export default function Max3dproConfigPage() {
 
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
 
-  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["prizes", "rates", "play"]).withDefault("prizes"));
+  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["prizes", "rates", "play", "ops"]).withDefault("prizes"));
 
   return (
     <div className="@container/main flex flex-col gap-2">
@@ -69,6 +70,10 @@ export default function Max3dproConfigPage() {
               <Settings2 className="size-4 text-violet-500" />
               Luật chơi
             </TabsTrigger>
+            <TabsTrigger value="ops" className="gap-1.5">
+              <ShieldAlert className="size-4 text-red-500" />
+              Vận hành
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="prizes" className="mt-2">
@@ -81,6 +86,10 @@ export default function Max3dproConfigPage() {
 
           <TabsContent value="play" className="mt-2">
             <PlayRulesSection config={config} onSave={handleSave} isPending={mutation.isPending} />
+          </TabsContent>
+
+          <TabsContent value="ops" className="mt-2">
+            <OpsSection config={config} onSave={handleSave} isPending={mutation.isPending} />
           </TabsContent>
         </Tabs>
       )}

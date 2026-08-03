@@ -1,14 +1,39 @@
 import { describe, it, expect } from "vitest";
-import { lookupBasicPrize, DEFAULT_BASIC_PRIZE_TABLE } from "@megawin/game-keno/rules";
+import { lookupBasicPrize } from "@megawin/game-keno/rules";
 import {
   matchBasicBoard,
   matchBigSmallBet,
   matchEvenOddBet,
   computeDrawStats,
+  type DrawResultForMatch,
 } from "@megawin/game-keno/helpers";
 import { KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
+import {
+  TEST_BASIC_PRIZE_TABLE,
+  TEST_BIG_SMALL_PRIZES,
+  TEST_EVEN_ODD_PRIZES,
+} from "./helpers/default-prize-tables";
 
 // ─── Helpers ────────────────────────────────────────
+
+/**
+ * Wrapper bind sẵn fixture prize table cho test — `matchBasicBoard()`/
+ * `matchBigSmallBet()`/`matchEvenOddBet()`/`lookupBasicPrize()` không còn default
+ * param (production luôn truyền tường minh từ config DB), nên test tự bind 1 lần
+ * ở đây thay vì lặp lại fixture ở mọi call site.
+ */
+function matchBasic(numbers: string[], result: DrawResultForMatch) {
+  return matchBasicBoard(numbers, result, TEST_BASIC_PRIZE_TABLE);
+}
+function matchBigSmall(bet: KenoBigSmallBet, result: DrawResultForMatch) {
+  return matchBigSmallBet(bet, result, TEST_BIG_SMALL_PRIZES);
+}
+function matchEvenOdd(bet: KenoEvenOddBet, result: DrawResultForMatch) {
+  return matchEvenOddBet(bet, result, TEST_EVEN_ODD_PRIZES);
+}
+function lookupPrize(pickCount: number, matchCount: number) {
+  return lookupBasicPrize(pickCount, matchCount, TEST_BASIC_PRIZE_TABLE);
+}
 
 function pad(n: number): string {
   return n.toString().padStart(2, "0");
@@ -55,7 +80,7 @@ function numbersWithCounts(opts: { bigCount: number; evenCount: number }): strin
 
 describe("lookupBasicPrize – Tra cứu giải thưởng cơ bản", () => {
   it.each(
-    Object.entries(DEFAULT_BASIC_PRIZE_TABLE).flatMap(([pick, matches]) =>
+    Object.entries(TEST_BASIC_PRIZE_TABLE).flatMap(([pick, matches]) =>
       Object.entries(matches).map(([match, prize]) => ({
         pickCount: Number(pick),
         matchCount: Number(match),
@@ -63,19 +88,19 @@ describe("lookupBasicPrize – Tra cứu giải thưởng cơ bản", () => {
       })),
     ),
   )("pick$pickCount / match$matchCount → $expected VND", ({ pickCount, matchCount, expected }) => {
-    expect(lookupBasicPrize(pickCount, matchCount)).toBe(expected);
+    expect(lookupPrize(pickCount, matchCount)).toBe(expected);
   });
 
   it("trả 0 khi matchCount không có giải", () => {
-    expect(lookupBasicPrize(1, 0)).toBe(0);
-    expect(lookupBasicPrize(5, 1)).toBe(0);
-    expect(lookupBasicPrize(6, 2)).toBe(0);
-    expect(lookupBasicPrize(10, 4)).toBe(0);
+    expect(lookupPrize(1, 0)).toBe(0);
+    expect(lookupPrize(5, 1)).toBe(0);
+    expect(lookupPrize(6, 2)).toBe(0);
+    expect(lookupPrize(10, 4)).toBe(0);
   });
 
   it("trả 0 khi pickCount không hợp lệ", () => {
-    expect(lookupBasicPrize(0, 0)).toBe(0);
-    expect(lookupBasicPrize(11, 5)).toBe(0);
+    expect(lookupPrize(0, 0)).toBe(0);
+    expect(lookupPrize(11, 5)).toBe(0);
   });
 });
 
@@ -107,7 +132,7 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
 
   it("pick1 trúng 1 số → 20,000 VND", () => {
     const result = makeDrawResult(baseWinning);
-    const r = matchBasicBoard(["05"], result);
+    const r = matchBasic(["05"], result);
     expect(r.pickCount).toBe(1);
     expect(r.matchCount).toBe(1);
     expect(r.matchedNumbers).toEqual(["05"]);
@@ -116,7 +141,7 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
 
   it("pick1 trượt → 0 VND", () => {
     const result = makeDrawResult(baseWinning);
-    const r = matchBasicBoard(["02"], result);
+    const r = matchBasic(["02"], result);
     expect(r.matchCount).toBe(0);
     expect(r.winAmount).toBe(0);
   });
@@ -124,42 +149,42 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
   describe("pick5 – các mức trùng", () => {
     it("match5 → 4,400,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+      const r = matchBasic(["01", "05", "10", "15", "20"], result);
       expect(r.matchCount).toBe(5);
       expect(r.winAmount).toBe(4_400_000);
     });
 
     it("match4 → 150,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["01", "05", "10", "15", "02"], result);
+      const r = matchBasic(["01", "05", "10", "15", "02"], result);
       expect(r.matchCount).toBe(4);
       expect(r.winAmount).toBe(150_000);
     });
 
     it("match3 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["01", "05", "10", "02", "04"], result);
+      const r = matchBasic(["01", "05", "10", "02", "04"], result);
       expect(r.matchCount).toBe(3);
       expect(r.winAmount).toBe(10_000);
     });
 
     it("match2 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["01", "05", "02", "04", "06"], result);
+      const r = matchBasic(["01", "05", "02", "04", "06"], result);
       expect(r.matchCount).toBe(2);
       expect(r.winAmount).toBe(10_000);
     });
 
     it("match1 → 0 VND (không có giải)", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["01", "02", "04", "06", "08"], result);
+      const r = matchBasic(["01", "02", "04", "06", "08"], result);
       expect(r.matchCount).toBe(1);
       expect(r.winAmount).toBe(0);
     });
 
     it("match0 → 0 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["02", "04", "06", "08", "09"], result);
+      const r = matchBasic(["02", "04", "06", "08", "09"], result);
       expect(r.matchCount).toBe(0);
       expect(r.winAmount).toBe(0);
     });
@@ -168,24 +193,21 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
   describe("pick8/pick9/pick10 – giải an ủi match0", () => {
     it("pick8 match0 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["02", "04", "06", "08", "09", "11", "13", "14"], result);
+      const r = matchBasic(["02", "04", "06", "08", "09", "11", "13", "14"], result);
       expect(r.matchCount).toBe(0);
       expect(r.winAmount).toBe(10_000);
     });
 
     it("pick9 match0 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(["02", "04", "06", "08", "09", "11", "13", "14", "16"], result);
+      const r = matchBasic(["02", "04", "06", "08", "09", "11", "13", "14", "16"], result);
       expect(r.matchCount).toBe(0);
       expect(r.winAmount).toBe(10_000);
     });
 
     it("pick10 match0 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(
-        ["02", "04", "06", "08", "09", "11", "13", "14", "16", "17"],
-        result,
-      );
+      const r = matchBasic(["02", "04", "06", "08", "09", "11", "13", "14", "16", "17"], result);
       expect(r.matchCount).toBe(0);
       expect(r.winAmount).toBe(10_000);
     });
@@ -215,7 +237,7 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
       "59",
     ];
     const result = makeDrawResult(winning);
-    const r = matchBasicBoard(["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"], result);
+    const r = matchBasic(["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"], result);
     expect(r.matchCount).toBe(10);
     expect(r.winAmount).toBe(2_000_000_000);
   });
@@ -227,7 +249,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
   describe("cược Lớn (Big)", () => {
     it("bigCount >= 13 → thắng 26,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 14, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+      const r = matchBigSmall(KenoBigSmallBet.Big, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("big13Plus");
       expect(r.winAmount).toBe(26_000);
@@ -235,14 +257,14 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("bigCount = 13 → thắng 26,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 13, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+      const r = matchBigSmall(KenoBigSmallBet.Big, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(26_000);
     });
 
     it("bigCount = 12 → thắng 10,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 12, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+      const r = matchBigSmall(KenoBigSmallBet.Big, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("big1112");
       expect(r.winAmount).toBe(10_000);
@@ -250,7 +272,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("bigCount = 11 → thắng 10,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 11, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+      const r = matchBigSmall(KenoBigSmallBet.Big, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("big1112");
       expect(r.winAmount).toBe(10_000);
@@ -258,14 +280,14 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("bigCount = 10 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+      const r = matchBigSmall(KenoBigSmallBet.Big, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
 
     it("bigCount = 5 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 5, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+      const r = matchBigSmall(KenoBigSmallBet.Big, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -274,7 +296,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
   describe("cược Hoà Lớn Nhỏ (BigSmallDraw)", () => {
     it("bigCount=10 && smallCount=10 → thắng 26,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.BigSmallDraw, result);
+      const r = matchBigSmall(KenoBigSmallBet.BigSmallDraw, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("draw");
       expect(r.winAmount).toBe(26_000);
@@ -282,7 +304,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("bigCount=12 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 12, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.BigSmallDraw, result);
+      const r = matchBigSmall(KenoBigSmallBet.BigSmallDraw, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -291,7 +313,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
   describe("cược Nhỏ (Small)", () => {
     it("smallCount >= 13 → thắng 26,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 6, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Small, result);
+      const r = matchBigSmall(KenoBigSmallBet.Small, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("small13Plus");
       expect(r.winAmount).toBe(26_000);
@@ -299,7 +321,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("smallCount = 12 → thắng 10,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 8, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Small, result);
+      const r = matchBigSmall(KenoBigSmallBet.Small, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("small1112");
       expect(r.winAmount).toBe(10_000);
@@ -307,7 +329,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("smallCount = 11 → thắng 10,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 9, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Small, result);
+      const r = matchBigSmall(KenoBigSmallBet.Small, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("small1112");
       expect(r.winAmount).toBe(10_000);
@@ -315,7 +337,7 @@ describe("matchBigSmallBet – Đối soát cược Lớn/Nhỏ", () => {
 
     it("smallCount = 10 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 10 }));
-      const r = matchBigSmallBet(KenoBigSmallBet.Small, result);
+      const r = matchBigSmall(KenoBigSmallBet.Small, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -328,7 +350,7 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
   describe("cược Chẵn (Even)", () => {
     it("evenCount >= 15 → thắng 200,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 16 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("even15Plus");
       expect(r.winAmount).toBe(200_000);
@@ -336,14 +358,14 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("evenCount = 15 → thắng 200,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 15 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(200_000);
     });
 
     it("evenCount = 14 → thắng 40,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 14 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("even1314");
       expect(r.winAmount).toBe(40_000);
@@ -351,14 +373,14 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("evenCount = 13 → thắng 40,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 13 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(40_000);
     });
 
     it("evenCount = 12 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 12 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -367,7 +389,7 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
   describe("cược Chẵn 11-12 (Even1112)", () => {
     it("evenCount = 11 → thắng 20,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 11 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even1112, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("even1112");
       expect(r.winAmount).toBe(20_000);
@@ -375,21 +397,21 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("evenCount = 12 → thắng 20,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 12 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even1112, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(20_000);
     });
 
     it("evenCount = 10 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 10 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even1112, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
 
     it("evenCount = 13 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 13 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Even1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Even1112, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -398,7 +420,7 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
   describe("cược Hoà Chẵn Lẻ (EvenOddDraw)", () => {
     it("evenCount=10 && oddCount=10 → thắng 20,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 10 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.EvenOddDraw, result);
+      const r = matchEvenOdd(KenoEvenOddBet.EvenOddDraw, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("draw");
       expect(r.winAmount).toBe(20_000);
@@ -406,7 +428,7 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("evenCount=12 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 12 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.EvenOddDraw, result);
+      const r = matchEvenOdd(KenoEvenOddBet.EvenOddDraw, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -415,7 +437,7 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
   describe("cược Lẻ 11-12 (Odd1112)", () => {
     it("oddCount = 11 → thắng 20,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 9 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd1112, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("odd1112");
       expect(r.winAmount).toBe(20_000);
@@ -423,14 +445,14 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("oddCount = 12 → thắng 20,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 8 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd1112, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(20_000);
     });
 
     it("oddCount = 10 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 10 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd1112, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd1112, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -439,7 +461,7 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
   describe("cược Lẻ (Odd)", () => {
     it("oddCount >= 15 → thắng 200,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 4 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("odd15Plus");
       expect(r.winAmount).toBe(200_000);
@@ -447,14 +469,14 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("oddCount = 15 → thắng 200,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 5 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(200_000);
     });
 
     it("oddCount = 14 → thắng 40,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 6 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd, result);
       expect(r.isWin).toBe(true);
       expect(r.outcome).toBe("odd1314");
       expect(r.winAmount).toBe(40_000);
@@ -462,14 +484,14 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
     it("oddCount = 13 → thắng 40,000", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 7 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd, result);
       expect(r.isWin).toBe(true);
       expect(r.winAmount).toBe(40_000);
     });
 
     it("oddCount = 12 → thua", () => {
       const result = makeDrawResult(numbersWithCounts({ bigCount: 10, evenCount: 8 }));
-      const r = matchEvenOddBet(KenoEvenOddBet.Odd, result);
+      const r = matchEvenOdd(KenoEvenOddBet.Odd, result);
       expect(r.isWin).toBe(false);
       expect(r.winAmount).toBe(0);
     });
@@ -571,7 +593,7 @@ describe("betCount multiplier – winAmount nhân betCount tại settle layer", 
 
   it("matchBasicBoard trả per-unit winAmount (không đổi dù betCount khác nhau)", () => {
     const result = makeDrawResult(baseWinning);
-    const r = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+    const r = matchBasic(["01", "05", "10", "15", "20"], result);
     // matchBasicBoard luôn trả per-unit — settle layer chịu trách nhiệm nhân betCount
     expect(r.winAmount).toBe(4_400_000);
   });
@@ -579,7 +601,7 @@ describe("betCount multiplier – winAmount nhân betCount tại settle layer", 
   it("settle board betCount=3: boardPayout.winAmount = matchWin × 3", () => {
     const result = makeDrawResult(baseWinning);
     const betCount = 3;
-    const matchResult = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+    const matchResult = matchBasic(["01", "05", "10", "15", "20"], result);
     const boardPayoutWinAmount = matchResult.winAmount * betCount;
     expect(boardPayoutWinAmount).toBe(4_400_000 * 3);
     expect(boardPayoutWinAmount).toBe(13_200_000);
@@ -588,20 +610,20 @@ describe("betCount multiplier – winAmount nhân betCount tại settle layer", 
   it("settle board betCount=1 (default): winAmount không thay đổi", () => {
     const result = makeDrawResult(baseWinning);
     const betCount = 1;
-    const matchResult = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+    const matchResult = matchBasic(["01", "05", "10", "15", "20"], result);
     expect(matchResult.winAmount * betCount).toBe(matchResult.winAmount);
   });
 
   it("matchBigSmallBet trả per-unit winAmount", () => {
     const result = makeDrawResult(numbersWithCounts({ bigCount: 14, evenCount: 10 }));
-    const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+    const r = matchBigSmall(KenoBigSmallBet.Big, result);
     expect(r.winAmount).toBe(26_000);
   });
 
   it("settle sideBet betCount=2: sideBetPayout.winAmount = matchWin × 2", () => {
     const result = makeDrawResult(numbersWithCounts({ bigCount: 14, evenCount: 10 }));
     const betCount = 2;
-    const matchResult = matchBigSmallBet(KenoBigSmallBet.Big, result);
+    const matchResult = matchBigSmall(KenoBigSmallBet.Big, result);
     const sideBetPayoutWinAmount = matchResult.winAmount * betCount;
     expect(sideBetPayoutWinAmount).toBe(26_000 * 2);
     expect(sideBetPayoutWinAmount).toBe(52_000);

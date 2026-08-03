@@ -8,6 +8,8 @@
  */
 
 export type { ISODateString } from "@megawin/game-core/types";
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { Max3dOpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Number (kỳ quay trong tuần)
@@ -139,4 +141,44 @@ export interface PlayRules {
   drawTimes: string[];
   /** Các ngày trong tuần được phép quay (0=CN, 1=T2, ..., 6=T7). */
   drawDaysOfWeek: number[];
+}
+
+// ─────────────────────────────────────────────
+// Operations & Risk Control Config (analysis max3d-ops §3.6)
+// ─────────────────────────────────────────────
+
+/**
+ * Ngưỡng cảnh báo vận hành — evaluator so mỗi tick worker (p0-04).
+ *
+ * KHÁC Keno/Bingo18: KHÔNG có cap kỳ và revenue kỳ (bán nhiều ngày) không ổn định
+ * làm mẫu số → ngưỡng TUYỆT ĐỐI VND (chốt 30/07/2026, analysis §7 Q2).
+ */
+export interface OpsAlertsConfig {
+  /** Ngưỡng 1 entry bị coi là cược lớn (VND). Default 5.000.000. */
+  largeBetAmount: number;
+  /** Ngưỡng worst-case tổng (VND tuyệt đối) → `exposure_threshold`. Default 5 tỷ. */
+  exposureWarnAmount: number;
+  /**
+   * Ngưỡng liability ĐB của 1 cặp plus (VND) → `pair_liability`. Default 2 tỷ
+   * (ĐB plus 1 tỷ/unit ×100.000 — 20.000đ cược vào 1 cặp = liability 2 tỷ; bắn
+   * sớm thiên an toàn vì KHÔNG có cap kỳ — chốt §7 Q2).
+   */
+  pairLiabilityWarnAmount: number;
+  /** Số account distinct cùng 1 cặp → `combo_concentration`. Default 5. */
+  comboAccountsWarn: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `Max3dOpsAlertType`. */
+  enabled: Record<Max3dOpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro.
+ *
+ * KHÔNG expose cho player. `stats` dùng {@link OpsStatsConfig} ĐẦY ĐỦ (có
+ * `topCombosK` — cắt danh sách `topPairs`, khác Bingo18 dùng base).
+ */
+export interface OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-04). */
+  alerts: OpsAlertsConfig;
+  /** Nhịp worker + top-K (`OpsStatsConfig` từ game-core — topCombosK cho topPairs). */
+  stats: OpsStatsConfig;
 }

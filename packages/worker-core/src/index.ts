@@ -1,18 +1,25 @@
 // Main barrel — tất cả public exports của @megawin/worker-core.
 
 // Entities & value types
-export { WorkerCoreCollections } from "./entities";
-export type { WorkerLockDoc, WorkerLockEntity } from "./entities";
+export { WorkerCoreCollections, WorkerLockKind } from "./entities";
+export type { WorkerLockDoc, WorkerLockEntity, WorkerStalledItem } from "./entities";
 
 // Repository layer
 export { WorkerLockRepository } from "./infras/repos";
 export type { AcquireOptions } from "./infras/repos";
 
-// Use cases — distributed lock base class & coordinator
-export { LockedWorkerUseCase, BusinessLockCoordinator, isLockedWorkerSkipped } from "./use-cases";
+// Use cases — canonical: base worker class (extends) + mutex facade (new)
+export {
+  SingleRunWorker,
+  TickLoopWorker,
+  LockTakenOverError,
+  DistributedMutex,
+  STALLED_ALERT_THRESHOLD,
+  isWorkerRunSkipped,
+} from "./use-cases";
 export type {
-  LockedWorkerResult,
-  LockedWorkerSkipped,
+  WorkerRunResult,
+  WorkerRunSkipped,
   AcquireBusinessLockOptions,
   ReleaseBusinessLockOptions,
 } from "./use-cases";

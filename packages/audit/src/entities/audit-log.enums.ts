@@ -40,6 +40,7 @@ export const AuditCategory = {
   Account: "account",
   Finance: "finance",
   System: "system",
+  Worker: "worker",
 } as const;
 export type AuditCategory = (typeof AuditCategory)[keyof typeof AuditCategory];
 
@@ -63,6 +64,7 @@ export const AuditTargetType = {
   TenantConfig: "tenant_config",
   Account: "account",
   Tenant: "tenant",
+  Worker: "worker",
 } as const;
 export type AuditTargetType = (typeof AuditTargetType)[keyof typeof AuditTargetType];
 
@@ -149,6 +151,13 @@ export const AUDIT_ACTIONS = {
   system: {
     settleFinalized: "system.settle_finalized",
     voidFinalized: "system.void_finalized",
+  },
+  /**
+   * category=worker, target=worker. Thao tác vận hành worker nền từ trang BO
+   * "Sức khoẻ worker" (`/system/workers`) — hiện chỉ có kill-switch.
+   */
+  worker: {
+    setEnabled: "worker.set_enabled",
   },
 } as const;
 

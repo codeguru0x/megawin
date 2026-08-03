@@ -45,7 +45,7 @@ import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { buildResettleLockKey, toExecutionName } from "@megawin/game-core/utils";
 import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
 import { generateId, logError } from "@megawin/shared/utils";
-import { BusinessLockCoordinator } from "@megawin/worker-core";
+import { DistributedMutex } from "@megawin/worker-core/locks";
 import { ResettleScenario } from "@megawin/game-mega645/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -62,7 +62,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
   TriggerResettleOutput
 > {
   private readonly drawRepo = new DrawRepository();
-  private readonly lockCoordinator = new BusinessLockCoordinator();
+  private readonly lockCoordinator = new DistributedMutex();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
   private readonly detectBoundaries = new DetectResettleBoundariesInternalUseCase();

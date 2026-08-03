@@ -31,6 +31,12 @@ export interface IndexSpec {
     name?: string;
     /** True nếu chỉ index các document có field đó (tiết kiệm storage cho optional fields). */
     sparse?: boolean;
+    /**
+     * TTL (giây) — Mongo tự xoá document sau khi field trong `key` (PHẢI là 1 field
+     * Date, ascending, đứng riêng — không gộp compound) quá hạn. Dùng cho retention
+     * (xem `mongodb.mdc` §7) thay cho cleanup batch tự viết trong worker.
+     */
+    expireAfterSeconds?: number;
   };
   /** Mô tả mục đích index này phục vụ query nào. Dùng để review và audit. */
   purpose: string;
@@ -113,6 +119,13 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.TicketEntries,
+    key: { drawId: 1, _id: 1 },
+    options: { name: "idx_draw_id" },
+    purpose:
+      "Ops stats insert-stream: đọc entries mới 1 draw theo watermark _id (drawId equality + _id range, index-only cursor). Cũng phục vụ recompute full lúc salesClosed.",
+  },
+  {
+    collection: KenoCollections.TicketEntries,
     key: {
       drawId: 1,
       status: 1,
@@ -134,20 +147,20 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.TicketEntries,
-    key: { tenantId: 1, accountId: 1, drawDate: -1 },
-    options: { name: "idx_tenant_account_drawDate" },
+    key: { tenantId: 1, accountId: 1, financialDate: -1 },
+    options: { name: "idx_tenant_account_financialDate" },
     purpose: "Lịch sử chơi: player xem entries gần đây",
   },
   {
     collection: KenoCollections.TicketEntries,
-    key: { tenantId: 1, drawDate: 1, status: 1 },
-    options: { name: "idx_tenant_drawDate_status" },
+    key: { tenantId: 1, financialDate: 1, status: 1 },
+    options: { name: "idx_tenant_financialDate_status" },
     purpose: "Báo cáo tenant: doanh thu theo ngày",
   },
   {
     collection: KenoCollections.TicketEntries,
-    key: { drawDate: 1, status: 1 },
-    options: { name: "idx_drawDate_status" },
+    key: { financialDate: 1, status: 1 },
+    options: { name: "idx_financialDate_status" },
     purpose: "Báo cáo megawin: doanh thu toàn hệ thống theo ngày",
   },
   {
@@ -212,5 +225,139 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     key: { drawDate: 1 },
     options: { unique: true, name: "idx_drawDate_unique" },
     purpose: "Atomic counter: 1 document per ngày, $inc drawNo race-safe",
+  },
+
+  // ─────────────────────────────────────────
+  // kenoDrawBettingStats
+  // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.BettingStats,
+    key: { drawId: 1 },
+    options: { unique: true, name: "idx_drawId_unique" },
+    purpose: "Ops dashboard: findOne pre-aggregated stats theo drawId (1 doc/draw, O(1))",
+  },
+  {
+    collection: KenoCollections.BettingStats,
+    key: { final: 1 },
+    options: { name: "idx_final" },
+    purpose:
+      "Worker stats-sync: hàng đợi việc `findNotFinal()` — nguồn điều phối DUY NHẤT thay cho " +
+      "getUnfinishedDraws(status). Bền với mọi tốc độ chuyển status draw (p2-01 §3.5.4). " +
+      "Selectivity thấp (chỉ 2 giá trị) nhưng số doc `final:false` luôn nhỏ (kỳ đang mở + vừa đóng) " +
+      "và query dùng projection → index-only, không fetch doc.",
+  },
+  {
+    collection: KenoCollections.BettingStats,
+    key: { updatedAt: 1 },
+    options: { name: "idx_updatedAt" },
+    purpose:
+      "Worker ops-alerts: findChangedSince({updatedAt:{$gt:cursor}}) — hàng đợi đánh giá alert " +
+      "theo doc ĐÃ ĐỔI. Doc final không update lại → phần index 'nóng' luôn nhỏ. " +
+      "(analysis keno-stats-worker-simplification §5.1)",
+  },
+
+  // ─────────────────────────────────────────
+  // kenoDrawComboStats
+  // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.ComboStats,
+    key: { drawId: 1, comboKey: 1 },
+    options: { unique: true, name: "idx_drawId_comboKey_unique" },
+    purpose:
+      "Combo lookup staff/player + upsert delta worker (1 doc/combo/draw). Worker upsert filter " +
+      "`{drawId, comboKey, lastEntryId:{$lt:batchMaxId}}` — index phủ 2 field equality, " +
+      "`lastEntryId` lọc sau (chỉ 1 doc nên không tốn gì). Unique CÒN là cơ chế idempotent: " +
+      "batch đã áp → filter không khớp → upsert cố insert → lỗi 11000 = 'đã áp rồi' = no-op " +
+      "(bulkWrite `ordered:false`, bỏ qua 11000). Xem `DeltaAccumulatedDoc`.",
+  },
+  {
+    collection: KenoCollections.ComboStats,
+    key: { drawId: 1, sets: -1 },
+    options: { name: "idx_drawId_sets" },
+    purpose:
+      "Derive `topCombos` lúc đọc: sort({sets:-1}).limit(topCombosK) — thay mảng top-K trong " +
+      "stats doc vốn bị drift (p2-01 §3.5). Index-only, không cần recompute lúc đóng bán.",
+  },
+  {
+    collection: KenoCollections.ComboStats,
+    key: { drawId: 1, accountCount: -1 },
+    options: { name: "idx_drawId_accountCount" },
+    purpose:
+      "Rule combo_concentration: find({drawId, accountCount:{$gte:n}}) — THAY `$expr $size` " +
+      "trên mảng accounts (không sargable → COLLSCAN toàn bộ combo của kỳ mỗi tick, p2-01 R2). " +
+      "Counter vô hướng nên index được (mongodb.mdc §8.2).",
+  },
+  {
+    collection: KenoCollections.ComboStats,
+    key: { createdAt: 1 },
+    options: { name: "idx_createdAt_ttl", expireAfterSeconds: 90 * 24 * 60 * 60 },
+    purpose:
+      "TTL retention 90 ngày — Mongo tự xoá combo-stats cũ (thay cleanup batch tự viết trong " +
+      "worker `SyncBettingStatsUseCase`, xem mongodb.mdc §7). Index RIÊNG, single-field ascending " +
+      "— không gộp vào unique index compound phía trên (TTL bắt buộc single-field).",
+  },
+
+  // ─────────────────────────────────────────
+  // kenoDrawComboAccounts
+  // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.ComboAccounts,
+    key: { drawId: 1, comboKey: 1, accountId: 1 },
+    options: { unique: true, name: "idx_drawId_comboKey_accountId_unique" },
+    purpose:
+      "Worker `$inc` upsert 1 doc/(draw × combo × account) — thay mảng `accounts` trong combo doc " +
+      "(mảng phình theo số người chơi → chạm BSON 16MB + buộc read-modify-write, p2-01 R1). " +
+      "Unique vừa để đếm account mới qua `upsertedCount`, vừa là cơ chế idempotent: batch đã áp " +
+      "→ filter `lastEntryId:{$lt}` không khớp → insert → 11000 = no-op (`DeltaAccumulatedDoc`).",
+  },
+  {
+    collection: KenoCollections.ComboAccounts,
+    key: { createdAt: 1 },
+    options: { name: "idx_createdAt_ttl", expireAfterSeconds: 90 * 24 * 60 * 60 },
+    purpose: "TTL retention 90 ngày — cùng chuẩn ComboStats (mongodb.mdc §7).",
+  },
+
+  // ─────────────────────────────────────────
+  // kenoDrawAccountStats
+  // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.AccountStats,
+    key: { drawId: 1, accountId: 1 },
+    options: { unique: true, name: "idx_drawId_accountId_unique" },
+    purpose:
+      "Worker `$inc` upsert tích luỹ cược theo account/kỳ. Unique vừa bảo đảm 1 doc/(draw × " +
+      "account), vừa là cơ chế idempotent: batch đã áp → filter `lastEntryId:{$lt}` không khớp " +
+      "→ insert → 11000 = no-op (xem `DeltaAccumulatedDoc`). " +
+      "Cũng phục vụ tra outstanding theo player/kỳ (link từ alert large_bet).",
+  },
+  {
+    collection: KenoCollections.AccountStats,
+    key: { drawId: 1, amount: -1 },
+    options: { name: "idx_drawId_amount" },
+    purpose:
+      "Derive `topAccounts` lúc đọc: sort({amount:-1}).limit(topAccountsK) — THAY mảng top-K " +
+      "trong stats doc vốn drift tỷ lệ thuận số người chơi (p2-01 R5). Chính xác tuyệt đối.",
+  },
+  {
+    collection: KenoCollections.AccountStats,
+    key: { createdAt: 1 },
+    options: { name: "idx_createdAt_ttl", expireAfterSeconds: 90 * 24 * 60 * 60 },
+    purpose: "TTL retention 90 ngày — cùng chuẩn ComboStats (mongodb.mdc §7).",
+  },
+
+  // ─────────────────────────────────────────
+  // kenoOpsAlerts
+  // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.OpsAlerts,
+    key: { status: 1, createdAt: -1 },
+    options: { name: "idx_status_createdAt" },
+    purpose: "List/count alert theo status (badge snapshot index-only count)",
+  },
+  {
+    collection: KenoCollections.OpsAlerts,
+    key: { drawId: 1, dedupeKey: 1 },
+    options: { unique: true, name: "idx_drawId_dedupeKey_unique" },
+    purpose: "Chống bắn trùng: 1 alert/(draw × dedupeKey), evaluator upsert idempotent",
   },
 ];

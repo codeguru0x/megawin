@@ -4,14 +4,11 @@ import { useEffect, useEffectEvent } from "react";
 
 import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
 import type {
-  DiceFrequencyOutput,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
-  OpsSummaryOutput,
-  PlayTypeDistributionOutput,
-  TenantBreakdownOutput,
+  ListAlertsOutput,
 } from "@megawin/game-bingo18-application/use-cases/operations";
 import type { GetEntryByIdOutput } from "@megawin/game-bingo18-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
@@ -23,30 +20,21 @@ import { bingo18Keys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
 export type {
-  DiceFrequencyItem,
-  DiceFrequencyOutput,
+  AlertGroup,
   DrawSelectorItem,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
+  ListAlertsOutput,
   LiveEntryBoard,
   LiveEntryItem,
-  OpsSummaryOutput,
-  PlayTypeDistributionItem,
-  PlayTypeDistributionOutput,
-  TenantBreakdownItem,
-  TenantBreakdownOutput,
-  TopComboItem,
+  SnapshotAlertCounts,
+  SnapshotThresholds,
   WinningBoardDetail,
   WinningEntriesSummary,
   WinningEntryItem,
 } from "@megawin/game-bingo18-application/use-cases/operations";
-
-export interface OpsQueryParams {
-  financialDate?: string;
-  drawId?: string;
-}
 
 const BASE = "/bingo18/operations";
 
@@ -85,106 +73,114 @@ export function useDrawDetail(drawId: string | undefined) {
 }
 
 // ─────────────────────────────────────────────
-// Operations Analytics
+// Operations Snapshot — timer 1 duy nhất (stats + exposure + alertCounts + drawStatus)
 // ─────────────────────────────────────────────
 
 /**
- * KPI tổng quan: doanh thu, entries, boards, sideBets, players, commission.
- * Bingo 18: refetch mỗi 15s; dừng khi đã settle.
+ * Snapshot gộp mọi số liệu vận hành 1 kỳ — **timer 1 duy nhất** (analysis §4.1).
+ *
+ * Thay 5 hook aggregation on-demand cũ (summary/tenant/diceFreq/playtype/topCombos)
+ * bằng 1 findOne pre-aggregated. Nhịp poll đọc TỪ CHÍNH response (`pollSeconds` =
+ * worker `ops.stats.tickSeconds`) → FE khớp cadence worker, không hardcode. Fallback 10s.
+ *
+ * Mỗi section truyền `select` slice field của mình → section này đổi không kéo section
+ * khác re-render (React Query dedupe 1 query, `select` chặn cross re-render).
+ *
+ * @param drawId - Kỳ cần đọc; `undefined` → query tắt.
+ * @param isSettled - Kỳ đã settle → tắt poll, `staleTime` Infinity (0 request).
+ * @param select - Optional slice để giảm re-render; mặc định trả full output.
  */
-export function useOpsSummary(params: OpsQueryParams, isSettled = false) {
+export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
+  drawId: string | undefined,
+  isSettled: boolean,
+  select?: (data: GetOpsSnapshotOutput) => TData,
+) {
   return useQuery({
-    queryKey: bingo18Keys.opsSummary(params as unknown as Record<string, unknown>),
+    queryKey: bingo18Keys.opsSnapshot(drawId ?? ""),
     queryFn: () =>
-      apiClient.get<OpsSummaryOutput>(`${BASE}/summary`, {
-        params: params as unknown as Record<string, string>,
+      apiClient.get<GetOpsSnapshotOutput>(`${BASE}/snapshot`, {
+        params: { drawId: drawId! },
       }),
-    refetchInterval: isSettled ? false : 15_000,
-    staleTime: isSettled ? Infinity : 10_000,
-    enabled: !!params.drawId,
+    enabled: !!drawId,
+    // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
+    refetchInterval: (query) => {
+      if (isSettled) return false;
+      const s = query.state.data?.pollSeconds ?? 10;
+      return s * 1000;
+    },
+    staleTime: isSettled ? Infinity : 8_000,
+    select,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Alerts (on-demand khi panel mở) + Ack mutation
+// ─────────────────────────────────────────────
+
+/**
+ * List alert 1 kỳ (grouped theo type) — chỉ fetch khi panel mở (`enabled`).
+ * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
+ * Trả CẢ item `ack` — UI v6: render dưới disclosure per-group (guideline §4).
+ */
+export function useAlerts(
+  drawId: string | undefined,
+  status: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: bingo18Keys.opsAlerts(drawId ?? "", status),
+    queryFn: () =>
+      apiClient.get<ListAlertsOutput>(`${BASE}/alerts`, {
+        params: {
+          drawId: drawId!,
+          ...(status ? { status } : {}),
+          grouped: "true",
+        },
+      }),
+    enabled: !!drawId && enabled,
   });
 }
 
 /**
- * Phân tích doanh thu theo đại lý (tenant).
+ * Acknowledge 1 alert. Invalidate toàn bộ Bingo 18 cache để refresh cả panel alert
+ * lẫn badge count (đọc từ snapshot) — đơn giản, an toàn cho hành động ít tần suất.
  */
-export function useOpsTenantBreakdown(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: bingo18Keys.opsTenantBreakdown(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TenantBreakdownOutput>(`${BASE}/tenants`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-    enabled: !!params.drawId,
+export function useAckAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: bingo18Keys.all });
+      toast.success("Đã xác nhận cảnh báo.");
+    },
+    onError: (err) => {
+      const { title, description } = formatErrorToast(err, "Xác nhận cảnh báo thất bại.");
+      toast.error(title, { description });
+    },
   });
 }
 
-/**
- * Tần suất 6 mặt xúc xắc Bingo 18 (histogram giá trị 1-6).
- */
-export function useOpsDiceFrequency(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: bingo18Keys.opsDiceFrequency(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<DiceFrequencyOutput>(`${BASE}/dice-frequency`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
+// ─────────────────────────────────────────────
+// Live feed — timer 2 (chỉ chạy khi tab Phân tích mở & kỳ chưa settle)
+// ─────────────────────────────────────────────
 
 /**
- * Phân bổ theo kiểu chơi.
- * Bingo 18: 5 kiểu — singleNum, doubleMatch, tripleMatch (basic) + sumTotal, bigSmallDraw (side bets).
+ * Live feed: N entries mới nhất của một kỳ Bingo 18 — **timer 2**.
+ *
+ * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng.
+ * `enabled` gate ở caller (tab Phân tích mở && chưa settle) — tab Giám sát chỉ có
+ * đúng 1 timer snapshot.
  */
-export function useOpsPlayTypeDistribution(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: bingo18Keys.opsPlayTypeDistribution(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<PlayTypeDistributionOutput>(`${BASE}/playtype-distribution`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Live feed: N entries mới nhất của một kỳ Bingo 18.
- * Refetch mỗi 15s khi kỳ đang bán.
- */
-export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean) {
+export function useOpsLiveEntries(drawId: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: bingo18Keys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
         params: { drawId: drawId! },
       }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 15_000,
-    staleTime: isSettled ? Infinity : 10_000,
-  });
-}
-
-/**
- * Top N side-bet combos phổ biến nhất trong một kỳ.
- * Bingo 18: tập trung vào sumTotal và bigSmallDraw.
- */
-export function useOpsTopCombos(drawId: string | undefined, isSettled: boolean) {
-  return useQuery({
-    queryKey: bingo18Keys.opsTopCombos(drawId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetTopCombosOutput>(`${BASE}/top-combos`, {
-        params: { drawId: drawId! },
-      }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
+    enabled: !!drawId && enabled,
+    refetchInterval: enabled ? 10_000 : false,
+    staleTime: 8_000,
   });
 }
 

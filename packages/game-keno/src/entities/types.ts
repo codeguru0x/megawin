@@ -13,6 +13,9 @@
 // ─────────────────────────────────────────────
 
 export type { ISODateString } from "@megawin/game-core/types";
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
+import type { KenoOpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Keno Number Ranges
@@ -34,12 +37,20 @@ export const KENO_PICK_MAX = 10;
 // ─────────────────────────────────────────────
 
 /**
+ * Tất cả số Keno hợp lệ theo thứ tự tăng dần dạng string zero-padded: `["01", …, "80"]`.
+ *
+ * Dùng để render/iterate (heatmap 80 ô, list số) — KHÔNG tự `Array.from({length:80})` +
+ * `padStart` lặp lại ở tầng UI. `KENO_VALID_NUMBERS` là Set dẫn xuất từ mảng này cho lookup O(1).
+ */
+export const KENO_ALL_NUMBERS: readonly string[] = Array.from({ length: KENO_NUMBER_MAX }, (_, i) =>
+  String(i + 1).padStart(2, "0"),
+);
+
+/**
  * Tất cả số Keno hợp lệ dưới dạng string: "01", "02", ..., "80".
  * Dùng cho validation và lookup.
  */
-export const KENO_VALID_NUMBERS: ReadonlySet<string> = new Set(
-  Array.from({ length: KENO_NUMBER_MAX }, (_, i) => String(i + 1).padStart(2, "0")),
-);
+export const KENO_VALID_NUMBERS: ReadonlySet<string> = new Set(KENO_ALL_NUMBERS);
 
 /** Parse string number ("01"-"80") thành số nguyên. Trả null nếu invalid. */
 export function parseKenoNumber(s: string): number | null {
@@ -63,8 +74,6 @@ export function formatKenoNumber(n: number): string | null {
  * - Số từ 41-80: "lớn"
  */
 export const KENO_BIG_SMALL_BOUNDARY = 40;
-
-import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
 
 // ─────────────────────────────────────────────
 // Board Selection (user input)
@@ -222,4 +231,64 @@ export interface KenoPrizeOverrides {
   basicPrizes?: BasicPrizes;
   bigSmallPrizes?: BigSmallPrizes;
   evenOddPrizes?: EvenOddPrizes;
+}
+
+// ─────────────────────────────────────────────
+// Operations & Risk Control config (§3.9)
+// ─────────────────────────────────────────────
+
+/**
+ * Ngưỡng số bộ cappable gần cap `maxSetsForFixed` (cảnh báo trước khi chuyển chia đều).
+ *
+ * Vietlott: pick8 cap 50 bộ, pick9 12 bộ, pick10 5 bộ (`keno-game-rules`). Ngưỡng cảnh
+ * báo đặt thấp hơn để staff biết sớm. VD default 40/10/4 = cảnh báo khi gần chạm.
+ */
+export interface ComboSetsWarn {
+  /** Ngưỡng cảnh báo số bộ pick8 (cap 50). Default 40. */
+  pick8: number;
+  /** Ngưỡng cảnh báo số bộ pick9 (cap 12). Default 10. */
+  pick9: number;
+  /** Ngưỡng cảnh báo số bộ pick10 (cap 5). Default 4. */
+  pick10: number;
+}
+
+/**
+ * Cấu hình ngưỡng alert vận hành (`ops.alerts`) — evaluator so ngưỡng này (p0-06).
+ *
+ * Tất cả ngưỡng cấu hình động; đổi có hiệu lực trong ~1 chu kỳ worker, không deploy.
+ */
+export interface OpsAlertsConfig {
+  /** Ngưỡng cược lớn (VND) — entry.amount ≥ giá trị này → `large_bet`. Default 5.000.000. */
+  largeBetAmount: number;
+  /**
+   * % cap `maxPerDraw` mà exposure worst-case chạm để cảnh báo `exposure_threshold`.
+   * Đơn vị %: [0,100]. Default 60 = cảnh báo khi worst-case ≥ 60% cap kỳ.
+   */
+  exposureWarnPct: number;
+  /**
+   * % lệch tối đa 1 hướng side bet để cảnh báo `sidebet_skew`.
+   * Đơn vị %: [0,100]. Default 70 = 1 hướng chiếm ≥ 70% tiền cặp side bet.
+   */
+  sidebetSkewPct: number;
+  /** Ngưỡng số bộ cappable gần cap → `cap_sets_near`. Default 40/10/4. */
+  comboSetsWarn: ComboSetsWarn;
+  /**
+   * Số account distinct cùng cược 1 combo để cảnh báo dồn cược `combo_concentration`.
+   * Default 5 = ≥5 người cùng 1 bộ số → nghi syndicate.
+   */
+  comboAccountsWarn: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `KenoOpsAlertType` (type dẫn xuất). */
+  enabled: Record<KenoOpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro (§3.9).
+ *
+ * KHÔNG expose cho player (allowlist DTO player không chứa `ops`).
+ */
+export interface OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-06). */
+  alerts: OpsAlertsConfig;
+  /** Nhịp worker + top-K stats (`OpsStatsConfig` từ game-core). */
+  stats: OpsStatsConfig;
 }

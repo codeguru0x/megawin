@@ -3,26 +3,36 @@
  */
 
 export { GetDrawSelectorUseCase } from "./get-draw-selector";
-export { GetOpsSummaryUseCase } from "./get-ops-summary";
-export { GetTenantBreakdownUseCase } from "./get-tenant-breakdown";
-export { GetDiceFrequencyUseCase } from "./get-dice-frequency";
-export { GetPlayTypeDistributionUseCase } from "./get-playtype-distribution";
 export { GetLiveEntriesUseCase } from "./get-live-entries";
-export { GetTopCombosUseCase } from "./get-top-combos";
 export { GetWinningEntriesUseCase } from "./get-winning-entries";
-
-export type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
+export { SyncBettingStatsUseCase } from "./sync-betting-stats";
+export type { SyncBettingStatsResult } from "./sync-betting-stats";
+export { EvaluateOpsAlertsUseCase } from "./evaluate-ops-alerts";
+export type { EvaluateOpsAlertsResult } from "./evaluate-ops-alerts";
+export { Bingo18DrawStatsAccumulator } from "./stats-accumulator";
+export type { PrizeContext } from "./stats-accumulator";
+export { evaluateBingo18Alerts } from "./evaluate-alerts";
+export type { EvaluateAlertsInput } from "./evaluate-alerts";
+export { GetOpsSnapshotUseCase } from "./get-ops-snapshot";
+export { ListAlertsUseCase } from "./list-alerts";
+export { AckAlertUseCase } from "./ack-alert";
 
 export type {
-  OpsQueryInput,
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  DiceFrequencyOutput,
-  DiceFrequencyItem,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-} from "./dto/operations.dto";
+  GetOpsSnapshotInput,
+  GetOpsSnapshotOutput,
+  SnapshotAlertCounts,
+  SnapshotThresholds,
+} from "./dto/snapshot.dto";
+
+export type {
+  ListAlertsInput,
+  ListAlertsOutput,
+  AlertGroup,
+  AckAlertInput,
+  AckAlertOutput,
+} from "./dto/alerts.dto";
+
+export type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
 export type {
   GetLiveEntriesInput,
@@ -30,8 +40,6 @@ export type {
   LiveEntryItem,
   LiveEntryBoard,
 } from "./dto/live-entries.dto";
-
-export type { GetTopCombosInput, GetTopCombosOutput, TopComboItem } from "./dto/top-combos.dto";
 
 export type {
   GetWinningEntriesInput,

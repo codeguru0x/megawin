@@ -27,7 +27,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
     const limit = Math.min(input.limit ?? 50, 100);
 
     // Validate drawId tồn tại
-    const draw = await this.drawRepo.getDrawById(drawId);
+    const draw = await this.drawRepo.existsByDrawId(drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${drawId} không tồn tại.`);
     }

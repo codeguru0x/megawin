@@ -1,3 +1,5 @@
+import type { WorkerLockKind } from "../../../entities";
+
 /**
  * Input cho `WorkerLockRepository.tryAcquire`.
  *
@@ -22,4 +24,16 @@ export interface AcquireOptions {
    * hạn giữa chừng khi worker đang chạy.
    */
   ttlSeconds: number;
+
+  /**
+   * Mô tả worker làm gì — ghi qua `$set` (KHÔNG `$setOnInsert`, xem
+   * `worker-lock-repo.ts`). Bỏ trống để giữ nguyên giá trị đã có trên doc.
+   */
+  description?: string;
+
+  /**
+   * Loại lock — `SingleRunWorker` luôn truyền `WorkerLockKind.Worker`,
+   * `DistributedMutex` truyền `WorkerLockKind.Business`.
+   */
+  kind: WorkerLockKind;
 }

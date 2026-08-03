@@ -41,7 +41,7 @@
  *
  * ## Distributed lock
  *
- * Extends {@link LockedWorkerUseCase} — main/retry lane mỗi lane 1 `lockKey`
+ * Extends {@link SingleRunWorker} — main/retry lane mỗi lane 1 `lockKey`
  * riêng, đảm bảo chỉ 1 invocation chạy tại 1 thời điểm. Overlap ở cold-start
  * (issue của `reservedConcurrency: 1`) được lock phủ tiếp.
  *
@@ -56,7 +56,7 @@ import {
   type TenantGatewayClient,
 } from "@megawin/tenant-gateway";
 import { chunk, toTenantUsername } from "@megawin/shared/utils";
-import { LockedWorkerUseCase } from "@megawin/worker-core/use-cases";
+import { SingleRunWorker } from "@megawin/worker-core/workers";
 
 import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { PendingDispatchOrder } from "../../infras/repos/types";
@@ -87,7 +87,7 @@ interface BatchResultAccumulator {
   failed: { tx: string; error: string; nextAttemptAt: Date }[];
 }
 
-export abstract class ProcessDispatchBatchBaseUseCase extends LockedWorkerUseCase<
+export abstract class ProcessDispatchBatchBaseUseCase extends SingleRunWorker<
   ProcessDispatchBatchInput,
   ProcessDispatchBatchOutput
 > {

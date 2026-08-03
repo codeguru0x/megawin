@@ -10,6 +10,7 @@ import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
 import { EntryMapper } from "../mappers/entry-mapper";
+import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { BaseRepo } from "./base-repo";
 import type {
   PlayerBreakdownRow,
@@ -18,6 +19,7 @@ import type {
   WinningEntryForDispatch,
   VoidedEntryForDispatch,
 } from "./types/entry.types";
+import type { EntryForStats } from "./types/betting-stats.types";
 
 /**
  * Repository quản lý TicketEntry lifecycle — Max 3D Pro.
@@ -53,6 +55,45 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
+  }
+
+  // ─── Operations Stats: insert-stream watermark reads ───
+
+  /**
+   * Đọc entries MỚI của 1 DRAW theo watermark insert-stream — cho stats worker
+   * (analysis max3dpro-ops §3.3). Watermark PER-DRAW; entries insert-only → `_id`
+   * ObjectId tăng đơn điệu là watermark tin cậy. Dùng index `idx_draw_id`.
+   * Loại `status: Void` NGAY TẠI NGUỒN đọc (bài học Keno chốt 30/07/2026).
+   *
+   * @param drawId - Draw đang mở/chưa chốt cần theo dõi.
+   * @param afterId - Watermark: chỉ lấy entry có `_id` lớn hơn (exclusive). undefined = từ đầu.
+   * @param limit - Kích thước batch.
+   */
+  async getEntriesForStatsAfter(
+    drawId: string,
+    afterId: string | undefined,
+    limit: number,
+  ): Promise<EntryForStats[]> {
+    const filter: Record<string, unknown> = { drawId, status: { $ne: EntryStatus.Void } };
+    if (afterId) {
+      filter._id = { $gt: new ObjectId(afterId) };
+    }
+    const docs = await this.findManyAsDocuments(filter, {
+      sort: { _id: 1 },
+      limit,
+      projection: {
+        _id: 1,
+        drawId: 1,
+        tenantId: 1,
+        accountId: 1,
+        username: 1,
+        amount: 1,
+        unitPrice: 1,
+        "tenant.commissionAmount": 1,
+        "entrySummary.boards": 1,
+      },
+    });
+    return docs.map(mapDocToEntryForStats);
   }
 
   /** Lấy scheduled entries theo batch (offset pagination), sort by createdAt asc. */
@@ -1038,335 +1079,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     }));
   }
 
-  // ─── Operations Dashboard Aggregations ───
-
-  /** Build filter cho operations queries theo financialDate và drawId optional. */
-  private buildOpsFilter(opts: {
-    financialDate: string;
-    drawId?: string;
-  }): Record<string, unknown> {
-    const filter: Record<string, unknown> = {
-      financialDate: opts.financialDate,
-      status: { $ne: EntryStatus.Void },
-    };
-    if (opts.drawId) filter.drawId = opts.drawId;
-    return filter;
-  }
-
-  /**
-   * Aggregate KPI tổng hợp cho dashboard vận hành Max 3D.
-   *
-   * Trả về: totalRevenue, totalEntries, totalLines, totalPlayers, totalCommission.
-   * Max 3D Pro KHÔNG CÓ Jackpot → không cần totalPayout riêng lẻ trong KPI.
-   */
-  async aggregateOpsSummary(opts: { financialDate: string; drawId?: string }): Promise<{
-    totalRevenue: number;
-    totalEntries: number;
-    totalBetUnits: number;
-    totalPlayers: number;
-    totalCommission: number;
-  }> {
-    const result = await this.aggregate([
-      { $match: this.buildOpsFilter(opts) },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-          totalEntries: { $sum: 1 },
-          // betUnitCount phản ánh tiền thực (lineCount × betCount) — dùng cho KPI revenue.
-          // Fallback sang lineCount cho entries cũ chưa có betUnitCount.
-          totalBetUnits: { $sum: { $ifNull: ["$betUnitCount", "$lineCount"] } },
-          uniquePlayers: { $addToSet: "$accountId" },
-          totalCommission: { $sum: "$tenant.commissionAmount" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          totalRevenue: 1,
-          totalEntries: 1,
-          totalBetUnits: 1,
-          totalPlayers: { $size: "$uniquePlayers" },
-          totalCommission: 1,
-        },
-      },
-    ]);
-    const row = (result[0] as any) ?? {};
-    return {
-      totalRevenue: row.totalRevenue ?? 0,
-      totalEntries: row.totalEntries ?? 0,
-      totalBetUnits: row.totalBetUnits ?? 0,
-      totalPlayers: row.totalPlayers ?? 0,
-      totalCommission: row.totalCommission ?? 0,
-    };
-  }
-
-  /**
-   * Aggregate breakdown theo đại lý cho dashboard vận hành.
-   *
-   * Sort: revenue desc.
-   */
-  async aggregateTenantBreakdown(opts: { financialDate: string; drawId?: string }): Promise<
-    Array<{
-      tenantId: string;
-      entries: number;
-      betUnits: number;
-      players: number;
-      revenue: number;
-      commission: number;
-    }>
-  > {
-    const result = await this.aggregate([
-      { $match: this.buildOpsFilter(opts) },
-      {
-        $group: {
-          _id: "$tenantId",
-          entries: { $sum: 1 },
-          // betUnitCount phản ánh tiền thực per tenant — dùng thay lineCount.
-          betUnits: { $sum: { $ifNull: ["$betUnitCount", "$lineCount"] } },
-          players: { $addToSet: "$accountId" },
-          revenue: { $sum: "$amount" },
-          commission: { $sum: "$tenant.commissionAmount" },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          tenantId: "$_id",
-          entries: 1,
-          betUnits: 1,
-          players: { $size: "$players" },
-          revenue: 1,
-          commission: 1,
-        },
-      },
-      { $sort: { revenue: -1 } },
-    ]);
-    return result as any[];
-  }
-
-  /**
-   * Tần suất xuất hiện của từng bộ ba số trong các boards cược.
-   *
-   * Pipeline: match → unwind boards → unwind triplets → group by triplet → sort desc → limit.
-   * Revenue xấp xỉ: phân bổ entry.amount theo tỷ lệ (board.lineCount × board.betCount) / entry.betUnitCount.
-   */
-  async aggregateTripletFrequency(opts: {
-    financialDate: string;
-    drawId?: string;
-    limit: number;
-  }): Promise<
-    Array<{
-      triplet: string;
-      count: number;
-      revenue: number;
-    }>
-  > {
-    const result = await this.aggregate([
-      { $match: this.buildOpsFilter(opts) },
-      { $unwind: "$entrySummary.boards" },
-      { $unwind: "$entrySummary.boards.triplets" },
-      {
-        $group: {
-          _id: "$entrySummary.boards.triplets",
-          count: { $sum: 1 },
-          revenue: {
-            $sum: {
-              $multiply: [
-                "$amount",
-                {
-                  $cond: [
-                    { $gt: [{ $ifNull: ["$betUnitCount", "$lineCount"] }, 0] },
-                    {
-                      $divide: [
-                        // Phân bổ theo betUnit của board / tổng betUnit entry
-                        {
-                          $multiply: [
-                            { $ifNull: ["$entrySummary.boards.lineCount", 1] },
-                            { $ifNull: ["$entrySummary.boards.betCount", 1] },
-                          ],
-                        },
-                        { $ifNull: ["$betUnitCount", "$lineCount"] },
-                      ],
-                    },
-                    0,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          triplet: "$_id",
-          count: 1,
-          revenue: { $round: ["$revenue", 0] },
-        },
-      },
-      { $sort: { count: -1 } },
-      { $limit: opts.limit },
-    ]);
-    return result as any[];
-  }
-
-  /**
-   * Phân bổ cược theo playMode cho dashboard vận hành Max 3D Pro.
-   *
-   * Max 3D Pro có 2 playMode: multiNumber và multiDigit (KHÔNG có combo3/combo6).
-   * Group by playMode → boardCount, lineCount, betUnitCount, entryCount, revenue.
-   * Revenue phân bổ theo tỷ lệ (board.lineCount × board.betCount) / entry.betUnitCount.
-   */
-  async aggregatePlayTypeDistribution(opts: { financialDate: string; drawId?: string }): Promise<
-    Array<{
-      playMode: string;
-      boardCount: number;
-      lineCount: number;
-      betUnitCount: number;
-      entryCount: number;
-      revenue: number;
-    }>
-  > {
-    const result = await this.aggregate([
-      { $match: this.buildOpsFilter(opts) },
-      { $unwind: "$entrySummary.boards" },
-      {
-        $group: {
-          _id: "$entrySummary.boards.playMode",
-          boardCount: { $sum: 1 },
-          lineCount: { $sum: "$entrySummary.boards.lineCount" },
-          // Tổng betUnit per board = lineCount × betCount
-          betUnitCount: {
-            $sum: {
-              $multiply: [
-                { $ifNull: ["$entrySummary.boards.lineCount", 1] },
-                { $ifNull: ["$entrySummary.boards.betCount", 1] },
-              ],
-            },
-          },
-          entryIds: { $addToSet: "$_id" },
-          // Revenue phân bổ theo tỷ lệ betUnit board / betUnit entry
-          revenue: {
-            $sum: {
-              $multiply: [
-                "$amount",
-                {
-                  $cond: [
-                    { $gt: [{ $ifNull: ["$betUnitCount", "$lineCount"] }, 0] },
-                    {
-                      $divide: [
-                        {
-                          $multiply: [
-                            { $ifNull: ["$entrySummary.boards.lineCount", 1] },
-                            { $ifNull: ["$entrySummary.boards.betCount", 1] },
-                          ],
-                        },
-                        { $ifNull: ["$betUnitCount", "$lineCount"] },
-                      ],
-                    },
-                    0,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          playMode: "$_id",
-          boardCount: 1,
-          lineCount: 1,
-          betUnitCount: 1,
-          entryCount: { $size: "$entryIds" },
-          revenue: { $round: ["$revenue", 0] },
-        },
-      },
-      { $sort: { lineCount: -1 } },
-    ]);
-    return result as any[];
-  }
-
-  /**
-   * Top N cặp TripletPair phổ biến nhất trong 1 kỳ.
-   *
-   * Max 3D Pro: mọi board đều tạo cặp ordered (first, second).
-   * Normalize theo sorted pair để (A,B) và (B,A) có cùng key.
-   * Chỉ chính xác với boards có đúng 2 triplets.
-   */
-  async aggregateTopPairCombos(opts: { drawId: string; limit: number }): Promise<
-    Array<{
-      first: string;
-      second: string;
-      boardCount: number;
-      totalAmount: number;
-    }>
-  > {
-    const result = await this.aggregate([
-      { $match: { drawId: opts.drawId } },
-      { $unwind: "$entrySummary.boards" },
-      {
-        // Chỉ xét boards có đúng 2 triplets (1 cặp rõ ràng)
-        $match: {
-          "entrySummary.boards.triplets.1": { $exists: true },
-          "entrySummary.boards.triplets.2": { $exists: false },
-        },
-      },
-      {
-        $project: {
-          // Normalize thứ tự: lấy sorted pair để (A,B) và (B,A) có cùng key
-          sortedPair: {
-            $sortArray: { input: "$entrySummary.boards.triplets", sortBy: 1 },
-          },
-          entryLineCount: "$lineCount",
-          entryAmount: "$amount",
-          boardLineCount: "$entrySummary.boards.lineCount",
-        },
-      },
-      {
-        $group: {
-          _id: {
-            $concat: [
-              { $arrayElemAt: ["$sortedPair", 0] },
-              ",",
-              { $arrayElemAt: ["$sortedPair", 1] },
-            ],
-          },
-          first: { $first: { $arrayElemAt: ["$sortedPair", 0] } },
-          second: { $first: { $arrayElemAt: ["$sortedPair", 1] } },
-          boardCount: { $sum: 1 },
-          totalAmount: {
-            $sum: {
-              $multiply: [
-                "$entryAmount",
-                {
-                  $cond: [
-                    { $gt: ["$entryLineCount", 0] },
-                    { $divide: [{ $ifNull: ["$boardLineCount", 1] }, "$entryLineCount"] },
-                    0,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          first: 1,
-          second: 1,
-          boardCount: 1,
-          totalAmount: { $round: ["$totalAmount", 0] },
-        },
-      },
-      { $sort: { boardCount: -1 } },
-      { $limit: opts.limit },
-    ]);
-    return result as any[];
-  }
+  // ─── Operations Dashboard ─────────────────────────────────────────────────
+  // Các aggregation on-demand cũ (aggregateOpsSummary/TenantBreakdown/TripletFrequency/
+  // PlayTypeDistribution/TopPairCombos) đã XOÁ 30/07/2026 — thay bằng pre-aggregated
+  // `max3dpro_draw_betting_stats` (worker stats-sync, đọc qua BettingStatsRepository).
+  // Xem plan max3dpro-ops p0-05 §6 (dead-code cleanup theo checklist Keno §9.3).
 
   /**
    * Aggregate player breakdown cho 1 draw × tenant — dùng cho drill-down level 3.

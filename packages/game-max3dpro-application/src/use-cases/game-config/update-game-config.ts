@@ -1,10 +1,15 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
+import type { OpsConfig } from "@megawin/game-max3dpro/entities";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
 import { globalConfigCache } from "../../caches/global-config.cache";
-import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
+import type {
+  UpdateGameConfigInput,
+  UpdateGameConfigOutput,
+  UpdateOpsInput,
+} from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game toàn cục (upsert).
@@ -26,7 +31,6 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
-    this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
     const merged = {
@@ -48,12 +52,15 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
             ...input.play,
           }
         : undefined,
+      // Section ops: merge per sub-section (alerts/stats), enabled merge shallow.
+      ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 
     const cleanMerged: Record<string, unknown> = {};
     if (merged.rates) cleanMerged.rates = merged.rates;
     if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
     if (merged.play) cleanMerged.play = merged.play;
+    if (merged.ops) cleanMerged.ops = merged.ops;
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
@@ -79,38 +86,27 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     };
   }
 
-  private validateInput(input: UpdateGameConfigInput): void {
-    if (input.rates) {
-      const { defaultCommissionRate } = input.rates;
+  /**
+   * Merge section `ops` per sub-section (alerts/stats) — chỉ set field gửi lên, giữ
+   * phần còn lại từ existing (fallback default). `enabled` merge shallow để đổi 1 khoá
+   * mà không phải gửi cả object.
+   */
+  private mergeOps(existing: OpsConfig | undefined, input: UpdateOpsInput): OpsConfig {
+    const base = existing ?? DEFAULT_MAX3D_PRO_CONFIG.ops;
 
-      if (
-        defaultCommissionRate !== undefined &&
-        (defaultCommissionRate < 0 || defaultCommissionRate > 1)
-      ) {
-        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
-      }
-    }
-
-    if (input.defaultPrizes) {
-      const { standard } = input.defaultPrizes;
-
-      if (standard) {
-        for (const [key, value] of Object.entries(standard)) {
-          if (value !== undefined && (typeof value !== "number" || value < 0)) {
-            throw AppException.badRequest(`Giải thưởng standard.${key} phải là số dương.`);
-          }
+    const alerts = input.alerts
+      ? {
+          ...base.alerts,
+          ...input.alerts,
+          enabled: {
+            ...base.alerts.enabled,
+            ...input.alerts.enabled,
+          },
         }
-      }
-    }
+      : base.alerts;
 
-    if (input.play?.drawDaysOfWeek) {
-      for (const day of input.play.drawDaysOfWeek) {
-        if (!Number.isInteger(day) || day < 0 || day > 6) {
-          throw AppException.badRequest(
-            "drawDaysOfWeek phải là mảng số nguyên [0-6] (0=CN, 1=T2, ..., 6=T7).",
-          );
-        }
-      }
-    }
+    const stats = input.stats ? { ...base.stats, ...input.stats } : base.stats;
+
+    return { alerts, stats };
   }
 }

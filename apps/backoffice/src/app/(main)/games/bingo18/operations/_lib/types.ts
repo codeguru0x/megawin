@@ -4,7 +4,7 @@
  * Bingo 18 khác Keno:
  * - Không có Jackpot
  * - Kết quả: 3 xúc xắc (1-6) + tổng 3-18
- * - Boards chứa cả cơ bản (singleNum, doubleMatch, tripleMatch) và bổ sung (sumTotal, bigSmallDraw)
+ * - Bộ cược gồm cả cơ bản (singleNum, doubleMatch, tripleMatch) và bổ sung (sumTotal, bigSmallDraw)
  * - UI phân biệt cơ bản/bổ sung bằng filter playType
  * - Không có payout caps
  * - profit = totalRevenue - totalPrizes - totalAgentCommission
@@ -16,13 +16,83 @@ export interface OpsKpi {
   /** Tổng doanh thu (VND). */
   totalRevenue: number;
   totalEntries: number;
-  /** Số basic boards (singleNum, doubleMatch, tripleMatch). Tính phía UI từ totalBoards - totalSideBets. */
-  totalBasicBoards: number;
-  /** Số side bets (sumTotal, bigSmallDraw). Tính phía UI bằng filter boards theo playType. */
+  /** Số bộ cược cơ bản (Σ betCount của singleNum/doubleMatch/tripleMatch). */
+  totalBasicSets: number;
+  /** Số bộ cược bổ sung (Σ betCount của sumTotal/bigSmallDraw). */
   totalSideBets: number;
+  /**
+   * Số người chơi distinct — số THẬT, `countDocuments` trên `bingo18_draw_account_stats`
+   * (1 doc/account), field cấp snapshot (p0-03).
+   */
   uniquePlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalCommission: number;
+}
+
+// ─── Play type distribution ──────────────────────────────────────────────────
+
+export interface PlayTypeRow {
+  /** Key kiểu chơi (tripleMatch tách "tripleMatch-specific"/"tripleMatch-any"). */
+  playType: string;
+  label: string;
+  entries: number;
+  /** Σ betCount (số bộ cược). */
+  sets: number;
+  /** Tổng tiền (VND). */
+  revenue: number;
+  /** % theo revenue. */
+  pct: number;
+}
+
+// ─── Dice board (6 ô — thuần hiển thị, KHÔNG chọn số) ───────────────────────
+
+export interface DiceCellItem {
+  /** Mặt xúc xắc 1-6. */
+  diceValue: number;
+  /** Dòng tiền quy cho số này (VND) — heat nền theo giá trị này. */
+  amount: number;
+  /** Số bộ cược chứa số này (singleNum + doubleMatch + tripleMatch.specific). */
+  sets: number;
+}
+
+// ─── SumTotal bar (16 cột 3-18) ──────────────────────────────────────────────
+
+export interface SumBarItem {
+  /** Tổng 3-18. */
+  sum: number;
+  /** Tiền dồn vào tổng này (VND). */
+  amount: number;
+  /** Số bộ. */
+  sets: number;
+  /** Bucket nhân cao (×120 — tổng 3/18): viền đỏ nhạt + xét ngưỡng amber. */
+  isHighMultiplier: boolean;
+}
+
+// ─── Side bet split (3 hướng big/draw/small) ─────────────────────────────────
+
+export interface SideBetSplit {
+  big: { label: string; amount: number };
+  draw: { label: string; amount: number };
+  small: { label: string; amount: number };
+  total: number;
+}
+
+// ─── Top risk ────────────────────────────────────────────────────────────────
+
+export interface TopAccountRow {
+  accountId: string;
+  username: string;
+  amount: number;
+  entries: number;
+}
+
+export interface TopPotentialRow {
+  entryId: string;
+  accountId: string;
+  username: string;
+  amount: number;
+  /** Worst-case entry này trả (VND) — exact max over 216 outcome. */
+  potentialWin: number;
 }
 
 // ─── Tenant Breakdown ────────────────────────────────────────────────────────
@@ -30,8 +100,6 @@ export interface OpsKpi {
 export interface TenantRow {
   tenantId: string;
   entries: number;
-  boards: number;
-  players: number;
   /** Doanh thu (VND). */
   revenue: number;
   /** Hoa hồng (VND). */

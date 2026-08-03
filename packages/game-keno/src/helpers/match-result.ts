@@ -14,11 +14,7 @@ import {
   type BigSmallPrizes,
   type EvenOddPrizes,
 } from "../entities/types";
-import {
-  lookupBasicPrize,
-  DEFAULT_BIG_SMALL_PRIZES,
-  DEFAULT_EVEN_ODD_PRIZES,
-} from "../rules/prize-tables";
+import { lookupBasicPrize } from "../rules/prize-tables";
 
 // ─────────────────────────────────────────────
 // Draw Result (input)
@@ -79,12 +75,12 @@ export interface BasicMatchResult {
  *
  * @param numbers - Số người chơi chọn, dạng string "01"-"80"
  * @param result - Kết quả kỳ quay (gồm winningNumbers + bigCount/smallCount...)
- * @param prizeTable - Bảng giải thưởng (mặc định dùng DEFAULT_BASIC_PRIZE_TABLE)
+ * @param prizeTable - Bảng giải thưởng, key trần `pickCount` (build từ `config.basicPrizes`)
  */
 export function matchBasicBoard(
   numbers: string[],
   result: DrawResultForMatch,
-  prizeTable?: Record<string, Record<string, number>>,
+  prizeTable: Record<string, Record<string, number>>,
 ): BasicMatchResult {
   const winSet = new Set(result.winningNumbers);
   const matchedNumbers: string[] = [];
@@ -142,12 +138,12 @@ export interface SideBetMatchResult {
  *
  * @param bet - Lựa chọn người chơi đặt (big / bigSmallDraw / small)
  * @param result - Kết quả kỳ quay (cần bigCount, smallCount)
- * @param prizes - Bảng giải thưởng Lớn/Nhỏ (mặc định DEFAULT_BIG_SMALL_PRIZES)
+ * @param prizes - Bảng giải thưởng Lớn/Nhỏ (từ `config.bigSmallPrizes`)
  */
 export function matchBigSmallBet(
   bet: KenoBigSmallBet,
   result: DrawResultForMatch,
-  prizes: BigSmallPrizes = DEFAULT_BIG_SMALL_PRIZES,
+  prizes: BigSmallPrizes,
 ): SideBetMatchResult {
   const { bigCount, smallCount } = result;
 
@@ -192,12 +188,12 @@ export function matchBigSmallBet(
  *
  * @param bet - Lựa chọn người chơi đặt
  * @param result - Kết quả kỳ quay (cần evenCount, oddCount)
- * @param prizes - Bảng giải thưởng Chẵn/Lẻ (mặc định DEFAULT_EVEN_ODD_PRIZES)
+ * @param prizes - Bảng giải thưởng Chẵn/Lẻ (từ `config.evenOddPrizes`)
  */
 export function matchEvenOddBet(
   bet: KenoEvenOddBet,
   result: DrawResultForMatch,
-  prizes: EvenOddPrizes = DEFAULT_EVEN_ODD_PRIZES,
+  prizes: EvenOddPrizes,
 ): SideBetMatchResult {
   const { evenCount, oddCount } = result;
 

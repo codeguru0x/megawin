@@ -14,7 +14,7 @@
  *
  * RESETTLE PATH:
  * - `resettleContext` present → release business lock
- *   (`max3dpro:resettle:{drawId}`) qua `BusinessLockCoordinator` với đúng
+ *   (`max3dpro:resettle:{drawId}`) qua `DistributedMutex` với đúng
  *   `lockOwnerToken` (tránh release nhầm khi TTL hết và owner mới đã takeover).
  * - Coordinator trả `false` (lock đã bị takeover hoặc owner sai) → coordinator
  *   tự log warning, KHÔNG fail SFN: phiên resettle đã hoàn tất nội dung; lock
@@ -29,7 +29,7 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { BusinessLockCoordinator } from "@megawin/worker-core";
+import { DistributedMutex } from "@megawin/worker-core/locks";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { SettleContext } from "./types";
 
@@ -44,7 +44,7 @@ export interface FinalizeSettleResult {
 
 export class FinalizeSettleUseCase extends InternalUseCase<SettleContext, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
-  private readonly lockCoordinator = new BusinessLockCoordinator();
+  private readonly lockCoordinator = new DistributedMutex();
 
   protected async execute(input: SettleContext): Promise<FinalizeSettleResult> {
     const { drawId, resettleContext } = input;

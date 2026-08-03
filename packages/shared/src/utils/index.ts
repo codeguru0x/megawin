@@ -1,5 +1,6 @@
 export * from "./alpha-label";
 export * from "./array";
+export * from "./async";
 export * from "./date";
 export * from "./env";
 export * from "./financial-date";

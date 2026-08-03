@@ -63,6 +63,47 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne({ drawId });
   }
 
+  /**
+   * `drawId` của mọi kỳ chưa hoàn thành — thin version của {@link getUnfinishedDraws}.
+   *
+   * Worker stats (p0-01) chỉ cần danh sách id để seed stats doc lúc `beforeLoop` (enroll),
+   * không cần nội dung draw. Covered query: projection `{drawId}` + filter `status` khớp
+   * trọn index `{status:1, drawId:-1}`, không chạm document.
+   *
+   * @param limit - Trần số kỳ trả về. `findMany` mặc định cắt 500 và **im lặng** — truyền
+   *   tường minh để caller biết mình đang giới hạn ở đâu.
+   */
+  async listUnfinishedDrawIds(limit = 500): Promise<string[]> {
+    const docs = await this.findManyAsDocuments(
+      { status: { $in: [...DRAW_UNFINISHED_STATUSES] } },
+      { projection: { _id: 0, drawId: 1 }, sort: { drawId: -1 }, limit },
+    );
+
+    return docs.map((d) => d.drawId as string);
+  }
+
+  /**
+   * Map `drawId → status` cho một tập kỳ — chỉ đọc 2 field, KHÔNG map `DrawEntity`.
+   *
+   * Dành cho worker stats (p0-01) chạy nhịp tick ~30s và chỉ cần status để biết kỳ đã
+   * terminal (`Settled`/`Void`) chưa. `getDrawsByIds` đọc full `DrawDoc` (có `financial`,
+   * `settleSummary`, `vietlottRef`…) — kéo hàng chục KB × D kỳ mỗi tick chỉ để đọc 1 chuỗi
+   * là write/read amplification thuần (mongodb.mdc §8.4).
+   *
+   * @param drawIds - Danh sách kỳ cần biết status.
+   * @returns Map chỉ chứa kỳ TỒN TẠI (drawId lạ sẽ không có key).
+   */
+  async getStatusesByDrawIds(drawIds: string[]): Promise<Map<string, DrawStatus>> {
+    if (drawIds.length === 0) return new Map();
+
+    const docs = await this.findManyAsDocuments(
+      { drawId: { $in: drawIds } },
+      { projection: { _id: 0, drawId: 1, status: 1 } },
+    );
+
+    return new Map(docs.map((d) => [d.drawId as string, d.status as DrawStatus]));
+  }
+
   /** Lấy nhiều draws theo danh sách drawId, sort by drawDate asc. */
   async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
     if (drawIds.length === 0) return [];

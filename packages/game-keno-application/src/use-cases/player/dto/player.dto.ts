@@ -249,3 +249,41 @@ export interface PlayerDrawResultInfo {
     drawDate: string;
   };
 }
+
+// ─────────────────────────────────────────────
+// Combo Popularity (minh bạch combo cappable — p1-01)
+// ─────────────────────────────────────────────
+
+/**
+ * Input tra cứu độ đông 1 bộ số cappable (pick8/9/10) của CHÍNH player.
+ *
+ * `accountId` lấy từ auth (không nhận từ client). Ownership-gate: chỉ trả dữ liệu khi
+ * account thực sự có entry chứa đúng combo này trong kỳ — combo lạ luôn báo không tồn tại.
+ */
+export interface PlayerComboPopularityInput {
+  /** Account đang yêu cầu — lấy từ JWT, KHÔNG nhận từ body/query. */
+  accountId: string;
+  /** drawId dạng `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Số "01".."80" của combo cần check — 8, 9 hoặc 10 số distinct. */
+  numbers: string[];
+}
+
+/**
+ * Kết quả minh bạch combo cho player.
+ *
+ * `found=false` (đồng nhất cho cả "player chưa cược combo này" lẫn "combo chưa ai chơi") —
+ * cố ý KHÔNG phân biệt để chặn dò ẩn bộ số hệ thống. `sets` chỉ có khi `found=true`.
+ * TUYỆT ĐỐI không trả amount/accountId/username cho player.
+ *
+ * CHỈ trả `sets` (không trả số người chơi): quy tắc chia đều cap 8/9/10 (analysis
+ * `keno-game-rules`) dùng tổng SỐ BỘ trúng làm mẫu số (`maxPerDraw / winnerCount`,
+ * winnerCount đếm theo board trúng, không theo account) — `sets` là dữ liệu tối giản
+ * và đúng nhất để player tự kiểm chứng phần chia của mình.
+ */
+export interface PlayerComboPopularityOutput {
+  /** true CHỈ khi account có entry chứa đúng combo này VÀ combo có dữ liệu. */
+  found: boolean;
+  /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
+  sets?: number;
+}

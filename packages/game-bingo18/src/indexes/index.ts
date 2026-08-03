@@ -11,6 +11,12 @@ export interface IndexSpec {
     unique?: boolean;
     name?: string;
     sparse?: boolean;
+    /**
+     * TTL (giây) — Mongo tự xoá document sau khi field trong `key` (PHẢI là 1 field
+     * Date, ascending, đứng riêng — không gộp compound) quá hạn. Dùng cho retention
+     * (xem `mongodb.mdc` §7) thay cho cleanup batch tự viết trong worker.
+     */
+    expireAfterSeconds?: number;
   };
   purpose: string;
 }
@@ -103,20 +109,27 @@ export const BINGO18_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Bingo18Collections.TicketEntries,
-    key: { tenantId: 1, accountId: 1, drawDate: -1 },
-    options: { name: "idx_tenant_account_drawDate" },
+    key: { drawId: 1, _id: 1 },
+    options: { name: "idx_draw_id" },
+    purpose:
+      "Ops stats insert-stream: đọc entries mới 1 draw theo watermark _id (drawId equality + _id range, index-only cursor).",
+  },
+  {
+    collection: Bingo18Collections.TicketEntries,
+    key: { tenantId: 1, accountId: 1, financialDate: -1 },
+    options: { name: "idx_tenant_account_financialDate" },
     purpose: "Lịch sử chơi: player xem entries gần đây",
   },
   {
     collection: Bingo18Collections.TicketEntries,
-    key: { tenantId: 1, drawDate: 1, status: 1 },
-    options: { name: "idx_tenant_drawDate_status" },
+    key: { tenantId: 1, financialDate: 1, status: 1 },
+    options: { name: "idx_tenant_financialDate_status" },
     purpose: "Báo cáo tenant: doanh thu theo ngày",
   },
   {
     collection: Bingo18Collections.TicketEntries,
-    key: { drawDate: 1, status: 1 },
-    options: { name: "idx_drawDate_status" },
+    key: { financialDate: 1, status: 1 },
+    options: { name: "idx_financialDate_status" },
     purpose: "Báo cáo megawin: doanh thu toàn hệ thống theo ngày",
   },
   {
@@ -182,5 +195,77 @@ export const BINGO18_INDEXES: readonly IndexSpec[] = [
     key: { drawDate: 1 },
     options: { unique: true, name: "idx_drawDate_unique" },
     purpose: "Atomic counter: 1 document per ngày",
+  },
+
+  // ─────────────────────────────────────────
+  // bingo18_draw_betting_stats
+  // ─────────────────────────────────────────
+  {
+    collection: Bingo18Collections.BettingStats,
+    key: { drawId: 1 },
+    options: { unique: true, name: "idx_drawId_unique" },
+    purpose: "Ops dashboard: findOne pre-aggregated stats theo drawId (1 doc/draw, O(1))",
+  },
+  {
+    collection: Bingo18Collections.BettingStats,
+    key: { final: 1 },
+    options: { name: "idx_final" },
+    purpose:
+      "Worker stats-sync: hàng đợi việc `findNotFinal({final:false})` — nguồn điều phối DUY NHẤT " +
+      "thay cho getUnfinishedDraws(status). Bền với mọi tốc độ chuyển status draw (F4-e). " +
+      "Selectivity thấp (chỉ 2 giá trị) nhưng số doc `final:false` luôn nhỏ (kỳ đang mở + vừa đóng) " +
+      "→ Mongo nhảy thẳng tập nhỏ này thay vì scan toàn bộ kỳ đã `final:true`. KHÔNG có index này " +
+      "thì mỗi tick là 1 collection scan khi số kỳ lên hàng trăm nghìn (DrawBettingStatsBase.final JSDoc).",
+  },
+  {
+    collection: Bingo18Collections.BettingStats,
+    key: { updatedAt: 1 },
+    options: { name: "idx_updatedAt" },
+    purpose:
+      "Ops-alerts worker cursor: findChangedSince(updatedAt) — quét kỳ có stats đổi. Sort updatedAt ASC, IXSCAN.",
+  },
+
+  // ─────────────────────────────────────────
+  // bingo18_draw_account_stats
+  // ─────────────────────────────────────────
+  {
+    collection: Bingo18Collections.AccountStats,
+    key: { drawId: 1, accountId: 1 },
+    options: { unique: true, name: "idx_drawId_accountId_unique" },
+    purpose:
+      "Worker `$inc` upsert tích luỹ cược theo account/kỳ. Unique vừa bảo đảm 1 doc/(draw × " +
+      "account), vừa là cơ chế idempotent: batch đã áp → filter `lastEntryId:{$lt}` không khớp " +
+      "→ insert → 11000 = no-op (xem `DeltaAccumulatedDoc`). " +
+      "Cũng phục vụ tra outstanding theo player/kỳ (link từ alert large_bet).",
+  },
+  {
+    collection: Bingo18Collections.AccountStats,
+    key: { drawId: 1, amount: -1 },
+    options: { name: "idx_drawId_amount" },
+    purpose:
+      "Derive `topAccounts` lúc đọc: sort({amount:-1}).limit(topAccountsK) — THAY mảng top-K " +
+      "trong stats doc vốn drift tỷ lệ thuận số người chơi. Chính xác tuyệt đối.",
+  },
+  {
+    collection: Bingo18Collections.AccountStats,
+    key: { createdAt: 1 },
+    options: { name: "idx_createdAt_ttl", expireAfterSeconds: 90 * 24 * 60 * 60 },
+    purpose: "TTL retention 90 ngày — cùng chuẩn Keno account stats (mongodb.mdc §7).",
+  },
+
+  // ─────────────────────────────────────────
+  // bingo18_ops_alerts
+  // ─────────────────────────────────────────
+  {
+    collection: Bingo18Collections.OpsAlerts,
+    key: { status: 1, createdAt: -1 },
+    options: { name: "idx_status_createdAt" },
+    purpose: "List/count alert theo status (badge snapshot index-only count)",
+  },
+  {
+    collection: Bingo18Collections.OpsAlerts,
+    key: { drawId: 1, dedupeKey: 1 },
+    options: { unique: true, name: "idx_drawId_dedupeKey_unique" },
+    purpose: "Chống bắn trùng: 1 alert/(draw × dedupeKey), evaluator upsert idempotent",
   },
 ];

@@ -77,6 +77,16 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne({ drawId });
   }
 
+  /**
+   * Kiểm tra kỳ quay có tồn tại — dùng khi use-case CHỈ cần validate `drawId` hợp lệ,
+   * không đọc field nào của draw (VD: guard trước khi query collection phụ thuộc như
+   * entries/combo-stats). Nhanh hơn `getDrawById`: `countDocuments({ limit: 1 })` dừng
+   * ngay khi thấy 1 match, không map cả document sang `DrawEntity`.
+   */
+  async existsByDrawId(drawId: string): Promise<boolean> {
+    return await this.exists({ drawId });
+  }
+
   /** Lấy nhiều kỳ quay theo danh sách drawIds. Sort theo drawDate + drawNo tăng dần. */
   async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
     return await this.findMany(
@@ -85,6 +95,52 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         sort: { drawDate: 1, drawNo: 1 },
       },
     );
+  }
+
+  /**
+   * Map `drawId → status` cho một tập kỳ — chỉ đọc 2 field, KHÔNG map `DrawEntity`.
+   *
+   * Dành cho caller chạy **nhịp cao** và chỉ cần status (worker stats gọi mỗi 10s để biết kỳ
+   * đã terminal chưa). `getDrawsByIds` đọc full `DrawDoc` (có `financial`, `settleSummary`,
+   * `vietlottRef`…) — kéo hàng chục KB × D kỳ mỗi tick chỉ để đọc 1 chuỗi là write/read
+   * amplification thuần (mongodb.mdc §8.4).
+   *
+   * Projection `{_id:0, drawId:1, status:1}`: IXSCAN `idx_drawId_unique` rồi FETCH doc, nhưng
+   * chỉ **truyền về 2 field** — cắt phần lớn chi phí (network + BSON deserialize + map entity).
+   * KHÔNG covered được vì không có index nào chứa cả `drawId` và `status` theo thứ tự này
+   * (`idx_status_drawId_desc` có `status` làm prefix nên không dùng được cho filter theo `drawId`).
+   *
+   * @param drawIds - Danh sách kỳ cần biết status.
+   * @returns Map chỉ chứa kỳ TỒN TẠI (drawId lạ sẽ không có key).
+   */
+  async getStatusesByDrawIds(drawIds: string[]): Promise<Map<string, DrawStatus>> {
+    if (drawIds.length === 0) return new Map();
+
+    const docs = await this.findManyAsDocuments(
+      { drawId: { $in: drawIds } },
+      { projection: { _id: 0, drawId: 1, status: 1 } },
+    );
+
+    return new Map(docs.map((d) => [d.drawId as string, d.status as DrawStatus]));
+  }
+
+  /**
+   * `drawId` của mọi kỳ chưa hoàn thành — thin version của {@link getUnfinishedDraws}.
+   *
+   * Cùng lý do như {@link getStatusesByDrawIds}: worker stats chỉ cần danh sách id để seed
+   * stats doc, không cần nội dung draw. Ở đây là **covered query** thật — projection
+   * `{drawId}` + filter `status` khớp trọn `idx_status_drawId_desc`, không chạm document.
+   *
+   * @param limit - Trần số kỳ trả về. `findMany` mặc định cắt 500 và **im lặng** — truyền
+   *   tường minh để caller biết mình đang giới hạn ở đâu.
+   */
+  async listUnfinishedDrawIds(limit = 500): Promise<string[]> {
+    const docs = await this.findManyAsDocuments(
+      { status: { $in: [...DRAW_UNFINISHED_STATUSES] } },
+      { projection: { _id: 0, drawId: 1 }, sort: { drawId: -1 }, limit },
+    );
+
+    return docs.map((d) => d.drawId as string);
   }
 
   /** Paginate danh sách kỳ quay theo filter status và/hoặc date range. Sort drawDate desc. */

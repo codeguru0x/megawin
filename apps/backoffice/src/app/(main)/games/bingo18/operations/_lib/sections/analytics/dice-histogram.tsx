@@ -1,212 +1,117 @@
 "use client";
 
 /**
- * Bingo 18 – Dice Histogram
+ * Bingo 18 – Dice Board (bảng 6 ô xúc xắc, THUẦN HIỂN THỊ)
  *
- * Tần suất 6 mặt xúc xắc (1-6) từ boards cơ bản (singleNum + doubleMatch).
- * Hiển thị dạng bar chart + top side-bet combos + tenant breakdown.
- * Thay thế NumberHeatmap của Keno.
+ * Mỗi ô = 1 mặt 1–6: badge số · Dòng tiền (giá trị chính) · số bộ `Nx`.
+ * Heat nền theo Dòng tiền (5 cấp) — guideline §3.2. KHÔNG per-number liability (§3.3).
+ *
+ * KHÁC guideline Keno §3 CÓ CHỦ ĐÍCH (chốt analysis §7 Q4, 30/07/2026): KHÔNG chọn số /
+ * action menu / dialog tra cứu — Bingo 18 chỉ có 38 cửa cược cố định, toàn bộ đã hiển
+ * thị trọn trên trang (bảng này + SumTotalBar + SideBetCard), không còn gì để "tra cứu".
+ *
+ * Data từ snapshot bucket (adapter `toDiceCells`) — không request riêng.
  */
 
-import { formatNumber } from "@megawin/shared/utils";
-import { Dice5, TrendingUp } from "lucide-react";
+import { memo } from "react";
+
+import { formatCurrency, formatNumber } from "@megawin/shared/utils";
+import { Dice5 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-import type { TenantRow } from "../../types";
-import type { TopComboItem } from "../../use-operations";
+import type { DiceCellItem } from "../../types";
 
-// ─── Single Dice Face ─────────────────────────────────────────────────────────
+/** 5 cấp heat nền theo Dòng tiền: cold → hot (hot = amber, đồng bộ cross-game). */
+const HEAT_LEVELS = [
+  "bg-card border-border/50",
+  "bg-amber-50/40 border-amber-200/40 dark:bg-amber-950/10 dark:border-amber-900/30",
+  "bg-amber-50/80 border-amber-200/60 dark:bg-amber-950/25 dark:border-amber-800/40",
+  "bg-amber-100/80 border-amber-300/70 dark:bg-amber-900/35 dark:border-amber-700/50",
+  "bg-amber-200/80 border-amber-400/80 dark:bg-amber-800/45 dark:border-amber-600/60",
+] as const;
 
-/** Màu theo giá trị mặt xúc xắc — gradient từ nhạt (1) đến đậm (6) */
-const DICE_COLORS: Record<number, { bar: string; badge: string; bg: string }> = {
-  1: {
-    bar: "bg-amber-300 dark:bg-amber-700",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400",
-    bg: "bg-amber-50 dark:bg-amber-950/30",
-  },
-  2: {
-    bar: "bg-amber-400 dark:bg-amber-600",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400",
-    bg: "bg-amber-50 dark:bg-amber-950/30",
-  },
-  3: {
-    bar: "bg-orange-400 dark:bg-orange-600",
-    badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/30",
-  },
-  4: {
-    bar: "bg-orange-500 dark:bg-orange-500",
-    badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/30",
-  },
-  5: {
-    bar: "bg-red-400 dark:bg-red-500",
-    badge: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/30",
-  },
-  6: {
-    bar: "bg-red-500 dark:bg-red-400",
-    badge: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/30",
-  },
-};
-
-// ─── Tenant Breakdown (inline, giống Power/Mega pattern) ─────────────────────
-
-function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
-  if (tenants.length === 0) return null;
-
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-        <span className="size-2 rounded-full bg-primary/50 shrink-0" />
-        Đại lý
-      </p>
-      <div className="space-y-1">
-        {tenants.map((t) => (
-          <div
-            key={t.tenantId}
-            className="grid items-center gap-x-3 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
-            style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
-          >
-            <span className="text-xs font-medium truncate">{t.tenantId}</span>
-            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.entries)} ent
-            </span>
-            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.players)} ng
-            </span>
-            <span className="text-xs tabular-nums font-semibold text-foreground text-right">
-              {formatNumber(t.revenue)}
-            </span>
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-amber-500/60 transition-all" style={{ width: `${t.pct}%` }} />
-              </div>
-              <span className="text-[11px] font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
-                {t.pct.toFixed(0)}%
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+function heatLevel(amount: number, max: number): number {
+  if (amount <= 0 || max <= 0) return 0;
+  const ratio = amount / max;
+  if (ratio >= 0.85) return 4;
+  if (ratio >= 0.6) return 3;
+  if (ratio >= 0.35) return 2;
+  return 1;
 }
 
-// ─── Dice Histogram ───────────────────────────────────────────────────────────
-
-interface DiceFreqItem {
-  /** Mặt xúc xắc (1-6). */
-  diceValue: number;
-  /** Số lần xuất hiện trong boards cược. */
-  count: number;
-  entries: number;
-}
-
-export function DiceHistogram({
-  diceFreq,
-  combos,
-  tenants,
+/** 1 ô xúc xắc — memo props primitives: poll mới chỉ re-render ô có số đổi. */
+const DiceCell = memo(function DiceCell({
+  diceValue,
+  amount,
+  sets,
+  level,
 }: {
-  diceFreq: DiceFreqItem[];
-  combos: TopComboItem[];
-  tenants?: TenantRow[];
+  diceValue: number;
+  amount: number;
+  sets: number;
+  level: number;
 }) {
-  const maxCount = Math.max(...diceFreq.map((d) => d.count), 1);
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={cn(
+            "relative flex cursor-help flex-col items-center justify-center rounded-xl border py-4 transition-colors",
+            HEAT_LEVELS[level],
+          )}
+        >
+          <span className="absolute left-2 top-2 flex size-6 items-center justify-center rounded-md bg-foreground/5 text-sm font-bold tabular-nums">
+            {diceValue}
+          </span>
+          <span className="text-base font-bold tabular-nums leading-tight">
+            {amount > 0 ? formatCurrency(amount) : "—"}
+          </span>
+          <span className="text-[11px] tabular-nums text-muted-foreground">
+            {formatNumber(sets)}x
+          </span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs tabular-nums">
+        Số {diceValue}: {formatNumber(amount)} VND · {formatNumber(sets)} bộ (Một số + Hai số trùng
+        + Ba số cụ thể)
+      </TooltipContent>
+    </Tooltip>
+  );
+});
+
+export function DiceBoard({ cells }: { cells: DiceCellItem[] }) {
+  const maxAmount = Math.max(...cells.map((c) => c.amount), 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardContent className="pt-4 space-y-4">
-        <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
-          {/* Histogram */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50 shrink-0">
-                <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <span className="text-sm font-semibold">Tần suất xúc xắc</span>
-            </div>
-            {diceFreq.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Chưa có dữ liệu</p>
-            ) : (
-              <div className="flex items-end justify-around gap-3 h-40 px-2">
-                {diceFreq.map((d) => {
-                  const colors = DICE_COLORS[d.diceValue] ?? DICE_COLORS[1]!;
-                  const barHeightPct = maxCount > 0 ? (d.count / maxCount) * 100 : 0;
-                  return (
-                    <div key={d.diceValue} className="flex flex-col items-center gap-1 flex-1 h-full group">
-                      <div className="flex-1 flex flex-col justify-end w-full">
-                        <div className="relative w-full flex flex-col justify-end" style={{ height: "100%" }}>
-                          <span
-                            className={cn(
-                              "text-[11px] font-semibold tabular-nums text-center mb-1 transition-opacity",
-                              d.count === 0 ? "opacity-0" : "opacity-100",
-                            )}
-                          >
-                            {formatNumber(d.count)}
-                          </span>
-                          <div
-                            className={cn("w-full rounded-t-md transition-all duration-700", colors.bar)}
-                            style={{ height: `${Math.max(barHeightPct, d.count > 0 ? 4 : 0)}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div
-                        className={cn(
-                          "flex size-8 items-center justify-center rounded-lg text-sm font-bold tabular-nums shrink-0",
-                          colors.badge,
-                        )}
-                      >
-                        {d.diceValue}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+            <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
           </div>
-
-          {/* Top Side-bet Combos */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/50 shrink-0">
-                <TrendingUp className="size-3.5 text-cyan-600 dark:text-cyan-400" />
-              </div>
-              <span className="text-sm font-semibold">Top Side Bets</span>
-            </div>
-            {combos.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Chưa có dữ liệu</p>
-            ) : (
-              <div className="space-y-1">
-                {combos.slice(0, 10).map((combo, i) => {
-                  const label =
-                    combo.playType === "sumTotal" ? `Tổng ${combo.sum ?? "?"}` : `Lớn/Nhỏ — ${combo.bet ?? "?"}`;
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-lg hover:bg-muted/30 transition-colors"
-                    >
-                      <span className="text-[10px] text-muted-foreground/40 w-4 tabular-nums shrink-0">{i + 1}</span>
-                      <span className="text-xs font-medium flex-1 truncate">{label}</span>
-                      <span className="text-xs tabular-nums font-semibold text-cyan-700 dark:text-cyan-400 shrink-0">
-                        {formatNumber(combo.count)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <CardTitle className="text-sm font-semibold">Dòng tiền theo mặt xúc xắc</CardTitle>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Một số + Hai số trùng + Ba số cụ thể · heat theo tiền cược
+            </p>
           </div>
         </div>
-
-        {tenants && tenants.length > 0 && (
-          <div className="border-t pt-3">
-            <TenantBreakdown tenants={tenants} />
-          </div>
-        )}
+      </CardHeader>
+      <CardContent className="px-5 pb-4 pt-1">
+        <div className="grid grid-cols-3 gap-2 @[28rem]/main:grid-cols-6">
+          {cells.map((c) => (
+            <DiceCell
+              key={c.diceValue}
+              diceValue={c.diceValue}
+              amount={c.amount}
+              sets={c.sets}
+              level={heatLevel(c.amount, maxAmount)}
+            />
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

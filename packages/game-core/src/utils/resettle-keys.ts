@@ -4,7 +4,7 @@ import type { GameProduct } from "../entities";
  * Convention build các string key liên quan đến phiên resettle.
  *
  * SINGLE SOURCE OF TRUTH cho format `{game}:resettle:...` xuyên hệ thống —
- * lock key (BusinessLockCoordinator) và batchKey (tenant_dispatch_orders).
+ * lock key (DistributedMutex) và batchKey (tenant_dispatch_orders).
  *
  * ## Vì sao centralize ở `game-core/utils`?
  *
@@ -34,7 +34,7 @@ import type { GameProduct } from "../entities";
  *
  * Convention: `"{game}:resettle:{drawId}"`.
  *
- * Lock key này dùng bởi {@link BusinessLockCoordinator} để chống double-trigger
+ * Lock key này dùng bởi {@link DistributedMutex} để chống double-trigger
  * resettle cho cùng 1 draw — `TriggerResettle` (BO API) acquire, `FinalizeSettle`
  * (worker SFN) release.
  *

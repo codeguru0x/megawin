@@ -238,7 +238,7 @@ export function getOddsForPick(pickCount: number, matchCounts: number[]): KenoTi
 
 /**
  * Bảng match counts có giải cho mỗi bậc.
- * Chỉ bao gồm matchCount có giải (từ DEFAULT_BASIC_PRIZE_TABLE).
+ * Chỉ bao gồm matchCount có giải (từ `DEFAULT_KENO_CONFIG.basicPrizes`, xem `./financials`).
  */
 const PICK_MATCH_COUNTS: Record<number, number[]> = {
   1: [1],

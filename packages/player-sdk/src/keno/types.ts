@@ -1065,3 +1065,66 @@ export interface KenoListDrawResultsResponse {
   /** Số lượng kỳ yêu cầu (echo lại size). */
   size: number;
 }
+
+// ─────────────────────────────────────────────
+// Combo Popularity — minh bạch combo cappable (pick8/9/10)
+// ─────────────────────────────────────────────
+
+/**
+ * Tham số tra cứu độ đông 1 bộ số cappable (pick8/9/10) mà player đã cược.
+ *
+ * Chỉ dùng cho combo cappable — nơi giải cao nhất bị giới hạn và chia đều khi vượt cap.
+ * Player kiểm chứng số người cùng chơi để tin rằng hệ thống chia thưởng minh bạch.
+ *
+ * @example
+ * ```ts
+ * const params: KenoComboPopularityParams = {
+ *   drawId: "2026-03-07.001",
+ *   numbers: ["01", "05", "12", "23", "34", "45", "56", "67", "78", "80"], // pick10
+ * };
+ * ```
+ */
+export interface KenoComboPopularityParams {
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+  drawId: string;
+  /**
+   * Bộ số cần kiểm tra — 8, 9 hoặc 10 số distinct, dạng zero-padded string `"01".."80"`.
+   * Số lượng số quyết định loại chơi: 8 → pick8, 9 → pick9, 10 → pick10.
+   *
+   * @example `["01", "05", "12", "23", "34", "45", "56", "67"]` // pick8
+   */
+  numbers: string[];
+}
+
+/**
+ * Kết quả minh bạch combo — số bộ đang cùng cược bộ số này.
+ *
+ * **Ownership-gate:** `found` chỉ `true` khi chính bạn ĐÃ cược đúng combo này trong kỳ.
+ * Nếu bạn chưa cược combo đó (hoặc combo chưa ai chơi), API trả `{ found: false }` — hai
+ * trường hợp cố ý KHÔNG phân biệt để bảo vệ dữ liệu cược của người khác. Đây KHÔNG phải
+ * lỗi: bạn chỉ xem được độ đông của combo mình thực sự tham gia.
+ *
+ * Chỉ trả `sets` (không trả số người chơi): quy tắc chia đều khi vượt cap dùng tổng
+ * SỐ BỘ trúng làm mẫu số (`maxPerDraw / sets`), không phải số người — `sets` là số
+ * liệu đúng và đủ để bạn tự tính phần chia của mình.
+ *
+ * @example
+ * ```ts
+ * const res = await client.keno.getComboPopularity({
+ *   drawId: "2026-03-07.001",
+ *   numbers: ["01", "05", "12", "23", "34", "45", "56", "67", "78", "80"],
+ * });
+ *
+ * if (res.found) {
+ *   console.log(`${res.sets} bộ đang cược combo này`);
+ * } else {
+ *   console.log("Bạn chưa cược combo này (hoặc chưa ai chơi).");
+ * }
+ * ```
+ */
+export interface KenoComboPopularityResponse {
+  /** `true` khi bạn đã cược đúng combo này VÀ combo có dữ liệu; ngược lại `false`. */
+  found: boolean;
+  /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
+  sets?: number;
+}

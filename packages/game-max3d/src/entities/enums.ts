@@ -19,6 +19,16 @@ export const Max3dCollections = {
   TicketLines: "max3d_ticket_lines",
   Draws: "max3d_draws",
   GameConfigs: "max3d_game_configs",
+  /** Pre-aggregated ops stats — 1 doc/draw, worker cập nhật async (ops p0-02). */
+  BettingStats: "max3d_draw_betting_stats",
+  /** Alert vận hành — evaluator sinh ở worker `max3d:ops-alerts` riêng (ops p0-02). */
+  OpsAlerts: "max3d_ops_alerts",
+  /** Tích luỹ cược theo cặp plus — 1 doc/(draw × pairKey), nguồn `topPairs` (ops p0-03). */
+  PairStats: "max3d_draw_pair_stats",
+  /** Tích luỹ cược theo account — 1 doc/(draw × account), nguồn `topAccounts` (ops p0-03). */
+  AccountStats: "max3d_draw_account_stats",
+  /** Chi tiết account/cặp plus — 1 doc/(draw × pairKey × account), nguồn `accountCount` (ops p0-03). */
+  PairAccounts: "max3d_draw_pair_accounts",
 } as const;
 
 // ─────────────────────────────────────────────

@@ -7,7 +7,7 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type { FinancialRates, Max3dproPrizeConfig, PlayRules } from "./types";
+import type { FinancialRates, Max3dproPrizeConfig, OpsConfig, PlayRules } from "./types";
 
 export interface GlobalConfigDoc {
   _id: unknown;
@@ -17,6 +17,12 @@ export interface GlobalConfigDoc {
   rates: FinancialRates;
   defaultPrizes: Max3dproPrizeConfig;
   play: PlayRules;
+
+  /**
+   * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
+   * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
+   */
+  ops: OpsConfig;
 
   version: number;
   createdAt: Date;

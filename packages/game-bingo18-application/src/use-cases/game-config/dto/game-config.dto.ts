@@ -6,8 +6,10 @@ import type {
   SumTotalPrizes,
   BigSmallDrawPrizes,
   PlayRules,
+  Bingo18OpsAlertType,
 } from "@megawin/game-bingo18/entities";
 import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
+import type { OpsStatsConfigBase } from "@megawin/game-core/types";
 import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
@@ -22,6 +24,23 @@ export interface GetGameConfigOutput {
 // ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
+
+/**
+ * Deep-partial input cho section `ops` khi update config. Chỉ gửi field cần đổi; merge
+ * per sub-section (alerts/stats), `enabled` merge shallow ở use-case.
+ * Interface tường minh — KHÔNG indexed-access `OpsConfig["alerts"]` (rule §5.4, Keno Risk #8).
+ */
+export interface UpdateOpsInput {
+  alerts?: {
+    largeBetAmount?: number;
+    exposureWarnRevenuePct?: number;
+    exposureWarnMinAmount?: number;
+    sidebetSkewPct?: number;
+    bucketConcentrationAmount?: number;
+    enabled?: Partial<Record<Bingo18OpsAlertType, boolean>>;
+  };
+  stats?: Partial<OpsStatsConfigBase>;
+}
 
 export interface UpdateGameConfigInput {
   /** Tỷ lệ tài chính (defaultCommissionRate). */
@@ -38,6 +57,11 @@ export interface UpdateGameConfigInput {
   bigSmallDrawPrizes?: Partial<BigSmallDrawPrizes>;
   /** Cấu hình luật chơi (drawInterval, salesDuration, …). */
   play?: Partial<PlayRules>;
+  /**
+   * Cấu hình vận hành. Deep-partial: chỉ gửi field cần đổi, merge per sub-section
+   * (alerts/stats), `enabled` merge shallow ở use-case.
+   */
+  ops?: UpdateOpsInput;
   /** Chủ thể thực hiện (staff BO) — dùng cho audit. */
   actor: AuditActor;
 }

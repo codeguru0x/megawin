@@ -71,3 +71,12 @@ keno-get-draw-result:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+keno-get-combo-popularity:
+  handler: src/handlers/keno/get-combo-popularity.handler
+  events:
+    - httpApi:
+        path: /games/keno/draws/{drawId}/combo-popularity
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

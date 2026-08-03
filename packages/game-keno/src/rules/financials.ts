@@ -6,6 +6,7 @@
  */
 
 import type { GlobalConfigDoc } from "../entities/global-config";
+import { KenoOpsAlertType } from "../entities/ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Financial Calculation
@@ -142,7 +143,7 @@ export const KENO_MAX_BOARDS = 100;
  */
 export const DEFAULT_KENO_CONFIG: Pick<
   GlobalConfigDoc,
-  "rates" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "payoutCaps" | "play"
+  "rates" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "payoutCaps" | "play" | "ops"
 > = {
   /** Tỷ lệ tài chính: hoa hồng đại lý mặc định 20%. Keno không cần companyRate (xem financials.ts). */
   rates: {
@@ -232,5 +233,34 @@ export const DEFAULT_KENO_CONFIG: Pick<
     firstDrawTime: "06:00",
     lastDrawTime: "21:52",
     timezone: "Asia/Ho_Chi_Minh",
+  },
+  /**
+   * Cấu hình vận hành mặc định (§3.9). Ngưỡng alert + nhịp/top-K stats.
+   * Staff chỉnh trên tab "Vận hành"; đổi có hiệu lực trong ~1 chu kỳ worker.
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 5_000_000,
+      exposureWarnPct: 60,
+      sidebetSkewPct: 70,
+      comboSetsWarn: { pick8: 40, pick9: 10, pick10: 4 },
+      comboAccountsWarn: 5,
+      enabled: {
+        [KenoOpsAlertType.LargeBet]: true,
+        [KenoOpsAlertType.ExposureThreshold]: true,
+        [KenoOpsAlertType.SidebetSkew]: true,
+        [KenoOpsAlertType.CapSetsNear]: true,
+        [KenoOpsAlertType.ComboConcentration]: true,
+        // Để dành — không bắn ở P0.
+        [KenoOpsAlertType.RevenueAnomaly]: false,
+        [KenoOpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 10,
+      topCombosK: 100,
+      topPotentialK: 50,
+      topAccountsK: 50,
+    },
   },
 };

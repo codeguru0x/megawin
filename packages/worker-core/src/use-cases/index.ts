@@ -1,8 +1,12 @@
-export { LockedWorkerUseCase } from "./locked-worker-use-case";
-export { BusinessLockCoordinator } from "./business-lock-coordinator";
+// Canonical exports — dùng cho @megawin/worker-core/use-cases.
+export { SingleRunWorker } from "./lock/single-run-worker";
+export { TickLoopWorker } from "./lock/tick-loop-worker";
+export { LockTakenOverError } from "./lock/lock-taken-over-error";
+export { DistributedMutex } from "./lock/distributed-mutex";
 export type {
   AcquireBusinessLockOptions,
   ReleaseBusinessLockOptions,
-} from "./business-lock-coordinator";
-export { isLockedWorkerSkipped } from "./types";
-export type { LockedWorkerResult, LockedWorkerSkipped } from "./types";
+} from "./lock/distributed-mutex";
+export { STALLED_ALERT_THRESHOLD } from "./health/stalled-item-tracker";
+export { isWorkerRunSkipped } from "./types";
+export type { WorkerRunResult, WorkerRunSkipped, TickLoopResult, TickOutcome } from "./types";

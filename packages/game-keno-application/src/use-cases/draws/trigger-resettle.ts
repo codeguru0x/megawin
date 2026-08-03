@@ -14,7 +14,7 @@
  *      (retry sau lần startExecution fail). Mọi status khác → reject.
  *   4. Sinh `resettleId` (UUIDv7) — propagate xuyên SFN (đi vào input).
  *   5. Acquire business lock `keno:resettle:{drawId}` TTL 300s qua
- *      `BusinessLockCoordinator`.
+ *      `DistributedMutex`.
  *   6. Transition `Published → Settling` qua `drawRepo.triggerSettle`.
  *      Bỏ qua step này nếu draw đã ở `Settling` (retry).
  *   7. StartExecution Resettle SFN với name **deterministic theo `settledAt`**
@@ -38,7 +38,7 @@
  * IDEMPOTENT (cùng pattern với `TriggerSettleUseCase`):
  * - Status filter cho phép retry an toàn (`Published` lần đầu, `Settling` lần retry).
  * - SFN execution name deterministic theo `(drawId, settledAt)` → AWS idempotent.
- * - `BusinessLockCoordinator` chống 2 staff click cùng lúc → 1 thắng, 1 fail 409.
+ * - `DistributedMutex` chống 2 staff click cùng lúc → 1 thắng, 1 fail 409.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
@@ -47,7 +47,7 @@ import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { buildResettleLockKey, toExecutionName } from "@megawin/game-core/utils";
 import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
 import { generateId, logError } from "@megawin/shared/utils";
-import { BusinessLockCoordinator } from "@megawin/worker-core";
+import { DistributedMutex } from "@megawin/worker-core/locks";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditResettle } from "../../services/audit-log";
 import type { TriggerResettleInput, TriggerResettleOutput } from "./dto/draw.dto";
@@ -59,7 +59,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
   TriggerResettleOutput
 > {
   private readonly drawRepo = new DrawRepository();
-  private readonly lockCoordinator = new BusinessLockCoordinator();
+  private readonly lockCoordinator = new DistributedMutex();
 
   protected async execute(input: TriggerResettleInput): Promise<TriggerResettleOutput> {
     const { drawId } = input;
@@ -130,7 +130,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     //  - Nếu acquire ở Lambda: đã transition Settling + StartExecution OK
     //    nhưng Lambda fail acquire → status kẹt Settling, SFN execution dở.
     //
-    // BusinessLockCoordinator wrap WorkerLockRepository — không lộ
+    // DistributedMutex wrap WorkerLockRepository — không lộ
     // ownerToken/expiresAt detail ra business layer. Coordinator throw
     // AppException(heldErrorCode, heldErrorMessage) trực tiếp khi acquire fail
     // → Next.js middleware tự render HTTP 409. ownerToken được trả về để

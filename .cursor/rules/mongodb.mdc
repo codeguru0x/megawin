@@ -391,7 +391,338 @@ export { EntryRepository } from "./entry-repo";
 
 ---
 
-## 7. Checklist
+## 7. Retention — TTL Index ưu tiên hơn Cleanup Batch tự viết
+
+> **Bài học thật (Keno combo-stats, sửa 30/07/2026):** plan p0-04 ban đầu chốt cleanup batch
+> (`deleteOlderThan(cutoff)` gọi từ worker mỗi invocation) với lý do "không có TTL tiền lệ trong
+> dự án" — **KẾT LUẬN SAI vì không grep trước khi quyết**: `packages/game-core/src/indexes/index.ts`
+> (`TX_INTENT_INDEXES.idx_resolvedAt_ttl`, TTL 14 ngày + `partialFilterExpression`) và
+> `packages/audit/src/indexes/index.ts` (`AUDIT_LOG_INDEXES.ts_ttl`, TTL 90 ngày) đã dùng TTL từ
+> trước. Hậu quả: sinh thêm code (repo method + worker call + hằng retention) chạy 1 query
+> `deleteMany` MỖI invocation (worker chạy ~1 phút/lần, 24/7) dù >99% lần chạy không có gì để xoá.
+
+### 7.1 Quy tắc
+
+Khi cần tự xoá document "quá hạn N ngày/giờ" dựa theo **1 field Date cố định, không đổi sau khi
+ghi** (`createdAt`, `resolvedAt`, `snapshotAt`, `ts`…) → **TTL index là lựa chọn ĐẦU TIÊN**, KHÔNG
+viết cleanup batch (query + `deleteMany` tự gọi trong worker/cron).
+
+**TRƯỚC khi kết luận "collection này không có TTL tiền lệ" → PHẢI grep `expireAfterSeconds` toàn
+repo.** Đừng lặp lại sai lầm p0-04.
+
+```typescript
+// ✅ ĐÚNG — TTL index, Mongo background task tự xoá, 0 app code
+// packages/game-keno/src/indexes/index.ts
+{
+  collection: KenoCollections.ComboStats,
+  key: { createdAt: 1 }, // TTL bắt buộc single-field ascending
+  options: { name: "idx_createdAt_ttl", expireAfterSeconds: 90 * 24 * 60 * 60 },
+  purpose: "TTL retention 90 ngày — thay cleanup batch trong worker.",
+},
+
+// ❌ SAI — cleanup batch tự viết, tốn query mỗi invocation, dễ quên gọi
+async deleteOlderThan(cutoff: Date): Promise<number> {
+  return await this.deleteMany({ createdAt: { $lt: cutoff } });
+}
+// worker: await this.comboRepo.deleteOlderThan(cutoff); // gọi mỗi tick/invocation
+```
+
+### 7.2 Chỉ dùng cleanup batch khi
+
+1. Điều kiện xoá **phức tạp hơn 1 field Date đơn** VÀ không biểu diễn được qua
+   `partialFilterExpression` (§7.3) — ví dụ cần join/lookup dữ liệu khác trước khi quyết định xoá.
+2. Cần **archive** (di chuyển sang collection khác) trước khi xoá — TTL chỉ xoá, không archive.
+3. Cần **log/audit số lượng đã xoá** mỗi lần — TTL xoá âm thầm bằng background thread, không có
+   hook để log kết quả.
+
+### 7.3 TTL với điều kiện phụ — `partialFilterExpression`
+
+Muốn TTL chỉ áp dụng cho doc thoả điều kiện thêm (không phải mọi doc có field Date đều nên xoá)
+→ dùng `partialFilterExpression`, KHÔNG lùi về cleanup batch. Ví dụ `TX_INTENT_INDEXES`
+(`packages/game-core/src/indexes/index.ts`): intent CHƯA resolved (`resolvedAt: null`) phải giữ
+vĩnh viễn cho recovery, chỉ TTL khi đã resolved:
+
+```typescript
+{
+  key: { resolvedAt: 1 },
+  name: "idx_resolvedAt_ttl",
+  expireAfterSeconds: 14 * 24 * 60 * 60,
+  partialFilterExpression: { resolvedAt: { $type: "date" } },
+},
+```
+
+### 7.4 Ràng buộc kỹ thuật
+
+- TTL index **PHẢI single-field ascending** (`{ field: 1 }`) — KHÔNG gộp vào compound/unique
+  index khác dù field đó đã có mặt trong 1 index khác. Tạo index TTL RIÊNG (xem `AUDIT_LOG_INDEXES`:
+  `ts_id_desc` cho sort, `ts_ttl` riêng cho TTL — cùng field `ts` nhưng 2 index tách biệt).
+- Field TTL phải là kiểu `Date` (hoặc array chứa Date, Mongo lấy giá trị nhỏ nhất) — không dùng
+  string ISO hay timestamp số.
+- Mongo background TTL monitor quét **~60 giây/lần** — xoá KHÔNG tức thời, chấp nhận được cho
+  retention/cleanup (không phải correctness-critical), KHÔNG dùng TTL cho logic nghiệp vụ cần
+  xoá đúng thời điểm.
+- Index tạo **THỦ CÔNG** qua Compass/Atlas UI/mongosh — repo KHÔNG có script tự động chạy
+  `createIndex` (xem comment đầu `KENO_INDEXES`/`AUDIT_LOG_INDEXES`); file `*_INDEXES` chỉ là
+  **source of truth** để DBA copy sang DB tool.
+
+---
+
+## 8. Document Growth, Write Amplification & Query Sargability
+
+Ba lỗi dưới đây **im lặng ở tải thấp và sập ở tải cao** — loại lỗi tệ nhất, vì nó chỉ xuất hiện
+đúng lúc hệ thống cần chạy đúng nhất. Đã từng lặp lại trên 4 game (xem
+`.cursor/plans/keno-ops-risk-control/p2-01-stats-worker-scale-hardening.plan.md`).
+
+### 8.1. KHÔNG mảng object không trần trong document
+
+Câu hỏi quyết định: **"số phần tử tối đa của mảng này do NGHIỆP VỤ quyết định (hằng số) hay do
+NGƯỜI DÙNG quyết định (không trần)?"**
+
+- Trần cố định (VD 80 số Keno, 38 bucket Bingo18, 1000 triplet Max3D) → **OK để nhúng**.
+- Phụ thuộc số account/entry/giao dịch → **BẮT BUỘC tách collection riêng**, ghi bằng `$inc`
+  upsert (1 doc/phần tử), doc cha giữ **counter vô hướng**.
+
+```typescript
+/** SAI — mảng phình theo số người chơi + read-modify-write mỗi lần ghi */
+interface ComboStatsDoc {
+  accounts: { accountId: string; username: string; sets: number; amount: number }[];
+}
+// 100k account × ~100B ≈ 10MB → chạm BSON 16MB → bulkWrite throw → chết cả worker.
+// Kèm theo: mỗi tick phải đọc full mảng → merge app-side → $set lại full mảng.
+
+/** ĐÚNG — doc cha vô hướng, chi tiết tách collection ghi $inc */
+interface ComboStatsDoc {
+  accountCount: number; // counter, index được
+  sets: number;
+  amount: number;
+}
+// Collection phụ: { drawId, comboKey, accountId, sets, amount } — 1 doc/account,
+// ghi $inc upsert → không RMW, không giới hạn kích thước, idempotent.
+```
+
+**Hard limit:** BSON document = 16MB. Nhưng RMW mảng lớn chết **trước** limit vì băng thông
+(đọc + ghi full mảng mỗi lần cập nhật).
+
+### 8.2. KHÔNG filter theo `$size` / `$expr` trên field mảng
+
+`$size` và `$expr` **không sargable** → không dùng được index → COLLSCAN.
+
+```typescript
+/** SAI — COLLSCAN toàn bộ doc thoả drawId, mỗi tick */
+await this.find({ drawId, $expr: { $gte: [{ $size: "$accounts" }, minPlayers] } });
+
+/** ĐÚNG — duy trì counter vô hướng song song + index {drawId:1, accountCount:-1} */
+await this.find({ drawId, accountCount: { $gte: minPlayers } }); // IXSCAN range
+```
+
+Quy tắc: **cần filter/sort theo số lượng phần tử → duy trì counter vô hướng, luôn.**
+
+### 8.3. Document lớn: `$inc` theo path cố định, KHÔNG `$set` toàn doc
+
+Write amplification = `kích thước doc / kích thước delta`. Ghi lại doc 33KB cho 1 delta 1KB = **33×**
+oplog, replication, backup, WiredTiger cache churn.
+
+```typescript
+/** SAI — rewrite toàn snapshot mỗi tick */
+await this.updateOne({ drawId }, { $set: fullSnapshot }, { upsert: true });
+
+/** ĐÚNG — $inc theo path cố định cho phần schema xác định */
+const f = docPath<StatsDoc>();
+await this.updateOne(
+  { drawId },
+  { $inc: { [f("totals.amount")]: delta.amount, [f("numberFreq.07.boards")]: 1 } },
+  { upsert: true },
+);
+```
+
+Chỉ phần **không thể `$inc`** (mảng top-K cần sort lại) mới dùng read-modify-write, và nên ghi ở
+**nhịp thưa hơn** counters.
+
+**Ước lượng doc size từ config Zod MAX, không từ default.** (VD default cho doc 33KB nhưng config
+max cho phép 60KB.)
+
+### 8.4. Projection bắt buộc cho mọi `find` chạy theo chu kỳ
+
+Chi phí idle = `D (số entity đồng thời) × số query cố định × tần suất` — **tồn tại dù không có giao
+dịch nào**. Ước lượng D thực tế trước khi thiết kế, **KHÔNG giả định D = 1**.
+
+```typescript
+/** SAI — kéo full doc 33KB × 120 kỳ × 6 lần/phút = 24MB/phút dù không ai cược */
+await this.find({ drawId: { $in: drawIds } });
+
+/** ĐÚNG — chỉ field cần dùng */
+await this.find({ drawId: { $in: drawIds } }, { projection: { drawId: 1, lastEntryId: 1 } });
+```
+
+**Rà theo ĐƯỜNG THỰC THI, không theo collection đang sửa.** Lỗi rất dễ mắc: siết projection cho
+collection mình đang tối ưu, rồi bỏ sót repo khác **trên cùng một tick/request**. Cách rà: liệt kê
+mọi lệnh Mongo trong 1 tick (hoặc 1 request), với mỗi lệnh hỏi *"dùng bao nhiêu field trong kết
+quả?"*. Nếu ≤ 2–3 field → tạo method **thin, TÊN RIÊNG** và dùng nó ở đường nóng.
+
+```typescript
+/** SAI — hot path (tick 10s / route FE poll) tái dùng method full-doc chỉ để đọc `status` */
+const draws = await this.drawRepo.getDrawsByIds(drawIds); // full DrawDoc: financial, settleSummary…
+const statusByDraw = new Map(draws.map((d) => [d.drawId, d.status]));
+
+/** ĐÚNG — method riêng, projection 2 field; tên khác nên không ai dùng lẫn */
+const statusByDraw = await this.drawRepo.getStatusesByDrawIds(drawIds);
+```
+
+Đặt tên khác nhau (`getDrawsByIds` vs `getStatusesByDrawIds`) là **có chủ đích**: cùng tên +
+tham số optional thì hot path sẽ lặng lẽ quay về đọc full doc khi ai đó refactor.
+
+**Vì sao KHÔNG để use-case tự truyền `projection` (thay vì tạo method riêng)?**
+
+Có 2 chỗ có thể đặt quyết định "lấy field nào": **trong repo** (cách trên) hoặc **ở tham số do
+use-case truyền vào**. Nghe cách 2 linh hoạt hơn, nhưng vi phạm rule "use case KHÔNG biết cấu trúc
+Mongo" (§9 Checklist "Use case mới"):
+
+```typescript
+/** SAI — use-case phải biết field BSON thật + cú pháp Mongo projection */
+const statusByDraw = await this.drawRepo.find(
+  { drawId: { $in: drawIds } },
+  { projection: { drawId: 1, status: 1 } }, // ← use-case đang "viết Mongo"
+);
+```
+
+Hai hệ quả cụ thể:
+
+1. **Mất type-safety ở return.** `projection` tự do → return type chỉ có thể là `Document` hoặc
+   `Partial<TEntity>` (không biết field nào chắc có mặt) — compiler không còn bắt được việc đọc
+   nhầm field chưa được project.
+2. **Regression âm thầm.** Nếu `projection` là param optional (default = full doc), quên truyền
+   thì method lặng lẽ quay lại đọc full doc — không lỗi compile, không cảnh báo, chỉ chậm dần theo D.
+
+Method tên riêng (`getStatusesByDrawIds`) giữ quyết định projection **trong repo**, use-case chỉ
+thấy tên method + return type cụ thể (`Map<string, DrawStatus>`) — tên tự mô tả ý định, và không
+thể "quên truyền projection" vì không có gì để quên.
+
+*Nếu tương lai có nhiều tổ hợp field khác nhau (không chỉ full vs. thin) và method riêng bắt đầu
+phình:* dùng **overload theo `view` param** thay vì projection tự do — vẫn giữ type-safety (TS suy
+return type theo giá trị `view`) mà chỉ cần 1 tên method:
+
+```typescript
+async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]>;
+async getDrawsByIds(drawIds: string[], view: "statusOnly"): Promise<Pick<DrawEntity, "drawId" | "status">[]>;
+```
+
+`view` vẫn là "menu đóng" do repo định nghĩa — khác projection tự do ở chỗ use-case chọn TỪ MỘT TẬP
+đã được repo thiết kế sẵn, không tự soạn field Mongo.
+
+### 8.5. Cờ `final` / `completed` phải có đường reset
+
+Nếu logic là `if (doc.final) return;` thì khi dữ liệu nguồn bị **sửa sau đó**, sai số trở thành
+**vĩnh viễn**. Luôn thêm method `resetFinal(id)` và gọi từ flow adjust (hoặc action vận hành
+"tính lại").
+
+**Ngoại lệ — huỷ (void):** nếu bản ghi bị huỷ đã bị **loại ngay tại nguồn đọc** (VD query stats có
+`status: { $ne: void }`) thì sau khi huỷ **không còn gì để trừ** → reset `final` chỉ là round-trip
+vô ích, và số đã tích là **dấu vết audit hợp lệ** ("trước khi huỷ đã cược bao nhiêu"). Quyết định
+theo nguồn đọc, không theo phản xạ "void thì phải tính lại".
+
+Và **cờ phải khớp CHÍNH XÁC ngữ nghĩa terminal**: trước khi đặt cờ "đã xong", đọc use-case chuyển
+status để biết trạng thái đó có **quay lại được** không. Đặt cờ "xong" trên trạng thái **tạm** (VD
+`SalesClosed` — vì `SalesClosed → SalesOpen` là hợp lệ) = mất dữ liệu ghi sau đó.
+
+### 8.6. `$inc` sang nhiều collection: watermark THEO TỪNG DOCUMENT
+
+`$inc` **không idempotent**. Mongo **không** có nguyên tử cross-collection (trừ transaction). Nên khi
+1 batch ghi `$inc` sang N collection, crash giữa 2 lệnh ghi luôn hỏng theo 1 trong 2 kiểu:
+
+- Cursor/watermark đã tiến trước → delta của collection ghi sau **mất vĩnh viễn**.
+- Đọc lại batch → collection đã ghi bị **cộng đôi**.
+
+Đảo thứ tự ghi chỉ **đổi loại lỗi**, không hết lỗi.
+
+Fix: mỗi doc tích luỹ tự mang watermark riêng, update có điều kiện trên nó.
+
+```typescript
+/** SAI — cursor nằm ở collection khác, không nguyên tử với $inc này */
+await this.updateOne({ drawId, comboKey }, { $inc: { sets: d.sets } }, { upsert: true });
+
+/** ĐÚNG — $inc và $set watermark CÙNG 1 lệnh trên CÙNG 1 doc → nguyên tử + idempotent */
+const f = docPath<ComboStatsDoc>();
+await this.updateOne(
+  { drawId, comboKey, [f("lastEntryId")]: { $lt: batchMaxId } }, // đã áp → không khớp → no-op
+  { $inc: { [f("sets")]: d.sets }, $set: { [f("lastEntryId")]: batchMaxId } },
+  { upsert: true },
+);
+```
+Watermark của cursor đọc tiến **cuối cùng**. Detail doc có thể "đi trước" cursor nhưng **không bao giờ
+áp hai lần** → hệ thống **tự hội tụ sau mọi crash**, không cần transaction, không cần recompute.
+
+**⚠️ Cạm bẫy:** `upsert:true` + filter có `{$lt}` → khi doc đã tồn tại VÀ đã áp batch, filter không
+khớp nên Mongo cố **insert** → lỗi **duplicate key 11000** trên unique index. Đó là hành vi **đúng
+như thiết kế** (nghĩa là "đã áp rồi"). Phải `bulkWrite({ ordered: false })` và **coi 11000 là no-op**.
+KHÔNG "sửa" bằng cách bỏ điều kiện watermark — bỏ là mất tính idempotent.
+
+Dùng helper chung `runDeltaBulkWrite` (`@megawin/data/mongo`) để bọc `bulkWrite` này — KHÔNG tự viết
+lại try/catch 11000 riêng per-game (`isDuplicateKeyError`/`isOnlyDuplicateKeyError` cũng export từ
+đây cho case check lỗi đơn lẻ, vd `findOneAndUpdate`, hoặc bulk insert "insert-if-not-exists").
+
+**Idempotency phải là thuộc tính của LỆNH GHI, không phải của job dọn dẹp.** Nếu tính đúng đắn phụ
+thuộc "recompute sẽ sửa sau" thì mọi lúc chưa recompute là **đang sai mà không ai biết**.
+
+### 8.7. Counter PHÁI SINH: `$set` tuyệt đối, KHÔNG `$inc` theo delta
+
+Watermark ở §8.6 chỉ bảo vệ được counter mà **delta của nó nằm trong cùng doc** với watermark. Counter
+có giá trị **suy ra từ collection khác** (VD `accountCount` = số doc trong `*_combo_accounts`) không
+có cách nào idempotent bằng `$inc`:
+
+| Cách ghi | Crash giữa "ghi detail" và "cộng counter" |
+|---|---|
+| `$inc` theo `upsertedIds` (số doc MỚI trong batch) | Retry thấy detail doc đã tồn tại → không còn "doc mới" → counter **thiếu vĩnh viễn** |
+| `$set` = giá trị đếm lại (`$group`/`countDocuments`) | Retry đếm lại → ghi đúng giá trị thật → **tự hội tụ** |
+
+```typescript
+/** SAI — counter phái sinh cộng theo delta: mất là mất vĩnh viễn */
+await this.updateOne({ drawId, comboKey }, { $inc: { accountCount: newAccountsInBatch } });
+
+/** ĐÚNG — đếm lại rồi ghi tuyệt đối, chỉ cho các key VỪA BỊ CHẠM trong batch */
+const rows = await accountsRepo.aggregate([
+  { $match: { drawId, comboKey: { $in: touchedComboKeys } } },
+  { $group: { _id: "$comboKey", accounts: { $sum: 1 } } },
+]);
+// → bulkWrite $set accountCount cho từng combo
+```
+Chi phí đếm lại bị chặn bởi kích thước batch (chỉ `$in` các key vừa chạm), **không** tỷ lệ với tổng số
+key của entity.
+
+### 8.8. Việc "chạm mọi entity mỗi tick" phải là 1 round-trip
+
+Worker theo chu kỳ thường phải bảo đảm mỗi entity có doc (`$setOnInsert` upsert). Gọi `updateOne`
+trong vòng `for` = **D round-trip mỗi tick chỉ để no-op** — chi phí cố định tồn tại **dù không có
+giao dịch nào**.
+
+```typescript
+/** SAI — D round-trip/tick, gần như luôn no-op */
+for (const draw of unfinished) await this.statsRepo.ensureDoc(draw.drawId);
+
+/** ĐÚNG — 1 bulkWrite cho cả D entity */
+await this.statsRepo.ensureDocs(unfinished.map((d) => d.drawId));
+```
+
+### 8.9. Checklist collection ghi theo chu kỳ (worker/cron)
+
+- [ ] Mọi mảng trong doc có **trần do nghiệp vụ** quy định? Nếu không → tách collection + `$inc`.
+- [ ] Không có query nào filter bằng `$size`/`$expr` trên mảng? Counter vô hướng + index đã có?
+- [ ] Cập nhật dùng `$inc` theo path cho phần schema cố định (không `$set` full doc)?
+- [ ] Mọi `find` theo chu kỳ có `projection`? Đã rà **theo đường thực thi** (mọi repo mà tick/route
+      chạm), không chỉ collection đang sửa? Hot path có method thin **tên riêng**? (§8.4)
+- [ ] Doc size worst-case (theo **Zod max**) đã tính? < 1MB là an toàn, > 8MB là báo động.
+- [ ] Chi phí IDLE (D × query × tần suất) đã tính với D **thực tế**, không phải D=1?
+- [ ] Cờ `final`/`completed` có method reset khi nguồn bị **sửa**? Cờ đặt trên trạng thái **terminal
+      thật**, không phải trạng thái tạm quay lại được? (§8.5)
+- [ ] Ghi `$inc` sang >1 collection: **mỗi** collection có watermark riêng + filter `$lt` + bỏ qua
+      11000? (§8.6)
+- [ ] Counter phái sinh từ collection khác ghi `$set` tuyệt đối (không `$inc`)? (§8.7)
+- [ ] Việc "chạm mọi entity mỗi tick" gom `bulkWrite` 1 round-trip? (§8.8)
+- [ ] Vòng lặp đọc: `extendLock()` **bên trong** vòng + trần item/tick + resumable watermark?
+- [ ] Vòng lặp per-entity có try/catch riêng (1 entity lỗi không sập cả invocation)?
+
+---
+
+## 9. Checklist
 
 ### Repo method mới
 
@@ -415,9 +746,15 @@ export { EntryRepository } from "./entry-repo";
 - [ ] Đã đọc skill `mongodb-schema-design` (embed-vs-reference, unbounded array, 16MB)? (§0)
 - [ ] Entity/embedded types trong `packages/game-*/src/entities/`?
 
+### Retention mới cho collection
+
+- [ ] Đã grep `expireAfterSeconds` toàn repo trước khi kết luận "không có TTL tiền lệ"? (§7.1)
+- [ ] Field Date dùng làm TTL anchor có cố định, không đổi sau khi ghi? Nếu có điều kiện phụ →
+      `partialFilterExpression` (§7.3) thay vì cleanup batch.
+
 ---
 
-## 8. KHÔNG ĐƯỢC làm
+## 10. KHÔNG ĐƯỢC làm
 
 - **KHÔNG** viết string dot-path trần trong repo — path lồng phải qua `f = docPath<TDoc>()` (§1).
 - **KHÔNG** khai báo `interface`/`type` trong file `*-repo.ts` — tách ra `types/{concern}.types.ts`.
@@ -427,3 +764,9 @@ export { EntryRepository } from "./entry-repo";
 - **KHÔNG** duplicate entity types (DrawDoc, SettleDrawReport...) — import từ entity package.
 - **KHÔNG** khởi tạo/gọi Repository class trực tiếp từ API Route — phải đi qua Use Case (§4).
 - **KHÔNG** tự quyết schema/index/performance khi có MongoDB skill tương ứng — đọc skill trước (§0).
+- **KHÔNG** viết cleanup batch (`deleteMany` theo cutoff Date) khi TTL index đủ dùng — grep
+  `expireAfterSeconds` trước khi quyết (§7).
+- **KHÔNG** `$inc` sang nhiều collection trong 1 batch mà chỉ có 1 watermark dùng chung — mỗi doc
+  tích luỹ phải tự mang watermark + filter `$lt` (§8.6).
+- **KHÔNG** `$inc` counter phái sinh từ collection khác — đếm lại rồi `$set` tuyệt đối (§8.7).
+- **KHÔNG** gọi `updateOne` trong vòng `for` cho việc "chạm mọi entity mỗi tick" — gom `bulkWrite` (§8.8).

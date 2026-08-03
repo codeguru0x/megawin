@@ -562,6 +562,7 @@ Quy tắc này áp dụng **đồng nhất** trên tất cả 7 game:
 | Total row label viết thường | Label "Tổng cộng" phải `uppercase tracking-wider` — đồng nhất với header |
 | Dùng "Tỷ lệ trả", "Tỷ lệ KH" hoặc biến thể khác cho cột tỷ lệ trả thưởng | Tên cột chuẩn là **"Tỷ lệ TT"** — viết tắt của "Tỷ lệ trả thưởng", đồng nhất trên tất cả 7 game |
 | Sub-header (uppercase) cho label 1 control duy nhất | Sub-header **CHỈ** khi nhóm 2+ fields. Label cho 1 input/toggle/static value → dùng field label (`text-xs text-muted-foreground`) |
+| Field cấu hình không có tooltip | MỌI field config phải có tooltip 4 phần: ý nghĩa, giá trị hợp lệ, mặc định, thông tin hữu ích (xem section 16) |
 
 ---
 
@@ -585,6 +586,7 @@ Quy tắc này áp dụng **đồng nhất** trên tất cả 7 game:
 - [ ] Tab state: dùng `nuqs` lưu trên URL (xem section 14)
 - [ ] Tên cột "Tỷ lệ TT" — không dùng "Tỷ lệ trả", "Tỷ lệ KH", hay biến thể khác (xem section 15)
 - [ ] Sub-header (uppercase) CHỈ cho nhóm 2+ fields — label 1 control dùng field label (lowercase)
+- [ ] Mọi field cấu hình có tooltip đầy đủ 4 phần: ý nghĩa · giá trị hợp lệ · mặc định · thông tin hữu ích (xem section 16)
 
 ---
 
@@ -679,3 +681,50 @@ Quy tắc này áp dụng cho tất cả file:
 - `prizes-section.tsx` của 7 game (Keno, Lotto 5/35, Mega 6/45, Power 6/55, Max 3D, Max 3D Pro, Bingo 18)
 - `side-bets-section.tsx` (Keno)
 - Bất kỳ table config mới nào thêm sau này
+
+---
+
+## 16. Tooltip Cấu Hình — BẮT BUỘC Cho Mọi Field Config
+
+**Quy tắc (chốt 28/07/2026):** MỌI field cấu hình trên MỌI trang config backoffice (game config, đại lý, ops, và các trang config sau này) **PHẢI** có tooltip giải thích. Không có ngoại lệ — staff không được phép phải đoán ý nghĩa của một field.
+
+### 16.1 Nội dung tooltip — 4 phần bắt buộc
+
+| Phần | Nội dung | Ví dụ |
+|---|---|---|
+| **Ý nghĩa** | Field này điều khiển cái gì, ảnh hưởng đến đâu | "Ngưỡng 1 entry bị coi là cược lớn — vượt ngưỡng sẽ sinh cảnh báo trên trang Vận hành" |
+| **Giá trị hợp lệ** | Khoảng/loại giá trị được chấp nhận (khớp Zod schema) | "Số nguyên dương, đơn vị VND" |
+| **Giá trị mặc định** | Default của hệ thống | "Mặc định: 5.000.000 VND" |
+| **Thông tin hữu ích** | Tác động khi thay đổi, thời điểm hiệu lực, lưu ý nghiệp vụ (nếu có) | "Có hiệu lực trong ≤5s, không cần deploy" |
+
+### 16.2 Pattern
+
+Dùng `HeaderTooltip` (table column) hoặc `Tooltip` + icon `Info`/`cursor-help` (form field):
+
+```tsx
+// ✅ ĐÚNG — form field có tooltip đầy đủ 4 phần
+<div className="flex items-center gap-1">
+  <FormLabel className="text-xs text-muted-foreground">Ngưỡng cược lớn</FormLabel>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <Info className="size-3 text-muted-foreground cursor-help" />
+    </TooltipTrigger>
+    <TooltipContent side="top" className="max-w-72 text-xs">
+      Ngưỡng 1 entry bị coi là cược lớn — vượt ngưỡng sinh cảnh báo trên trang Vận hành.
+      <br />Giá trị: số nguyên dương (VND) · Mặc định: 5.000.000
+      <br />Có hiệu lực trong ≤5s, không cần deploy.
+    </TooltipContent>
+  </Tooltip>
+</div>
+
+// ❌ SAI — field config không có tooltip, hoặc tooltip chỉ lặp lại tên field
+<FormLabel>Ngưỡng cược lớn</FormLabel>  // không tooltip
+<TooltipContent>Ngưỡng cược lớn</TooltipContent>  // lặp tên, vô giá trị
+```
+
+### 16.3 Quy tắc bổ sung
+
+- Tooltip **KHÔNG** lặp lại tên field — phải thêm thông tin mới (giống anti-pattern JSDoc `/** The ticket ID. */`).
+- Giá trị mặc định và khoảng hợp lệ trong tooltip **PHẢI khớp** Zod schema phía server — sửa schema thì sửa tooltip.
+- Text tooltip: `text-xs`, `max-w-72`, viết thường (sentence case) theo §9.2.
+- Checklist review khi tạo config section mới: đếm số field == số tooltip.

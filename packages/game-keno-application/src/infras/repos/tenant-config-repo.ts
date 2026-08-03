@@ -20,6 +20,14 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
     });
   }
 
+  /**
+   * Upsert tenant config — chỉ update các fields được truyền vào.
+   *
+   * Filter `{ scope: Tenant, tenantId }` là equality clause thuần → Mongo tự
+   * điền cả 2 field vào doc mới khi insert (không cần lặp lại trong
+   * `$setOnInsert`). `$setOnInsert` chỉ cần `createdAt` + default value cho
+   * field chưa truyền vào.
+   */
   async upsertTenantConfig(
     tenantId: string,
     fields: Partial<Pick<TenantConfigDoc, "commissionRate" | "isEnabled">>,
@@ -30,11 +38,7 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
     if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
     if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
 
-    const $setOnInsert: Record<string, unknown> = {
-      scope: GameConfigScope.Tenant,
-      tenantId,
-      createdAt: now,
-    };
+    const $setOnInsert: Record<string, unknown> = { createdAt: now };
 
     if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0.2;
     if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;

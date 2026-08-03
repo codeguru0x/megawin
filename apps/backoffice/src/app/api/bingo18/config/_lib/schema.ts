@@ -1,4 +1,5 @@
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
+import { Bingo18OpsAlertType } from "@megawin/game-bingo18/entities";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -75,6 +76,46 @@ const playSchema = z
   })
   .partial();
 
+// ─────── Operations & Risk Control (analysis bingo18-ops §3.6) ───────
+
+/** Bật/tắt từng loại alert — khoá theo `Bingo18OpsAlertType` (derive const-as-const §5.3). */
+const alertEnabledSchema = z
+  .object(
+    Object.fromEntries(Object.values(Bingo18OpsAlertType).map((t) => [t, z.boolean()])) as Record<
+      Bingo18OpsAlertType,
+      z.ZodBoolean
+    >,
+  )
+  .partial();
+
+const opsAlertsSchema = z
+  .object({
+    largeBetAmount: positiveInt,
+    // Ngưỡng % doanh thu kỳ (100–1000%) — mẫu số exposure (không có cap kỳ, chốt §7 Q2).
+    exposureWarnRevenuePct: z.number().int().min(100).max(1000),
+    exposureWarnMinAmount: positiveInt,
+    sidebetSkewPct: z.number().int().min(50).max(95),
+    bucketConcentrationAmount: positiveInt,
+    enabled: alertEnabledSchema,
+  })
+  .partial();
+
+// KHÔNG có topCombosK — Bingo 18 dùng OpsStatsConfigBase (chốt §7 Q3, không field thừa).
+const opsStatsSchema = z
+  .object({
+    tickSeconds: z.number().int().min(5).max(60),
+    topPotentialK: z.number().int().min(20).max(100),
+    topAccountsK: z.number().int().min(20).max(100),
+  })
+  .partial();
+
+const opsSchema = z
+  .object({
+    alerts: opsAlertsSchema,
+    stats: opsStatsSchema,
+  })
+  .partial();
+
 // ─────── Root schema ───────
 
 export const updateBingo18GameConfigSchema = z
@@ -86,6 +127,7 @@ export const updateBingo18GameConfigSchema = z
     sumTotalPrizes: sumTotalPrizesSchema.optional(),
     bigSmallDrawPrizes: bigSmallDrawPrizesSchema.optional(),
     play: playSchema.optional(),
+    ops: opsSchema.optional(),
   })
   .refine(
     (data) =>
@@ -95,6 +137,7 @@ export const updateBingo18GameConfigSchema = z
       data.tripleMatchPrizes ||
       data.sumTotalPrizes ||
       data.bigSmallDrawPrizes ||
-      data.play,
+      data.play ||
+      data.ops,
     { message: "Phải cung cấp ít nhất một section để cập nhật." },
   );

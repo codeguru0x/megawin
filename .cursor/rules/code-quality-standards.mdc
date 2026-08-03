@@ -222,3 +222,242 @@ jackpot: Pick<DrawJackpot, "openingJackpot1" | "closingJackpot1" | "openingJackp
 /** ĐÚNG — dùng thẳng interface */
 jackpot: DrawJackpot
 ```
+
+### 5.3. KHÔNG dùng string literal trần cho tập giá trị hữu hạn — luôn `const object as const` + type dẫn xuất
+
+Mọi tập giá trị đóng (alert type, status, severity, kiểu chơi, tên collection, source…) **PHẢI**
+khai báo bằng **`const object` với `as const`** rồi dẫn xuất type — KHÔNG rải string literal trần
+khắp code, KHÔNG dùng `enum` của TS (codebase đã theo pattern `as const`).
+
+Lý do: string trần dễ gõ nhầm (`"critcal"` không bị compiler bắt), không autocomplete, refactor
+đổi tên phải grep thủ công. `const as const` cho: một nguồn chân lý, IDE autocomplete, compiler bắt
+sai chính tả, đổi giá trị 1 chỗ.
+
+Đây là pattern SẴN CÓ trong codebase (`KenoCollections`, `KenoPlayType`, `DrawStatus`…) — tuân theo,
+không phát minh kiểu khác.
+
+```typescript
+/** ĐÚNG — const object as const + type dẫn xuất (tiền lệ game-keno/entities/enums.ts) */
+export const KenoOpsAlertType = {
+  LargeBet: "large_bet",
+  ExposureThreshold: "exposure_threshold",
+  SidebetSkew: "sidebet_skew",
+  CapSetsNear: "cap_sets_near",
+  ComboConcentration: "combo_concentration",
+  RevenueAnomaly: "revenue_anomaly",
+  SettleStuck: "settle_stuck",
+} as const;
+export type KenoOpsAlertType = (typeof KenoOpsAlertType)[keyof typeof KenoOpsAlertType];
+
+export const OpsAlertStatus = {
+  New: "new",
+  Ack: "ack",
+  Resolved: "resolved",
+} as const;
+export type OpsAlertStatus = (typeof OpsAlertStatus)[keyof typeof OpsAlertStatus];
+
+// Dùng: severity === OpsAlertSeverity.Critical  (KHÔNG === "critical")
+```
+
+```typescript
+/** SAI — union string literal trần, giá trị rải rác trong code */
+type KenoOpsAlertType =
+  | "large_bet" | "exposure_threshold" | "sidebet_skew"
+  | "cap_sets_near" | "combo_concentration";
+
+// Rải string literal khắp nơi — gõ nhầm không bị bắt, không autocomplete:
+if (alert.type === "combo_concentraion") { ... }   // typo — compiler IM LẶNG
+alert.status = "acked";                             // sai giá trị — compiler IM LẶNG
+```
+
+**Quy tắc bổ sung:**
+- Type name **trùng tên** const object (TS cho phép — namespace value & type tách nhau), giống `GameConfigScope`.
+- So sánh/gán **luôn** qua member (`OpsAlertStatus.Ack`), KHÔNG viết literal (`"ack"`).
+- Base type dùng chung nhiều game: đặt const + type ở `@megawin/game-core` (vd `OpsAlertStatus`, `OpsAlertSeverity`); phần đặc thù game (`KenoOpsAlertType`) đặt ở entity game, tuân §5 (tìm-trước-khi-tạo).
+- `Record<KenoOpsAlertType, T>` (vd `enabled` trong OpsConfig) tự động đúng khoá nhờ type dẫn xuất — thêm alert type mới, compiler bắt mọi `Record` thiếu khoá.
+
+### 5.4. KHÔNG dùng indexed-access `SomeType["field"]` cho BẤT KỲ type nào — không chỉ Mongo `Doc`
+
+§5.1 cấm indexed-access trên Mongo `Doc` — quy tắc này áp dụng **RỘNG HƠN cho mọi type**,
+không riêng entity Mongo. Nếu field đó vốn đã là 1 type/interface có tên riêng (import
+được), **luôn dùng thẳng tên type đó**, không viết `SomeInterface["fieldName"]`.
+
+Lý do giống §5.1: indexed-access che tên type thật, IDE "go to definition" phải nhảy qua
+interface cha trước, và tạo phụ thuộc ngầm vào shape của interface cha thay vì import
+trực tiếp contract cần dùng.
+
+```typescript
+/** SAI — PrizeContext đã có field basic: BasicPrizes (type có tên), nhưng viết indexed-access */
+private buildPrizeContext(config: {
+  basicPrizes: PrizeContext["basic"];
+  bigSmallPrizes: PrizeContext["bigSmall"];
+}): PrizeContext { ... }
+
+/** ĐÚNG — import thẳng type gốc (BasicPrizes, BigSmallPrizes) từ entities */
+import type { BasicPrizes, BigSmallPrizes } from "@megawin/game-keno/entities";
+
+private buildPrizeContext(config: {
+  basicPrizes: BasicPrizes;
+  bigSmallPrizes: BigSmallPrizes;
+}): PrizeContext { ... }
+```
+
+```typescript
+/** SAI — severity vốn là OpsAlertSeverity (const-as-const §5.3), nhưng viết indexed-access qua Doc */
+severity: KenoOpsAlertDoc["severity"],
+
+/** ĐÚNG — dùng thẳng OpsAlertSeverity */
+severity: OpsAlertSeverity,
+```
+
+Chỉ chấp nhận indexed-access khi field đó **không có type riêng** (vd 1 object literal
+inline chưa từng được named) — trường hợp này hiếm, và nên named type đó lại thay vì
+indexed-access.
+
+## 6. Luôn Dùng `{}` Cho `if`/`else`/`for`/`while`/`do` — Không Viết Statement 1 Dòng
+
+JavaScript/TypeScript cho phép bỏ `{}` khi block chỉ có 1 statement, nhưng codebase này **KHÔNG
+bỏ** — luôn viết đầy đủ `{}`, dù block chỉ 1 dòng, dù là early-return guard clause.
+
+**Tại sao:**
+- Thêm dòng code sau (nhánh `else if`, log, early-return khác) mà quên bọc `{}` → statement mới
+  rơi ra ngoài block, tạo bug âm thầm (dangling-if kinh điển).
+- Diff review rõ ràng: thêm 1 dòng vào block có `{}` chỉ tạo 1 dòng diff, không phải sửa cấu trúc.
+- Nhất quán 100% — không phải cân nhắc "có cần `{}` không" mỗi lần viết `if`.
+
+```typescript
+/** SAI — statement 1 dòng không có {} */
+if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0.2;
+if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;
+
+for (const tenant of tenants) processTenant(tenant);
+
+if (!config) throw AppException.notFound("Config không tồn tại.");
+```
+
+```typescript
+/** ĐÚNG — luôn có {}, dù block chỉ 1 dòng, kể cả early-return */
+if (fields.commissionRate === undefined) {
+  $setOnInsert.commissionRate = 0.2;
+}
+if (fields.isEnabled === undefined) {
+  $setOnInsert.isEnabled = true;
+}
+
+for (const tenant of tenants) {
+  processTenant(tenant);
+}
+
+if (!config) {
+  throw AppException.notFound("Config không tồn tại.");
+}
+```
+
+**Lưu ý hạ tầng:** ESLint rule `curly` (`tooling/eslint-config/base.js`) đã enforce đúng điều
+này (option mặc định `"all"`) cho các package CÓ chạy ESLint (`packages/ui`, các app dùng
+`react-internal`/`next-js` config). Nhưng `packages/game-*-application` và nhiều package backend
+khác **hiện chưa có ESLint/Biome nào chạy** — nên rule tooling không tự bắt được ở đó. Coi mục
+này là nguồn chân lý khi viết code trong các package chưa có lint, không dựa vào tooling.
+
+## 7. Vị Trí Import — LUÔN Ở ĐẦU FILE, Ngay Sau Header Comment
+
+**MỌI câu `import`/`export ... from` PHẢI đặt liền nhau ở đầu file** (chỉ sau JSDoc
+header comment của file, nếu có) — KHÔNG rải rác giữa các khai báo `const`/`interface`/
+`function` phía dưới. Áp dụng cho cả `import type`, `export { X } from`, `export type { X } from`.
+
+Lý do: import rải giữa file buộc người đọc phải scroll để biết file phụ thuộc gì, dễ tạo
+circular import ẩn (import xuất hiện sau khi 1 phần module đã chạy), và khác biệt so với
+convention mọi file khác trong codebase (luôn "header comment → import block → code").
+
+```typescript
+/** SAI — import chèn giữa file, sau khi đã có code khác */
+export const KENO_BIG_SMALL_BOUNDARY = 40;
+
+import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums"; // ← import ở giữa file
+
+export interface NumberSelection {
+  numbers: string[];
+}
+
+// ... 150 dòng sau ...
+
+import type { OpsStatsConfig } from "@megawin/game-core/types"; // ← import thứ 2 ở giữa file
+export interface OpsAlertsConfig { ... }
+```
+
+```typescript
+/** ĐÚNG — TẤT CẢ import gộp 1 khối ngay sau header comment, trước mọi code */
+/**
+ * Keno – Shared Types
+ * ...
+ */
+
+export type { ISODateString } from "@megawin/game-core/types";
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
+import type { KenoOpsAlertType } from "./ops-alert";
+
+export const KENO_BIG_SMALL_BOUNDARY = 40;
+
+export interface NumberSelection {
+  numbers: string[];
+}
+// ...
+export interface OpsAlertsConfig { ... }
+```
+
+**Checklist trước khi merge:** grep file vừa sửa bằng `^import |^export .* from` — nếu
+match xuất hiện ở dòng số lớn (sau khi file đã có interface/const/function), đó là vi phạm,
+di chuyển lên đầu file ngay.
+
+## 8. KHÔNG Duplicate Validation Giữa Zod (route) Và Use-case
+
+Route Next.js validate input qua Zod schema (`_lib/schema.ts`) **TRƯỚC KHI** gọi use-case
+(`withApi().body(schema).handler(...)`). Use-case nhận input đã **ĐƯỢC ĐẢM BẢO hợp lệ** —
+KHÔNG viết lại `private validateInput()` để re-check range/format/type mà Zod đã chặn.
+
+Phát hiện thực tế (2026-07-28): cả 7 game (`update-game-config.ts`) đều có `validateInput()`
+lặp lại đúng các check Zod đã làm (rate `[0,1]`, prize `>= 0`...) — Zod ở route thậm chí
+CHẶT hơn (`positive()` > 0 so với validateInput chỉ chặn `< 0`) → method này **không bao giờ
+chạy tới nhánh throw**, dead code. Đã xoá khỏi cả 7 game.
+
+```typescript
+/** SAI — validate lại thứ Zod schema route đã validate chặt hơn */
+// _lib/schema.ts: payoutCapsSchema dùng positiveInt = z.number().int().positive() (>0)
+export class UpdateGameConfigUseCase extends NextApiUseCase<Input, Output> {
+  protected async execute(input: Input): Promise<Output> {
+    this.validateInput(input); // ← không bao giờ throw vì Zod đã chặt hơn từ route
+    // ...
+  }
+
+  private validateInput(input: Input): void {
+    if (input.payoutCaps) {
+      for (const [key, val] of Object.entries(input.payoutCaps)) {
+        if (val !== undefined && val < 0) throw AppException.badRequest(`${key} phải >= 0.`);
+      }
+    }
+  }
+}
+```
+
+```typescript
+/** ĐÚNG — tin tưởng Zod ở route, use-case chỉ lo business logic (merge/upsert/audit) */
+export class UpdateGameConfigUseCase extends NextApiUseCase<Input, Output> {
+  protected async execute(input: Input): Promise<Output> {
+    const existing = await this.repo.getGlobalConfig();
+    const merged = { /* ... */ };
+    // ...
+  }
+}
+```
+
+**Khi nào use-case VẪN cần validate riêng (không phải duplicate):**
+- Check phụ thuộc **dữ liệu DB** mà Zod không biết (vd: `tenantId` có tồn tại, `draw` có đúng
+  trạng thái cho phép sửa) — đây là business rule, không phải input shape validation.
+- Business rule **cross-field phức tạp** Zod schema route CHƯA cover (nên ưu tiên đưa vào
+  `.refine()` của Zod trước — xem `power655` `jackpotSchema.refine()` 3 rule liên field).
+- Use-case có **caller khác ngoài route HTTP** (worker, script nội bộ) không đi qua Zod —
+  hiếm, xác nhận thật có caller đó trước khi giữ lại validate riêng.
+
+**Checklist trước khi viết `validateInput`/`validate...` trong use-case:** đọc Zod schema ở
+route gọi use-case này — nếu Zod đã chặn đúng field/range/format, KHÔNG viết lại.

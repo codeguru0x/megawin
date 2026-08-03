@@ -14,9 +14,14 @@ export interface OpsKpi {
   /** Tổng doanh thu (VND). */
   totalRevenue: number;
   totalEntries: number;
-  /** Tổng boards (cả cơ bản pick1-10 và bổ sung bigSmall/evenOdd). */
-  totalBoards: number;
-  uniquePlayers: number;
+  /** Tổng số bộ cược `Σ(board.betCount)` — cả cơ bản pick1-10 và bổ sung bigSmall/evenOdd. */
+  totalSets: number;
+  /**
+   * Số người chơi distinct. `null` khi stats doc KHÔNG có sẵn — KpiStrip render "—".
+   * Betting stats hiện chỉ có entries/sets theo tenant, không có players count →
+   * KHÔNG bịa số (thà "—" còn hơn số sai).
+   */
+  uniquePlayers: number | null;
   /** Tổng hoa hồng đại lý (VND). */
   totalCommission: number;
   /** Doanh thu thuần (VND) = totalRevenue − totalCommission. */
@@ -28,8 +33,10 @@ export interface OpsKpi {
 export interface TenantRow {
   tenantId: string;
   entries: number;
-  boards: number;
-  players: number;
+  /** Số bộ cược. `null` khi stats không tách theo tenant → UI ẩn/"—". */
+  sets: number | null;
+  /** Số người chơi. `null` khi stats không có players theo tenant → UI ẩn/"—". */
+  players: number | null;
   /** Doanh thu (VND). */
   revenue: number;
   /** Hoa hồng (VND). */
@@ -99,4 +106,113 @@ export interface LiveFeedEntry {
   amount: number;
   username: string;
   tenant: string;
+}
+
+// ─── Analytics adapter outputs (từ betting stats snapshot) ───────────────────
+
+/** 1 dòng phân bổ kiểu chơi — khớp PlayTypeCard render contract. */
+export interface PlayTypeRow {
+  playType: string;
+  label: string;
+  /** Số bộ cược `Σ(board.betCount)` của kiểu chơi này. */
+  sets: number;
+  /** Doanh thu (VND). */
+  revenue: number;
+  /** % theo doanh thu so với tổng. */
+  pct: number;
+}
+
+/**
+ * 1 số trên heatmap — chỉ dòng tiền (`amount`).
+ * `sets` = số bộ cược basic chứa số này (stats không tách entries theo số).
+ *
+ * KHÔNG có per-number liability: worst-case là thuộc tính của BOARD (trúng đủ ngưỡng),
+ * gán cho từng số sẽ double-count vô nghĩa (1 board pick10 = 2 tỷ cộng vào cả 10 ô). Rủi
+ * ro chi trả đo ở cấp entry — xem `TopPotentialRow` (analysis §3.7 cập nhật 29/07).
+ */
+export interface NumberFreqItem {
+  number: string;
+  /** Số bộ cược basic chứa số này. */
+  sets: number;
+  /** Dòng tiền quy cho số (VND). */
+  amount: number;
+}
+
+/** 1 bộ số phổ biến — khớp TopCombos render contract trong number-heatmap.tsx. */
+export interface TopComboRow {
+  rank: number;
+  numbers: string[];
+  playType: string;
+  /** Số bộ cược vào combo này (`Σ betCount` mọi account). */
+  sets: number;
+  entryCount: number;
+}
+
+// ─── Exposure (proxy liability worst-case) ───────────────────────────────────
+
+/** 1 dòng cap sets của 1 bậc pick trên Exposure card. */
+export interface ExposureCapRow {
+  playType: "pick8" | "pick9" | "pick10";
+  /** Số bộ cược trọn bậc (trúng hết). */
+  sets: number;
+  /** Mẫu số cap tham chiếu (maxSetsForFixed default). */
+  max: number;
+}
+
+/** Slice exposure adapter → ExposureCard. */
+export interface ExposureView {
+  /** Tổng worst-case toàn kỳ (VND). */
+  worstCaseTotal: number;
+  capRows: ExposureCapRow[];
+}
+
+/**
+ * ExposureView + ngưỡng cảnh báo (%) từ config — bọc để `select` slice snapshot 1 lần
+ * (tránh 2 subscription). `warnPct` = `thresholds.exposureWarnPct` (analysis §4.3).
+ */
+export interface ExposureViewWithThreshold {
+  view: ExposureView;
+  /** Ngưỡng cảnh báo exposure (%) từ config — dùng tô màu gauge. */
+  warnPct: number;
+}
+
+// ─── Side-bet direction bars ─────────────────────────────────────────────────
+
+/** 1 cặp side bet đối xứng (Lớn↔Nhỏ hoặc Chẵn↔Lẻ) cho progress bar. */
+export interface SideBetPair {
+  /** Nhãn cặp (vd "Lớn / Nhỏ"). */
+  label: string;
+  /** Nhãn + tiền hướng trái. */
+  left: { label: string; amount: number };
+  /** Nhãn + tiền hướng phải. */
+  right: { label: string; amount: number };
+  /** Tiền hướng hoà (VND) — hiển thị phụ, không tính vào lệch. */
+  drawAmount: number;
+}
+
+// ─── Top risk (accounts theo tiền cược / theo liability) ─────────────────────
+
+/** 1 account trong bảng "Top người chơi theo tiền cược" (`stats.topAccounts`). */
+export interface TopAccountRow {
+  /** ID account — link tới hồ sơ tài khoản. */
+  accountId: string;
+  /** Username hiển thị (ưu tiên trước accountId). Rỗng → UI fallback accountId. */
+  username: string;
+  /** Tổng tiền account cược trong kỳ (VND). */
+  amount: number;
+  /** Số entries account đặt trong kỳ. */
+  entries: number;
+}
+
+/** 1 entry trong bảng "Top phải trả tiềm năng" (`stats.topPotential`). */
+export interface TopPotentialRow {
+  entryId: string;
+  /** ID account — link tới hồ sơ tài khoản. */
+  accountId: string;
+  /** Username hiển thị (ưu tiên trước accountId). Rỗng → UI fallback accountId. */
+  username: string;
+  /** Tiền cược của entry (VND). */
+  amount: number;
+  /** Tiền phải trả nếu entry trúng tối đa (VND). */
+  potentialWin: number;
 }

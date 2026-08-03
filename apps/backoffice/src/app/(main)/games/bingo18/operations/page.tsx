@@ -19,33 +19,37 @@ import Link from "next/link";
 
 import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { Dice5, Plus, SearchX } from "lucide-react";
+import { Activity, BarChart3, Dice5, Plus, SearchX } from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { bingo18Keys } from "@/lib/query-keys";
 
 import { DrawSelector } from "./_lib/draw-selector";
+import { AlertHeaderBadge, AlertsPanel } from "./_lib/sections/alerts/alerts-panel";
 import { AnalyticsSection } from "./_lib/sections/analytics";
 import { DrawManagementSection } from "./_lib/sections/draw-management";
 import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
 import { KpiSection } from "./_lib/sections/kpi";
 import { ResultSection } from "./_lib/sections/result";
 import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
+import { useOpsSnapshot } from "./_lib/use-operations";
 
 // ─── Last Updated Badge ────────────────────────────────────────────────────────
 
 /**
  * Hiển thị thời điểm cập nhật dữ liệu live cuối cùng.
- * Bingo 18: refetch mỗi 15s do chu kỳ ngắn (~6 phút).
+ * Đọc `dataUpdatedAt` của snapshot query (timer 1). Dùng DOM ref + setInterval để
+ * tránh re-render React mỗi giây.
  */
-function LastUpdatedBadge({ opsParams }: { opsParams: { drawId?: string; financialDate?: string } }) {
+function LastUpdatedBadge({ drawId }: { drawId: string | undefined }) {
   const qc = useQueryClient();
   const spanRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     function tick() {
-      const queryKey = bingo18Keys.opsSummary(opsParams as Record<string, unknown>);
-      const state = qc.getQueryState(queryKey);
+      const state = qc.getQueryState(bingo18Keys.opsSnapshot(drawId ?? ""));
       const ts = state?.dataUpdatedAt;
       if (spanRef.current && ts) {
         spanRef.current.textContent = displayVNTimeWithSeconds(new Date(ts));
@@ -54,7 +58,7 @@ function LastUpdatedBadge({ opsParams }: { opsParams: { drawId?: string; financi
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [qc, opsParams]);
+  }, [qc, drawId]);
 
   return (
     <span className="flex items-center gap-1 text-xs text-muted-foreground/70 tabular-nums">
@@ -79,9 +83,17 @@ function OperationsContent() {
     noDrawAvailable,
     isHistorical,
     isActiveForRefresh,
-    opsParams,
+    isSettled,
   } = useDrawContext();
   const [createOpen, setCreateOpen] = useState(false);
+
+  const [tab, setTab] = useQueryState(
+    "tab",
+    parseAsStringEnum(["monitor", "analysis"]).withDefault("monitor"),
+  );
+
+  // Badge alert đọc `alertCounts` từ snapshot (timer 1) — không timer riêng.
+  const { data: alertCounts } = useOpsSnapshot(effectiveDrawId, isSettled, (s) => s.alertCounts);
 
   if (drawNotFound || noDrawAvailable)
     return (
@@ -102,14 +114,21 @@ function OperationsContent() {
             <Dice5 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Bingo 18 — Vận hành</h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Bingo 18 — Vận hành
+            </h1>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay (~160 kỳ/ngày)</p>
-              {isActiveForRefresh ? <LastUpdatedBadge opsParams={opsParams} /> : null}
+              <p className="text-xs text-muted-foreground">
+                Quản lý và giám sát kỳ quay (~160 kỳ/ngày)
+              </p>
+              {isActiveForRefresh ? <LastUpdatedBadge drawId={effectiveDrawId} /> : null}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {alertCounts ? (
+            <AlertHeaderBadge counts={alertCounts} onClick={() => setTab("monitor")} />
+          ) : null}
           <DrawSelector
             draws={draws}
             selectedDrawId={effectiveDrawId}
@@ -126,17 +145,32 @@ function OperationsContent() {
       {/* Create draw dialog */}
       <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
-      {/* Zone 1: Draw management — command center + dialogs */}
-      <DrawManagementSection />
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="gap-6">
+        <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
+          <TabsTrigger value="monitor" className="gap-1.5">
+            <Activity className="size-4 text-emerald-500" />
+            Giám sát
+          </TabsTrigger>
+          <TabsTrigger value="analysis" className="gap-1.5">
+            <BarChart3 className="size-4 text-sky-500" />
+            Phân tích cược
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Zone 2: KPI strip */}
-      <KpiSection />
+        {/* Tab Giám sát: draw-management → Alerts (đầu tab — tín hiệu cần hành động)
+            → KPI (+Exposure chính xác 216) → Result. */}
+        <TabsContent value="monitor" className="flex flex-col gap-6">
+          <DrawManagementSection />
+          <AlertsPanel drawId={effectiveDrawId} active={tab === "monitor"} />
+          <KpiSection />
+          <ResultSection />
+        </TabsContent>
 
-      {/* Zone 3: Result + Financial — khi published/settling/settled */}
-      <ResultSection />
-
-      {/* Zone 4: Analytics — kiểu chơi, dice histogram, live feed */}
-      <AnalyticsSection />
+        {/* Tab Phân tích cược: unmount khi ở tab Giám sát (panels không render). */}
+        <TabsContent value="analysis">
+          <AnalyticsSection active={tab === "analysis"} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -162,7 +196,9 @@ function DrawNotFound({
             <Dice5 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Bingo 18 — Vận hành</h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Bingo 18 — Vận hành
+            </h1>
             <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
           </div>
         </div>

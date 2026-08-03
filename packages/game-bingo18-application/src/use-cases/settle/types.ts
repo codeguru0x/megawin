@@ -125,7 +125,7 @@ export interface ResettleContext {
    * Token sở hữu lock `bingo18:resettle:{drawId}` — sinh tại BO API cùng lúc
    * với `resettleId`, đảm bảo chỉ chủ lock mới có quyền release.
    *
-   * `FinalizeSettle` (resettle path) gọi `BusinessLockCoordinator.release()`
+   * `FinalizeSettle` (resettle path) gọi `DistributedMutex.release()`
    * với token này để giải phóng lock idempotent (race-safe).
    */
   lockOwnerToken: string;

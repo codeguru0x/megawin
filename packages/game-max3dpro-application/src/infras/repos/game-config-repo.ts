@@ -3,6 +3,7 @@ import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type {
   FinancialRates,
   Max3dproPrizeConfig,
+  OpsConfig,
   PlayRules,
   GlobalConfigEntity,
 } from "@megawin/game-max3dpro/entities";
@@ -33,7 +34,8 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
   /**
    * Upsert global config — chỉ update các fields được truyền vào.
    *
-   * Idempotent — $setOnInsert đảm bảo không tạo trùng.
+   * Filter `{ scope: Global }` là equality clause thuần → Mongo tự điền `scope`
+   * vào doc mới khi insert (không cần lặp lại trong `$setOnInsert`).
    * `$inc: { version: 1 }` để optimistic concurrency.
    */
   async upsertGlobalConfig(
@@ -41,6 +43,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
       rates: FinancialRates;
       defaultPrizes: Max3dproPrizeConfig;
       play: PlayRules;
+      ops: OpsConfig;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -49,6 +52,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     if (config.rates) $set.rates = config.rates;
     if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
     if (config.play) $set.play = config.play;
+    if (config.ops) $set.ops = config.ops;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },
@@ -56,7 +60,6 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
         $set,
         $inc: { version: 1 },
         $setOnInsert: {
-          scope: GameConfigScope.Global,
           tenantId: null,
           createdAt: now,
         },

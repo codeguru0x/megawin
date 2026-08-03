@@ -27,7 +27,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
     const { drawId } = input;
     const limit = Math.min(input.limit ?? Pagination.Report.Size, Pagination.Report.Max);
 
-    const draw = await this.drawRepo.getDrawById(drawId);
+    const draw = await this.drawRepo.existsByDrawId(drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${drawId} không tồn tại.`);
     }

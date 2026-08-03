@@ -8,15 +8,13 @@ import type {
   SumTotalPrizes,
   BigSmallDrawPrizes,
   PlayRules,
+  OpsConfig,
 } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
 import { GameConfigMapper } from "../mappers/game-config-mapper";
 import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
 
-export class GameConfigRepository extends BaseRepo<
-  GlobalConfigEntity,
-  GameConfigMapper
-> {
+export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {
     super({
       collName: Bingo18Collections.GameConfigs,
@@ -31,8 +29,11 @@ export class GameConfigRepository extends BaseRepo<
   }
 
   /**
-   * Upsert global config. Uses $setOnInsert for immutable fields,
-   * $set for mutable fields. Increments version on each update.
+   * Upsert global config. Filter `{ scope: Global }` là equality clause thuần
+   * → Mongo tự điền `scope` vào doc mới khi insert (không cần lặp lại trong
+   * `$setOnInsert`). $setOnInsert chỉ cần các field KHÔNG có trong filter
+   * (`tenantId`, `createdAt`) — immutable, chỉ đặt lần đầu. $set cho mutable
+   * fields. Increments version on each update.
    */
   async upsertGlobalConfig(
     config: Partial<{
@@ -43,7 +44,8 @@ export class GameConfigRepository extends BaseRepo<
       sumTotalPrizes: SumTotalPrizes;
       bigSmallDrawPrizes: BigSmallDrawPrizes;
       play: PlayRules;
-    }>
+      ops: OpsConfig;
+    }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
@@ -55,6 +57,7 @@ export class GameConfigRepository extends BaseRepo<
     if (config.sumTotalPrizes) $set.sumTotalPrizes = config.sumTotalPrizes;
     if (config.bigSmallDrawPrizes) $set.bigSmallDrawPrizes = config.bigSmallDrawPrizes;
     if (config.play) $set.play = config.play;
+    if (config.ops) $set.ops = config.ops;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },
@@ -62,12 +65,11 @@ export class GameConfigRepository extends BaseRepo<
         $set,
         $inc: { version: 1 },
         $setOnInsert: {
-          scope: GameConfigScope.Global,
           tenantId: null,
           createdAt: now,
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
   }
 }

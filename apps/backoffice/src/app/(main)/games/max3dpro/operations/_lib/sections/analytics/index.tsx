@@ -1,15 +1,16 @@
 "use client";
 
 /**
- * Max 3D Pro Operations — Analytics Section
+ * Max 3D Pro Operations — Analytics Section (tab Phân tích cược)
  *
- * Block tổng hợp toàn bộ phân tích cược:
- * - PlayModeCard: phân bổ kiểu chơi (multiNumber + multiDigit)
- * - TripletHeatmap: top N bộ ba số phổ biến + cặp đôi phổ biến nhất
- * - LiveFeed: cược gần nhất real-time
+ * Thứ tự panel (rủi ro TRƯỚC, monitoring SAU):
+ *   1. PlayTypeCard — 2 nhóm (multiNumber/multiDigit).
+ *   2. PairTable (RỦI RO SỐ 1 — liability ĐB per-cặp) + TopTripletsCard.
+ *   3. RiskCluster — [Top người chơi | Top phải trả (ước tính)].
+ *   4. [Live feed (rộng) | Đại lý (hẹp)].
  *
- * Max 3D Pro specific: 2 play modes (multiNumber + multiDigit),
- * triplet-based (000-999), cặp đôi TripletPair là đơn vị cược cơ bản.
+ * Data: TOÀN BỘ từ snapshot (timer 1) qua `select` slice + adapters — KHÔNG aggregation
+ * on-demand. Live feed là timer 2, CHỈ chạy khi tab này mở && kỳ chưa settle.
  */
 
 import { useMemo } from "react";
@@ -18,20 +19,19 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayMode } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_PLAY_MODE_LABELS } from "@megawin/game-max3dpro/labels";
 
-import type { LiveFeedEntry, PlayTypeRow, TenantRow, TripletFreq } from "../../types";
-import { useDrawContext } from "../../use-draw-context";
 import {
-  useOpsLiveEntries,
-  useOpsPlayTypeDistribution,
-  useOpsTenantBreakdown,
-  useOpsTopCombos,
-  useOpsTripletFrequency,
-} from "../../use-operations";
-import { PlayModeCard, TenantBreakdown } from "./analytics-panels";
+  toPairRows,
+  toPlayTypeRows,
+  toTenantRows,
+  toTopAccounts,
+  toTopPotential,
+  toTopTriplets,
+} from "../../adapters";
+import type { LiveFeedEntry } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import { useOpsLiveEntries, useOpsSnapshot } from "../../use-operations";
 import { LiveFeed } from "./live-feed";
-import { TripletHeatmap } from "./triplet-heatmap";
-
-// ─── Label maps ───────────────────────────────────────────────────────────────
+import { PairTable, PlayTypeCard, RiskCluster, TenantPanel, TopTripletsCard } from "./panels";
 
 const ANALYTICS_SHOW = new Set<string>([
   DrawStatus.SalesOpen,
@@ -41,103 +41,86 @@ const ANALYTICS_SHOW = new Set<string>([
   DrawStatus.Settled,
 ]);
 
-// ─── Component ────────────────────────────────────────────────────────────────
+/**
+ * @param active - Tab Phân tích đang mở → bật timer live-feed. Tab đóng → 0 request.
+ */
+export function AnalyticsSection({ active }: { active: boolean }) {
+  const { draw, effectiveDrawId, isSettled } = useDrawContext();
 
-export function AnalyticsSection() {
-  const { draw, effectiveDrawId, isSettled, opsParams } = useDrawContext();
+  // Slice snapshot → view models (adapter thuần trong select — 304 giữ reference → 0 re-render).
+  const { data: view } = useOpsSnapshot(effectiveDrawId, isSettled, (s) =>
+    s.stats
+      ? {
+          playTypes: toPlayTypeRows(s.stats),
+          topTriplets: toTopTriplets(s.stats),
+          pairRows: s.exposure ? toPairRows(s.exposure, s.thresholds) : [],
+          tenants: toTenantRows(s.stats),
+          topAccounts: toTopAccounts(s.topAccounts),
+          topPotential: toTopPotential(s.stats),
+          thresholds: s.thresholds,
+        }
+      : null,
+  );
 
-  const { data: playtypeData } = useOpsPlayTypeDistribution(opsParams, isSettled);
-  const { data: tenantData } = useOpsTenantBreakdown(opsParams, isSettled);
-  const { data: freqData } = useOpsTripletFrequency(opsParams, isSettled);
-  const { data: topCombosData } = useOpsTopCombos(effectiveDrawId, isSettled);
-  const { data: liveData } = useOpsLiveEntries(effectiveDrawId, isSettled);
-
-  // ── Adapters: API data → UI types ─────────────────────────────────────────
-
-  const playTypes: PlayTypeRow[] = useMemo(() => {
-    if (!playtypeData) return [];
-    const totalLines = playtypeData.distribution.reduce((a: number, d: { lineCount: number }) => a + d.lineCount, 0);
-    return playtypeData.distribution.map(
-      (d: { playMode: string; entryCount: number; lineCount: number; revenue: number; avgPairsPerEntry?: number }) => ({
-        playMode: d.playMode as PlayMode,
-        label: MAX3DPRO_PLAY_MODE_LABELS[d.playMode as PlayMode] ?? d.playMode,
-        entries: d.entryCount,
-        lines: d.lineCount,
-        revenue: d.revenue,
-        pct: totalLines > 0 ? (d.lineCount / totalLines) * 100 : 0,
-        avgPairsPerEntry: d.avgPairsPerEntry ?? 0,
-      }),
-    );
-  }, [playtypeData]);
-
-  const tenants: TenantRow[] = useMemo(() => {
-    if (!tenantData) return [];
-    const totalRevenue = tenantData.tenants.reduce((a: number, t: { revenue: number }) => a + t.revenue, 0);
-    return tenantData.tenants.map((t) => ({
-      tenantId: t.tenantId,
-      tenantName: t.tenantId,
-      entries: t.entries,
-      lines: t.betUnits,
-      revenue: t.revenue,
-      commission: t.commission,
-      pct: totalRevenue > 0 ? (t.revenue / totalRevenue) * 100 : 0,
-    }));
-  }, [tenantData]);
-
-  const triplets: TripletFreq[] = useMemo(() => {
-    if (!freqData) return [];
-    return freqData.triplets.map((f: { triplet: string; count: number; revenue: number }) => ({
-      triplet: f.triplet,
-      count: f.count,
-      revenue: f.revenue,
-    }));
-  }, [freqData]);
+  // Timer 2: live feed — CHỈ khi tab Phân tích mở && kỳ chưa settle.
+  const { data: liveData } = useOpsLiveEntries(effectiveDrawId, active && !isSettled);
 
   const liveFeed: LiveFeedEntry[] = useMemo(() => {
     if (!liveData) return [];
-    return liveData.entries.map(
-      (e: {
-        entryId: string;
-        createdAt: string;
-        boards: Array<{
-          playMode: string;
-          triplets: string[];
-          lineCount: number;
-          betCount?: number;
-        }>;
-        amount: number;
-        username?: string;
-        tenantId: string;
-      }) => {
-        const firstBoard = e.boards[0];
-        const playMode = (firstBoard?.playMode ?? PlayMode.MultiNumber) as PlayMode;
-        return {
-          entryId: e.entryId.slice(-6).toUpperCase(),
-          time: e.createdAt,
-          playMode,
-          playModeLabel: MAX3DPRO_PLAY_MODE_LABELS[playMode] ?? playMode,
-          triplets: firstBoard?.triplets ?? [],
-          lineCount: firstBoard?.lineCount ?? 1,
-          betCount: firstBoard?.betCount ?? 1,
-          amount: e.amount,
-          username: e.username ?? "",
-          tenant: e.tenantId,
-        };
-      },
-    );
+    return liveData.entries.map((e) => {
+      const firstBoard = e.boards[0];
+      const playMode = (firstBoard?.playMode ?? PlayMode.MultiNumber) as PlayMode;
+      return {
+        entryId: e.entryId,
+        time: e.createdAt,
+        playMode,
+        playModeLabel: MAX3DPRO_PLAY_MODE_LABELS[playMode] ?? playMode,
+        triplets: firstBoard?.triplets ?? [],
+        lineCount: firstBoard?.lineCount ?? 1,
+        betCount: firstBoard?.betCount ?? 1,
+        amount: e.amount,
+        username: e.username ?? "",
+        tenant: e.tenantId,
+      };
+    });
   }, [liveData]);
 
   if (!draw || !ANALYTICS_SHOW.has(draw.status)) return null;
 
+  if (!view) {
+    return (
+      <p className="rounded-xl border border-dashed bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
+        Chưa có dữ liệu cược cho kỳ này.
+      </p>
+    );
+  }
+
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
+      {/* 1. Phân bổ kiểu chơi */}
+      <PlayTypeCard playTypes={view.playTypes} />
 
-      <PlayModeCard distribution={playTypes} />
+      {/* 2. Rủi ro: cặp plus (số 1) + bộ ba bị dồn */}
+      <div className="grid items-start gap-4 @[64rem]/main:grid-cols-2">
+        <PairTable rows={view.pairRows} />
+        <TopTripletsCard rows={view.topTriplets} />
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
-        <TripletHeatmap triplets={triplets} pairCombos={topCombosData?.pairCombos} tenants={tenants} />
-        <LiveFeed entries={liveFeed} isSettled={isSettled} />
+      {/* 3. Cụm rủi ro người chơi */}
+      <RiskCluster
+        drawId={effectiveDrawId}
+        topAccounts={view.topAccounts}
+        topPotential={view.topPotential}
+      />
+
+      {/* 4. [Live feed (rộng) | Đại lý (hẹp)] */}
+      <div className="grid items-start gap-4 @[64rem]/main:[grid-template-columns:1fr_24rem]">
+        <LiveFeed
+          entries={liveFeed}
+          isSettled={isSettled}
+          largeBetThreshold={view.thresholds.largeBetAmount}
+        />
+        <TenantPanel tenants={view.tenants} />
       </div>
     </section>
   );

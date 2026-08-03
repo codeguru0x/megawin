@@ -1,4 +1,5 @@
 import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
+import { KenoOpsAlertType } from "@megawin/game-keno/entities";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -19,7 +20,10 @@ const ratesSchema = z
 const matchPrizesSchema = z.record(z.coerce.number().int().nonnegative(), nonNegativeInt);
 
 const basicPrizesSchema = z
-  .record(z.string().regex(/^pick([1-9]|10)$/, 'Key phải là "pick1" đến "pick10"'), matchPrizesSchema)
+  .record(
+    z.string().regex(/^pick([1-9]|10)$/, 'Key phải là "pick1" đến "pick10"'),
+    matchPrizesSchema,
+  )
   .refine((data) => Object.keys(data).length > 0, {
     message: "Phải có ít nhất 1 bậc chơi.",
   });
@@ -68,7 +72,10 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: z.number().int().min(1, "Tối thiểu 1"),
     maxBetCount: z.number().int().min(1, "Tối thiểu 1"),
-    maxBasicBoardsPerTicket: positiveInt.max(KENO_MAX_BOARDS, `Số board tối đa không được vượt ${KENO_MAX_BOARDS}.`),
+    maxBasicBoardsPerTicket: positiveInt.max(
+      KENO_MAX_BOARDS,
+      `Số board tối đa không được vượt ${KENO_MAX_BOARDS}.`,
+    ),
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,
     drawIntervalMinutes: positiveInt,
@@ -87,6 +94,53 @@ const playSchema = z
     { message: "maxBetCount phải ≥ minBetCount", path: ["maxBetCount"] },
   );
 
+// ─────── Operations & Risk Control (§3.9) ───────
+
+const pct = z.number().int().min(0).max(100);
+
+/** Bật/tắt từng loại alert — khoá theo `KenoOpsAlertType`. */
+const alertEnabledSchema = z
+  .object(
+    Object.fromEntries(Object.values(KenoOpsAlertType).map((t) => [t, z.boolean()])) as Record<
+      KenoOpsAlertType,
+      z.ZodBoolean
+    >,
+  )
+  .partial();
+
+const opsAlertsSchema = z
+  .object({
+    largeBetAmount: positiveInt,
+    exposureWarnPct: pct,
+    sidebetSkewPct: pct,
+    comboSetsWarn: z
+      .object({
+        pick8: positiveInt,
+        pick9: positiveInt,
+        pick10: positiveInt,
+      })
+      .partial(),
+    comboAccountsWarn: positiveInt,
+    enabled: alertEnabledSchema,
+  })
+  .partial();
+
+const opsStatsSchema = z
+  .object({
+    tickSeconds: z.number().int().min(5).max(60),
+    topCombosK: z.number().int().min(20).max(200),
+    topPotentialK: z.number().int().min(20).max(100),
+    topAccountsK: z.number().int().min(20).max(100),
+  })
+  .partial();
+
+const opsSchema = z
+  .object({
+    alerts: opsAlertsSchema,
+    stats: opsStatsSchema,
+  })
+  .partial();
+
 // ─────── Root schema ───────
 
 export const updateKenoGameConfigSchema = z
@@ -97,9 +151,16 @@ export const updateKenoGameConfigSchema = z
     evenOddPrizes: evenOddPrizesSchema.optional(),
     payoutCaps: payoutCapsSchema.optional(),
     play: playSchema.optional(),
+    ops: opsSchema.optional(),
   })
   .refine(
     (data) =>
-      data.rates || data.basicPrizes || data.bigSmallPrizes || data.evenOddPrizes || data.payoutCaps || data.play,
+      data.rates ||
+      data.basicPrizes ||
+      data.bigSmallPrizes ||
+      data.evenOddPrizes ||
+      data.payoutCaps ||
+      data.play ||
+      data.ops,
     { message: "Phải cung cấp ít nhất một section để cập nhật." },
   );

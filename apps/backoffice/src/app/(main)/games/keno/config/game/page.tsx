@@ -1,12 +1,13 @@
 "use client";
 
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { Dices, Percent, Settings2, Shield, Trophy } from "lucide-react";
+import { Activity, Dices, Percent, Settings2, Shield, Trophy } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { OpsSection } from "./_lib/ops-section";
 import { PayoutCapsSection } from "./_lib/payout-caps-section";
 import { PlayRulesSection } from "./_lib/play-rules-section";
 import { PrizesSection } from "./_lib/prizes-section";
@@ -31,7 +32,7 @@ export default function KenoConfigPage() {
 
   const [tab, setTab] = useQueryState(
     "tab",
-    parseAsStringEnum(["prizes", "sidebets", "caps", "rates", "play"]).withDefault("prizes"),
+    parseAsStringEnum(["prizes", "sidebets", "caps", "rates", "play", "ops"]).withDefault("prizes"),
   );
 
   return (
@@ -83,6 +84,10 @@ export default function KenoConfigPage() {
               <Settings2 className="size-4 text-violet-500" />
               Luật chơi
             </TabsTrigger>
+            <TabsTrigger value="ops" className="gap-1.5">
+              <Activity className="size-4 text-emerald-500" />
+              Vận hành
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="prizes" className="mt-2">
@@ -103,6 +108,10 @@ export default function KenoConfigPage() {
 
           <TabsContent value="play" className="mt-2">
             <PlayRulesSection config={config} onSave={handleSave} isPending={mutation.isPending} />
+          </TabsContent>
+
+          <TabsContent value="ops" className="mt-2">
+            <OpsSection config={config} onSave={handleSave} isPending={mutation.isPending} />
           </TabsContent>
         </Tabs>
       )}

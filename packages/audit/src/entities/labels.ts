@@ -60,6 +60,9 @@ export const AuditActionLabel: Record<AuditAction, string> = {
   // system
   [AUDIT_ACTIONS.system.settleFinalized]: "Hoàn tất tính thưởng",
   [AUDIT_ACTIONS.system.voidFinalized]: "Hoàn tất huỷ kỳ",
+
+  // worker
+  [AUDIT_ACTIONS.worker.setEnabled]: "Bật/tắt worker",
 };
 
 /** Nhãn tiếng Việt cho từng nhóm action. */
@@ -71,6 +74,7 @@ export const AuditCategoryLabel: Record<AuditCategory, string> = {
   [AuditCategory.Account]: "Tài khoản",
   [AuditCategory.Finance]: "Tài chính",
   [AuditCategory.System]: "Hệ thống",
+  [AuditCategory.Worker]: "Worker",
 };
 
 /** Nhãn tiếng Việt cho kết quả hành động. */
@@ -87,4 +91,5 @@ export const AuditTargetTypeLabel: Record<AuditTargetType, string> = {
   [AuditTargetType.TenantConfig]: "Cấu hình tenant",
   [AuditTargetType.Account]: "Tài khoản",
   [AuditTargetType.Tenant]: "Tenant",
+  [AuditTargetType.Worker]: "Worker",
 };

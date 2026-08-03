@@ -4,14 +4,13 @@
  * Bingo 18 – Analytics Panels
  *
  * PlayTypeCard: layout 2 cột, style card đồng nhất cho cả basic và side bets.
- *   - Trái: Basic boards (singleNum, doubleMatch, tripleMatch-specific, tripleMatch-any) — grid 2×2.
+ *   - Trái: Nhóm cơ bản (singleNum, doubleMatch, tripleMatch-specific, tripleMatch-any) — grid 2×2.
  *   - Phải: Side bets (sumTotal, bigSmallDraw) — 2 card lớn stretch full height.
  *   Cả hai cột dùng cùng card pattern: tinted bg + border + donut + KPI số.
- * TenantBreakdownCard: doanh thu / hoa hồng theo đại lý.
  */
 
 import { formatNumber } from "@megawin/shared/utils";
-import { BarChart2, Store } from "lucide-react";
+import { BarChart2 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -22,7 +21,8 @@ interface PlayTypeRow {
   playType: string;
   label: string;
   entries: number;
-  selections: number;
+  /** Σ betCount — số bộ cược (KHÔNG phải số board). */
+  sets: number;
   pct: number;
 }
 
@@ -146,7 +146,7 @@ function MiniDonut({ pct, fill, size }: { pct: number; fill: string; size: numbe
 function BasicCard({ row }: { row: PlayTypeRow }) {
   const s = BASIC_STYLES[row.playType];
   if (!s) return null;
-  const isEmpty = row.selections === 0;
+  const isEmpty = row.sets === 0;
 
   return (
     <div
@@ -165,7 +165,7 @@ function BasicCard({ row }: { row: PlayTypeRow }) {
         <MiniDonut pct={row.pct} fill={s.fill} size={32} />
       </div>
       <p className="text-xs font-bold tabular-nums text-foreground leading-tight">
-        {formatNumber(row.selections)} lượt
+        {formatNumber(row.sets)} bộ
       </p>
       <p className="text-xs text-muted-foreground tabular-nums leading-none">
         {formatNumber(row.entries)} entries
@@ -193,8 +193,8 @@ function SideBetCard({ row }: { row: PlayTypeRow }) {
       <div className="flex items-center gap-3 flex-1">
         <div className="flex-1 min-w-0">
           <p className="text-base font-bold tabular-nums text-foreground leading-tight">
-            {formatNumber(row.selections)}
-            <span className="text-xs font-normal text-muted-foreground ml-1">lượt</span>
+            {formatNumber(row.sets)}
+            <span className="text-xs font-normal text-muted-foreground ml-1">bộ</span>
           </p>
           <p className="text-xs text-muted-foreground tabular-nums mt-1">
             <span className="font-semibold text-foreground">{formatNumber(row.entries)}</span>{" "}
@@ -219,7 +219,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
         playType: pt,
         label: BASIC_STYLES[pt]?.label ?? pt,
         entries: 0,
-        selections: 0,
+        sets: 0,
         pct: 0,
       },
   );
@@ -230,12 +230,12 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
         playType: pt,
         label: SIDE_BET_STYLES[pt]?.label ?? pt,
         entries: 0,
-        selections: 0,
+        sets: 0,
         pct: 0,
       },
   );
 
-  const totalSelections = playTypes.reduce((a, r) => a + r.selections, 0);
+  const totalSets = playTypes.reduce((a, r) => a + r.sets, 0);
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
@@ -253,8 +253,8 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
-            <span className="font-semibold text-foreground">{formatNumber(totalSelections)}</span>
-            <span>lượt</span>
+            <span className="font-semibold text-foreground">{formatNumber(totalSets)}</span>
+            <span>bộ</span>
           </div>
         </div>
       </CardHeader>
@@ -267,7 +267,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
             {/* ── Cột trái: Basic boards grid 2×2 ── */}
             <div className="flex flex-col gap-2">
               <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">
-                Cơ bản — Boards
+                Cơ bản — Số bộ cược
               </p>
               <div className="flex-1 grid grid-cols-2 auto-rows-fr gap-2">
                 {basics.map((row) => (
@@ -286,89 +286,6 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
                   <SideBetCard key={row.playType} row={row} />
                 ))}
               </div>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── Tenant Breakdown ──────────────────────────────────────────────────────────
-
-interface TenantRow {
-  tenantId: string;
-  entries: number;
-  boards: number;
-  players: number;
-  revenue: number;
-  commission: number;
-  pct: number;
-}
-
-export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
-  const maxRevenue = Math.max(...tenants.map((t) => t.revenue), 1);
-
-  return (
-    <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
-            <Store className="size-3.5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <div>
-            <CardTitle className="text-sm font-semibold">Phân tích theo đại lý</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Doanh thu · Hoa hồng · Người chơi
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
-        {tenants.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
-        ) : (
-          <div className="rounded-xl border overflow-hidden">
-            <div
-              className="grid gap-x-2 px-3 py-2 bg-muted/40 border-b text-xs font-medium text-muted-foreground uppercase tracking-wider"
-              style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
-            >
-              <span>Đại lý</span>
-              <span className="text-right">Entries</span>
-              <span className="text-right">Người chơi</span>
-              <span className="text-right">Doanh thu</span>
-            </div>
-            <div className="divide-y divide-border/50 max-h-70 overflow-y-auto">
-              {tenants.map((t, i) => (
-                <div
-                  key={t.tenantId}
-                  className="relative grid gap-x-2 px-3 py-2.5 items-center hover:bg-muted/20 transition-colors"
-                  style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
-                >
-                  <div
-                    className="absolute inset-y-0 left-0 bg-green-500/5 dark:bg-green-400/5 rounded-r-sm"
-                    style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
-                  />
-                  <div className="relative flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">
-                      {i + 1}
-                    </span>
-                    <span className="text-sm font-medium truncate">{t.tenantId}</span>
-                    <span className="text-xs text-muted-foreground/50 shrink-0">
-                      {t.pct.toFixed(0)}%
-                    </span>
-                  </div>
-                  <span className="relative text-right tabular-nums text-sm">
-                    {formatNumber(t.entries)}
-                  </span>
-                  <span className="relative text-right tabular-nums text-sm text-muted-foreground">
-                    {formatNumber(t.players)}
-                  </span>
-                  <span className="relative text-right tabular-nums text-sm font-medium">
-                    {formatNumber(t.revenue)}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
         )}

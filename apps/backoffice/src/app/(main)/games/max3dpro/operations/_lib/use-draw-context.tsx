@@ -18,7 +18,7 @@ import { createContext, type ReactNode, useCallback, useContext } from "react";
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { useQueryState } from "nuqs";
 
-import { type DrawSelectorItem, type OpsQueryParams, useDrawDetail, useDrawSelectorList } from "./use-operations";
+import { type DrawSelectorItem, useDrawDetail, useDrawSelectorList } from "./use-operations";
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -29,8 +29,6 @@ interface DrawContextValue {
   draw: DrawSelectorItem | undefined;
   /** Draw ID hiệu lực (sau khi auto-select). */
   effectiveDrawId: string;
-  /** Params cho các analytics queries. */
-  opsParams: OpsQueryParams;
   /** Kỳ đã settle. */
   isSettled: boolean;
   /** Kỳ đã void. */
@@ -115,11 +113,6 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isActiveForRefresh = !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
-  const opsParams: OpsQueryParams = {
-    drawId: effectiveDrawId,
-    financialDate: draw?.financialDate ?? remoteDraw?.financialDate ?? remoteDraw?.drawDate,
-  };
-
   const onSelectDraw = useCallback(
     (drawId: string) => {
       // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
@@ -134,7 +127,6 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     draws,
     draw,
     effectiveDrawId,
-    opsParams,
     isSettled,
     isVoided,
     isActiveForRefresh,

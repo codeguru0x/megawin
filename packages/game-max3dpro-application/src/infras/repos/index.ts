@@ -23,3 +23,8 @@ export { SystemOutstandingRepo } from "./system-outstanding-repo";
 
 // ── Transaction Coordinators ─────────────────────────────────────────
 export { PlaceBetStore } from "./place-bet-store";
+export { BettingStatsRepository } from "./betting-stats-repo";
+export { PairStatsRepository } from "./pair-stats-repo";
+export { PairAccountsRepository } from "./pair-accounts-repo";
+export { AccountStatsRepository } from "./account-stats-repo";
+export { OpsAlertRepository } from "./ops-alert-repo";

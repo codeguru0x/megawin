@@ -1,52 +1,44 @@
 "use client";
 
 /**
- * Bingo 18 Operations — Analytics Section
+ * Bingo 18 Operations — Analytics Section (tab Phân tích cược)
  *
- * PlayTypeCard: phân bổ 5 kiểu chơi (singleNum/doubleMatch/tripleMatch + sumTotal/bigSmallDraw).
- * DiceHistogram: tần suất 6 mặt xúc xắc + top side-bet combos.
- * TenantBreakdown: doanh thu theo đại lý.
- * LiveFeed: cược gần nhất real-time.
+ * Thứ tự panel (guideline §5 — rủi ro TRƯỚC, monitoring SAU):
+ *   1. PlayTypeCard — phân bổ 6 nhóm kiểu chơi (tripleMatch tách specific/any).
+ *   2. DiceBoard (6 ô, thuần hiển thị) + SumTotalBar (16 cột) + SideBetCard (3 hướng).
+ *   3. RiskCluster — [Top người chơi | Top phải trả tiềm năng].
+ *   4. [Live feed (rộng) | Đại lý (hẹp)].
  *
- * Bingo 18 khác Keno:
- * - 5 kiểu chơi (3 basic + 2 side bet)
- * - Histogram 6 giá trị (1-6) thay vì heatmap 80 số
- * - Top combos là side-bet (sumTotal / bigSmallDraw) thay vì basic number
+ * Data: TOÀN BỘ từ snapshot (timer 1) qua `select` slice + adapters — KHÔNG aggregation
+ * on-demand. Live feed là timer 2, CHỈ chạy khi tab này mở && kỳ chưa settle.
  */
 
 import { useMemo } from "react";
 
 import { BINGO18_BASIC_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
-import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
-import type {
-  DiceFrequencyItem,
-  LiveEntryItem,
-  PlayTypeDistributionItem,
-  TenantBreakdownItem,
-} from "@megawin/game-bingo18-application/use-cases/operations";
+import type { LiveEntryItem } from "@megawin/game-bingo18-application/use-cases/operations";
 import { DrawStatus } from "@megawin/game-core/entities";
 
-import type { LiveFeedEntry, TenantRow } from "../../types";
-import { useDrawContext } from "../../use-draw-context";
 import {
-  useOpsDiceFrequency,
-  useOpsLiveEntries,
-  useOpsPlayTypeDistribution,
-  useOpsTenantBreakdown,
-  useOpsTopCombos,
-} from "../../use-operations";
+  toDiceCells,
+  toPlayTypeRows,
+  toSideBetSplit,
+  toSumBars,
+  toTenantRows,
+  toTopAccounts,
+  toTopPotential,
+} from "../../adapters";
+import type { LiveFeedEntry } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import { useOpsLiveEntries, useOpsSnapshot } from "../../use-operations";
 import { PlayTypeCard } from "./analytics-panels";
-import { DiceHistogram } from "./dice-histogram";
+import { DiceBoard } from "./dice-histogram";
 import { LiveFeed } from "./live-feed";
+import { RiskCluster } from "./risk-cluster";
+import { SideBetCard, SumTotalBar } from "./sum-side-panels";
+import { TenantPanel } from "./tenant-panel";
 
-/** Compound key labels for tripleMatch subtypes in analytics */
-const BINGO18_ANALYTICS_LABELS: Record<string, string> = {
-  ...BINGO18_PLAY_TYPE_LABELS,
-  "tripleMatch-specific": BINGO18_TRIPLE_KIND_LABELS["specific"],
-  "tripleMatch-any": BINGO18_TRIPLE_KIND_LABELS["any"],
-};
-
-const ANALYTICS_SHOW = new Set([
+const ANALYTICS_SHOW = new Set<string>([
   DrawStatus.SalesOpen,
   DrawStatus.SalesClosed,
   DrawStatus.Published,
@@ -54,61 +46,32 @@ const ANALYTICS_SHOW = new Set([
   DrawStatus.Settled,
 ]);
 
-export function AnalyticsSection() {
-  const { draw, effectiveDrawId, isSettled, opsParams } = useDrawContext();
+/**
+ * @param active - Tab Phân tích đang mở → bật timer live-feed. Tab đóng → 0 request.
+ */
+export function AnalyticsSection({ active }: { active: boolean }) {
+  const { draw, effectiveDrawId, isSettled } = useDrawContext();
 
-  const { data: playtypeData } = useOpsPlayTypeDistribution(opsParams, isSettled);
-  const { data: tenantData } = useOpsTenantBreakdown(opsParams, isSettled);
-  const { data: freqData } = useOpsDiceFrequency(opsParams, isSettled);
-  const { data: topCombosData } = useOpsTopCombos(effectiveDrawId, isSettled);
-  const { data: liveData } = useOpsLiveEntries(effectiveDrawId, isSettled);
+  // Slice snapshot → view models (adapter thuần chạy trong select — chỉ tính lại khi
+  // snapshot data đổi; 304 giữ reference → 0 re-render). `topAccounts` là field CẤP
+  // SNAPSHOT (derive từ bingo18_draw_account_stats, p0-03), KHÔNG phải `s.stats.topAccounts`.
+  const { data: view } = useOpsSnapshot(effectiveDrawId, isSettled, (s) =>
+    s.stats
+      ? {
+          playTypes: toPlayTypeRows(s.stats),
+          diceCells: toDiceCells(s.stats),
+          sumBars: toSumBars(s.stats),
+          sideBetSplit: toSideBetSplit(s.stats),
+          tenants: toTenantRows(s.stats),
+          topAccounts: toTopAccounts(s.topAccounts),
+          topPotential: toTopPotential(s.stats),
+          thresholds: s.thresholds,
+        }
+      : null,
+  );
 
-  // ── Adapters ────────────────────────────────────────────────────────────────
-
-  const playTypes = useMemo(() => {
-    if (!playtypeData) return [];
-    const totalSelections = playtypeData.distribution.reduce(
-      (a: number, d: PlayTypeDistributionItem) => a + d.selectionCount,
-      0,
-    );
-    return playtypeData.distribution.map((d: PlayTypeDistributionItem) => {
-      // Key hoá riêng tripleMatch-specific vs tripleMatch-any
-      const key = d.playType === "tripleMatch" && d.tripleKind ? `tripleMatch-${d.tripleKind}` : d.playType;
-      return {
-        playType: key,
-        label: BINGO18_ANALYTICS_LABELS[key] ?? d.playType,
-        entries: d.entryCount,
-        selections: d.selectionCount,
-        pct: totalSelections > 0 ? (d.selectionCount / totalSelections) * 100 : 0,
-      };
-    });
-  }, [playtypeData]);
-
-  const tenants: TenantRow[] = useMemo(() => {
-    if (!tenantData) return [];
-    const totalRevenue = tenantData.tenants.reduce((a: number, t: TenantBreakdownItem) => a + t.revenue, 0);
-    return tenantData.tenants.map((t: TenantBreakdownItem) => ({
-      tenantId: t.tenantId,
-      entries: t.entries,
-      boards: t.boards,
-      players: t.players,
-      revenue: t.revenue,
-      commission: t.commission,
-      pct: totalRevenue > 0 ? (t.revenue / totalRevenue) * 100 : 0,
-    }));
-  }, [tenantData]);
-
-  // Dice frequency: 6 giá trị (1-6)
-  const diceFreq = useMemo(() => {
-    if (!freqData) return [];
-    return freqData.dice.map((f: DiceFrequencyItem) => ({
-      diceValue: f.diceValue,
-      count: f.count,
-      entries: f.entries,
-    }));
-  }, [freqData]);
-
-  const topCombos = useMemo(() => topCombosData?.combos ?? [], [topCombosData]);
+  // Timer 2: live feed — CHỈ khi tab Phân tích mở && kỳ chưa settle.
+  const { data: liveData } = useOpsLiveEntries(effectiveDrawId, active && !isSettled);
 
   const liveEntries: LiveFeedEntry[] = useMemo(() => {
     if (!liveData) return [];
@@ -118,20 +81,22 @@ export function AnalyticsSection() {
       const rawType = firstBoard?.playType ?? "unknown";
       // Key hoá tripleMatch theo tripleKind
       const playType =
-        rawType === "tripleMatch" && firstBoard ? `tripleMatch-${(firstBoard as any).tripleKind ?? "any"}` : rawType;
+        rawType === "tripleMatch" && firstBoard
+          ? `tripleMatch-${(firstBoard as any).tripleKind ?? "any"}`
+          : rawType;
       return {
         entryId: e.entryId,
         time: e.createdAt,
         playType,
-        // singleNum/doubleMatch có number; tripleMatch-specific có number; else []
         numbers:
-          firstBoard && BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) && (firstBoard as any).number !== undefined
+          firstBoard &&
+          BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) &&
+          (firstBoard as any).number !== undefined
             ? [(firstBoard as any).number as number]
             : [],
-        // sumTotal: sum là tổng đã chọn (3-18)
         sum: rawType === "sumTotal" ? ((firstBoard as any).sum as number | undefined) : undefined,
-        // bigSmallDraw: bet là "big" | "draw" | "small"
-        bet: rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
+        bet:
+          rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,
@@ -139,17 +104,47 @@ export function AnalyticsSection() {
     });
   }, [liveData]);
 
-  if (!draw || !ANALYTICS_SHOW.has(draw.status as any)) return null;
+  if (!draw || !ANALYTICS_SHOW.has(draw.status as string)) return null;
+
+  if (!view) {
+    return (
+      <p className="rounded-xl border border-dashed bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
+        Chưa có dữ liệu cược cho kỳ này.
+      </p>
+    );
+  }
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
+      {/* 1. Phân bổ kiểu chơi */}
+      <PlayTypeCard playTypes={view.playTypes} />
 
-      <PlayTypeCard playTypes={playTypes} />
+      {/* 2. Bảng xúc xắc 6 ô + phân bổ Cộng tổng + Lớn/Hòa/Nhỏ */}
+      <div className="grid gap-4 @[64rem]/main:grid-cols-2">
+        <DiceBoard cells={view.diceCells} />
+        <SideBetCard split={view.sideBetSplit} skewPct={view.thresholds.sidebetSkewPct} />
+      </div>
+      <SumTotalBar
+        bars={view.sumBars}
+        concentrationThreshold={view.thresholds.bucketConcentrationAmount}
+      />
 
-      <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
-        <DiceHistogram diceFreq={diceFreq} combos={topCombos} tenants={tenants} />
-        <LiveFeed entries={liveEntries} totalCount={liveData?.totalCount ?? 0} isSettled={isSettled} />
+      {/* 3. Cụm rủi ro — TRƯỚC monitoring (guideline §5) */}
+      <RiskCluster
+        drawId={effectiveDrawId}
+        topAccounts={view.topAccounts}
+        topPotential={view.topPotential}
+      />
+
+      {/* 4. [Live feed (rộng) | Đại lý (hẹp)] */}
+      <div className="grid items-start gap-4 @[64rem]/main:[grid-template-columns:1fr_24rem]">
+        <LiveFeed
+          entries={liveEntries}
+          totalCount={liveData?.totalCount ?? 0}
+          isSettled={isSettled}
+          largeBetThreshold={view.thresholds.largeBetAmount}
+        />
+        <TenantPanel tenants={view.tenants} />
       </div>
     </section>
   );
