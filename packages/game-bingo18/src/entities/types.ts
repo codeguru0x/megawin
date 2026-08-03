@@ -10,6 +10,8 @@
  */
 
 import type { Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
+import type { OpsStatsConfigBase } from "@megawin/game-core/types";
+import type { Bingo18OpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Date helpers
@@ -147,6 +149,59 @@ export interface BigSmallDrawPrizes {
 /** Tỷ lệ tài chính – dùng trong GlobalConfigDoc.rates. */
 export interface FinancialRates {
   defaultCommissionRate: number;
+}
+
+// ─────────────────────────────────────────────
+// Operations & Risk Control Config (§3.6 analysis bingo18-ops)
+// ─────────────────────────────────────────────
+
+/**
+ * Ngưỡng cảnh báo vận hành — evaluator so mỗi tick worker (p0-04).
+ *
+ * KHÁC Keno: không có cap kỳ làm mẫu số exposure → dùng cặp
+ * `% doanh thu + sàn tuyệt đối` (chốt 30/07/2026, analysis §7 Q2).
+ */
+export interface OpsAlertsConfig {
+  /** Ngưỡng 1 entry bị coi là cược lớn (VND). Default 1.000.000. */
+  largeBetAmount: number;
+  /**
+   * Cảnh báo `exposure_threshold` khi worstCase ≥ pct% doanh thu kỳ.
+   * Đơn vị %: [100, 1000]. Default 300 = worst-case gấp 3 lần doanh thu.
+   */
+  exposureWarnRevenuePct: number;
+  /**
+   * Sàn tuyệt đối (VND): worstCase dưới mức này KHÔNG cảnh báo dù vượt % —
+   * chống noise kỳ vắng khách (revenue nhỏ → % luôn cao). Default 50.000.000.
+   */
+  exposureWarnMinAmount: number;
+  /**
+   * % lệch tối đa 1 hướng bigSmallDraw (theo amount) để cảnh báo `sidebet_skew`.
+   * Đơn vị %: [50, 95]. Default 70. LƯU Ý xác suất nền KHÔNG đối xứng
+   * (small 49,07% / draw 25% / big 25,93%).
+   */
+  sidebetSkewPct: number;
+  /**
+   * Ngưỡng tiền (VND) dồn vào 1 bucket NHÂN CAO (sumTotal 3/18, tripleMatch specific —
+   * ×120) để cảnh báo `bucket_concentration`. Default 5.000.000
+   * (5tr vào tổng 3/18 = liability 600tr nếu trúng).
+   */
+  bucketConcentrationAmount: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `Bingo18OpsAlertType` (type dẫn xuất). */
+  enabled: Record<Bingo18OpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro.
+ *
+ * KHÔNG expose cho player (allowlist DTO player không chứa `ops`).
+ * `stats` dùng {@link OpsStatsConfigBase} (KHÔNG có `topCombosK` — Bingo 18 không có
+ * khái niệm combo, 38 bucket đóng; quyết định "không cấu hình thừa" 30/07/2026).
+ */
+export interface OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-04). */
+  alerts: OpsAlertsConfig;
+  /** Nhịp worker + top-K (`OpsStatsConfigBase` từ game-core — không topCombosK). */
+  stats: OpsStatsConfigBase;
 }
 
 /** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */

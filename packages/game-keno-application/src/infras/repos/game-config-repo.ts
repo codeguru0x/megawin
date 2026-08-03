@@ -7,6 +7,7 @@ import type {
   EvenOddPrizes,
   PayoutCaps,
   PlayRules,
+  OpsConfig,
 } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
 import { GameConfigMapper } from "../mappers/game-config-mapper";
@@ -27,8 +28,11 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
   }
 
   /**
-   * Upsert global config. Uses $setOnInsert for immutable fields,
-   * $set for mutable fields. Increments version on each update.
+   * Upsert global config. Filter `{ scope: Global }` là equality clause thuần
+   * → Mongo tự điền `scope` vào doc mới khi insert (không cần lặp lại trong
+   * `$setOnInsert`). $setOnInsert chỉ cần các field KHÔNG có trong filter
+   * (`tenantId`, `createdAt`) — immutable, chỉ đặt lần đầu. $set cho mutable
+   * fields. Increments version on each update.
    */
   async upsertGlobalConfig(
     config: Partial<{
@@ -38,6 +42,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
       evenOddPrizes: EvenOddPrizes;
       payoutCaps: PayoutCaps;
       play: PlayRules;
+      ops: OpsConfig;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -49,6 +54,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     if (config.evenOddPrizes) $set.evenOddPrizes = config.evenOddPrizes;
     if (config.payoutCaps) $set.payoutCaps = config.payoutCaps;
     if (config.play) $set.play = config.play;
+    if (config.ops) $set.ops = config.ops;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },
@@ -56,7 +62,6 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
         $set,
         $inc: { version: 1 },
         $setOnInsert: {
-          scope: GameConfigScope.Global,
           tenantId: null,
           createdAt: now,
         },

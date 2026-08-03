@@ -1,0 +1,18 @@
+stats-sync:
+  handler: src/handlers/stats/stats-sync.handler
+  # Timeout 120s = lock TTL. Use case loop ~55s rồi thoát; invocation kế tiếp takeover.
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+ops-alerts:
+  handler: src/handlers/stats/ops-alerts.handler
+  # Timeout 120s = lock TTL. Đánh giá alert trên stats docs đã đổi (cursor updatedAt); lock
+  # `max3dpro:ops-alerts` độc lập với `max3dpro:stats-sync`.
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true

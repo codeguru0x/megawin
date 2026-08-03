@@ -1,0 +1,59 @@
+---
+description: Quy tắc hiển thị username người chơi trên UI backoffice (nhất quán)
+globs: apps/backoffice/**/*.tsx
+alwaysApply: false
+---
+
+# Hiển thị Username Người chơi — Backoffice
+
+Megawin username có dạng `<playerExternalId>@<tenantId>` (vd `player4@devone`). Trên backoffice
+phải hiển thị **NHẤT QUÁN** một cách duy nhất — trước đây có chỗ show raw `player4@devone` (dấu
+`@`), chỗ khác show `player4 · devone` (dấu `·`) → bất nhất, khó đọc.
+
+## Quy tắc
+
+1. **Format hiển thị chuẩn:** `<primary> · <tenantId>` — tên tài khoản sạch (bỏ suffix `@tenantId`)
+   + đại lý phía sau, phân tách bằng `·`. Tenant có thể ẩn/mờ ở chỗ chật, nhưng KHÔNG bao giờ show
+   raw dạng `@`.
+2. **KHÔNG hiển thị `accountId`** ở dòng phụ dưới username. `accountId` chỉ dùng để **dựng link**
+   (tới hồ sơ / outstanding) khi click — search & nhận diện dùng username là đủ.
+3. **Dùng component/helper chung trong UI lib, không tự parse:**
+   - `PlayerName` / `PlayerOutstandingLink` / `buildOutstandingHref` — **`@/components/player-name`**
+     (`apps/backoffice/src/components/player-name.tsx`). Component chung cho **toàn backoffice**,
+     dùng được ở mọi game (operations, reports outstanding/settle/void, jackpot…) — KHÔNG phải chỉ
+     riêng Keno ops.
+   - `PlayerOutstandingLink`/`buildOutstandingHref` nhận thêm `gameProduct` (`GameProduct` enum từ
+     `@megawin/game-core/entities/game-core.enums`) để dựng đúng link `/games/{gameProduct}/reports/outstanding`
+     — mỗi game có trang outstanding riêng cùng shape query (`draw`/`tenant`/`player`/`playerName`).
+   - Cấp thấp hơn (không cần link): `splitBackofficeUsername(username)` → `{ primary, tenantId }`
+     (từ `@megawin/shared/utils`) — dùng khi tự render custom, không qua `PlayerName`.
+4. Không dùng `toTenantUsername` trực tiếp để render rồi ghép tenant thủ công ở nhiều chỗ khác nhau —
+   dễ lệch format. Ưu tiên component/helper chung.
+
+## Ví dụ
+
+```tsx
+// ❌ SAI — raw @, lộ format Megawin, và show accountId thừa
+<span>{entry.username}</span>              // "player4@devone"
+<p className="text-xs">{entry.accountId}</p>
+
+// ✅ ĐÚNG — dùng component chung (mọi game, mọi trang backoffice)
+import { PlayerName } from "@/components/player-name";
+<PlayerName username={entry.username} accountId={entry.accountId} />  // "player4 · devone"
+
+// ✅ ĐÚNG — cần link tới outstanding player kỳ này (đúng game đang xem)
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { PlayerOutstandingLink } from "@/components/player-name";
+<PlayerOutstandingLink
+  gameProduct={GameProduct.Keno}
+  drawId={drawId}
+  accountId={p.accountId}
+  username={p.username}
+/>
+```
+
+Áp dụng cho: alert item, top risk (người chơi / phải trả), live-feed, combo lookup, outstanding/settle/void
+tables, jackpot cycles, và mọi nơi hiển thị người chơi trên backoffice — không riêng gì Keno ops.
+Khi thêm chỗ hiển thị player mới ở game/trang bất kỳ, **import từ `@/components/player-name`**,
+KHÔNG copy component riêng vào `_lib/` của game/trang đó.
+

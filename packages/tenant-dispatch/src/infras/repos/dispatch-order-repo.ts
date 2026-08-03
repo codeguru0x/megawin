@@ -1,5 +1,6 @@
 import type { AnyBulkWriteOperation, Filter, Document } from "mongodb";
 import { ObjectId } from "mongodb";
+import { isOnlyDuplicateKeyError } from "@megawin/data/mongo";
 
 import { TenantDispatchBaseRepo } from "./base-repo";
 import { DispatchOrderMapper } from "../mappers/dispatch-order-mapper";
@@ -74,12 +75,8 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<
 
     try {
       await this.insertMany(orders, { ordered: false });
-    } catch (err: any) {
-      const writeErrors = err?.writeErrors ?? [];
-      const allDuplicates = writeErrors.every(
-        (e: any) => e?.err?.code === 11000 || e?.code === 11000,
-      );
-      if (!allDuplicates) {
+    } catch (err) {
+      if (!isOnlyDuplicateKeyError(err)) {
         throw err;
       }
     }

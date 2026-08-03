@@ -87,6 +87,11 @@ export const operatorSidebarItems: NavGroup[] = [
         url: "/audit-logs",
         icon: History,
       },
+      {
+        title: "Workers",
+        url: "/system/workers",
+        icon: Activity,
+      },
     ],
   },
   {

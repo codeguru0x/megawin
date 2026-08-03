@@ -122,7 +122,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             // ── Cách chơi cơ bản (pick1-pick10): match số ──
             const playTypePrizes = config.basicPrizes[board.playType];
             const pickCount = board.numbers!.length;
-            const prizeTable = playTypePrizes ? { [String(pickCount)]: playTypePrizes } : undefined;
+            // Không có config cho playType này → bảng rỗng, lookupBasicPrize trả 0 an toàn.
+            const prizeTable = playTypePrizes ? { [String(pickCount)]: playTypePrizes } : {};
 
             const matchResult = matchBasicBoard(board.numbers!, result, prizeTable);
             boardPayouts.push({

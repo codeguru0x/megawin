@@ -6,6 +6,7 @@
  */
 
 import type { GlobalConfigDoc } from "../entities/global-config";
+import { Bingo18OpsAlertType } from "../entities/ops-alert";
 import {
   DEFAULT_SINGLE_NUM_PRIZES,
   DEFAULT_DOUBLE_MATCH_PRIZES,
@@ -108,6 +109,7 @@ export const DEFAULT_BINGO18_CONFIG: Pick<
   | "sumTotalPrizes"
   | "bigSmallDrawPrizes"
   | "play"
+  | "ops"
 > = {
   rates: {
     defaultCommissionRate: 0.2,
@@ -128,5 +130,33 @@ export const DEFAULT_BINGO18_CONFIG: Pick<
     firstDrawTime: "06:00",
     lastDrawTime: "21:53",
     timezone: "Asia/Ho_Chi_Minh",
+  },
+  /**
+   * Cấu hình vận hành mặc định (analysis bingo18-ops §3.6, ngưỡng chốt 30/07/2026).
+   * Staff chỉnh trên tab "Vận hành"; đổi có hiệu lực trong ~1 chu kỳ worker.
+   * `stats` KHÔNG có topCombosK — Bingo 18 dùng OpsStatsConfigBase (không combo).
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 1_000_000,
+      exposureWarnRevenuePct: 300,
+      exposureWarnMinAmount: 50_000_000,
+      sidebetSkewPct: 70,
+      bucketConcentrationAmount: 5_000_000,
+      enabled: {
+        [Bingo18OpsAlertType.LargeBet]: true,
+        [Bingo18OpsAlertType.ExposureThreshold]: true,
+        [Bingo18OpsAlertType.SidebetSkew]: true,
+        [Bingo18OpsAlertType.BucketConcentration]: true,
+        // Để dành — không bắn ở P0.
+        [Bingo18OpsAlertType.RevenueAnomaly]: false,
+        [Bingo18OpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 10,
+      topPotentialK: 50,
+      topAccountsK: 50,
+    },
   },
 };

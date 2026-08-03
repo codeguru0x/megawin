@@ -10,12 +10,9 @@ import type {
 import type {
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
-  OpsSummaryOutput,
-  PlayTypeDistributionOutput,
-  TenantBreakdownOutput,
-  TripletFrequencyOutput,
+  ListAlertsOutput,
 } from "@megawin/game-max3dpro-application/use-cases/operations";
 import type { GetEntryByIdOutput } from "@megawin/game-max3dpro-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
@@ -27,31 +24,22 @@ import { max3dproKeys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-max3dpro-application/use-cases/draws";
 export type {
+  AlertGroup,
   DrawSelectorItem,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
+  ListAlertsOutput,
   LiveEntryBoard,
   LiveEntryItem,
-  OpsSummaryOutput,
-  PlayTypeDistributionItem,
-  PlayTypeDistributionOutput,
-  TenantBreakdownItem,
-  TenantBreakdownOutput,
-  TopPairComboItem,
-  TripletFrequencyItem,
-  TripletFrequencyOutput,
+  SnapshotAlertCounts,
+  SnapshotThresholds,
   WinningEntriesSummary,
   WinningEntryBoard,
   WinningEntryItem,
   WinningEntryTierDetail,
 } from "@megawin/game-max3dpro-application/use-cases/operations";
-
-export interface OpsQueryParams {
-  financialDate?: string;
-  drawId?: string;
-}
 
 const BASE = "/max3dpro/operations";
 
@@ -60,7 +48,7 @@ const BASE = "/max3dpro/operations";
 // ─────────────────────────────────────────────
 
 /**
- * Preview danh sách kỳ sẽ tạo (gợi ý theo lịch T3/T5/T7 lúc 18:00).
+ * Preview danh sách kỳ sẽ tạo (gợi ý theo lịch T2/T4/T6 lúc 18:00).
  * count=0 → disabled (không gọi API).
  */
 export function usePreviewDraws(count: number) {
@@ -77,8 +65,8 @@ export function usePreviewDraws(count: number) {
 
 /**
  * Tạo nhiều kỳ quay Max 3D Pro liên tiếp.
- * Backend tự tính slot theo lịch T3/T5/T7, mỗi ngày 1 kỳ.
- * Invalidate toàn bộ cache max3dpro sau khi tạo thành công.
+ * Mỗi phần tử trong `draws` chứa drawDate, drawTime, openNow.
+ * Invalidate toàn bộ cache max3d sau khi tạo thành công.
  */
 export function useCreateDraw() {
   const qc = useQueryClient();
@@ -132,110 +120,112 @@ export function useDrawDetail(drawId: string | undefined) {
 }
 
 // ─────────────────────────────────────────────
-// Operations Analytics
+// Operations Snapshot — timer 1 duy nhất (stats + exposure + alertCounts + drawStatus)
 // ─────────────────────────────────────────────
 
 /**
- * KPI tổng quan cược: doanh thu, entries, lines (TripletPair), players, commission.
- * Refetch mỗi 30s khi kỳ đang mở bán; dừng refetch khi đã settle (dữ liệu ổn định).
- */
-export function useOpsSummary(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: max3dproKeys.opsSummary(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<OpsSummaryOutput>(`${BASE}/summary`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Phân tích doanh thu theo đại lý (tenant).
- * Refetch mỗi 30s khi kỳ đang mở bán; dừng refetch khi đã settle.
- */
-export function useOpsTenantBreakdown(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: max3dproKeys.opsTenantBreakdown(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TenantBreakdownOutput>(`${BASE}/tenants`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Tần suất bộ ba (triplet heatmap).
- * Refetch mỗi 60s khi đang active; dừng khi đã settle.
- */
-export function useOpsTripletFrequency(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: max3dproKeys.opsTripletFrequency(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TripletFrequencyOutput>(`${BASE}/triplet-frequency`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Phân bổ theo kiểu chơi (multiNumber | multiDigit): lines, entries, revenue.
- * Refetch mỗi 60s khi đang active; dừng khi đã settle.
- */
-export function useOpsPlayTypeDistribution(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: max3dproKeys.opsPlayTypeDistribution(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<PlayTypeDistributionOutput>(`${BASE}/playtype-distribution`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Live feed: N entries mới nhất của một kỳ quay.
+ * Snapshot gộp mọi số liệu vận hành 1 kỳ — **timer 1 duy nhất** (analysis §4.1).
  *
- * - Kỳ đang bán (isSettled=false): refetch tự động mỗi 30s
- * - Kỳ đã settle (isSettled=true): gọi 1 lần, staleTime = Infinity
+ * Thay 6 hook aggregation on-demand cũ (summary/tenant/tripletFreq/playtype/topCombos)
+ * bằng 1 findOne pre-aggregated. Nhịp poll đọc TỪ CHÍNH response (`pollSeconds` =
+ * worker `ops.stats.tickSeconds`, Max 3D Pro default 30s) → FE khớp cadence worker.
+ *
+ * Mỗi section truyền `select` slice field của mình → section này đổi không kéo section
+ * khác re-render (React Query dedupe 1 query, `select` chặn cross re-render).
+ *
+ * @param drawId - Kỳ cần đọc; `undefined` → query tắt.
+ * @param isSettled - Kỳ đã settle → tắt poll, `staleTime` Infinity (0 request).
+ * @param select - Optional slice để giảm re-render; mặc định trả full output.
  */
-export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean) {
+export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
+  drawId: string | undefined,
+  isSettled: boolean,
+  select?: (data: GetOpsSnapshotOutput) => TData,
+) {
+  return useQuery({
+    queryKey: max3dproKeys.opsSnapshot(drawId ?? ""),
+    queryFn: () =>
+      apiClient.get<GetOpsSnapshotOutput>(`${BASE}/snapshot`, {
+        params: { drawId: drawId! },
+      }),
+    enabled: !!drawId,
+    // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
+    refetchInterval: (query) => {
+      if (isSettled) return false;
+      const s = query.state.data?.pollSeconds ?? 30;
+      return s * 1000;
+    },
+    staleTime: isSettled ? Infinity : 25_000,
+    select,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Alerts (on-demand khi panel mở) + Ack mutation
+// ─────────────────────────────────────────────
+
+/**
+ * List alert 1 kỳ (grouped theo type) — chỉ fetch khi panel mở (`enabled`).
+ * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
+ * Trả CẢ item `ack` — UI v6: render dưới disclosure per-group (guideline §4).
+ */
+export function useAlerts(
+  drawId: string | undefined,
+  status: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: max3dproKeys.opsAlerts(drawId ?? "", status),
+    queryFn: () =>
+      apiClient.get<ListAlertsOutput>(`${BASE}/alerts`, {
+        params: {
+          drawId: drawId!,
+          ...(status ? { status } : {}),
+          grouped: "true",
+        },
+      }),
+    enabled: !!drawId && enabled,
+  });
+}
+
+/**
+ * Acknowledge 1 alert. Invalidate toàn bộ Max 3D Pro cache để refresh cả panel alert
+ * lẫn badge count (đọc từ snapshot) — đơn giản, an toàn cho hành động ít tần suất.
+ */
+export function useAckAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: max3dproKeys.all });
+      toast.success("Đã xác nhận cảnh báo.");
+    },
+    onError: (err) => {
+      const { title, description } = formatErrorToast(err, "Xác nhận cảnh báo thất bại.");
+      toast.error(title, { description });
+    },
+  });
+}
+
+// ─────────────────────────────────────────────
+// Live feed — timer 2 (chỉ chạy khi tab Phân tích mở & kỳ chưa settle)
+// ─────────────────────────────────────────────
+
+/**
+ * Live feed: N entries mới nhất của một kỳ Max 3D Pro — **timer 2**.
+ * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng.
+ * `enabled` gate ở caller (tab Phân tích mở && chưa settle).
+ */
+export function useOpsLiveEntries(drawId: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: max3dproKeys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
         params: { drawId: drawId! },
       }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-  });
-}
-
-/**
- * Top N cặp TripletPair phổ biến nhất trong một kỳ quay.
- * Max 3D Pro chỉ có 1 loại combo (ordered pair), khác Max 3D (basic + plus).
- */
-export function useOpsTopCombos(drawId: string | undefined, isSettled: boolean) {
-  return useQuery({
-    queryKey: max3dproKeys.opsTopCombos(drawId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetTopCombosOutput>(`${BASE}/top-combos`, {
-        params: { drawId: drawId! },
-      }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
+    enabled: !!drawId && enabled,
+    refetchInterval: enabled ? 30_000 : false,
+    staleTime: 25_000,
   });
 }
 

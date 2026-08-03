@@ -6,35 +6,37 @@ import Link from "next/link";
 
 import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Radio, SearchX } from "lucide-react";
+import { Activity, BarChart3, Plus, Radio, SearchX } from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { max3dproKeys } from "@/lib/query-keys";
 
 import { DrawSelector } from "./_lib/draw-selector";
+import { AlertHeaderBadge, AlertsPanel } from "./_lib/sections/alerts/alerts-panel";
 import { AnalyticsSection } from "./_lib/sections/analytics";
 import { DrawManagementSection } from "./_lib/sections/draw-management";
 import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
 import { KpiSection } from "./_lib/sections/kpi";
 import { ResultSection } from "./_lib/sections/result";
 import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
+import { useOpsSnapshot } from "./_lib/use-operations";
 
 // ─── Last Updated Badge ───────────────────────────────────────────────────────
 
 /**
  * Hiển thị thời điểm cập nhật dữ liệu live cuối cùng.
- *
- * Theo dõi opsSummary (refetch mỗi 30s) — là query phản ánh
- * dữ liệu live chính xác nhất cho kỳ đang active.
+ * Đọc `dataUpdatedAt` của snapshot query (timer 1). Dùng DOM ref + setInterval để
+ * tránh re-render React mỗi giây.
  */
-function LastUpdatedBadge({ opsParams }: { opsParams: { drawId?: string; financialDate?: string } }) {
+function LastUpdatedBadge({ drawId }: { drawId: string | undefined }) {
   const qc = useQueryClient();
   const spanRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     function tick() {
-      const queryKey = max3dproKeys.opsSummary(opsParams as Record<string, unknown>);
-      const state = qc.getQueryState(queryKey);
+      const state = qc.getQueryState(max3dproKeys.opsSnapshot(drawId ?? ""));
       const ts = state?.dataUpdatedAt;
       if (spanRef.current && ts) {
         spanRef.current.textContent = displayVNTimeWithSeconds(new Date(ts));
@@ -43,13 +45,13 @@ function LastUpdatedBadge({ opsParams }: { opsParams: { drawId?: string; financi
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [qc, opsParams]);
+  }, [qc, drawId]);
 
   return (
     <span className="flex items-center gap-1 text-xs text-muted-foreground/70 tabular-nums">
       <span className="relative flex size-1.5">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-violet-400 opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-violet-500" />
       </span>
       Live · <span ref={spanRef} />
     </span>
@@ -68,9 +70,17 @@ function OperationsContent() {
     noDrawAvailable,
     isHistorical,
     isActiveForRefresh,
-    opsParams,
+    isSettled,
   } = useDrawContext();
   const [createOpen, setCreateOpen] = useState(false);
+
+  const [tab, setTab] = useQueryState(
+    "tab",
+    parseAsStringEnum(["monitor", "analysis"]).withDefault("monitor"),
+  );
+
+  // Badge alert đọc `alertCounts` từ snapshot (timer 1) — không timer riêng.
+  const { data: alertCounts } = useOpsSnapshot(effectiveDrawId, isSettled, (s) => s.alertCounts);
 
   if (drawNotFound || noDrawAvailable)
     return (
@@ -87,18 +97,21 @@ function OperationsContent() {
       {/* Page Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 to-pink-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-violet-600 shadow-sm">
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D Pro — Vận hành</h1>
             <div className="flex items-center gap-2">
               <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
-              {isActiveForRefresh ? <LastUpdatedBadge opsParams={opsParams} /> : null}
+              {isActiveForRefresh ? <LastUpdatedBadge drawId={effectiveDrawId} /> : null}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {alertCounts ? (
+            <AlertHeaderBadge counts={alertCounts} onClick={() => setTab("monitor")} />
+          ) : null}
           <DrawSelector
             draws={draws}
             selectedDrawId={effectiveDrawId}
@@ -115,17 +128,31 @@ function OperationsContent() {
       {/* Create draw dialog */}
       <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
-      {/* Zone 1: Draw management — command center + dialogs */}
-      <DrawManagementSection />
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="gap-6">
+        <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
+          <TabsTrigger value="monitor" className="gap-1.5">
+            <Activity className="size-4 text-emerald-500" />
+            Giám sát
+          </TabsTrigger>
+          <TabsTrigger value="analysis" className="gap-1.5">
+            <BarChart3 className="size-4 text-sky-500" />
+            Phân tích cược
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Zone 2: KPI strip */}
-      <KpiSection />
+        {/* Tab Giám sát: draw-management → Alerts (đầu tab) → KPI (+Exposure) → Result. */}
+        <TabsContent value="monitor" className="flex flex-col gap-6">
+          <DrawManagementSection />
+          <AlertsPanel drawId={effectiveDrawId} active={tab === "monitor"} />
+          <KpiSection />
+          <ResultSection />
+        </TabsContent>
 
-      {/* Zone 3: Result + Financial — hiển thị khi có kết quả */}
-      <ResultSection />
-
-      {/* Zone 4: Analytics — play mode, triplet freq, live feed */}
-      <AnalyticsSection />
+        {/* Tab Phân tích cược: unmount khi ở tab Giám sát. */}
+        <TabsContent value="analysis">
+          <AnalyticsSection active={tab === "analysis"} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -147,7 +174,7 @@ function DrawNotFound({
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 to-pink-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-violet-600 shadow-sm">
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
@@ -203,7 +230,7 @@ function DrawNotFound({
 
 // ─── Page root ────────────────────────────────────────────────────────────────
 
-export default function Max3dproOperationsPage() {
+export default function Max3dOperationsPage() {
   return (
     <Suspense>
       <DrawContextProvider>

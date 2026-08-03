@@ -1,0 +1,17 @@
+stats-sync:
+  handler: src/handlers/stats/stats-sync.handler
+  # Timeout 120s = lock TTL. Use case loop ~55s rồi thoát; invocation kế tiếp takeover.
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+ops-alerts:
+  handler: src/handlers/stats/ops-alerts.handler
+  # Timeout 120s = lock TTL. Lock riêng "bingo18:ops-alerts" — độc lập stats-sync.
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true

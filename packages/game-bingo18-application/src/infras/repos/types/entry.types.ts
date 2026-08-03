@@ -130,25 +130,6 @@ export interface TicketAggregateResult {
 }
 
 /**
- * KPI tổng hợp cho Operations Dashboard.
- * Bingo 18: profit = revenue - prizes - commission (KHÔNG có Jackpot).
- */
-export interface OpsSummary {
-  /** Tổng doanh thu bán vé (VND). */
-  totalRevenue: number;
-  /** Tổng số entries. */
-  totalEntries: number;
-  /** Tổng số boards cơ bản (singleNum/doubleMatch/tripleMatch). */
-  totalBoards: number;
-  /** Tổng số side bets (sumTotal/bigSmallDraw). */
-  totalSideBets: number;
-  /** Số unique players. */
-  uniquePlayers: number;
-  /** Tổng hoa hồng đại lý (VND). */
-  totalCommission: number;
-}
-
-/**
  * Summary entries trúng thưởng trong 1 draw.
  * Bingo 18: không có cappedEntries (không có payout cap).
  */

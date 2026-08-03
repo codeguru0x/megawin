@@ -19,6 +19,19 @@ export interface SettledFinancialSummary {
   totalPayoutAmount: number;
 }
 
+/**
+ * 1 board basic của account (ownership-gate minh bạch combo — p1-01).
+ *
+ * Projection cực nhẹ `{ playType, numbers }` từ `entrySummary.boards`. Chỉ board có
+ * `numbers` (pick1-10) mới đưa vào — dùng để xác định combo player yêu cầu có thuộc họ.
+ */
+export interface OwnedBoard {
+  /** Loại chơi basic — chỉ pick8/9/10 mới hợp lệ cho tra cứu minh bạch. */
+  playType: string;
+  /** Số "01".."80" của board. */
+  numbers: string[];
+}
+
 /** Keno: KHÔNG CÓ lineCount. */
 export interface PlayerBreakdownRow {
   accountId: string;

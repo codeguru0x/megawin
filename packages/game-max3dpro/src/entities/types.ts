@@ -8,6 +8,8 @@
  */
 
 export type { ISODateString } from "@megawin/game-core/types";
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { Max3dproOpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Number (kỳ quay trong tuần)
@@ -141,4 +143,45 @@ export interface PlayRules {
   drawTimes: string[];
   /** Các ngày trong tuần được phép quay (0=CN, 1=T2, ..., 6=T7). */
   drawDaysOfWeek: number[];
+}
+
+// ─────────────────────────────────────────────
+// Operations & Risk Control Config (analysis max3dpro-ops §3.6)
+// ─────────────────────────────────────────────
+
+/**
+ * Ngưỡng cảnh báo vận hành — evaluator so mỗi tick worker (p0-04).
+ *
+ * Ngưỡng TUYỆT ĐỐI VND (không cap kỳ, revenue bán-nhiều-ngày không ổn định làm mẫu số
+ * — chốt §7 Q2). KHÁC Max 3D: largeBet 10tr (multiNumber 20 bộ = 3,8tr/kỳ betCount 1),
+ * pairLiability 4 tỷ (ĐB Pro 2 tỷ/unit).
+ */
+export interface OpsAlertsConfig {
+  /** Ngưỡng 1 entry bị coi là cược lớn (VND). Default 10.000.000. */
+  largeBetAmount: number;
+  /** Ngưỡng worst-case tổng (VND tuyệt đối) → `exposure_threshold`. Default 5 tỷ. */
+  exposureWarnAmount: number;
+  /**
+   * Ngưỡng liability ĐB của 1 cặp (VND) → `pair_liability`. Default 4 tỷ
+   * (1 unit đúng chiều = 2 tỷ ×200.000; chiều ngược cộng phụ ĐB 400tr — bắn sớm
+   * thiên an toàn vì KHÔNG có cap kỳ, chốt §7 Q2).
+   */
+  pairLiabilityWarnAmount: number;
+  /** Số account distinct cùng 1 cặp → `combo_concentration`. Default 5. */
+  comboAccountsWarn: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `Max3dproOpsAlertType`. */
+  enabled: Record<Max3dproOpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro.
+ *
+ * KHÔNG expose cho player. `stats` dùng {@link OpsStatsConfig} ĐẦY ĐỦ (có
+ * `topCombosK` — cắt danh sách `topPairs` ordered).
+ */
+export interface OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-04). */
+  alerts: OpsAlertsConfig;
+  /** Nhịp worker + top-K (`OpsStatsConfig` từ game-core — topCombosK cho topPairs). */
+  stats: OpsStatsConfig;
 }

@@ -20,6 +20,7 @@ import type {
   SumTotalPrizes,
   BigSmallDrawPrizes,
   PlayRules,
+  OpsConfig,
 } from "./types";
 
 export interface GlobalConfigDoc {
@@ -46,6 +47,14 @@ export interface GlobalConfigDoc {
   // ───── Play Rules ─────
 
   play: PlayRules;
+
+  // ───── Operations & Risk Control ─────
+
+  /**
+   * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
+   * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
+   */
+  ops: OpsConfig;
 
   // ───── Metadata ─────
 

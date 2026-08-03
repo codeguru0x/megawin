@@ -463,6 +463,82 @@ const status = row.original.status as AccountStatus;
 
 ---
 
+## PHẦN 2b — HẰNG SỐ & CẤU HÌNH (KHÔNG chỉ label)
+
+Ngoài label (PHẦN 2), **mọi hằng số / danh sách / giá trị cấu hình** trên UI cũng phải tuân luật
+"một nguồn chân lý". KHÔNG khai lại danh sách domain (danh sách kiểu cược, dải số hợp lệ, thứ tự
+pick…) trong từng `.tsx`. Vi phạm điển hình đã sửa: `PICK_KEYS`/`ALL_PICKS` (mảng `pick1..pick10`),
+`Array.from({length: 80})` + `padStart` (dải số Keno), `PICK_LABEL` (subset của label core) — mỗi
+file khai một bản, đổi luật chơi 1 chỗ phải sửa N nơi, dễ lệch.
+
+### 2b.1 Cây quyết định: khai ở ĐÂU
+
+| Loại hằng số | Ví dụ | Khai ở đâu |
+|---|---|---|
+| **Domain — dùng cả BE lẫn FE** | danh sách play type, dải số hợp lệ, ngưỡng nghiệp vụ, đơn vị tiền, cấu trúc cược | `packages/game-<slug>/src/entities/*` (hoặc `game-core` nếu chung mọi game). FE **import lại**, KHÔNG copy. |
+| **Domain nhưng chỉ hiển thị** | label tiếng Việt của play type/status | `packages/game-<slug>/src/labels/*` (PHẦN 2) |
+| **UI-only, dùng nhiều nơi trong 1 game** | palette màu pick, style token card, thứ tự cột hiển thị, icon map | **1 file gom chung cho game đó** trong backoffice (VD `operations/_lib/ops-constants.ts`). Sửa 1 chỗ → mọi nơi trong web đổi theo. |
+| **UI-only, dùng chung mọi game** | heatmap badge size, spacing token | `apps/backoffice/src/components/games/shared/*` (VD `game-number-tokens.ts`) |
+| **UI-only, thật sự chỉ 1 component dùng** | layout grid cột riêng của 1 heatmap | Khai local trong chính component đó — chấp nhận được. |
+
+**Nguyên tắc một dòng:** hằng số **mô tả nghiệp vụ** → package core; hằng số **chỉ để render** dùng
+lại → gom 1 nơi per-game trong backoffice; chỉ 1 component xài → để local.
+
+### 2b.2 Hằng số domain Keno đã có sẵn trong core — DÙNG LẠI, đừng khai lại
+
+Trước khi khai bất kỳ mảng/dải số Keno ở UI, kiểm tra `@megawin/game-keno/entities`:
+
+| Cần | Dùng | KHÔNG khai lại |
+|---|---|---|
+| Danh sách 10 pick theo thứ tự | `KENO_BASIC_PLAY_TYPES` | `["pick1"…"pick10"]`, `Array.from({length:10})` |
+| 2 side bet | `KENO_SIDE_BET_PLAY_TYPES` | `["bigSmall","evenOdd"]` |
+| Dải số "01".."80" (array) | `KENO_ALL_NUMBERS` | `Array.from({length:80}).map(padStart)` |
+| Set số hợp lệ (lookup O(1)) | `KENO_VALID_NUMBERS` | `new Set([...])` |
+| Số tối đa / pick tối đa | `KENO_NUMBER_MAX`, `KENO_PICK_MAX` | magic `80`, `10` |
+| Format số → "01".."80" | `formatKenoNumber` | `String(n).padStart(2,"0")` rải rác |
+| Label play type / side bet | `KENO_PLAY_TYPE_LABELS`, `KENO_BIG_SMALL_BET_LABELS`, `KENO_EVEN_ODD_BET_LABELS` | `Record<string,string>` inline |
+
+Các game khác mirror cấu trúc này — tìm constant tương ứng trong `packages/game-<slug>/src/entities/*`
+trước khi tự khai ở FE.
+
+### 2b.3 Ví dụ
+
+```tsx
+// ❌ SAI — khai lại danh sách pick + dải số ngay trong .tsx
+const PICK_KEYS = ["pick1","pick2","pick3","pick4","pick5","pick6","pick7","pick8","pick9","pick10"] as const;
+const cells = Array.from({ length: 80 }, (_, i) => String(i + 1).padStart(2, "0"));
+const PICK_LABEL = { pick8: "Pick 8", pick9: "Pick 9", pick10: "Pick 10" };
+```
+
+```tsx
+// ✅ ĐÚNG — import domain constant từ core, dùng lại label core
+import { KENO_BASIC_PLAY_TYPES, KENO_ALL_NUMBERS } from "@megawin/game-keno/entities";
+import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
+
+const picks = KENO_BASIC_PLAY_TYPES.map((pt) => ({ pt, label: KENO_PLAY_TYPE_LABELS[pt] }));
+const cells = KENO_ALL_NUMBERS; // "01".."80" đã zero-padded
+```
+
+```tsx
+// ✅ ĐÚNG — palette UI-only gom 1 nơi cho game (ops-constants.ts), mọi panel import lại
+// operations/_lib/ops-constants.ts
+export const KENO_PICK_STYLES: Record<number, KenoPlayTypeStyle> = { 1: {...}, /* … */ 10: {...} };
+// analytics-panels.tsx
+import { KENO_PICK_STYLES } from "../../ops-constants";
+```
+
+### 2b.4 Checklist trước khi khai 1 hằng số ở component FE
+
+1. Đây là **giá trị nghiệp vụ** (BE cũng cần biết)? → phải ở `packages/game-<slug>` hoặc `game-core`,
+   import lại. Nếu chưa có, thêm vào core (không khai ở FE).
+2. Chỉ dùng để **render** nhưng ≥ 2 nơi trong game dùng? → gom vào 1 file per-game trong backoffice
+   (`_lib/*-constants.ts`), export ra, import lại. KHÔNG copy giữa các `.tsx`.
+3. Dùng chung mọi game (chỉ UI)? → `components/games/shared/*`.
+4. Thật sự chỉ 1 component dùng và không mang nghĩa nghiệp vụ? → local trong component, OK.
+5. Là **label hiển thị**? → theo PHẦN 2 (`@megawin/game-<slug>/labels`).
+
+---
+
 ## PHẦN 3 — URL STATE (nuqs)
 
 **BẮT BUỘC dùng `nuqs`** cho mọi state cần persist vào URL. **KHÔNG** dùng `useSearchParams` + `useState` + `useEffect` thủ công.
@@ -876,6 +952,8 @@ Form đơn giản chỉ có **1 field** và **không cần validation phức t�
 - `<Suspense>` bọc mọi component dùng `useQueryState`
 - Query hooks tách file riêng, dùng `accountsKeys.*` từ `lib/query-keys/`
 - Label import từ package, cast an toàn trước khi index
+- **Hằng số domain (danh sách play type, dải số, ngưỡng) import từ `game-<slug>`/`game-core` — KHÔNG khai lại ở `.tsx`** (mục 2b)
+- **Hằng số UI-only dùng ≥ 2 nơi trong game: gom 1 file per-game (`_lib/*-constants.ts`)** — sửa 1 chỗ đổi cả web (mục 2b)
 - API route dùng `withApi()` + `.body(schema)` + use case từ package
 - Empty state + loading skeleton match layout
 - **`pl-5` cột đầu tiên + `pr-5` cột cuối cùng** cho mọi table trong `CardContent p-0` — áp dụng cho TableHead, TableCell (body), TableCell (footer) (mục 1.7a)
@@ -886,6 +964,8 @@ Form đơn giản chỉ có **1 field** và **không cần validation phức t�
 - **`text-[10px]`, `text-[11px]` ngoài heatmap grid / stepper** — phải dùng `text-xs` trở lên
 - Hardcode color (`bg-teal-500`, `#14b8a6`) thay vì dùng token / `GAME_COLORS`
 - Hardcode label `Record<string, string>` trong component
+- **Khai lại danh sách/dải số domain (`["pick1"…]`, `Array.from({length:80})`, magic `80`/`10`) trong `.tsx`** — import từ core (mục 2b)
+- **Copy cùng 1 hằng số UI (palette, style token) giữa nhiều `.tsx`** — gom 1 nơi per-game (mục 2b)
 - `useState("")` cho selector cần persist URL — dùng `nuqs`
 - `useQuery` inline trong component — tách ra `_lib/queries.ts`
 - Hardcode queryKey string — dùng `accountsKeys.*`

@@ -17,3 +17,12 @@ export type {
 export type { VoidTenantBreakdownRow, VoidPlayerBreakdownRow } from "./entry-void.types";
 export type { TicketSummary } from "./ticket.types";
 export type { TenantConfigFields } from "./config.types";
+export type {
+  EntryForStats,
+  EntryBoardForStats,
+  DrawStatsCursor,
+  DrawStatsDelta,
+  PartialByPlayTypeDelta,
+  PairStatsDelta,
+  AccountStatsDelta,
+} from "./betting-stats.types";

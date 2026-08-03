@@ -5,10 +5,7 @@ import { BaseRepo } from "./base-repo";
 import { TenantConfigMapper } from "../mappers/game-config-mapper";
 import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";
 
-export class TenantConfigRepository extends BaseRepo<
-  TenantConfigEntity,
-  TenantConfigMapper
-> {
+export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {
     super({
       collName: Bingo18Collections.GameConfigs,
@@ -23,6 +20,14 @@ export class TenantConfigRepository extends BaseRepo<
     });
   }
 
+  /**
+   * Upsert tenant config — chỉ update các fields được truyền vào.
+   *
+   * Filter `{ scope: Tenant, tenantId }` là equality clause thuần → Mongo tự
+   * điền cả 2 field vào doc mới khi insert (không cần lặp lại trong
+   * `$setOnInsert`). `$setOnInsert` chỉ cần `createdAt` + default value cho
+   * field chưa truyền vào.
+   */
   async upsertTenantConfig(
     tenantId: string,
     fields: Partial<Pick<TenantConfigDoc, "commissionRate" | "isEnabled">>,
@@ -30,18 +35,21 @@ export class TenantConfigRepository extends BaseRepo<
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined)
+    if (fields.commissionRate !== undefined) {
       $set.commissionRate = fields.commissionRate;
-    if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
+    }
+    if (fields.isEnabled !== undefined) {
+      $set.isEnabled = fields.isEnabled;
+    }
 
-    const $setOnInsert: Record<string, unknown> = {
-      scope: GameConfigScope.Tenant,
-      tenantId,
-      createdAt: now,
-    };
+    const $setOnInsert: Record<string, unknown> = { createdAt: now };
 
-    if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0.2;
-    if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;
+    if (fields.commissionRate === undefined) {
+      $setOnInsert.commissionRate = 0.2;
+    }
+    if (fields.isEnabled === undefined) {
+      $setOnInsert.isEnabled = true;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Tenant, tenantId },
@@ -55,9 +63,6 @@ export class TenantConfigRepository extends BaseRepo<
   }
 
   async listTenantConfigs(): Promise<TenantConfigEntity[]> {
-    return await this.findMany(
-      { scope: GameConfigScope.Tenant },
-      { sort: { tenantId: 1 } },
-    );
+    return await this.findMany({ scope: GameConfigScope.Tenant }, { sort: { tenantId: 1 } });
   }
 }

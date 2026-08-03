@@ -50,3 +50,26 @@ export function parseUsername(
     tenantId: megawinUsername.slice(atIndex + 1),
   };
 }
+
+/**
+ * Tách Megawin username thành phần hiển thị nhất quán trên **backoffice**.
+ *
+ * QUY TẮC HIỂN THỊ USERNAME (backoffice): tên tài khoản luôn hiện dạng
+ * `<playerExternalId> · <tenantId>` — tên sạch (bỏ suffix `@tenantId`) + đại lý phía sau,
+ * phân tách bằng dấu `·`. KHÔNG hiển thị raw `player4@devone` (dấu `@`) lẫn lộn với dạng
+ * có `·` ở chỗ khác — trước đây alert/top show `@`, live-feed show `·` gây bất nhất.
+ *
+ * Component render `<primary> · <tenant>` (tenant có thể ẩn/mờ tuỳ chỗ). Dùng cho mọi
+ * nơi hiển thị người chơi: alert, top risk, live-feed, combo lookup…
+ *
+ * @param megawinUsername - Username dạng `<id>@<tenantId>`, hoặc fallback (accountId).
+ * @returns `{ primary, tenantId }` — `tenantId` là `null` khi input không có suffix `@`.
+ */
+export function splitBackofficeUsername(megawinUsername: string): {
+  primary: string;
+  tenantId: string | null;
+} {
+  const parsed = parseUsername(megawinUsername);
+  if (parsed === null) return { primary: megawinUsername, tenantId: null };
+  return { primary: parsed.playerExternalId, tenantId: parsed.tenantId };
+}

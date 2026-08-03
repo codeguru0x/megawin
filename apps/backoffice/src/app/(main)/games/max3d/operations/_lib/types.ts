@@ -12,7 +12,12 @@
  * - Kết quả: 20 bộ ba số (special x2, first x4, second x6, third x8)
  */
 
-import type { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "@megawin/game-max3d/entities";
+import type {
+  BasicPrizeTier,
+  PlayMode,
+  PlayType,
+  PlusPrizeTier,
+} from "@megawin/game-max3d/entities";
 
 // ─── KPI ─────────────────────────────────────────────────────────────────────
 
@@ -20,9 +25,13 @@ export interface OpsKpi {
   /** Tổng doanh thu (VND). */
   totalRevenue: number;
   totalEntries: number;
-  /** Tổng đơn vị cược = Σ(betUnitCount). Phản ánh tiền thực trả. */
+  /** Tổng đơn vị dự thưởng (Σ lineCount × betCount — basic + plus). */
   totalBetUnits: number;
-  uniquePlayers: number;
+  /**
+   * Số người chơi distinct. Stats doc KHÔNG có count này (topAccounts chỉ là top-K)
+   * → null, UI render "—" (honest data — không bịa số).
+   */
+  uniquePlayers: number | null;
   /** Tổng hoa hồng đại lý (VND). */
   totalCommission: number;
 }
@@ -31,10 +40,7 @@ export interface OpsKpi {
 
 export interface TenantRow {
   tenantId: string;
-  tenantName: string;
   entries: number;
-  /** Tổng đơn vị cược = Σ(betUnitCount). Dùng hiển thị thay cho lines khi betCount > 1. */
-  betUnits: number;
   /** Doanh thu (VND). */
   revenue: number;
   /** Hoa hồng (VND). */
@@ -46,26 +52,64 @@ export interface TenantRow {
 // ─── Play Type Distribution ──────────────────────────────────────────────────
 
 export interface PlayTypeRow {
-  playMode: PlayMode;
-  playType: PlayType;
+  /** Key nhóm: basicStraight | basicCombo3 | basicCombo6 | plus. */
+  playType: string;
   label: string;
   entries: number;
-  lines: number;
+  /** Σ units (lineCount × betCount). */
+  units: number;
   /** Doanh thu (VND). */
   revenue: number;
-  /** Phần trăm lines so với tổng. */
+  /** Phần trăm revenue so với tổng. */
   pct: number;
 }
 
-// ─── Triplet Frequency ───────────────────────────────────────────────────────
+// ─── Top triplets (thay triplet heatmap on-demand cũ) ────────────────────────
 
-export interface TripletFreq {
-  /** Bộ ba số (000-999). */
+export interface TopTripletRow {
+  /** Bộ ba "000".."999". */
   triplet: string;
-  /** Số lần xuất hiện (số boards chứa triplet này). */
-  count: number;
-  /** Tổng tiền cược của các boards chứa triplet này (VND). */
-  revenue: number;
+  /** Σ units straight. */
+  straightUnits: number;
+  /** Σ units combo (3+6). */
+  comboUnits: number;
+  /** Dòng tiền quy cho triplet (VND). */
+  amount: number;
+}
+
+// ─── Pair table (đặc thù Max 3D — rủi ro số 1) ───────────────────────────────
+
+export interface PairRow {
+  pairKey: string;
+  triplet1: string;
+  triplet2: string;
+  units: number;
+  accounts: number;
+  amount: number;
+  /** Liability ĐB nếu cặp này ra (VND) = units × plusPrizes.special. */
+  liability: number;
+  /** Vượt ngưỡng `pairLiabilityWarnAmount` → tô đỏ. */
+  overLiability: boolean;
+  /** Vượt ngưỡng `comboAccountsWarn` → tô amber cột accounts. */
+  overAccounts: boolean;
+}
+
+// ─── Top risk ────────────────────────────────────────────────────────────────
+
+export interface TopAccountRow {
+  accountId: string;
+  username: string;
+  amount: number;
+  entries: number;
+}
+
+export interface TopPotentialRow {
+  entryId: string;
+  accountId: string;
+  username: string;
+  amount: number;
+  /** Worst-case entry này trả (VND) — PROXY Σ max/board (UI ghi "ước tính"). */
+  potentialWin: number;
 }
 
 // ─── Settled Draw Result ─────────────────────────────────────────────────────

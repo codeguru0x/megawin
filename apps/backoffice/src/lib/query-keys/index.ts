@@ -63,6 +63,7 @@ export { reportsKeys } from "./reports";
 export { tenantDispatchKeys } from "./tenant-dispatch";
 export { tenantsKeys } from "./tenants";
 export { txLogsKeys } from "./tx-logs";
+export { workersKeys } from "./workers";
 
 import { accountsKeys } from "./accounts";
 import { auditLogsKeys } from "./audit-logs";
@@ -80,6 +81,7 @@ import { reportsKeys } from "./reports";
 import { tenantDispatchKeys } from "./tenant-dispatch";
 import { tenantsKeys } from "./tenants";
 import { txLogsKeys } from "./tx-logs";
+import { workersKeys } from "./workers";
 
 export const queryKeys = {
   tenants: tenantsKeys,
@@ -98,4 +100,5 @@ export const queryKeys = {
   txLogs: txLogsKeys,
   tenantDispatch: tenantDispatchKeys,
   auditLogs: auditLogsKeys,
+  workers: workersKeys,
 } as const;

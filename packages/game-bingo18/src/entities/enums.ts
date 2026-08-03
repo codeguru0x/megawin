@@ -25,6 +25,12 @@ export const Bingo18Collections = {
   Draws: "bingo18_draws",
   DrawCounters: "bingo18_draw_counters",
   GameConfigs: "bingo18_game_configs",
+  /** Pre-aggregated ops stats — 1 doc/draw, worker cập nhật async (ops p0-02). */
+  BettingStats: "bingo18_draw_betting_stats",
+  /** Tích luỹ cược theo account/kỳ — nguồn topAccounts chính xác, TTL 90d (ops p0-03). */
+  AccountStats: "bingo18_draw_account_stats",
+  /** Alert vận hành — evaluator sinh trong stats worker (ops p0-04). */
+  OpsAlerts: "bingo18_ops_alerts",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -74,8 +80,7 @@ export const BINGO18_SIDE_BET_PLAY_TYPES: readonly Bingo18PlayType[] = [
 
 /** Narrowed type cho side bet play types. */
 export type Bingo18SideBetPlayType =
-  | typeof Bingo18PlayType.SumTotal
-  | typeof Bingo18PlayType.BigSmallDraw;
+  typeof Bingo18PlayType.SumTotal | typeof Bingo18PlayType.BigSmallDraw;
 
 /** Narrowed type cho basic play types. */
 export type Bingo18BasicPlayType =

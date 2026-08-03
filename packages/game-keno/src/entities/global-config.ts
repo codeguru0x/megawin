@@ -20,6 +20,7 @@ import type {
   EvenOddPrizes,
   PayoutCaps,
   PlayRules,
+  OpsConfig,
 } from "./types";
 
 /**
@@ -69,6 +70,14 @@ export interface GlobalConfigDoc {
 
   /** Quy tắc chơi – hiển thị mục "Cấu hình luật chơi" trên UI. */
   play: PlayRules;
+
+  // ───── Operations & Risk Control (§3.9) ─────
+
+  /**
+   * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
+   * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
+   */
+  ops: OpsConfig;
 
   // ───── Metadata ─────
 

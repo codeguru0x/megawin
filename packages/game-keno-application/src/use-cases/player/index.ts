@@ -5,6 +5,7 @@ export { GetTicketEntriesPlayerUseCase } from "./get-ticket-entries-player";
 export { GetGameConfigPlayerUseCase } from "./get-game-config-player";
 export { ListDrawResultsPlayerUseCase } from "./list-draw-results-player";
 export { GetDrawResultPlayerUseCase } from "./get-draw-result-player";
+export { GetComboPopularityPlayerUseCase } from "./get-combo-popularity";
 
 export type {
   PlayerGetCurrentDrawOutput,
@@ -21,6 +22,8 @@ export type {
   PlayerDrawResultSummary,
   PlayerDrawResultInfo,
   PlayerPrizeSummary,
+  PlayerComboPopularityInput,
+  PlayerComboPopularityOutput,
 } from "./dto/player.dto";
 
 export type { GetDrawResultPlayerInput } from "./get-draw-result-player";

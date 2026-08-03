@@ -19,6 +19,8 @@ import type {
   KenoListDrawResultsParams,
   KenoListDrawResultsResponse,
   KenoDrawResultDetail,
+  KenoComboPopularityParams,
+  KenoComboPopularityResponse,
 } from "../keno";
 import { ENDPOINTS } from "../endpoints";
 
@@ -323,6 +325,43 @@ export interface KenoApi {
    * ```
    */
   getDrawResult(drawId: string): Promise<KenoDrawResultDetail>;
+
+  /**
+   * Kiểm tra độ đông 1 bộ số cappable (pick8/9/10) mà bạn đã cược — minh bạch chống gian lận.
+   *
+   * Trả về tổng số bộ đang cùng cược combo, giúp bạn kiểm chứng cách hệ thống chia
+   * giải cao nhất (khi vượt cap, giải chia đều theo số bộ trúng). Realtime đến giờ đóng cược.
+   *
+   * **Ownership-gate (QUAN TRỌNG):** bạn CHỈ xem được combo mình đã thực sự cược trong kỳ.
+   * Với combo bạn chưa cược — hoặc combo chưa ai chơi — API trả `{ found: false }` như nhau,
+   * cố ý KHÔNG phân biệt hai trường hợp. Đây là thiết kế để không ai dò được bộ số cược của
+   * người khác qua endpoint này. `found: false` KHÔNG phải lỗi.
+   *
+   * **Endpoint:** `GET /games/keno/draws/{drawId}/combo-popularity`
+   *
+   * @param params - Kỳ quay + bộ số cần kiểm tra (8–10 số distinct, zero-padded)
+   * @returns `{ found: true, sets }` nếu bạn đã cược combo này; ngược lại `{ found: false }`
+   *
+   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — số lượng số ngoài 8–10 hoặc số không hợp lệ
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * // Sau khi cược 1 board pick10, kiểm tra độ đông combo đó
+   * const res = await client.keno.getComboPopularity({
+   *   drawId: "2026-03-07.001",
+   *   numbers: ["01", "05", "12", "23", "34", "45", "56", "67", "78", "80"],
+   * });
+   *
+   * if (res.found) {
+   *   console.log(`${res.sets} bộ đang cược combo này`);
+   * } else {
+   *   // Bạn chưa cược combo này, hoặc chưa ai chơi — không phân biệt.
+   *   console.log("Không có dữ liệu cho combo này.");
+   * }
+   * ```
+   */
+  getComboPopularity(params: KenoComboPopularityParams): Promise<KenoComboPopularityResponse>;
 }
 
 // ─────────────────────────────────────────────
@@ -370,6 +409,16 @@ export function createKenoApi(http: HttpClient): KenoApi {
 
     async getDrawResult(drawId: string): Promise<KenoDrawResultDetail> {
       return http.get<KenoDrawResultDetail>(ENDPOINTS.keno.getDrawResult(drawId));
+    },
+
+    async getComboPopularity(
+      params: KenoComboPopularityParams,
+    ): Promise<KenoComboPopularityResponse> {
+      // numbers gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
+      return http.get<KenoComboPopularityResponse>(
+        ENDPOINTS.keno.getComboPopularity(params.drawId),
+        { params: { numbers: params.numbers.join(",") } },
+      );
     },
   };
 }

@@ -1,6 +1,19 @@
 import { ObjectId } from "mongodb";
 
 /**
+ * ObjectId nhỏ nhất — 24 số 0 hex, dùng làm **sentinel "từ đầu"** cho watermark string.
+ *
+ * Mọi ObjectId thật đều LỚN hơn giá trị này (4 byte đầu là timestamp Unix > 0), nên:
+ * - `{ _id: { $gt: MIN_OBJECT_ID } }` khớp mọi entry ⇒ đọc từ đầu.
+ * - `{ lastEntryId: { $lt: batchMaxId } }` với `lastEntryId = MIN_OBJECT_ID` luôn khớp
+ *   lần áp batch ĐẦU — tránh phải viết `$or: [{$exists:false}, {$lt}]` cho doc chưa từng
+ *   cộng delta (Mongo `$lt: <string>` KHÔNG khớp field thiếu do type-bracketing).
+ *
+ * Seed field watermark bằng hằng này thay vì để field vắng mặt ⇒ filter `$lt` thuần đủ dùng.
+ */
+export const MIN_OBJECT_ID = "000000000000000000000000";
+
+/**
  * Kiểm tra một string có phải là MongoDB ObjectId hợp lệ không.
  *
  * Hợp lệ khi: đúng 24 ký tự hex (0-9, a-f, A-F).

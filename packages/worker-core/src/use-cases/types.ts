@@ -1,8 +1,8 @@
 /**
- * Types dùng chung cho `LockedWorkerUseCase` — skip marker và result union.
+ * Types dùng chung cho `SingleRunWorker` — skip marker và result union.
  *
  * Tách riêng khỏi class để tránh circular import khi consumer chỉ cần type guard
- * (`isLockedWorkerSkipped`) hoặc type (`LockedWorkerResult<O>`).
+ * (`isWorkerRunSkipped`) hoặc type (`WorkerRunResult<O>`).
  */
 
 /**
@@ -14,7 +14,7 @@
  * `skipped` luôn là `true`; không có executed case mang field này để tránh pollute
  * output của subclass.
  */
-export interface LockedWorkerSkipped {
+export interface WorkerRunSkipped {
   /** Luôn là `true` — narrow discriminator cho type guard. */
   skipped: true;
   /** Lý do bị skip — ops theo dõi `"disabled"`, scheduler tolerate `"locked"`. */
@@ -22,22 +22,22 @@ export interface LockedWorkerSkipped {
 }
 
 /**
- * Return type của `LockedWorkerUseCase.run(input)`.
+ * Return type của `SingleRunWorker.run(input)`.
  *
- * Caller kiểm tra `"skipped" in result` (hoặc dùng `isLockedWorkerSkipped`) để
+ * Caller kiểm tra `"skipped" in result` (hoặc dùng `isWorkerRunSkipped`) để
  * narrow TypeScript về `O` khi executed.
  *
  * @template O - Output chuẩn của subclass khi business logic chạy thành công.
  */
-export type LockedWorkerResult<O> = O | LockedWorkerSkipped;
+export type WorkerRunResult<O> = O | WorkerRunSkipped;
 
 /**
- * Type guard — narrow `LockedWorkerResult<O>` về `LockedWorkerSkipped`.
+ * Type guard — narrow `WorkerRunResult<O>` về `WorkerRunSkipped`.
  *
  * @example
  * ```ts
  * const result = await useCase.run();
- * if (isLockedWorkerSkipped(result)) {
+ * if (isWorkerRunSkipped(result)) {
  *   console.info(`skipped: ${result.reason}`);
  *   return result;
  * }
@@ -45,13 +45,23 @@ export type LockedWorkerResult<O> = O | LockedWorkerSkipped;
  * return result;
  * ```
  */
-export function isLockedWorkerSkipped<O>(
-  result: LockedWorkerResult<O>,
-): result is LockedWorkerSkipped {
+export function isWorkerRunSkipped<O>(result: WorkerRunResult<O>): result is WorkerRunSkipped {
   return (
     typeof result === "object" &&
     result !== null &&
     "skipped" in result &&
     (result as { skipped: unknown }).skipped === true
   );
+}
+
+/** Kết quả 1 tick trả về cho `TickLoopWorker` — subclass báo có nên dừng sớm. */
+export interface TickOutcome {
+  /** `true` → thoát vòng lặp ngay (VD: lock bị takeover, kill-switch). Optional, default false. */
+  shouldStop?: boolean;
+}
+
+/** Kết quả cả invocation từ phía base `TickLoopWorker` — subclass thường bọc thêm counters riêng. */
+export interface TickLoopResult {
+  /** Số tick đã chạy trong invocation. */
+  ticks: number;
 }

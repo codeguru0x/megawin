@@ -8,3 +8,4 @@ export * from "./odds";
 export * from "./financials";
 export * from "./defaults";
 export * from "./draw-result";
+export * from "./exposure";

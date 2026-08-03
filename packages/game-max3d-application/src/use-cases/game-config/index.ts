@@ -6,6 +6,7 @@ export type {
   GetGameConfigOutput,
   UpdateGameConfigInput,
   UpdateGameConfigOutput,
+  UpdateOpsInput,
 } from "./dto/game-config.dto";
 
 export type { GlobalConfigEntity } from "@megawin/game-max3d/entities";

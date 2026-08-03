@@ -1,6 +1,8 @@
 import type {
   FinancialRates,
+  Max3dOpsAlertType,
   Max3dPrizeConfig,
+  OpsStatsConfig,
   PlayRules,
 } from "@megawin/game-max3d/entities";
 import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
@@ -23,6 +25,22 @@ export interface GetGameConfigOutput {
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 
+/**
+ * Deep-partial input cho section `ops` khi update config. Chỉ gửi field cần đổi; merge
+ * per sub-section (alerts/stats), `enabled` merge shallow ở use-case.
+ * Interface tường minh — KHÔNG indexed-access `OpsConfig["alerts"]` (rule §5.4, Keno Risk #8).
+ */
+export interface UpdateOpsInput {
+  alerts?: {
+    largeBetAmount?: number;
+    exposureWarnAmount?: number;
+    pairLiabilityWarnAmount?: number;
+    comboAccountsWarn?: number;
+    enabled?: Partial<Record<Max3dOpsAlertType, boolean>>;
+  };
+  stats?: Partial<OpsStatsConfig>;
+}
+
 export interface UpdateGameConfigInput {
   /** Tỷ lệ tài chính (defaultCommissionRate). */
   rates?: Partial<FinancialRates>;
@@ -30,6 +48,11 @@ export interface UpdateGameConfigInput {
   defaultPrizes?: DeepPartial<Max3dPrizeConfig>;
   /** Quy tắc chơi (playModes, playTypes, pricing, …). */
   play?: Partial<PlayRules>;
+  /**
+   * Cấu hình vận hành. Deep-partial: chỉ gửi field cần đổi, merge per sub-section
+   * (alerts/stats), `enabled` merge shallow ở use-case.
+   */
+  ops?: UpdateOpsInput;
   /** Chủ thể thực hiện — dùng cho audit. */
   actor: AuditActor;
 }

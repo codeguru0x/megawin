@@ -9,7 +9,7 @@ import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selecto
  *
  * Keno có ~120 kỳ/ngày — group theo trạng thái để tránh quá tải:
  *   - active: unfinished còn lại (salesOpen/salesClosed/published/settling/voiding, và cả
- *     scheduled đã tới hạn/quá khứ — coi như cần xử lý).
+ *     scheduled đã tới hạn/quá khứ — coi như cần xử lý). Sort drawId ASC — kỳ SỚM nhất lên đầu.
  *   - future: scheduled sắp tới, chỉ lấy 10 kỳ gần nhất (sort drawTime asc).
  *   - recent: 5 kỳ settled/void gần đây nhất (sort drawId desc — mới nhất lên đầu, dễ theo dõi).
  *
@@ -32,7 +32,13 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       unfinishedDraws.filter((d) => d.status === DrawStatus.Scheduled),
       (d) => d.drawId,
     ).slice(0, 10);
-    const activeDraws = unfinishedDraws.filter((d) => d.status !== DrawStatus.Scheduled);
+    // active sort drawId ASC: kỳ SỚM nhất (gần giờ hiện tại nhất, cần xử lý trước) lên đầu.
+    // getUnfinishedDraws trả DESC → phải re-sort, nếu không auto-select + selector hiện kỳ
+    // XA nhất trước (vd 16:00 thay vì 14:48 đang chạy) — sai kỳ vận hành thực tế.
+    const activeDraws = sortBy(
+      unfinishedDraws.filter((d) => d.status !== DrawStatus.Scheduled),
+      (d) => d.drawId,
+    );
 
     const toItem = (
       draw: (typeof unfinishedDraws)[0],
@@ -48,7 +54,7 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       scheduledDrawAt: draw.drawTime.toISOString(),
       drawResultAt: draw.result?.publishedAt?.toISOString(),
       settledAt: draw.settledAt?.toISOString(),
-      status: draw.status as DrawStatus,
+      status: draw.status,
       financialDate: draw.financialDate,
       group,
     });

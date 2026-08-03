@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Shared infrastructure cho workers — distributed lock, checkpoint, kill-switch dựa trên MongoDB.",
+  "description": "Shared infrastructure cho workers — distributed lock, checkpoint, kill-switch dựa trên MongoDB. Subpath exports: ./workers (SingleRunWorker, TickLoopWorker) và ./locks (DistributedMutex).",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
@@ -31,15 +31,47 @@
       "import": "./src/use-cases/index.ts",
       "default": "./dist/use-cases/index.js"
     },
+    "./workers": {
+      "types": "./src/use-cases/lock/workers.ts",
+      "import": "./src/use-cases/lock/workers.ts",
+      "default": "./dist/use-cases/lock/workers.js"
+    },
+    "./locks": {
+      "types": "./src/use-cases/lock/locks.ts",
+      "import": "./src/use-cases/lock/locks.ts",
+      "default": "./dist/use-cases/lock/locks.js"
+    },
     "./indexes": {
       "types": "./src/indexes/index.ts",
       "import": "./src/indexes/index.ts",
       "default": "./dist/indexes/index.js"
+    },
+    "./use-cases/admin": {
+      "types": "./src/use-cases/admin/index.ts",
+      "import": "./src/use-cases/admin/index.ts",
+      "default": "./dist/use-cases/admin/index.js"
+    },
+    "./use-cases/admin/types": {
+      "types": "./src/use-cases/admin/types.ts",
+      "import": "./src/use-cases/admin/types.ts",
+      "default": "./dist/use-cases/admin/types.js"
+    },
+    "./use-cases/health": {
+      "types": "./src/use-cases/health/index.ts",
+      "import": "./src/use-cases/health/index.ts",
+      "default": "./dist/use-cases/health/index.js"
+    },
+    "./shared/labels": {
+      "types": "./src/shared/labels/index.ts",
+      "import": "./src/shared/labels/index.ts",
+      "default": "./dist/shared/labels/index.js"
     }
   },
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/audit": "workspace:*",
     "@megawin/data": "workspace:*",
+    "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "mongodb": "^7.5.0"
   },

@@ -5,7 +5,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ---
 
-## [1.0.18]
+## [1.1.0] - 2026-07-28
+
+### Added — `client.keno.getComboPopularity` (minh bạch combo cappable)
+
+Thêm method `getComboPopularity(params)` cho Keno — player kiểm tra độ đông 1 bộ số cappable (pick8/9/10) họ đã cược: bao nhiêu bộ đang cùng chơi combo đó. Dùng để kiểm chứng cách chia giải cao nhất khi vượt cap (giải chia đều theo **số bộ trúng**, không theo số người).
+
+Types mới (subpath `@megawin/player-sdk/keno`):
+
+- `KenoComboPopularityParams` — `{ drawId, numbers }`. `numbers` là 8–10 số distinct zero-padded `"01".."80"`.
+- `KenoComboPopularityResponse` — `{ found, sets? }`. Chỉ trả `sets` (không trả `players`) vì công thức chia đều dùng tổng SỐ BỘ trúng làm mẫu số, không phải số người chơi — đây là dữ liệu tối giản đủ để player tự tính phần chia của mình.
+
+**Ownership-gate:** player CHỈ xem được combo mình đã thực sự cược. Combo chưa cược — hoặc combo chưa ai chơi — trả `{ found: false }` như nhau, cố ý KHÔNG phân biệt để không lộ bộ số cược của người khác. `found: false` không phải error.
+
+```ts
+const res = await client.keno.getComboPopularity({
+  drawId: "2026-03-07.001",
+  numbers: ["01", "05", "12", "23", "34", "45", "56", "67", "78", "80"],
+});
+if (res.found) console.log(`${res.sets} bộ đang cược combo này`);
+```
+
+---
 
 ### Changed — `boardNo` hỗ trợ số board động (tất cả games)
 

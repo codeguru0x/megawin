@@ -59,8 +59,8 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={Grid2x2}
         iconBg="bg-indigo-100 dark:bg-indigo-900/50"
         iconColor="text-indigo-600 dark:text-indigo-400"
-        label="Boards"
-        value={formatNumber(kpi.totalBoards)}
+        label="Số bộ cược"
+        value={formatNumber(kpi.totalSets)}
         sub="cơ bản + bổ sung"
       />
       <KpiCard
@@ -68,7 +68,7 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         iconBg="bg-violet-100 dark:bg-violet-900/50"
         iconColor="text-violet-600 dark:text-violet-400"
         label="Người chơi"
-        value={formatNumber(kpi.uniquePlayers)}
+        value={kpi.uniquePlayers === null ? "—" : formatNumber(kpi.uniquePlayers)}
       />
       <KpiCard
         icon={Wallet}

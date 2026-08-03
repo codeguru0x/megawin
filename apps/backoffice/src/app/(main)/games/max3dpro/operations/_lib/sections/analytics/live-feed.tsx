@@ -7,26 +7,46 @@
  * border-l-2 theo play mode color, font size minimum text-xs.
  */
 
-import { displayVNTimeWithSeconds, formatNumber, toTenantUsername } from "@megawin/shared/utils";
+import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
 
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
+import { PlayerName } from "@/components/player-name";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 import type { LiveFeedEntry } from "../../types";
-import { PLAY_MODE_COLORS } from "./analytics-panels";
+
+/** Màu theo play mode (multiNumber emerald / multiDigit violet) — UI-only, chuyển từ analytics-panels cũ. */
+const PLAY_MODE_COLORS: Record<string, { dot: string; text: string; fill: string }> = {
+  multiNumber: {
+    dot: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
+    fill: "#10b981",
+  },
+  multiDigit: {
+    dot: "bg-violet-500",
+    text: "text-violet-600 dark:text-violet-400",
+    fill: "#8b5cf6",
+  },
+};
 
 /**
- * Ngưỡng "cược lớn" (VND): entry có amount ≥ ngưỡng được highlight border đỏ +
- * chip để người trực ca chú ý dòng tiền lớn bất thường. Max3D Pro có giải ĐB
- * tới 2 tỷ, cược multiNumber (tới 20 bộ ba → 380 cặp/kỳ) có thể lên tới vài
- * triệu/kỳ — cao hơn game không-triplet (Keno/Bingo18). Đặt baseline
- * 2.000.000 (quan sát thực tế rồi tinh chỉnh, xem ghi chú ở Keno LiveFeed).
+ * Ngưỡng "cược lớn" (VND) — đọc từ `snapshot.thresholds.largeBetAmount` (config thực,
+ * KHÔNG hardcode). 0 khi chưa load → không tô. Đồng bộ với ngưỡng alert `large_bet`
+ * worker sinh, tránh mâu thuẫn feed vs alert.
  */
-const LARGE_BET_THRESHOLD = 2_000_000;
 
-export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntry[]; isSettled?: boolean }) {
+export function LiveFeed({
+  entries,
+  isSettled = false,
+  largeBetThreshold,
+}: {
+  entries: LiveFeedEntry[];
+  isSettled?: boolean;
+  /** Ngưỡng cược lớn (VND) từ `snapshot.thresholds` — 0 khi chưa load (không tô). */
+  largeBetThreshold: number;
+}) {
   return (
     <Card className="gap-0 py-0 shadow-sm flex flex-col">
       <CardHeader className="px-5 pb-2 pt-4 shrink-0">
@@ -51,7 +71,7 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_MODE_COLORS[e.playMode];
-              const isLargeBet = e.amount >= LARGE_BET_THRESHOLD;
+              const isLargeBet = largeBetThreshold > 0 && e.amount >= largeBetThreshold;
               return (
                 <div
                   key={e.entryId}
@@ -67,8 +87,18 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play mode label */}
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
-                      <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>
+                      <div
+                        className={cn(
+                          "size-1.5 rounded-full shrink-0",
+                          color?.dot ?? "bg-muted-foreground",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "text-xs font-semibold truncate",
+                          color?.text ?? "text-muted-foreground",
+                        )}
+                      >
                         {e.playModeLabel}
                       </span>
                       {isLargeBet && (
@@ -85,10 +115,14 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                         <TripletDisplay key={idx} value={t} variant="default" size="sm" />
                       ))}
                       {e.triplets.length > 4 && (
-                        <span className="text-xs text-muted-foreground shrink-0">+{e.triplets.length - 4}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          +{e.triplets.length - 4}
+                        </span>
                       )}
                       {e.lineCount > 1 && (
-                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">({e.lineCount} cặp)</span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">
+                          ({e.lineCount} cặp)
+                        </span>
                       )}
                       {e.betCount > 1 && (
                         <span className="text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded shrink-0 ml-0.5">
@@ -102,15 +136,9 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                       </span>
                     </div>
 
-                    {/* Row 3: username · tenant | time */}
-                    <div className="text-xs text-muted-foreground truncate mt-0.5">
-                      {e.username && (
-                        <>
-                          <span className="font-medium text-foreground/70">{toTenantUsername(e.username)}</span>
-                          <span className="mx-1">·</span>
-                        </>
-                      )}
-                      {e.tenant}
+                    {/* Row 3: player (primary · tenant qua PlayerName) | time */}
+                    <div className="min-w-0 truncate mt-0.5">
+                      <PlayerName username={e.username} className="text-xs" />
                     </div>
                     <div className="flex items-start justify-end">
                       <span className="text-xs font-mono tabular-nums text-muted-foreground">

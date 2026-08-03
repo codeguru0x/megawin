@@ -7,14 +7,12 @@ import type {
   PreviewDrawsOutput,
 } from "@megawin/game-keno-application/use-cases/draws";
 import type {
+  GetComboLookupOutput,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
-  NumberFrequencyOutput,
-  OpsSummaryOutput,
-  PlayTypeDistributionOutput,
-  TenantBreakdownOutput,
+  ListAlertsOutput,
 } from "@megawin/game-keno-application/use-cases/operations";
 import type { GetEntryByIdOutput } from "@megawin/game-keno-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
@@ -26,21 +24,18 @@ import { kenoKeys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-keno-application/use-cases/draws";
 export type {
+  AlertGroup,
+  ComboLookupAccount,
   DrawSelectorItem,
+  GetComboLookupOutput,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
+  ListAlertsOutput,
   LiveEntryBoard,
   LiveEntryItem,
-  NumberFrequencyItem,
-  NumberFrequencyOutput,
-  OpsSummaryOutput,
-  PlayTypeDistributionItem,
-  PlayTypeDistributionOutput,
-  TenantBreakdownItem,
-  TenantBreakdownOutput,
-  TopComboItem,
+  SnapshotAlertCounts,
   WinningEntriesSummary,
   WinningEntryBoardDetail,
   WinningEntryItem,
@@ -88,107 +83,136 @@ export function useDrawDetail(drawId: string | undefined) {
 }
 
 // ─────────────────────────────────────────────
-// Operations Analytics
+// Operations Snapshot — timer 1 duy nhất (stats + alertCounts + drawStatus)
 // ─────────────────────────────────────────────
 
 /**
- * KPI tổng quan cược: doanh thu, entries, boards, side bets, players.
- * Keno: refetch mỗi 15s (kỳ ngắn ~8 phút); dừng khi đã settle.
+ * Snapshot gộp mọi số liệu vận hành 1 kỳ — **timer 1 duy nhất** (analysis §4.1).
+ *
+ * Thay 6 hook aggregation on-demand cũ bằng 1 findOne pre-aggregated. Nhịp poll đọc
+ * TỪ CHÍNH response (`pollSeconds` = worker `ops.stats.tickSeconds`) → FE khớp cadence
+ * worker, không hardcode; staff hạ tickSeconds thì FE tự theo. Fallback 10s.
+ *
+ * Mỗi section truyền `select` slice field của mình → section này đổi không kéo section
+ * khác re-render (React Query dedupe 1 query, `select` chặn cross re-render — §4.2).
+ *
+ * @param drawId - Kỳ cần đọc; `undefined` → query tắt.
+ * @param isSettled - Kỳ đã settle → tắt poll, `staleTime` Infinity (0 request).
+ * @param select - Optional slice để giảm re-render; mặc định trả full output.
  */
-export function useOpsSummary(params: OpsQueryParams, isSettled = false) {
+export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
+  drawId: string | undefined,
+  isSettled: boolean,
+  select?: (data: GetOpsSnapshotOutput) => TData,
+) {
   return useQuery({
-    queryKey: kenoKeys.opsSummary(params as unknown as Record<string, unknown>),
+    queryKey: kenoKeys.opsSnapshot(drawId ?? ""),
     queryFn: () =>
-      apiClient.get<OpsSummaryOutput>(`${BASE}/summary`, {
-        params: params as unknown as Record<string, string>,
+      apiClient.get<GetOpsSnapshotOutput>(`${BASE}/snapshot`, {
+        params: { drawId: drawId! },
       }),
-    refetchInterval: isSettled ? false : 15_000,
-    staleTime: isSettled ? Infinity : 10_000,
-    enabled: !!params.drawId,
+    enabled: !!drawId,
+    // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
+    refetchInterval: (query) => {
+      if (isSettled) return false;
+      const s = query.state.data?.pollSeconds ?? 10;
+      return s * 1000;
+    },
+    staleTime: isSettled ? Infinity : 8_000,
+    select,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Alerts (on-demand khi panel mở) + Ack mutation
+// ─────────────────────────────────────────────
+
+/**
+ * List alert 1 kỳ (grouped theo type) — chỉ fetch khi panel mở (`enabled`).
+ * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
+ */
+export function useAlerts(
+  drawId: string | undefined,
+  status: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: kenoKeys.opsAlerts(drawId ?? "", status),
+    queryFn: () =>
+      apiClient.get<ListAlertsOutput>(`${BASE}/alerts`, {
+        params: {
+          drawId: drawId!,
+          ...(status ? { status } : {}),
+          grouped: "true",
+        },
+      }),
+    enabled: !!drawId && enabled,
   });
 }
 
 /**
- * Phân tích doanh thu theo đại lý (tenant).
- * Refetch mỗi 30s khi đang active.
+ * Acknowledge 1 alert. Invalidate toàn bộ Keno cache để refresh cả panel alert
+ * lẫn badge count (đọc từ snapshot) — đơn giản, an toàn cho hành động ít tần suất.
  */
-export function useOpsTenantBreakdown(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: kenoKeys.opsTenantBreakdown(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TenantBreakdownOutput>(`${BASE}/tenants`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-    enabled: !!params.drawId,
+export function useAckAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: kenoKeys.all });
+      toast.success("Đã xác nhận cảnh báo.");
+    },
+    onError: (err) => {
+      const { title, description } = formatErrorToast(err, "Xác nhận cảnh báo thất bại.");
+      toast.error(title, { description });
+    },
   });
 }
 
+// ─────────────────────────────────────────────
+// Combo lookup (on-demand — bấm "Kiểm tra")
+// ─────────────────────────────────────────────
+
 /**
- * Tần suất 80 số Keno (heatmap 8×10).
- * Refetch mỗi 60s khi đang active.
+ * Tra cứu 1 bộ số cappable (pick8/9/10) trong 1 kỳ — on-demand.
+ *
+ * Dùng `useMutation` cho pattern bấm-nút-mới-chạy: component đọc `.mutate/.data/.isPending`.
+ * `numbers` gửi CSV ("01,05,...") — khớp `comboLookupQuerySchema` phía server.
  */
-export function useOpsNumberFrequency(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: kenoKeys.opsNumberFrequency(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<NumberFrequencyOutput>(`${BASE}/number-frequency`, {
-        params: params as unknown as Record<string, string>,
+export function useComboLookup(drawId: string | undefined) {
+  return useMutation({
+    mutationFn: ({ playType, numbers }: { playType: string; numbers: string[] }) =>
+      apiClient.get<GetComboLookupOutput>(`${BASE}/combo-lookup`, {
+        params: {
+          drawId: drawId!,
+          playType,
+          numbers: numbers.join(","),
+        },
       }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
   });
 }
 
-/**
- * Phân bổ theo kiểu chơi.
- * Keno: 12 kiểu — pick1-10 (basic) + bigSmall + evenOdd (side bets).
- */
-export function useOpsPlayTypeDistribution(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: kenoKeys.opsPlayTypeDistribution(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<PlayTypeDistributionOutput>(`${BASE}/playtype-distribution`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
+// ─────────────────────────────────────────────
+// Live feed — timer 2 (chỉ chạy khi tab Phân tích mở & kỳ chưa settle)
+// ─────────────────────────────────────────────
 
 /**
- * Live feed: N entries mới nhất của một kỳ quay Keno.
- * Keno: refetch mỗi 15s khi kỳ đang bán (chu kỳ ngắn).
+ * Live feed: N entries mới nhất của 1 kỳ Keno — **timer 2** (analysis §4.2).
+ *
+ * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng.
+ * `enabled` gate ở caller (`onAnalysisTab && !isSettled`) để chỉ chạy khi tab Phân
+ * tích mở. Nhịp poll khớp `pollMs` (mặc định 10s) — dừng khi settled.
  */
-export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean) {
+export function useLiveFeed(drawId: string | undefined, enabled: boolean, pollMs = 10_000) {
   return useQuery({
     queryKey: kenoKeys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
         params: { drawId: drawId! },
       }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 15_000,
-    staleTime: isSettled ? Infinity : 10_000,
-  });
-}
-
-/**
- * Top N bộ số phổ biến nhất trong một kỳ quay.
- */
-export function useOpsTopCombos(drawId: string | undefined, isSettled: boolean) {
-  return useQuery({
-    queryKey: kenoKeys.opsTopCombos(drawId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetTopCombosOutput>(`${BASE}/top-combos`, {
-        params: { drawId: drawId! },
-      }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
+    enabled: !!drawId && enabled,
+    refetchInterval: enabled ? pollMs : false,
+    staleTime: pollMs * 0.8,
   });
 }
 

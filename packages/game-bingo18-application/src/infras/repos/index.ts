@@ -18,6 +18,9 @@ export { EntryVoidRepository } from "./entry-void-repo";
 export { SystemSettleGameDailyRepo } from "./system-settle-game-daily-repo";
 export { SystemSettleTenantDailyRepo } from "./system-settle-tenant-daily-repo";
 export { SystemOutstandingRepo } from "./system-outstanding-repo";
+export { BettingStatsRepository } from "./betting-stats-repo";
+export { AccountStatsRepository } from "./account-stats-repo";
+export { OpsAlertRepository } from "./ops-alert-repo";
 
 export type * from "./types";
 

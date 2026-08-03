@@ -143,13 +143,20 @@ async function parseResponse<T>(response: Response, rawResponse?: boolean): Prom
   const contentType = response.headers.get("content-type") ?? "";
 
   if (!contentType.includes("application/json")) {
-    if (!response.ok) {
-      throw new ApiClientError(response.status, {
-        code: "NETWORK_ERROR",
-        message: `Unexpected response: ${response.status} ${response.statusText}`,
-      });
-    }
-    return undefined as T;
+    // Mọi response hợp lệ từ backend MegaWin đều là JSON (`apiSuccess`/`apiError` dùng
+    // `NextResponse.json`) — nhánh này chỉ chạm tới khi có bất thường ngoài luồng
+    // (dev server trả HTML overlay lúc compile lỗi, proxy/middleware redirect tới trang
+    // login, response 204/304 lọt qua tầng cache trình duyệt...). TRƯỚC đây `response.ok`
+    // (2xx) → silently `return undefined as T`, khiến React Query crash với lỗi khó hiểu
+    // "Query data cannot be undefined" che mất nguyên nhân gốc. Luôn throw để caller thấy
+    // lỗi rõ ràng, vào error state bình thường (tự retry ở lần poll kế tiếp nếu là bất
+    // thường tạm thời).
+    throw new ApiClientError(response.status, {
+      code: "NETWORK_ERROR",
+      message: response.ok
+        ? `Expected JSON response but got "${contentType || "unknown content-type"}"`
+        : `Unexpected response: ${response.status} ${response.statusText}`,
+    });
   }
 
   // rawResponse mode: chỉ throw khi HTTP non-ok; giữ nguyên envelope cho caller.

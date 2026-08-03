@@ -7,12 +7,14 @@
  * Giải thưởng áp dụng cho 1 lần tham gia mệnh giá 10.000 VND.
  */
 
-import type { FinancialRates, Max3dPrizeConfig, PlayRules } from "../entities/types";
+import type { FinancialRates, Max3dPrizeConfig, OpsConfig, PlayRules } from "../entities/types";
+import { Max3dOpsAlertType } from "../entities/ops-alert";
 
 export const DEFAULT_MAX3D_CONFIG: {
   rates: FinancialRates;
   defaultPrizes: Max3dPrizeConfig;
   play: PlayRules;
+  ops: OpsConfig;
 } = {
   rates: {
     defaultCommissionRate: 0.2,
@@ -58,5 +60,33 @@ export const DEFAULT_MAX3D_CONFIG: {
     drawsPerDay: 1,
     drawTimes: ["18:00"],
     drawDaysOfWeek: [1, 3, 5],
+  },
+  /**
+   * Cấu hình vận hành mặc định (analysis max3d-ops §3.6, ngưỡng chốt 30/07/2026).
+   * Ngưỡng TUYỆT ĐỐI VND (không có cap kỳ / revenue ổn định làm mẫu số).
+   * tickSeconds 30 (chốt §7 Q3 — 3 kỳ/tuần, kỳ bán nhiều ngày, không cần nhịp 10s).
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 5_000_000,
+      exposureWarnAmount: 5_000_000_000,
+      pairLiabilityWarnAmount: 2_000_000_000,
+      comboAccountsWarn: 5,
+      enabled: {
+        [Max3dOpsAlertType.LargeBet]: true,
+        [Max3dOpsAlertType.ExposureThreshold]: true,
+        [Max3dOpsAlertType.PairLiability]: true,
+        [Max3dOpsAlertType.ComboConcentration]: true,
+        // Để dành — không bắn ở P0.
+        [Max3dOpsAlertType.RevenueAnomaly]: false,
+        [Max3dOpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 30,
+      topCombosK: 100,
+      topPotentialK: 50,
+      topAccountsK: 50,
+    },
   },
 };

@@ -11,7 +11,7 @@
  * held → return `{ skipped: true, reason: "locked" }` ngay, không chờ.
  */
 
-import { isLockedWorkerSkipped } from "@megawin/worker-core";
+import { isWorkerRunSkipped } from "@megawin/worker-core/workers";
 import { ProcessMainDispatchBatchUseCase } from "@megawin/tenant-dispatch/use-cases/process";
 
 const useCase = new ProcessMainDispatchBatchUseCase();
@@ -19,7 +19,7 @@ const useCase = new ProcessMainDispatchBatchUseCase();
 export async function handler() {
   const result = await useCase.run();
 
-  if (isLockedWorkerSkipped(result)) {
+  if (isWorkerRunSkipped(result)) {
     console.info(`[tenant-dispatch][main] skipped: ${result.reason}`);
     return result;
   }

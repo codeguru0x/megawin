@@ -24,6 +24,13 @@ export const KenoCollections = {
   Draws: "keno_draws",
   DrawCounters: "keno_draw_counters",
   GameConfigs: "keno_game_configs",
+  BettingStats: "keno_draw_betting_stats",
+  ComboStats: "keno_draw_combo_stats",
+  /** Chi tiết account/combo — tách khỏi ComboStats để doc không phình (p2-01 §3.5). */
+  ComboAccounts: "keno_draw_combo_accounts",
+  /** Tích luỹ cược theo account/kỳ — nguồn CHÍNH XÁC cho `topAccounts` (p2-01 §3.5). */
+  AccountStats: "keno_draw_account_stats",
+  OpsAlerts: "keno_ops_alerts",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -65,8 +72,8 @@ export type KenoPlayType = (typeof KenoPlayType)[keyof typeof KenoPlayType];
 
 export const KENO_PLAY_TYPE_VALUES = Object.values(KenoPlayType);
 
-/** Play types thuộc cách chơi cơ bản (chọn số). */
-export const KENO_BASIC_PLAY_TYPES: readonly KenoPlayType[] = [
+/** Play types thuộc cách chơi cơ bản (chọn số). Thứ tự pick1→pick10 — UI iterate theo đây. */
+export const KENO_BASIC_PLAY_TYPES: readonly KenoBasicPlayType[] = [
   KenoPlayType.Pick1,
   KenoPlayType.Pick2,
   KenoPlayType.Pick3,
@@ -100,6 +107,15 @@ export type KenoBasicPlayType =
   | typeof KenoPlayType.Pick8
   | typeof KenoPlayType.Pick9
   | typeof KenoPlayType.Pick10;
+
+/**
+ * Narrowed type cho play type CAPPABLE — pick8/9/10, nhóm duy nhất bị áp payout cap cứng/kỳ
+ * (`PayoutCaps.pick{8,9,10}MaxPerDraw`, xem `rules/max-prize.ts`) vì cardinality thấp, dễ bị
+ * dồn cược khai thác. Dùng thay string literal trần `"pick8" | "pick9" | "pick10"` ở mọi nơi
+ * cần tập giá trị đóng này (evaluator alert, exposure cap, combo stats).
+ */
+export type KenoCappablePlayType =
+  typeof KenoPlayType.Pick8 | typeof KenoPlayType.Pick9 | typeof KenoPlayType.Pick10;
 
 /** Set dùng cho runtime check: playType có thuộc basic (chọn số) hay không. */
 export const KENO_BASIC_PLAY_TYPE_SET: ReadonlySet<KenoPlayType> = new Set(KENO_BASIC_PLAY_TYPES);

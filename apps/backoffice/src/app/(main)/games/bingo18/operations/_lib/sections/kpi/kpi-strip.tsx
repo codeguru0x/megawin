@@ -35,11 +35,11 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
 /**
  * KPI strip cho Bingo 18 Operations.
  *
- * Bingo 18: boards (singleNum/doubleMatch/tripleMatch) + sideBets (sumTotal/bigSmallDraw).
+ * Bingo 18: bộ cược cơ bản (singleNum/doubleMatch/tripleMatch) + sideBets (sumTotal/bigSmallDraw).
  *
  * Label metric chung (doanh thu, phiếu cược, người chơi, hoa hồng) đọc từ
  * `REPORT_COLUMN_LABELS` (label language dùng chung mọi game/report) — tránh hardcode
- * lệch chữ giữa operations và report. Card đặc thù game (Boards cơ bản / Side bets)
+ * lệch chữ giữa operations và report. Card đặc thù game (Bộ cược cơ bản / Side bets)
  * giữ label riêng vì không phải metric chung.
  */
 export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
@@ -63,8 +63,8 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={Grid2x2}
         iconBg="bg-indigo-100 dark:bg-indigo-900/50"
         iconColor="text-indigo-600 dark:text-indigo-400"
-        label="Boards cơ bản"
-        value={formatNumber(kpi.totalBasicBoards)}
+        label="Bộ cược cơ bản"
+        value={formatNumber(kpi.totalBasicSets)}
         sub="singleNum · double · triple"
       />
       <KpiCard

@@ -11,12 +11,14 @@
  * lúc 18h00.
  */
 
-import type { FinancialRates, Max3dproPrizeConfig, PlayRules } from "../entities/types";
+import type { FinancialRates, Max3dproPrizeConfig, OpsConfig, PlayRules } from "../entities/types";
+import { Max3dproOpsAlertType } from "../entities/ops-alert";
 
 export const DEFAULT_MAX3D_PRO_CONFIG: {
   rates: FinancialRates;
   defaultPrizes: Max3dproPrizeConfig;
   play: PlayRules;
+  ops: OpsConfig;
 } = {
   rates: {
     defaultCommissionRate: 0.2,
@@ -43,5 +45,33 @@ export const DEFAULT_MAX3D_PRO_CONFIG: {
     drawsPerDay: 1,
     drawTimes: ["18:00"],
     drawDaysOfWeek: [2, 4, 6],
+  },
+  /**
+   * Cấu hình vận hành mặc định (analysis max3dpro-ops §3.6, ngưỡng chốt 30/07/2026).
+   * KHÁC Max 3D: largeBet 10tr (multiNumber 20 bộ = 3,8tr/kỳ betCount 1 — 5tr sẽ noise);
+   * pairLiability 4 tỷ (ĐB Pro 2 tỷ/unit). tickSeconds 30 (3 kỳ/tuần, bán nhiều ngày).
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 10_000_000,
+      exposureWarnAmount: 5_000_000_000,
+      pairLiabilityWarnAmount: 4_000_000_000,
+      comboAccountsWarn: 5,
+      enabled: {
+        [Max3dproOpsAlertType.LargeBet]: true,
+        [Max3dproOpsAlertType.ExposureThreshold]: true,
+        [Max3dproOpsAlertType.PairLiability]: true,
+        [Max3dproOpsAlertType.ComboConcentration]: true,
+        // Để dành — không bắn ở P0.
+        [Max3dproOpsAlertType.RevenueAnomaly]: false,
+        [Max3dproOpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 30,
+      topCombosK: 100,
+      topPotentialK: 50,
+      topAccountsK: 50,
+    },
   },
 };

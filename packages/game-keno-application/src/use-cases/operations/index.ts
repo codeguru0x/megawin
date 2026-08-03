@@ -2,28 +2,16 @@
  * Keno – Operations Dashboard Use Cases barrel export.
  */
 
-export { GetOpsSummaryUseCase } from "./get-ops-summary";
-export { GetTenantBreakdownUseCase } from "./get-tenant-breakdown";
-export { GetNumberFrequencyUseCase } from "./get-number-frequency";
-export { GetPlayTypeDistributionUseCase } from "./get-playtype-distribution";
 export { GetLiveEntriesUseCase } from "./get-live-entries";
 export { GetDrawSelectorUseCase } from "./get-draw-selector";
-export { GetTopCombosUseCase } from "./get-top-combos";
+export { GetComboLookupUseCase } from "./get-combo-lookup";
+export { GetOpsSnapshotUseCase } from "./get-ops-snapshot";
+export { ListAlertsUseCase } from "./list-alerts";
+export { AckAlertUseCase } from "./ack-alert";
 export { GetWinningEntriesUseCase } from "./get-winning-entries";
-
-export type {
-  GetOpsSummaryInput,
-  OpsSummaryOutput,
-  GetTenantBreakdownInput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  GetNumberFrequencyInput,
-  NumberFrequencyOutput,
-  NumberFrequencyItem,
-  GetPlayTypeDistributionInput,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-} from "./dto/operations.dto";
+export { SyncBettingStatsUseCase, type SyncBettingStatsResult } from "./sync-betting-stats";
+export { EvaluateOpsAlertsUseCase, type EvaluateOpsAlertsResult } from "./evaluate-ops-alerts";
+export { DrawStatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 export type {
   GetLiveEntriesInput,
@@ -34,7 +22,25 @@ export type {
 
 export type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
-export type { GetTopCombosInput, GetTopCombosOutput, TopComboItem } from "./dto/top-combos.dto";
+export type {
+  GetComboLookupInput,
+  GetComboLookupOutput,
+  ComboLookupAccount,
+} from "./dto/combo-lookup.dto";
+
+export type {
+  ListAlertsInput,
+  ListAlertsOutput,
+  AlertGroup,
+  AckAlertInput,
+  AckAlertOutput,
+} from "./dto/alerts.dto";
+
+export type {
+  GetOpsSnapshotInput,
+  GetOpsSnapshotOutput,
+  SnapshotAlertCounts,
+} from "./dto/snapshot.dto";
 
 export type {
   GetWinningEntriesInput,

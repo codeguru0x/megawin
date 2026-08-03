@@ -1,6 +1,7 @@
 "use client";
 
-import type { FinancialRates, Max3dproPrizeConfig, PlayRules } from "@megawin/game-max3dpro/entities/types";
+import type { FinancialRates, Max3dproPrizeConfig, PlayRules, OpsConfig,
+} from "@megawin/game-max3dpro/entities/types";
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -12,6 +13,8 @@ interface GameConfig {
   rates: FinancialRates;
   defaultPrizes: Max3dproPrizeConfig;
   play: PlayRules;
+  /** Cấu hình vận hành — doc cũ chưa save lần nào có thể thiếu (fallback default ở UI). */
+  ops?: OpsConfig;
   version: number;
   createdAt: string;
   updatedAt: string;

@@ -32,7 +32,13 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       unfinishedDraws.filter((d) => d.status === DrawStatus.Scheduled),
       (d) => d.drawId,
     ).slice(0, 10);
-    const activeDraws = unfinishedDraws.filter((d) => d.status !== DrawStatus.Scheduled);
+    // active sort drawId ASC: kỳ SỚM nhất (gần giờ hiện tại nhất, cần xử lý trước) lên đầu.
+    // getUnfinishedDraws trả DESC → phải re-sort, nếu không auto-select + selector hiện kỳ
+    // XA nhất trước (vd 16:00 thay vì 14:48 đang chạy) — sai kỳ vận hành thực tế.
+    const activeDraws = sortBy(
+      unfinishedDraws.filter((d) => d.status !== DrawStatus.Scheduled),
+      (d) => d.drawId,
+    );
 
     const toItem = (
       draw: (typeof unfinishedDraws)[0],

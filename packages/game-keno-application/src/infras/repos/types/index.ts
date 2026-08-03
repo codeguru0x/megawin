@@ -9,6 +9,7 @@ export type {
   VoidedEntryForDispatch,
   ReversalCandidate,
   ReversalEntryForDispatch,
+  OwnedBoard,
 } from "./entry.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
 export type {
@@ -16,3 +17,13 @@ export type {
   OutstandingPlayerBreakdownRow,
 } from "./entry-outstanding.types";
 export type { VoidTenantBreakdownRow, VoidPlayerBreakdownRow } from "./entry-void.types";
+export type {
+  EntryForStats,
+  EntryBoardForStats,
+  DrawStatsCursor,
+  DrawStatsDelta,
+  PartialPlayTypeDelta,
+  ComboAccountDelta,
+  ComboStatsDelta,
+  AccountStatsDelta,
+} from "./betting-stats.types";

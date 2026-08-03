@@ -8,6 +8,10 @@
  * - Trạng thái tenant (có được phép chơi không)
  *
  * Không expose thông tin tài chính nội bộ (commissionRate, companyRate...).
+ *
+ * LƯU Ý: DTO player build allowlist tường minh (KHÔNG spread `globalConfig`). Section
+ * `ops` (ngưỡng alert, top-K, nhịp worker — §3.9) KHÔNG được thêm vào đây: thông tin
+ * vận hành nội bộ, tuyệt đối không lộ cho player.
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";

@@ -10,7 +10,6 @@ export type {
   VoidMetrics,
   VoidRefundSummary,
   TicketAggregateResult,
-  OpsSummary,
   WinningEntriesSummary,
   PrizeSummaryRow,
   WinningEntryForDispatch,
@@ -25,3 +24,11 @@ export type {
   OutstandingPlayerBreakdownRow,
 } from "./entry-outstanding.types";
 export type { VoidTenantBreakdownRow, VoidPlayerBreakdownRow } from "./entry-void.types";
+export type {
+  EntryForStats,
+  EntryBoardForStats,
+  DrawStatsCursor,
+  Bingo18PartialByPlayType,
+  DrawStatsDelta,
+  AccountStatsDelta,
+} from "./betting-stats.types";

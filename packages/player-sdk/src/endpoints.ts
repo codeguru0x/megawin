@@ -24,6 +24,7 @@ export const ENDPOINTS = {
     getTicketEntries: (ticketId: string) => `/games/keno/tickets/${ticketId}/entries` as const,
     listDrawResults: "/games/keno/draw-results",
     getDrawResult: (drawId: string) => `/games/keno/draw-results/${drawId}` as const,
+    getComboPopularity: (drawId: string) => `/games/keno/draws/${drawId}/combo-popularity` as const,
   },
 
   lotto535: {

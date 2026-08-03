@@ -25,7 +25,6 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
-    this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
     const merged = {
@@ -80,39 +79,5 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       config: updated,
       version: updated.version,
     };
-  }
-
-  private validateInput(input: UpdateGameConfigInput): void {
-    if (input.rates) {
-      const { defaultCommissionRate, companyRate } = input.rates;
-
-      if (
-        defaultCommissionRate !== undefined &&
-        (defaultCommissionRate < 0 || defaultCommissionRate > 1)
-      ) {
-        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
-      }
-
-      if (companyRate !== undefined && (companyRate < 0 || companyRate > 1)) {
-        throw AppException.badRequest("companyRate phải trong range [0, 1].");
-      }
-    }
-
-    if (input.defaultPrizes) {
-      for (const [key, value] of Object.entries(input.defaultPrizes)) {
-        if (value !== undefined && (typeof value !== "number" || value < 0)) {
-          throw AppException.badRequest(`Giải thưởng ${key} phải là số dương.`);
-        }
-      }
-    }
-
-    if (input.jackpot) {
-      if (input.jackpot.seedAmount !== undefined && input.jackpot.seedAmount < 0) {
-        throw AppException.badRequest("seedAmount phải >= 0.");
-      }
-      if (input.jackpot.splitThreshold !== undefined && input.jackpot.splitThreshold < 0) {
-        throw AppException.badRequest("splitThreshold phải >= 0.");
-      }
-    }
   }
 }
