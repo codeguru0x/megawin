@@ -7,6 +7,8 @@
     "dev": "tsc --watch",
     "build": "tsc -p tsconfig.build.json",
     "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
     "clean": "rm -rf dist"
   },
   "keywords": [],
@@ -21,8 +23,11 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "@megawin/shared": "workspace:*"

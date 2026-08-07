@@ -3,33 +3,45 @@
 /**
  * Power 6/55 Operations — Analytics Section
  *
- * PlayTypeCard: phân bổ 12 kiểu chơi Power 6/55.
- * NumberHeatmap: tần suất 55 số chính (11×5) + top combos + tenant breakdown.
- * LiveFeed: cược gần nhất real-time (mainNumbers + suffix).
+ * Tab "Phân tích" — đọc TỪ SNAPSHOT (1 query + `select` slice per-section, KHÔNG còn 5 hook
+ * aggregation cũ). Sections: PlayTypeCard (12 kiểu) · NumberHeatmap (55 số + combo lookup) ·
+ * TopRiskPanel (top người chơi/phải trả/bộ số phổ biến) · TenantBreakdownCard · LiveFeed.
  *
- * Power 6/55: standard, bao5, bao7-bao18.
+ * `select` slice: đổi 1 section KHÔNG kéo section khác re-render (React Query dedupe 1 query).
+ * LiveFeed đọc endpoint riêng (live entries KHÔNG nằm trong stats doc) nhưng DÙNG CHUNG nhịp
+ * `tickSeconds` với snapshot (analysis §5.2, §6.1-D2) — lấy `pollSeconds` từ chính snapshot.
  */
-
-import { useMemo } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayType } from "@megawin/game-power655/entities";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 
-import type { LiveFeedEntry, NumberFreq, PlayTypeRow, TenantRow } from "../../types";
-import { useDrawContext } from "../../use-draw-context";
 import {
-  useOpsLiveEntries,
-  useOpsNumberFrequency,
-  useOpsPlayTypeDistribution,
-  useOpsTenantBreakdown,
-  useOpsTopCombos,
-} from "../../use-operations";
-import { PlayTypeCard } from "./analytics-panels";
+  toNumberFreq,
+  toPlayTypeRows,
+  toTenantRows,
+  toTopAccounts,
+  toTopCombos,
+  toTopPotential,
+} from "../../adapters";
+import type {
+  LiveFeedEntry,
+  NumberFreqItem,
+  PlayTypeRow,
+  TenantRow,
+  TopAccountRow,
+  TopComboRow,
+  TopPotentialRow,
+} from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import type { LiveEntryItem } from "../../use-operations";
+import { useOpsLiveEntries, useOpsSnapshot } from "../../use-operations";
+import { PlayTypeCard, TenantBreakdownCard, TopRiskPanel } from "./analytics-panels";
 import { LiveFeed } from "./live-feed";
 import { NumberHeatmap } from "./number-heatmap";
 
-const ANALYTICS_SHOW = new Set([
+/** Trạng thái kỳ được phép hiển thị tab phân tích (đã có/đang có cược hoặc đã settle). */
+const ANALYTICS_SHOW = new Set<DrawStatus>([
   DrawStatus.SalesOpen,
   DrawStatus.SalesClosed,
   DrawStatus.Published,
@@ -39,91 +51,95 @@ const ANALYTICS_SHOW = new Set([
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function AnalyticsSection() {
-  const { draw, effectiveDrawId, isSettled, opsParams } = useDrawContext();
+export function AnalyticsSection({ active }: { active: boolean }) {
+  const { draw, effectiveDrawId, isSettled, status } = useDrawContext();
 
-  const { data: playtypeData } = useOpsPlayTypeDistribution(opsParams, isSettled);
-  const { data: tenantData } = useOpsTenantBreakdown(opsParams, isSettled);
-  const { data: freqData } = useOpsNumberFrequency(opsParams, isSettled);
-  const { data: topCombosData } = useOpsTopCombos(effectiveDrawId, isSettled);
-  const { data: liveData } = useOpsLiveEntries(effectiveDrawId, isSettled);
+  // 1 snapshot query, mỗi section 1 `select` slice → tránh cross re-render.
+  const { data: playTypes } = useOpsSnapshot<PlayTypeRow[]>(effectiveDrawId, isSettled, (s) =>
+    s.stats ? toPlayTypeRows(s.stats) : [],
+  );
+  const { data: numberFreq } = useOpsSnapshot<NumberFreqItem[]>(effectiveDrawId, isSettled, (s) =>
+    toNumberFreq(s.numberStats),
+  );
+  const { data: topCombos } = useOpsSnapshot<TopComboRow[]>(effectiveDrawId, isSettled, (s) =>
+    toTopCombos(s.topCombos),
+  );
+  const { data: topAccounts } = useOpsSnapshot<TopAccountRow[]>(effectiveDrawId, isSettled, (s) =>
+    toTopAccounts(s.topAccounts),
+  );
+  const { data: topPotential } = useOpsSnapshot<TopPotentialRow[]>(
+    effectiveDrawId,
+    isSettled,
+    (s) => (s.stats ? toTopPotential(s.stats) : []),
+  );
+  const { data: tenants } = useOpsSnapshot<TenantRow[]>(effectiveDrawId, isSettled, (s) =>
+    s.stats ? toTenantRows(s.stats) : [],
+  );
+  // Nhịp poll chung cho toàn trang (D2) — live feed khớp cadence snapshot, không hardcode.
+  const { data: pollSeconds } = useOpsSnapshot<number>(
+    effectiveDrawId,
+    isSettled,
+    (s) => s.pollSeconds,
+  );
 
-  // ── Adapters: API data → UI types ─────────────────────────────────────────
+  const { data: liveData } = useOpsLiveEntries(
+    active && effectiveDrawId ? effectiveDrawId : undefined,
+    isSettled,
+    pollSeconds,
+  );
+  const liveFeed = toLiveFeed(liveData?.entries);
 
-  const playTypes: PlayTypeRow[] = useMemo(() => {
-    if (!playtypeData) return [];
-    const totalLines = playtypeData.distribution.reduce((a, d) => a + d.lineCount, 0);
-    return playtypeData.distribution.map((d) => ({
-      playType: d.playType as PlayType,
-      label: POWER655_PLAY_TYPE_LABELS[d.playType as PlayType] ?? d.playType,
-      entries: d.entryCount,
-      lines: d.lineCount,
-      revenue: d.revenue,
-      pct: totalLines > 0 ? (d.lineCount / totalLines) * 100 : 0,
-    }));
-  }, [playtypeData]);
-
-  const tenants: TenantRow[] = useMemo(() => {
-    if (!tenantData) return [];
-    const totalRevenue = tenantData.tenants.reduce((a, t) => a + t.revenue, 0);
-    return tenantData.tenants.map((t) => ({
-      tenantId: t.tenantId,
-      tenantName: t.tenantId,
-      entries: t.entries,
-      lines: t.lines,
-      revenue: t.revenue,
-      commission: t.commission,
-      pct: totalRevenue > 0 ? (t.revenue / totalRevenue) * 100 : 0,
-    }));
-  }, [tenantData]);
-
-  // Power 6/55: chỉ có mainNumbers (01-55)
-  const numberFreq: NumberFreq[] = useMemo(() => {
-    if (!freqData) return [];
-    return freqData.mainNumbers.map((f) => ({
-      number: String(f.number).padStart(2, "0"),
-      count: f.count,
-      lines: f.lines,
-      amount: f.revenue,
-    }));
-  }, [freqData]);
-
-  const liveFeed: LiveFeedEntry[] = useMemo(() => {
-    if (!liveData) return [];
-    return liveData.entries.map((e) => {
-      const firstBoard = e.boards[0];
-      const playType = firstBoard?.playType ?? "standard";
-
-      // Tạo suffix mô tả kiểu bao cho Live Feed
-      const suffix =
-        playType !== "standard" ? `(${POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType})` : undefined;
-
-      return {
-        entryId: e.entryId.slice(-6).toUpperCase(),
-        time: e.createdAt,
-        playType,
-        playTypeLabel: POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType,
-        mainNumbers: firstBoard?.mainNumbers ?? [],
-        suffix,
-        amount: e.amount,
-        username: e.username ?? "",
-        tenant: e.tenantId,
-      };
-    });
-  }, [liveData]);
-
-  if (!draw || !ANALYTICS_SHOW.has(draw.status as any)) return null;
+  if (!draw || !status || !ANALYTICS_SHOW.has(status)) return null;
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+        Phân tích cược
+      </h2>
 
-      <PlayTypeCard distribution={playTypes} />
+      <PlayTypeCard distribution={playTypes ?? []} />
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
-        <NumberHeatmap mainNumbers={numberFreq} topCombos={topCombosData?.combos} tenants={tenants} />
+        <NumberHeatmap numbers={numberFreq ?? []} drawId={effectiveDrawId} />
         <LiveFeed entries={liveFeed} isSettled={isSettled} />
       </div>
+
+      <TopRiskPanel
+        drawId={effectiveDrawId}
+        topAccounts={topAccounts ?? []}
+        topPotential={topPotential ?? []}
+        topCombos={topCombos ?? []}
+      />
+
+      {(tenants?.length ?? 0) > 0 && <TenantBreakdownCard tenants={tenants ?? []} />}
     </section>
   );
+}
+
+// ─── Live feed adapter (live entries → LiveFeedEntry) ────────────────────────
+
+/** Suffix mô tả kiểu bao cho live feed — standard → không hiện, còn lại "(Bao N)". */
+function baoSuffix(playType: string): string | undefined {
+  if (playType === "standard") return undefined;
+  return `(${POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType})`;
+}
+
+/** `live-entries.entries` → LiveFeedEntry[] — lấy board đầu tiên làm đại diện hiển thị. */
+function toLiveFeed(entries: LiveEntryItem[] | undefined): LiveFeedEntry[] {
+  if (!entries) return [];
+  return entries.map((e) => {
+    const firstBoard = e.boards[0];
+    const playType = firstBoard?.playType ?? "standard";
+    return {
+      entryId: e.entryId,
+      time: e.createdAt,
+      playType,
+      playTypeLabel: POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType,
+      mainNumbers: firstBoard?.mainNumbers ?? [],
+      suffix: baoSuffix(playType),
+      amount: e.amount,
+      username: e.username ?? "",
+      tenant: e.tenantId,
+    };
+  });
 }

@@ -34,6 +34,20 @@ export const Mega645Collections = {
    * of truth cho resettle (đọc opening), DBA restore cycle, và audit tích luỹ.
    */
   JackpotCycleEntries: "mega645_jackpot_cycle_entries",
+
+  // ── Ops & Risk Control (analysis §3.3–§3.9) ──
+  /** Thống kê realtime 1 kỳ — 1 doc/draw, worker cập nhật async (thay aggregate on-demand). */
+  DrawBettingStats: "mega645_draw_betting_stats",
+  /** Tần suất từng số trong 1 kỳ — 1 doc/(draw × số), tách riêng để chừa đường chỉ số unbounded. */
+  DrawNumberStats: "mega645_draw_number_stats",
+  /** Tích luỹ cược theo account trong 1 kỳ — 1 doc/(draw × account), nguồn topAccounts. */
+  DrawAccountStats: "mega645_draw_account_stats",
+  /** Thống kê combo (board) trong 1 kỳ — 1 doc/(draw × combo), nguồn topCombos + combo-lookup + jackpotUnits. */
+  DrawComboStats: "mega645_draw_combo_stats",
+  /** Chi tiết account đã cược 1 combo — 1 doc/(draw × combo × account), tránh mảng phình trong combo doc. */
+  DrawComboAccounts: "mega645_draw_combo_accounts",
+  /** Alert vận hành — 1 doc/(draw × dedupeKey), evaluator upsert idempotent. */
+  OpsAlerts: "mega645_ops_alerts",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -63,16 +77,6 @@ export const PrizeTier = {
 export type PrizeTier = (typeof PrizeTier)[keyof typeof PrizeTier];
 
 export const MEGA645_PRIZE_TIER_VALUES = Object.values(PrizeTier);
-
-/**
- * Các tier tham gia chia Jackpot khi split cycle.
- * tier1 nhận 2/5, tier2 nhận 2/5, tier3 nhận 1/5.
- */
-export const MEGA645_SPLIT_ELIGIBLE_TIERS: readonly PrizeTier[] = [
-  PrizeTier.Tier1,
-  PrizeTier.Tier2,
-  PrizeTier.Tier3,
-];
 
 // ─────────────────────────────────────────────
 // Play Type

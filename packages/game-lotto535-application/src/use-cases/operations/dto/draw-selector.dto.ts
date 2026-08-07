@@ -5,7 +5,7 @@
  * Mỗi item chứa đủ thông tin để render DrawRow (status, schedule, group).
  */
 
-import type { DrawSelectorGroup } from "@megawin/game-core/entities";
+import type { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────
 // GetDrawSelectorList
@@ -53,7 +53,7 @@ export interface DrawSelectorItem {
   /** Thời điểm settle gần nhất (ISO 8601) — high-water mark resettle. */
   settledAt?: string;
   /** Trạng thái kỳ quay. */
-  status: string;
+  status: DrawStatus;
   /** Ngày tài chính (YYYY-MM-DD) — dùng để filter analytics đúng ngày. */
   financialDate: string;
   /**

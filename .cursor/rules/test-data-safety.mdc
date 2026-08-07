@@ -1,0 +1,139 @@
+---
+description: Quy tắc an toàn dữ liệu khi viết test — cấm xoá/sửa dữ liệu không do chính test sinh ra. Áp dụng cho mọi file test và helper trong thư mục test.
+globs:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/test/**/*.ts"
+  - "**/test/**/*.tsx"
+alwaysApply: false
+---
+
+# Test Data Safety — Không Xoá/Sửa Dữ Liệu Không Do Test Sinh Ra
+
+Quy tắc SỐNG CÒN cho mọi file test trong monorepo này.
+
+> **Bối cảnh bắt buộc phải nhớ:** DB test dùng **CHUNG với staging website**. Test integration
+> chạy trực tiếp trên DB thật của staging. Một lệnh ghi/xoá sai scope = phá dữ liệu thật.
+> Sự cố 05/08/2026: một test gọi `deleteMany({})` không scope đã **XOÁ SẠCH tenant config thật**.
+> Đây là lý do quy tắc này tồn tại và tại sao nó tuyệt đối, không có ngoại lệ.
+
+---
+
+## 1. Luật vàng: CHỈ được chạm dữ liệu do CHÍNH test này sinh ra
+
+Test **CHỈ** được xoá/cập nhật những record mà **chính nó đã tạo ra** trong `beforeAll`/
+`beforeEach`/thân test. TUYỆT ĐỐI KHÔNG chạm bất kỳ dữ liệu nào khác — kể cả khi "trông giống
+data test".
+
+> **Cách đơn giản nhất để an toàn tuyệt đối: MOCK DB** (`vi.mock` repo/collection) — không chạm
+> DB thật thì không thể xoá nhầm. Ưu tiên mock cho unit test logic. Chỉ dùng DB thật khi thực sự
+> cần verify tầng repo/infra — và khi đó tuân thủ đầy đủ quy tắc dưới đây (seed-trước-rồi-mutate).
+
+- Mọi record test tạo ra PHẢI mang **MARKER nhận diện** để cleanup chỉ chạm đúng nó:
+  - `_id` cụ thể do test giữ lại, HOẶC
+  - `drawId` sentinel (VD `"2999-01-01.001"`), HOẶC
+  - prefix `ticketNo` test (VD `"L535-29990101-..."`), HOẶC
+  - field đánh dấu (VD `scope: GameConfigScope.Global` khi test đúng scope đó).
+- Cleanup (`afterAll`/`afterEach`) PHẢI dùng **đúng filter đã seed** — mirror 1:1. Không "dọn rộng".
+
+```typescript
+/** ĐÚNG — seed có marker, cleanup mirror đúng filter đã seed */
+const TEST_DRAW_ID = "2999-01-01.001"; // sentinel, không đụng data thật
+
+beforeAll(async () => {
+  await drawRepo.insertOne({ drawId: TEST_DRAW_ID, /* ... */ });
+});
+
+afterAll(async () => {
+  // Xoá ĐÚNG record test đã tạo — cùng filter với seed.
+  await drawRepo.deleteMany({ drawId: TEST_DRAW_ID });
+});
+```
+
+```typescript
+/** SAI — cleanup rộng hơn seed, chạm data không do test sinh ra */
+afterAll(async () => {
+  await drawRepo.deleteMany({}); // XOÁ SẠCH — phá staging
+  await drawRepo.deleteMany({ status: "settled" }); // xoá cả draw thật đã settled
+});
+```
+
+---
+
+## 2. CẤM TUYỆT ĐỐI các lệnh xoá/sửa không-scope
+
+Không bao giờ, trong bất kỳ file test hay test helper nào, được viết:
+
+- `deleteMany({})`, `deleteMany()` — filter rỗng
+- `deleteOne({})`
+- `updateMany({}, ...)`, `updateOne({}, ...)` — filter rỗng
+- `findOneAndDelete({})`, `findOneAndUpdate({}, ...)`
+- `collection.drop()`, `db.dropDatabase()`, `db.dropCollection(...)`
+- Bất kỳ filter nào **không định danh chính xác** record do test tạo (VD chỉ theo `status`,
+  `type`, `createdAt`, hay range thời gian — vì có thể trùng data thật).
+
+Nếu cần "reset về trạng thái sạch", KHÔNG xoá toàn collection. Thay vào đó: seed idempotent
+(upsert) đúng record test, và cleanup đúng record đó.
+
+---
+
+## 3. Seed helper phải idempotent và đặt đúng chỗ
+
+- Seed helper đặt tại `test/**/helpers/seed-*.ts`.
+- Dùng **upsert** để gọi nhiều lần vẫn an toàn (nhiều test file chạy chung process).
+- Mẫu: `packages/game-power655-application/test/use-cases/helpers/seed-global-config.ts`.
+
+```typescript
+/** ĐÚNG — idempotent, dùng upsert */
+export async function insertDefaultGlobalConfig(): Promise<GlobalConfigEntity> {
+  const repo = new GameConfigRepository();
+  const result = await repo.upsertGlobalConfig({ /* default fields */ });
+  if (!result) {
+    throw new Error("Failed to insert default global config");
+  }
+  return result;
+}
+```
+
+---
+
+## 4. Sửa doc trực tiếp trong test — vẫn phải scope
+
+Khi test cần ghi thẳng vào collection (VD dựng edge-case), luôn dùng filter định danh record test:
+
+```typescript
+/** ĐÚNG — updateOne có filter scope đúng record test đang dựng */
+await coll.updateOne(
+  { scope: GameConfigScope.Global }, // đúng doc test đã seed
+  { $set: { ops: { /* partial edge-case */ } } },
+);
+```
+
+Sau khi sửa doc trực tiếp ngoài luồng use-case → nhớ **invalidate cache** liên quan nếu có
+(cache TTL không tự phát hiện thay đổi ngoài luồng).
+
+---
+
+## 5. Ba lớp phòng thủ (hiểu để không phá nhầm)
+
+Quy tắc này (Cursor rule) là **lớp tĩnh** — ngăn code sai từ lúc viết. Ngoài ra hệ thống có:
+
+- **`db-guard` runtime** (`@megawin/vitest-config/setup-db-guard`): chạy đầu mỗi test worker.
+  - KHÔNG có `MONGODB_URI` → hiểu là test **mock/pure** (không chạm DB) → cho chạy bình thường.
+  - CÓ `MONGODB_URI` remote mà không set `ALLOW_DB_TESTS=true` → **từ chối chạy**.
+  - Đồng thời chặn động lệnh xoá/sửa filter rỗng (`deleteMany({})`, `drop`, `dropDatabase`) ở tầng driver.
+- **Biome GritQL** (kế hoạch `.cursor/plans/biome-monorepo-migration/p2-01-test-data-safety-guard.plan.md`):
+  chặn ở CI/lint các anti-pattern ở §2.
+
+KHÔNG dựa vào 2 lớp kia để bỏ qua quy tắc này. Viết test đúng ngay từ đầu.
+
+---
+
+## 6. Checklist trước khi commit file test integration
+
+- [ ] Mọi record test tạo ra có marker nhận diện (id/drawId/prefix/field).
+- [ ] Mọi `delete*`/`update*` có filter scope đúng record test — KHÔNG filter rỗng.
+- [ ] Cleanup `afterAll`/`afterEach` mirror đúng filter seed, không dọn rộng.
+- [ ] Seed helper idempotent (upsert), đặt tại `test/**/helpers/`.
+- [ ] Không có `deleteMany({})`, `drop()`, `dropDatabase()` ở bất kỳ đâu trong file.
+- [ ] Test pure (không DB) thì không cần các mục trên — ghi rõ `PURE — không DB` ở đầu file.

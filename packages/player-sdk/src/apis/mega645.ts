@@ -22,6 +22,8 @@ import type {
   Mega645TicketEntriesResponse,
   Mega645EntryLinesResponse,
   Mega645ListDrawResultsResponse,
+  Mega645ComboPopularityParams,
+  Mega645ComboPopularityResponse,
 } from "../mega645";
 import { ENDPOINTS } from "../endpoints";
 
@@ -263,6 +265,45 @@ export interface Mega645Api {
    * ```
    */
   getDrawResult(drawId: string): Promise<Mega645DrawResultDetail>;
+
+  /**
+   * Tra độ đông 1 bộ số bạn đã cược trong kỳ — minh bạch chia jackpot.
+   *
+   * **Endpoint:** `GET /games/mega645/draws/{drawId}/combo-popularity`
+   *
+   * **Ownership-gate:** chỉ trả `found: true` khi bạn ĐÃ cược đúng bộ số này trong kỳ. Nếu
+   * bạn chưa cược (hoặc bộ chưa ai chơi), API trả `{ found: false }` — hai trường hợp cố ý
+   * KHÔNG phân biệt để bảo vệ dữ liệu cược của người khác. `found: false` KHÔNG phải lỗi.
+   *
+   * **`sets` vs `jackpotUnits`:** `sets` là số bộ cùng cược — tín hiệu tham khảo (jackpot chia
+   * theo betCount toàn line trúng của kỳ, không phải trực tiếp theo `sets`). `jackpotUnits`
+   * CHỈ có khi tra bộ **6 số standard** — là mẫu số chia jackpot: phần của bạn khi trúng =
+   * `floor(pool / jackpotUnits) × betCount`. Con số tại thời điểm tra (bán vé tiếp → chỉ tăng).
+   *
+   * @param params - `drawId` + bộ số (5/6/7–15/18 số distinct `"01".."45"`)
+   * @returns Độ đông bộ số (`found`, `sets?`, `boardPrice?`, `jackpotUnits?`)
+   *
+   * @throws {@link ApiClientError} `UNAUTHORIZED` — token thiếu hoặc hết hạn
+   *
+   * @example
+   * ```ts
+   * const res = await client.mega645.getComboPopularity({
+   *   drawId: "2026-03-08.001",
+   *   numbers: ["01", "05", "12", "23", "34", "45"], // standard 6 số
+   * });
+   *
+   * if (res.found) {
+   *   console.log(`${res.sets} bộ đang cược · giá 1 board ${res.boardPrice} VND`);
+   *   if (res.jackpotUnits) {
+   *     console.log(`Mẫu số chia jackpot: ${res.jackpotUnits}`);
+   *   }
+   * } else {
+   *   // Bạn chưa cược bộ này, hoặc chưa ai chơi — không phân biệt.
+   *   console.log("Không có dữ liệu cho bộ số này.");
+   * }
+   * ```
+   */
+  getComboPopularity(params: Mega645ComboPopularityParams): Promise<Mega645ComboPopularityResponse>;
 }
 
 /** @internal */
@@ -303,6 +344,13 @@ export function createMega645Api(http: HttpClient): Mega645Api {
     },
     async getDrawResult(drawId) {
       return http.get<Mega645DrawResultDetail>(ENDPOINTS.mega645.getDrawResult(drawId));
+    },
+    async getComboPopularity(params) {
+      // numbers gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
+      return http.get<Mega645ComboPopularityResponse>(
+        ENDPOINTS.mega645.getComboPopularity(params.drawId),
+        { params: { numbers: params.numbers.join(",") } },
+      );
     },
   };
 }

@@ -190,3 +190,28 @@ export function validateSelection(playType: PlayType, selection: BoardSelection)
 
   return { valid: errors.length === 0, errors };
 }
+
+// ─────────────────────────────────────────────
+// PlayType Inference (từ số lượng đã chọn)
+// ─────────────────────────────────────────────
+
+/**
+ * Suy `PlayType` từ số lượng số chính + đặc biệt đã chọn — dùng khi caller KHÔNG gửi
+ * `playType` tường minh (VD: player combo popularity, p1-01 — chỉ gửi `numbers`/`specials`).
+ *
+ * Trả `null` nếu tổ hợp (mainCount, specialCount) KHÔNG khớp bất kỳ playType nào — caller
+ * phải coi đây là lỗi 400 (client gửi số lượng vô nghĩa), KHÔNG suy đoán thêm.
+ *
+ * Trùng logic UI `suggestPlayType` (backoffice `number-heatmap.tsx`) — đây là bản domain
+ * dùng lại được ở server (Zod `.refine` route + use-case), 1 nguồn duy nhất.
+ *
+ * @param mainCount - Số lượng số chính đã chọn.
+ * @param specialCount - Số lượng số đặc biệt đã chọn.
+ */
+export function inferPlayType(mainCount: number, specialCount: number): PlayType | null {
+  if (specialCount === 1 && mainCount === 4) return PlayType.MainCover4;
+  if (specialCount === 1 && mainCount === 5) return PlayType.Standard;
+  if (specialCount === 1 && mainCount >= 6 && mainCount <= 15) return PlayType.MainCover;
+  if (mainCount === 5 && specialCount >= 2 && specialCount <= 12) return PlayType.SpecialCover;
+  return null;
+}

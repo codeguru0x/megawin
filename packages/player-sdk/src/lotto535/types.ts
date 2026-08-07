@@ -976,3 +976,108 @@ export interface Lotto535ListDrawResultsResponse {
   /** Số lượng mỗi trang (echo lại `size`). */
   size: number;
 }
+
+// ─── Combo Popularity (minh bạch chia Jackpot + split) ───
+
+/**
+ * Tham số tra combo popularity Lotto 5/35 — bộ số bạn muốn kiểm tra độ đông.
+ *
+ * Tổ hợp `numbers`/`specials` phải khớp ĐÚNG 1 playType hợp lệ:
+ * - 5 chính + 1 ĐB → `standard` (bộ CHUẨN — DUY NHẤT trúng được Jackpot).
+ * - 4 chính + 1 ĐB → `mainCover4`.
+ * - 6-15 chính + 1 ĐB → `mainCover`.
+ * - 5 chính + 2-12 ĐB → `specialCover`.
+ *
+ * Tổ hợp KHÔNG khớp playType nào (VD 6 chính + 2 ĐB) → lỗi `VALIDATION_ERROR`.
+ *
+ * @example
+ * ```ts
+ * const params: Lotto535ComboPopularityParams = {
+ *   drawId: "2026-03-07.001",
+ *   numbers: ["01", "08", "15", "22", "35"], // standard — 5 chính
+ *   specials: ["07"], // 1 ĐB
+ * };
+ * ```
+ */
+export interface Lotto535ComboPopularityParams {
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+  drawId: string;
+  /**
+   * Số chính cần kiểm tra — 4-15 số distinct, dạng zero-padded string `"01".."35"`.
+   * Số lượng quyết định nhóm playType (kết hợp với `specials.length`).
+   */
+  numbers: string[];
+  /**
+   * Số đặc biệt cần kiểm tra — 1-12 số distinct, dạng zero-padded string `"01".."12"`.
+   */
+  specials: string[];
+}
+
+/**
+ * Kết quả minh bạch combo Lotto 5/35 — độ đông + mẫu số chia Jackpot (nếu bộ chuẩn) + mô
+ * tả cơ chế split cycle.
+ *
+ * **Ownership-gate:** `found` chỉ `true` khi chính bạn ĐÃ cược đúng bộ này trong kỳ. Nếu
+ * bạn chưa cược bộ đó — hoặc bộ chưa ai chơi — API trả `{ found: false }` như nhau, cố ý
+ * KHÔNG phân biệt 2 trường hợp để không lộ bộ số cược của người khác. `found: false`
+ * KHÔNG phải lỗi — bạn chỉ xem được độ đông của bộ mình thực sự tham gia.
+ *
+ * `sets` là tín hiệu THAM KHẢO — Jackpot chia theo TOÀN KỲ (tất cả line trúng bộ CHUẨN),
+ * KHÔNG theo riêng combo bạn tra. Với các playType không phải `standard` (bao/phủ),
+ * `sets` chỉ phản ánh độ đông của riêng bộ đó, KHÔNG liên quan tới chia Jackpot.
+ *
+ * `jackpotUnits` — CHỈ có khi bạn tra ĐÚNG bộ CHUẨN (5 chính + 1 ĐB, playType `standard`)
+ * — là mẫu số chia Jackpot THẬT nếu bộ đó trúng: phần thắng của board bạn =
+ * `floor(jackpotPool / jackpotUnits) × betCount` (betCount của board bạn, không phải của
+ * người khác). Giá trị này tại THỜI ĐIỂM TRA — bán tiếp có thể tăng, huỷ vé giảm trễ theo
+ * dữ liệu worker.
+ *
+ * `splitEligibleDraw` — CHỈ mô tả CƠ CHẾ, KHÔNG có con số split dự tính: nếu Jackpot đạt
+ * ngưỡng chia (mặc định 12 tỷ) VÀ không ai trúng Jackpot VÀ đây là kỳ 21h, thì TOÀN BỘ
+ * Jackpot được chia cho tier1-5 theo tỷ lệ 2:1:1:1:1 phần, sau đó chia tiếp cho SỐ ĐƠN VỊ
+ * dự thưởng trúng từng tier (chỉ biết SAU khi có kết quả quay); tiền chia làm tròn xuống
+ * 5.000đ (trừ tier cao nhất — nhận thêm phần dư làm tròn). KHÔNG thể tính trước giờ quay.
+ *
+ * @example
+ * ```ts
+ * const res = await client.lotto535.getComboPopularity({
+ *   drawId: "2026-03-07.001",
+ *   numbers: ["01", "08", "15", "22", "35"],
+ *   specials: ["07"],
+ * });
+ *
+ * if (res.found) {
+ *   console.log(`${res.sets} bộ đang cược combo này`);
+ *   console.log(`Giá 1 board: ${res.boardPrice?.toLocaleString()} VND`);
+ *   if (res.jackpotUnits) {
+ *     console.log(`Mẫu số chia Jackpot nếu trúng: ${res.jackpotUnits} đơn vị`);
+ *   }
+ *   if (res.splitEligibleDraw) {
+ *     console.log("Kỳ này đủ điều kiện chia Jackpot nếu không ai trúng.");
+ *   }
+ * } else {
+ *   console.log("Bạn chưa cược bộ này (hoặc chưa ai chơi).");
+ * }
+ * ```
+ */
+export interface Lotto535ComboPopularityResponse {
+  /** `true` khi bạn đã cược đúng bộ này VÀ combo có dữ liệu; ngược lại `false`. */
+  found: boolean;
+  /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
+  sets?: number;
+  /**
+   * Giá 1 board (VND) theo config hiện tại = `expandedLines × unitPrice`. Chỉ có khi
+   * `found=true`. Lưu ý: entry cũ có thể snapshot `unitPrice` khác nếu config đã đổi.
+   */
+  boardPrice?: number;
+  /**
+   * Mẫu số chia Jackpot (Σ đơn vị cược phủ bộ CHUẨN này) — CHỈ có khi tra ĐÚNG bộ chuẩn
+   * (5 chính + 1 ĐB). Công thức phần thắng: `floor(jackpotPool / jackpotUnits) × betCount`.
+   */
+  jackpotUnits?: number;
+  /**
+   * Kỳ này đủ điều kiện chia Jackpot NẾU không ai trúng (JP ≥ ngưỡng + kỳ 21h) — CHỈ có
+   * khi tra bộ chuẩn. Xem mô tả cơ chế split đầy đủ ở JSDoc interface.
+   */
+  splitEligibleDraw?: boolean;
+}

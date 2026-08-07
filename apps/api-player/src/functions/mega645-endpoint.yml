@@ -89,3 +89,12 @@ mega645-get-draw-result:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+mega645-get-combo-popularity:
+  handler: src/handlers/mega645/get-combo-popularity.handler
+  events:
+    - httpApi:
+        path: /games/mega645/draws/{drawId}/combo-popularity
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

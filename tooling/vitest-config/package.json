@@ -1,19 +1,63 @@
 {
   "name": "@megawin/vitest-config",
   "version": "0.0.0",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dist": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./setup-db-guard": {
+      "types": "./dist/setup-db-guard.d.ts",
+      "default": "./dist/setup-db-guard.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
+    "jsdom": "^30.0.1",
+    "mongodb": "^7.5.0",
     "vitest": "^4.1.10"
+  },
+  "peerDependenciesMeta": {
+    "@testing-library/jest-dom": {
+      "optional": true
+    },
+    "@testing-library/react": {
+      "optional": true
+    },
+    "@testing-library/user-event": {
+      "optional": true
+    },
+    "jsdom": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
     "@types/node": "^25.9.4",
-    "typescript": "^6.0.3"
+    "jsdom": "^30.0.1",
+    "mongodb": "^7.5.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   }
 }

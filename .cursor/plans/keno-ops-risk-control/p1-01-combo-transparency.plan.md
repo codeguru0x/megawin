@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # p1-01 — Minh bạch combo cho player (ownership-gated)
 
 > **Nguồn:** `.cursor/analysis/keno-operations-risk-control.analysis.md` §3.8, verdict #15.

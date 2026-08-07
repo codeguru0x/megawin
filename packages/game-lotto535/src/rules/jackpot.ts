@@ -22,12 +22,14 @@
 
 import { PrizeTier } from "../entities/enums";
 import { DrawNo } from "../entities/types";
+import { Lotto535OpsAlertType } from "../entities/ops-alert";
 import type {
   JackpotConfig,
   FinancialRates,
   PrizeAmounts,
   PlayRules,
   SplitRatios,
+  Lotto535OpsConfig,
 } from "../entities/types";
 
 // ─────────────────────────────────────────────
@@ -315,6 +317,7 @@ export const DEFAULT_LOTTO535_CONFIG: {
   rates: FinancialRates;
   defaultPrizes: PrizeAmounts;
   play: PlayRules;
+  ops: Lotto535OpsConfig;
 } = {
   jackpot: {
     seedAmount: 1_000_000_000,
@@ -342,5 +345,35 @@ export const DEFAULT_LOTTO535_CONFIG: {
     salesCloseBeforeMinutes: 5,
     drawsPerDay: 2,
     drawTimes: ["13:00", "21:00"],
+  },
+  /**
+   * Cấu hình vận hành mặc định (analysis §3.8). Ngưỡng alert + nhịp/top-K stats.
+   * Staff chỉnh trên tab "Vận hành"; đổi có hiệu lực trong ~1 chu kỳ worker.
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 30_000_000,
+      fixedExposureWarnAmount: 500_000_000,
+      comboAccountsWarn: 5,
+      coverHighStakeAmount: 10_000_000,
+      specialSkewRatio: 0.35,
+      specialSkewMinAmount: 50_000_000,
+      enabled: {
+        [Lotto535OpsAlertType.LargeBet]: true,
+        [Lotto535OpsAlertType.ExposureThreshold]: true,
+        [Lotto535OpsAlertType.ComboConcentration]: true,
+        [Lotto535OpsAlertType.CoverHighStake]: true,
+        [Lotto535OpsAlertType.SpecialSkew]: true,
+        // Để dành — không bắn ở P0.
+        [Lotto535OpsAlertType.RevenueAnomaly]: false,
+        [Lotto535OpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 10,
+      topPotentialK: 50,
+      topAccountsK: 50,
+      topCombosK: 100,
+    },
   },
 };

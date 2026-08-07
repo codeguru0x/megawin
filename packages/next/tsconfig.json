@@ -1,9 +1,10 @@
 {
   "extends": "@megawin/typescript-config/nextjs.json",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "dist",
     "noEmit": false
   },
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]
 }

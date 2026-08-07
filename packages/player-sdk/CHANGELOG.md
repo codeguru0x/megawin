@@ -28,6 +28,56 @@ if (res.found) console.log(`${res.sets} bộ đang cược combo này`);
 
 ---
 
+### Added — `client.mega645.getComboPopularity` (minh bạch chia Jackpot)
+
+Thêm method `getComboPopularity(params)` cho Mega 6/45 — player kiểm tra độ đông 1 bộ số họ đã cược VÀ, khi tra đúng bộ 6 số standard, xem mẫu số chia Jackpot thật nếu bộ đó trúng.
+
+Types mới (subpath `@megawin/player-sdk/mega645`):
+
+- `Mega645ComboPopularityParams` — `{ drawId, numbers }`. `numbers` 5–18 số distinct zero-padded `"01".."45"`; số lượng khớp playType (5 = bao5, 6 = standard, 7–15 = baoN, 18 = bao18).
+- `Mega645ComboPopularityResponse` — `{ found, sets?, boardPrice?, jackpotUnits? }`. `sets` là tín hiệu tham khảo — jackpot chia theo betCount toàn line trúng, không theo `sets`. `jackpotUnits` CHỈ có khi tra bộ 6 số standard: mẫu số chia jackpot, phần của bạn = `floor(pool / jackpotUnits) × betCount`.
+
+**Ownership-gate:** player CHỈ xem được bộ số mình đã thực sự cược. Bộ chưa cược — hoặc chưa ai chơi — trả `{ found: false }` như nhau, cố ý KHÔNG phân biệt để không lộ dữ liệu cược của người khác. `found: false` không phải error.
+
+```ts
+const res = await client.mega645.getComboPopularity({
+  drawId: "2026-03-08.001",
+  numbers: ["01", "05", "12", "23", "34", "45"], // standard 6 số
+});
+if (res.found && res.jackpotUnits) {
+  console.log(`Mẫu số chia jackpot: ${res.jackpotUnits}`);
+}
+```
+
+---
+
+### Added — `client.lotto535.getComboPopularity` (minh bạch chia Jackpot + cơ chế split)
+
+Thêm method `getComboPopularity(params)` cho Lotto 5/35 — player kiểm tra độ đông 1 bộ số họ đã cược VÀ, khi tra đúng bộ CHUẨN (5 chính + 1 ĐB), xem mẫu số chia Jackpot thật nếu bộ đó trúng.
+
+Types mới (subpath `@megawin/player-sdk/lotto535`):
+
+- `Lotto535ComboPopularityParams` — `{ drawId, numbers, specials }`. `numbers` 4–15 số chính distinct zero-padded `"01".."35"`, `specials` 1–12 số đặc biệt distinct `"01".."12"`. Tổ hợp phải khớp 1 trong 4 playType (standard/mainCover4/mainCover/specialCover).
+- `Lotto535ComboPopularityResponse` — `{ found, sets?, boardPrice?, jackpotUnits?, splitEligibleDraw? }`.
+  - `sets` — tín hiệu THAM KHẢO (Jackpot chia theo toàn kỳ, không theo riêng combo).
+  - `jackpotUnits` — CHỈ có khi tra bộ CHUẨN: mẫu số chia Jackpot thật, `phần thắng = floor(pool / jackpotUnits) × betCount`.
+  - `splitEligibleDraw` — CHỈ mô tả cơ chế split cycle (JP ≥ ngưỡng + kỳ 21h), KHÔNG có con số dự tính — pool chia theo đơn vị dự thưởng trúng từng tier, chỉ biết SAU khi có kết quả quay.
+
+**Ownership-gate** giống Keno: bộ chưa cược hoặc chưa ai chơi đều trả `{ found: false }`, không phân biệt.
+
+```ts
+const res = await client.lotto535.getComboPopularity({
+  drawId: "2026-03-07.001",
+  numbers: ["01", "08", "15", "22", "35"],
+  specials: ["07"],
+});
+if (res.found && res.jackpotUnits) {
+  console.log(`Nếu trúng JP, chia cho ${res.jackpotUnits} đơn vị`);
+}
+```
+
+---
+
 ### Changed — `boardNo` hỗ trợ số board động (tất cả games)
 
 `boardNo` không còn giới hạn cứng theo danh sách chữ cái cố định (VD `"A"`–`"F"` hay `"A"`–`"D"`). Board giờ sinh tự động theo thứ tự chữ cái kiểu bảng tính: `"A"`, `"B"`, ..., `"Z"`, `"AA"`, `"AB"`, ... Số board tối đa mỗi vé do cấu hình game quyết định, không hard-code.

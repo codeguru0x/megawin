@@ -13,13 +13,18 @@
  *
  *   1. Tìm tất cả entries trúng Jackpot trong draw (tier = "jackpot", hitCount > 0)
  *
- *   2. Tính jackpotPerWinner:
+ *   2. Tính jackpotPerUnit (chia THEO betCount, KHÔNG chia đều per winner/line):
  *      totalJackpotPrize = jackpotOpeningAmount + jackpotContribution
- *      jackpotPerWinner  = floor(totalJackpotPrize / winnerCount)
+ *      totalBetUnits     = Σ(line.betCount) trên TẤT CẢ JP lines của draw
+ *      jackpotPerUnit    = floor(totalJackpotPrize / totalBetUnits)
  *
  *      - jackpotOpeningAmount: số tiền JP đầu kỳ (từ cycle.currentAmount lúc PrepareSettle)
  *      - jackpotContribution: phần doanh thu kỳ này đóng góp vào JP (từ CalculateFinancials)
- *      - Nhiều winner → chia đều, làm tròn xuống (phần dư rất nhỏ, bỏ qua)
+ *      - entry nhận: jackpotPerUnit × Σ(betCount các JP line của entry) — CỘNG DỒN, không set() đè.
+ *      - Mỗi BOARD phủ bộ trúng sinh 1 JP line riêng với betCount riêng — entry multi-board
+ *        (nhiều board trong 1 vé) CÓ THỂ có nhiều JP line. Đây chính là giả định sai đã gây
+ *        bug chia JP ở Mega 6/45 (xem `mega645-fix-jackpot-betcount.plan.md`) — Lotto 5/35
+ *        không dính bug đó vì `betUnitsByEntry` cộng dồn (`+=`) theo entryId, không `Map.set()` đè.
  *
  *   3. Patch song song (idempotent — chỉ patch docs có amount = 0):
  *      a. entry.payout.tiers[jackpot] → cập nhật unitAmount, amount, winAmount, payoutAmount
@@ -84,24 +89,15 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     }
 
     // ── Bước 2: Tính jackpot per unit (theo tỷ lệ tham gia dự thưởng) ──
-    // Quy tắc Vietlott: "Giải Độc Đắc được chia đều theo tỷ lệ giá trị tham gia dự thưởng"
-    // → chia theo betCount, không chia đều per line/entry.
+    // Quy tắc Vietlott: "Giải Độc Đắc được chia theo tỷ lệ giá trị tham gia dự thưởng"
+    // → chia theo betCount (bet units), KHÔNG chia đều per winner/line.
     //
-    // Vì 1 entry chỉ có 1 JP line (determineTier trả tier cao nhất per line),
-    // betCount của JP line = betCount của board chứa nó.
-    // Entry snapshot có boards[] nhưng không biết JP line thuộc board nào nếu multi-board.
-    //
-    // Approach đơn giản và chính xác: dùng payout tier betCount nếu có.
-    // Mỗi entry có 1 jp tier với hitCount = số JP lines. Đối với multi-board entries
-    // có betCount khác nhau, chúng ta lấy betCount từ entrySummary.boards
-    // (sum của tất cả bet units trong entry / hitCount — xấp xỉ đúng khi hitCount = 1).
-    //
-    // Với hitCount = 1 (phổ biến nhất): betCount chính xác là betCount của board có JP line.
-    // Để lấy betCount chính xác, entry-repo.patchJackpotPrize sẽ tính từ tiers.betCount.
-    // Ở đây tính totalBetUnits = Σ(hitCount × avg_betCount_per_entry).
-    //
-    // Trường hợp đơn giản nhất (99%+ cases): 1 JP line per entry, tất cả boards betCount đồng nhất.
-    // Trường hợp phức tạp: lấy JP lines từ DB để tính chính xác.
+    // Mẫu số totalBetUnits lấy từ TẤT CẢ JP lines hiện có trong DB (KHÔNG filter
+    // matchResult.winAmount = 0) — khác Power 6/55 (Power 6/55 lọc theo entry chưa patch).
+    // Lý do: nếu lọc theo "chưa patch", một lần chạy retry sau crash (patch lines xong,
+    // entry chưa patch) sẽ đọc thiếu lines đã patch → mẫu số hụt → chia sai lần retry.
+    // Đọc toàn bộ JP lines làm mẫu số deterministic bất kể chạy lại bao nhiêu lần.
+    // KHÔNG "đồng bộ ngược" filter `winAmount: 0` vào đây nếu copy pattern từ Power 6/55.
     const jpLinesData = await this.lineRepo.getJackpotLinesForDraw(drawId);
     const totalBetUnits = jpLinesData.reduce((sum, line) => sum + line.betCount, 0);
 
@@ -113,7 +109,10 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     }
 
     // ── Bước 3: Patch entries + lines + settleSummary song song ──
-    // Build betUnitsByEntry map để repo tính prizeAmount chính xác per entry
+    // Build betUnitsByEntry map để repo tính prizeAmount chính xác per entry.
+    // CỘNG DỒN (+=) theo entryId — entry multi-board CÓ THỂ có nhiều JP line
+    // (mỗi board phủ bộ trúng sinh 1 line riêng), KHÔNG dùng Map.set() vì sẽ ghi đè
+    // dòng trước, làm mất betCount của board khác trong cùng entry (bug Mega 6/45).
     const betUnitsByEntry = new Map<string, number>();
     for (const line of jpLinesData) {
       const entryIdStr = line.entryId?.toString() ?? "";
@@ -134,18 +133,23 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     await this.drawRepo.setTotalPayout(drawId, totalPayout);
 
     // ── Build winners list để truyền sang FinalizeSettle ──
+    // Dùng CHÍNH betUnitsByEntry (nguồn số đã dùng để patch entry) — không filter lại
+    // jpLinesData + fallback `|| hitCount` (2 nguồn số khác nhau từng gây winners lệch
+    // với tiền entry thực nhận). Một nguồn số duy nhất → winners luôn khớp entry patch.
     const winners: JackpotWinnerInfo[] = jackpotEntries.map((e) => {
-      const jpTier = e.payout?.tiers.find((t) => t.tier === "jackpot");
-      const hitCount = jpTier?.hitCount ?? 0;
-      // betCount: lấy từ lines data thay vì estimate từ boards
-      const entryBetUnits = jpLinesData
-        .filter((l) => l.entryId?.toString() === e.id)
-        .reduce((sum, l) => sum + l.betCount, 0);
+      const entryBetUnits = betUnitsByEntry.get(e.id) ?? 0;
+      if (entryBetUnits === 0) {
+        // Bất thường dữ liệu: entry có jp tier (hitCount > 0) nhưng không có JP line nào
+        // khớp entryId trong betUnitsByEntry — không im lặng fallback, log warn để điều tra.
+        console.warn(
+          `[PatchJackpotPrize Lotto535] entry ${e.id} trúng JP nhưng thiếu betUnits trong betUnitsByEntry — prizeAmount = 0.`,
+        );
+      }
       return {
         accountId: e.accountId,
         username: e.username,
         tenantId: e.tenantId,
-        prizeAmount: jackpotPerUnit * (entryBetUnits || hitCount),
+        prizeAmount: jackpotPerUnit * entryBetUnits,
         entryId: e.id,
         drawId,
       };

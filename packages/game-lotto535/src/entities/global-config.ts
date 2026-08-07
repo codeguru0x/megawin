@@ -13,6 +13,7 @@ import type {
   FinancialRates,
   PrizeAmounts,
   PlayRules,
+  Lotto535OpsConfig,
 } from "./types";
 
 /**
@@ -65,6 +66,18 @@ export interface GlobalConfigDoc {
 
   /** Quy tắc chơi – hiển thị mục "Cấu hình luật chơi" trên UI. */
   play: PlayRules;
+
+  // ───── Ops Config (vận hành & kiểm soát rủi ro) ─────
+
+  /**
+   * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
+   * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
+   *
+   * Doc luôn có field này sau khi init/update config (seed đầy đủ qua backoffice).
+   * Mapper KHÔNG merge default — chỉ phản ánh đúng DB. Doc cũ thiếu `ops` được
+   * `GetGlobalConfigUseCase` lấp `DEFAULT_LOTTO535_CONFIG.ops` (tạm thời, chỉ đường BO).
+   */
+  ops: Lotto535OpsConfig;
 
   // ───── Metadata ─────
 

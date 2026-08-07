@@ -89,3 +89,12 @@ lotto535-get-draw-result:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+lotto535-get-combo-popularity:
+  handler: src/handlers/lotto535/get-combo-popularity.handler
+  events:
+    - httpApi:
+        path: /games/lotto535/draws/{drawId}/combo-popularity
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

@@ -1,8 +1,9 @@
 {
   "extends": "@megawin/typescript-config/react-library.json",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]
 }

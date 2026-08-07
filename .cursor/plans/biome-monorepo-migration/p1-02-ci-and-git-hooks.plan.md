@@ -81,6 +81,26 @@ jobs:
         run: pnpm test
 ```
 
+### ⚠️ Ràng buộc với test infra (bắt buộc giải quyết khi thực thi)
+
+`pnpm test` KHÔNG chạy trơn trong CI như local — hai chốt chặn từ test infra hiện tại
+(xem `.cursor/plans/monorepo-test-setup/` + `.cursor/rules/test-data-safety.mdc`):
+
+1. **db-guard runtime** (`@megawin/vitest-config/setup-db-guard`): từ chối chạy nếu `MONGODB_URI`
+   không phải `localhost`/`127.0.0.1` và không set `ALLOW_DB_TESTS=true`. Test integration (Group B/D)
+   hiện chạy trên **DB staging chung** — KHÔNG đưa URI staging vào CI công khai.
+2. `test/global-setup.ts` của các package gọi `turbo build --filter=...^...` — cần Turbo cache trong CI
+   để không build lại cả graph mỗi run.
+
+Hướng chốt (chọn khi thực thi, khuyến nghị (a) trước):
+
+- **(a) Giai đoạn đầu:** CI chỉ chạy nhóm test KHÔNG cần DB (Group A domain pure + C UI jsdom) —
+  filter qua `turbo run test --filter=...` hoặc env flag; test integration vẫn chạy local/manual.
+- **(b) Giai đoạn sau:** thêm service container `mongodb` trong workflow (`MONGODB_URI=mongodb://localhost:27017`)
+  → db-guard pass tự nhiên, test integration chạy trên Mongo ephemeral, không đụng staging.
+
+KHÔNG set `ALLOW_DB_TESTS=true` trong CI để "cho qua" — flag đó dành cho chủ đích chạy trên DB thật.
+
 Giải trình:
 
 | Lựa chọn | Lý do |
@@ -114,3 +134,38 @@ Sau khi CI xanh ổn định vài ngày, bật branch protection cho `main`: req
 - Mở PR có lỗi lint → CI đỏ với message rõ ràng từ `biome ci`.
 - `apps/backoffice/package.json` không còn khối `lint-staged` (đã dồn về root).
 - Thời gian job `quality` < 3 phút (chủ yếu là install).
+
+## Phương án review sau thực thi
+
+**1. Diff review — file được phép đổi:**
+
+```
+package.json                      (root — husky/lint-staged dep + config + script prepare)
+.husky/pre-commit                 (MỚI)
+.github/workflows/ci.yml          (MỚI)
+apps/backoffice/package.json      (xoá lint-staged config + dep)
+pnpm-lock.yaml
+```
+
+**2. Negative test hook (quan trọng nhất — hook "được cài" khác "hoạt động"):**
+
+```bash
+# a) File format sai → hook phải TỰ FIX rồi commit pass
+echo 'const   x=1;;   export {x}' > packages/shared/src/probe-hook.ts
+git add packages/shared/src/probe-hook.ts && git commit -m "probe" 
+git show HEAD --stat && git show HEAD | rg 'const x = 1'   # file đã được format trong commit
+git reset --hard HEAD~1
+
+# b) File có lỗi KHÔNG auto-fix được (vd enum) → hook phải CHẶN commit
+echo 'export enum P { A }' > packages/shared/src/probe-hook2.ts
+git add . && git commit -m "probe2"    # KỲ VỌNG: exit != 0, commit không tạo
+git reset --hard
+
+# c) File .md → đi qua Prettier, không qua Biome
+```
+
+**3. Verify CI trên PR thật:** mở PR draft chứa 1 vi phạm lint cố ý → job `quality` đỏ, log chỉ đúng file/rule; push fix → xanh. Đo tổng thời gian job (< 3 phút).
+
+**4. Verify test strategy đã chọn (mục ⚠️):** nếu chọn (a) — log CI phải cho thấy CHỈ các package Group A/C chạy test; nếu (b) — service container Mongo khởi động, `MONGODB_URI=mongodb://localhost:27017`, db-guard pass mà KHÔNG có `ALLOW_DB_TESTS`.
+
+**5. Rollback:** xoá `.husky/` + revert package.json → hook biến mất ngay (husky không để lại global state). CI: xoá workflow file.

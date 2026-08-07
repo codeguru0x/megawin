@@ -1,7 +1,6 @@
 import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { TicketLineDoc } from "@megawin/game-max3d/entities";
 import { chunk } from "@megawin/shared/utils";
-import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 
 /** Số lượng ops mỗi chunk khi bulk upsert lines. */
@@ -85,18 +84,18 @@ export class LineRepository extends BaseRepo<any> {
     options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
-    const col = await this.getCollection();
-    const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
+    // entryId lưu dạng hex string (settle-entries ghi `entry.id`), KHÔNG phải ObjectId.
+    // Query bằng string để khớp — dùng ObjectId sẽ không match → trả rỗng.
+    const filter: Record<string, unknown> = { entryId };
 
     if (cursor != null) {
       filter.lineIndex = { $gt: cursor };
     }
 
-    const lines = await col
-      .find(filter)
-      .sort({ lineIndex: 1 })
-      .limit(size + 1)
-      .toArray();
+    const lines = await this.findManyAsDocuments(filter, {
+      sort: { lineIndex: 1 },
+      limit: size + 1,
+    });
 
     // Lấy thêm 1 để detect hasMore mà không cần count query riêng
     const hasMore = lines.length > size;
@@ -107,6 +106,6 @@ export class LineRepository extends BaseRepo<any> {
 
   /** Đếm số lines của 1 entry. */
   async countByEntryId(entryId: string): Promise<number> {
-    return await this.count({ entryId: new ObjectId(entryId) });
+    return await this.count({ entryId });
   }
 }

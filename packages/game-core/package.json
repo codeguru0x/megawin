@@ -8,7 +8,9 @@
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "exports": {
     "./entities": {
@@ -55,7 +57,10 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   }
 }

@@ -10,6 +10,9 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "build:deps": "turbo run build --filter=@megawin/worker-max3dpro^...",
+    "pretest": "pnpm build:deps",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
     "build:sfn": "bash src/step-functions/generate-asl.sh",
     "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
     "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
@@ -26,9 +29,13 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
+    "next": "^16.2.12",
     "serverless-offline": "^14.7.3",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   }
 }

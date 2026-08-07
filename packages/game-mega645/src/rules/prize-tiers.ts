@@ -37,8 +37,6 @@ export interface PrizeTierRule {
   requiredMatches: number;
   /** Giá trị giải thưởng mặc định (VND). Jackpot = 0 vì là giải tích luỹ. */
   defaultAmount: number;
-  /** Có được nhận bonus từ split cycle hay không. Jackpot = false, các tier còn lại = true. */
-  splitEligible: boolean;
 }
 
 // ─────────────────────────────────────────────
@@ -51,28 +49,24 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     label: "Giải Đặc Biệt",
     requiredMatches: 6,
     defaultAmount: 0,
-    splitEligible: false,
   },
   {
     tier: PrizeTier.Tier1,
     label: "Giải Nhất",
     requiredMatches: 5,
     defaultAmount: 10_000_000,
-    splitEligible: true,
   },
   {
     tier: PrizeTier.Tier2,
     label: "Giải Nhì",
     requiredMatches: 4,
     defaultAmount: 300_000,
-    splitEligible: true,
   },
   {
     tier: PrizeTier.Tier3,
     label: "Giải Ba",
     requiredMatches: 3,
     defaultAmount: 30_000,
-    splitEligible: true,
   },
 ] as const;
 

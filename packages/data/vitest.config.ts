@@ -1,11 +1,10 @@
 import { defineConfig } from "vitest/config";
-import { sharedConfig } from "@megawin/vitest-config/dist";
+import { nodeConfig } from "@megawin/vitest-config";
 
 export default defineConfig({
-  ...sharedConfig,
+  ...nodeConfig,
   test: {
-    ...sharedConfig.test,
+    ...nodeConfig.test,
     include: ["test/**/*.test.ts"],
-    environment: "node",
   },
 });

@@ -12,7 +12,13 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules } from "./types";
+import type {
+  JackpotConfig,
+  FinancialRates,
+  PrizeAmounts,
+  PlayRules,
+  Power655OpsConfig,
+} from "./types";
 
 /**
  * MongoDB document cho global config.
@@ -32,6 +38,15 @@ export interface GlobalConfigDoc {
   defaultPrizes: PrizeAmounts;
   /** Luật chơi: giá vé, max boards, max draws, lịch quay. */
   play: PlayRules;
+  /**
+   * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
+   * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
+   *
+   * Doc luôn có field này sau khi init/update config (seed đầy đủ qua backoffice).
+   * Mapper KHÔNG merge default — chỉ phản ánh đúng DB. Khi doc CHƯA TỪNG tồn tại,
+   * `GetGlobalConfigUseCase` trả `DEFAULT_POWER655_CONFIG` cho staff xem/lưu lần đầu.
+   */
+  ops: Power655OpsConfig;
   /** Version tăng mỗi lần update (optimistic concurrency). */
   version: number;
   /** Thời điểm tạo document. */

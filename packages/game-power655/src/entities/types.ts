@@ -13,6 +13,8 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { Power655OpsAlertType } from "./ops-alert";
 
 // ─── Number Ranges ───
 
@@ -208,6 +210,56 @@ export const BAO_COMBINATIONS: Record<string, number> = {
   bao15: 5005,
   bao18: 18564,
 };
+
+// ─────────────────────────────────────────────
+// Operations & Risk Control config (analysis §3.8)
+// ─────────────────────────────────────────────
+
+/**
+ * Cấu hình ngưỡng alert vận hành (`ops.alerts`) — evaluator so ngưỡng này (p0-02).
+ *
+ * Tất cả ngưỡng cấu hình động; đổi có hiệu lực trong ~1 chu kỳ worker, không deploy.
+ * Defaults là THAM KHẢO — staff chỉnh qua tab "Vận hành" trang config game.
+ */
+export interface Power655OpsAlertsConfig {
+  /**
+   * Ngưỡng cược lớn (VND) — `entry.amount >= giá trị này` → `large_bet`.
+   * Default 30.000.000 — cao hơn Keno vì vé Bao phổ biến lớn (Bao 7 đã 70.000đ,
+   * Bao 14 đã 30,03tr).
+   */
+  largeBetAmount: number;
+  /**
+   * Ngưỡng exposure giải cố định (VND, tuyệt đối) — `fixedWorstCase >= giá trị
+   * này` → `exposure_threshold`. Default 2.000.000.000. VND tuyệt đối (không phải
+   * %) vì Power 6/55 không có `maxPerDraw` để tính phần trăm.
+   */
+  fixedExposureWarnAmount: number;
+  /**
+   * Số account distinct cùng cược 1 combo để cảnh báo dồn cược `combo_concentration`.
+   * Default 5 = ≥5 người cùng 1 bộ số → nghi syndicate.
+   */
+  comboAccountsWarn: number;
+  /**
+   * Ngưỡng giá board Bao cao (VND) — playType bao13..bao18 có board với giá
+   * `BAO_COMBINATIONS[pt] × unitPrice >= giá trị này` → `bao_high_stake`.
+   * Default 30.000.000 (board bao13 = 17,16tr CHƯA chạm; bao14 = 30,03tr đã chạm).
+   */
+  baoHighStakeAmount: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `Power655OpsAlertType` (type dẫn xuất). */
+  enabled: Record<Power655OpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro (§3.8).
+ *
+ * KHÔNG expose cho player (allowlist DTO player không chứa `ops`).
+ */
+export interface Power655OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-02). */
+  alerts: Power655OpsAlertsConfig;
+  /** Nhịp worker + top-K stats (`OpsStatsConfig` từ game-core: tickSeconds, topPotentialK, topAccountsK, topCombosK). */
+  stats: OpsStatsConfig;
+}
 
 // ─── Re-export ───
 export type { GameConfigScope };

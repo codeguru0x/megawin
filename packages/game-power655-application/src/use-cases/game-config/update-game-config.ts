@@ -1,10 +1,15 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
+import type { Power655OpsConfig } from "@megawin/game-power655/entities";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
 import { globalConfigCache } from "../../caches/global-config.cache";
-import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
+import type {
+  UpdateGameConfigInput,
+  UpdateGameConfigOutput,
+  UpdateOpsInput,
+} from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game Power 6/55 toàn cục (upsert).
@@ -14,6 +19,7 @@ import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-c
  * - Financial rates (commission, company rate)
  * - Prize amounts (tier1-3)
  * - Play rules (unit price, draw times, draw days, etc.)
+ * - Vận hành & kiểm soát rủi ro (ngưỡng alert + nhịp/top-K stats — analysis §3.8)
  *
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
@@ -50,6 +56,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       play: input.play
         ? { ...(existing?.play ?? DEFAULT_POWER655_CONFIG.play), ...input.play }
         : undefined,
+      ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 
     const cleanMerged: Record<string, unknown> = {};
@@ -57,6 +64,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (merged.rates) cleanMerged.rates = merged.rates;
     if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
     if (merged.play) cleanMerged.play = merged.play;
+    if (merged.ops) cleanMerged.ops = merged.ops;
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
@@ -80,5 +88,32 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       config: updated,
       version: updated.version,
     };
+  }
+
+  /**
+   * Merge section `ops` per sub-section (alerts/stats) — chỉ set field gửi lên, giữ
+   * phần còn lại từ existing (fallback default). `enabled` merge shallow để đổi 1
+   * khoá alert type mà không phải gửi cả object.
+   */
+  private mergeOps(
+    existing: Power655OpsConfig | undefined,
+    input: UpdateOpsInput,
+  ): Power655OpsConfig {
+    const base = existing ?? DEFAULT_POWER655_CONFIG.ops;
+
+    const alerts = input.alerts
+      ? {
+          ...base.alerts,
+          ...input.alerts,
+          enabled: {
+            ...base.alerts.enabled,
+            ...input.alerts.enabled,
+          },
+        }
+      : base.alerts;
+
+    const stats = input.stats ? { ...base.stats, ...input.stats } : base.stats;
+
+    return { alerts, stats };
   }
 }

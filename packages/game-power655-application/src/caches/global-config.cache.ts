@@ -10,6 +10,7 @@
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
 import { AppException } from "@megawin/shared/errors";
+import { APP_ERROR_CODES } from "@megawin/shared/errors";
 import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
 import { POWER655_CACHE_KEYS } from "./keys";
@@ -30,7 +31,15 @@ const fetcher = createCachedFetcher<void, GlobalConfigEntity>(
   async () => {
     const config = await getRepo().getGlobalConfig();
     if (!config) {
-      throw AppException.internal("Power 6/55 GameConfig chưa được khởi tạo.");
+      // Code riêng (KHÔNG dùng `AppException.internal` generic) để
+      // `GetGlobalConfigUseCase` (BO route) bắt CHÍNH XÁC trường hợp này — phân biệt
+      // với lỗi hạ tầng khác (analysis §3.8, D4). Giữ statusCode 500 (lỗi vận hành/config,
+      // không phải lỗi request của client) cho MỌI caller khác (game logic, worker).
+      throw new AppException(
+        APP_ERROR_CODES.GAME_CONFIG_NOT_FOUND,
+        "Power 6/55 GameConfig chưa được khởi tạo.",
+        { statusCode: 500 },
+      );
     }
     return config;
   },

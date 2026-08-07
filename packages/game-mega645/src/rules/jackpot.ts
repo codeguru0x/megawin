@@ -11,7 +11,14 @@
  *   JackpotContribution = Revenue - FixedPrizes - AgentCommission - CompanyTake
  */
 
-import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules } from "../entities/types";
+import type {
+  JackpotConfig,
+  FinancialRates,
+  PrizeAmounts,
+  PlayRules,
+  Mega645OpsConfig,
+} from "../entities/types";
+import { Mega645OpsAlertType } from "../entities/ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Financial Calculation
@@ -113,6 +120,7 @@ export const DEFAULT_MEGA645_CONFIG: {
   rates: FinancialRates;
   defaultPrizes: PrizeAmounts;
   play: PlayRules;
+  ops: Mega645OpsConfig;
 } = {
   jackpot: {
     /** Jackpot khởi điểm tối thiểu theo quy định Vietlott: 12 tỷ VND. */
@@ -151,5 +159,32 @@ export const DEFAULT_MEGA645_CONFIG: {
     drawDaysOfWeek: [0, 3, 5],
     /** Giờ quay: 18:00. */
     drawTime: "18:00",
+  },
+  /**
+   * Cấu hình vận hành mặc định (analysis §3.8). Ngưỡng alert + nhịp/top-K stats.
+   * Staff chỉnh trên tab "Vận hành"; đổi có hiệu lực trong ~1 chu kỳ worker.
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 30_000_000,
+      fixedExposureWarnAmount: 500_000_000,
+      comboAccountsWarn: 5,
+      baoHighStakeAmount: 30_000_000,
+      enabled: {
+        [Mega645OpsAlertType.LargeBet]: true,
+        [Mega645OpsAlertType.ExposureThreshold]: true,
+        [Mega645OpsAlertType.ComboConcentration]: true,
+        [Mega645OpsAlertType.BaoHighStake]: true,
+        // Để dành — không bắn ở P0.
+        [Mega645OpsAlertType.RevenueAnomaly]: false,
+        [Mega645OpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 10,
+      topPotentialK: 50,
+      topAccountsK: 50,
+      topCombosK: 100,
+    },
   },
 };

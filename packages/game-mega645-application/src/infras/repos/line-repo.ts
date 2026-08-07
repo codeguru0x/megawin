@@ -66,7 +66,9 @@ export class LineRepository extends BaseRepo<any> {
     options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
-    const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
+    // entryId lưu dạng hex string (settle-entries ghi `entry.id`), KHÔNG phải ObjectId.
+    // Query bằng string để khớp — dùng ObjectId sẽ không match → trả rỗng.
+    const filter: Record<string, unknown> = { entryId };
 
     if (cursor != null) {
       filter.lineIndex = { $gt: cursor };
@@ -132,14 +134,15 @@ export class LineRepository extends BaseRepo<any> {
   /**
    * Patch winAmount cho lines trúng JP theo betCount riêng từng line.
    *
-   * jackpotPerUnit × betCount (từ line doc) = winAmount thực tế.
+   * Mỗi BOARD phủ bộ số trúng sinh 1 line JP (C(6,6)=1) với `betCount` riêng của
+   * board đó — một entry multi-board có thể có NHIỀU line JP. Mỗi line dùng
+   * `betCount` của CHÍNH NÓ (không lấy từ map cấp entry) để `winAmount = jackpotPerUnit
+   * × line.betCount` — đảm bảo bất biến Σ(line.winAmount per entry) =
+   * entry.payout.tiers[jackpot].amount (mirror Power 6/55 `patchJackpotLinesPerUnit`).
+   *
    * Idempotent: chỉ update lines có winAmount = 0.
    */
-  async patchJackpotLineWinAmountPerLine(
-    drawId: string,
-    jackpotPerUnit: number,
-    betCountByEntry: Map<string, number>,
-  ): Promise<number> {
+  async patchJackpotLineWinAmountPerLine(drawId: string, jackpotPerUnit: number): Promise<number> {
     // Load lines JP chưa patch
     const jpLines = await this.findManyAsDocuments(
       {
@@ -148,16 +151,14 @@ export class LineRepository extends BaseRepo<any> {
         "matchResult.winAmount": 0,
       },
       {
-        projection: { _id: 1, entryId: 1, betCount: 1 },
+        projection: { _id: 1, betCount: 1 },
       },
     );
 
     if (jpLines.length === 0) return 0;
 
     const ops = jpLines.map((line: any) => {
-      const entryId =
-        typeof line.entryId === "string" ? line.entryId : (line.entryId as ObjectId).toHexString();
-      const betCount = betCountByEntry.get(entryId) ?? (line.betCount as number);
+      const betCount = line.betCount as number;
       return {
         updateOne: {
           filter: {

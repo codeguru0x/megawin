@@ -93,6 +93,8 @@ export type {
   Mega645EntryLinesResponse,
   Mega645ListDrawResultsParams,
   Mega645ListDrawResultsResponse,
+  Mega645ComboPopularityParams,
+  Mega645ComboPopularityResponse,
 } from "./mega645";
 export { Mega645PlayType, Mega645PrizeTier } from "./mega645";
 export type {
@@ -197,6 +199,8 @@ export type {
   Lotto535EntryLinesResponse,
   Lotto535ListDrawResultsParams,
   Lotto535ListDrawResultsResponse,
+  Lotto535ComboPopularityParams,
+  Lotto535ComboPopularityResponse,
 } from "./lotto535";
 export type { PlayerApi, PlayerBalance } from "./apis/player";
 

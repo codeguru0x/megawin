@@ -17,3 +17,8 @@ export * from "./jackpot-cycle";
 export * from "./jackpot-cycle-entry";
 export * from "./report";
 export * from "./feed-types";
+export * from "./betting-stats";
+export * from "./number-stats";
+export * from "./account-stats";
+export * from "./combo-stats";
+export * from "./ops-alert";

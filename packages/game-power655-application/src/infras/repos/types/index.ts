@@ -15,3 +15,14 @@ export type {
   OutstandingPlayerBreakdownRow,
 } from "./entry-outstanding.types";
 export type { VoidTenantBreakdownRow, VoidPlayerBreakdownRow } from "./entry-void.types";
+export type {
+  EntryForStats,
+  EntryBoardForStats,
+  DrawStatsCursor,
+  DrawStatsDelta,
+  PartialPlayTypeDelta,
+  NumberStatsDelta,
+  AccountStatsDelta,
+  ComboAccountDelta,
+  ComboStatsDelta,
+} from "./betting-stats.types";

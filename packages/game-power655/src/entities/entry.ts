@@ -364,7 +364,7 @@ export interface EntryBoardSnapshot {
  *      tier1/2/3 theo tỷ lệ betCount.
  *
  *   2. Khi chia Jackpot cho nhiều winners, `PatchJackpotPrize` lấy betCount
- *      TRỰC TIẾP từ line collection (`getJackpotWinningLines` →
+ *      TRỰC TIẾP từ line collection (`getAllJackpotLines` →
  *      `totalBetUnits = Σ(line.betCount)`), KHÔNG đọc `EntryPayoutTier.betUnitCount`.
  *      Line collection là nguồn chính xác hơn — chứa từng line vật lý trúng JP.
  *

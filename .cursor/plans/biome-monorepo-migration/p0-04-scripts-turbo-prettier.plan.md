@@ -17,6 +17,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "check-types": "turbo run check-types",
+    "test": "turbo run test",
 
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -35,6 +36,7 @@ Giải trình:
 | Script | Best practice |
 |---|---|
 | `lint` = `biome check .` | `check` = format + lint + import sort trong **một lần đọc file**. Đây là khuyến nghị chính thức của Biome ("use `biome check` as your single command"). Không đi qua Turbo: 1 process duyệt 3.122 file mất ~1-3s, nhanh hơn overhead orchestration + cache của Turbo. |
+| `test` = `turbo run test` | **Bổ sung mới** — `turbo.json` đã có task `test` (dependsOn `^build` + `@megawin/vitest-config#build`) nhưng root chưa có script gọi nó. p0-06 (verify sau auto-fix) và p1-02 (CI) đều cần `pnpm test` chạy được từ root. |
 | `ci` = `biome ci .` | `biome ci` **không bao giờ ghi file**, exit code rõ ràng, output tối ưu cho log CI. Dùng đúng subcommand này trong pipeline (xem [p1-02](p1-02-ci-and-git-hooks.plan.md)) thay vì `check --write`. |
 | `format:docs` chỉ còn `md,yml,yaml` | Biome 2.5 chưa format Markdown/YAML → giữ Prettier đúng phần đó. Bỏ `ts,tsx,js,mjs,json,css` khỏi glob Prettier để chấm dứt xung đột 100 vs 120 cột. |
 
@@ -103,6 +105,43 @@ Lưu ý `.prettierignore` hiện đã ignore `docs` và `.cursor` — nghĩa là
 ## Acceptance criteria
 
 - `pnpm lint` ở root chạy Biome trên toàn repo, không còn dính `eslint: command not found`.
+- `pnpm test` ở root chạy `turbo run test` (task đã có sẵn trong `turbo.json`).
 - `pnpm format:docs:check` chỉ liệt kê file `.md`/`.yml`/`.yaml`.
 - Chạy `pnpm format:docs` rồi `pnpm format:check` → **0 file** cần format lại (chứng minh Prettier và Biome không còn chồng lấn).
 - `rg '"lint"' turbo.json` → không còn kết quả.
+
+## Phương án review sau thực thi
+
+**1. Diff review — file được phép đổi:**
+
+```
+package.json                                      (root — scripts)
+turbo.json                                        (xoá task lint)
+packages/game-lotto535-application/package.json   (xoá script lint hỏng)
+.prettierrc                                       (thêm proseWrap nếu chọn)
+.prettierignore                                   (thêm 6 dòng chặn *.ts/*.tsx/...)
+.vscode/settings.json                             (file MỚI hoặc bổ sung)
+```
+
+**2. Lệnh verify:**
+
+| Lệnh | Kỳ vọng |
+|---|---|
+| `pnpm lint` | chạy `biome check .`, exit theo diagnostic thật, KHÔNG `eslint: command not found` |
+| `pnpm test --dry-run` hoặc `pnpm test -- --help` | turbo nhận task `test` (không "task not found") |
+| `pnpm format:docs:check 2>&1 \| rg -v '\.(md\|yml\|yaml)'` \| chỉ còn dòng summary — không có file TS/JSON nào lọt |
+| `pnpm ci` | chạy `biome ci .`, không ghi file (verify `git status` không đổi sau khi chạy) |
+
+**3. Negative test — 2 lớp chặn Prettier/Biome không giẫm chân:**
+
+```bash
+# Cố tình chạy Prettier lên file TS — phải bị .prettierignore chặn
+pnpm exec prettier --check packages/shared/src/index.ts
+# KỲ VỌNG: "No files matching the pattern were found" hoặc bị ignore
+
+# Chạy vòng tròn: format docs rồi format code — không được tạo diff chéo
+pnpm format:docs && pnpm format:check
+git status --porcelain   # KỲ VỌNG: chỉ file .md/.yml đổi (nếu có), 0 file code
+```
+
+**4. Rollback:** `git checkout -- package.json turbo.json .prettierrc .prettierignore .vscode packages/game-lotto535-application/package.json`.
