@@ -5,15 +5,13 @@ import type {
   FinancialRates,
   PrizeAmounts,
   PlayRules,
+  Power655OpsConfig,
 } from "@megawin/game-power655/entities";
 import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
 import { GlobalConfigMapper } from "../mappers/global-config-mapper";
 
-export class GameConfigRepository extends BaseRepo<
-  GlobalConfigEntity,
-  GlobalConfigMapper
-> {
+export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GlobalConfigMapper> {
   constructor() {
     super({
       collName: Power655Collections.GameConfigs,
@@ -33,7 +31,8 @@ export class GameConfigRepository extends BaseRepo<
       rates: FinancialRates;
       defaultPrizes: PrizeAmounts;
       play: PlayRules;
-    }>
+      ops: Power655OpsConfig;
+    }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
@@ -42,6 +41,7 @@ export class GameConfigRepository extends BaseRepo<
     if (config.rates) $set.rates = config.rates;
     if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
     if (config.play) $set.play = config.play;
+    if (config.ops) $set.ops = config.ops;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },
@@ -54,7 +54,7 @@ export class GameConfigRepository extends BaseRepo<
           createdAt: now,
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
   }
 }

@@ -1,4 +1,5 @@
 import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
+import { Power655OpsAlertType } from "@megawin/game-power655/entities";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -80,7 +81,10 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: positiveInt,
     maxBetCount: positiveInt,
-    maxBoardsPerTicket: positiveInt.max(POWER655_MAX_BOARDS, `Số board tối đa không được vượt ${POWER655_MAX_BOARDS}.`),
+    maxBoardsPerTicket: positiveInt.max(
+      POWER655_MAX_BOARDS,
+      `Số board tối đa không được vượt ${POWER655_MAX_BOARDS}.`,
+    ),
     maxDrawCount: positiveInt,
     salesCloseBeforeMinutes: positiveInt,
     drawsPerDay: positiveInt,
@@ -89,13 +93,55 @@ const playSchema = z
   })
   .partial();
 
+// ─────── Operations & Risk Control (analysis §3.8 / §5.3 p0-03) ───────
+
+/** Bật/tắt từng loại alert — khoá theo `Power655OpsAlertType`. Chỉ 4 alert P0 có toggle;
+ * `revenue_anomaly`/`settle_stuck` để dành nhưng vẫn nhận key (schema chấp nhận, UI chưa hiện). */
+const alertEnabledSchema = z
+  .object(
+    Object.fromEntries(Object.values(Power655OpsAlertType).map((t) => [t, z.boolean()])) as Record<
+      Power655OpsAlertType,
+      z.ZodBoolean
+    >,
+  )
+  .partial();
+
+const opsAlertsSchema = z
+  .object({
+    largeBetAmount: positiveInt,
+    fixedExposureWarnAmount: positiveInt,
+    comboAccountsWarn: z.number().int().min(2),
+    baoHighStakeAmount: positiveInt,
+    enabled: alertEnabledSchema,
+  })
+  .partial();
+
+const opsStatsSchema = z
+  .object({
+    tickSeconds: z.number().int().min(5).max(60),
+    topPotentialK: z.number().int().min(20).max(100),
+    topAccountsK: z.number().int().min(20).max(100),
+    topCombosK: z.number().int().min(20).max(200),
+  })
+  .partial();
+
+const opsSchema = z
+  .object({
+    alerts: opsAlertsSchema,
+    stats: opsStatsSchema,
+  })
+  .partial();
+
+// ─────── Root schema ───────
+
 export const updateGameConfigSchema = z
   .object({
     jackpot: jackpotSchema.optional(),
     rates: ratesSchema.optional(),
     defaultPrizes: prizesSchema.optional(),
     play: playSchema.optional(),
+    ops: opsSchema.optional(),
   })
-  .refine((data) => data.jackpot || data.rates || data.defaultPrizes || data.play, {
+  .refine((data) => data.jackpot || data.rates || data.defaultPrizes || data.play || data.ops, {
     message: "Phải cung cấp ít nhất một section để cập nhật.",
   });

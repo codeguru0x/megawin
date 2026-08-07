@@ -53,8 +53,8 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={Hash}
         iconBg="bg-indigo-100 dark:bg-indigo-900/50"
         iconColor="text-indigo-600 dark:text-indigo-400"
-        label={REPORT_COLUMN_LABELS.lineCount}
-        value={formatNumber(kpi.totalLines)}
+        label="Số bộ cược"
+        value={formatNumber(kpi.totalSets)}
       />
       <KpiCard
         icon={Users}

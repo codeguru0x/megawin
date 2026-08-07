@@ -21,8 +21,16 @@ import {
 } from "lucide-react";
 
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
-import { Countdown, getOverdueGrace, OverdueBanner, useOverdue } from "@/components/games/shared/draw-countdown";
-import { getDrawLifecycleSteps, LifecycleStepper } from "@/components/games/shared/draw-lifecycle-stepper";
+import {
+  Countdown,
+  getOverdueGrace,
+  OverdueBanner,
+  useOverdue,
+} from "@/components/games/shared/draw-countdown";
+import {
+  getDrawLifecycleSteps,
+  LifecycleStepper,
+} from "@/components/games/shared/draw-lifecycle-stepper";
 import { getNextAction } from "@/components/games/shared/draw-next-action";
 import { shouldShowResettle } from "@/components/games/shared/draw-resettle";
 import { ScheduleChips } from "@/components/games/shared/draw-schedule-chips";
@@ -79,7 +87,10 @@ export function DrawCommandCenter({
   // chọn nên tự đúng cho cả 2 khung giờ 13h/21h — không cần logic riêng.
   const grace = getOverdueGrace(GameProduct.Lotto535);
   // close: quá salesCloseAt + grace mà vẫn SalesOpen → scheduler close-sales kẹt.
-  const closeOverdue = useOverdue(status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined, grace.close);
+  const closeOverdue = useOverdue(
+    status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined,
+    grace.close,
+  );
   // publish: quá giờ quay theo lịch + grace mà vẫn SalesClosed → worker publish kẹt.
   const publishOverdue = useOverdue(
     status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined,
@@ -101,7 +112,8 @@ export function DrawCommandCenter({
   // Không cho huỷ kỳ đã từng settle (settledAt != null) — đó là luồng chờ resettle,
   // chỉ được "Kết sổ lại", không được huỷ. Backend cũng guard trong VoidDrawUseCase.
   const canVoid =
-    !draw.settledAt && [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
+    !draw.settledAt &&
+    [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
@@ -143,6 +155,10 @@ export function DrawCommandCenter({
         "bg-linear-to-br from-violet-50/60 via-card to-purple-50/30 dark:from-violet-950/20 dark:via-card dark:to-purple-950/10",
       [DrawStatus.Settling]:
         "bg-linear-to-br from-orange-50/60 via-card to-red-50/30 dark:from-orange-950/20 dark:via-card dark:to-red-950/10",
+      [DrawStatus.Settled]:
+        "bg-linear-to-br from-slate-50/60 via-card to-slate-100/30 dark:from-slate-900/20 dark:via-card dark:to-slate-800/10",
+      [DrawStatus.Scheduled]:
+        "bg-linear-to-br from-slate-50/60 via-card to-slate-100/30 dark:from-slate-900/20 dark:via-card dark:to-slate-800/10",
       [DrawStatus.Void]:
         "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
       [DrawStatus.Voiding]:
@@ -194,6 +210,8 @@ export function DrawCommandCenter({
       [DrawStatus.SalesClosed]: "bg-amber-400",
       [DrawStatus.Published]: "bg-violet-400",
       [DrawStatus.Settling]: "bg-orange-400",
+      [DrawStatus.Settled]: "bg-slate-400",
+      [DrawStatus.Scheduled]: "bg-slate-400",
       [DrawStatus.Void]: "bg-red-400",
       [DrawStatus.Voiding]: "bg-red-400",
     }[status] ?? "";
@@ -204,6 +222,8 @@ export function DrawCommandCenter({
       [DrawStatus.SalesClosed]: "bg-amber-500",
       [DrawStatus.Published]: "bg-violet-500",
       [DrawStatus.Settling]: "bg-orange-500",
+      [DrawStatus.Settled]: "bg-slate-500",
+      [DrawStatus.Scheduled]: "bg-slate-500",
       [DrawStatus.Void]: "bg-red-500",
       [DrawStatus.Voiding]: "bg-red-500",
     }[status] ?? "";
@@ -247,11 +267,20 @@ export function DrawCommandCenter({
                 iconBg,
               )}
             >
-              <StatusIcon className={cn("size-3.5", iconColor, status === DrawStatus.Settling && "animate-spin")} />
+              <StatusIcon
+                className={cn(
+                  "size-3.5",
+                  iconColor,
+                  status === DrawStatus.Settling && "animate-spin",
+                )}
+              />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                   <span
-                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", pingColor)}
+                    className={cn(
+                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
+                      pingColor,
+                    )}
                   />
                   <span className={cn("relative inline-flex size-2.5 rounded-full", dotColor)} />
                 </span>
@@ -269,8 +298,12 @@ export function DrawCommandCenter({
               <div className="flex items-center gap-3 flex-wrap">
                 <p className="text-xs text-muted-foreground font-mono shrink-0">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
-                {status === DrawStatus.SalesOpen && <Countdown target={draw.salesCloseAt} prefix="Đóng bán sau" />}
-                {status === DrawStatus.SalesClosed && <Countdown target={draw.scheduledDrawAt} prefix="Quay số sau" />}
+                {status === DrawStatus.SalesOpen && (
+                  <Countdown target={draw.salesCloseAt} prefix="Đóng bán sau" />
+                )}
+                {status === DrawStatus.SalesClosed && (
+                  <Countdown target={draw.scheduledDrawAt} prefix="Quay số sau" />
+                )}
               </div>
             </div>
           </div>
@@ -293,7 +326,9 @@ export function DrawCommandCenter({
                 <DropdownMenuSeparator />
                 {isSettled && (
                   <DropdownMenuItem asChild>
-                    <Link href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
+                    <Link
+                      href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                    >
                       <FileText className="size-3.5" /> Xem báo cáo
                     </Link>
                   </DropdownMenuItem>
@@ -338,7 +373,9 @@ export function DrawCommandCenter({
             <p className="text-xs text-muted-foreground">
               Hủy bởi <span className="font-medium text-foreground">{voidInfo.voidedBy}</span> ·{" "}
               {displayVNDateTime(voidInfo.voidedAt)} · Hoàn{" "}
-              <span className="font-semibold tabular-nums text-foreground">{formatNumber(voidInfo.refundAmount)}</span>
+              <span className="font-semibold tabular-nums text-foreground">
+                {formatNumber(voidInfo.refundAmount)}
+              </span>
             </p>
           </div>
         )}
@@ -351,7 +388,9 @@ export function DrawCommandCenter({
         )}
 
         {status === DrawStatus.Scheduled && (
-          <p className="mt-4 text-xs text-muted-foreground text-center py-1">Chưa có dữ liệu cược — kỳ chưa mở bán</p>
+          <p className="mt-4 text-xs text-muted-foreground text-center py-1">
+            Chưa có dữ liệu cược — kỳ chưa mở bán
+          </p>
         )}
 
         {/* Action bar */}
@@ -380,7 +419,12 @@ export function DrawCommandCenter({
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
-                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="gap-1.5 text-muted-foreground">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onEditSchedule}
+                  className="gap-1.5 text-muted-foreground"
+                >
                   <Pencil className="size-3.5" /> Sửa lịch
                 </Button>
               )}

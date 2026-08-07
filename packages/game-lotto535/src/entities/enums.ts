@@ -30,6 +30,21 @@ export const Lotto535Collections = {
   JackpotCycles: "lotto535_jackpot_cycles",
   /** Cycle Ledger — lịch sử tích luỹ per-draw trong jackpot cycle (resettle). */
   JackpotCycleEntries: "lotto535_jackpot_cycle_entries",
+
+  // ─── Ops stats/alerts (analysis §3.3–§3.9) ───
+
+  /** Stats tổng hợp 1 kỳ (1 doc/draw) — thay ops aggregation on-demand. */
+  DrawBettingStats: "lotto535_draw_betting_stats",
+  /** Tần suất từng số — 1 doc/(draw × kind × số), kind = main|special. */
+  DrawNumberStats: "lotto535_draw_number_stats",
+  /** Tích luỹ cược theo account — 1 doc/(draw × account). */
+  DrawAccountStats: "lotto535_draw_account_stats",
+  /** Tích luỹ cược theo combo (board) — 1 doc/(draw × comboKey). */
+  DrawComboStats: "lotto535_draw_combo_stats",
+  /** Chi tiết account theo combo — 1 doc/(draw × comboKey × account). */
+  DrawComboAccounts: "lotto535_draw_combo_accounts",
+  /** Alert vận hành — 1 doc/(draw × dedupeKey). */
+  OpsAlerts: "lotto535_ops_alerts",
 } as const;
 
 // ─────────────────────────────────────────────

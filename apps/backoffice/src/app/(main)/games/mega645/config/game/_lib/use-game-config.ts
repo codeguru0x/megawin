@@ -31,6 +31,25 @@ interface GameConfig {
     drawDaysOfWeek: number[];
     drawTime: string;
   };
+  /**
+   * Vận hành & kiểm soát rủi ro. Server merge default nếu doc chưa có section này
+   * (mapper normalize-on-read — analysis D1), nên FE luôn nhận đủ field.
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: number;
+      fixedExposureWarnAmount: number;
+      comboAccountsWarn: number;
+      baoHighStakeAmount: number;
+      enabled: Record<string, boolean>;
+    };
+    stats: {
+      tickSeconds: number;
+      topPotentialK: number;
+      topAccountsK: number;
+      topCombosK: number;
+    };
+  };
   version: number;
   createdAt: string;
   updatedAt: string;

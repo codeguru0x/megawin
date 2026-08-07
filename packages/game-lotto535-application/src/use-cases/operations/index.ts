@@ -2,28 +2,25 @@
  * Lotto 5/35 – Operations Dashboard Use Cases barrel export.
  */
 
-export { GetOpsSummaryUseCase } from "./get-ops-summary";
-export { GetTenantBreakdownUseCase } from "./get-tenant-breakdown";
-export { GetNumberFrequencyUseCase } from "./get-number-frequency";
-export { GetPlayTypeDistributionUseCase } from "./get-playtype-distribution";
 export { GetLiveEntriesUseCase } from "./get-live-entries";
 export { GetDrawSelectorUseCase } from "./get-draw-selector";
-export { GetTopCombosUseCase } from "./get-top-combos";
 export { GetWinningEntriesUseCase } from "./get-winning-entries";
 
-export type {
-  GetOpsSummaryInput,
-  OpsSummaryOutput,
-  GetTenantBreakdownInput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  GetNumberFrequencyInput,
-  NumberFrequencyOutput,
-  NumberFrequencyItem,
-  GetPlayTypeDistributionInput,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-} from "./dto/operations.dto";
+// ── p0-03: operations API (snapshot / alerts / combo-lookup) — đọc snapshot pre-aggregated ──
+export { GetOpsSnapshotUseCase } from "./get-ops-snapshot";
+export { ListAlertsUseCase } from "./list-alerts";
+export { AckAlertUseCase } from "./ack-alert";
+export { GetComboLookupUseCase } from "./get-combo-lookup";
+
+// ── p0-02: stats worker (accumulator pure + 2 TickLoopWorker) ──
+export { Lotto535StatsAccumulator } from "./stats-accumulator";
+export type { PrizeContext } from "./stats-accumulator";
+export { SyncBettingStatsUseCase } from "./sync-betting-stats";
+export type { SyncBettingStatsResult } from "./sync-betting-stats";
+export { evaluateAlerts } from "./evaluate-alerts";
+export type { EvaluateAlertsInput } from "./evaluate-alerts";
+export { EvaluateOpsAlertsUseCase } from "./evaluate-ops-alerts";
+export type { EvaluateOpsAlertsResult } from "./evaluate-ops-alerts";
 
 export type {
   GetLiveEntriesInput,
@@ -34,8 +31,6 @@ export type {
 
 export type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
-export type { GetTopCombosInput, GetTopCombosOutput, TopComboItem } from "./dto/top-combos.dto";
-
 export type {
   GetWinningEntriesInput,
   GetWinningEntriesOutput,
@@ -44,3 +39,19 @@ export type {
   WinningEntryTierDetail,
   WinningEntriesSummary,
 } from "./dto/winning-entries.dto";
+
+export type {
+  GetOpsSnapshotInput,
+  GetOpsSnapshotOutput,
+  Lotto535TopCombo,
+  Lotto535SnapshotThresholds,
+  Lotto535SnapshotExposure,
+  ListAlertsInput,
+  ListAlertsOutput,
+  Lotto535AlertGroup,
+  AckAlertInput,
+  AckAlertOutput,
+  GetComboLookupInput,
+  GetComboLookupOutput,
+  Lotto535ComboLookupAccount,
+} from "./dto/ops.dto";

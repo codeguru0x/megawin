@@ -3,6 +3,8 @@ import type {
   FinancialRates,
   PrizeAmounts,
   PlayRules,
+  OpsStatsConfig,
+  Power655OpsAlertType,
 } from "@megawin/game-power655/entities";
 import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
 import type { AuditActor } from "@megawin/audit/logger";
@@ -19,6 +21,22 @@ export interface GetGameConfigOutput {
 // ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
+
+/**
+ * Input cập nhật section `ops` — deep-partial: chỉ gửi field cần đổi, merge
+ * per sub-section (`alerts`/`stats`) ở use-case; `enabled` merge shallow để đổi
+ * 1 khoá alert type mà không phải gửi cả object (analysis §3.8, p0-03).
+ */
+export interface UpdateOpsInput {
+  alerts?: {
+    largeBetAmount?: number;
+    fixedExposureWarnAmount?: number;
+    comboAccountsWarn?: number;
+    baoHighStakeAmount?: number;
+    enabled?: Partial<Record<Power655OpsAlertType, boolean>>;
+  };
+  stats?: Partial<OpsStatsConfig>;
+}
 
 export interface UpdateGameConfigInput {
   /**
@@ -53,6 +71,11 @@ export interface UpdateGameConfigInput {
    * - schedule: lịch quay trong tuần
    */
   play?: Partial<PlayRules>;
+  /**
+   * Cấu hình vận hành (analysis §3.8). Deep-partial: chỉ gửi field cần đổi, merge
+   * per sub-section (alerts/stats), `enabled` merge shallow ở use-case.
+   */
+  ops?: UpdateOpsInput;
   /** Chủ thể thực hiện — dùng cho audit. */
   actor: AuditActor;
 }

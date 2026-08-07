@@ -1,4 +1,17 @@
 /**
+ * 1 board của account (ownership-gate minh bạch combo — p1-01).
+ *
+ * Projection cực nhẹ `{ playType, numbers }` từ `entrySummary.boards`. Chỉ board có
+ * `numbers` mới đưa vào — dùng để xác định combo player yêu cầu có thuộc họ không.
+ */
+export interface OwnedBoard {
+  /** Loại chơi (`standard`, `bao5`, `bao7`..`bao15`, `bao18`). */
+  playType: string;
+  /** Số "01".."45" của board. */
+  numbers: string[];
+}
+
+/**
  * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3.
  * Mega 6/45: CÓ lineCount.
  */

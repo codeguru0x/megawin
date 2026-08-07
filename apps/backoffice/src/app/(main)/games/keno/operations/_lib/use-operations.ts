@@ -61,7 +61,7 @@ export function useDrawSelectorList() {
   return useQuery({
     queryKey: kenoKeys.opsDrawSelector,
     queryFn: () => apiClient.get<GetDrawSelectorOutput>(`${BASE}/draw-selector`),
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
   });
 }
 

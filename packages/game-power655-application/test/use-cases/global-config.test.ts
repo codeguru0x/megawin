@@ -9,11 +9,33 @@
  * - Version auto-increments on each update
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
+import { GetGlobalConfigUseCase } from "../../src/use-cases/game-config/get-global-config";
+import { UpdateGameConfigUseCase } from "../../src/use-cases/game-config/update-game-config";
+import { globalConfigCache } from "../../src/caches/global-config.cache";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
+import { Power655OpsAlertType } from "@megawin/game-power655/entities";
 import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
+import { systemActor } from "@megawin/audit/logger";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
+import type { ApiSuccessResponse, ApiErrorResponse } from "@megawin/shared/api-types";
+import type { NextResponse } from "next/server";
+
+/**
+ * `NextApiUseCase.run()` trả về `NextResponse` (Web `Response`) — PHẢI gọi `.json()`
+ * để lấy body, KHÔNG được truy cập field trực tiếp trên kết quả `run()`. Helper này
+ * unwrap `data`, throw nếu response là error (test success-path không cần tự check).
+ */
+async function unwrapSuccess<O>(
+  response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>,
+): Promise<O> {
+  const body = await response.json();
+  if (!body.success) {
+    throw new Error(`Use-case trả lỗi: ${body.error.code} — ${body.error.message}`);
+  }
+  return body.data;
+}
 
 describe("GameConfigRepository – Power 6/55 Global Config", () => {
   const repo = new GameConfigRepository();
@@ -124,5 +146,135 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     const after = await repo.getGlobalConfig();
     expect(after!.version).toBe(versionBefore + 1);
     expect(after!.rates.companyRate).toBe(0.18);
+  });
+});
+
+/**
+ * `GetGlobalConfigUseCase` + `GlobalConfigMapper` — merge default section `ops`
+ * (analysis §3.8, divergence D4, p0-03 rủi ro R1/R2).
+ *
+ * Đi qua ĐÚNG đường thật (repo → mapper → cache → use-case) — KHÔNG mock, để bắt
+ * đúng lỗi tích hợp giữa các tầng (VD quên invalidate cache sau khi sửa doc thẳng).
+ */
+describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section", () => {
+  const repo = new GameConfigRepository();
+
+  // Mỗi test tự invalidate cache SAU KHI sửa doc trực tiếp — cache TTL 10 phút,
+  // không tự phát hiện thay đổi ngoài luồng use-case update.
+  afterAll(async () => {
+    // Trả lại trạng thái đầy đủ cho các test file/describe khác trong cùng package
+    // (nếu chạy cùng process) — seed lại full default config + ops.
+    await insertDefaultGlobalConfig();
+    await repo.upsertGlobalConfig({ ops: DEFAULT_POWER655_CONFIG.ops });
+    await globalConfigCache.invalidate();
+  });
+
+  it("(a) chưa có global config doc → trả default virtual entity, KHÔNG throw", async () => {
+    // SCOPED delete: CHỈ xoá global config (khớp filter `getGlobalConfig` = `{scope: Global}`).
+    // TUYỆT ĐỐI KHÔNG `deleteMany({})` — collection `power655_game_configs` chứa CẢ tenant
+    // config; `deleteMany({})` từng xoá sạch tenant config thật khi test trỏ vào DB dùng chung.
+    await repo.deleteMany({ scope: GameConfigScope.Global });
+    await globalConfigCache.invalidate();
+
+    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+
+    // Sentinel virtual entity — chưa persist.
+    expect(config.id).toBe("");
+    expect(config.version).toBe(0);
+    // Toàn bộ 5 nhóm = default tham khảo.
+    expect(config.jackpot).toEqual(DEFAULT_POWER655_CONFIG.jackpot);
+    expect(config.rates).toEqual(DEFAULT_POWER655_CONFIG.rates);
+    expect(config.defaultPrizes).toEqual(DEFAULT_POWER655_CONFIG.defaultPrizes);
+    expect(config.play).toEqual(DEFAULT_POWER655_CONFIG.play);
+    expect(config.ops).toEqual(DEFAULT_POWER655_CONFIG.ops);
+  });
+
+  it("(b) doc tồn tại nhưng KHÔNG có field `ops` (doc trước p0-01) → merge default toàn bộ", async () => {
+    await insertDefaultGlobalConfig(); // jackpot/rates/defaultPrizes/play — KHÔNG có ops.
+    await globalConfigCache.invalidate();
+
+    // Xác nhận doc raw thật sự thiếu `ops` trước khi test (tránh test giả nếu seed helper đổi).
+    const coll = await repo.getCollection();
+    const raw = await coll.findOne({ scope: GameConfigScope.Global });
+    expect(raw?.ops).toBeUndefined();
+
+    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+
+    expect(config.id).not.toBe(""); // Doc thật, có id.
+    expect(config.ops).toEqual(DEFAULT_POWER655_CONFIG.ops);
+  });
+
+  it("(c) doc có `ops` MỘT PHẦN → field thiếu lấp default, field có giữ nguyên", async () => {
+    await insertDefaultGlobalConfig();
+    // Ghi thẳng vào doc 1 `ops` không đầy đủ — thiếu `baoHighStakeAmount`, thiếu
+    // `Power655OpsAlertType.BaoHighStake` trong `enabled`, thiếu cả `stats.topCombosK`.
+    const coll = await repo.getCollection();
+    await coll.updateOne(
+      { scope: GameConfigScope.Global },
+      {
+        $set: {
+          ops: {
+            alerts: {
+              largeBetAmount: 99_000_000, // Field CÓ — phải giữ nguyên, không bị default đè.
+              fixedExposureWarnAmount: 2_000_000_000,
+              comboAccountsWarn: 5,
+              // baoHighStakeAmount: thiếu.
+              enabled: {
+                [Power655OpsAlertType.LargeBet]: true,
+                // BaoHighStake, ExposureThreshold, ComboConcentration, RevenueAnomaly, SettleStuck: thiếu.
+              },
+            },
+            stats: {
+              tickSeconds: 5, // Field CÓ — phải giữ nguyên.
+              topPotentialK: 50,
+              topAccountsK: 50,
+              // topCombosK: thiếu.
+            },
+          },
+        },
+      },
+    );
+    await globalConfigCache.invalidate();
+
+    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+
+    // Field có sẵn giữ nguyên.
+    expect(config.ops.alerts.largeBetAmount).toBe(99_000_000);
+    expect(config.ops.stats.tickSeconds).toBe(5);
+    // Field thiếu lấp default.
+    expect(config.ops.alerts.baoHighStakeAmount).toBe(
+      DEFAULT_POWER655_CONFIG.ops.alerts.baoHighStakeAmount,
+    );
+    expect(config.ops.stats.topCombosK).toBe(DEFAULT_POWER655_CONFIG.ops.stats.topCombosK);
+    // `enabled` merge từng key — key có giữ, key thiếu lấp default.
+    expect(config.ops.alerts.enabled[Power655OpsAlertType.LargeBet]).toBe(true);
+    expect(config.ops.alerts.enabled[Power655OpsAlertType.BaoHighStake]).toBe(
+      DEFAULT_POWER655_CONFIG.ops.alerts.enabled[Power655OpsAlertType.BaoHighStake],
+    );
+  });
+
+  it("(d) update `ops` qua UpdateGameConfigUseCase rồi get lại → persist đúng", async () => {
+    await insertDefaultGlobalConfig();
+    await globalConfigCache.invalidate();
+
+    await unwrapSuccess(
+      await new UpdateGameConfigUseCase().run({
+        ops: {
+          alerts: { largeBetAmount: 50_000_000 },
+          stats: { tickSeconds: 15 },
+        },
+        actor: systemActor(),
+      }),
+    );
+
+    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+
+    expect(config.ops.alerts.largeBetAmount).toBe(50_000_000);
+    expect(config.ops.stats.tickSeconds).toBe(15);
+    // Field KHÔNG gửi trong input vẫn giữ default (existing lúc merge = insertDefaultGlobalConfig
+    // không có `ops` → base = DEFAULT_POWER655_CONFIG.ops).
+    expect(config.ops.alerts.fixedExposureWarnAmount).toBe(
+      DEFAULT_POWER655_CONFIG.ops.alerts.fixedExposureWarnAmount,
+    );
   });
 });

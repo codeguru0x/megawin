@@ -16,6 +16,8 @@
 // ─────────────────────────────────────────────
 
 export type { ISODateString } from "@megawin/game-core/types";
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { Lotto535OpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Number (kỳ quay trong ngày)
@@ -210,4 +212,66 @@ export interface SplitRatios {
   tier4: number;
   /** Tỷ lệ phần chia cho Giải Năm (mặc định 1/6 ≈ 16.7%). */
   tier5: number;
+}
+
+// ─────────────────────────────────────────────
+// Ops Config (vận hành & kiểm soát rủi ro — analysis §3.8)
+// ─────────────────────────────────────────────
+
+/**
+ * Ngưỡng alert vận hành — dùng trong `GlobalConfigDoc.ops.alerts`.
+ *
+ * Defaults là THAM KHẢO — staff chỉnh qua tab "Vận hành" trang config game. Zod
+ * schema ở route siết range; use-case KHÔNG validate lại (rule §8 code-quality).
+ */
+export interface Lotto535OpsAlertsConfig {
+  /**
+   * Ngưỡng cược lớn (VND) — `entry.amount >= giá trị này` → `large_bet`.
+   * Default 30.000.000 — đồng nhất Power 6/55 (user chốt 05/08).
+   */
+  largeBetAmount: number;
+  /**
+   * Ngưỡng exposure giải cố định (VND, tuyệt đối) — `fixedWorstCase >= giá trị
+   * này` → `exposure_threshold`. Default 500.000.000 — tier1 Lotto 5/35 (10tr)
+   * nhỏ hơn Power 6/55 (40tr) nên ngưỡng thấp hơn tương ứng.
+   */
+  fixedExposureWarnAmount: number;
+  /**
+   * Số account distinct cùng cược 1 combo để cảnh báo dồn cược `combo_concentration`.
+   * Default 5 = ≥5 người cùng 1 bộ số → nghi syndicate.
+   */
+  comboAccountsWarn: number;
+  /**
+   * Ngưỡng giá board `mainCover` cao (VND) — playType `mainCover6..mainCover15`
+   * có board với giá `combination(N,5) × unitPrice >= giá trị này` →
+   * `cover_high_stake`. Default 10.000.000 (board `mainCover13` = 12,87tr ĐÃ chạm;
+   * `mainCover12` = 7,92tr CHƯA chạm).
+   */
+  coverHighStakeAmount: number;
+  /**
+   * Tỷ trọng tối đa 1 số đặc biệt được phép chiếm trong tổng tiền `kind=special`
+   * trước khi bắn `special_skew` (số thập phân 0–1, KHÔNG phải VND nguyên).
+   * Default 0.35 — baseline lý thuyết đều = 1/12 ≈ 8,3%, ngưỡng 35% đã là lệch rõ rệt.
+   */
+  specialSkewRatio: number;
+  /**
+   * Tổng tiền `kind=special` tối thiểu (VND) để rule `special_skew` có nghĩa —
+   * chống nhiễu kỳ vắng (kỳ mới mở bán, ít tiền, 1 số ĐB dễ "chiếm 100%" giả tạo).
+   * Default 50.000.000.
+   */
+  specialSkewMinAmount: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `Lotto535OpsAlertType` (type dẫn xuất). */
+  enabled: Record<Lotto535OpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro (§3.8).
+ *
+ * KHÔNG expose cho player (allowlist DTO player không chứa `ops`).
+ */
+export interface Lotto535OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-02). */
+  alerts: Lotto535OpsAlertsConfig;
+  /** Nhịp worker + top-K stats (`OpsStatsConfig` từ game-core: tickSeconds, topPotentialK, topAccountsK, topCombosK). */
+  stats: OpsStatsConfig;
 }

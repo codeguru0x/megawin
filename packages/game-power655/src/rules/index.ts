@@ -8,3 +8,4 @@ export * from "./jackpot";
 export * from "./odds";
 export * from "./draw-result";
 export * from "./resettle";
+export * from "./combo-key";

@@ -425,6 +425,42 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
+   * Status hiện tại của danh sách kỳ — dùng cho stats worker để biết kỳ nào cần seed/dừng cursor.
+   *
+   * @param drawIds - Danh sách kỳ cần biết status.
+   * @returns Map chỉ chứa kỳ TỒN TẠI (drawId lạ sẽ không có key).
+   */
+  async getStatusesByDrawIds(drawIds: string[]): Promise<Map<string, DrawStatus>> {
+    if (drawIds.length === 0) return new Map();
+
+    const docs = await this.findManyAsDocuments(
+      { drawId: { $in: drawIds } },
+      { projection: { _id: 0, drawId: 1, status: 1 } },
+    );
+
+    return new Map(docs.map((d) => [d.drawId as string, d.status as DrawStatus]));
+  }
+
+  /**
+   * `drawId` của mọi kỳ chưa hoàn thành — thin version của {@link getUnfinishedDraws}.
+   *
+   * Cùng lý do như {@link getStatusesByDrawIds}: worker stats chỉ cần danh sách id để seed
+   * stats doc, không cần nội dung draw. Ở đây là **covered query** thật — projection
+   * `{drawId}` + filter `status` khớp trọn `idx_status_drawId_desc`, không chạm document.
+   *
+   * @param limit - Trần số kỳ trả về. `findMany` mặc định cắt 500 và **im lặng** — truyền
+   *   tường minh để caller biết mình đang giới hạn ở đâu.
+   */
+  async listUnfinishedDrawIds(limit = 500): Promise<string[]> {
+    const docs = await this.findManyAsDocuments(
+      { status: { $in: [...DRAW_UNFINISHED_STATUSES] } },
+      { projection: { _id: 0, drawId: 1 }, sort: { drawId: -1 }, limit },
+    );
+
+    return docs.map((d) => d.drawId as string);
+  }
+
+  /**
    * Lấy N kỳ đã hoàn thành gần nhất (settled/void) — dùng cho nhóm "recent" trên draw selector
    * (tra soát/resettle nhanh), KHÔNG dùng để phát hiện kỳ kẹt (đã có `getUnfinishedDraws`).
    *

@@ -8,14 +8,12 @@ import type {
   ResettlePreflightOutput,
 } from "@megawin/game-lotto535-application/use-cases/draws";
 import type {
+  GetComboLookupOutput,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
-  NumberFrequencyOutput,
-  OpsSummaryOutput,
-  PlayTypeDistributionOutput,
-  TenantBreakdownOutput,
+  ListAlertsOutput,
 } from "@megawin/game-lotto535-application/use-cases/operations";
 import type { GetEntryByIdOutput } from "@megawin/game-lotto535-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
@@ -31,20 +29,19 @@ export type {
 } from "@megawin/game-lotto535-application/use-cases/draws";
 export type {
   DrawSelectorItem,
+  GetComboLookupOutput,
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
-  GetTopCombosOutput,
+  GetOpsSnapshotOutput,
   GetWinningEntriesOutput,
+  ListAlertsOutput,
   LiveEntryBoard,
   LiveEntryItem,
-  NumberFrequencyItem,
-  NumberFrequencyOutput,
-  OpsSummaryOutput,
-  PlayTypeDistributionItem,
-  PlayTypeDistributionOutput,
-  TenantBreakdownItem,
-  TenantBreakdownOutput,
-  TopComboItem,
+  Lotto535AlertGroup,
+  Lotto535ComboLookupAccount,
+  Lotto535SnapshotExposure,
+  Lotto535SnapshotThresholds,
+  Lotto535TopCombo,
   WinningEntriesSummary,
   WinningEntryBoard,
   WinningEntryItem,
@@ -94,114 +91,164 @@ export function useDrawDetail(drawId: string | undefined) {
 }
 
 // ─────────────────────────────────────────────
-// Operations Analytics
+// Operations Snapshot — timer 1 duy nhất (stats + numberStats + top-K + alertCounts)
 // ─────────────────────────────────────────────
 
 /**
- * KPI tổng quan cược: doanh thu, entries, lines, players, commission, payout.
- * Refetch mỗi 30s khi kỳ đang mở bán; dừng refetch khi đã settle (dữ liệu ổn định).
- */
-export function useOpsSummary(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: lotto535Keys.opsSummary(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<OpsSummaryOutput>(`${BASE}/summary`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Phân tích doanh thu theo đại lý (tenant).
- * Refetch mỗi 30s khi kỳ đang mở bán; dừng refetch khi đã settle (dữ liệu ổn định).
- */
-export function useOpsTenantBreakdown(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: lotto535Keys.opsTenantBreakdown(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<TenantBreakdownOutput>(`${BASE}/tenant-breakdown`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Tần suất số trong các bộ cược (heatmap).
- * Refetch mỗi 60s khi đang active; dừng khi đã settle.
- */
-export function useOpsNumberFrequency(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: lotto535Keys.opsNumberFrequency(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<NumberFrequencyOutput>(`${BASE}/number-frequency`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Phân bổ theo kiểu chơi (PlayType): lines, entries, revenue.
- * Refetch mỗi 60s khi đang active; dừng khi đã settle.
- */
-export function useOpsPlayTypeDistribution(params: OpsQueryParams, isSettled = false) {
-  return useQuery({
-    queryKey: lotto535Keys.opsPlayTypeDistribution(params as unknown as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<PlayTypeDistributionOutput>(`${BASE}/playtype-distribution`, {
-        params: params as unknown as Record<string, string>,
-      }),
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
-    enabled: !!params.drawId,
-  });
-}
-
-/**
- * Live feed: N entries mới nhất của một kỳ quay.
+ * Snapshot gộp mọi số liệu vận hành 1 kỳ — **timer 1 duy nhất** (analysis §5.2, mirror
+ * Power 6/55 D2).
  *
- * - Kỳ đang bán (isSettled=false): refetch tự động mỗi 30s
- * - Kỳ đã settle (isSettled=true): gọi 1 lần, staleTime = Infinity
+ * Thay 5 hook aggregation on-demand cũ (summary/tenant-breakdown/number-frequency/
+ * playtype-distribution/top-combos) bằng 1 findOne pre-aggregated + vài query top-K
+ * index-only. Nhịp poll đọc TỪ CHÍNH response (`pollSeconds` = worker `ops.stats.tickSeconds`)
+ * — FE khớp cadence worker, không hardcode; staff hạ tickSeconds thì FE tự theo. Fallback 10s.
+ *
+ * Mỗi section truyền `select` slice field của mình → section này đổi không kéo section
+ * khác re-render (React Query dedupe 1 query, `select` chặn cross re-render).
+ *
+ * @param drawId - Kỳ cần đọc; `undefined` → query tắt.
+ * @param isSettled - Kỳ đã settle → tắt poll, `staleTime` Infinity (0 request).
+ * @param select - Optional slice để giảm re-render; mặc định trả full output.
  */
-export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean) {
+export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
+  drawId: string | undefined,
+  isSettled: boolean,
+  select?: (data: GetOpsSnapshotOutput) => TData,
+) {
+  return useQuery({
+    queryKey: lotto535Keys.opsSnapshot(drawId ?? ""),
+    queryFn: () =>
+      apiClient.get<GetOpsSnapshotOutput>(`${BASE}/snapshot`, {
+        params: { drawId: drawId! },
+      }),
+    enabled: !!drawId,
+    // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
+    refetchInterval: (query) => {
+      if (isSettled) return false;
+      const s = query.state.data?.pollSeconds ?? 10;
+      return s * 1000;
+    },
+    staleTime: isSettled ? Infinity : 8_000,
+    select,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Alerts (on-demand khi panel mở) + Ack mutation
+// ─────────────────────────────────────────────
+
+/**
+ * List alert 1 kỳ (grouped theo type) — chỉ fetch khi panel mở (`enabled`).
+ * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
+ */
+export function useAlerts(
+  drawId: string | undefined,
+  status: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: lotto535Keys.opsAlerts(drawId ?? "", status),
+    queryFn: () =>
+      apiClient.get<ListAlertsOutput>(`${BASE}/alerts`, {
+        params: {
+          drawId: drawId!,
+          ...(status ? { status } : {}),
+          grouped: "true",
+        },
+      }),
+    enabled: !!drawId && enabled,
+  });
+}
+
+/**
+ * Acknowledge 1 alert. Invalidate toàn bộ Lotto 5/35 cache để refresh cả panel alert
+ * lẫn badge count (đọc từ snapshot) — đơn giản, an toàn cho hành động ít tần suất.
+ */
+export function useAckAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: lotto535Keys.all });
+      toast.success("Đã xác nhận cảnh báo.");
+    },
+    onError: (err) => {
+      const { title, description } = formatErrorToast(err, "Xác nhận cảnh báo thất bại.");
+      toast.error(title, { description });
+    },
+  });
+}
+
+// ─────────────────────────────────────────────
+// Combo lookup (on-demand — bấm "Tra cứu")
+// ─────────────────────────────────────────────
+
+/**
+ * Tra cứu 1 board (bộ số theo playType) trong 1 kỳ — on-demand.
+ *
+ * Dùng `useMutation` cho pattern bấm-nút-mới-chạy. `mainNumbers`/`specialNumbers` gửi
+ * CSV riêng ("01,05,...") — khớp `comboLookupQuerySchema` phía server (Lotto 5/35 luôn
+ * có 2 chiều số, KHÁC Power 6/55 chỉ 1 chiều). `playType` TỰ SUY ở UI theo số lượng số
+ * đã chọn (4+1/5+1/6..15+1/5+2..12).
+ */
+export function useComboLookup(drawId: string | undefined) {
+  return useMutation({
+    mutationFn: ({
+      playType,
+      mainNumbers,
+      specialNumbers,
+    }: {
+      playType: string;
+      mainNumbers: string[];
+      specialNumbers: string[];
+    }) =>
+      apiClient.get<GetComboLookupOutput>(`${BASE}/combo-lookup`, {
+        params: {
+          drawId: drawId!,
+          playType,
+          mainNumbers: mainNumbers.join(","),
+          specialNumbers: specialNumbers.join(","),
+        },
+      }),
+  });
+}
+
+// ─────────────────────────────────────────────
+// Live feed — DÙNG CHUNG nhịp `tickSeconds` với snapshot (analysis §5.2)
+// ─────────────────────────────────────────────
+
+/** Nhịp poll fallback (ms) khi snapshot chưa trả về `pollSeconds` — khớp default `ops.stats.tickSeconds`. */
+const LIVE_FEED_FALLBACK_MS = 10_000;
+
+/**
+ * Live feed: N entries mới nhất của 1 kỳ.
+ *
+ * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng, nhưng
+ * **DÙNG CHUNG nhịp `tickSeconds`** với snapshot (mirror Power 6/55 D2). Caller truyền
+ * `pollSeconds` lấy TỪ CHÍNH snapshot (`snapshot.pollSeconds`); staff hạ tickSeconds thì
+ * live feed tự theo.
+ *
+ * `enabled` gate ở caller (`onAnalysisTab && !isSettled`) để chỉ chạy khi tab Phân tích mở.
+ *
+ * @param drawId - Kỳ cần đọc; `undefined` → query tắt.
+ * @param isSettled - Kỳ đã settle → dừng poll, `staleTime` Infinity.
+ * @param pollSeconds - Nhịp chung từ snapshot (giây); `undefined` → fallback 10s.
+ */
+export function useOpsLiveEntries(
+  drawId: string | undefined,
+  isSettled: boolean,
+  pollSeconds: number | undefined,
+) {
+  const pollMs = pollSeconds ? pollSeconds * 1000 : LIVE_FEED_FALLBACK_MS;
   return useQuery({
     queryKey: lotto535Keys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
         params: { drawId: drawId! },
       }),
-    // Chỉ fetch khi đã chọn drawId
     enabled: !!drawId,
-    // Kỳ đã settle: không cần refetch
-    refetchInterval: isSettled ? false : 30_000,
-    staleTime: isSettled ? Infinity : 25_000,
-  });
-}
-
-/**
- * Top N bộ số phổ biến nhất trong một kỳ quay.
- *
- * Refetch mỗi 60s khi kỳ đang mở bán.
- * Kỳ đã settle: không refetch (kết quả ổn định).
- */
-export function useOpsTopCombos(drawId: string | undefined, isSettled: boolean) {
-  return useQuery({
-    queryKey: lotto535Keys.opsTopCombos(drawId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetTopCombosOutput>(`${BASE}/top-combos`, {
-        params: { drawId: drawId! },
-      }),
-    enabled: !!drawId,
-    refetchInterval: isSettled ? false : 60_000,
-    staleTime: isSettled ? Infinity : 55_000,
+    refetchInterval: isSettled ? false : pollMs,
+    staleTime: isSettled ? Infinity : pollMs * 0.8,
   });
 }
 
@@ -249,10 +296,16 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Winning Entries Dialog để xem lại phiếu cược gốc (board, kết quả, giải trúng).
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  */
-export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
+export function useWinningEntryDetail(
+  entryId: string | null,
+  { onNotFound }: { onNotFound?: () => void } = {},
+) {
   const query = useQuery({
     queryKey: lotto535Keys.reportEntryById(entryId ?? ""),
-    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/lotto535/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () =>
+      apiClient
+        .get<GetEntryByIdOutput>(`/lotto535/reports/entries/${entryId}`)
+        .then((r) => r.entry),
     enabled: !!entryId,
   });
 
@@ -293,7 +346,9 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
+      method === "post"
+        ? apiClient.post(actionPath(drawId), body)
+        : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: lotto535Keys.all });
       toast.success(successMessage);
@@ -322,7 +377,11 @@ export function usePublishResult() {
 }
 
 export function useTriggerSettle() {
-  return useDrawAction((id) => `/lotto535/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.");
+  return useDrawAction(
+    (id) => `/lotto535/draws/${id}/trigger-settle`,
+    "post",
+    "Đã bắt đầu kết sổ.",
+  );
 }
 
 /**
@@ -380,7 +439,11 @@ export function useResettlePreflight() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>((id) => `/lotto535/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
+  return useDrawAction<{ reason: string }>(
+    (id) => `/lotto535/draws/${id}/void`,
+    "post",
+    "Đã huỷ kỳ quay.",
+  );
 }
 
 export function useUpdateSchedule() {

@@ -18,6 +18,12 @@ export { VoidReportRepository } from "./void-report-repo";
 export { OutstandingReportRepository } from "./outstanding-report-repo";
 export { EntryOutstandingRepository } from "./entry-outstanding-repo";
 export { EntryVoidRepository } from "./entry-void-repo";
+export { BettingStatsRepository } from "./betting-stats-repo";
+export { NumberStatsRepository } from "./number-stats-repo";
+export { AccountStatsRepository } from "./account-stats-repo";
+export { ComboStatsRepository } from "./combo-stats-repo";
+export { ComboAccountsRepository } from "./combo-accounts-repo";
+export { OpsAlertRepository } from "./ops-alert-repo";
 
 export type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
 export type { JackpotCycleEntryEntity } from "@megawin/game-mega645/entities";
@@ -37,4 +43,13 @@ export type {
   VoidPlayerBreakdownRow,
   ReversalCandidate,
   ReversalEntryForDispatch,
+  EntryForStats,
+  EntryBoardForStats,
+  DrawStatsCursor,
+  DrawStatsDelta,
+  PartialPlayTypeDelta,
+  NumberStatsDelta,
+  AccountStatsDelta,
+  ComboAccountDelta,
+  ComboStatsDelta,
 } from "./types";

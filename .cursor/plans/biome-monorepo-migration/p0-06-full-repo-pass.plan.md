@@ -6,6 +6,15 @@
 
 Đưa 2.019 file chưa từng được lint (41 package backend + `packages/ui`) về trạng thái sạch, **mà không tạo ra một commit khổng lồ trộn lẫn format và logic**.
 
+> **Bước 0 bắt buộc — re-survey:** số liệu khảo sát chốt ngày 01/08 (3.122 file, 571 `any`, 248 barrel...)
+> đã drift do các plan song song (`monorepo-test-setup`, ops-risk-control 3 game — xem overview §3.1).
+> Trước khi chạy full pass, chạy lại các lệnh đếm ripgrep trong overview §4 và cập nhật bảng backlog
+> bên dưới bằng số MỚI. Đặc biệt lưu ý số file test/`vitest.config.ts` mới thêm.
+
+> **Điều kiện tiên quyết — working tree SẠCH (overview §7 mục 1):** `git status --porcelain` phải rỗng
+> (mọi work-in-progress đã commit/merge). Chạy format toàn repo trên tree bẩn = trộn diff format vào
+> diff logic đang dở → không review nổi. p0-01→p0-05 không có ràng buộc này; p0-06 CÓ, tuyệt đối.
+
 ## Nguyên tắc: 3 commit tách biệt, KHÔNG trộn
 
 ### Commit 1 — format-only (không đổi hành vi)
@@ -81,3 +90,41 @@ Nguyên tắc: **không hạ rule xuống `off` để làm sạch output**. Nế
 - `git log --oneline -3` cho thấy 2-3 commit tách biệt rõ mục đích (format / autofix / unsafe).
 - `.git-blame-ignore-revs` tồn tại và chứa SHA commit format.
 - Bảng backlog ở trên đã được điền số thật.
+
+## Phương án review sau thực thi
+
+**1. Review commit 1 (format-only) — chứng minh KHÔNG đổi hành vi:**
+
+```bash
+# Diff chỉ được chứa whitespace/quote/comma — verify bằng diff bỏ qua whitespace:
+git diff HEAD~1 --ignore-all-space --ignore-blank-lines --stat
+# KỲ VỌNG: gần như rỗng (chỉ còn quote style đổi ' → " nếu có, và trailing comma)
+# Kiểm tra máy móc: AST không đổi
+pnpm check-types    # xanh — TS không quan tâm format
+pnpm test           # xanh — hành vi runtime không đổi
+```
+
+**2. Review commit 2 (safe auto-fix) — soi đúng các loại fix đã khai báo:**
+
+```bash
+git diff HEAD~1 --stat | tail -1                       # ghi lại quy mô
+git diff HEAD~1 | rg '^\-.*import ' | head -30          # import bị xoá/đổi — phải toàn unused/type-only
+# Side-effect import KHÔNG được di chuyển qua nhau:
+rg -n '^import ["'"'"']' apps/backoffice/next.config.ts apps/backoffice/src/env.ts
+pnpm check-types && pnpm test && pnpm build             # cả 3 xanh
+```
+
+**3. Review commit 3 (unsafe — nếu chạy):** đọc diff TỪNG FILE, không gộp. Từ chối mọi fix đổi `any` → `unknown` trong `infras/**` (mâu thuẫn mongodb.mdc). Nếu diff > ~30 file → huỷ, đưa backlog.
+
+**4. Verify tổng:**
+
+| Lệnh | Kỳ vọng |
+|---|---|
+| `pnpm exec biome check . --reporter=summary` | 0 error; warning khớp bảng backlog đã điền |
+| `git log --oneline -3` | 2-3 commit tách bạch format / autofix / (unsafe) |
+| `git config blame.ignoreRevsFile` | `.git-blame-ignore-revs` |
+| `git blame packages/game-keno/src/entities/enums.ts \| head -3` | tác giả THẬT, không phải commit format |
+
+**5. Smoke test UI (rủi ro `useSortedClasses` — overview §7 mục 3):** mở backoffice local, đi qua operations 4 game + config page, so màn hình với trước migration. Đặc biệt các component trong `packages/ui` (10 file lần đầu bị sort class).
+
+**6. Rollback:** commit tách bạch nên revert theo lớp: `git revert <sha-commit-3>` (nếu có) → đo lại; format-only revert là phương án cuối cùng (tạo lại diff khổng lồ) — ưu tiên fix-forward.

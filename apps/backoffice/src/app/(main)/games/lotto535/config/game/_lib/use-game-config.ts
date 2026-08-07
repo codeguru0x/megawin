@@ -35,6 +35,23 @@ interface GameConfig {
     drawsPerDay: number;
     drawTimes: string[];
   };
+  ops: {
+    alerts: {
+      largeBetAmount: number;
+      fixedExposureWarnAmount: number;
+      comboAccountsWarn: number;
+      coverHighStakeAmount: number;
+      specialSkewRatio: number;
+      specialSkewMinAmount: number;
+      enabled: Record<string, boolean>;
+    };
+    stats: {
+      tickSeconds: number;
+      topPotentialK: number;
+      topAccountsK: number;
+      topCombosK: number;
+    };
+  };
   version: number;
   createdAt: string;
   updatedAt: string;

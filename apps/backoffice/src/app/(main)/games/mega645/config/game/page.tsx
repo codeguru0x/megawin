@@ -1,13 +1,14 @@
 "use client";
 
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { DollarSign, Percent, Settings2, Trophy } from "lucide-react";
+import { DollarSign, Percent, Radio, Settings2, Trophy } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { JackpotSection } from "./_lib/jackpot-section";
+import { OpsSection } from "./_lib/ops-section";
 import { PlayRulesSection } from "./_lib/play-rules-section";
 import { PrizesSection } from "./_lib/prizes-section";
 import { RatesSection } from "./_lib/rates-section";
@@ -28,7 +29,7 @@ export default function Mega645ConfigPage() {
 
   const [tab, setTab] = useQueryState(
     "tab",
-    parseAsStringEnum(["jackpot", "prizes", "rates", "play"]).withDefault("jackpot"),
+    parseAsStringEnum(["jackpot", "prizes", "rates", "play", "ops"]).withDefault("jackpot"),
   );
 
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
@@ -40,7 +41,9 @@ export default function Mega645ConfigPage() {
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">Mega 6/45 — Cấu hình</h1>
+          <h1 className="text-base font-semibold tracking-tight text-foreground">
+            Mega 6/45 — Cấu hình
+          </h1>
           {config && (
             <p className="text-xs tabular-nums text-muted-foreground">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
@@ -78,6 +81,10 @@ export default function Mega645ConfigPage() {
               <Settings2 className="size-4 text-violet-500" />
               Luật chơi
             </TabsTrigger>
+            <TabsTrigger value="ops" className="gap-1.5">
+              <Radio className="size-4 text-red-500" />
+              Vận hành
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jackpot" className="mt-2">
@@ -94,6 +101,10 @@ export default function Mega645ConfigPage() {
 
           <TabsContent value="play" className="mt-2">
             <PlayRulesSection config={config} onSave={handleSave} isPending={mutation.isPending} />
+          </TabsContent>
+
+          <TabsContent value="ops" className="mt-2">
+            <OpsSection config={config} onSave={handleSave} isPending={mutation.isPending} />
           </TabsContent>
         </Tabs>
       )}

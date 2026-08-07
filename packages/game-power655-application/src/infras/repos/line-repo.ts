@@ -66,7 +66,9 @@ export class LineRepository extends BaseRepo<any> {
     options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
-    const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
+    // entryId lưu dạng hex string (settle-entries ghi `entry.id`), KHÔNG phải ObjectId.
+    // Query bằng string để khớp — dùng ObjectId sẽ không match → trả rỗng.
+    const filter: Record<string, unknown> = { entryId };
 
     if (cursor != null) {
       filter.lineIndex = { $gt: cursor };
@@ -84,55 +86,66 @@ export class LineRepository extends BaseRepo<any> {
   }
 
   /**
-   * Patch winAmount cho tất cả lines trúng jackpotTier trong draw.
+   * Lấy TẤT CẢ lines trúng jackpotTier trong draw (KỂ CẢ line đã patch winAmount).
    *
-   * Idempotent: chỉ update lines có matchResult.tier = jackpotTier và matchResult.winAmount = 0.
+   * Đây là NGUỒN tính mẫu số `totalBetUnits` + danh sách winners trong
+   * `PatchJackpotPrize`. PHẢI đọc tất cả — KHÔNG filter `matchResult.winAmount`
+   * — để mẫu số và winners DETERMINISTIC qua mọi lần Step Function retry sau
+   * crash giữa chừng (kịch bản lines đã patch nhưng entries chưa). Nếu tính từ
+   * tập lines-chưa-patch, retry sẽ thấy tập co lại → jackpotPerUnit phình to +
+   * entries trúng JP bị bỏ sót vĩnh viễn.
+   *
+   * Tập này = tập line winner thật: settle-entries luôn ghi JP line với
+   * `winAmount = 0` ban đầu, chỉ `PatchJackpotPrize` mới đổi thành > 0. Không
+   * có nguồn nào khác tạo JP line, nên "tất cả JP line theo tier" = "tất cả
+   * line winner của tier đó".
+   *
+   * @param jackpotTier - "jackpot1" hoặc "jackpot2"
+   * @returns lineId + entryId (hex) + betCount của mỗi line trúng
+   */
+  async getAllJackpotLines(
+    drawId: string,
+    jackpotTier: string,
+  ): Promise<Array<{ lineId: string; entryId: string; betCount: number }>> {
+    const docs = await this.findManyAsDocuments(
+      {
+        drawId,
+        "matchResult.tier": jackpotTier,
+      },
+      { projection: { _id: 1, entryId: 1, betCount: 1 } },
+    );
+
+    return docs.map((d) => ({
+      lineId: (d._id as ObjectId).toHexString(),
+      entryId: d.entryId instanceof ObjectId ? d.entryId.toHexString() : String(d.entryId),
+      betCount: (d.betCount as number | undefined) ?? 1,
+    }));
+  }
+
+  /**
+   * Lấy lines trúng jackpotTier CHƯA patch (`matchResult.winAmount = 0`) trong draw.
+   *
+   * CHỈ dùng nội bộ bởi {@link patchJackpotLinesPerUnit} để biết line nào cần
+   * ghi winAmount. TUYỆT ĐỐI KHÔNG dùng để tính mẫu số `totalBetUnits` hay
+   * winners — dùng {@link getAllJackpotLines} cho việc đó (retry-safe).
    *
    * @param jackpotTier - "jackpot1" hoặc "jackpot2"
    */
-  async patchJackpotLineWinAmount(
+  private async getUnpatchedJackpotLines(
     drawId: string,
     jackpotTier: string,
-    jackpotPerWinner: number,
-  ): Promise<number> {
-    const result = await this.updateMany(
+  ): Promise<Array<{ lineId: string; betCount: number }>> {
+    const docs = await this.findManyAsDocuments(
       {
         drawId,
         "matchResult.tier": jackpotTier,
         "matchResult.winAmount": 0,
       },
-      {
-        $set: { "matchResult.winAmount": jackpotPerWinner },
-      },
+      { projection: { _id: 1, betCount: 1 } },
     );
-    return result.modifiedCount;
-  }
-
-  /**
-   * Lấy tất cả lines trúng jackpotTier trong draw.
-   * Dùng để tính tổng betCount và patch winAmount theo tỷ lệ (không chia đều).
-   *
-   * Trả về ObjectId entryId + betCount của mỗi line trúng.
-   */
-  async getJackpotWinningLines(
-    drawId: string,
-    jackpotTier: string,
-  ): Promise<Array<{ lineId: string; entryId: string; betCount: number }>> {
-    const col = await this.getCollection();
-    const docs = await col
-      .find(
-        {
-          drawId,
-          "matchResult.tier": jackpotTier,
-          "matchResult.winAmount": 0,
-        },
-        { projection: { _id: 1, entryId: 1, betCount: 1 } },
-      )
-      .toArray();
 
     return docs.map((d) => ({
-      lineId: d._id.toHexString(),
-      entryId: d.entryId instanceof ObjectId ? d.entryId.toHexString() : String(d.entryId),
+      lineId: (d._id as ObjectId).toHexString(),
       betCount: (d.betCount as number | undefined) ?? 1,
     }));
   }
@@ -141,18 +154,23 @@ export class LineRepository extends BaseRepo<any> {
    * Patch winAmount cho từng line trúng JP theo tỷ lệ betCount.
    *
    * Thay vì set cùng 1 amount uniform, mỗi line có winAmount riêng = jackpotPerUnit × betCount.
-   * Idempotent: chỉ update lines có winAmount = 0.
+   * Idempotent: chỉ update lines có winAmount = 0 (đọc qua getUnpatchedJackpotLines
+   * + filter `winAmount: 0` trong bulk op). `jackpotPerUnit` do caller tính từ
+   * mẫu số DETERMINISTIC (getAllJackpotLines) nên mọi retry đều dùng cùng đơn giá
+   * → line patch ở lần retry khác nhau vẫn ra cùng winAmount.
    */
   async patchJackpotLinesPerUnit(
     drawId: string,
     jackpotTier: string,
     jackpotPerUnit: number,
   ): Promise<number> {
-    // Lấy danh sách lines trúng JP + betCount của từng line
-    const winningLines = await this.getJackpotWinningLines(drawId, jackpotTier);
-    if (winningLines.length === 0) return 0;
+    // Chỉ lấy lines CHƯA patch để tránh ghi đè line đã có winAmount (idempotent).
+    const unpatchedLines = await this.getUnpatchedJackpotLines(drawId, jackpotTier);
+    if (unpatchedLines.length === 0) {
+      return 0;
+    }
 
-    const ops = winningLines.map((line) => {
+    const ops = unpatchedLines.map((line) => {
       const winAmount = jackpotPerUnit * line.betCount;
       return {
         updateOne: {

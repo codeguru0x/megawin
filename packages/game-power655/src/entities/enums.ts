@@ -29,6 +29,18 @@ export const Power655Collections = {
    * Dùng cho resettle (PrepareSettle đọc opening từ ledger) và DBA restore.
    */
   JackpotCycleEntries: "power655_jackpot_cycle_entries",
+  /** Thống kê realtime cược 1 kỳ (pre-aggregated) — 1 doc/draw. Xem `entities/betting-stats.ts`. */
+  DrawBettingStats: "power655_draw_betting_stats",
+  /** Tần suất từng số trong 1 kỳ — 1 doc/(draw × số). Xem `entities/number-stats.ts`. */
+  DrawNumberStats: "power655_draw_number_stats",
+  /** Tích luỹ cược theo account trong 1 kỳ — 1 doc/(draw × account). Xem `entities/account-stats.ts`. */
+  DrawAccountStats: "power655_draw_account_stats",
+  /** Chi tiết combo (board) theo bộ số trong 1 kỳ — 1 doc/(draw × combo). Xem `entities/combo-stats.ts`. */
+  DrawComboStats: "power655_draw_combo_stats",
+  /** Chi tiết account đã cược 1 combo — 1 doc/(draw × combo × account). Xem `entities/combo-stats.ts`. */
+  DrawComboAccounts: "power655_draw_combo_accounts",
+  /** Alert vận hành — 1 doc/(draw × dedupeKey). Xem `entities/ops-alert.ts`. */
+  OpsAlerts: "power655_ops_alerts",
 } as const;
 
 /**

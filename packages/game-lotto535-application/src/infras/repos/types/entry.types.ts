@@ -1,3 +1,5 @@
+import type { PlayType } from "@megawin/game-lotto535/entities";
+
 /**
  * Kết quả aggregate metrics outstanding cho 1 draw (Query A).
  *
@@ -67,6 +69,22 @@ export interface VoidedEntryForDispatch {
   ticketNo: string;
   refundAmount: number;
   refundTx: string;
+}
+
+/**
+ * 1 board của account (ownership-gate minh bạch combo — p1-01).
+ *
+ * Projection cực nhẹ `{ playType, mainNumbers, specialNumbers }` từ `entrySummary.boards`
+ * — dùng để build comboKey xác định combo player yêu cầu có thuộc họ không. KHÁC Keno:
+ * thêm `specialNumbers` (Lotto 5/35 luôn có 2 chiều số).
+ */
+export interface OwnedBoard {
+  /** Loại chơi board — standard/mainCover4/mainCover/specialCover. */
+  playType: PlayType;
+  /** Số chính đã chọn ("01".."35"), sorted. */
+  mainNumbers: string[];
+  /** Số đặc biệt đã chọn ("01".."12"), sorted. */
+  specialNumbers: string[];
 }
 
 /** Settled entry có payout > 0 — candidate reversal trước resettle. */

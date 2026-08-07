@@ -15,6 +15,14 @@ Hai lựa chọn:
 
 Chọn (A). Nếu về sau cần tách, thêm lại nested config tốn 5 phút.
 
+## Ghi chú: shadcn/ui KHÔNG bắt buộc ESLint
+
+Trả lời dứt điểm câu hỏi "shadcn có dùng Biome được không hay bắt buộc ESLint":
+
+- **shadcn KHÔNG phụ thuộc ESLint.** shadcn/ui không phải library runtime — CLI chỉ **copy source component** (TS/React thuần) vào `src/components/ui/`. Không có peer dependency, không có plugin lint, không có bước lint nào trong CLI. Docs shadcn dùng ESLint trong ví dụ template chỉ vì `create-next-app` mặc định có ESLint — không phải yêu cầu.
+- **Bằng chứng ngay trong repo**: `apps/backoffice` đã chạy shadcn + Biome (không ESLint) từ trước migration này — `components.json` + `biome.json` chung sống bình thường.
+- Cách xử lý đúng (đã chốt ở p0-02 (1b)): coi `src/components/ui/**` là **generated code** → tắt cả `linter` + `formatter` + `assist`. Lý do không phải "Biome không lint được shadcn" mà là: code generate sẽ bị regenerate khi `shadcn add` — mọi format/fix thủ công đều tạo diff vô nghĩa ở lần regenerate sau. Component **tự viết** dùng shadcn primitives (ngoài thư mục `ui/`) vẫn lint đầy đủ như code thường.
+
 ## Thay đổi
 
 ### 1. Bổ sung vào `/biome.json` (phần chưa có ở p0-01)
@@ -91,7 +99,7 @@ Sau khi verify `biome format --check apps/backoffice` cho 0 diff so với trư�
 
 ### 4. `apps/backoffice/package.json`
 
-- Xoá `"@biomejs/biome": "2.5.5"` khỏi `devDependencies` (đã có ở root).
+- Xoá `"@biomejs/biome": "2.5.7"` khỏi `devDependencies` (đã có ở root — bump từ 2.5.5 lên 2.5.7 xảy ra ở p0-01).
 - Giữ nguyên script `lint`/`format` (đang gọi `biome`) — vẫn hoạt động qua root config.
 
 ### 5. `packages/ui` — rời ESLint
@@ -123,3 +131,42 @@ Mặt khác, vì React Compiler tự memo hoá, **không** thêm rule kiểu "b�
 - `pnpm exec biome check apps/backoffice/src/app/globals.css` → không lỗi parse `@theme`.
 - `pnpm --filter @megawin/ui lint` chạy Biome, exit 0 (hoặc chỉ còn warning đã ghi vào backlog p0-06).
 - `rg "eslint" packages/ui` → không còn kết quả.
+
+## Phương án review sau thực thi
+
+**1. Diff review — file được phép đổi:**
+
+```
+biome.json                          (bổ sung Tailwind/CSS/HTML settings + override Next)
+apps/backoffice/biome.json          (XOÁ)
+apps/backoffice/package.json        (xoá dep @biomejs/biome)
+packages/ui/eslint.config.mjs       (XOÁ)
+packages/ui/package.json            (script lint đổi + xoá 2 dep ESLint)
+pnpm-lock.yaml
+```
+
+**2. So sánh diagnostic TRƯỚC/SAU xoá nested config (bước quan trọng nhất của plan này):**
+
+```bash
+# TRƯỚC khi xoá apps/backoffice/biome.json:
+pnpm exec biome check apps/backoffice --reporter=summary > /tmp/before.txt 2>&1
+# SAU khi xoá + gộp vào root:
+pnpm exec biome check apps/backoffice --reporter=summary > /tmp/after.txt 2>&1
+diff /tmp/before.txt /tmp/after.txt
+# KỲ VỌNG: 0 khác biệt về số lượng và loại rule. Có khác = root config chưa gộp đủ setting — dò từng rule lệch.
+```
+
+**3. Lệnh verify:**
+
+| Lệnh | Kỳ vọng |
+|---|---|
+| `pnpm exec biome format --check apps/backoffice` | 0 file cần format |
+| `pnpm exec biome check apps/backoffice/src/app/globals.css` | không lỗi parse `@theme`/`@custom-variant` |
+| `pnpm --filter @megawin/ui lint` | chạy Biome, không phải ESLint |
+| `pnpm exec biome check packages/ui 2>&1 \| rg useExhaustiveDependencies` | rule react domain hoạt động ở packages/ui (nếu có vi phạm) |
+| `rg -l "eslint" packages/ui` | 0 kết quả |
+| `rg '"@biomejs/biome"' -g 'package.json' -g '!node_modules'` | đúng 1 kết quả (root) |
+
+**4. Negative test — domain react auto-detect ở `packages/ui`:** thêm tạm hook gọi trong điều kiện (`if (x) { useState(0); }`) vào 1 component → check → KỲ VỌNG error `useHookAtTopLevel` → revert. Chứng minh domain `react` tự bật KHÔNG cần khai báo.
+
+**5. Rollback:** `git checkout -- biome.json apps/backoffice/ packages/ui/ && pnpm install`.

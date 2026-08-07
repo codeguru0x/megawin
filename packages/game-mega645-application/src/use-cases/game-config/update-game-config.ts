@@ -1,10 +1,15 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
+import type { Mega645OpsConfig } from "@megawin/game-mega645/entities";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
 import { globalConfigCache } from "../../caches/global-config.cache";
-import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
+import type {
+  UpdateGameConfigInput,
+  UpdateGameConfigOutput,
+  UpdateOpsInput,
+} from "./dto/game-config.dto";
 
 export class UpdateGameConfigUseCase extends NextApiUseCase<
   UpdateGameConfigInput,
@@ -37,6 +42,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       play: input.play
         ? { ...(existing?.play ?? DEFAULT_MEGA645_CONFIG.play), ...input.play }
         : undefined,
+      ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 
     const cleanMerged: Record<string, unknown> = {};
@@ -44,6 +50,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (merged.rates) cleanMerged.rates = merged.rates;
     if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
     if (merged.play) cleanMerged.play = merged.play;
+    if (merged.ops) cleanMerged.ops = merged.ops;
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
@@ -67,5 +74,32 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       config: updated,
       version: updated.version,
     };
+  }
+
+  /**
+   * Merge section `ops` per sub-section (alerts/stats) — chỉ set field gửi lên, giữ
+   * phần còn lại từ existing (fallback default). `enabled` merge shallow để đổi 1
+   * khoá alert type mà không phải gửi cả object.
+   */
+  private mergeOps(
+    existing: Mega645OpsConfig | undefined,
+    input: UpdateOpsInput,
+  ): Mega645OpsConfig {
+    const base = existing ?? DEFAULT_MEGA645_CONFIG.ops;
+
+    const alerts = input.alerts
+      ? {
+          ...base.alerts,
+          ...input.alerts,
+          enabled: {
+            ...base.alerts.enabled,
+            ...input.alerts.enabled,
+          },
+        }
+      : base.alerts;
+
+    const stats = input.stats ? { ...base.stats, ...input.stats } : base.stats;
+
+    return { alerts, stats };
   }
 }

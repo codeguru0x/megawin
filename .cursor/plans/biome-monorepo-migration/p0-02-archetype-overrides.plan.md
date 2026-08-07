@@ -13,7 +13,7 @@ Mỗi loại package trong monorepo có yêu cầu khác nhau (Next.js app vs La
 | 1 | Next.js App Router | `apps/backoffice` | 1.103 | Default export bắt buộc cho page/layout/route; Tailwind class sort; shadcn generated code; React Compiler bật |
 | 2 | React component library | `packages/ui` | 10 | React domain (auto-detect), không có Next |
 | 3 | Node/Lambda handler | `apps/api-*`, `apps/worker-*` | ~235 | `console` → CloudWatch; không DOM; không React |
-| 4 | Domain package thuần | `packages/game-{keno,bingo18,max3d,max3dpro,lotto535,mega645,power655}`, `game-core`, `shared`, `identity`, `auth`, `data`, `cache`, `audit`, `http-client`, `tenant-*`, `worker-core`, `next` | ~340 | Strictest: named export only, không I/O, pure logic |
+| 4 | Domain package thuần + tooling | `packages/game-{keno,bingo18,max3d,max3dpro,lotto535,mega645,power655}`, `game-core`, `shared`, `identity`, `auth`, `data`, `cache`, `audit`, `http-client`, `tenant-*`, `worker-core`, `next`, `tooling/vitest-config`, `tooling/typescript-config` | ~340 | Strictest: named export only, không I/O, pure logic |
 | 5 | Application layer | `packages/game-*-application`, `identity-application`, `game-core-application` | ~1.160 | `(r: any)` trong aggregate mapping được `mongodb.mdc` endorse |
 | 6 | SDK publish ra ngoài | `packages/player-sdk` | 55 | Barrel entry là API contract; JSDoc là sản phẩm (TypeDoc) |
 | 7 | Config + test files | `**/*.config.ts`, `**/test/**`, `**/*.test.ts`, `**/*.type-test.ts` | ~200 | Default export bắt buộc; test cần `any`/magic number thoải mái |
@@ -47,8 +47,9 @@ Mỗi loại package trong monorepo có yêu cầu khác nhau (Next.js app vs La
     },
 
     // ── (4)(6) Library code: CHỈ named export ────────────────────────────────
+    // Bao gồm cả tooling/* (tooling/vitest-config có source TS thật — drift sau khảo sát 01/08)
     {
-      "includes": ["packages/*/src/**"],
+      "includes": ["packages/*/src/**", "tooling/*/src/**"],
       "linter": {
         "rules": {
           "style": { "noDefaultExport": "error" }
@@ -87,11 +88,14 @@ Mỗi loại package trong monorepo có yêu cầu khác nhau (Next.js app vs La
       }
     },
 
-    // ── (1b) shadcn generated components: không lint, không format ───────────
+    // ── (1b) shadcn generated components: không lint, không format, KHÔNG assist ─
+    // Phải tắt cả "assist" — nếu chỉ tắt linter+formatter, `biome check --write`
+    // vẫn chạy organizeImports lên file generated → diff mỗi lần `shadcn add` regenerate.
     {
       "includes": ["apps/backoffice/src/components/ui/**"],
       "linter": { "enabled": false },
-      "formatter": { "enabled": false }
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
     }
   ]
 }
@@ -115,7 +119,7 @@ Không cần override riêng: Biome tự bật domain `react` vì `package.json`
 
 ### (3) Node/Lambda handler — `apps/api-*`, `apps/worker-*`
 
-- `noConsole: "off"`: 356 chỗ `console.*`, và với Lambda thì `console.log` → CloudWatch Logs là cách log chuẩn (không cần logger lib). Repo không có logger abstraction nào.
+- `noConsole: "off"`: 356 chỗ `console.*`, và với Lambda thì `console.log` → CloudWatch Logs là cách log chuẩn (không cần logger lib). Repo không có logger abstraction nào. *(Lưu ý: root p0-01 đã đặt `noConsole: "off"` toàn cục — vì `packages/*-application` cũng có ~375 chỗ `console.*` chạy trong Lambda. Override này giữ lại dưới dạng tường minh phòng khi root đổi thành `warn` sau này, không gây hại.)*
 - `noDefaultExport: "off"`: handler Lambda và `serverless.yml` entry point thường export default.
 - **Không** bật DOM globals ở đây — `tooling/typescript-config/serverless.json` đã chỉ dùng `lib: ["es2024"]`, Biome tự suy theo domain (không có react → không có JSX rule).
 
@@ -156,4 +160,47 @@ Biome áp dụng override **theo thứ tự khai báo, sau ghi đè trước**. 
 - `pnpm exec biome check .` cho **0 lỗi thuộc nhóm "không thể fix"**: không có warning `noDefaultExport` trong `apps/backoffice/src/app/**`, `**/*.config.ts`, `apps/api-*`, `apps/worker-*`.
 - `pnpm exec biome check packages/game-keno-application/src/infras/repos` → không có warning `noExplicitAny`.
 - `pnpm exec biome check packages/game-keno-application/src/use-cases` → **vẫn** báo `noExplicitAny` nếu có `any` (chứng minh override đúng scope).
-- `pnpm exec biome check apps/backoffice/src/components/ui` → 0 diagnostic (linter tắt).
+- `pnpm exec biome check apps/backoffice/src/components/ui` → 0 diagnostic (linter tắt), và `biome check --write` **không đổi 1 byte nào** trong thư mục này (chứng minh assist cũng đã tắt).
+- `pnpm exec biome check tooling/vitest-config/src` chạy với rule library (`noDefaultExport` áp dụng).
+
+## Phương án review sau thực thi
+
+**1. Diff review — file được phép đổi:** duy nhất `biome.json` (root). Bất kỳ file nào khác đổi = sai.
+
+**2. Verify từng override bằng probe file (tạo → check → xoá). Chạy tuần tự:**
+
+```bash
+# (7a) Config file được default export, không bị bắt filename
+echo 'export default { x: 1 };' > packages/shared/probe.config.ts
+pnpm exec biome check packages/shared/probe.config.ts   # KỲ VỌNG: 0 lỗi noDefaultExport
+rm packages/shared/probe.config.ts
+
+# (7b) Test file được dùng any + non-null assertion
+printf 'const a: any = 1;\nexport const b = a!.x;\n' > packages/shared/test/probe.test.ts
+pnpm exec biome check packages/shared/test/probe.test.ts # KỲ VỌNG: 0 lỗi noExplicitAny/noNonNullAssertion
+rm packages/shared/test/probe.test.ts
+
+# (4) Library src: default export BỊ CHẶN — cả packages/* lẫn tooling/*
+echo 'export default function f() {}' > packages/shared/src/probe-default.ts
+pnpm exec biome check packages/shared/src/probe-default.ts   # KỲ VỌNG: error noDefaultExport
+rm packages/shared/src/probe-default.ts
+echo 'export default function f() {}' > tooling/vitest-config/src/probe-default.ts
+pnpm exec biome check tooling/vitest-config/src/probe-default.ts # KỲ VỌNG: error noDefaultExport
+rm tooling/vitest-config/src/probe-default.ts
+
+# (5) infras được any, use-cases KHÔNG
+pnpm exec biome check packages/game-keno-application/src/infras    # KỲ VỌNG: 0 noExplicitAny
+pnpm exec biome check packages/game-keno-application/src/use-cases # KỲ VỌNG: có noExplicitAny nếu tồn tại any
+
+# (1)(1b) App Router + shadcn
+pnpm exec biome check apps/backoffice/src/app 2>&1 | rg -c "noDefaultExport|useFilenamingConvention"
+# KỲ VỌNG: 0
+BEFORE=$(find apps/backoffice/src/components/ui -type f | xargs md5 | md5)
+pnpm exec biome check --write apps/backoffice/src/components/ui
+AFTER=$(find apps/backoffice/src/components/ui -type f | xargs md5 | md5)
+[ "$BEFORE" = "$AFTER" ] && echo "OK: shadcn untouched" || echo "FAIL: assist/format vẫn chạm shadcn"
+```
+
+**3. Kiểm tra thứ tự override:** thêm tạm `console.log` + default export vào 1 file `apps/api-player/src/handlers/keno/probe.ts` → check → KỲ VỌNG 0 lỗi noConsole/noDefaultExport → xoá.
+
+**4. Rollback:** `git checkout -- biome.json`.

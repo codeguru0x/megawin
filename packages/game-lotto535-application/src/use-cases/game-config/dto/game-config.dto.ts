@@ -3,6 +3,8 @@ import type {
   FinancialRates,
   PrizeAmounts,
   PlayRules,
+  OpsStatsConfig,
+  Lotto535OpsAlertType,
 } from "@megawin/game-lotto535/entities";
 import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
 import type { AuditActor } from "@megawin/audit/logger";
@@ -20,6 +22,24 @@ export interface GetGameConfigOutput {
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 
+/**
+ * Input cập nhật section `ops` — deep-partial: chỉ gửi field cần đổi, merge
+ * per sub-section (`alerts`/`stats`) ở use-case; `enabled` merge shallow để đổi
+ * 1 khoá alert type mà không phải gửi cả object (analysis §3.8, p0-03).
+ */
+export interface UpdateOpsInput {
+  alerts?: {
+    largeBetAmount?: number;
+    fixedExposureWarnAmount?: number;
+    comboAccountsWarn?: number;
+    coverHighStakeAmount?: number;
+    specialSkewRatio?: number;
+    specialSkewMinAmount?: number;
+    enabled?: Partial<Record<Lotto535OpsAlertType, boolean>>;
+  };
+  stats?: Partial<OpsStatsConfig>;
+}
+
 export interface UpdateGameConfigInput {
   /** Cấu hình Jackpot (seedAmount, splitThreshold, splitRatios). Partial update. */
   jackpot?: Partial<JackpotConfig>;
@@ -29,6 +49,11 @@ export interface UpdateGameConfigInput {
   defaultPrizes?: Partial<PrizeAmounts>;
   /** Quy tắc chơi (unitPrice, maxBoardsPerTicket, maxDrawCount, ...). Partial update. */
   play?: Partial<PlayRules>;
+  /**
+   * Cấu hình vận hành (analysis §3.8). Deep-partial: chỉ gửi field cần đổi, merge
+   * per sub-section (alerts/stats), `enabled` merge shallow ở use-case.
+   */
+  ops?: UpdateOpsInput;
   /** Chủ thể thực hiện — dùng cho audit. */
   actor: AuditActor;
 }

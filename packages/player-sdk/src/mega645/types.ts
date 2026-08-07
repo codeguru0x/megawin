@@ -812,3 +812,78 @@ export interface Mega645ListDrawResultsResponse {
   /** Số lượng mỗi trang (echo lại `size`). */
   size: number;
 }
+
+// ─────────────────────────────────────────────
+// Combo Popularity — minh bạch chia jackpot
+// ─────────────────────────────────────────────
+
+/**
+ * Tham số tra cứu độ đông 1 bộ số mà player đã cược trong kỳ.
+ *
+ * Player kiểm chứng số bộ cùng chơi — và với bộ 6 số standard, xem cả `jackpotUnits` (mẫu
+ * số chia jackpot) — để tin rằng hệ thống chia thưởng minh bạch.
+ *
+ * @example
+ * ```ts
+ * const params: Mega645ComboPopularityParams = {
+ *   drawId: "2026-03-08.001",
+ *   numbers: ["01", "05", "12", "23", "34", "45"], // standard (6 số)
+ * };
+ * ```
+ */
+export interface Mega645ComboPopularityParams {
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. VD: `"2026-03-08.001"`. */
+  drawId: string;
+  /**
+   * Bộ số cần kiểm tra — distinct, dạng zero-padded string `"01".."45"`. Số lượng số
+   * quyết định loại chơi: 5 → bao5, 6 → standard, 7–15 → baoN, 18 → bao18 (16/17 không hợp lệ).
+   *
+   * @example `["01", "05", "12", "23", "34", "45"]` // standard (6 số)
+   */
+  numbers: string[];
+}
+
+/**
+ * Kết quả minh bạch combo — số bộ đang cùng cược bộ số này.
+ *
+ * **Ownership-gate:** `found` chỉ `true` khi chính bạn ĐÃ cược đúng bộ số này trong kỳ.
+ * Nếu bạn chưa cược (hoặc bộ chưa ai chơi), API trả `{ found: false }` — hai trường hợp cố
+ * ý KHÔNG phân biệt để bảo vệ dữ liệu cược của người khác. Đây KHÔNG phải lỗi.
+ *
+ * **`sets` vs `jackpotUnits`:**
+ * - `sets` = số bộ cược cùng bộ số — TÍN HIỆU tham khảo. Jackpot Mega 6/45 chia theo betCount
+ *   trên toàn bộ line trúng của kỳ, nên `sets` KHÔNG phải mẫu số chia trực tiếp (nhất là board Bao).
+ * - `jackpotUnits` (CHỈ có khi tra bộ **6 số standard**) = mẫu số chia jackpot khi bộ này
+ *   trúng. Phần của bạn = `floor(pool / jackpotUnits) × betCount`. Con số tại thời điểm tra —
+ *   bán vé tiếp tục → chỉ tăng (không giảm trừ khi có vé bị void).
+ *
+ * @example
+ * ```ts
+ * const res = await client.mega645.getComboPopularity({
+ *   drawId: "2026-03-08.001",
+ *   numbers: ["01", "05", "12", "23", "34", "45"],
+ * });
+ *
+ * if (res.found) {
+ *   console.log(`${res.sets} bộ đang cược · giá 1 board ${res.boardPrice} VND`);
+ *   if (res.jackpotUnits) {
+ *     console.log(`Mẫu số chia jackpot hiện tại: ${res.jackpotUnits} units`);
+ *   }
+ * } else {
+ *   console.log("Bạn chưa cược bộ này (hoặc chưa ai chơi).");
+ * }
+ * ```
+ */
+export interface Mega645ComboPopularityResponse {
+  /** `true` khi bạn đã cược đúng bộ số này VÀ combo có dữ liệu; ngược lại `false`. */
+  found: boolean;
+  /** Tổng số bộ mọi người cược bộ số này (Σ betCount). Chỉ có khi `found=true`. */
+  sets?: number;
+  /** Giá 1 board bộ số này theo config hiện tại (VND). Chỉ có khi `found=true`. */
+  boardPrice?: number;
+  /**
+   * Mẫu số chia jackpot nếu bộ 6 số này trúng — CHỈ có khi tra bộ **6 số standard**.
+   * Phần của bạn = `floor(pool / jackpotUnits) × betCount`.
+   */
+  jackpotUnits?: number;
+}

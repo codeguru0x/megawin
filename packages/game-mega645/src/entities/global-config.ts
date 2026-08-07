@@ -10,6 +10,7 @@ import type {
   FinancialRates,
   PrizeAmounts,
   PlayRules,
+  Mega645OpsConfig,
 } from "./types";
 
 /** Cấu hình game Mega 6/45 cấp toàn cục (scope = "global"). */
@@ -28,6 +29,15 @@ export interface GlobalConfigDoc {
   defaultPrizes: PrizeAmounts;
   /** Quy tắc chơi (giá vé, số board tối đa, lịch quay, v.v.). */
   play: PlayRules;
+  /**
+   * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
+   * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
+   *
+   * Doc luôn có field này sau khi init/update config (seed đầy đủ qua backoffice).
+   * Mapper KHÔNG merge default — chỉ phản ánh đúng DB. Doc cũ thiếu `ops` được
+   * `GetGlobalConfigUseCase` lấp `DEFAULT_MEGA645_CONFIG.ops` (tạm thời, chỉ đường BO).
+   */
+  ops: Mega645OpsConfig;
   /** Số phiên bản cấu hình (tăng mỗi khi admin cập nhật). */
   version: number;
   /** Thời điểm tạo. */

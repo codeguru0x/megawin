@@ -417,3 +417,57 @@ export interface PlayerListDrawResultsOutput {
   /** Số lượng mỗi trang. */
   size: number;
 }
+
+// ─── Get Combo Popularity (Player, p1-01) ───
+
+/**
+ * Input tra cứu combo popularity — bộ số (main + special) player yêu cầu kiểm tra.
+ *
+ * `numbers`/`specials` chưa validate playType tại đây — Zod schema route (`.refine`
+ * `validateSelection`) đã chốt chặn, use-case KHÔNG validate lại (rule §8 code-quality).
+ */
+export interface PlayerComboPopularityInput {
+  /** Account đang yêu cầu (từ auth). */
+  accountId: string;
+  /** Kỳ cần soi. Format `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Số chính "01".."35" — 4 (mainCover4), 5 (standard/specialCover), hoặc 6-15 (mainCover). */
+  numbers: string[];
+  /** Số đặc biệt "01".."12" — 1 (standard/mainCover4/mainCover) hoặc 2-12 (specialCover). */
+  specials: string[];
+}
+
+/**
+ * Kết quả minh bạch combo Lotto 5/35 — độ đông + mẫu số chia Jackpot (nếu bộ chuẩn).
+ *
+ * **Ownership-gate:** `found` chỉ `true` khi chính bạn ĐÃ cược đúng bộ này trong kỳ. Combo
+ * bạn chưa cược — hoặc chưa ai chơi — trả `{ found: false }` như nhau, cố ý KHÔNG phân biệt
+ * để không lộ bộ số cược của người khác. `found: false` không phải error.
+ *
+ * `sets` là tín hiệu THAM KHẢO (Jackpot chia theo TOÀN KỲ, không theo từng combo riêng lẻ).
+ * `jackpotUnits` — CHỈ có khi tra bộ CHUẨN (5 chính + 1 ĐB) — là mẫu số CHIA thật khi bộ đó
+ * trúng Jackpot: phần bạn nhận = `floor(pool / jackpotUnits) × betCount` của chính board bạn.
+ * `splitEligibleDraw` mô tả cơ chế — KHÔNG có con số split dự tính trước giờ quay (cơ chế
+ * riêng của Lotto 5/35, phụ thuộc kết quả quay).
+ */
+export interface PlayerComboPopularityOutput {
+  /** `true` khi bạn đã cược đúng bộ này VÀ có dữ liệu; ngược lại `false`. */
+  found: boolean;
+  /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
+  sets?: number;
+  /** Giá 1 board (VND) theo config hiện tại = expandedLines × unitPrice. Chỉ khi `found=true`. */
+  boardPrice?: number;
+  /**
+   * Tổng đơn vị cược phủ bộ CHUẨN (5 chính + 1 ĐB) — mẫu số chia Jackpot khi bộ này trúng.
+   * CHỈ có khi tra đúng bộ chuẩn (numbers.length===5 && specials.length===1). Giá trị tại
+   * THỜI ĐIỂM TRA — bán tiếp tăng, void giảm trễ theo watermark worker.
+   */
+  jackpotUnits?: number;
+  /**
+   * Kỳ này có đủ điều kiện chia Jackpot (split cycle) nếu không ai trúng — copy nguyên
+   * điều kiện từ `isSplitCycleDraw` (JP ≥ ngưỡng, kỳ 21h). KHÔNG có con số dự tính: pool
+   * chia tier1-5 theo đơn vị dự thưởng trúng từng tier — chỉ biết SAU khi quay; tiền chia
+   * làm tròn xuống 5.000đ (trừ tier cao nhất nhận phần dư).
+   */
+  splitEligibleDraw?: boolean;
+}

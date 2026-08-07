@@ -33,3 +33,20 @@ export type { DrawEntity } from "@megawin/game-power655/entities";
 export { SystemSettleGameDailyRepo } from "./system-settle-game-daily-repo";
 export { SystemSettleTenantDailyRepo } from "./system-settle-tenant-daily-repo";
 export { SystemOutstandingRepo } from "./system-outstanding-repo";
+export { BettingStatsRepository } from "./betting-stats-repo";
+export { NumberStatsRepository } from "./number-stats-repo";
+export { AccountStatsRepository } from "./account-stats-repo";
+export { ComboStatsRepository } from "./combo-stats-repo";
+export { ComboAccountsRepository } from "./combo-accounts-repo";
+export { OpsAlertRepository } from "./ops-alert-repo";
+export type {
+  EntryForStats,
+  EntryBoardForStats,
+  DrawStatsCursor,
+  DrawStatsDelta,
+  PartialPlayTypeDelta,
+  NumberStatsDelta,
+  AccountStatsDelta,
+  ComboAccountDelta,
+  ComboStatsDelta,
+} from "./types";

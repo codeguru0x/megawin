@@ -25,6 +25,8 @@ import type {
   Lotto535TicketEntriesResponse,
   Lotto535EntryLinesResponse,
   Lotto535ListDrawResultsResponse,
+  Lotto535ComboPopularityParams,
+  Lotto535ComboPopularityResponse,
 } from "../lotto535";
 import { ENDPOINTS } from "../endpoints";
 
@@ -388,6 +390,56 @@ export interface Lotto535Api {
    * ```
    */
   getDrawResult(drawId: string): Promise<Lotto535DrawResultDetail>;
+
+  /**
+   * Kiểm tra độ đông + mẫu số chia Jackpot cho bộ số bạn ĐÃ cược (minh bạch chia thưởng).
+   *
+   * **Ownership-gate:** chỉ tra được bộ số CHÍNH BẠN đã cược trong kỳ. Bộ chưa cược —
+   * hoặc bộ chưa ai chơi — trả về y hệt `{ found: false }`, không phân biệt 2 trường hợp.
+   *
+   * Khi tra ĐÚNG bộ CHUẨN (5 chính + 1 ĐB), response còn trả `jackpotUnits` (mẫu số chia
+   * Jackpot thật nếu bộ đó trúng) và `splitEligibleDraw` (mô tả — không phải con số dự
+   * tính — cơ chế chia Jackpot khi không ai trúng, xem JSDoc {@link Lotto535ComboPopularityResponse}).
+   *
+   * **Endpoint:** `GET /games/lotto535/draws/{drawId}/combo-popularity`
+   *
+   * @param params - `drawId` + bộ số (`numbers` 4-15 số chính, `specials` 1-12 số ĐB)
+   * @returns Độ đông (`sets`), giá board, và (nếu bộ chuẩn) mẫu số chia Jackpot + cờ split
+   *
+   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — số lượng không khớp playType nào
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * // Tra bộ chuẩn bạn đã cược — có jackpotUnits nếu sở hữu
+   * const res = await client.lotto535.getComboPopularity({
+   *   drawId: "2026-03-07.001",
+   *   numbers: ["01", "08", "15", "22", "35"],
+   *   specials: ["07"],
+   * });
+   *
+   * if (res.found) {
+   *   console.log(`${res.sets} bộ đang cược combo này`);
+   *   if (res.jackpotUnits) {
+   *     console.log(`Nếu trúng JP, chia cho ${res.jackpotUnits} đơn vị`);
+   *   }
+   * } else {
+   *   // Bạn chưa cược bộ này, hoặc bộ chưa ai chơi — không phân biệt.
+   *   console.log("Không có dữ liệu cho bộ này.");
+   * }
+   *
+   * // Tra bộ bao (mainCover9) — không có jackpotUnits (không phải bộ chuẩn)
+   * const cover = await client.lotto535.getComboPopularity({
+   *   drawId: "2026-03-07.001",
+   *   numbers: ["01", "05", "10", "15", "20", "25", "30", "33", "35"],
+   *   specials: ["07"],
+   * });
+   * console.log(cover.boardPrice); // 1.260.000 (C(9,5) × 10.000)
+   * ```
+   */
+  getComboPopularity(
+    params: Lotto535ComboPopularityParams,
+  ): Promise<Lotto535ComboPopularityResponse>;
 }
 
 // ─────────────────────────────────────────────
@@ -445,6 +497,16 @@ export function createLotto535Api(http: HttpClient): Lotto535Api {
 
     async getDrawResult(drawId: string): Promise<Lotto535DrawResultDetail> {
       return http.get<Lotto535DrawResultDetail>(ENDPOINTS.lotto535.getDrawResult(drawId));
+    },
+
+    async getComboPopularity(
+      params: Lotto535ComboPopularityParams,
+    ): Promise<Lotto535ComboPopularityResponse> {
+      // numbers/specials gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
+      return http.get<Lotto535ComboPopularityResponse>(
+        ENDPOINTS.lotto535.getComboPopularity(params.drawId),
+        { params: { numbers: params.numbers.join(","), specials: params.specials.join(",") } },
+      );
     },
   };
 }

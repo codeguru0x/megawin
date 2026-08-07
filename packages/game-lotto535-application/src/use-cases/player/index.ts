@@ -7,6 +7,7 @@ export { GetEntryLinesPlayerUseCase } from "./get-entry-lines-player";
 export { GetGameConfigPlayerUseCase } from "./get-game-config-player";
 export { ListDrawResultsPlayerUseCase } from "./list-draw-results-player";
 export { GetDrawResultPlayerUseCase } from "./get-draw-result-player";
+export { GetComboPopularityPlayerUseCase } from "./get-combo-popularity";
 
 export type {
   PlayerGetCurrentDrawOutput,
@@ -43,3 +44,5 @@ export type {
 } from "./dto/player.dto";
 
 export type { GetDrawResultPlayerInput } from "./get-draw-result-player";
+
+export type { PlayerComboPopularityInput, PlayerComboPopularityOutput } from "./dto/player.dto";

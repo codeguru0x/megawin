@@ -1,22 +1,62 @@
 "use client";
 
 /**
- * Mega 6/45 – KPI Section
+ * Mega 6/45 – KPI Section (tab Giám sát)
  *
- * Lazy-load KPI strip từ opsSummary + tenantBreakdown.
- * Hiển thị skeleton khi đang load; dừng refetch khi kỳ đã settle.
+ * Đọc snapshot (timer 1) qua `select` slice `stats` → KpiStrip. Exposure card đọc
+ * `select` slice `exposure` riêng → KPI đổi không kéo Exposure re-render (React Query
+ * dedupe 1 query, mỗi `select` chặn cross re-render). Click Exposure card → chuyển
+ * sang tab Phân tích cược.
  */
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-import type { OpsKpi } from "../../types";
+import type { OfficialFinancialSlice } from "../../adapters";
+import { toExposureView, toKpi } from "../../adapters";
+import type { ExposureViewWithThreshold, OpsKpi } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
-import { useOpsSummary } from "../../use-operations";
+import { useDrawDetail, useOpsSnapshot } from "../../use-operations";
+import { ExposureCard } from "./exposure-card";
 import { KpiStrip } from "./kpi-strip";
 
-export function KpiSection() {
-  const { opsParams, isSettled, effectiveDrawId } = useDrawContext();
-  const { data, isLoading } = useOpsSummary(opsParams, isSettled);
+export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) {
+  const { effectiveDrawId, status, isSettled } = useDrawContext();
+
+  // Số chính thức từ settle — chỉ fetch khi Settled; queryKey trùng ResultSection/
+  // DrawManagement → react-query dedupe, zero request thêm khi các section đó đã fetch.
+  const { data: drawDetail } = useDrawDetail(isSettled ? effectiveDrawId : undefined);
+  const official: OfficialFinancialSlice | undefined = drawDetail?.draw
+    ? {
+        financial: drawDetail.draw.financial
+          ? {
+              totalRevenue: drawDetail.draw.financial.totalRevenue,
+              totalAgentCommission: drawDetail.draw.financial.totalAgentCommission,
+            }
+          : undefined,
+        ticketEntryCount: drawDetail.draw.stats?.ticketEntryCount,
+      }
+    : undefined;
+
+  // Slice `stats` + `uniquePlayers` → KpiStrip. Inline arrow (không useCallback) — luôn
+  // tạo mới mỗi render nên `status`/`official` trong closure luôn tươi, tránh rủi ro
+  // select kẹt giá trị cũ khi drawDetail về sau snapshot.
+  const { data: kpi, isLoading } = useOpsSnapshot<OpsKpi | null>(effectiveDrawId, isSettled, (s) =>
+    s.stats ? toKpi(s.stats, s.uniquePlayers, status, official) : null,
+  );
+
+  // Slice `exposure` + `thresholds.fixedExposureWarnAmount` → ExposureCard (query dedupe
+  // với slice trên, không request thêm).
+  const { data: exposure } = useOpsSnapshot<ExposureViewWithThreshold | null>(
+    effectiveDrawId,
+    isSettled,
+    (s) =>
+      s.exposure
+        ? {
+            view: toExposureView(s.exposure),
+            warnAmount: s.thresholds.fixedExposureWarnAmount,
+          }
+        : null,
+  );
 
   if (!effectiveDrawId) return null;
 
@@ -30,16 +70,18 @@ export function KpiSection() {
     );
   }
 
-  if (!data) return null;
+  if (!kpi) return null;
 
-  const kpi: OpsKpi = {
-    totalRevenue: data.totalRevenue,
-    totalEntries: data.totalEntries,
-    totalLines: data.totalLines,
-    uniquePlayers: data.uniquePlayers,
-    totalCommission: data.totalCommission,
-    netRevenue: data.totalRevenue - data.totalCommission,
-  };
-
-  return <KpiStrip kpi={kpi} />;
+  return (
+    <div className="space-y-3">
+      <KpiStrip kpi={kpi} />
+      {exposure && (
+        <ExposureCard
+          exposure={exposure.view}
+          warnAmount={exposure.warnAmount}
+          onOpenAnalysis={onOpenAnalysis}
+        />
+      )}
+    </div>
+  );
 }

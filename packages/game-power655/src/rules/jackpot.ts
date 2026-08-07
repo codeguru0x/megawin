@@ -20,7 +20,14 @@
  *   là mặc định tham khảo — đọc từ GlobalConfig, operator có thể thay đổi.
  */
 
-import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules } from "../entities/types";
+import type {
+  JackpotConfig,
+  FinancialRates,
+  PrizeAmounts,
+  PlayRules,
+  Power655OpsConfig,
+} from "../entities/types";
+import { Power655OpsAlertType } from "../entities/ops-alert";
 
 // ─── Draw Financial Calculation ───
 
@@ -247,6 +254,7 @@ export const DEFAULT_POWER655_CONFIG: {
   rates: FinancialRates;
   defaultPrizes: PrizeAmounts;
   play: PlayRules;
+  ops: Power655OpsConfig;
 } = {
   jackpot: {
     jackpot1: { seedAmount: 30_000_000_000 }, // 30 tỷ (mặc định tham khảo)
@@ -274,5 +282,32 @@ export const DEFAULT_POWER655_CONFIG: {
     drawsPerDay: 1,
     drawTimes: ["18:00"],
     drawDaysOfWeek: [2, 4, 6], // Thứ 3, 5, 7
+  },
+  /**
+   * Cấu hình vận hành mặc định (analysis §3.8). Ngưỡng alert + nhịp/top-K stats.
+   * Staff chỉnh trên tab "Vận hành"; đổi có hiệu lực trong ~1 chu kỳ worker.
+   */
+  ops: {
+    alerts: {
+      largeBetAmount: 30_000_000,
+      fixedExposureWarnAmount: 2_000_000_000,
+      comboAccountsWarn: 5,
+      baoHighStakeAmount: 30_000_000,
+      enabled: {
+        [Power655OpsAlertType.LargeBet]: true,
+        [Power655OpsAlertType.ExposureThreshold]: true,
+        [Power655OpsAlertType.ComboConcentration]: true,
+        [Power655OpsAlertType.BaoHighStake]: true,
+        // Để dành — không bắn ở P0.
+        [Power655OpsAlertType.RevenueAnomaly]: false,
+        [Power655OpsAlertType.SettleStuck]: false,
+      },
+    },
+    stats: {
+      tickSeconds: 10,
+      topPotentialK: 50,
+      topAccountsK: 50,
+      topCombosK: 100,
+    },
   },
 };

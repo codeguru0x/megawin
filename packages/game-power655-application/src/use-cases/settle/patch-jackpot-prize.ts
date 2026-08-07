@@ -29,22 +29,27 @@
  * PIPELINE per jackpot type:
  * ────────────────────────────────────────────────
  *
- *   1. Lấy lines trúng jackpotTier → betCount per line
- *   2. totalBetUnits = Σ(line.betCount)
+ *   1. Lấy TẤT CẢ lines trúng jackpotTier (kể cả đã patch) → betCount per line
+ *   2. totalBetUnits = Σ(line.betCount) trên MỌI line JP → deterministic qua retry
  *   3. jackpotPerUnit = floor(totalJp1Prize / totalBetUnits)
  *   4. Nhóm lines theo entryId → entryBetUnits = Σ(betCount của lines trong entry)
  *   5. perEntryAmounts: prizeAmount = jackpotPerUnit × entryBetUnits
  *   6. Patch song song (idempotent):
- *      a. entry.payout.tiers[jackpotN] → unitAmount, amount, winAmount
- *      b. line.matchResult.winAmount   → jackpotPerUnit × line.betCount
+ *      a. entry.payout.tiers[jackpotN] → unitAmount, amount, winAmount (filter amount=0)
+ *      b. line.matchResult.winAmount   → jackpotPerUnit × line.betCount (filter winAmount=0)
  *   7. Re-aggregate totalPayout từ entries rồi $set (idempotent)
  *
  * ────────────────────────────────────────────────
- * IDEMPOTENT:
+ * IDEMPOTENT + RETRY-SAFE:
  * ────────────────────────────────────────────────
+ *   - Mẫu số + winners ĐỌC TỪ TẤT CẢ line JP (getAllJackpotLines, KHÔNG filter
+ *     winAmount) → mọi lần SFN retry sau crash giữa chừng đều ra cùng jackpotPerUnit
+ *     + cùng perEntryAmounts. Filter chưa-patch CHỈ áp ở bước GHI:
  *   - patchJackpotPrizePerEntry:  filter amount = 0 → skip nếu đã patch
  *   - patchJackpotLinesPerUnit:   filter winAmount = 0 → skip nếu đã patch
  *   - setTotalPayout:             re-aggregate từ entries rồi $set → luôn đúng
+ *   - settleSummary gate theo perEntryAmounts.size (deterministic), KHÔNG theo
+ *     modifiedCount → crash sau khi entries đã patch vẫn ghi lại settleSummary.
  *
  * Input: SettleContextWithFinancials
  * Output: { drawId, jp1EntriesPatched, jp2EntriesPatched, winners }
@@ -90,6 +95,11 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     let jp1EntriesPatched = 0;
     let jp2EntriesPatched = 0;
+    // Số entry winner theo tier — DERIVE từ perEntryAmounts (mẫu số deterministic),
+    // KHÔNG từ modifiedCount. Dùng để gate settleSummary: crash sau khi entries đã
+    // patch (modifiedCount=0 ở retry) vẫn phải ghi lại settleSummary.
+    let jp1WinnerCount = 0;
+    let jp2WinnerCount = 0;
     const winners: JackpotWinnerInfo[] = [];
 
     // ── JP1: patch theo tỷ lệ betCount ─────────────────────────────────────
@@ -100,6 +110,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
         jp1CurrentAmount + jackpot1Contribution,
       );
       jp1EntriesPatched = result.patchedCount;
+      jp1WinnerCount = result.perEntryAmounts.size;
 
       // Build winners list để truyền sang FinalizeSettle
       for (const [entryId, info] of result.perEntryAmounts) {
@@ -126,6 +137,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
         jp2CurrentAmount + jackpot2Contribution,
       );
       jp2EntriesPatched = result.patchedCount;
+      jp2WinnerCount = result.perEntryAmounts.size;
 
       // Build winners list để truyền sang FinalizeSettle
       for (const [entryId, info] of result.perEntryAmounts) {
@@ -149,7 +161,10 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     // patchSettleSummaryJackpot: $set → idempotent (set giá trị, không cộng).
     const jackpotPatches: Array<{ tier: PrizeTier; prizeAmount: number }> = [];
 
-    if (jp1EntriesPatched > 0 && hasJackpot1Winner) {
+    // Gate theo winnerCount (perEntryAmounts.size — deterministic), KHÔNG theo
+    // modifiedCount: nếu crash xảy ra SAU khi entries đã patch nhưng TRƯỚC bước
+    // này, retry có modifiedCount=0 nhưng winnerCount>0 → vẫn ghi settleSummary.
+    if (hasJackpot1Winner && jp1WinnerCount > 0) {
       const totalJp1 = jp1CurrentAmount + jackpot1Contribution;
       jackpotPatches.push({
         tier: PrizeTier.Jackpot1,
@@ -158,7 +173,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       });
     }
 
-    if (jp2EntriesPatched > 0 && hasJackpot2Winner) {
+    if (hasJackpot2Winner && jp2WinnerCount > 0) {
       const totalJp2 = jp2CurrentAmount + jackpot2Contribution;
       jackpotPatches.push({
         tier: PrizeTier.Jackpot2,
@@ -184,11 +199,11 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
    * Tính toán và patch 1 loại Jackpot (JP1 hoặc JP2) theo tỷ lệ betCount.
    *
    * Quy trình:
-   *   1. Lấy lines trúng jackpotTier kèm betCount từ DB
-   *   2. totalBetUnits = Σ(line.betCount) — tổng đơn vị tham gia dự thưởng
+   *   1. Lấy TẤT CẢ lines trúng jackpotTier (getAllJackpotLines — kể cả đã patch)
+   *   2. totalBetUnits = Σ(line.betCount) — mẫu số deterministic qua retry
    *   3. jackpotPerUnit = floor(totalPool / totalBetUnits)
    *   4. Group lines theo entryId → entryBetUnits, prizeAmount
-   *   5. Patch entries + lines song song (idempotent)
+   *   5. Patch entries + lines song song (idempotent — filter chưa-patch ở bước ghi)
    *
    * @param drawId - ID kỳ quay
    * @param jackpotTier - "jackpot1" hoặc "jackpot2"
@@ -209,17 +224,20 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       return { patchedCount: 0, totalPrizeDistributed: 0, perEntryAmounts };
     }
 
-    // ── Bước 1: Lấy lines trúng JP + betCount ────────────────────────
-    // Chỉ lấy lines có winAmount = 0 (chưa patch) để idempotent.
-    const winningLines = await this.lineRepo.getJackpotWinningLines(drawId, jackpotTier);
+    // ── Bước 1: Lấy TẤT CẢ lines trúng JP (KỂ CẢ đã patch) ───────────
+    // PHẢI đọc tất cả — KHÔNG filter winAmount — để mẫu số totalBetUnits +
+    // danh sách winner DETERMINISTIC khi SFN retry sau crash giữa chừng
+    // (kịch bản lines đã patch, entries chưa). Filter winAmount = 0 chỉ áp ở
+    // thao tác PATCH (patchJackpotLinesPerUnit / patchJackpotPrizePerEntry).
+    const jackpotLines = await this.lineRepo.getAllJackpotLines(drawId, jackpotTier);
 
-    if (winningLines.length === 0) {
+    if (jackpotLines.length === 0) {
       return { patchedCount: 0, totalPrizeDistributed: 0, perEntryAmounts };
     }
 
     // ── Bước 2: Tính totalBetUnits ────────────────────────────────────
-    // Tổng đơn vị tham gia dự thưởng = Σ(betCount per JP line).
-    const totalBetUnits = winningLines.reduce((sum, l) => sum + l.betCount, 0);
+    // Tổng đơn vị tham gia dự thưởng = Σ(betCount per JP line) trên MỌI line JP.
+    const totalBetUnits = jackpotLines.reduce((sum, l) => sum + l.betCount, 0);
 
     // ── Bước 3: Tính jackpotPerUnit ───────────────────────────────────
     // jackpotPerUnit = floor(totalPool / totalBetUnits).
@@ -232,9 +250,10 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     // ── Bước 4: Group lines theo entryId ─────────────────────────────
     // entryBetUnits = Σ(betCount của các JP lines thuộc entry này).
-    // Một entry có thể có nhiều JP lines (từ Bao boards).
+    // Một entry có thể có nhiều JP lines (từ Bao boards) → phải CỘNG DỒN.
+    // Group từ TẤT CẢ line JP (không chỉ line chưa patch) → deterministic.
     const entryBetUnitsMap = new Map<string, number>();
-    for (const line of winningLines) {
+    for (const line of jackpotLines) {
       const prev = entryBetUnitsMap.get(line.entryId) ?? 0;
       entryBetUnitsMap.set(line.entryId, prev + line.betCount);
     }

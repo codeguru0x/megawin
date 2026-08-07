@@ -6,6 +6,9 @@
  * Lịch quay: 3 lần/tuần – Thứ 4, Thứ 6, Chủ nhật lúc 18:00.
  */
 
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+import type { Mega645OpsAlertType } from "./ops-alert";
+
 // ─────────────────────────────────────────────
 // Date helpers
 // ─────────────────────────────────────────────
@@ -184,3 +187,54 @@ export const BAO_COMBINATIONS: Record<number, number> = {
   15: 5005,
   18: 18564,
 };
+
+// ─────────────────────────────────────────────
+// Operations & Risk Control config (analysis §3.8)
+// ─────────────────────────────────────────────
+
+/**
+ * Cấu hình ngưỡng alert vận hành (`ops.alerts`) — evaluator so ngưỡng này (p0-02).
+ *
+ * Tất cả ngưỡng cấu hình động; đổi có hiệu lực trong ~1 chu kỳ worker, không deploy.
+ * Defaults là THAM KHẢO — staff chỉnh qua tab "Vận hành" trang config game.
+ */
+export interface Mega645OpsAlertsConfig {
+  /**
+   * Ngưỡng cược lớn (VND) — `entry.amount >= giá trị này` → `large_bet`.
+   * Default 30.000.000 — đồng bộ Power 6/55 vì bảng giá Bao y hệt (Bao 7 = 70.000đ,
+   * Bao 14 = 30,03tr).
+   */
+  largeBetAmount: number;
+  /**
+   * Ngưỡng exposure giải cố định (VND, tuyệt đối) — `fixedWorstCase >= giá trị
+   * này` → `exposure_threshold`. Default 500.000.000 — scale ¼ theo tier1 (10tr =
+   * ¼ tier1 Power 6/55 40tr). VND tuyệt đối (không phải %) vì Mega 6/45 không có
+   * `maxPerDraw` để tính phần trăm.
+   */
+  fixedExposureWarnAmount: number;
+  /**
+   * Số account distinct cùng cược 1 combo để cảnh báo dồn cược `combo_concentration`.
+   * Default 5 = ≥5 người cùng 1 bộ số → nghi syndicate.
+   */
+  comboAccountsWarn: number;
+  /**
+   * Ngưỡng giá board Bao cao (VND) — playType bao13..bao18 có board với giá
+   * `BAO_COMBINATIONS[N] × unitPrice >= giá trị này` → `bao_high_stake`.
+   * Default 30.000.000 (board bao13 = 17,16tr CHƯA chạm; bao14 = 30,03tr đã chạm).
+   */
+  baoHighStakeAmount: number;
+  /** Bật/tắt từng loại alert. Khoá tự đúng theo `Mega645OpsAlertType` (type dẫn xuất). */
+  enabled: Record<Mega645OpsAlertType, boolean>;
+}
+
+/**
+ * Section `ops` trong GlobalConfig — cấu hình vận hành & kiểm soát rủi ro (§3.8).
+ *
+ * KHÔNG expose cho player (allowlist DTO player không chứa `ops`).
+ */
+export interface Mega645OpsConfig {
+  /** Ngưỡng alert (evaluator so — p0-02). */
+  alerts: Mega645OpsAlertsConfig;
+  /** Nhịp worker + top-K stats (`OpsStatsConfig` từ game-core: tickSeconds, topPotentialK, topAccountsK, topCombosK). */
+  stats: OpsStatsConfig;
+}

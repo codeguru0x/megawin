@@ -76,3 +76,4 @@ functions:
   - ${file(src/functions/feed.yml)}
   - ${file(src/functions/outstanding.yml)}
   - ${file(src/functions/resettle.yml)}
+  - ${file(src/functions/stats.yml)}

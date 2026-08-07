@@ -1,21 +1,17 @@
-import {
-  Mega645Collections,
-} from "@megawin/game-mega645/entities";
+import { Mega645Collections } from "@megawin/game-mega645/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type {
   JackpotConfig,
   FinancialRates,
   PrizeAmounts,
   PlayRules,
+  Mega645OpsConfig,
 } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
 import { GameConfigMapper } from "../mappers/global-config-mapper";
 import type { GlobalConfigEntity } from "@megawin/game-mega645/entities";
 
-export class GameConfigRepository extends BaseRepo<
-  GlobalConfigEntity,
-  GameConfigMapper
-> {
+export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {
     super({
       collName: Mega645Collections.GameConfigs,
@@ -39,6 +35,7 @@ export class GameConfigRepository extends BaseRepo<
       rates: FinancialRates;
       defaultPrizes: PrizeAmounts;
       play: PlayRules;
+      ops: Mega645OpsConfig;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -48,6 +45,7 @@ export class GameConfigRepository extends BaseRepo<
     if (config.rates) $set.rates = config.rates;
     if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
     if (config.play) $set.play = config.play;
+    if (config.ops) $set.ops = config.ops;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },
