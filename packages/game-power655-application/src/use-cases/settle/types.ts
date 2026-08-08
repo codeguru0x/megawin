@@ -27,8 +27,7 @@
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
  */
 
-import type { PrizeAmounts } from "@megawin/game-power655/entities";
-import type { JackpotWinnerInfo } from "@megawin/game-power655/entities";
+import type { JackpotWinnerInfo, PrizeAmounts } from "@megawin/game-power655/entities";
 import type { ResettleScenario } from "@megawin/game-power655/rules";
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -3,29 +3,29 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
-  Mega645TicketPurchaseInput,
-  Mega645GameConfigResponse,
-  Mega645DrawInfo,
-  Mega645TicketSummary,
-  Mega645EntryResult,
-  Mega645DrawResultDetail,
-  Mega645DrawResultSummary,
-  Mega645PlaceBetResponse,
-  Mega645CurrentDrawResponse,
-  Mega645JackpotResponse,
-  Mega645ListPendingTicketsParams,
-  Mega645ListAllTicketsParams,
-  Mega645ListDrawResultsParams,
-  Mega645ListTicketsResponse,
-  Mega645TicketEntriesResponse,
-  Mega645EntryLinesResponse,
-  Mega645ListDrawResultsResponse,
   Mega645ComboPopularityParams,
   Mega645ComboPopularityResponse,
+  Mega645CurrentDrawResponse,
+  Mega645DrawInfo,
+  Mega645DrawResultDetail,
+  Mega645DrawResultSummary,
+  Mega645EntryLinesResponse,
+  Mega645EntryResult,
+  Mega645GameConfigResponse,
+  Mega645JackpotResponse,
+  Mega645ListAllTicketsParams,
+  Mega645ListDrawResultsParams,
+  Mega645ListDrawResultsResponse,
+  Mega645ListPendingTicketsParams,
+  Mega645ListTicketsResponse,
+  Mega645PlaceBetResponse,
+  Mega645TicketEntriesResponse,
+  Mega645TicketPurchaseInput,
+  Mega645TicketSummary,
 } from "../mega645";
-import { ENDPOINTS } from "../endpoints";
 
 /**
  * API module cho game Mega 6/45.

@@ -5,9 +5,10 @@
  * Không dùng trong business logic layer — chỉ dùng tại boundary (API handler, DTO).
  */
 
-import { z } from "zod";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
-import { MEGA645_NUMBER_MIN, MEGA645_NUMBER_MAX, MEGA645_NUMBER_COUNT } from "../entities/types";
+import { z } from "zod";
+
+import { MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MAX, MEGA645_NUMBER_MIN } from "../entities/types";
 
 /** Board nos hợp lệ cho Mega 6/45: tối đa 6 boards, ký hiệu A-F. */
 export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;

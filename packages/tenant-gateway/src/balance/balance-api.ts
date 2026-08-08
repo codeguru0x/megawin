@@ -9,10 +9,10 @@
  */
 
 import type { HttpClient } from "@megawin/http-client";
+import { DEFAULT_CURRENCY } from "@megawin/shared/types";
 
 import { CALLBACK_PATHS } from "../shared";
 import type { GetBalanceRequest, GetBalanceResponse } from "./types";
-import { DEFAULT_CURRENCY } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BalanceApi Interface

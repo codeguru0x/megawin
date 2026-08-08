@@ -14,8 +14,9 @@
 
 import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_SETTLE_TENANT_REPORTS } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { SettleTenantReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";
 
 /**

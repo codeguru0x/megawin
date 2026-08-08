@@ -1,12 +1,12 @@
-export { KenoTicketLookupService } from "./ticket-lookup-service";
 export {
+  auditCloseSales,
   auditDrawVoid,
+  auditOpenSales,
   auditPublishResult,
   auditRepublishResult,
-  auditSettle,
   auditResettle,
-  auditOpenSales,
-  auditCloseSales,
-  auditUpdateSchedule,
+  auditSettle,
   auditUpdateGameConfig,
+  auditUpdateSchedule,
 } from "./audit-log";
+export { KenoTicketLookupService } from "./ticket-lookup-service";

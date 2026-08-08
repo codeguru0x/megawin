@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { createPlayerClient, MemoryTokenStorage, type PlayerClient, type PlayerSdkConfig } from "../src";
-import { BASE_URL, TOKENS, mockFetch, mockFetchError } from "./helpers";
+import { BASE_URL, mockFetch, mockFetchError, TOKENS } from "./helpers";
 
 function createMockSessionStorage(): Storage {
   const store = new Map<string, string>();

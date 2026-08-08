@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Mega645OpsAlertEntity } from "@megawin/game-mega645/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `mega645_ops_alerts` → entity (ObjectId → id hex).

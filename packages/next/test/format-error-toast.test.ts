@@ -5,8 +5,9 @@
  * Kiểm tra `formatErrorToast` — logic thuần map ApiClientError → { title, description }.
  */
 
-import { describe, it, expect } from "vitest";
 import { ApiClientError } from "@megawin/shared/api-types";
+import { describe, expect, it } from "vitest";
+
 import { formatErrorToast } from "../src/client/format-error-toast";
 
 describe("formatErrorToast", () => {

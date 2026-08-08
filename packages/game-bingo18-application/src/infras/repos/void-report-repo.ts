@@ -9,8 +9,9 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_VOID_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { VoidDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository ghi void report cho Bingo 18.

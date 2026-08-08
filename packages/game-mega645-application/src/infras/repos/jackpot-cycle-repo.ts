@@ -7,16 +7,17 @@
  * Không có Split Cycle — không lưu splitDetail.
  */
 
-import {
-  Mega645Collections,
-  JackpotCycleStatus,
-  type JackpotCycleDoc,
-  type JackpotCycleCloseReason,
-  type JackpotWinnerInfo,
-} from "@megawin/game-mega645/entities";
-import { BaseRepo } from "./base-repo";
-import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
 import type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
+import {
+  type JackpotCycleCloseReason,
+  type JackpotCycleDoc,
+  JackpotCycleStatus,
+  type JackpotWinnerInfo,
+  Mega645Collections,
+} from "@megawin/game-mega645/entities";
+
+import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, JackpotCycleMapper> {
   constructor() {

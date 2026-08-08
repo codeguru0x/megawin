@@ -10,12 +10,13 @@
  * Power 6/55 KHÔNG có split cycle — theo luật Vietlott gốc.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 import { JackpotCycleStatus } from "@megawin/game-power655/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
 /**
  * Lấy trạng thái dual jackpot hiện tại Power 6/55.

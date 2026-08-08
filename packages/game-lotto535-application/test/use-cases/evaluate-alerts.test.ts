@@ -8,14 +8,6 @@
  * critical; enabled=false → im. Kèm case "logic ngược" bẫy copy từ Power 6/55.
  */
 
-import { describe, it, expect } from "vitest";
-import {
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  Lotto535NumberKind,
-  Lotto535OpsAlertType,
-  Lotto535StatsPlayKey,
-} from "@megawin/game-lotto535/entities";
 import type {
   Lotto535DrawBettingStatsEntity,
   Lotto535DrawComboStatsEntity,
@@ -23,7 +15,16 @@ import type {
   Lotto535OpsAlertsConfig,
   Lotto535PlayTypeStat,
 } from "@megawin/game-lotto535/entities";
-import { PlayType } from "@megawin/game-lotto535/entities";
+import {
+  Lotto535NumberKind,
+  Lotto535OpsAlertType,
+  Lotto535StatsPlayKey,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  PlayType,
+} from "@megawin/game-lotto535/entities";
+import { describe, expect, it } from "vitest";
+
 import { evaluateAlerts } from "../../src/use-cases/operations/evaluate-alerts";
 
 const DRAW_ID = "2000-01-01.001";

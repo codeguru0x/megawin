@@ -1,11 +1,12 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { AppException } from "@megawin/shared/errors";
 import {
   adminChangeUserPassword,
-  COGNITO_WORKFORCE_POOL_ID,
   COGNITO_WORKFORCE_CLIENT_ID,
+  COGNITO_WORKFORCE_POOL_ID,
 } from "@megawin/app-core/aws/cognito";
 import type { AuditActor } from "@megawin/audit/logger";
+import { NextApiUseCase } from "@megawin/next/server";
+import { AppException } from "@megawin/shared/errors";
+
 import { auditChangeOwnPassword } from "../../services/audit-log";
 
 export interface ChangeMyPasswordInput {

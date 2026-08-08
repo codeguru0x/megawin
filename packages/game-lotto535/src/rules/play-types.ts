@@ -28,10 +28,10 @@
 
 import { PlayType } from "../entities/enums";
 import {
+  type BoardSelection,
   LOTTO535_MAIN_COUNT,
   VALID_MAIN_NUMBER_SET,
   VALID_SPECIAL_NUMBER_SET,
-  type BoardSelection,
 } from "../entities/types";
 
 // ─────────────────────────────────────────────

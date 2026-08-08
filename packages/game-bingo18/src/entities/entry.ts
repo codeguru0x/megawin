@@ -7,10 +7,11 @@
  * Đơn vị vận hành chính cho settle + report.
  */
 
-import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
-import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import type { ISODateString } from "./types";
+import type { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
+
+import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./enums";
+import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces

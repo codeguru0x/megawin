@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { EntryVoidRepository } from "../../infras/repos/entry-void-repo";
 import type { ListVoidDrawTenantsInput, ListVoidDrawTenantsOutput } from "./types";
 

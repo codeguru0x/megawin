@@ -18,21 +18,23 @@
  */
 
 import type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 } from "@megawin/game-core/types";
+
 import type { PlayType } from "./enums";
+
 export type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 };
 
 /** Thống kê tiền/bộ cược của 1 kiểu chơi (standard hoặc 1 loại Bao). */

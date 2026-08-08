@@ -1,7 +1,8 @@
+import { NextResponse } from "next/server";
+
 import { GetOpsSnapshotUseCase } from "@megawin/game-bingo18-application/use-cases/operations";
 import { CompanyRole } from "@megawin/identity/entities";
 import { apiSuccess } from "@megawin/next/server";
-import { NextResponse } from "next/server";
 
 import { withApi } from "@/lib/api";
 

@@ -10,9 +10,10 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { AppException } from "@megawin/shared/errors";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { VoidContext } from "./types";
-import { AppException } from "@megawin/shared/errors";
 
 export interface PrepareVoidInput {
   drawId: string;

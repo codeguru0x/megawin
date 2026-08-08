@@ -50,13 +50,13 @@
  * Heartbeat chỉ có giá trị khi TTL < total runtime — không đúng với use case này.
  */
 
-import { tenantGateway, type BatchTransactionItem, type TenantGatewayClient } from "@megawin/tenant-gateway";
 import { chunk, toTenantUsername } from "@megawin/shared/utils";
+import { type BatchTransactionItem, type TenantGatewayClient, tenantGateway } from "@megawin/tenant-gateway";
 import { SingleRunWorker } from "@megawin/worker-core/workers";
 
+import { DISPATCH_CHUNK_SIZE } from "../../config";
 import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { PendingDispatchOrder } from "../../infras/repos/types";
-import { DISPATCH_CHUNK_SIZE } from "../../config";
 import { computeNextAttemptAt } from "./backoff";
 import { normalizeDispatchError } from "./normalize-error";
 

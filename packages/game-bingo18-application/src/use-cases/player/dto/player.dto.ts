@@ -5,8 +5,8 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
-import type { DrawPrizeSummary, EntryResult, EntryBoardPayout } from "@megawin/game-bingo18/entities";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import type { DrawPrizeSummary, EntryBoardPayout, EntryResult } from "@megawin/game-bingo18/entities";
+import type { EntryOutcome } from "@megawin/game-core/entities";
 
 export type { DrawPrizeSummary as PlayerPrize };
 

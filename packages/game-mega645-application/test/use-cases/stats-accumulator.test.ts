@@ -15,12 +15,13 @@
  * - Không mutate `board.numbers` của caller.
  */
 
-import { describe, it, expect } from "vitest";
 import { PlayType } from "@megawin/game-mega645/entities";
 import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
-import { Mega645StatsAccumulator } from "../../src/use-cases/operations/stats-accumulator";
+import { describe, expect, it } from "vitest";
+
+import type { EntryBoardForStats, EntryForStats } from "../../src/infras/repos/types";
 import type { PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
-import type { EntryForStats, EntryBoardForStats } from "../../src/infras/repos/types";
+import { Mega645StatsAccumulator } from "../../src/use-cases/operations/stats-accumulator";
 
 const DRAW_ID = "2999-01-01.001"; // sentinel — pure test, không chạm DB nhưng giữ convention
 const UNIT_PRICE = 10_000;

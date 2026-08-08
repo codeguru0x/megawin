@@ -51,18 +51,14 @@ export function parseKenoDrawId(drawId: string): { drawDate: ISODateString; draw
  * @returns Mảng drawIds có độ dài = drawCount
  * @throws Nếu startDrawId không đúng format
  */
-export function generateKenoDrawIdSequence(
-  startDrawId: string,
-  drawCount: number,
-  drawsPerDay: number = 120,
-): string[] {
+export function generateKenoDrawIdSequence(startDrawId: string, drawCount: number, drawsPerDay = 120): string[] {
   const parsed = parseKenoDrawId(startDrawId);
   if (!parsed) {
     throw new Error(`Invalid startDrawId: ${startDrawId}`);
   }
 
   const ids: string[] = [];
-  let currentDate = new Date(parsed.drawDate + "T00:00:00");
+  const currentDate = new Date(parsed.drawDate + "T00:00:00");
   let currentDrawNo = parsed.drawNo;
 
   for (let i = 0; i < drawCount; i++) {
@@ -95,7 +91,7 @@ export function generateKenoDrawIdSequence(
  * @param intervalMinutes - Khoảng cách giữa các kỳ (default 8)
  * @returns drawNo (1-based). Trả 0 nếu `time` trước `firstDrawTime`.
  */
-export function calculateDrawNo(time: string, firstDrawTime: string = "06:00", intervalMinutes: number = 8): number {
+export function calculateDrawNo(time: string, firstDrawTime = "06:00", intervalMinutes = 8): number {
   const [h, m] = time.split(":").map(Number);
   const [fh, fm] = firstDrawTime.split(":").map(Number);
 

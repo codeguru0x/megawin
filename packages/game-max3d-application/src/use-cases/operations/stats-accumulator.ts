@@ -36,22 +36,23 @@
  * - plus: pairKey UNORDERED (2 triplet sort tăng) → `pairs` map (units/amount/accounts).
  */
 
-import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
-import { getUniquePermutations, maxBoardUnitWin } from "@megawin/game-max3d/rules";
-import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
 import type {
   Max3dPlayTypeStat,
-  Max3dTripletStake,
   Max3dTopPotential,
+  Max3dTripletStake,
   TenantBettingStat,
 } from "@megawin/game-max3d/entities";
+import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
+import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
+import { getUniquePermutations, maxBoardUnitWin } from "@megawin/game-max3d/rules";
+
 import type {
-  DrawStatsDelta,
-  EntryForStats,
-  EntryBoardForStats,
-  PartialByPlayTypeDelta,
-  PairStatsDelta,
   AccountStatsDelta,
+  DrawStatsDelta,
+  EntryBoardForStats,
+  EntryForStats,
+  PairStatsDelta,
+  PartialByPlayTypeDelta,
 } from "../../infras/repos/types";
 
 /** Prize config + ngưỡng cược lớn gom lại — truyền 1 lần cho accumulator. */

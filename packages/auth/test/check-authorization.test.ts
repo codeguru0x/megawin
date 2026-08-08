@@ -5,11 +5,12 @@
  * (accountType/roles/accountStatus). Không verify token, không chạm DB.
  */
 
-import { describe, it, expect } from "vitest";
-import { checkAuthorization } from "../src/authorization-api-gateway";
-import type { AuthContext } from "../src/authorization-api-gateway";
-import { AccountType, AccountStatus, CompanyRole } from "@megawin/identity/entities";
+import { AccountStatus, AccountType, CompanyRole } from "@megawin/identity/entities";
 import { APP_ERROR_CODES } from "@megawin/shared/errors";
+import { describe, expect, it } from "vitest";
+
+import type { AuthContext } from "../src/authorization-api-gateway";
+import { checkAuthorization } from "../src/authorization-api-gateway";
 
 const companyAdmin: AuthContext = {
   sub: "sub-1",

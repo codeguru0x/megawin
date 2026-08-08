@@ -24,12 +24,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Power655Collections } from "@megawin/game-power655/entities";
-import type { Power655DrawComboStatsDoc, Power655DrawComboStatsEntity } from "@megawin/game-power655/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Power655DrawComboStatsDoc, Power655DrawComboStatsEntity } from "@megawin/game-power655/entities";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Power655DrawComboStatsDoc>();

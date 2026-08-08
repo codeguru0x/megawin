@@ -6,11 +6,12 @@
  * staff drill-down điều tra.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
-import { OpsAlertSeverity } from "@megawin/game-lotto535/entities";
 import type { Lotto535OpsAlertEntity, Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
+import { OpsAlertSeverity } from "@megawin/game-lotto535/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
-import type { Lotto535AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/ops.dto";
+import type { ListAlertsInput, ListAlertsOutput, Lotto535AlertGroup } from "./dto/ops.dto";
 
 /** Rank severity để chọn cao nhất trong nhóm (critical > warning > info). */
 const SEVERITY_RANK: Record<string, number> = {

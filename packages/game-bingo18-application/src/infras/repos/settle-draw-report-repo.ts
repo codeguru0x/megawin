@@ -15,8 +15,9 @@
 
 import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_SETTLE_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { SettleDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { DrawSummaryResult } from "./types";
 
 /**

@@ -54,12 +54,13 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
-import { tenantGateway } from "@megawin/tenant-gateway";
-import type { TransactionStatusResponse } from "@megawin/tenant-gateway";
 import type { TxIntentEntity } from "@megawin/game-core/entities";
 import { TransactionAction, TransactionReason } from "@megawin/shared/types";
 import { generateId, logError } from "@megawin/shared/utils";
+import type { TransactionStatusResponse } from "@megawin/tenant-gateway";
+import { tenantGateway } from "@megawin/tenant-gateway";
+
+import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

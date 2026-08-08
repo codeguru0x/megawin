@@ -9,10 +9,10 @@
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
-import { AppException } from "@megawin/shared/errors";
-import { APP_ERROR_CODES } from "@megawin/shared/errors";
-import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
+import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
+
+import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import { POWER655_CACHE_KEYS } from "./keys";
 
 let repo: GameConfigRepository | null = null;

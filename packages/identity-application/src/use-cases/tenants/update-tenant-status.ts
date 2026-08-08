@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
+
 import { TenantRepository } from "../../infras/repos/tenant-repo";
 import type { UpdateTenantStatusInput, UpdateTenantStatusOutput } from "./dto/tenant.dto";
 

@@ -1,5 +1,5 @@
-import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 import { Bingo18OpsAlertType } from "@megawin/game-bingo18/entities";
+import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();

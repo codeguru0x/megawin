@@ -20,19 +20,19 @@
  * biên dir() dùng hằng domain BINGO18_SMALL_MAX/BINGO18_BIG_MIN, KHÔNG hardcode.
  */
 
-import { BINGO18_DICE_MIN, BINGO18_DICE_MAX, BINGO18_SMALL_MAX, BINGO18_BIG_MIN } from "../entities/types";
-import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
-import { lookupSingleNumPrize, lookupSumTotalPrize } from "./prize-tables";
-import { TOTAL_OUTCOMES } from "./odds";
-import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
-  BigSmallDrawPrizes,
-} from "../entities/types";
-import type { Bingo18ByPlayType, Bingo18BucketStat } from "../entities/betting-stats";
+import type { Bingo18BucketStat, Bingo18ByPlayType } from "../entities/betting-stats";
 import type { EntryBoardSnapshot } from "../entities/entry";
+import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
+import type {
+  BigSmallDrawPrizes,
+  DoubleMatchPrizes,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
+} from "../entities/types";
+import { BINGO18_BIG_MIN, BINGO18_DICE_MAX, BINGO18_DICE_MIN, BINGO18_SMALL_MAX } from "../entities/types";
+import { TOTAL_OUTCOMES } from "./odds";
+import { lookupSingleNumPrize, lookupSumTotalPrize } from "./prize-tables";
 
 // ─────────────────────────────────────────────
 // Types

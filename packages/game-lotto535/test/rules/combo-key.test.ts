@@ -4,7 +4,8 @@
  * PURE — không DB, không cần quy tắc test staging chung.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { buildComboKey } from "../../src/rules/combo-key";
 
 describe("buildComboKey", () => {

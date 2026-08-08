@@ -12,15 +12,16 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+
 import type {
-  FinancialRates,
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
   BigSmallDrawPrizes,
-  PlayRules,
+  DoubleMatchPrizes,
+  FinancialRates,
   OpsConfig,
+  PlayRules,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
 } from "./types";
 
 export interface GlobalConfigDoc {

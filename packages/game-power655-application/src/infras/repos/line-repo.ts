@@ -9,10 +9,11 @@
  * khi re-settle, vừa giữ `createdAt` immutable kể cả khi settle retry sau crash.
  */
 
-import { Power655Collections } from "@megawin/game-power655/entities";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import { chunk } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
+
 import { BaseRepo } from "./base-repo";
 
 export class LineRepository extends BaseRepo<any> {

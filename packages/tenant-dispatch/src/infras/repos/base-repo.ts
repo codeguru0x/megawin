@@ -1,6 +1,6 @@
-import { TenantRepo, MongoMapper } from "@megawin/data/mongo";
 import type { BaseEntity } from "@megawin/data/mongo";
-import { Document } from "mongodb";
+import { type MongoMapper, TenantRepo } from "@megawin/data/mongo";
+import type { Document } from "mongodb";
 
 /**
  * Base repository cho tenant-dispatch — trỏ vào DB `megawin-tenant`.

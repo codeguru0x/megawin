@@ -7,8 +7,9 @@
  * bọc ngoài. Đừng gọi thẳng client này trên hot path nếu chưa tự xử lý lỗi.
  */
 
-import { createClient, type RedisClientType } from "redis";
 import { isDevNextJs, logError } from "@megawin/shared/utils";
+import { createClient, type RedisClientType } from "redis";
+
 import { DEFAULT_REDIS_ENV_KEY } from "../constants";
 import "../types/declarations/global";
 

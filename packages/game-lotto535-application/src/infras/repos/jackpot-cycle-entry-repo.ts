@@ -19,8 +19,9 @@
 
 import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-lotto535/entities";
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import { BaseRepo } from "./base-repo";
+
 import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class JackpotCycleEntryRepository extends BaseRepo<JackpotCycleEntryEntity, JackpotCycleEntryMapper> {
   constructor() {

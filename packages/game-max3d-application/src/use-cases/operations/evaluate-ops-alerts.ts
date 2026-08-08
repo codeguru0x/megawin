@@ -36,17 +36,17 @@
  * khó là syndicate đáng kể).
  */
 
-import { TickLoopWorker } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DEFAULT_MAX3D_CONFIG, computeMax3dExposure } from "@megawin/game-max3d/rules";
-import type { Max3dTopPair, OpsAlertsConfig } from "@megawin/game-max3d/entities";
-import type { Max3dDrawBettingStatsEntity } from "@megawin/game-max3d/entities";
+import type { Max3dDrawBettingStatsEntity, Max3dTopPair, OpsAlertsConfig } from "@megawin/game-max3d/entities";
 import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { computeMax3dExposure, DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateMax3dAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */

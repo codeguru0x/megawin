@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
-import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import { GameConfigScope } from "@megawin/game-core/entities";
+import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 
 describe("GameConfigRepository – Keno Global Config", () => {

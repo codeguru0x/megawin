@@ -35,17 +35,18 @@
  * `SingleRunWorker.recordStalledItem`/`clearStalledItem` — KHÔNG còn bắn alert riêng.
  */
 
-import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DRAW_COMPLETED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
-import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 import type { GlobalConfigEntity, OpsConfig, OpsStatsConfigBase } from "@megawin/game-bingo18/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
+import { DRAW_COMPLETED_STATUSES, type DrawStatus } from "@megawin/game-core/entities";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+
+import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { Bingo18DrawStatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */

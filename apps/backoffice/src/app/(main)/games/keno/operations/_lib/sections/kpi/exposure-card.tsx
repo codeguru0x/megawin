@@ -10,8 +10,8 @@
  * Click card → chuyển sang tab Phân tích cược (nơi có combo list/heatmap để đào sâu).
  */
 
-import { formatNumber } from "@megawin/shared/utils";
 import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
+import { formatNumber } from "@megawin/shared/utils";
 import { ShieldAlert } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";

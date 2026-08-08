@@ -14,19 +14,19 @@
 
 import { TZDate } from "@date-fns/tz";
 import {
-  format,
-  addMinutes,
-  subMinutes,
   addDays,
-  subDays,
   addHours,
-  subHours,
-  startOfDay,
+  addMinutes,
   endOfDay,
-  isBefore,
-  isAfter,
-  isEqual,
+  format,
   getDay,
+  isAfter,
+  isBefore,
+  isEqual,
+  startOfDay,
+  subDays,
+  subHours,
+  subMinutes,
 } from "date-fns";
 
 export const VN_TIMEZONE = "Asia/Ho_Chi_Minh";
@@ -220,7 +220,7 @@ export function currentVNHour(): number {
 // Arithmetic helpers (trả Date chuẩn)
 // ─────────────────────────────────────────────
 
-export { addMinutes, subMinutes, addDays, subDays, addHours, subHours, getDay };
+export { addDays, addHours, addMinutes, getDay, subDays, subHours, subMinutes };
 
 /**
  * Trừ phút từ 1 Date, trả về Date mới.
@@ -233,9 +233,7 @@ export function subtractMinutes(date: Date, minutes: number): Date {
 // Comparison helpers
 // ─────────────────────────────────────────────
 
-export { isBefore, isAfter, isEqual };
-
-export { TZDate };
+export { isAfter, isBefore, isEqual, TZDate };
 
 // ─────────────────────────────────────────────
 // Start/End of day theo giờ VN
@@ -274,7 +272,7 @@ export function endOfDayVN(date: Date): Date {
  * Ví dụ (intervalMinutes = 1):
  *   15:01:25 → 15:01:00
  */
-export function floorTime(date: Date, intervalMinutes: number = 1): Date {
+export function floorTime(date: Date, intervalMinutes = 1): Date {
   const ms = intervalMinutes * 60_000;
   return new Date(Math.floor(date.getTime() / ms) * ms);
 }
@@ -291,7 +289,7 @@ export function floorTime(date: Date, intervalMinutes: number = 1): Date {
  * Ví dụ (intervalMinutes = 1):
  *   15:01:25 → 15:02:00
  */
-export function ceilTime(date: Date, intervalMinutes: number = 1): Date {
+export function ceilTime(date: Date, intervalMinutes = 1): Date {
   const ms = intervalMinutes * 60_000;
   return new Date(Math.ceil(date.getTime() / ms) * ms);
 }

@@ -26,15 +26,15 @@
  * KHÔNG lưu output vào doc (bucket RAW tuyến tính — bài học Keno Risk #4).
  */
 
-import {
-  MAX3D_DRAW_COUNT_SPECIAL,
-  MAX3D_DRAW_COUNT_FIRST,
-  MAX3D_DRAW_COUNT_SECOND,
-  MAX3D_DRAW_COUNT_THIRD,
-} from "../entities/types";
+import type { Max3dTopPair, Max3dTripletStake } from "../entities/betting-stats";
 import { BasicPrizeTier, PlayMode, PlayType } from "../entities/enums";
 import type { BasicPrizeAmounts, ComboPrizeAmounts, PlusPrizeAmounts } from "../entities/types";
-import type { Max3dTripletStake, Max3dTopPair } from "../entities/betting-stats";
+import {
+  MAX3D_DRAW_COUNT_FIRST,
+  MAX3D_DRAW_COUNT_SECOND,
+  MAX3D_DRAW_COUNT_SPECIAL,
+  MAX3D_DRAW_COUNT_THIRD,
+} from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Types

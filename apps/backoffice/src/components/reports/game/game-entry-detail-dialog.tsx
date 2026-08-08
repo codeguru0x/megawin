@@ -31,7 +31,7 @@ export interface GameEntryDetailDialogProps {
    * bộ số đặt cược + thông tin kỳ, KHÔNG hiển thị kết quả.
    * Với settled entries: hiển thị đầy đủ.
    */
-  // biome-ignore lint/suspicious/noExplicitAny: wrapper dùng chung cho TicketEntryEntity của 7 game khác nhau — mỗi game-specific dialog con tự narrow type.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   entry: any | null;
   open: boolean;
   onClose: () => void;

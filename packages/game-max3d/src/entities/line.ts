@@ -7,8 +7,8 @@
  * Tạo khi settle, immutable sau insert.
  */
 
-import type { BasicPrizeTier, PlusPrizeTier, PlayMode, PlayType } from "./enums";
-import type { Triplet, ISODateString } from "./types";
+import type { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "./enums";
+import type { ISODateString, Triplet } from "./types";
 
 // ─────────────────────────────────────────────
 // Line Match Result

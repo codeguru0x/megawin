@@ -146,6 +146,7 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
       // ── Batch update entries bị ảnh hưởng ──
       let lastEntryId: string | undefined;
 
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const entries = await this.entryRepo.getCappableEntries(drawId, tier.pickCount, BATCH_SIZE, lastEntryId);
 

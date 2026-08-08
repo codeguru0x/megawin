@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { CreateCompanyAccountUseCase } from "../../src/use-cases/accounts/create-company-account";
 import { CompanyRole } from "@megawin/identity/entities";
+import { describe, expect, it } from "vitest";
+
+import { CreateCompanyAccountUseCase } from "../../src/use-cases/accounts/create-company-account";
 import type { CreateCompanyAccountInput } from "../../src/use-cases/accounts/dto/create-company-account.dto";
 
 class TestableUseCase extends CreateCompanyAccountUseCase {

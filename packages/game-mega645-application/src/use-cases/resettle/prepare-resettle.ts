@@ -27,8 +27,9 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { generateId } from "@megawin/shared/utils";
 import type { EntryReversal } from "@megawin/game-mega645/entities";
+import { generateId } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryResettleRepository } from "../../infras/repos/entry-resettle-repo";
 

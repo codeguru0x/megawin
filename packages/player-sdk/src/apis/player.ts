@@ -6,8 +6,8 @@
  * @module
  */
 
-import type { HttpClient } from "../http-client";
 import { ENDPOINTS } from "../endpoints";
+import type { HttpClient } from "../http-client";
 
 // ─────────────────────────────────────────────
 // Response Types

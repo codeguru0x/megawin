@@ -10,8 +10,8 @@
  * }, { schemas: { query: querySchema } });
  */
 
-import { type ApiGatewayEventWithTenant, type ApiGatewayZodSchemas, type InferSchema } from "../index";
 import { withMiddleware } from "../handler-wrappers";
+import type { ApiGatewayEventWithTenant, ApiGatewayZodSchemas, InferSchema } from "../index";
 import { tenantAuth } from "./tenant-auth";
 
 export function withTenantAuth<TSchemas extends ApiGatewayZodSchemas | undefined = undefined>(

@@ -11,8 +11,8 @@
  * lúc 18h00.
  */
 
-import type { FinancialRates, Max3dproPrizeConfig, OpsConfig, PlayRules } from "../entities/types";
 import { Max3dproOpsAlertType } from "../entities/ops-alert";
+import type { FinancialRates, Max3dproPrizeConfig, OpsConfig, PlayRules } from "../entities/types";
 
 export const DEFAULT_MAX3D_PRO_CONFIG: {
   rates: FinancialRates;

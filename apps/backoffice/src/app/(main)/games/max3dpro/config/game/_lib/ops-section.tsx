@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Max3dproOpsAlertType, OpsAlertSeverity } from "@megawin/game-max3dpro/entities";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { Coins, HelpCircle, Link2, Save, ShieldAlert, Users, type LucideIcon } from "lucide-react";
+import { Coins, HelpCircle, Link2, type LucideIcon, Save, ShieldAlert, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 

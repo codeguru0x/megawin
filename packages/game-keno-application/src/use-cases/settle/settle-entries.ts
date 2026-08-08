@@ -35,20 +35,21 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
+import { EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-keno/entities";
 import {
+  CAPPABLE_PICK_COUNTS,
+  KENO_BASIC_PLAY_TYPE_SET,
   type KenoBigSmallBet,
   type KenoEvenOddBet,
   KenoPlayType,
-  CAPPABLE_PICK_COUNTS,
-  KENO_BASIC_PLAY_TYPE_SET,
 } from "@megawin/game-keno/entities";
-import type { EntryPayout, EntryResult, EntryBoardPayout } from "@megawin/game-keno/entities";
 import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import { generateId } from "@megawin/shared/utils";
+import { sumBy } from "@megawin/shared/utils/array";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
-import { sumBy } from "@megawin/shared/utils/array";
 
 /** Số entries xử lý mỗi lần query DB. */
 const BATCH_SIZE = 500;

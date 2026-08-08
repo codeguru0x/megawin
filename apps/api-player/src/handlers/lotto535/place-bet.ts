@@ -6,19 +6,18 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
+import { PlayType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import {
+  lotto535DrawIdSchema,
   lotto535MainNumberSchema,
   lotto535SpecialNumberSchema,
-  lotto535DrawIdSchema,
 } from "@megawin/game-lotto535/schemas";
-import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
-import { PlayType } from "@megawin/game-lotto535/entities";
+import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───

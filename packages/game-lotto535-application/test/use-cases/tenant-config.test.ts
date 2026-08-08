@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { TenantConfigRepository } from "../../src/infras/repos/tenant-config-repo";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { TenantConfigRepository } from "../../src/infras/repos/tenant-config-repo";
 import { seedTenantConfig } from "./helpers/seed-tenant-config";
 
 describe("TenantConfigRepository – Lotto 5/35 Tenant Config", () => {

@@ -21,8 +21,8 @@
  * const results = await multi.incrBy("wallet:a", -amount).incrBy("wallet:b", amount).exec();
  */
 
-import getRedisClient from "./client";
 import { DEFAULT_REDIS_ENV_KEY, DELETE_BATCH_SIZE } from "../constants";
+import getRedisClient from "./client";
 import type {
   ExpireMode,
   RedisClient,
@@ -234,7 +234,7 @@ export class RedisRepository {
    * INCRBY — tăng counter atomically. Key chưa tồn tại → khởi tạo 0 rồi tăng.
    * @returns Giá trị counter SAU khi tăng.
    */
-  public async incrBy(key: string, increment: number = 1): Promise<number> {
+  public async incrBy(key: string, increment = 1): Promise<number> {
     const client = await this.getClient();
     return await client.incrBy(key, increment);
   }
@@ -257,7 +257,7 @@ export class RedisRepository {
    * HINCRBY — tăng 1 field số trong hash atomically.
    * @returns Giá trị field SAU khi tăng.
    */
-  public async hIncrBy(key: string, field: string, increment: number = 1): Promise<number> {
+  public async hIncrBy(key: string, field: string, increment = 1): Promise<number> {
     const client = await this.getClient();
     return await client.hIncrBy(key, field, increment);
   }

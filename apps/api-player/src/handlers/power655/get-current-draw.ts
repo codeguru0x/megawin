@@ -6,7 +6,6 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-
 import { GetCurrentDrawPlayerUseCase } from "@megawin/game-power655-application/use-cases/player";
 
 const useCase = new GetCurrentDrawPlayerUseCase();

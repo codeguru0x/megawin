@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemSettleTenantDailyRepository,
   type SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { MEGA645_SETTLE_TENANT_REPORTS } from "@megawin/game-mega645/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyRepository {

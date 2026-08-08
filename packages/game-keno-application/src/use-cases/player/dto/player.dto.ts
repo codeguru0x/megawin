@@ -5,8 +5,8 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
+import type { EntryOutcome } from "@megawin/game-core/entities";
 import type { DrawPrizeSummary } from "@megawin/game-keno/entities";
-import { EntryOutcome } from "@megawin/game-core/entities";
 
 export type { DrawPrizeSummary as PlayerPrizeSummary };
 

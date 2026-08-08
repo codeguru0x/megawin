@@ -10,21 +10,21 @@
  */
 
 import { Bingo18BigSmallBet, Bingo18TripleKind } from "../entities/enums";
-import { BINGO18_SMALL_MAX, BINGO18_DRAW_VALUES, BINGO18_BIG_MIN } from "../entities/types";
-import {
-  DEFAULT_SINGLE_NUM_PRIZES,
-  DEFAULT_DOUBLE_MATCH_PRIZES,
-  DEFAULT_TRIPLE_MATCH_PRIZES,
-  DEFAULT_SUM_TOTAL_PRIZES,
-  DEFAULT_BIG_SMALL_DRAW_PRIZES,
-} from "../rules/prize-tables";
 import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
   BigSmallDrawPrizes,
+  DoubleMatchPrizes,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
 } from "../entities/types";
+import { BINGO18_BIG_MIN, BINGO18_DRAW_VALUES, BINGO18_SMALL_MAX } from "../entities/types";
+import {
+  DEFAULT_BIG_SMALL_DRAW_PRIZES,
+  DEFAULT_DOUBLE_MATCH_PRIZES,
+  DEFAULT_SINGLE_NUM_PRIZES,
+  DEFAULT_SUM_TOTAL_PRIZES,
+  DEFAULT_TRIPLE_MATCH_PRIZES,
+} from "../rules/prize-tables";
 
 // ─────────────────────────────────────────────
 // Shared Input Type

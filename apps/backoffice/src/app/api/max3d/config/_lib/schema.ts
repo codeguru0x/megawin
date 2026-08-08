@@ -1,5 +1,5 @@
-import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 import { Max3dOpsAlertType } from "@megawin/game-max3d/entities";
+import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();

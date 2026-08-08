@@ -1,17 +1,18 @@
 import {
-  AdminCreateUserCommand,
-  AdminCreateUserCommandInput,
   AdminAddUserToGroupCommand,
+  AdminCreateUserCommand,
+  type AdminCreateUserCommandInput,
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminGetUserCommand,
   AdminInitiateAuthCommand,
   AdminRespondToAuthChallengeCommand,
   AdminSetUserMFAPreferenceCommand,
-  AdminSetUserMFAPreferenceCommandInput,
+  type AdminSetUserMFAPreferenceCommandInput,
   AdminSetUserPasswordCommand,
   AdminUpdateUserAttributesCommand,
   AssociateSoftwareTokenCommand,
+  type AttributeType,
   GetUserPoolMfaConfigCommand,
   InitiateAuthCommand,
   ListUsersCommand,
@@ -20,7 +21,6 @@ import {
   type SetUserPoolMfaConfigCommandInput,
   type UserType,
   VerifySoftwareTokenCommand,
-  AttributeType,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 import { cognitoClient } from "./client";

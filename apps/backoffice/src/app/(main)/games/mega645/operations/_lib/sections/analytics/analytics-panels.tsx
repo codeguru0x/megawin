@@ -13,7 +13,7 @@
  */
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { PlayType } from "@megawin/game-mega645/entities";
+import type { PlayType } from "@megawin/game-mega645/entities";
 import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 import { PLAY_TYPE_CONFIGS } from "@megawin/game-mega645/rules";
 import { formatNumber } from "@megawin/shared/utils";

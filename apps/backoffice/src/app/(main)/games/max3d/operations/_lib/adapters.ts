@@ -8,8 +8,8 @@
  * là PROXY (UI ghi "ước tính").
  */
 
-import type { Max3dDrawBettingStatsEntity, Max3dPlayTypeStat } from "@megawin/game-max3d/entities";
 import type { TopAccountStat } from "@megawin/game-core/types";
+import type { Max3dDrawBettingStatsEntity, Max3dPlayTypeStat } from "@megawin/game-max3d/entities";
 import type { Max3dExposureResult } from "@megawin/game-max3d/rules";
 
 import type { OpsKpi, PairRow, PlayTypeRow, TenantRow, TopAccountRow, TopPotentialRow, TopTripletRow } from "./types";

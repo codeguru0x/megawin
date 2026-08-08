@@ -12,10 +12,11 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawVoidSummary } from "@megawin/game-max3d/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
-import { DrawVoidSummary } from "@megawin/game-max3d/entities";
 
 export interface FinalizeVoidResult {
   drawId: string;

@@ -17,23 +17,24 @@
  */
 
 import type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 } from "@megawin/game-core/types";
-import { PlayType } from "./enums";
+
 import type { EntryBoardSnapshot } from "./entry";
+import { PlayType } from "./enums";
 
 export type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 };
 
 /**

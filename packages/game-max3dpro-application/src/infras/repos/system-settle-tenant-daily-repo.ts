@@ -6,10 +6,11 @@
  */
 
 import {
-  SystemSettleTenantDailyRepository,
   type SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { MAX3DPRO_SETTLE_TENANT_REPORTS } from "@megawin/game-max3dpro/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyRepository {

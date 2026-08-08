@@ -7,11 +7,12 @@
  * Max 3D — khác các game khác chỉ lấy hạng cao nhất).
  */
 
-import { describe, it, expect } from "vitest";
-import { flattenDrawResult, findAllTiersInResult, matchBasicStraight } from "../../src/rules/prize-tiers";
-import { BasicPrizeTier } from "../../src/entities/enums";
+import { describe, expect, it } from "vitest";
+
 import type { Max3dDrawResult } from "../../src/entities/draw-result";
+import { BasicPrizeTier } from "../../src/entities/enums";
 import type { BasicPrizeAmounts } from "../../src/entities/types";
+import { findAllTiersInResult, flattenDrawResult, matchBasicStraight } from "../../src/rules/prize-tiers";
 
 const drawResult: Max3dDrawResult = {
   special: ["096", "389"],

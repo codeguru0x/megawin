@@ -5,8 +5,9 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
+
 import type { GetGameConfigOutput } from "./dto/game-config.dto";
+import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
 
 export class GetGlobalConfigUseCase extends NextApiUseCase<void, GetGameConfigOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();

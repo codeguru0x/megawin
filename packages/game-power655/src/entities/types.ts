@@ -14,6 +14,7 @@
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
 import type { OpsStatsConfig } from "@megawin/game-core/types";
+
 import type { Power655OpsAlertType } from "./ops-alert";
 
 // ─── Number Ranges ───

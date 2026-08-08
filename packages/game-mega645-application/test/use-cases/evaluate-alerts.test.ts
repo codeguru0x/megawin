@@ -12,14 +12,15 @@
  * - dedupeKey ổn định để upsert idempotent (không sinh doc trùng).
  */
 
-import { describe, it, expect } from "vitest";
-import { OpsAlertSeverity, PlayType, Mega645OpsAlertType } from "@megawin/game-mega645/entities";
 import type {
   Mega645DrawBettingStatsEntity,
   Mega645DrawComboStatsEntity,
   Mega645OpsAlertsConfig,
   Mega645PlayTypeStat,
 } from "@megawin/game-mega645/entities";
+import { Mega645OpsAlertType, OpsAlertSeverity, PlayType } from "@megawin/game-mega645/entities";
+import { describe, expect, it } from "vitest";
+
 import { evaluateAlerts } from "../../src/use-cases/operations/evaluate-alerts";
 
 const DRAW_ID = "2999-01-01.001";

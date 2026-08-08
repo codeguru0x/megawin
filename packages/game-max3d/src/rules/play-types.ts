@@ -7,6 +7,7 @@
  */
 
 import { AppException } from "@megawin/shared/errors";
+
 import { PlayMode, PlayType } from "../entities/enums";
 import type { BoardSelection } from "../entities/types";
 import { getPermutationCount } from "./prize-tiers";

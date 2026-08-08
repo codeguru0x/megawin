@@ -9,8 +9,9 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-power655/entities";
 import { POWER655_VOID_DRAW_REPORTS } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
+
 import { VoidDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository ghi void report cho Power 6/55.

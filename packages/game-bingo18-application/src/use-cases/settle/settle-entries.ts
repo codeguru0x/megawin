@@ -23,24 +23,24 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
+import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-bingo18/entities";
 import {
-  Bingo18PlayType,
   BINGO18_BASIC_PLAY_TYPE_SET,
   type Bingo18BigSmallBet,
+  Bingo18PlayType,
   type Bingo18TripleKind,
 } from "@megawin/game-bingo18/entities";
-import type { EntryPayout, EntryResult, EntryBoardPayout } from "@megawin/game-bingo18/entities";
 import {
-  matchSingleNum,
-  matchDoubleMatch,
-  matchTripleMatch,
-  matchSumTotal,
-  matchBigSmallDraw,
   type DrawResultForMatch,
+  matchBigSmallDraw,
+  matchDoubleMatch,
+  matchSingleNum,
+  matchSumTotal,
+  matchTripleMatch,
 } from "@megawin/game-bingo18/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import { sumBy } from "@megawin/shared/utils";
+import { generateId, sumBy } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
 

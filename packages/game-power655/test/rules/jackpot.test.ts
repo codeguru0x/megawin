@@ -7,7 +7,8 @@
  * theo thể lệ Vietlott (chỉ kích hoạt khi CÓ JP2 winner và KHÔNG có JP1 winner).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { calculateDrawFinancials, type DrawFinancialInput } from "../../src/rules/jackpot";
 
 const baseInput: DrawFinancialInput = {

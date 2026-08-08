@@ -7,9 +7,10 @@
  * (zero-padded tối thiểu 5 chữ số, prefix mapping đúng GameProduct).
  */
 
-import { describe, it, expect } from "vitest";
-import { buildTicketNo } from "../../src/entities/ticket-counter";
+import { describe, expect, it } from "vitest";
+
 import { GameProduct } from "../../src/entities/game-core.enums";
+import { buildTicketNo } from "../../src/entities/ticket-counter";
 
 describe("buildTicketNo", () => {
   it("Đúng logic — keno, seq=1 → zero-padded 5 chữ số, format {PREFIX}-{YYYYMMDD}-{NNNNN}", () => {

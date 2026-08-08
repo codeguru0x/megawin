@@ -1,6 +1,7 @@
+import { AccountType } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { AccountType } from "@megawin/identity/entities";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type { GetPlayerAccountInput, GetPlayerAccountOutput } from "./dto/get-player-account.dto";
 

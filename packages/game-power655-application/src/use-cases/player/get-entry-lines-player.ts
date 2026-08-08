@@ -12,9 +12,10 @@
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
+import type { TicketLineDoc } from "@megawin/game-power655/entities";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import type { TicketLineDoc } from "@megawin/game-power655/entities";
 import type { PlayerGetEntryLinesInput, PlayerGetEntryLinesOutput, PlayerLineInfo } from "./dto/player.dto";
 
 /**

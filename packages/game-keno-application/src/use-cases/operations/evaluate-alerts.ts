@@ -10,6 +10,15 @@
  * mỗi tick). Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
+import type {
+  KenoCappablePlayType,
+  KenoDrawBettingStatsEntity,
+  KenoDrawComboStatsEntity,
+  KenoOpsAlertDoc,
+  KenoSideBetPlayType,
+  OpsAlertsConfig,
+  PayoutCaps,
+} from "@megawin/game-keno/entities";
 import {
   KenoBigSmallBet,
   KenoEvenOddBet,
@@ -20,15 +29,6 @@ import {
 } from "@megawin/game-keno/entities";
 import { capExposureByPlayType } from "@megawin/game-keno/rules";
 import { sumBy } from "@megawin/shared/utils/array";
-import type {
-  KenoCappablePlayType,
-  KenoDrawBettingStatsEntity,
-  KenoDrawComboStatsEntity,
-  KenoOpsAlertDoc,
-  KenoSideBetPlayType,
-  OpsAlertsConfig,
-  PayoutCaps,
-} from "@megawin/game-keno/entities";
 
 /** Snapshot stats + combo cần cho evaluate. */
 export interface EvaluateAlertsInput {

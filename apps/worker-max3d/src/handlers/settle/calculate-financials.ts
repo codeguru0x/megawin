@@ -11,8 +11,8 @@
  * @output SettleFinancials
  */
 
-import { CalculateFinancialsUseCase } from "@megawin/game-max3d-application/use-cases/settle";
 import type { SettleContext } from "@megawin/game-max3d-application/use-cases/settle";
+import { CalculateFinancialsUseCase } from "@megawin/game-max3d-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 

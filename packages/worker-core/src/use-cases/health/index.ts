@@ -1,1 +1,1 @@
-export { StalledItemTracker, STALLED_ALERT_THRESHOLD } from "./stalled-item-tracker";
+export { STALLED_ALERT_THRESHOLD, StalledItemTracker } from "./stalled-item-tracker";

@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 
-import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { TenantDispatchOrderEntity } from "../../entities/dispatch-order";
+import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 
 export interface GetOrderByTxInput {
   tx: string;

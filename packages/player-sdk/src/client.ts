@@ -13,21 +13,20 @@
  * @module
  */
 
-/// <reference lib="dom" />
-import { createHttpClient, type HttpClient, type RequestConfig } from "./http-client";
-import { ApiClientError } from "./api-types";
-import { TokenManager, SessionStorageTokenStorage } from "./auth/token-manager";
-import type { AuthTokens, TokenStorage } from "./auth/types";
-
-import { createAuthApi, type AuthApi } from "./auth/auth-api";
+import type { ApiClientError } from "./api-types";
+import { type Bingo18Api, createBingo18Api } from "./apis/bingo18";
 import { createKenoApi, type KenoApi } from "./apis/keno";
 import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
-import { createMega645Api, type Mega645Api } from "./apis/mega645";
-import { createPower655Api, type Power655Api } from "./apis/power655";
 import { createMax3dApi, type Max3dApi } from "./apis/max3d";
 import { createMax3dproApi, type Max3dproApi } from "./apis/max3dpro";
-import { createBingo18Api, type Bingo18Api } from "./apis/bingo18";
+import { createMega645Api, type Mega645Api } from "./apis/mega645";
 import { createPlayerApi, type PlayerApi } from "./apis/player";
+import { createPower655Api, type Power655Api } from "./apis/power655";
+import { type AuthApi, createAuthApi } from "./auth/auth-api";
+import { SessionStorageTokenStorage, TokenManager } from "./auth/token-manager";
+import type { AuthTokens, TokenStorage } from "./auth/types";
+/// <reference lib="dom" />
+import { createHttpClient, type HttpClient, type RequestConfig } from "./http-client";
 
 // ============ Config ============
 

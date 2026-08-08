@@ -8,9 +8,10 @@
  * sẽ khiến lock không release đúng (chỉ được TTL release sau 5 phút).
  */
 
-import { describe, it, expect } from "vitest";
-import { buildResettleLockKey, buildResettleBatchKey } from "../../src/utils/resettle-keys";
+import { describe, expect, it } from "vitest";
+
 import { GameProduct } from "../../src/entities";
+import { buildResettleBatchKey, buildResettleLockKey } from "../../src/utils/resettle-keys";
 
 describe("buildResettleLockKey", () => {
   it("Đúng logic — format {game}:resettle:{drawId}", () => {

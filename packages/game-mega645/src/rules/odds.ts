@@ -68,7 +68,7 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import { MEGA645_NUMBER_MAX, MEGA645_NUMBER_COUNT, type PrizeAmounts } from "../entities/types";
+import { MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MAX, type PrizeAmounts } from "../entities/types";
 import { combination } from "./play-types";
 
 const NUMBER_POOL = MEGA645_NUMBER_MAX; // 45

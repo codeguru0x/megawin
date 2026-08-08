@@ -27,16 +27,17 @@
  * 7. betUnitsByEntry thiếu 1 entryId (bất thường dữ liệu) → winners prizeAmount = 0.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { ObjectId, Long } from "mongodb";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
+import type { EntryPayoutTier, TicketLineDoc } from "@megawin/game-lotto535/entities";
+import { PrizeTier } from "@megawin/game-lotto535/entities/enums";
+import { Long, ObjectId } from "mongodb";
+import { describe, expect, it, vi } from "vitest";
+
 import { EntryRepository } from "../../src/infras/repos/entry-repo";
 import { LineRepository } from "../../src/infras/repos/line-repo";
-import { PatchJackpotPrizeUseCase } from "../../src/use-cases/settle/patch-jackpot-prize";
 import { ApplySplitBonusesUseCase } from "../../src/use-cases/settle/apply-split-bonuses";
+import { PatchJackpotPrizeUseCase } from "../../src/use-cases/settle/patch-jackpot-prize";
 import type { SettleContext, SettleFinancials } from "../../src/use-cases/settle/types";
-import { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import { PrizeTier } from "@megawin/game-lotto535/entities/enums";
-import type { EntryPayoutTier, TicketLineDoc } from "@megawin/game-lotto535/entities";
 
 const entryRepo = new EntryRepository();
 const lineRepo = new LineRepository();

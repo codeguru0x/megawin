@@ -57,12 +57,12 @@
  */
 
 import {
-  BINGO18_DICE_MIN,
-  BINGO18_DICE_MAX,
-  BINGO18_SUM_MIN,
-  BINGO18_SUM_MAX,
-  BINGO18_SMALL_MAX,
   BINGO18_BIG_MIN,
+  BINGO18_DICE_MAX,
+  BINGO18_DICE_MIN,
+  BINGO18_SMALL_MAX,
+  BINGO18_SUM_MAX,
+  BINGO18_SUM_MIN,
 } from "../entities/types";
 
 /** Tổng không gian mẫu = 6^3. */
@@ -103,7 +103,7 @@ export function getSingleNumOdds(): SingleNumOdds[] {
   const results: SingleNumOdds[] = [];
 
   for (let m = 1; m <= 3; m++) {
-    const ways = C[m]! * Math.pow(5, 3 - m);
+    const ways = C[m]! * 5 ** (3 - m);
     const probability = ways / TOTAL_OUTCOMES;
     results.push({
       matchCount: m,

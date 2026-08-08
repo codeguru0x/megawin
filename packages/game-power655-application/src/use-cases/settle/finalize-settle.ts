@@ -62,9 +62,10 @@ import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
 import { JackpotCycleClosedReasons, JackpotType } from "@megawin/game-power655/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { SettleContextWithFinancials } from "./types";
 

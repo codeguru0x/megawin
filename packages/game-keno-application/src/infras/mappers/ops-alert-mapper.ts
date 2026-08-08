@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { KenoOpsAlertEntity } from "@megawin/game-keno/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `keno_ops_alerts` → entity (ObjectId → id hex).

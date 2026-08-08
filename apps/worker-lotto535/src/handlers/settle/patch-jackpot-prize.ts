@@ -8,8 +8,8 @@
  * @output PatchJackpotPrizeResult { drawId, entriesPatched }
  */
 
-import { PatchJackpotPrizeUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
 import type { SettleContext } from "@megawin/game-lotto535-application/use-cases/settle";
+import { PatchJackpotPrizeUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new PatchJackpotPrizeUseCase();
 

@@ -10,8 +10,8 @@
  * với `betCount` để ra worst-case của board.
  */
 
-import type { BasicPrizes, BigSmallPrizes, EvenOddPrizes, PayoutCaps } from "../entities/types";
 import { KENO_BASIC_PLAY_TYPE_SET, KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "../entities/enums";
+import type { BasicPrizes, BigSmallPrizes, EvenOddPrizes, PayoutCaps } from "../entities/types";
 import { lookupBasicPrize } from "./prize-tables";
 
 /**

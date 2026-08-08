@@ -20,11 +20,12 @@
  * upsert overwrite doc cũ, không có trường hợp doc stale.
  */
 
+import { ReportRepo } from "@megawin/data/mongo";
 import type { PlayerSettleGameDaily, PlayerSettleGameDailyEntity } from "@megawin/game-core/entities";
 import { PLAYER_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
-import { ReportRepo } from "@megawin/data/mongo";
+
 import { PlayerSettleGameDailyMapper } from "../mappers";
-import type { PlayerOverviewResult, PlayerGameBreakdownRow } from "./types";
+import type { PlayerGameBreakdownRow, PlayerOverviewResult } from "./types";
 
 /**
  * Base repository ghi và query player settle game daily reports.

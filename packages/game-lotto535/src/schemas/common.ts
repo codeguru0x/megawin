@@ -11,12 +11,13 @@
  */
 
 import { z } from "zod";
+
 import {
-  LOTTO535_MAIN_MIN,
-  LOTTO535_MAIN_MAX,
   LOTTO535_MAIN_COUNT,
-  LOTTO535_SPECIAL_MIN,
+  LOTTO535_MAIN_MAX,
+  LOTTO535_MAIN_MIN,
   LOTTO535_SPECIAL_MAX,
+  LOTTO535_SPECIAL_MIN,
 } from "../entities/types";
 
 // ─── Atomic schemas ───

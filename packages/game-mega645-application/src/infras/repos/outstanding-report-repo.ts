@@ -10,6 +10,7 @@
 
 import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-mega645/entities";
 import { MEGA645_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-mega645/entities";
+
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";

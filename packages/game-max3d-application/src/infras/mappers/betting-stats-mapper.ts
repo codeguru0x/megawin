@@ -8,7 +8,7 @@ import type {
   TenantBettingStat,
 } from "@megawin/game-max3d/entities";
 import { createEmptyByPlayType, createEmptyPlayTypeStat } from "@megawin/game-max3d/rules";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `max3d_draw_betting_stats` → entity, NORMALIZE shape phía đọc.

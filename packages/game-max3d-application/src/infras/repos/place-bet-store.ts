@@ -1,7 +1,8 @@
 import type { TicketDoc, TicketEntryDoc } from "@megawin/game-max3d/entities";
-import { TicketRepository } from "./ticket-repo";
-import { EntryRepository } from "./entry-repo";
 import { AppException } from "@megawin/shared/errors";
+
+import { EntryRepository } from "./entry-repo";
+import { TicketRepository } from "./ticket-repo";
 
 /**
  * Atomic write coordinator cho place-bet — Max 3D.

@@ -1,4 +1,4 @@
-import { StartExecutionCommand, ListExecutionsCommand, DescribeExecutionCommand } from "@aws-sdk/client-sfn";
+import { DescribeExecutionCommand, ListExecutionsCommand, StartExecutionCommand } from "@aws-sdk/client-sfn";
 
 export { ExecutionAlreadyExists } from "@aws-sdk/client-sfn";
 

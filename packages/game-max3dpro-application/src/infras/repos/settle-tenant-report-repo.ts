@@ -17,8 +17,9 @@
 
 import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_SETTLE_TENANT_REPORTS } from "@megawin/game-max3dpro/entities";
-import { BaseRepo } from "./base-repo";
+
 import { SettleTenantReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";
 
 /**

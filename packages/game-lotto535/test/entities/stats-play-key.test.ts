@@ -6,9 +6,10 @@
  * key từ board.
  */
 
-import { describe, it, expect } from "vitest";
-import { PlayType } from "../../src/entities/enums";
+import { describe, expect, it } from "vitest";
+
 import { Lotto535StatsPlayKey, toStatsPlayKey } from "../../src/entities/betting-stats";
+import { PlayType } from "../../src/entities/enums";
 
 describe("Lotto535StatsPlayKey", () => {
   it("Đúng logic — có đúng 13 giá trị, không trùng nhau", () => {

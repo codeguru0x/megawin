@@ -13,8 +13,7 @@
  */
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import type { Lotto535StatsPlayKey } from "@megawin/game-lotto535/entities";
-import { PlayType } from "@megawin/game-lotto535/entities";
+import type { Lotto535StatsPlayKey, PlayType } from "@megawin/game-lotto535/entities";
 import { LOTTO535_PLAY_TYPE_LABELS } from "@megawin/game-lotto535/labels";
 import { formatNumber } from "@megawin/shared/utils";
 import { BarChart2, Receipt, Store, TrendingUp, Trophy, Users } from "lucide-react";
@@ -23,8 +22,8 @@ import { PlayerOutstandingLink } from "@/components/player-name";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import type { PlayTypeRow, TenantRow, TopAccountRow, TopComboRow, TopPotentialRow } from "../../types";
 import { describeStatsPlayKey, LOTTO535_STATS_PLAY_KEY_ORDER } from "../../ops-constants";
+import type { PlayTypeRow, TenantRow, TopAccountRow, TopComboRow, TopPotentialRow } from "../../types";
 import { NumberBadge } from "./number-heatmap";
 
 // ─── Color palette — Lotto 5/35 (amber brand + phân biệt mainCover) ─────────

@@ -22,14 +22,14 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import type { Lotto535DrawComboStatsDoc, Lotto535DrawComboStatsEntity } from "@megawin/game-lotto535/entities";
-import { PlayType } from "@megawin/game-lotto535/entities";
-import { buildComboKey, calculateLineCount } from "@megawin/game-lotto535/rules";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Lotto535DrawComboStatsDoc, Lotto535DrawComboStatsEntity } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PlayType } from "@megawin/game-lotto535/entities";
+import { buildComboKey, calculateLineCount } from "@megawin/game-lotto535/rules";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Lotto535DrawComboStatsDoc>();

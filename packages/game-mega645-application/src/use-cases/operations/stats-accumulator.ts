@@ -18,13 +18,14 @@
 import type { Mega645PlayTypeStat, Mega645TopPotential, TenantBettingStat } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
 import { buildComboKey } from "@megawin/game-mega645/rules";
+
 import type {
   AccountStatsDelta,
   ComboAccountDelta,
   ComboStatsDelta,
   DrawStatsDelta,
-  EntryForStats,
   EntryBoardForStats,
+  EntryForStats,
   NumberStatsDelta,
   PartialPlayTypeDelta,
 } from "../../infras/repos/types";

@@ -10,8 +10,8 @@
  * seed lại chính xác trong doc).
  */
 
-import { Bingo18BigSmallBet } from "@megawin/game-bingo18/entities";
 import type { Bingo18BucketStat, Bingo18DrawBettingStatsEntity, TopAccountStat } from "@megawin/game-bingo18/entities";
+import { Bingo18BigSmallBet } from "@megawin/game-bingo18/entities";
 import {
   BINGO18_BIG_SMALL_BET_LABELS,
   BINGO18_PLAY_TYPE_LABELS,

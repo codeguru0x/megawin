@@ -7,8 +7,8 @@
  * CHỈ dùng khi slice threshold chưa về (loading) — tô màu, KHÔNG sinh alert.
  */
 
-import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 import { KenoOpsAlertType, OpsAlertSeverity } from "@megawin/game-keno/entities";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 
 /**
  * Label tiếng Việt cho từng loại alert vận hành Keno.

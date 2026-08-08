@@ -23,13 +23,14 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Mega645Collections, PlayType } from "@megawin/game-mega645/entities";
-import type { Mega645DrawComboStatsDoc, Mega645DrawComboStatsEntity } from "@megawin/game-mega645/entities";
-import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Mega645DrawComboStatsDoc, Mega645DrawComboStatsEntity } from "@megawin/game-mega645/entities";
+import { Mega645Collections, PlayType } from "@megawin/game-mega645/entities";
+import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Mega645DrawComboStatsDoc>();

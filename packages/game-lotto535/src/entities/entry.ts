@@ -17,10 +17,11 @@
  * Pattern naming: {Game}TicketEntryDoc – áp dụng cho mọi game.
  */
 
-import type { PlayType, PrizeTier } from "./enums";
-import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import type { ISODateString } from "./types";
+import type { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
+
+import type { PlayType, PrizeTier } from "./enums";
+import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces

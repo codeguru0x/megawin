@@ -55,10 +55,11 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
 import type { SettleContext } from "./types";
 
 export interface PatchJackpotPrizeResult {

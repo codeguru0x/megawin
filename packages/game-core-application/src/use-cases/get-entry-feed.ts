@@ -11,7 +11,8 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import type { GameProduct, BetsFeedResponse } from "@megawin/game-core/entities";
+import type { BetsFeedResponse, GameProduct } from "@megawin/game-core/entities";
+
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
 
 export interface GetEntryFeedInput {

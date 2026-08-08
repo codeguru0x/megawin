@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
 import { PlayType } from "@megawin/game-power655/entities";
-import { Power655StatsAccumulator, type PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
+import { describe, expect, it } from "vitest";
+
 import type { EntryBoardForStats, EntryForStats } from "../../src/infras/repos/types";
+import { Power655StatsAccumulator, type PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
 
 const DRAW_ID = "2026-08-05.001";
 const UNIT_PRICE = 10_000;

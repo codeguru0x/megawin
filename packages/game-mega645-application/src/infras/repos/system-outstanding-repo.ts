@@ -6,10 +6,11 @@
  */
 
 import {
-  SystemOutstandingReportRepository,
   type OutstandingPerGameAggregateResult,
+  SystemOutstandingReportRepository,
 } from "@megawin/game-core-application/repos";
 import { MEGA645_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-mega645/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemOutstandingRepo extends SystemOutstandingReportRepository {

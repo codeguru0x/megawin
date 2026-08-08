@@ -9,12 +9,12 @@
 
 import type {
   DrawBettingTotals,
+  Lotto535NumberKind,
   Lotto535PlayTypeStat,
   Lotto535StatsPlayKey,
   Lotto535TopPotential,
-  Lotto535NumberKind,
-  TenantBettingStat,
   PlayType,
+  TenantBettingStat,
 } from "@megawin/game-lotto535/entities";
 
 /** 1 entry tối thiểu để worker aggregate delta — projection từ `lotto535TicketEntries`. */

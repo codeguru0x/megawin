@@ -12,8 +12,8 @@
  * Draw days khác Mega 6/45 (T4, T6, CN).
  */
 
-import { DrawNo } from "../entities/types";
 import type { ISODateString } from "../entities/types";
+import { DrawNo } from "../entities/types";
 
 /**
  * Sinh draw ID từ ngày quay và số thứ tự kỳ.

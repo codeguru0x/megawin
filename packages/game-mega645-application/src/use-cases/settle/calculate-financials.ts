@@ -19,9 +19,10 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { PrizeTier, MEGA645_PRIZE_TIER_VALUES } from "@megawin/game-mega645/entities";
 import type { DrawSettleSummary } from "@megawin/game-mega645/entities";
+import { MEGA645_PRIZE_TIER_VALUES, PrizeTier } from "@megawin/game-mega645/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-mega645/rules";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";

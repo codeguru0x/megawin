@@ -13,7 +13,7 @@
  * @output EnqueueReversalsOutput
  */
 
-import { EnqueueReversalsUseCase, type EnqueueReversalsInput } from "@megawin/game-keno-application/use-cases/resettle";
+import { type EnqueueReversalsInput, EnqueueReversalsUseCase } from "@megawin/game-keno-application/use-cases/resettle";
 
 const useCase = new EnqueueReversalsUseCase();
 

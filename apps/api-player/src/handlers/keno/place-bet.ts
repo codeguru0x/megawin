@@ -31,14 +31,14 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
-import { kenoNumberSchema, kenoDrawIdSchema } from "@megawin/game-keno/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
 import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
 import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
+import { kenoDrawIdSchema, kenoNumberSchema } from "@megawin/game-keno/schemas";
+import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ============ Board Schemas — Tách riêng theo playType ============

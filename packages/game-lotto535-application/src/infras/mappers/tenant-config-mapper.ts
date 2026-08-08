@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-lotto535/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 export class TenantConfigMapper extends MongoMapper<Document, TenantConfigEntity> {
   constructor() {

@@ -11,9 +11,10 @@
  * TTL: snapshotAt reset mỗi lần sync → doc tự expire nếu job không chạy 15 phút.
  */
 
-import type { GameProduct } from "@megawin/game-core/entities";
-import type { OutstandingPerGameAggregateResult, SystemOutstandingReportRepository } from "../infras/repos";
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { GameProduct } from "@megawin/game-core/entities";
+
+import type { OutstandingPerGameAggregateResult, SystemOutstandingReportRepository } from "../infras/repos";
 
 /** Interface per-game repo phải implement để aggregate per-game outstanding reports. */
 export interface SystemOutstandingPublisher extends SystemOutstandingReportRepository {

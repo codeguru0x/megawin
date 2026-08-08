@@ -9,9 +9,10 @@
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
-import { AppException } from "@megawin/shared/errors";
-import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
+import { AppException } from "@megawin/shared/errors";
+
+import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import { BINGO18_CACHE_KEYS } from "./keys";
 
 let repo: GameConfigRepository | null = null;

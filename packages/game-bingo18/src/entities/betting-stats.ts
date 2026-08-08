@@ -25,12 +25,12 @@
 import type {
   DrawBettingStatsBase,
   DrawBettingTotals,
+  OpsStatsConfigBase,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfigBase,
 } from "@megawin/game-core/types";
 
-export type { DrawBettingStatsBase, DrawBettingTotals, TenantBettingStat, TopAccountStat, OpsStatsConfigBase };
+export type { DrawBettingStatsBase, DrawBettingTotals, OpsStatsConfigBase, TenantBettingStat, TopAccountStat };
 
 /**
  * Thống kê 1 bucket cược — 1 lựa chọn cụ thể của 1 kiểu chơi.

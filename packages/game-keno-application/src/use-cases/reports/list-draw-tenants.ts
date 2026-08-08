@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { ListDrawTenantsInput, ListDrawTenantsOutput } from "./types";
 

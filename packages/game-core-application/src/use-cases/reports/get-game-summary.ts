@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SystemSettleGameDailyRepository } from "../../infras/repos/system-settle-game-daily-repo";
 import type { GetGameSummaryInput, GetGameSummaryOutput } from "./types";
 

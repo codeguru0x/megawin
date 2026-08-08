@@ -1,18 +1,19 @@
+import type {
+  BigSmallDrawPrizes,
+  DoubleMatchPrizes,
+  FinancialRates,
+  GlobalConfigEntity,
+  OpsConfig,
+  PlayRules,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
+} from "@megawin/game-bingo18/entities";
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type {
-  FinancialRates,
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
-  BigSmallDrawPrizes,
-  PlayRules,
-  OpsConfig,
-} from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { GameConfigMapper } from "../mappers/game-config-mapper";
-import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
+import { BaseRepo } from "./base-repo";
 
 export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {

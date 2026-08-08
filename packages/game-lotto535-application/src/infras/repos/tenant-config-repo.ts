@@ -1,10 +1,10 @@
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type { TenantConfigDoc } from "@megawin/game-lotto535/entities";
-import { BaseRepo } from "./base-repo";
-import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
-import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
+import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { nowVN } from "@megawin/shared/utils";
+
+import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {

@@ -25,14 +25,14 @@
  * 2 Lambda cùng lúc handle 1 intent → chỉ 1 cái thành công.
  */
 
+import { Bingo18TicketLookupService } from "@megawin/game-bingo18-application/services";
 import { RecoverOrphanTxIntentsUseCase } from "@megawin/game-core-application/use-cases";
 import { KenoTicketLookupService } from "@megawin/game-keno-application/services";
 import { Lotto535TicketLookupService } from "@megawin/game-lotto535-application/services";
-import { Mega645TicketLookupService } from "@megawin/game-mega645-application/services";
-import { Power655TicketLookupService } from "@megawin/game-power655-application/services";
 import { Max3dTicketLookupService } from "@megawin/game-max3d-application/services";
 import { Max3dproTicketLookupService } from "@megawin/game-max3dpro-application/services";
-import { Bingo18TicketLookupService } from "@megawin/game-bingo18-application/services";
+import { Mega645TicketLookupService } from "@megawin/game-mega645-application/services";
+import { Power655TicketLookupService } from "@megawin/game-power655-application/services";
 
 // ── Khởi tạo lookup services — 1 lần, reuse giữa các invocations ──
 // Lambda reuse container giữa các lần gọi → singleton pattern phù hợp.

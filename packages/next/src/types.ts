@@ -4,11 +4,10 @@
  */
 
 export type {
-  ApiSuccessResponse,
+  ApiErrorDetail,
   ApiErrorResponse,
   ApiResponse,
-  ApiErrorDetail,
   ApiResponseMeta,
+  ApiSuccessResponse,
 } from "@megawin/shared/api-types";
-
-export { ApiClientError, isApiSuccess, isApiError } from "@megawin/shared/api-types";
+export { ApiClientError, isApiError, isApiSuccess } from "@megawin/shared/api-types";

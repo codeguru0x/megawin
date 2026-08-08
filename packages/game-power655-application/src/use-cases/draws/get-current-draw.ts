@@ -8,13 +8,14 @@
  *   - jackpot1CurrentAmount + jackpot2CurrentAmount: đọc từ active jackpot cycle
  */
 
+import type { DrawEntity } from "@megawin/game-power655/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { DrawEntity } from "@megawin/game-power655/entities";
-import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
+import type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 
 /**
  * Lấy kỳ quay hiện tại và danh sách kỳ active cho player/backoffice.

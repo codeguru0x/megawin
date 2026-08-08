@@ -30,13 +30,14 @@ import type {
 } from "@megawin/game-lotto535/entities";
 import { Lotto535NumberKind, Lotto535StatsPlayKey, toStatsPlayKey } from "@megawin/game-lotto535/entities";
 import { buildComboKey } from "@megawin/game-lotto535/rules";
+
 import type {
   AccountStatsDelta,
   ComboAccountDelta,
   ComboStatsDelta,
   DrawStatsDelta,
-  EntryForStats,
   EntryBoardForStats,
+  EntryForStats,
   NumberStatsDelta,
   PartialPlayTypeDelta,
 } from "../../infras/repos/types";

@@ -1,6 +1,7 @@
-import { TenantEntity, TenantStatus, TenantOption } from "@megawin/identity/entities";
-import { IdentityBaseRepo } from "./identity-base-repo";
+import { type TenantEntity, type TenantOption, TenantStatus } from "@megawin/identity/entities";
+
 import { TenantMapper } from "../mappers/tenant-mapper";
+import { IdentityBaseRepo } from "./identity-base-repo";
 
 export class TenantRepository extends IdentityBaseRepo<TenantEntity, TenantMapper> {
   constructor() {

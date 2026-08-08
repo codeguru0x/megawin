@@ -17,12 +17,12 @@
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
  */
 
-import type { SystemSettleTenantDaily, SystemSettleTenantDailyEntity } from "@megawin/game-core/entities";
-import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
-import type { GameProduct } from "@megawin/game-core/entities";
 import { ReportRepo } from "@megawin/data/mongo";
+import type { GameProduct, SystemSettleTenantDaily, SystemSettleTenantDailyEntity } from "@megawin/game-core/entities";
+import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
+
 import { SystemSettleTenantDailyMapper } from "../mappers";
-import type { TenantSummaryRow, TenantGameBreakdownRow } from "./types";
+import type { TenantGameBreakdownRow, TenantSummaryRow } from "./types";
 
 /**
  * Base repository ghi và query system tenant daily settle reports.

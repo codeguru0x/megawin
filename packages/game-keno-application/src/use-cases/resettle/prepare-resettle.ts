@@ -39,10 +39,11 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+import type { EntryReversal } from "@megawin/game-keno/entities";
 import { generateId } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryResettleRepository } from "../../infras/repos/entry-resettle-repo";
-import { EntryReversal } from "@megawin/game-keno/entities";
 
 const BATCH_SIZE = 500;
 

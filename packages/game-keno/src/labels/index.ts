@@ -11,7 +11,7 @@
  * Import: `import { KENO_PLAY_TYPE_LABELS, ... } from "@megawin/game-keno/labels"`
  */
 
-import { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet } from "../entities/enums";
+import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Play Type Labels

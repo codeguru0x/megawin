@@ -1,5 +1,6 @@
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { NextApiUseCase } from "@megawin/next/server";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+
 import { PlayerEntryRepository } from "../../infras/repos/player-entry-repo";
 import type { GetPlayerEntriesInput, GetPlayerEntriesOutput } from "./types";
 

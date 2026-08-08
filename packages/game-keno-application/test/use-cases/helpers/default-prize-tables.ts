@@ -1,5 +1,5 @@
-import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import type { BasicPrizes } from "@megawin/game-keno/entities";
+import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 
 /**
  * Chuyển `BasicPrizes` (key domain `"pickN"`, DB schema) → lookup table key trần

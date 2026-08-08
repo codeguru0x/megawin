@@ -28,8 +28,9 @@
 
 import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-power655/entities";
 import { Power655Collections } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
+
 import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository cho Cycle Ledger Power 6/55.

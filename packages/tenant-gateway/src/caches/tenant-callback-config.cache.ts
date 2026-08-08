@@ -18,6 +18,7 @@
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
+
 import { TenantCallbackConfigRepo } from "../infras/repos/tenant-callback-config-repo";
 import type { TenantCallbackConfig } from "../infras/repos/types";
 import { TENANT_GW_CACHE_KEYS } from "./keys";

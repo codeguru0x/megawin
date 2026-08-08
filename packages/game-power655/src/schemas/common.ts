@@ -12,7 +12,8 @@
  */
 
 import { z } from "zod";
-import { POWER655_MAIN_MIN, POWER655_MAIN_MAX, POWER655_MAIN_COUNT } from "../entities/types";
+
+import { POWER655_MAIN_COUNT, POWER655_MAIN_MAX, POWER655_MAIN_MIN } from "../entities/types";
 
 /**
  * Board labels hợp lệ cho Power 6/55.

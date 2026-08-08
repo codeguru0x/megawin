@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Mega645OpsAlertType, OpsAlertSeverity } from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { BellOff, Coins, HelpCircle, Layers, Save, ShieldAlert, Users, type LucideIcon } from "lucide-react";
+import { BellOff, Coins, HelpCircle, Layers, type LucideIcon, Save, ShieldAlert, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 

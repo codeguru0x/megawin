@@ -20,11 +20,11 @@
 import type {
   DrawBettingStatsBase,
   DrawBettingTotals,
-  TenantBettingStat,
   OpsStatsConfig,
+  TenantBettingStat,
 } from "@megawin/game-core/types";
 
-export type { DrawBettingStatsBase, DrawBettingTotals, TenantBettingStat, OpsStatsConfig };
+export type { DrawBettingStatsBase, DrawBettingTotals, OpsStatsConfig, TenantBettingStat };
 
 /** Thống kê tiền/bộ của 1 nhóm kiểu chơi (basicStraight/basicCombo3/basicCombo6/plus). */
 export interface Max3dPlayTypeStat {

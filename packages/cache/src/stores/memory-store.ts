@@ -14,6 +14,7 @@
  */
 
 import { LRUCache } from "lru-cache";
+
 import type { CacheStore } from "../types";
 
 export interface MemoryCacheStoreOptions {

@@ -1,7 +1,7 @@
 import { sleep } from "@megawin/shared/utils";
 
-import { SingleRunWorker } from "./single-run-worker";
 import type { TickLoopResult, TickOutcome } from "../types";
+import { SingleRunWorker } from "./single-run-worker";
 
 /**
  * Worker chạy LOOP nhiều tick trong 1 invocation Lambda (cadence < 1 phút).

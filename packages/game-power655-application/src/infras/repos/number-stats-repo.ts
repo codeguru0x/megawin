@@ -23,12 +23,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Power655Collections } from "@megawin/game-power655/entities";
-import type { Power655DrawNumberStatsDoc, Power655DrawNumberStatsEntity } from "@megawin/game-power655/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Power655DrawNumberStatsDoc, Power655DrawNumberStatsEntity } from "@megawin/game-power655/entities";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { NumberStatsMapper } from "../mappers/number-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { NumberStatsDelta } from "./types";
 
 const f = docPath<Power655DrawNumberStatsDoc>();

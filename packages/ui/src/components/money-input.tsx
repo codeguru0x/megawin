@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { NumericFormat, type NumberFormatValues, type NumericFormatProps } from "react-number-format";
+
+import { type NumberFormatValues, NumericFormat, type NumericFormatProps } from "react-number-format";
+
 import { cn } from "../lib/cn";
 
 export interface MoneyInputProps

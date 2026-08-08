@@ -8,14 +8,15 @@
  * Mega 6/45 không có isSplitCycle — không map field này.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
 import { PrizeTier } from "@megawin/game-mega645/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type {
+  JackpotHistoryItem,
   ListJackpotHistoryByCycleInput,
   ListJackpotHistoryByCycleOutput,
-  JackpotHistoryItem,
 } from "./dto/jackpot.dto";
 
 export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<

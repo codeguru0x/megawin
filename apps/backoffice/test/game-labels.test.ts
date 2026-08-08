@@ -5,9 +5,10 @@
  * Kiểm tra `getGameLabel` + GAME_PRODUCT_OPTIONS — logic thuần map gameId → nhãn.
  */
 
-import { describe, it, expect } from "vitest";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { getGameLabel, GAME_PRODUCT_OPTIONS } from "@/lib/game-labels";
+import { describe, expect, it } from "vitest";
+
+import { GAME_PRODUCT_OPTIONS, getGameLabel } from "@/lib/game-labels";
 
 describe("game-labels", () => {
   it("getGameLabel map đúng gameId enum → nhãn tiếng Việt", () => {

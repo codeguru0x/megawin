@@ -9,6 +9,7 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-keno/entities";
 import { KENO_VOID_DRAW_REPORTS } from "@megawin/game-keno/entities";
+
 import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 

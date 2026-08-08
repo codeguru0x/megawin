@@ -16,7 +16,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lotto535OpsAlertType, OpsAlertSeverity } from "@megawin/game-lotto535/entities";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { BellOff, Coins, HelpCircle, Layers, Save, ShieldAlert, Sparkles, Users, type LucideIcon } from "lucide-react";
+import { BellOff, Coins, HelpCircle, Layers, type LucideIcon, Save, ShieldAlert, Sparkles, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 

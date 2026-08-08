@@ -7,7 +7,7 @@
  * Import: `import { MAX3D_PLAY_TYPE_LABELS, ... } from "@megawin/game-max3d/labels"`
  */
 
-import { PlayMode, PlayType, BasicPrizeTier, PlusPrizeTier } from "../entities/enums";
+import { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Play Mode Labels

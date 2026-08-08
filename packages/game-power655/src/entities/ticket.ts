@@ -11,7 +11,8 @@
  * Collection: power655_tickets.
  */
 
-import type { TicketStatus, TicketChannel } from "@megawin/game-core/entities";
+import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+
 import type { PlayType } from "./enums";
 import type { BoardSelection, ISODateString } from "./types";
 

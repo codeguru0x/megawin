@@ -7,10 +7,11 @@
  * Dùng $inc + upsert để đảm bảo race-safe.
  */
 
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
-import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
 import type { DrawCounterEntity } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+
+import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCounterMapper> {
   constructor() {

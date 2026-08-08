@@ -3,27 +3,27 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
-  Max3dTicketPurchaseInput,
-  Max3dGameConfigResponse,
-  Max3dDrawInfo,
-  Max3dTicketSummary,
-  Max3dLineInfo,
-  Max3dDrawResultSummary,
-  Max3dDrawResultInfo,
-  Max3dPlaceBetResponse,
   Max3dCurrentDrawResponse,
-  Max3dListPendingTicketsParams,
+  Max3dDrawInfo,
+  Max3dDrawResultInfo,
+  Max3dDrawResultSummary,
+  Max3dEntryLinesParams,
+  Max3dEntryLinesResponse,
+  Max3dGameConfigResponse,
+  Max3dLineInfo,
   Max3dListAllTicketsParams,
   Max3dListDrawResultsParams,
-  Max3dEntryLinesParams,
-  Max3dListTicketsResponse,
-  Max3dTicketEntriesResponse,
-  Max3dEntryLinesResponse,
   Max3dListDrawResultsResponse,
+  Max3dListPendingTicketsParams,
+  Max3dListTicketsResponse,
+  Max3dPlaceBetResponse,
+  Max3dTicketEntriesResponse,
+  Max3dTicketPurchaseInput,
+  Max3dTicketSummary,
 } from "../max3d";
-import { ENDPOINTS } from "../endpoints";
 
 /**
  * API module cho game Max 3D.

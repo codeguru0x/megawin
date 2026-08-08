@@ -20,39 +20,34 @@
  * @packageDocumentation
  */
 
+// ── Balance types ────────────────────────────────────────────────────────────
+export type { BalanceApi, BalanceData, GetBalanceRequest, GetBalanceResponse } from "./balance";
 // ── Client interface ─────────────────────────────────────────────────────────
 export type { TenantGatewayClient } from "./client";
-
+// ── Logging policy ───────────────────────────────────────────────────────────
+export { TxLoggingPolicy } from "./entities/enums";
 // ── Main facade — cached, self-contained ─────────────────────────────────────
 export { tenantGateway } from "./gateway";
-
-// ── Shared types — CallbackResponse envelope, error codes ────────────────────
-export { TransactionErrorCode, BalanceErrorCode } from "./shared";
 export type {
-  CallbackResponse,
   CallbackErrorInfo,
+  CallbackResponse,
   TenantGatewayConfig,
   TransactionStatusErrorCode,
 } from "./shared";
-
+// ── Shared types — CallbackResponse envelope, error codes ────────────────────
+export { BalanceErrorCode, TransactionErrorCode } from "./shared";
 // ── Transaction types ────────────────────────────────────────────────────────
 export type {
-  TransactionRequest,
-  TransactionData,
-  TransactionResponse,
-  BatchTransactionItem,
-  BatchTransactionRequest,
-  BatchTransactionItemResult,
   BatchTransactionData,
+  BatchTransactionItem,
+  BatchTransactionItemResult,
+  BatchTransactionRequest,
   BatchTransactionResponse,
-  TransactionStatusData,
-  TransactionStatusResponse,
   TransactionApi,
   TransactionCallOptions,
+  TransactionData,
+  TransactionRequest,
+  TransactionResponse,
+  TransactionStatusData,
+  TransactionStatusResponse,
 } from "./transaction";
-
-// ── Logging policy ───────────────────────────────────────────────────────────
-export { TxLoggingPolicy } from "./entities/enums";
-
-// ── Balance types ────────────────────────────────────────────────────────────
-export type { GetBalanceRequest, GetBalanceResponse, BalanceData, BalanceApi } from "./balance";

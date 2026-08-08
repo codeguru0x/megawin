@@ -12,21 +12,20 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase, type PlaceBetBoardInput } from "@megawin/game-max3dpro-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
-import { max3dproTripletSchema, max3dproDrawIdSchema, max3dproDigitSchema } from "@megawin/game-max3dpro/schemas";
 import {
+  MAX3D_PRO_MULTI_NUMBER_MAX,
+  MAX3D_PRO_MULTI_NUMBER_MIN,
   PlayMode,
   PlayType,
-  MAX3D_PRO_MULTI_NUMBER_MIN,
-  MAX3D_PRO_MULTI_NUMBER_MAX,
 } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
+import { max3dproDigitSchema, max3dproDrawIdSchema, max3dproTripletSchema } from "@megawin/game-max3dpro/schemas";
+import { type PlaceBetBoardInput, PlaceBetUseCase } from "@megawin/game-max3dpro-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───

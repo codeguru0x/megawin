@@ -32,8 +32,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
-import { PrizeTier } from "@megawin/game-power655/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
   EntryPayout,
   EntryPayoutTier,
@@ -41,9 +40,10 @@ import type {
   PrizeAmounts,
   TicketLineDoc,
 } from "@megawin/game-power655/entities";
-import { expandAllBoards } from "@megawin/game-power655/helpers";
-import { matchLines, type DrawResultForMatch } from "@megawin/game-power655/helpers";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import { PrizeTier } from "@megawin/game-power655/entities";
+import { type DrawResultForMatch, expandAllBoards, matchLines } from "@megawin/game-power655/helpers";
+import { generateId } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";

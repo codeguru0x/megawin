@@ -20,12 +20,12 @@
 import type {
   DrawBettingStatsBase,
   DrawBettingTotals,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 } from "@megawin/game-core/types";
 
-export type { DrawBettingStatsBase, DrawBettingTotals, TenantBettingStat, TopAccountStat, OpsStatsConfig };
+export type { DrawBettingStatsBase, DrawBettingTotals, OpsStatsConfig, TenantBettingStat, TopAccountStat };
 
 /** Thống kê tiền/bộ của 1 play mode (multiNumber/multiDigit). */
 export interface Max3dproPlayTypeStat {

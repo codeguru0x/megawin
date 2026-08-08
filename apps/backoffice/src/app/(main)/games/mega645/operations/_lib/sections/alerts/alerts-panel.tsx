@@ -18,13 +18,14 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { Mega645OpsAlertEntity, Mega645TopPotential } from "@megawin/game-mega645/entities";
 import { Mega645OpsAlertType, OpsAlertSeverity, OpsAlertStatus, PlayType } from "@megawin/game-mega645/entities";
 import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
 import { AlertTriangle, BellRing, Check, ChevronDown, ExternalLink, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 
 import { buildOutstandingHref, PlayerName } from "@/components/player-name";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";

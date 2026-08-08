@@ -19,17 +19,18 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { Lotto535OpsAlertEntity, Lotto535TopPotential } from "@megawin/game-lotto535/entities";
 import {
   Lotto535OpsAlertType,
-  Lotto535StatsPlayKey,
+  type Lotto535StatsPlayKey,
   OpsAlertSeverity,
   OpsAlertStatus,
 } from "@megawin/game-lotto535/entities";
 import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
 import { AlertTriangle, BellRing, Check, ChevronDown, ExternalLink, ShieldCheck } from "lucide-react";
-import Link from "next/link";
 
 import { buildOutstandingHref, PlayerName } from "@/components/player-name";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";

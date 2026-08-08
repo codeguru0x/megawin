@@ -1,7 +1,8 @@
+import type { MfaStatus } from "@megawin/identity/entities";
+import { MfaStatus as MfaStatusEnum } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { MfaStatus as MfaStatusEnum } from "@megawin/identity/entities";
-import type { MfaStatus } from "@megawin/identity/entities";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 
 export interface GetMyProfileInput {

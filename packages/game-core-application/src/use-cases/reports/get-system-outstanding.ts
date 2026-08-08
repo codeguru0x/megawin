@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SystemOutstandingReportRepository } from "../../infras/repos/system-outstanding-report-repo";
 import type { GetSystemOutstandingOutput } from "./types";
 

@@ -7,8 +7,9 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { GetTenantConfigInternalUseCase } from "./get-tenant-config-internal";
+
 import type { GetTenantConfigInput, GetTenantConfigOutput } from "./dto/tenant-config.dto";
+import { GetTenantConfigInternalUseCase } from "./get-tenant-config-internal";
 
 export class GetTenantConfigUseCase extends NextApiUseCase<GetTenantConfigInput, GetTenantConfigOutput> {
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();

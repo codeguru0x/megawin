@@ -1,6 +1,7 @@
 import type { TicketDoc, TicketEntryDoc } from "@megawin/game-mega645/entities";
-import { TicketRepository } from "./ticket-repo";
+
 import { EntryRepository } from "./entry-repo";
+import { TicketRepository } from "./ticket-repo";
 
 /**
  * Atomic write coordinator cho place-bet — Mega 6/45.

@@ -17,9 +17,10 @@
  * TTL: snapshotAt + 300s → MongoDB tự xoá doc cũ.
  */
 
+import { ReportRepo } from "@megawin/data/mongo";
 import type { SystemOutstandingGameDaily, SystemOutstandingGameDailyEntity } from "@megawin/game-core/entities";
 import { SYSTEM_OUTSTANDING_GAME_DAILY } from "@megawin/game-core/entities";
-import { ReportRepo } from "@megawin/data/mongo";
+
 import { SystemOutstandingGameDailyMapper } from "../mappers";
 
 /**

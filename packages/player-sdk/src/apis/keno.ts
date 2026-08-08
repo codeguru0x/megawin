@@ -6,23 +6,23 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
-  KenoTicketPurchaseInput,
-  KenoPlaceBetResponse,
-  KenoCurrentDrawResponse,
-  KenoListTicketsParams,
-  KenoListAllTicketsParams,
-  KenoListTicketsResponse,
-  KenoTicketEntriesResponse,
-  KenoGameConfigResponse,
-  KenoListDrawResultsParams,
-  KenoListDrawResultsResponse,
-  KenoDrawResultDetail,
   KenoComboPopularityParams,
   KenoComboPopularityResponse,
+  KenoCurrentDrawResponse,
+  KenoDrawResultDetail,
+  KenoGameConfigResponse,
+  KenoListAllTicketsParams,
+  KenoListDrawResultsParams,
+  KenoListDrawResultsResponse,
+  KenoListTicketsParams,
+  KenoListTicketsResponse,
+  KenoPlaceBetResponse,
+  KenoTicketEntriesResponse,
+  KenoTicketPurchaseInput,
 } from "../keno";
-import { ENDPOINTS } from "../endpoints";
 
 // ─────────────────────────────────────────────
 // API Interface

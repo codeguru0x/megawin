@@ -7,6 +7,7 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+
 import type { FinancialRates, Max3dproPrizeConfig, OpsConfig, PlayRules } from "./types";
 
 export interface GlobalConfigDoc {

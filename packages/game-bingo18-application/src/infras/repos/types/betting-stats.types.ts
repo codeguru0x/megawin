@@ -5,11 +5,11 @@
  */
 
 import type {
-  Bingo18PlayType,
   Bingo18BigSmallBet,
-  Bingo18TripleKind,
   Bingo18BucketStat,
+  Bingo18PlayType,
   Bingo18TopPotential,
+  Bingo18TripleKind,
   DrawBettingTotals,
   TenantBettingStat,
 } from "@megawin/game-bingo18/entities";

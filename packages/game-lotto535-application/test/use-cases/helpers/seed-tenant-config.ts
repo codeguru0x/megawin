@@ -1,6 +1,7 @@
-import { TenantConfigRepository } from "../../../src/infras/repos/tenant-config-repo";
-import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
+import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
+
+import { TenantConfigRepository } from "../../../src/infras/repos/tenant-config-repo";
 
 /**
  * Insert/update tenant config cho testing.

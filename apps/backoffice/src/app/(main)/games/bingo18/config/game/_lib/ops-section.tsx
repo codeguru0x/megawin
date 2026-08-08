@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Bingo18OpsAlertType, OpsAlertSeverity } from "@megawin/game-bingo18/entities";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { BellOff, Coins, HelpCircle, Save, Scale, ShieldAlert, Sigma, type LucideIcon } from "lucide-react";
+import { BellOff, Coins, HelpCircle, type LucideIcon, Save, Scale, ShieldAlert, Sigma } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 

@@ -5,7 +5,7 @@
  * Dùng cho cả API response và client-side type.
  */
 
-import type { JackpotCycleStatus, JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
+import type { JackpotCycleCloseReason, JackpotCycleStatus } from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
 // GetJackpotCurrent

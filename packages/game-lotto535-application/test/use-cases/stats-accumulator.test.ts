@@ -7,10 +7,11 @@
  * special.
  */
 
-import { describe, it, expect } from "vitest";
-import { PlayType, Lotto535NumberKind } from "@megawin/game-lotto535/entities";
-import { Lotto535StatsAccumulator, type PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
+import { Lotto535NumberKind, PlayType } from "@megawin/game-lotto535/entities";
+import { describe, expect, it } from "vitest";
+
 import type { EntryBoardForStats, EntryForStats } from "../../src/infras/repos/types";
+import { Lotto535StatsAccumulator, type PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
 
 const DRAW_ID = "2000-01-01.001";
 const UNIT_PRICE = 10_000;

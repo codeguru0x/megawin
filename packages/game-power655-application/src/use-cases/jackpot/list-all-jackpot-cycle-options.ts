@@ -8,8 +8,9 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { ListAllJackpotCycleOptionsOutput, JackpotCycleOption } from "./dto/jackpot.dto";
+import type { JackpotCycleOption, ListAllJackpotCycleOptionsOutput } from "./dto/jackpot.dto";
 
 /** Lấy danh sách cycle options cho selector "Lịch sử Jackpot" (tối đa 10 vòng). */
 export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<void, ListAllJackpotCycleOptionsOutput> {

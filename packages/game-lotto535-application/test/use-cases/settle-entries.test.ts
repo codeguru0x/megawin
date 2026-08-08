@@ -1,16 +1,16 @@
-import { describe, it, expect } from "vitest";
-import { determineTier, buildPrizeAmountMap } from "@megawin/game-lotto535/rules/prize-tiers";
+import { PlayType, PrizeTier } from "@megawin/game-lotto535/entities/enums";
+import type { LineValue } from "@megawin/game-lotto535/entities/types";
+import { expandBoardToLines } from "@megawin/game-lotto535/helpers/expand-lines";
+import { matchLine, matchLines } from "@megawin/game-lotto535/helpers/match-result";
 import {
   calculateDrawFinancials,
-  isSplitCycleDraw,
   calculateSplitDistribution,
   DEFAULT_LOTTO535_CONFIG,
+  isSplitCycleDraw,
 } from "@megawin/game-lotto535/rules/jackpot";
-import { matchLine, matchLines } from "@megawin/game-lotto535/helpers/match-result";
-import { expandBoardToLines } from "@megawin/game-lotto535/helpers/expand-lines";
 import { calculateLineCount, combination } from "@megawin/game-lotto535/rules/play-types";
-import { PrizeTier, PlayType } from "@megawin/game-lotto535/entities/enums";
-import type { LineValue } from "@megawin/game-lotto535/entities/types";
+import { buildPrizeAmountMap, determineTier } from "@megawin/game-lotto535/rules/prize-tiers";
+import { describe, expect, it } from "vitest";
 
 // ─────────────────────────────────────────────
 // determineTier

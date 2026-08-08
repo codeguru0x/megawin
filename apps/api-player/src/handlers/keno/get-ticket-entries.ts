@@ -3,11 +3,10 @@
  * Lấy chi tiết ticket Keno + tất cả entries thuộc ticket đó.
  */
 
+import { withPlayerAuth } from "@megawin/auth";
+import { GetTicketEntriesPlayerUseCase } from "@megawin/game-keno-application/use-cases/player";
 import { z } from "zod";
 
-import { withPlayerAuth } from "@megawin/auth";
-
-import { GetTicketEntriesPlayerUseCase } from "@megawin/game-keno-application/use-cases/player";
 import { objectIdSchema } from "#lib/schemas";
 
 const pathSchema = z.object({

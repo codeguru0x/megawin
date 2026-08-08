@@ -1,5 +1,5 @@
-import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 import { KenoOpsAlertType } from "@megawin/game-keno/entities";
+import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();

@@ -10,8 +10,9 @@
  */
 
 import { IdentityRepo } from "@megawin/data/mongo";
+import type { TenantEntity } from "@megawin/identity/entities";
+
 import type { TenantCallbackConfig } from "./types";
-import { TenantEntity } from "@megawin/identity/entities";
 
 export class TenantCallbackConfigRepo extends IdentityRepo<TenantEntity> {
   constructor() {

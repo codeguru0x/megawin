@@ -7,7 +7,7 @@ import type {
   TenantBettingStat,
 } from "@megawin/game-lotto535/entities";
 import { Lotto535StatsPlayKey } from "@megawin/game-lotto535/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `lotto535_draw_betting_stats` → entity, NORMALIZE shape phía đọc.

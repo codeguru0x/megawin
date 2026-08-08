@@ -64,7 +64,7 @@
  */
 
 import { BasicPrizeTier, PlusPrizeTier } from "../entities/enums";
-import type { BasicPrizeAmounts, PlusPrizeAmounts, Max3dPrizeConfig } from "../entities/types";
+import type { BasicPrizeAmounts, Max3dPrizeConfig, PlusPrizeAmounts } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Constants

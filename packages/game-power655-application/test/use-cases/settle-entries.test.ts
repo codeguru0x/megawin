@@ -14,14 +14,13 @@
  * Bonus number ∉ winning 6 → trùng 6/6 thì bonus KHÔNG THỂ match.
  */
 
-import { describe, it, expect } from "vitest";
-import { determineTier, determineTiers, highestTier } from "@megawin/game-power655/rules/prize-tiers";
-import { matchLine, matchLines } from "@megawin/game-power655/helpers/match-result";
-import type { DrawResultForMatch } from "@megawin/game-power655/helpers/match-result";
-import { PrizeTier } from "@megawin/game-power655/entities/enums";
+import { PlayType, PrizeTier } from "@megawin/game-power655/entities/enums";
 import type { LineValue } from "@megawin/game-power655/entities/types";
 import { expandBoardToLines } from "@megawin/game-power655/helpers/expand-lines";
-import { PlayType } from "@megawin/game-power655/entities/enums";
+import type { DrawResultForMatch } from "@megawin/game-power655/helpers/match-result";
+import { matchLine, matchLines } from "@megawin/game-power655/helpers/match-result";
+import { determineTier, determineTiers, highestTier } from "@megawin/game-power655/rules/prize-tiers";
+import { describe, expect, it } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────
 

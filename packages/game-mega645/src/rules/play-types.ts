@@ -22,7 +22,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import { VALID_NUMBER_SET, type BoardSelection } from "../entities/types";
+import { type BoardSelection, VALID_NUMBER_SET } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Play Rule Hard Caps (chống abuse — độc lập với config động)

@@ -10,8 +10,8 @@
  */
 
 import {
-  EnqueueReversalsUseCase,
   type EnqueueReversalsInput,
+  EnqueueReversalsUseCase,
 } from "@megawin/game-power655-application/use-cases/resettle";
 
 const useCase = new EnqueueReversalsUseCase();

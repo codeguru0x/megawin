@@ -10,10 +10,11 @@
  * - Version auto-increments on each update
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
-import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { GameConfigScope } from "@megawin/game-core/entities";
+import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 
 describe("GameConfigRepository – Mega 6/45 Global Config", () => {

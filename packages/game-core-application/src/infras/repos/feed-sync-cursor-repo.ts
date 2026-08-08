@@ -1,7 +1,7 @@
-import { Long } from "mongodb";
+import type { FeedSyncCursorEntity, GameProduct } from "@megawin/game-core/entities";
 import { GameCoreCollections } from "@megawin/game-core/entities";
-import type { GameProduct } from "@megawin/game-core/entities";
-import type { FeedSyncCursorEntity } from "@megawin/game-core/entities";
+import { Long } from "mongodb";
+
 import { FeedSyncCursorMapper } from "../mappers/feed-sync-cursor-mapper";
 import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
 import type { AcquireLockResult } from "./types";

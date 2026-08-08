@@ -9,11 +9,12 @@
  *   → 1 summary row → dùng cho upsertGameOutstanding().
  */
 
-import {
-  SystemOutstandingReportRepository,
-  type OutstandingPerGameAggregateResult,
-} from "@megawin/game-core-application/repos";
 import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
+import {
+  type OutstandingPerGameAggregateResult,
+  SystemOutstandingReportRepository,
+} from "@megawin/game-core-application/repos";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemOutstandingRepo extends SystemOutstandingReportRepository {

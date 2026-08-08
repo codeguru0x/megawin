@@ -4,7 +4,8 @@
  * Unit test cho LockTakenOverError — signal nội bộ phân biệt mất-lock vs item-lỗi.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { LockTakenOverError } from "../src/use-cases/lock/lock-taken-over-error";
 
 describe("LockTakenOverError", () => {

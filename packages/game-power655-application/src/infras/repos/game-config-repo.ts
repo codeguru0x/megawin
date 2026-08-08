@@ -1,15 +1,16 @@
-import { Power655Collections } from "@megawin/game-power655/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type {
-  JackpotConfig,
   FinancialRates,
-  PrizeAmounts,
+  GlobalConfigEntity,
+  JackpotConfig,
   PlayRules,
   Power655OpsConfig,
+  PrizeAmounts,
 } from "@megawin/game-power655/entities";
-import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
+import { Power655Collections } from "@megawin/game-power655/entities";
+
 import { GlobalConfigMapper } from "../mappers/global-config-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GlobalConfigMapper> {
   constructor() {

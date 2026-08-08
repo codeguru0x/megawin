@@ -7,11 +7,12 @@
  * điểm chỉ có ở Max 3D Pro, và quy tắc duplicate đặc biệt (special + specialSub, KHÔNG × 2).
  */
 
-import { describe, it, expect } from "vitest";
-import { flattenDrawResult, matchPair } from "../../src/rules/prize-tiers";
-import { PrizeTier } from "../../src/entities/enums";
+import { describe, expect, it } from "vitest";
+
 import type { Max3dproDrawResult } from "../../src/entities/draw-result";
+import { PrizeTier } from "../../src/entities/enums";
 import type { PrizeAmounts } from "../../src/entities/types";
+import { flattenDrawResult, matchPair } from "../../src/rules/prize-tiers";
 
 const drawResult: Max3dproDrawResult = {
   special: ["096", "389"],

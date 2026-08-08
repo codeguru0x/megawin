@@ -8,8 +8,8 @@
  * drawDate là ngày theo giờ Việt Nam (UTC+7).
  */
 
-import { DrawNo } from "../entities/types";
 import type { ISODateString } from "../entities/types";
+import { DrawNo } from "../entities/types";
 
 /**
  * Tạo Draw ID từ drawDate và drawNo.

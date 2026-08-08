@@ -16,8 +16,9 @@
 
 import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-max3dpro/entities";
-import { BaseRepo } from "./base-repo";
+
 import { OutstandingDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";
 
 /**

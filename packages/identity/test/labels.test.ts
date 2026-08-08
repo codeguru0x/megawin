@@ -5,12 +5,13 @@
  * Kiểm tra các label map (const-as-const) phủ đủ mọi giá trị enum tương ứng.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  AccountTypeLabel,
   AccountStatusLabel,
-  CompanyRoleLabel,
+  AccountTypeLabel,
   AgentRoleLabel,
+  CompanyRoleLabel,
   MfaStatusLabel,
 } from "../src/entities/labels";
 

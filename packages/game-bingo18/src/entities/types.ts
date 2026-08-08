@@ -9,8 +9,9 @@
  * - Cách chơi bổ sung: cộng tổng, Lớn/Hòa/Nhỏ
  */
 
-import type { Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { OpsStatsConfigBase } from "@megawin/game-core/types";
+
+import type { Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { Bingo18OpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────

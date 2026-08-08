@@ -8,8 +8,8 @@
 
 import type { OpsAlertBase } from "@megawin/game-core/types";
 
-export { OpsAlertStatus, OpsAlertSeverity } from "@megawin/game-core/types";
 export type { OpsAlertBase } from "@megawin/game-core/types";
+export { OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-core/types";
 
 /**
  * Loại alert vận hành Max 3D Pro — CÙNG TẬP với Max 3D (không side bet, không cap).

@@ -1,5 +1,5 @@
-import type { TenantConfigEntity } from "@megawin/game-max3d/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { TenantConfigEntity } from "@megawin/game-max3d/entities";
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs

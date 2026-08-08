@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { cacheKey, hashKeyPart } from "../src/keys";
 
 describe("cacheKey", () => {

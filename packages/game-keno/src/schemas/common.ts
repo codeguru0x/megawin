@@ -16,7 +16,8 @@
  */
 
 import { z } from "zod";
-import { KENO_DRAW_COUNT, KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "../entities/types";
+
+import { KENO_DRAW_COUNT, KENO_NUMBER_MAX, KENO_NUMBER_MIN } from "../entities/types";
 
 // ─── Atomic schemas ───
 

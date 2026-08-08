@@ -1,10 +1,11 @@
+import type { Power655OpsConfig } from "@megawin/game-power655/entities";
+import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
-import type { Power655OpsConfig } from "@megawin/game-power655/entities";
+
+import { globalConfigCache } from "../../caches/global-config.cache";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
-import { globalConfigCache } from "../../caches/global-config.cache";
 import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
 /**

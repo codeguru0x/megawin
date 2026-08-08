@@ -23,9 +23,9 @@
  * | Bao 18 | C(18,6) =  18.564 lines |
  */
 
-import { PlayType } from "../entities/enums";
-import { ALL_MAIN_NUMBERS, type LineValue, type BoardSelection, POWER655_MAIN_COUNT } from "../entities/types";
 import type { EntryBoardSnapshot } from "../entities/entry";
+import { PlayType } from "../entities/enums";
+import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue, POWER655_MAIN_COUNT } from "../entities/types";
 
 /**
  * Sinh tất cả tổ hợp chập k từ mảng numbers (backtracking).

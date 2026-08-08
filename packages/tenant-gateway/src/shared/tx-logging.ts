@@ -23,7 +23,7 @@
  * @internal
  */
 
-import { LogTxUseCase, LogTxBulkUseCase } from "../use-cases/tx-logs/write";
+import { LogTxBulkUseCase, LogTxUseCase } from "../use-cases/tx-logs/write";
 
 /**
  * Singleton cho log 1 transaction đơn lẻ.

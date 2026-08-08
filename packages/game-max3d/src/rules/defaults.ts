@@ -7,8 +7,8 @@
  * Giải thưởng áp dụng cho 1 lần tham gia mệnh giá 10.000 VND.
  */
 
-import type { FinancialRates, Max3dPrizeConfig, OpsConfig, PlayRules } from "../entities/types";
 import { Max3dOpsAlertType } from "../entities/ops-alert";
+import type { FinancialRates, Max3dPrizeConfig, OpsConfig, PlayRules } from "../entities/types";
 
 export const DEFAULT_MAX3D_CONFIG: {
   rates: FinancialRates;

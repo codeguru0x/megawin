@@ -8,8 +8,8 @@
  * @output FinalizeVoidResult
  */
 
-import { FinalizeVoidUseCase } from "@megawin/game-keno-application/use-cases/void";
 import type { VoidContext } from "@megawin/game-keno-application/use-cases/void";
+import { FinalizeVoidUseCase } from "@megawin/game-keno-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 

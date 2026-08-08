@@ -38,17 +38,18 @@
  *    7 hạng giải.
  */
 
-import { BasicPrizeTier, PlusPrizeTier, PlayMode, PlayType } from "../entities/enums";
 import { sumBy } from "@megawin/shared/utils";
-import type {
-  Triplet,
-  BasicPrizeAmounts,
-  PlusPrizeAmounts,
-  ComboPrizeAmounts,
-  Max3dPrizeConfig,
-} from "../entities/types";
+
 import type { Max3dDrawResult } from "../entities/draw-result";
 import type { EntryPayoutTier } from "../entities/entry";
+import { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "../entities/enums";
+import type {
+  BasicPrizeAmounts,
+  ComboPrizeAmounts,
+  Max3dPrizeConfig,
+  PlusPrizeAmounts,
+  Triplet,
+} from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Module-level Constants

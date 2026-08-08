@@ -49,9 +49,9 @@
 
 import { createHttpClient, type HttpClient } from "@megawin/http-client";
 
+import { type BalanceApi, createBalanceApi } from "./balance";
 import type { TenantGatewayConfig } from "./shared/types";
 import { createTransactionApi, type TransactionApi } from "./transaction";
-import { createBalanceApi, type BalanceApi } from "./balance";
 
 /** Default timeout cho HTTP requests (ms). */
 const DEFAULT_TIMEOUT = 10_000;

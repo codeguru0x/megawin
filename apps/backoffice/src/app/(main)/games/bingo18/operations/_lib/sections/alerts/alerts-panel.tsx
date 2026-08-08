@@ -21,9 +21,9 @@ import { useState } from "react";
 
 import Link from "next/link";
 
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { Bingo18OpsAlertEntity, Bingo18TopPotential } from "@megawin/game-bingo18/entities";
 import { Bingo18OpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
 import { AlertTriangle, BellRing, Check, ChevronDown, ExternalLink, ShieldCheck } from "lucide-react";
 

@@ -1,11 +1,9 @@
-export { TransactionErrorCode, BalanceErrorCode } from "./types";
+export { CALLBACK_PATHS } from "./endpoints";
+export * from "./labels";
 export type {
-  CallbackResponse,
   CallbackErrorInfo,
+  CallbackResponse,
   TenantGatewayConfig,
   TransactionStatusErrorCode,
 } from "./types";
-
-export { CALLBACK_PATHS } from "./endpoints";
-
-export * from "./labels";
+export { BalanceErrorCode, TransactionErrorCode } from "./types";

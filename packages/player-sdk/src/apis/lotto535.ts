@@ -6,29 +6,29 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
-  Lotto535TicketPurchaseInput,
-  Lotto535DrawInfo,
-  Lotto535TicketSummary,
-  Lotto535EntryResult,
-  Lotto535GameConfigResponse,
-  Lotto535DrawResultDetail,
-  Lotto535DrawResultSummary,
-  Lotto535PlaceBetResponse,
-  Lotto535CurrentDrawResponse,
-  Lotto535JackpotResponse,
-  Lotto535ListTicketsParams,
-  Lotto535ListAllTicketsParams,
-  Lotto535ListDrawResultsParams,
-  Lotto535ListTicketsResponse,
-  Lotto535TicketEntriesResponse,
-  Lotto535EntryLinesResponse,
-  Lotto535ListDrawResultsResponse,
   Lotto535ComboPopularityParams,
   Lotto535ComboPopularityResponse,
+  Lotto535CurrentDrawResponse,
+  Lotto535DrawInfo,
+  Lotto535DrawResultDetail,
+  Lotto535DrawResultSummary,
+  Lotto535EntryLinesResponse,
+  Lotto535EntryResult,
+  Lotto535GameConfigResponse,
+  Lotto535JackpotResponse,
+  Lotto535ListAllTicketsParams,
+  Lotto535ListDrawResultsParams,
+  Lotto535ListDrawResultsResponse,
+  Lotto535ListTicketsParams,
+  Lotto535ListTicketsResponse,
+  Lotto535PlaceBetResponse,
+  Lotto535TicketEntriesResponse,
+  Lotto535TicketPurchaseInput,
+  Lotto535TicketSummary,
 } from "../lotto535";
-import { ENDPOINTS } from "../endpoints";
 
 /**
  * Lotto 5/35 API — các thao tác liên quan đến game Lotto 5/35.

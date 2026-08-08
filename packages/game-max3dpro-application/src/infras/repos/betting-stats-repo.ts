@@ -22,17 +22,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi field update đi qua method typed ở đây.
  */
 
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
+import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
 import type {
   Max3dproDrawBettingStatsDoc,
   Max3dproDrawBettingStatsEntity,
   Max3dproPlayTypeStat,
   OpsStatsConfig,
 } from "@megawin/game-max3dpro/entities";
-import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
+import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { DrawStatsCursor, Max3dproStatsDelta } from "./types";
 
 const f = docPath<Max3dproDrawBettingStatsDoc>();
@@ -60,7 +61,7 @@ export class BettingStatsRepository extends BaseRepo<Max3dproDrawBettingStatsEnt
    * @param limit - Trần số kỳ xử lý 1 tick. Vượt trần → kỳ còn lại chờ tick sau (sort
    *   `drawId` asc để kỳ cũ nhất — sắp settle — được ưu tiên).
    */
-  async findNotFinal(limit: number = 500): Promise<DrawStatsCursor[]> {
+  async findNotFinal(limit = 500): Promise<DrawStatsCursor[]> {
     const docs = await this.findManyAsDocuments(
       { final: false },
       { projection: { _id: 0, drawId: 1, lastEntryId: 1 }, sort: { drawId: 1 }, limit },

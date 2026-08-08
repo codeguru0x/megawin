@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { numberToAlphaLabel, alphaLabelToNumber, alphaLabelSequence } from "../src/utils/alpha-label";
+import { describe, expect, it } from "vitest";
+
+import { alphaLabelSequence, alphaLabelToNumber, numberToAlphaLabel } from "../src/utils/alpha-label";
 
 describe("alpha-label", () => {
   describe("numberToAlphaLabel (base-1)", () => {

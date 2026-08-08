@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
-import { OpsAlertSeverity, OpsAlertStatus, PlayType, Power655OpsAlertType } from "@megawin/game-power655/entities";
 import type {
   Power655DrawBettingStatsEntity,
   Power655DrawComboStatsEntity,
   Power655OpsAlertsConfig,
 } from "@megawin/game-power655/entities";
+import { OpsAlertSeverity, OpsAlertStatus, PlayType, Power655OpsAlertType } from "@megawin/game-power655/entities";
+import { describe, expect, it } from "vitest";
+
 import { evaluateAlerts } from "../../src/use-cases/operations/evaluate-alerts";
 
 const DRAW_ID = "2026-08-05.001";

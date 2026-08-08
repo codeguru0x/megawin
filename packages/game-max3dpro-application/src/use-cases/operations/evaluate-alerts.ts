@@ -11,14 +11,14 @@
  * theo pairKey) để staff track từng cặp riêng.
  */
 
-import { Max3dproOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3dpro/entities";
-import type { Max3dproExposureResult } from "@megawin/game-max3dpro/rules";
 import type {
   Max3dproDrawBettingStatsDoc,
   Max3dproOpsAlertDoc,
   Max3dproTopPair,
   OpsAlertsConfig,
 } from "@megawin/game-max3dpro/entities";
+import { Max3dproOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3dpro/entities";
+import type { Max3dproExposureResult } from "@megawin/game-max3dpro/rules";
 
 /** Snapshot stats + exposure cần cho evaluate (đã có in-memory ở worker). */
 export interface EvaluateAlertsInput {

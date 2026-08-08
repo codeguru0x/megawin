@@ -7,10 +7,11 @@
  * CRASH-SAFE: chỉ đọc DB — idempotent, chạy lại nhiều lần an toàn.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
 import { JackpotCycleStatus } from "@megawin/game-mega645/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
 // ─────────────────────────────────────────────

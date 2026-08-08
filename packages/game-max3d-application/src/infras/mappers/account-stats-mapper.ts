@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Max3dDrawAccountStatsEntity } from "@megawin/game-max3d/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `max3d_draw_account_stats` → entity (ObjectId → id hex).

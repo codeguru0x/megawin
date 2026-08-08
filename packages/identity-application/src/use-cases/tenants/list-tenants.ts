@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { TenantRepository } from "../../infras/repos/tenant-repo";
 import type { ListTenantsOutput } from "./dto/tenant.dto";
 

@@ -36,9 +36,11 @@
  *   });
  */
 
-import { type NextRequest, NextResponse } from "next/server";
-import type { z } from "zod";
+import type { NextRequest, NextResponse } from "next/server";
+
 import { APP_ERROR_CODES } from "@megawin/shared/errors";
+import type { z } from "zod";
+
 import { apiError, catchToApiResponse, validationError } from "./response";
 
 // ============ Read-only HTTP methods ============

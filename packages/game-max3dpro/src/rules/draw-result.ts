@@ -6,8 +6,8 @@
  * mở lại luồng resettle hay không.
  */
 
-import { BASIC_TIER_PRIORITY } from "../entities/enums";
 import type { Max3dproDrawResult } from "../entities/draw-result";
+import { BASIC_TIER_PRIORITY } from "../entities/enums";
 
 /**
  * So sánh 2 `Max3dproDrawResult` CHÍNH XÁC theo thứ tự từng ô.

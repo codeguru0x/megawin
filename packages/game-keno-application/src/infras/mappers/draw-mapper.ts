@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { DrawDoc, DrawEntity } from "@megawin/game-keno/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 export class DrawMapper extends MongoMapper<Document, DrawEntity> {
   constructor() {

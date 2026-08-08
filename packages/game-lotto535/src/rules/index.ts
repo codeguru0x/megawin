@@ -4,10 +4,10 @@
  * Import: `import { ... } from "@megawin/game-lotto535/rules"`
  */
 
-export * from "./prize-tiers";
-export * from "./play-types";
+export * from "./combo-key";
+export * from "./draw-result";
 export * from "./jackpot";
 export * from "./odds";
-export * from "./draw-result";
+export * from "./play-types";
+export * from "./prize-tiers";
 export * from "./resettle";
-export * from "./combo-key";

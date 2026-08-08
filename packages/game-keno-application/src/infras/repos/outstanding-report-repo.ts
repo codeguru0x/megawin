@@ -11,6 +11,7 @@
 
 import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-keno/entities";
 import { KENO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-keno/entities";
+
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";

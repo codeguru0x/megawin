@@ -16,7 +16,9 @@
 // ─────────────────────────────────────────────
 
 export type { ISODateString } from "@megawin/game-core/types";
+
 import type { OpsStatsConfig } from "@megawin/game-core/types";
+
 import type { Lotto535OpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────

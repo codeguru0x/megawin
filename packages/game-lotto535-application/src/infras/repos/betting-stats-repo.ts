@@ -15,17 +15,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi field update đi qua method typed ở đây.
  */
 
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
 import type {
   Lotto535DrawBettingStatsDoc,
   Lotto535DrawBettingStatsEntity,
   Lotto535PlayTypeStat,
   Lotto535TopPotential,
 } from "@megawin/game-lotto535/entities";
-import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
+import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { DrawStatsCursor, DrawStatsDelta } from "./types";
 
 const f = docPath<Lotto535DrawBettingStatsDoc>();
@@ -56,7 +57,7 @@ export class BettingStatsRepository extends BaseRepo<Lotto535DrawBettingStatsEnt
    *
    * @param limit - Trần số kỳ xử lý 1 tick.
    */
-  async findNotFinal(limit: number = 500): Promise<DrawStatsCursor[]> {
+  async findNotFinal(limit = 500): Promise<DrawStatsCursor[]> {
     const docs = await this.findManyAsDocuments(
       { final: false },
       { projection: { _id: 0, drawId: 1, lastEntryId: 1 }, sort: { drawId: 1 }, limit },

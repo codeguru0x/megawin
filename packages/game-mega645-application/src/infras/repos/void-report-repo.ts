@@ -9,6 +9,7 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-mega645/entities";
 import { MEGA645_VOID_DRAW_REPORTS } from "@megawin/game-mega645/entities";
+
 import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 

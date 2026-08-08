@@ -1,9 +1,10 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import { auditUpdateTenantConfig } from "../../services/audit-log";
+
 import { tenantConfigCache } from "../../caches/tenant-config.cache";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import { auditUpdateTenantConfig } from "../../services/audit-log";
 import type { UpdateTenantConfigInput, UpdateTenantConfigOutput } from "./dto/tenant-config.dto";
 
 /**

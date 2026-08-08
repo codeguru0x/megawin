@@ -1,6 +1,6 @@
-import type { DrawStatus } from "@megawin/game-core/entities";
 import type { Bingo18DrawBettingStatsEntity, TopAccountStat } from "@megawin/game-bingo18/entities";
 import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
+import type { DrawStatus } from "@megawin/game-core/entities";
 
 /** Input snapshot vận hành — 1 kỳ cụ thể. */
 export interface GetOpsSnapshotInput {

@@ -13,10 +13,11 @@
  * phân biệt qua playType. Tương tự boardPayouts[] chứa payout cho tất cả boards.
  */
 
-import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
-import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import type { ISODateString } from "./types";
+import type { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
+
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
+import type { ISODateString } from "./types";
 
 /**
  * Các bậc chơi (pickCount) mà giải thưởng cao nhất có giới hạn trả thưởng mỗi kỳ.

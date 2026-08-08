@@ -1,4 +1,4 @@
-import { MongoMapper, longToString } from "@megawin/data/mongo";
+import { longToString, MongoMapper } from "@megawin/data/mongo";
 import type { EntryFeedEntity } from "@megawin/game-core/entities";
 import type { Document } from "mongodb";
 

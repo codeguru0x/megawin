@@ -11,14 +11,13 @@
  * - Tier3: 3/6 (30.000)
  */
 
-import { describe, it, expect } from "vitest";
-import { determineTier, buildPrizeAmountMap, DEFAULT_PRIZE_TIER_RULES } from "@megawin/game-mega645/rules/prize-tiers";
-import { matchLine, matchLines } from "@megawin/game-mega645/helpers/match-result";
-import type { DrawResultForMatch } from "@megawin/game-mega645/helpers/match-result";
-import { PrizeTier } from "@megawin/game-mega645/entities/enums";
+import { PlayType, PrizeTier } from "@megawin/game-mega645/entities/enums";
 import type { LineValue } from "@megawin/game-mega645/entities/types";
 import { expandBoardToLines } from "@megawin/game-mega645/helpers/expand-lines";
-import { PlayType } from "@megawin/game-mega645/entities/enums";
+import type { DrawResultForMatch } from "@megawin/game-mega645/helpers/match-result";
+import { matchLine, matchLines } from "@megawin/game-mega645/helpers/match-result";
+import { buildPrizeAmountMap, DEFAULT_PRIZE_TIER_RULES, determineTier } from "@megawin/game-mega645/rules/prize-tiers";
+import { describe, expect, it } from "vitest";
 
 // ─── Helpers ─────────────────────────────────────────────
 

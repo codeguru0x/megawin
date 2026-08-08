@@ -7,7 +7,7 @@ import type {
   Max3dproTripletStake,
   TenantBettingStat,
 } from "@megawin/game-max3dpro/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `max3dpro_draw_betting_stats` → entity, NORMALIZE shape phía đọc.

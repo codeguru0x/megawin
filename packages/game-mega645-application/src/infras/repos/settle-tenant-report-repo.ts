@@ -14,6 +14,7 @@
 
 import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-mega645/entities";
 import { MEGA645_SETTLE_TENANT_REPORTS } from "@megawin/game-mega645/entities";
+
 import { SettleTenantReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";

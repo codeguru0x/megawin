@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest";
-import {
-  matchSingleNum,
-  matchDoubleMatch,
-  matchTripleMatch,
-  matchSumTotal,
-  matchBigSmallDraw,
-  computeDrawStats,
-} from "@megawin/game-bingo18/helpers/match-result";
 import { Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities/enums";
+import {
+  computeDrawStats,
+  matchBigSmallDraw,
+  matchDoubleMatch,
+  matchSingleNum,
+  matchSumTotal,
+  matchTripleMatch,
+} from "@megawin/game-bingo18/helpers/match-result";
+import { describe, expect, it } from "vitest";
 
 // ─── Helpers ────────────────────────────────────────
 

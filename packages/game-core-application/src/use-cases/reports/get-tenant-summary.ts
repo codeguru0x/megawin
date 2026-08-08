@@ -1,6 +1,7 @@
+import type { GameProduct } from "@megawin/game-core/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import type { GameProduct } from "@megawin/game-core/entities";
+
 import { SystemSettleTenantDailyRepository } from "../../infras/repos/system-settle-tenant-daily-repo";
 import type { GetTenantSummaryInput, GetTenantSummaryOutput } from "./types";
 

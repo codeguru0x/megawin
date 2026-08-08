@@ -14,15 +14,15 @@
  * nhiều doc trùng loại/scope trong 1 kỳ (payload cập nhật mỗi tick).
  */
 
-import { Bingo18OpsAlertType, Bingo18PlayType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
-import { BINGO18_HIGH_MULTIPLIER_BUCKETS } from "@megawin/game-bingo18/rules";
-import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
 import type {
+  Bingo18BucketStat,
   Bingo18DrawBettingStatsDoc,
   Bingo18OpsAlertDoc,
-  Bingo18BucketStat,
   OpsAlertsConfig,
 } from "@megawin/game-bingo18/entities";
+import { Bingo18OpsAlertType, Bingo18PlayType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
+import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
+import { BINGO18_HIGH_MULTIPLIER_BUCKETS } from "@megawin/game-bingo18/rules";
 
 /** Snapshot stats + exposure cần cho evaluate (đã có in-memory ở worker). */
 export interface EvaluateAlertsInput {

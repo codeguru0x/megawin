@@ -8,7 +8,8 @@
  */
 
 import type { Currency } from "@megawin/shared/types";
-import type { CallbackResponse, BalanceErrorCode } from "../shared/types";
+
+import type { BalanceErrorCode, CallbackResponse } from "../shared/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Request

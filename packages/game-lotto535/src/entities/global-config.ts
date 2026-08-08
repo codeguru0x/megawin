@@ -8,7 +8,8 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules, Lotto535OpsConfig } from "./types";
+
+import type { FinancialRates, JackpotConfig, Lotto535OpsConfig, PlayRules, PrizeAmounts } from "./types";
 
 /**
  * Cấu hình game toàn cục – staff MegaWin quản lý trên backoffice.

@@ -16,12 +16,13 @@
  * Pipeline KHÔNG $sum "$lineCount" khác với Power655/Mega645/Lotto535.
  */
 
+import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { EntryMapper } from "../mappers/entry-mapper";
-import type { OutstandingTenantBreakdownRow, OutstandingPlayerBreakdownRow } from "./types";
+import { BaseRepo } from "./base-repo";
+import type { OutstandingPlayerBreakdownRow, OutstandingTenantBreakdownRow } from "./types";
 
 export class EntryOutstandingRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   constructor() {

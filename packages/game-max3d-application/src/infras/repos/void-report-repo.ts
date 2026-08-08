@@ -13,8 +13,9 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-max3d/entities";
 import { MAX3D_VOID_DRAW_REPORTS } from "@megawin/game-max3d/entities";
-import { BaseRepo } from "./base-repo";
+
 import { VoidDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository ghi void report cho Max 3D.

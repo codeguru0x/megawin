@@ -1,13 +1,14 @@
-import { describe, it, expect } from "vitest";
-import { lookupBasicPrize } from "@megawin/game-keno/rules";
+import { KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
 import {
+  computeDrawStats,
+  type DrawResultForMatch,
   matchBasicBoard,
   matchBigSmallBet,
   matchEvenOddBet,
-  computeDrawStats,
-  type DrawResultForMatch,
 } from "@megawin/game-keno/helpers";
-import { KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
+import { lookupBasicPrize } from "@megawin/game-keno/rules";
+import { describe, expect, it } from "vitest";
+
 import { TEST_BASIC_PRIZE_TABLE, TEST_BIG_SMALL_PRIZES, TEST_EVEN_ODD_PRIZES } from "./helpers/default-prize-tables";
 
 // ─── Helpers ────────────────────────────────────────

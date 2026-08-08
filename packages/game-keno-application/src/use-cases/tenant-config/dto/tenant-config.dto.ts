@@ -1,5 +1,5 @@
-import type { TenantConfigEntity } from "@megawin/game-keno/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { TenantConfigEntity } from "@megawin/game-keno/entities";
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs

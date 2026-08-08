@@ -1,39 +1,38 @@
 import {
-  AggregateOptions,
-  AnyBulkWriteOperation,
-  BulkWriteOptions,
-  BulkWriteResult,
-  ClientSession,
-  Collection,
-  CollectionOptions,
-  CountOptions,
-  Db,
-  DeleteOptions,
-  DistinctOptions,
-  Document,
-  Filter,
-  FindOneAndUpdateOptions,
-  FindOptions,
-  InsertManyResult,
-  InsertOneOptions,
-  MongoClient,
+  type AggregateOptions,
+  type AnyBulkWriteOperation,
+  type BulkWriteOptions,
+  type BulkWriteResult,
+  type ClientSession,
+  type Collection,
+  type CollectionOptions,
+  type CountOptions,
+  type Db,
+  type DeleteOptions,
+  type DistinctOptions,
+  type Document,
+  type Filter,
+  type FindOneAndUpdateOptions,
+  type FindOptions,
+  type InsertManyResult,
+  type InsertOneOptions,
+  type MongoClient,
   ObjectId,
-  OptionalId,
-  ReplaceOptions,
-  Sort,
-  TransactionOptions,
-  UpdateFilter,
-  UpdateOptions,
-  UpdateResult,
-  WithoutId,
+  type OptionalId,
+  type ReplaceOptions,
+  type Sort,
+  type TransactionOptions,
+  type UpdateFilter,
+  type UpdateOptions,
+  type UpdateResult,
+  type WithoutId,
 } from "mongodb";
 
+import type { BaseEntity } from "./base-entity";
 import { getMongoClient, getMongoDb } from "./client";
-import { DefaultMongoMapper, MongoMapper } from "./mapper";
-
 import { Constants } from "./constants";
-import { BaseEntity } from "./base-entity";
 import type { CursorPage } from "./cursor-page";
+import { DefaultMongoMapper, type MongoMapper } from "./mapper";
 
 export abstract class MongoRepository<
   TEntity extends BaseEntity,

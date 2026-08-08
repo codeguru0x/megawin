@@ -31,23 +31,24 @@
  * KHÔNG giữ watermark ở đây: worker lấy `batchMaxId` từ entry cuối của batch (đã sort `_id`).
  */
 
-import { PlayMode } from "@megawin/game-max3dpro/entities";
-import { expandSelectionToPairs, maxProBoardUnitWin, toOrderedPairKey } from "@megawin/game-max3dpro/rules";
-import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
 import type {
   Max3dproByPlayType,
   Max3dproPlayTypeStat,
-  Max3dproTripletStake,
   Max3dproTopPotential,
+  Max3dproTripletStake,
   TenantBettingStat,
 } from "@megawin/game-max3dpro/entities";
+import { PlayMode } from "@megawin/game-max3dpro/entities";
+import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
+import { expandSelectionToPairs, maxProBoardUnitWin, toOrderedPairKey } from "@megawin/game-max3dpro/rules";
+
 import type {
-  EntryForStats,
   EntryBoardForStats,
-  Max3dproStatsDelta,
-  Max3dproPairStatsDelta,
-  Max3dproPairAccountDelta,
+  EntryForStats,
   Max3dproAccountStatsDelta,
+  Max3dproPairAccountDelta,
+  Max3dproPairStatsDelta,
+  Max3dproStatsDelta,
 } from "../../infras/repos/types";
 
 /** Prize config + ngưỡng cược lớn gom lại — truyền 1 lần cho accumulator. */

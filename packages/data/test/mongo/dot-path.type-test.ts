@@ -7,8 +7,10 @@
  *
  * Runtime behaviour (identity, cả 2 dạng path/`$path`) test ở `dot-path.test.ts`.
  */
-import { docPath } from "../../src/mongo/dot-path";
+
 import type { Long } from "mongodb";
+
+import { docPath } from "../../src/mongo/dot-path";
 
 interface EntryPayout {
   winAmount: number;

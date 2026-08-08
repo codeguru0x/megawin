@@ -3,11 +3,10 @@
  * Lấy chi tiết ticket Bingo 18 + tất cả entries thuộc ticket đó.
  */
 
+import { withPlayerAuth } from "@megawin/auth";
+import { GetTicketEntriesPlayerUseCase } from "@megawin/game-bingo18-application/use-cases/player";
 import { z } from "zod";
 
-import { withPlayerAuth } from "@megawin/auth";
-
-import { GetTicketEntriesPlayerUseCase } from "@megawin/game-bingo18-application/use-cases/player";
 import { objectIdSchema } from "#lib/schemas";
 
 const pathSchema = z.object({

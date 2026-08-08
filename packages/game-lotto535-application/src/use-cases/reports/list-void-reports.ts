@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { VoidReportRepository } from "../../infras/repos/void-report-repo";
 import type { ListVoidReportsInput, ListVoidReportsOutput } from "./types";
 

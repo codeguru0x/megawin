@@ -2,8 +2,8 @@
 
 import { calcRelativeTime } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 import type { WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
+import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";

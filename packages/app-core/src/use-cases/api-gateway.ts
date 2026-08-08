@@ -9,22 +9,24 @@
  * - Error:   { success: false, error: { code, message, details? } }
  */
 
+import type { ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "@megawin/shared/api-types";
 import {
-  type AppError,
-  type AppResult,
-  AppException,
-  isAppError,
   APP_ERROR_CODES,
+  type AppError,
+  AppException,
+  type AppResult,
   appErrorToStatusCode,
+  isAppError,
 } from "@megawin/shared/errors";
-import type { ApiSuccessResponse, ApiErrorResponse, ApiResponseMeta } from "@megawin/shared/api-types";
 
 // ============ Re-export cho backward compat ============
 
-export { errorCodeToStatusCode, appErrorToStatusCode } from "@megawin/shared/errors";
-
 /** @deprecated Dùng errorCodeToStatusCode từ @megawin/shared/errors */
-export { errorCodeToStatusCode as useCaseErrorToStatusCode } from "@megawin/shared/errors";
+export {
+  appErrorToStatusCode,
+  errorCodeToStatusCode,
+  errorCodeToStatusCode as useCaseErrorToStatusCode,
+} from "@megawin/shared/errors";
 
 // ============ Types ============
 

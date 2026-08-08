@@ -36,12 +36,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { KenoCollections } from "@megawin/game-keno/entities";
-import type { KenoDrawComboStatsDoc, KenoDrawComboStatsEntity } from "@megawin/game-keno/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { KenoDrawComboStatsDoc, KenoDrawComboStatsEntity } from "@megawin/game-keno/entities";
+import { KenoCollections } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<KenoDrawComboStatsDoc>();

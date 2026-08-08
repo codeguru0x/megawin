@@ -15,22 +15,28 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { Power655Collections, PrizeTier } from "@megawin/game-power655/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import type { EntryPayout, EntryResult, EntryVoidInfo } from "@megawin/game-power655/entities";
-import { ObjectId, Long } from "mongodb";
-import { BaseRepo } from "./base-repo";
-import { EntryMapper } from "../mappers/entry-mapper";
-import type { TicketEntryEntity, TicketEntryDoc } from "@megawin/game-power655/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import type {
-  PlayerBreakdownRow,
-  OutstandingDrawMetrics,
-  OutstandingDrawCounts,
-  WinningEntryForDispatch,
-  VoidedEntryForDispatch,
+  EntryPayout,
+  EntryResult,
+  EntryVoidInfo,
+  TicketEntryDoc,
+  TicketEntryEntity,
+} from "@megawin/game-power655/entities";
+import { Power655Collections, PrizeTier } from "@megawin/game-power655/entities";
+import { type Long, ObjectId } from "mongodb";
+
+import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
+import { EntryMapper } from "../mappers/entry-mapper";
+import { BaseRepo } from "./base-repo";
+import type {
   EntryForStats,
+  OutstandingDrawCounts,
+  OutstandingDrawMetrics,
+  PlayerBreakdownRow,
+  VoidedEntryForDispatch,
+  WinningEntryForDispatch,
 } from "./types";
 
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {

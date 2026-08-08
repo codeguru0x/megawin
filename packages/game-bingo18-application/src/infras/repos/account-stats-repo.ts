@@ -28,12 +28,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
-import type { Bingo18DrawAccountStatsDoc, Bingo18DrawAccountStatsEntity } from "@megawin/game-bingo18/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Bingo18DrawAccountStatsDoc, Bingo18DrawAccountStatsEntity } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { AccountStatsMapper } from "../mappers/account-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { AccountStatsDelta } from "./types";
 
 const f = docPath<Bingo18DrawAccountStatsDoc>();

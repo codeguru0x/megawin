@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemSettleTenantDailyRepository,
   type SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { KENO_SETTLE_TENANT_REPORTS } from "@megawin/game-keno/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyRepository {

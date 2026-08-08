@@ -22,18 +22,18 @@
  * nhiều doc trùng loại/scope trong 1 kỳ. Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
-import {
-  BAO_COMBINATIONS,
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  PlayType,
-  Mega645OpsAlertType,
-} from "@megawin/game-mega645/entities";
 import type {
   Mega645DrawBettingStatsEntity,
   Mega645DrawComboStatsEntity,
   Mega645OpsAlertDoc,
   Mega645OpsAlertsConfig,
+} from "@megawin/game-mega645/entities";
+import {
+  BAO_COMBINATIONS,
+  Mega645OpsAlertType,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  PlayType,
 } from "@megawin/game-mega645/entities";
 
 /** Snapshot stats + combo cần cho evaluate. */

@@ -7,8 +7,9 @@
  * Mỗi vé có tối đa 6 boards (A-F).
  */
 
-import type { PlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+
+import type { PlayType } from "./enums";
 import type { BoardSelection, ISODateString } from "./types";
 
 // ─────────────────────────────────────────────

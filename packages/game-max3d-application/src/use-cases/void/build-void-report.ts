@@ -28,12 +28,13 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { VoidPreviousSettleSnapshot } from "@megawin/game-max3d/entities";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import { VoidReportRepository } from "../../infras/repos/void-report-repo";
 import type { VoidContext } from "./types";
-import type { VoidPreviousSettleSnapshot } from "@megawin/game-max3d/entities";
 
 export interface BuildVoidReportResult {
   /** Mã kỳ quay. */
@@ -63,7 +64,7 @@ export class BuildVoidReportUseCase extends InternalUseCase<VoidContext, BuildVo
     const existingSettleReport = await this.drawReportRepo.findByDrawId(drawId);
     const wasPreviouslySettled = existingSettleReport !== null;
 
-    let previousSettleSnapshot: VoidPreviousSettleSnapshot | undefined = undefined;
+    let previousSettleSnapshot: VoidPreviousSettleSnapshot | undefined;
 
     if (wasPreviouslySettled && existingSettleReport) {
       // 0a. Snapshot settle data trước khi xoá — dùng cho audit trail trong void report

@@ -155,7 +155,7 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import { POWER655_MAIN_MAX, POWER655_MAIN_COUNT, type PrizeAmounts } from "../entities/types";
+import { POWER655_MAIN_COUNT, POWER655_MAIN_MAX, type PrizeAmounts } from "../entities/types";
 import { combination } from "./play-types";
 
 const MAIN_POOL = POWER655_MAIN_MAX; // 55

@@ -10,17 +10,16 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
-import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
-import { max3dTripletSchema, max3dDrawIdSchema } from "@megawin/game-max3d/schemas";
-import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
+import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
+import { max3dDrawIdSchema, max3dTripletSchema } from "@megawin/game-max3d/schemas";
+import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
+import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───

@@ -13,8 +13,9 @@
  * - Chơi nhiều kỳ liên tiếp (multi-draw)
  */
 
-import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+
+import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./enums";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────

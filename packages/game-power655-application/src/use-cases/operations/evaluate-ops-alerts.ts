@@ -28,16 +28,17 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { Power655OpsAlertType } from "@megawin/game-power655/entities";
 import type { Power655DrawBettingStatsEntity, Power655OpsAlertsConfig } from "@megawin/game-power655/entities";
+import { Power655OpsAlertType } from "@megawin/game-power655/entities";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */

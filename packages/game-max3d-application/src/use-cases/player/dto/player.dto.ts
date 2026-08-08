@@ -5,8 +5,8 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
-import type { DrawSettleSummaryTier, EntrySummary, EntryPayoutTier } from "@megawin/game-max3d/entities";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryOutcome } from "@megawin/game-core/entities";
+import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary } from "@megawin/game-max3d/entities";
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 

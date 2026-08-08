@@ -1,16 +1,16 @@
-import { describe, it, expect } from "vitest";
-import {
-  matchBasicStraight,
-  matchBasicCombo,
-  matchPlus,
-  matchBoard,
-  getUniquePermutations,
-  getPermutationCount,
-  flattenDrawResult,
-} from "@megawin/game-max3d/rules/prize-tiers";
-import { PlayMode, PlayType, BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities/enums";
-import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules/defaults";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities/draw-result";
+import { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "@megawin/game-max3d/entities/enums";
+import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules/defaults";
+import {
+  flattenDrawResult,
+  getPermutationCount,
+  getUniquePermutations,
+  matchBasicCombo,
+  matchBasicStraight,
+  matchBoard,
+  matchPlus,
+} from "@megawin/game-max3d/rules/prize-tiers";
+import { describe, expect, it } from "vitest";
 
 // ─────────────────────────────────────────────
 // Fixtures

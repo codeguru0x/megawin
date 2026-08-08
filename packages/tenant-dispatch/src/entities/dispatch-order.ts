@@ -25,8 +25,9 @@
  * an toàn, không cần gating trong outbox.
  */
 
-import type { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
-import type { DispatchSourceKind, DispatchOrderStatus } from "./enums";
+import type { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
+
+import type { DispatchOrderStatus, DispatchSourceKind } from "./enums";
 
 // ─────────────────────────────────────────────
 // Doc & Entity

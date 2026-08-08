@@ -1,7 +1,8 @@
-import { Long } from "mongodb";
-import { GameCoreCollections, ENTRY_CHANGE_SEQ_KEY } from "@megawin/game-core/entities";
-import type { SeqAllocation } from "@megawin/game-core/entities";
 import type { BaseEntity } from "@megawin/data/mongo";
+import type { SeqAllocation } from "@megawin/game-core/entities";
+import { ENTRY_CHANGE_SEQ_KEY, GameCoreCollections } from "@megawin/game-core/entities";
+import { Long } from "mongodb";
+
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 /**

@@ -7,10 +7,10 @@
  * Chỉ trả khi draw đã settle và có kết quả.
  */
 
-import { z } from "zod";
 import { withPlayerAuth } from "@megawin/auth";
 import { GetDrawResultPlayerUseCase } from "@megawin/game-max3dpro-application/use-cases/player";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
+import { z } from "zod";
 
 const pathSchema = z.object({
   drawId: z.string().regex(DRAW_ID_REGEX, "Kỳ quay thưởng phải có định dạng YYYY-MM-DD.NNN"),

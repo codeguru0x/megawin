@@ -8,7 +8,7 @@
  * @output SettleContext
  */
 
-import { PrepareSettleUseCase, type PrepareSettleInput } from "@megawin/game-keno-application/use-cases/settle";
+import { type PrepareSettleInput, PrepareSettleUseCase } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new PrepareSettleUseCase();
 

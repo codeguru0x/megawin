@@ -1,6 +1,7 @@
 import { Mapper } from "@megawin/shared/mappers";
-import { BaseEntity } from "./base-entity";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
+
+import type { BaseEntity } from "./base-entity";
 /**
  * Map document từ MongoDB sang Entity object
  */

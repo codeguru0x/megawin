@@ -5,8 +5,8 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
-import type { DrawTierPrizeSummary, EntrySummary, EntryPayoutTier } from "@megawin/game-lotto535/entities";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryOutcome } from "@megawin/game-core/entities";
+import type { DrawTierPrizeSummary, EntryPayoutTier, EntrySummary } from "@megawin/game-lotto535/entities";
 
 export type { DrawTierPrizeSummary as PlayerDrawTierPrize };
 

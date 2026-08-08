@@ -28,6 +28,7 @@
  */
 
 import { AppException } from "@megawin/shared/errors";
+
 import { PlayMode } from "../entities/enums";
 import type { BoardSelection, Triplet, TripletPair } from "../entities/types";
 

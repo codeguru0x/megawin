@@ -6,24 +6,23 @@
  * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
 import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
+import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
-import { Long } from "mongodb";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
-  TicketEntryEntity,
   EntryBoardSnapshot,
   EntryPayout,
-  EntryVoidInfo,
   EntryResult,
-} from "@megawin/game-lotto535/entities";
-import type {
+  EntryVoidInfo,
   Lotto535FeedBetContent,
   Lotto535FeedDrawResult,
   Lotto535FeedPayoutDetail,
+  TicketEntryEntity,
 } from "@megawin/game-lotto535/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
+import { Long } from "mongodb";
+
+import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
   private readonly entryRepo = new EntryRepository();

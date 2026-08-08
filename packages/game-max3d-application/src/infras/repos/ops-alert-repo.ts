@@ -12,14 +12,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import { Max3dCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3d/entities";
-import type { Max3dOpsAlertDoc, Max3dOpsAlertEntity } from "@megawin/game-max3d/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-max3d/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  Max3dOpsAlertDoc,
+  Max3dOpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-max3d/entities";
+import { Max3dCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3d/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<Max3dOpsAlertDoc>();
 

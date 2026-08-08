@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { OpsAlertStatus, PlayType } from "@megawin/game-power655/entities";
 import { getRequiredMainCount } from "@megawin/game-power655/rules";
 import { power655DrawIdSchema, power655MainNumberSchema } from "@megawin/game-power655/schemas";
+import { z } from "zod";
 
 /** Tuple giá trị status alert từ const-as-const (§5.3) — KHÔNG string literal trần. */
 const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [OpsAlertStatus, ...OpsAlertStatus[]];

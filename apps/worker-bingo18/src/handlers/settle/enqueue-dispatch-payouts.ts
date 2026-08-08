@@ -11,8 +11,8 @@
  */
 
 import {
-  EnqueueDispatchPayoutsUseCase,
   type EnqueueDispatchPayoutsInput,
+  EnqueueDispatchPayoutsUseCase,
 } from "@megawin/game-bingo18-application/use-cases/settle";
 
 const useCase = new EnqueueDispatchPayoutsUseCase();

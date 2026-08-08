@@ -11,8 +11,9 @@
 
 import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { OutstandingDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";
 
 /**

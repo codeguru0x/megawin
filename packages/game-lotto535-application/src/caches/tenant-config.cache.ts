@@ -9,8 +9,9 @@
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
-import { TenantConfigRepository } from "../infras/repos/tenant-config-repo";
 import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
+
+import { TenantConfigRepository } from "../infras/repos/tenant-config-repo";
 import { LOTTO535_CACHE_KEYS } from "./keys";
 
 let repo: TenantConfigRepository | null = null;

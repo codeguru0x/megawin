@@ -4,7 +4,7 @@
  * Validate lựa chọn theo play type.
  */
 
-import { Bingo18PlayType, BINGO18_BASIC_PLAY_TYPES, Bingo18TripleKind } from "../entities/enums";
+import { BINGO18_BASIC_PLAY_TYPES, type Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
 import { BINGO18_VALID_NUMBERS, BINGO18_VALID_SUMS } from "../entities/types";
 
 // ─────────────────────────────────────────────

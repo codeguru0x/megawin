@@ -6,10 +6,11 @@
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
+import type { EntryBoardSnapshot, EntryPayoutTier, TicketEntryEntity } from "@megawin/game-max3dpro/entities";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { EntryBoardSnapshot, TicketEntryEntity, EntryPayoutTier } from "@megawin/game-max3dpro/entities";
-import type { PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput, PlayerEntryInfo } from "./dto/player.dto";
+import { TicketRepository } from "../../infras/repos/ticket-repo";
+import type { PlayerEntryInfo, PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput } from "./dto/player.dto";
 
 export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   PlayerGetTicketEntriesInput,

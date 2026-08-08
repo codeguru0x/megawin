@@ -1,6 +1,7 @@
-import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
-import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
+import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
+
+import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 
 /**
  * Insert default global config vào database.

@@ -9,7 +9,7 @@
  *   - prize-tables.ts: tra cứu giải thưởng sau khi đã có kết quả
  */
 
-import { KenoBasicPlayType } from "../entities/enums";
+import type { KenoBasicPlayType } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Validation

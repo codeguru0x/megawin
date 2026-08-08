@@ -1,6 +1,6 @@
-import { IdentityRepo, MongoMapper } from "@megawin/data/mongo";
 import type { BaseEntity } from "@megawin/data/mongo";
-import { Document } from "mongodb";
+import { IdentityRepo, type MongoMapper } from "@megawin/data/mongo";
+import type { Document } from "mongodb";
 
 /**
  * Base repo cho identity (`accounts`, `tenants`) — DB `megawin-identity`.

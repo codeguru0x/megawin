@@ -15,10 +15,11 @@
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import type { BasicPrizes } from "@megawin/game-keno/entities";
+
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
-import type { PlayerGetGameConfigOutput, PlayerBasicPrizes } from "./dto/player-game-config.dto";
-import type { BasicPrizes } from "@megawin/game-keno/entities";
+import type { PlayerBasicPrizes, PlayerGetGameConfigOutput } from "./dto/player-game-config.dto";
 
 export interface GetGameConfigPlayerInput {
   tenantId: string;

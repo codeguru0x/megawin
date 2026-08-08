@@ -7,7 +7,7 @@ import type {
   TenantBettingStat,
 } from "@megawin/game-power655/entities";
 import { PlayType } from "@megawin/game-power655/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `power655_draw_betting_stats` → entity, NORMALIZE shape phía đọc.

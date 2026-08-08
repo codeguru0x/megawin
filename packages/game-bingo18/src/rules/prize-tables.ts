@@ -69,11 +69,11 @@
 
 import type { Bingo18PlayType } from "../entities/enums";
 import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
   BigSmallDrawPrizes,
+  DoubleMatchPrizes,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
 } from "../entities/types";
 
 // ─────────────────────────────────────────────

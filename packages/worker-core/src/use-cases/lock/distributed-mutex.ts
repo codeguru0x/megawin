@@ -82,8 +82,8 @@
 import { AppException } from "@megawin/shared/errors";
 import { generateId, truncateErrorMessage } from "@megawin/shared/utils";
 
-import { WorkerLockRepository } from "../../infras/repos";
 import { WorkerLockKind } from "../../entities";
+import { WorkerLockRepository } from "../../infras/repos";
 
 export interface AcquireBusinessLockOptions {
   /**

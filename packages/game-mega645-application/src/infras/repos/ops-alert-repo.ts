@@ -16,14 +16,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import { Mega645Collections, OpsAlertStatus } from "@megawin/game-mega645/entities";
-import type { Mega645OpsAlertDoc, Mega645OpsAlertEntity } from "@megawin/game-mega645/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-mega645/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  Mega645OpsAlertDoc,
+  Mega645OpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-mega645/entities";
+import { Mega645Collections, OpsAlertStatus } from "@megawin/game-mega645/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<Mega645OpsAlertDoc>();
 

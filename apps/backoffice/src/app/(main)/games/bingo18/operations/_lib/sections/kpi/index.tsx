@@ -7,8 +7,8 @@
  * Mỗi slice riêng → KPI đổi không kéo Exposure re-render (React Query dedupe 1 query).
  */
 
-import { DrawStatus } from "@megawin/game-core/entities";
 import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
+import { DrawStatus } from "@megawin/game-core/entities";
 
 import { Skeleton } from "@/components/ui/skeleton";
 

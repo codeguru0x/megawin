@@ -1,8 +1,9 @@
 import { isDuplicateKeyError } from "@megawin/data/mongo";
-import { WorkerCoreCollections } from "../../entities";
+
 import type { WorkerLockEntity, WorkerLockKind, WorkerStalledItem } from "../../entities";
-import { WorkerLockMapper } from "../mappers";
+import { WorkerCoreCollections } from "../../entities";
 import { WorkerCoreBaseRepo } from "../base-repo";
+import { WorkerLockMapper } from "../mappers";
 import type { AcquireOptions } from "./types/worker-lock.types";
 
 /**

@@ -10,13 +10,14 @@
  * Mega 6/45 theo luật Vietlott: không có split cycle.
  */
 
+import type { DrawEntity } from "@megawin/game-mega645/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { DrawEntity } from "@megawin/game-mega645/entities";
-import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
+import type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 
 export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();

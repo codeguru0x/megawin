@@ -1,5 +1,5 @@
-import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import { Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();

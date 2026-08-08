@@ -24,24 +24,23 @@
  * Use case chỉ kiểm tra tenant + draw (DB) + betCount range.
  */
 
-import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type { Board, TicketDoc, TicketEntryDoc, EntryBoardSnapshot } from "@megawin/game-keno/entities";
+import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
+import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { DebitPlayerService } from "@megawin/game-core-application/services";
+import type { Board, EntryBoardSnapshot, TicketDoc, TicketEntryDoc } from "@megawin/game-keno/entities";
 import { KENO_BASIC_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 import { getPlayTypeFromPickCount } from "@megawin/game-keno/rules";
+import { AppException } from "@megawin/shared/errors";
+import { Currency } from "@megawin/shared/types";
+import { getFinancialDate, nowVN } from "@megawin/shared/utils";
+import { ObjectId } from "mongodb";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
-import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { DebitPlayerService } from "@megawin/game-core-application/services";
-import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
-import { Currency } from "@megawin/shared/types";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
-import { nowVN, getFinancialDate } from "@megawin/shared/utils";
-import { ObjectId } from "mongodb";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();

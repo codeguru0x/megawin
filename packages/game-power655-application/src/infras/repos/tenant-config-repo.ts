@@ -1,9 +1,10 @@
-import { Power655Collections } from "@megawin/game-power655/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
-import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import { nowVN } from "@megawin/shared/utils";
+
+import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {

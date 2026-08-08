@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemSettleGameDailyRepository,
   type SettleGameDailyAggregateResult,
+  SystemSettleGameDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { MAX3D_SETTLE_DRAW_REPORTS } from "@megawin/game-max3d/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleGameDailyRepo extends SystemSettleGameDailyRepository {

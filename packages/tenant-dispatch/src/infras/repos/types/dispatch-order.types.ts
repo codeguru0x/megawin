@@ -5,9 +5,10 @@
  * File này chỉ chứa aggregate/query result types riêng cho repo.
  */
 
-import type { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
-import type { DispatchOrderStatus, DispatchSourceKind } from "../../../entities/enums";
+import type { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
+
 import type { TenantDispatchOrderEntity } from "../../../entities/dispatch-order";
+import type { DispatchOrderStatus, DispatchSourceKind } from "../../../entities/enums";
 
 // ─────────────────────────────────────────────
 // Pending batch — worker polling

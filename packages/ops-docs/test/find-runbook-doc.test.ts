@@ -5,7 +5,8 @@
  * route segments, và convention path resettle (type-a/b1/b2).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { findRunbookDoc, RUNBOOK_MANIFEST } from "../src/manifest";
 
 describe("RUNBOOK_MANIFEST", () => {

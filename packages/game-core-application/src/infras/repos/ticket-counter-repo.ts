@@ -13,9 +13,10 @@
  *   const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
  */
 
+import type { BaseEntity } from "@megawin/data/mongo";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import { todayVN } from "@megawin/shared/utils";
-import type { BaseEntity } from "@megawin/data/mongo";
+
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 export interface TicketSeqResult {

@@ -10,8 +10,8 @@
  */
 
 import { PlayType } from "../entities/enums";
-import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue } from "../entities/types";
 import type { Board } from "../entities/ticket";
+import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Core: generate combinations

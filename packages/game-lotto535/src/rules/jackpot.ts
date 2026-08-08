@@ -21,16 +21,16 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import { DrawNo } from "../entities/types";
 import { Lotto535OpsAlertType } from "../entities/ops-alert";
 import type {
-  JackpotConfig,
   FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  SplitRatios,
+  JackpotConfig,
   Lotto535OpsConfig,
+  PlayRules,
+  PrizeAmounts,
+  SplitRatios,
 } from "../entities/types";
+import { DrawNo } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Jackpot Accumulation

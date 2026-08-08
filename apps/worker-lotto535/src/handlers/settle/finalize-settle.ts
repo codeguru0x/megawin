@@ -10,8 +10,8 @@
  * @output FinalizeSettleResult
  */
 
-import { FinalizeSettleUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
 import type { SettleContextWithFinancials } from "@megawin/game-lotto535-application/use-cases/settle";
+import { FinalizeSettleUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new FinalizeSettleUseCase();
 

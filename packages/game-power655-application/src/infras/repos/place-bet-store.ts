@@ -1,6 +1,7 @@
 import type { TicketDoc, TicketEntryDoc } from "@megawin/game-power655/entities";
-import { TicketRepository } from "./ticket-repo";
+
 import { EntryRepository } from "./entry-repo";
+import { TicketRepository } from "./ticket-repo";
 
 /**
  * Atomic write coordinator cho place-bet — Power 6/55.

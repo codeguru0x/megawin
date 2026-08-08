@@ -47,10 +47,11 @@ import {
   type JackpotSplitDetail,
   type SplitTierAllocation,
 } from "@megawin/game-lotto535/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
-import type { SettleContextWithFinancials, LottoSplitTierDetail } from "./types";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import type { LottoSplitTierDetail, SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
   /** ID kỳ quay đã hoàn tất settle. */
@@ -220,7 +221,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFina
 
     // ── Build split detail (nếu split thực tế) ──
     const splitExecuted = isSplitCycle && splitDetails != null;
-    let splitDetail: JackpotSplitDetail | undefined = undefined;
+    let splitDetail: JackpotSplitDetail | undefined;
     if (splitExecuted && splitDetails) {
       const tierEntries = Object.entries(splitDetails) as [string, LottoSplitTierDetail][];
       let totalWinners = 0;

@@ -6,8 +6,9 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { ListJackpotCyclesInput, ListJackpotCyclesOutput, JackpotCycleSummary } from "./dto/jackpot.dto";
+import type { JackpotCycleSummary, ListJackpotCyclesInput, ListJackpotCyclesOutput } from "./dto/jackpot.dto";
 
 export class ListJackpotCyclesUseCase extends NextApiUseCase<ListJackpotCyclesInput, ListJackpotCyclesOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();

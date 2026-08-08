@@ -31,16 +31,16 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import { TickLoopWorker } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
-import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
-import { computeBingo18Exposure } from "@megawin/game-bingo18/rules";
 import type { Bingo18DrawBettingStatsEntity, OpsAlertsConfig } from "@megawin/game-bingo18/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
+import { computeBingo18Exposure, DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateBingo18Alerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */

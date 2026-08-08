@@ -9,7 +9,7 @@ import type {
   TenantBettingStat,
 } from "@megawin/game-keno/entities";
 import { createEmptyByPlayType, createEmptyPlayTypeStat } from "@megawin/game-keno/rules";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `keno_draw_betting_stats` → entity, NORMALIZE shape phía đọc.

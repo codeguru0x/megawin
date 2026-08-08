@@ -9,8 +9,8 @@
 
 import type { OpsAlertBase } from "@megawin/game-core/types";
 
-export { OpsAlertStatus, OpsAlertSeverity } from "@megawin/game-core/types";
 export type { OpsAlertBase } from "@megawin/game-core/types";
+export { OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-core/types";
 
 /**
  * Loại alert vận hành Keno.

@@ -37,9 +37,10 @@
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleConfig, SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {

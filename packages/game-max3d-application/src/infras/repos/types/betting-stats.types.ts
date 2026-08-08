@@ -4,13 +4,15 @@
  * Tách theo rule `mongodb.mdc` §2 — result shape của repo không inline trong method.
  */
 
-import type { PlayMode, PlayType, Triplet } from "@megawin/game-max3d/entities";
 import type {
   DrawBettingTotals,
   Max3dByPlayType,
-  Max3dTripletStake,
   Max3dTopPotential,
+  Max3dTripletStake,
+  PlayMode,
+  PlayType,
   TenantBettingStat,
+  Triplet,
 } from "@megawin/game-max3d/entities";
 
 /** 1 entry tối thiểu để worker aggregate delta — projection từ `max3d_ticket_entries`. */

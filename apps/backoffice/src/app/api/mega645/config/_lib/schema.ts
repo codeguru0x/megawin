@@ -1,5 +1,5 @@
-import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
 import { Mega645OpsAlertType } from "@megawin/game-mega645/entities";
+import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();

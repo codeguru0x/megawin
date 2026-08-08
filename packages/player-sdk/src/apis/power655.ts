@@ -3,29 +3,29 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
-  Power655TicketPurchaseInput,
-  Power655GameConfigResponse,
-  Power655DrawInfo,
-  Power655TicketSummary,
-  Power655EntryResult,
-  Power655LineInfo,
-  Power655DrawResultSummary,
-  Power655DrawResultInfo,
-  Power655PlaceBetResponse,
   Power655CurrentDrawResponse,
+  Power655DrawInfo,
+  Power655DrawResultInfo,
+  Power655DrawResultSummary,
+  Power655EntryLinesParams,
+  Power655EntryLinesResponse,
+  Power655EntryResult,
+  Power655GameConfigResponse,
   Power655JackpotResponse,
-  Power655ListPendingTicketsParams,
+  Power655LineInfo,
   Power655ListAllTicketsParams,
   Power655ListDrawResultsParams,
-  Power655EntryLinesParams,
-  Power655ListTicketsResponse,
-  Power655TicketEntriesResponse,
-  Power655EntryLinesResponse,
   Power655ListDrawResultsResponse,
+  Power655ListPendingTicketsParams,
+  Power655ListTicketsResponse,
+  Power655PlaceBetResponse,
+  Power655TicketEntriesResponse,
+  Power655TicketPurchaseInput,
+  Power655TicketSummary,
 } from "../power655";
-import { ENDPOINTS } from "../endpoints";
 
 /**
  * API module cho game Power 6/55.

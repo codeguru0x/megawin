@@ -1,4 +1,4 @@
-import type { DrawSettleSummaryTier, EntrySummary, EntryPayoutTier } from "@megawin/game-power655/entities";
+import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary } from "@megawin/game-power655/entities";
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 
@@ -14,7 +14,7 @@ export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
  *   - matchResult có bonusMatched thay vì specialMatched
  */
 
-import { EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryOutcome } from "@megawin/game-core/entities";
 
 // ─── Get Current Draw (Player) ───
 

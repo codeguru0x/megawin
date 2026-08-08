@@ -9,12 +9,13 @@
  * IDEMPOTENT: chạy lại nhiều lần cho cùng kết quả.
  */
 
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import {
   SystemPublishSettleDailyUseCase as CorePublishSettleDailyUseCase,
   type PublishSettleDailyResult,
 } from "@megawin/game-core-application/use-cases";
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+
 import { SystemSettleGameDailyRepo, SystemSettleTenantDailyRepo } from "../../infras/repos";
 
 /** Input tối thiểu — chỉ cần financialDate từ SettleContext. */

@@ -11,7 +11,7 @@
  * @output SyncTicketSummariesResult
  */
 
-import { SyncTicketSummariesUseCase, type DrawSyncInput } from "@megawin/game-bingo18-application/use-cases/settle";
+import { type DrawSyncInput, SyncTicketSummariesUseCase } from "@megawin/game-bingo18-application/use-cases/settle";
 
 const useCase = new SyncTicketSummariesUseCase();
 

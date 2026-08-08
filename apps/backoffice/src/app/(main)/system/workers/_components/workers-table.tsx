@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 import { calcRelativeTime } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 import { WORKER_RUN_STATE_LABELS, WORKER_RUN_STATE_VARIANT } from "@megawin/worker-core/shared/labels";
 import type { WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
 import { WorkerRunState } from "@megawin/worker-core/use-cases/admin/types";
+import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 import { AlertTriangle, Inbox, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";

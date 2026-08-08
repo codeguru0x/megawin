@@ -4,5 +4,6 @@
  *
  * Đối lập với `@megawin/worker-core/workers` (base class để `extends`).
  */
-export { DistributedMutex } from "./distributed-mutex";
+
 export type { AcquireBusinessLockOptions, ReleaseBusinessLockOptions } from "./distributed-mutex";
+export { DistributedMutex } from "./distributed-mutex";

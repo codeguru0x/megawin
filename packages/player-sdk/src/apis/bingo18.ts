@@ -3,24 +3,24 @@
  * @module
  */
 
-import type { HttpClient } from "../http-client";
 import type {
-  Bingo18TicketPurchaseInput,
-  Bingo18GameConfigResponse,
-  Bingo18DrawInfo,
-  Bingo18TicketSummary,
-  Bingo18DrawResultSummary,
-  Bingo18DrawResultInfo,
-  Bingo18PlaceBetResponse,
   Bingo18CurrentDrawResponse,
-  Bingo18ListPendingTicketsParams,
+  Bingo18DrawInfo,
+  Bingo18DrawResultInfo,
+  Bingo18DrawResultSummary,
+  Bingo18GameConfigResponse,
   Bingo18ListAllTicketsParams,
   Bingo18ListDrawResultsParams,
-  Bingo18ListTicketsResponse,
-  Bingo18TicketEntriesResponse,
   Bingo18ListDrawResultsResponse,
+  Bingo18ListPendingTicketsParams,
+  Bingo18ListTicketsResponse,
+  Bingo18PlaceBetResponse,
+  Bingo18TicketEntriesResponse,
+  Bingo18TicketPurchaseInput,
+  Bingo18TicketSummary,
 } from "../bingo18";
 import { ENDPOINTS } from "../endpoints";
+import type { HttpClient } from "../http-client";
 
 /**
  * API module cho game Bingo 18.

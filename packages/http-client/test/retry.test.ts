@@ -6,7 +6,8 @@
  * per-request override + client default (ưu tiên per-request > default > null).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { resolveRetryConfig } from "../src/retry";
 
 describe("resolveRetryConfig", () => {

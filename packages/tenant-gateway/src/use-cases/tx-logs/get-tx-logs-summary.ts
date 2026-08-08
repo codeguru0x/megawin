@@ -11,7 +11,7 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
-import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
+import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
 import { TxLogRepository } from "../../infras/repos";
 

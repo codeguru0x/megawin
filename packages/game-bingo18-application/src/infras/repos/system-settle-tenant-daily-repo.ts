@@ -9,11 +9,12 @@
  *   → group by tenantId → per-tenant summaries → dùng cho upsertTenantDaily().
  */
 
-import {
-  SystemSettleTenantDailyRepository,
-  type SettleTenantDailyAggregateResult,
-} from "@megawin/game-core-application/repos";
 import { BINGO18_SETTLE_TENANT_REPORTS } from "@megawin/game-bingo18/entities";
+import {
+  type SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
+} from "@megawin/game-core-application/repos";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyRepository {

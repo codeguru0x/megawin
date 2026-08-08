@@ -7,7 +7,7 @@
  * KHÔNG hardcode ở đây (mirror Keno).
  */
 
-import { Power655OpsAlertType, OpsAlertSeverity } from "@megawin/game-power655/entities";
+import { OpsAlertSeverity, Power655OpsAlertType } from "@megawin/game-power655/entities";
 
 /**
  * Label tiếng Việt cho từng loại alert vận hành Power 6/55.

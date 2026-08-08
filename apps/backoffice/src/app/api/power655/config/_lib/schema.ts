@@ -1,5 +1,5 @@
-import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
 import { Power655OpsAlertType } from "@megawin/game-power655/entities";
+import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();

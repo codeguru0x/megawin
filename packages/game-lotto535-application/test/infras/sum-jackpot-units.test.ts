@@ -17,9 +17,10 @@
  * truyền input UNSORTED — chứng minh repo phải sort nội bộ để đếm đúng cả 4 nhánh.
  */
 
-import { describe, it, expect, vi } from "vitest";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { buildComboKey } from "@megawin/game-lotto535/rules";
+import { describe, expect, it, vi } from "vitest";
+
 import { ComboStatsRepository } from "../../src/infras/repos/combo-stats-repo";
 
 const DRAW_ID = "2999-01-01.001";

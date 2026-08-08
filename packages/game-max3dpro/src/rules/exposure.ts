@@ -20,8 +20,8 @@
  * ⚠️ KHÔNG sort/normalize pairKey ở bất kỳ đâu trong file này.
  */
 
-import type { PrizeAmounts } from "../entities/types";
 import type { Max3dproTopPair } from "../entities/betting-stats";
+import type { PrizeAmounts } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Types

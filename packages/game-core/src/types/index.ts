@@ -6,7 +6,7 @@
  * ops-alert). Import: `import { ... } from "@megawin/game-core/types"`.
  */
 
+export * from "./betting-stats";
 export * from "./common";
 export * from "./draw";
-export * from "./betting-stats";
 export * from "./ops-alert";

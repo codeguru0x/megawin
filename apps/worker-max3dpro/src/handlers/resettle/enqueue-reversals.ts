@@ -14,8 +14,8 @@
  */
 
 import {
-  EnqueueReversalsUseCase,
   type EnqueueReversalsInput,
+  EnqueueReversalsUseCase,
 } from "@megawin/game-max3dpro-application/use-cases/resettle";
 
 const useCase = new EnqueueReversalsUseCase();

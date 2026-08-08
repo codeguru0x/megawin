@@ -13,15 +13,15 @@
  * });
  */
 
-export type { CacheStore, CachedFetcher, CachedFetcherOptions, CacheFetchEvent } from "./types";
+export { createCachedFetcher } from "./cached-fetcher";
 export { cacheKey, hashKeyPart } from "./keys";
 export { CacheNamespace } from "./namespaces";
-export { createCachedFetcher } from "./cached-fetcher";
+export type { MemoryCacheStoreOptions, RedisCacheStoreOptions, TieredCacheOptions } from "./stores";
 export {
+  getDefaultCacheStore,
   MemoryCacheStore,
   NoopCacheStore,
   RedisCacheStore,
   TieredCache,
-  getDefaultCacheStore,
 } from "./stores";
-export type { MemoryCacheStoreOptions, RedisCacheStoreOptions, TieredCacheOptions } from "./stores";
+export type { CachedFetcher, CachedFetcherOptions, CacheFetchEvent, CacheStore } from "./types";

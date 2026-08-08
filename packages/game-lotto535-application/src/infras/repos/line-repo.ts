@@ -13,9 +13,10 @@
  * PatchJackpotPrize (step 4a) qua patchJackpotLineWinAmount().
  */
 
-import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import { chunk } from "@megawin/shared/utils";
+
 import { BaseRepo } from "./base-repo";
 
 export class LineRepository extends BaseRepo<any> {

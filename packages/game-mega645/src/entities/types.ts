@@ -7,6 +7,7 @@
  */
 
 import type { OpsStatsConfig } from "@megawin/game-core/types";
+
 import type { Mega645OpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────

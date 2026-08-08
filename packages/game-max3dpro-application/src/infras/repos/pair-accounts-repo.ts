@@ -17,12 +17,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
-import type { Max3dproDrawPairAccountDoc, Max3dproDrawPairAccountEntity } from "@megawin/game-max3dpro/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Max3dproDrawPairAccountDoc, Max3dproDrawPairAccountEntity } from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { PairAccountMapper } from "../mappers/pair-account-mapper";
+import { BaseRepo } from "./base-repo";
 import type { Max3dproPairStatsDelta } from "./types";
 
 const f = docPath<Max3dproDrawPairAccountDoc>();

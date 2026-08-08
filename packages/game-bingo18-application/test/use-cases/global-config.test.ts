@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 import { GameConfigScope } from "@megawin/game-core/entities";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 
 describe("GameConfigRepository – Bingo18 Global Config", () => {

@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Max3dproOpsAlertEntity } from "@megawin/game-max3dpro/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /** Doc `max3dpro_ops_alerts` → entity (ObjectId → id hex). */
 export class OpsAlertMapper extends MongoMapper<Document, Max3dproOpsAlertEntity> {

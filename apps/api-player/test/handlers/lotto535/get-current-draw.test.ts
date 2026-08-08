@@ -2,7 +2,8 @@
  * Tests: GET /player/lotto535/draws/current
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { createMockEvent, parseBody } from "#test/helpers/mock-event";
 
 vi.mock("@megawin/game-lotto535-application/use-cases/player", () => ({

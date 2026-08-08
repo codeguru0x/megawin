@@ -6,8 +6,9 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
+
 import type { GetGameConfigOutput } from "./dto/game-config.dto";
+import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
 
 /**
  * API endpoint trả về global config Lotto 5/35 cho backoffice.

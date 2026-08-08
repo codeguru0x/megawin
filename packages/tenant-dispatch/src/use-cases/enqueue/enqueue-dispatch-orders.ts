@@ -1,6 +1,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
+
 import type { TenantDispatchOrderInput } from "../../entities/dispatch-order";
+import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 
 export interface EnqueueDispatchOrdersInput {
   /** Orders đã được build bởi các builder (buildPayoutOrder / buildRefundOrder / buildReversalOrder). */

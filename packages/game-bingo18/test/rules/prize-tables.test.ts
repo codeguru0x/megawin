@@ -4,12 +4,13 @@
  * PURE — không DB, không cần quy tắc test staging chung.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  lookupSingleNumPrize,
-  lookupSumTotalPrize,
   DEFAULT_SINGLE_NUM_PRIZES,
   DEFAULT_SUM_TOTAL_PRIZES,
+  lookupSingleNumPrize,
+  lookupSumTotalPrize,
 } from "../../src/rules/prize-tables";
 
 describe("lookupSingleNumPrize", () => {

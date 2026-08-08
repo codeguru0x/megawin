@@ -9,7 +9,7 @@
  */
 
 import { KenoBigSmallBet, KenoEvenOddBet, type KenoPlayType } from "../entities/enums";
-import { KENO_BIG_SMALL_BOUNDARY, type BigSmallPrizes, type EvenOddPrizes } from "../entities/types";
+import { type BigSmallPrizes, type EvenOddPrizes, KENO_BIG_SMALL_BOUNDARY } from "../entities/types";
 import { lookupBasicPrize } from "../rules/prize-tables";
 
 // ─────────────────────────────────────────────

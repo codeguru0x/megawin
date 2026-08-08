@@ -13,8 +13,9 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
 import type { EntryVoidInfo } from "@megawin/game-max3d/entities";
+import { generateId } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 

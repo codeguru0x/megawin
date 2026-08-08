@@ -26,23 +26,26 @@
  * + `$slice` lo phần cắt).
  */
 
-import { maxBoardPrize, buildComboKey, createEmptyByPlayType } from "@megawin/game-keno/rules";
-import type { BasicPrizes, BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
-import { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet, KENO_VALID_NUMBERS } from "@megawin/game-keno/entities";
 import type {
+  BasicPrizes,
+  BigSmallPrizes,
+  EvenOddPrizes,
   KenoByPlayType,
-  KenoPlayTypeStat,
   KenoNumberStat,
+  KenoPlayTypeStat,
   KenoTopPotential,
   TenantBettingStat,
 } from "@megawin/game-keno/entities";
+import { KENO_VALID_NUMBERS, KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
+import { buildComboKey, createEmptyByPlayType, maxBoardPrize } from "@megawin/game-keno/rules";
+
 import type {
   AccountStatsDelta,
   ComboAccountDelta,
   ComboStatsDelta,
   DrawStatsDelta,
-  EntryForStats,
   EntryBoardForStats,
+  EntryForStats,
 } from "../../infras/repos/types";
 
 /** Prize config gom lại để truyền cho tính worst-case. */

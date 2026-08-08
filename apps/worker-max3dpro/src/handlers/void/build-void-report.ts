@@ -10,8 +10,8 @@
  * @output BuildVoidReportResult
  */
 
-import { BuildVoidReportUseCase } from "@megawin/game-max3dpro-application/use-cases/void";
 import type { VoidContext } from "@megawin/game-max3dpro-application/use-cases/void";
+import { BuildVoidReportUseCase } from "@megawin/game-max3dpro-application/use-cases/void";
 
 const useCase = new BuildVoidReportUseCase();
 

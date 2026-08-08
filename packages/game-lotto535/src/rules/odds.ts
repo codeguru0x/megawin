@@ -139,7 +139,7 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import { LOTTO535_MAIN_MAX, LOTTO535_MAIN_COUNT, LOTTO535_SPECIAL_MAX, type PrizeAmounts } from "../entities/types";
+import { LOTTO535_MAIN_COUNT, LOTTO535_MAIN_MAX, LOTTO535_SPECIAL_MAX, type PrizeAmounts } from "../entities/types";
 import { combination } from "./play-types";
 
 const MAIN_POOL = LOTTO535_MAIN_MAX; // 35

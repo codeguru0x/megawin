@@ -37,11 +37,12 @@
  * seed đủ 38 bucket rồi lọc sau (F2-a) — tránh tốn RAM + vòng lặp vô ích mỗi tick × D kỳ.
  */
 
-import { Bingo18PlayType, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
-import { computeBingo18EntryPotentialWin } from "@megawin/game-bingo18/rules";
-import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
 import type { Bingo18BucketStat, Bingo18TopPotential, TenantBettingStat } from "@megawin/game-bingo18/entities";
-import type { DrawStatsDelta, AccountStatsDelta, EntryForStats, EntryBoardForStats } from "../../infras/repos/types";
+import { Bingo18PlayType, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
+import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
+import { computeBingo18EntryPotentialWin } from "@megawin/game-bingo18/rules";
+
+import type { AccountStatsDelta, DrawStatsDelta, EntryBoardForStats, EntryForStats } from "../../infras/repos/types";
 
 /** Prize config + ngưỡng cược lớn gom lại — truyền 1 lần cho accumulator. */
 export interface PrizeContext {

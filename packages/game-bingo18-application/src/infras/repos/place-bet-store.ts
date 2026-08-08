@@ -1,6 +1,7 @@
 import type { TicketDoc, TicketEntryDoc } from "@megawin/game-bingo18/entities";
-import { TicketRepository } from "./ticket-repo";
+
 import { EntryRepository } from "./entry-repo";
+import { TicketRepository } from "./ticket-repo";
 
 /**
  * Atomic write coordinator cho place-bet — Bingo 18.

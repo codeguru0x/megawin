@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { MEGA645_PLAY_TYPE_VALUES, OpsAlertStatus, PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_PLAY_TYPE_VALUES, OpsAlertStatus, type PlayType } from "@megawin/game-mega645/entities";
 import { getRequiredNumberCount } from "@megawin/game-mega645/rules";
+import { z } from "zod";
 
 /** Tuple giá trị status alert từ const-as-const (§5.3) — KHÔNG string literal trần. */
 const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [OpsAlertStatus, ...OpsAlertStatus[]];

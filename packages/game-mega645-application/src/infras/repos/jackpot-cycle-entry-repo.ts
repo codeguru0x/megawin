@@ -28,8 +28,9 @@
 
 import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-mega645/entities";
 import { Mega645Collections } from "@megawin/game-mega645/entities";
-import { BaseRepo } from "./base-repo";
+
 import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository cho Cycle Ledger Mega 6/45.

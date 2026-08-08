@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { PlayerClient } from "../src";
-import { createTestClient, mockFetch, BASE_URL } from "./helpers";
+import { BASE_URL, createTestClient, mockFetch } from "./helpers";
 
 describe("player.getBalance", () => {
   let client: PlayerClient;

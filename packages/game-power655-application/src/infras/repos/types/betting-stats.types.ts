@@ -7,10 +7,10 @@
 
 import type {
   DrawBettingTotals,
+  PlayType,
   Power655PlayTypeStat,
   Power655TopPotential,
   TenantBettingStat,
-  PlayType,
 } from "@megawin/game-power655/entities";
 
 /** 1 entry tối thiểu để worker aggregate delta — projection từ `power655_ticket_entries`. */

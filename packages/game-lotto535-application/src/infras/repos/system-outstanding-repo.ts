@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemOutstandingReportRepository,
   type OutstandingPerGameAggregateResult,
+  SystemOutstandingReportRepository,
 } from "@megawin/game-core-application/repos";
 import { LOTTO535_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
