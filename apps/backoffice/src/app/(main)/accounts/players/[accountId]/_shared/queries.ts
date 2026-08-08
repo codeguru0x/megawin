@@ -191,7 +191,7 @@ export function usePlayerEntryDetail(accountId: string, entryId: string, game: s
   return useQuery({
     queryKey: playerDetailKeys.entryDetail(accountId, entryId, game),
     queryFn: () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: response shape phụ thuộc `game` — mỗi game trả TicketEntryEntity khác nhau, không thể siết type tĩnh ở đây.
       apiClient.get<{ data: any }>(`/accounts/players/${accountId}/entries/${entryId}?game=${game}`),
     enabled: !!accountId && !!entryId && !!game,
     select: (res) => res.data,
