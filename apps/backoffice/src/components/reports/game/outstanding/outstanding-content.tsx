@@ -131,12 +131,7 @@ function OutstandingSkeleton({ showLineCount }: { showLineCount?: boolean }) {
           <Skeleton className="h-3.5 w-72" />
         </div>
       </div>
-      <div
-        className={cn(
-          "grid grid-cols-2 gap-3 sm:grid-cols-3",
-          cols === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4",
-        )}
-      >
+      <div className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3", cols === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
         {[...Array(cols)].map((_, i) => (
           <Skeleton key={i} className="h-18 w-full rounded-xl" />
         ))}
@@ -200,9 +195,7 @@ export function OutstandingContent({
           <Clock className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            {gameName} — Outstanding
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">{gameName} — Outstanding</h1>
           <div className="flex items-center gap-1.5">
             <p className="text-xs text-muted-foreground">Entries chưa settle</p>
             <LiveDot isFetching={drawsData.isLoading} onRefresh={() => drawsData.refetch()} />
@@ -212,11 +205,7 @@ export function OutstandingContent({
 
       {/* KPI Strip — chỉ Level 1 */}
       {level === "list" && (
-        <OutstandingKpiStrip
-          data={kpiData}
-          showLineCount={showLineCount}
-          lineCountLabel={lineCountLabel}
-        />
+        <OutstandingKpiStrip data={kpiData} showLineCount={showLineCount} lineCountLabel={lineCountLabel} />
       )}
 
       {/* Breadcrumb — từ Level 2 trở lên */}

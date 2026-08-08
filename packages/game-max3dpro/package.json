@@ -64,12 +64,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "max3dpro",
-    "game",
-    "domain"
-  ],
+  "keywords": ["megawin", "max3dpro", "game", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

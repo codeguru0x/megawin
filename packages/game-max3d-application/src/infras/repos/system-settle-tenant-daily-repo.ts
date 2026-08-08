@@ -17,9 +17,7 @@ export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyReposito
     collName: MAX3D_SETTLE_TENANT_REPORTS,
   });
 
-  async aggregateTenantsFromPerGame(
-    financialDate: string,
-  ): Promise<SettleTenantDailyAggregateResult[]> {
+  async aggregateTenantsFromPerGame(financialDate: string): Promise<SettleTenantDailyAggregateResult[]> {
     const result = await this.perGameColl.aggregate([
       { $match: { financialDate } },
       {

@@ -102,16 +102,10 @@ export function LiveFeed({
                           {displayLabel && (
                             <>
                               <div
-                                className={cn(
-                                  "size-1.5 rounded-full shrink-0",
-                                  color?.dot ?? "bg-muted-foreground",
-                                )}
+                                className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")}
                               />
                               <span
-                                className={cn(
-                                  "text-xs font-semibold truncate",
-                                  color?.text ?? "text-muted-foreground",
-                                )}
+                                className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}
                               >
                                 {displayLabel}
                               </span>
@@ -133,14 +127,10 @@ export function LiveFeed({
                         <TripletDisplay key={idx} value={t} variant="default" size="sm" />
                       ))}
                       {e.triplets.length > 4 && (
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          +{e.triplets.length - 4}
-                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">+{e.triplets.length - 4}</span>
                       )}
                       {isCombo && e.lineCount > 1 && (
-                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">
-                          ({e.lineCount} lines)
-                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">({e.lineCount} lines)</span>
                       )}
                       {e.betCount > 1 && (
                         <span className="text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded shrink-0 ml-0.5">

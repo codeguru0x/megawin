@@ -85,10 +85,7 @@ export class OpsAlertRepository extends BaseRepo<KenoOpsAlertEntity, OpsAlertMap
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByDrawAndStatus(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<KenoOpsAlertEntity[]> {
+  async listByDrawAndStatus(drawId: string, status?: OpsAlertStatusType): Promise<KenoOpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) filter.status = status;
     return await this.findMany(filter, { sort: { createdAt: -1 } });

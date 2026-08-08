@@ -37,16 +37,10 @@ export class OpenSalesUseCase extends NextApiUseCase<DrawTransitionInput, DrawTr
       );
     }
 
-    const updated = await this.drawRepo.openSales(
-      input.drawId,
-      draw.status,
-      !draw.sales.openAt ? nowVN() : undefined,
-    );
+    const updated = await this.drawRepo.openSales(input.drawId, draw.status, !draw.sales.openAt ? nowVN() : undefined);
 
     if (!updated) {
-      throw AppException.internal(
-        `Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`,
-      );
+      throw AppException.internal(`Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`);
     }
 
     // Audit staff mở bán — fire-and-forget, chỉ khi có actor (route BO truyền).

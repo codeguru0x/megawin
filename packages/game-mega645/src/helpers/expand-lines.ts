@@ -11,12 +11,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import {
-  ALL_NUMBERS,
-  MEGA645_NUMBER_COUNT,
-  type BoardSelection,
-  type LineValue,
-} from "../entities/types";
+import { ALL_NUMBERS, MEGA645_NUMBER_COUNT, type BoardSelection, type LineValue } from "../entities/types";
 import type { EntryBoardSnapshot } from "../entities/entry";
 
 // ─────────────────────────────────────────────

@@ -184,8 +184,7 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Comment: "Có JP1 hoặc JP2 winner → patch jackpot prize vào entries + lines",
-          Condition:
-            "{% $settleCtx.financials.hasJackpot1Winner or $settleCtx.financials.hasJackpot2Winner %}",
+          Condition: "{% $settleCtx.financials.hasJackpot1Winner or $settleCtx.financials.hasJackpot2Winner %}",
           Next: "PatchJackpotPrize",
         },
       ],

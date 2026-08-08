@@ -65,10 +65,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
@@ -138,19 +135,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             });
 
             // Chỉ basic boards mới có cappable prize (pick8/9/10).
-            if (
-              CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) &&
-              matchResult.matchCount === matchResult.pickCount
-            ) {
+            if (CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) && matchResult.matchCount === matchResult.pickCount) {
               hasCappablePrize = true;
             }
           } else if (board.playType === KenoPlayType.BigSmall) {
             // ── Side bet Lớn/Nhỏ ──
-            const matchResult = matchBigSmallBet(
-              board.bet as KenoBigSmallBet,
-              result,
-              config.bigSmallPrizes,
-            );
+            const matchResult = matchBigSmallBet(board.bet as KenoBigSmallBet, result, config.bigSmallPrizes);
 
             boardPayouts.push({
               boardNo: board.boardNo,
@@ -166,11 +156,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             });
           } else if (board.playType === KenoPlayType.EvenOdd) {
             // ── Side bet Chẵn/Lẻ ──
-            const matchResult = matchEvenOddBet(
-              board.bet as KenoEvenOddBet,
-              result,
-              config.evenOddPrizes,
-            );
+            const matchResult = matchEvenOddBet(board.bet as KenoEvenOddBet, result, config.evenOddPrizes);
             boardPayouts.push({
               boardNo: board.boardNo,
               playType: board.playType,

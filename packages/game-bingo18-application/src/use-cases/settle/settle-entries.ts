@@ -66,10 +66,7 @@ export interface SettleEntriesBatchResult {
  * Time-limited: tự trả `done: false` khi gần hết MAX_EXECUTION_MS.
  * 1 DB read (getScheduledEntries) + 1 DB write (bulkSettleEntries) mỗi vòng lặp.
  */
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
@@ -116,11 +113,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               case Bingo18PlayType.SingleNum: {
                 // Đếm số lần xuất hiện → tra bảng match1/match2/match3.
                 // board.number! an toàn: validate khi place-bet, singleNum luôn có number.
-                const matchResult = matchSingleNum(
-                  board.number!,
-                  drawResult,
-                  config.singleNumPrizes,
-                );
+                const matchResult = matchSingleNum(board.number!, drawResult, config.singleNumPrizes);
                 // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
                 const unitWinAmount = matchResult.winAmount;
 
@@ -139,11 +132,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               case Bingo18PlayType.DoubleMatch: {
                 // Thắng khi số xuất hiện ≥ 2 lần — 1 mức giải duy nhất (75.000đ).
                 // board.number! an toàn: doubleMatch luôn có number.
-                const matchResult = matchDoubleMatch(
-                  board.number!,
-                  drawResult,
-                  config.doubleMatchPrizes,
-                );
+                const matchResult = matchDoubleMatch(board.number!, drawResult, config.doubleMatchPrizes);
                 // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
                 const unitWinAmount = matchResult.winAmount;
 

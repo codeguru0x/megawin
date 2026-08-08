@@ -40,11 +40,7 @@ import { auditPublishResult, auditRepublishResult } from "../../services/audit-l
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
 
-const PUBLISHABLE_STATUSES = new Set<string>([
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settled,
-]);
+const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settled]);
 
 export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -83,9 +79,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
         const updated = await this.drawRepo.updateVietlottRef(input.drawId, input.vietlottRef);
 
         if (!updated) {
-          throw AppException.internal(
-            `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
-          );
+          throw AppException.internal(`Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`);
         }
 
         // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
@@ -140,10 +134,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
   }
 
   /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult`, → `Published`. */
-  private async publish(
-    input: PublishResultInput,
-    publishedAt: Date,
-  ): Promise<PublishResultOutput> {
+  private async publish(input: PublishResultInput, publishedAt: Date): Promise<PublishResultOutput> {
     const updated = await this.drawRepo.publishResult(
       input.drawId,
       { ...input.result, publishedAt },
@@ -167,11 +158,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
   }
 
   /** Build output shape thống nhất. */
-  private toOutput(
-    input: PublishResultInput,
-    status: string,
-    publishedAt: Date,
-  ): PublishResultOutput {
+  private toOutput(input: PublishResultInput, status: string, publishedAt: Date): PublishResultOutput {
     return {
       drawId: input.drawId,
       status,

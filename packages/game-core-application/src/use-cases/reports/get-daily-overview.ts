@@ -11,9 +11,7 @@ import type { GetDailyOverviewInput, GetDailyOverviewOutput } from "./types";
  *
  * Dùng cho tab "Tổng quan ngày" trang System Financial Reports.
  */
-export class GetDailyOverviewUseCase
-  extends NextApiUseCase<GetDailyOverviewInput, GetDailyOverviewOutput>
-{
+export class GetDailyOverviewUseCase extends NextApiUseCase<GetDailyOverviewInput, GetDailyOverviewOutput> {
   private readonly repo = new SystemSettleGameDailyRepository();
 
   protected async execute(input: GetDailyOverviewInput): Promise<GetDailyOverviewOutput> {

@@ -32,10 +32,7 @@ import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers
 import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
 import { logError } from "@megawin/shared/utils";
 import { Mega645OpsAlertType } from "@megawin/game-mega645/entities";
-import type {
-  Mega645DrawBettingStatsEntity,
-  Mega645OpsAlertsConfig,
-} from "@megawin/game-mega645/entities";
+import type { Mega645DrawBettingStatsEntity, Mega645OpsAlertsConfig } from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
@@ -68,8 +65,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
-    "Mega 6/45 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/bao) cho kỳ đang mở";
+  protected readonly description = "Mega 6/45 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/bao) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly statsRepo = new BettingStatsRepository();
@@ -96,8 +92,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
       unitPrice: config.play.unitPrice,
     };
 
-    this.tickMs =
-      (config.ops?.stats.tickSeconds ?? DEFAULT_MEGA645_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
+    this.tickMs = (config.ops?.stats.tickSeconds ?? DEFAULT_MEGA645_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
     this.counters = { evaluated: 0, alertsUpserted: 0 }; // reset — container reuse
 
     // Đọc cursor cũ từ lock doc — rỗng/không parse được → epoch (quét từ đầu).

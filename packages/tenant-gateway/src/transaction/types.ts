@@ -591,7 +591,4 @@ export interface TransactionStatusData {
  * // Scheduler xử lý mọi success: false giống nhau → xoá WAL, không rollback
  * ```
  */
-export type TransactionStatusResponse = CallbackResponse<
-  TransactionStatusData,
-  TransactionStatusErrorCode
->;
+export type TransactionStatusResponse = CallbackResponse<TransactionStatusData, TransactionStatusErrorCode>;

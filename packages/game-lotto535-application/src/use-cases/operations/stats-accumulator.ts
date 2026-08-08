@@ -28,11 +28,7 @@ import type {
   PlayType,
   TenantBettingStat,
 } from "@megawin/game-lotto535/entities";
-import {
-  Lotto535NumberKind,
-  Lotto535StatsPlayKey,
-  toStatsPlayKey,
-} from "@megawin/game-lotto535/entities";
+import { Lotto535NumberKind, Lotto535StatsPlayKey, toStatsPlayKey } from "@megawin/game-lotto535/entities";
 import { buildComboKey } from "@megawin/game-lotto535/rules";
 import type {
   AccountStatsDelta,
@@ -98,10 +94,9 @@ export class Lotto535StatsAccumulator {
    * key có delta khi build `$inc` (chỉ ghi key `!== undefined` sau khi accumulator lọc ở
    * {@link drainStatsDelta}) — đơn giản hơn giữ partial ngay tại đây.
    */
-  private readonly byPlayType: Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat> =
-    Object.fromEntries(
-      Object.values(Lotto535StatsPlayKey).map((key) => [key, createEmptyPlayTypeStat()]),
-    ) as Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat>;
+  private readonly byPlayType: Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat> = Object.fromEntries(
+    Object.values(Lotto535StatsPlayKey).map((key) => [key, createEmptyPlayTypeStat()]),
+  ) as Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat>;
 
   private readonly byTenant = new Map<string, TenantBettingStat>();
   /** number → delta, tách riêng theo `kind` (main "01".."35" / special "01".."12"). */

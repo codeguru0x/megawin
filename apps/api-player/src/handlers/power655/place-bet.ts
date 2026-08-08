@@ -169,13 +169,9 @@ export const power655PlaceBetBodySchema = z.object({
     .refine((ids) => isUnique(ids), {
       message: "Các drawId không được trùng lặp.",
     }),
-  boards: z
-    .array(power655BoardSchema)
-    .min(1)
-    .max(POWER655_MAX_BOARDS)
-    .refine(boardsSequentialRefine(), {
-      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
-    }),
+  boards: z.array(power655BoardSchema).min(1).max(POWER655_MAX_BOARDS).refine(boardsSequentialRefine(), {
+    message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
+  }),
 });
 
 export type Power655Board = z.infer<typeof power655BoardSchema>;

@@ -8,11 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  flattenDrawResult,
-  findAllTiersInResult,
-  matchBasicStraight,
-} from "../../src/rules/prize-tiers";
+import { flattenDrawResult, findAllTiersInResult, matchBasicStraight } from "../../src/rules/prize-tiers";
 import { BasicPrizeTier } from "../../src/entities/enums";
 import type { Max3dDrawResult } from "../../src/entities/draw-result";
 import type { BasicPrizeAmounts } from "../../src/entities/types";
@@ -39,10 +35,7 @@ describe("findAllTiersInResult", () => {
   });
 
   it("Đúng logic — triplet xuất hiện ở NHIỀU hạng (096: cả ĐB và Nhất) → trả TẤT CẢ tier khớp", () => {
-    expect(findAllTiersInResult("096", byTier)).toEqual([
-      BasicPrizeTier.Special,
-      BasicPrizeTier.First,
-    ]);
+    expect(findAllTiersInResult("096", byTier)).toEqual([BasicPrizeTier.Special, BasicPrizeTier.First]);
   });
 
   it("Logic ngược — triplet không khớp bất kỳ hạng nào → mảng rỗng", () => {

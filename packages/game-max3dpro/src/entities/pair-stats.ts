@@ -93,8 +93,7 @@ export interface Max3dproDrawPairAccountDoc extends DeltaAccumulatedDoc {
 }
 
 /** Application-layer entity sau khi qua mapper. ObjectId → id string. */
-export interface Max3dproDrawPairAccountEntity
-  extends Omit<Max3dproDrawPairAccountDoc, "_id"> {
+export interface Max3dproDrawPairAccountEntity extends Omit<Max3dproDrawPairAccountDoc, "_id"> {
   /** MongoDB ObjectId đã chuyển sang hex string. */
   id: string;
 }

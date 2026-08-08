@@ -6,10 +6,7 @@
 
 import middy from "@middy/core";
 import { z } from "zod";
-import {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-} from "@megawin/app-core/lambda/middleware";
+import { validatorZodMiddleware, httpErrorHandlerUseCaseFormat } from "@megawin/app-core/lambda/middleware";
 
 import { PlayerRefreshTokenUseCase } from "@megawin/identity-application/use-cases/players";
 

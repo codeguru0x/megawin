@@ -28,12 +28,7 @@
 
 import { maxBoardPrize, buildComboKey, createEmptyByPlayType } from "@megawin/game-keno/rules";
 import type { BasicPrizes, BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
-import {
-  KenoPlayType,
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KENO_VALID_NUMBERS,
-} from "@megawin/game-keno/entities";
+import { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet, KENO_VALID_NUMBERS } from "@megawin/game-keno/entities";
 import type {
   KenoByPlayType,
   KenoPlayTypeStat,
@@ -176,10 +171,7 @@ export class DrawStatsAccumulator {
 
     // ── worst-case exposure theo playType (RAW, chưa cap — analysis §3.4) ──
     const wc = this.boardWorstCase(board);
-    this.worstCaseByPlayType.set(
-      board.playType,
-      (this.worstCaseByPlayType.get(board.playType) ?? 0) + wc,
-    );
+    this.worstCaseByPlayType.set(board.playType, (this.worstCaseByPlayType.get(board.playType) ?? 0) + wc);
     this.worstCaseTotal += wc;
 
     // ── numberFreq + combo (chỉ basic có numbers) ──
@@ -216,21 +208,16 @@ export class DrawStatsAccumulator {
     // `board.playType` là `string` (projection thô từ `keno_ticket_entries`) — cast sang
     // `KenoPlayType` hợp lệ vì Zod đã validate giá trị này lúc place-bet (không phải đọc lại
     // input chưa qua validate, xem code-quality §5.4).
-    const perUnit = maxBoardPrize(
-      board.playType as KenoPlayType,
-      board.bet,
-      board.numbers?.length ?? 0,
-      { basic: this.prize.basic, bigSmall: this.prize.bigSmall, evenOdd: this.prize.evenOdd },
-    );
+    const perUnit = maxBoardPrize(board.playType as KenoPlayType, board.bet, board.numbers?.length ?? 0, {
+      basic: this.prize.basic,
+      bigSmall: this.prize.bigSmall,
+      evenOdd: this.prize.evenOdd,
+    });
     return perUnit * board.betCount;
   }
 
   /** Gom delta 1 combo trong tick (accountId → Δsets/Δamount + tên). */
-  private recordComboDelta(
-    entry: EntryForStats,
-    board: EntryBoardForStats,
-    boardAmount: number,
-  ): void {
+  private recordComboDelta(entry: EntryForStats, board: EntryBoardForStats, boardAmount: number): void {
     const numbers = [...(board.numbers ?? [])].sort();
     const key = buildComboKey(board.playType, numbers);
 

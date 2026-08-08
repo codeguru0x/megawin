@@ -6,11 +6,7 @@
  */
 
 import { EntryOutcome } from "@megawin/game-core/entities";
-import type {
-  DrawSettleSummaryTier,
-  EntrySummary,
-  EntryPayoutTier,
-} from "@megawin/game-mega645/entities";
+import type { DrawSettleSummaryTier, EntrySummary, EntryPayoutTier } from "@megawin/game-mega645/entities";
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 

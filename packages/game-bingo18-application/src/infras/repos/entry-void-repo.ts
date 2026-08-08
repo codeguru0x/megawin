@@ -90,10 +90,7 @@ export class EntryVoidRepository extends BaseRepo<TicketEntryEntity, EntryMapper
    * @param drawId   - Format `YYYY-MM-DD.NNN`
    * @param tenantId - Tenant filter
    */
-  async aggregatePlayersByDrawAndTenant(
-    drawId: string,
-    tenantId: string,
-  ): Promise<VoidPlayerBreakdownRow[]> {
+  async aggregatePlayersByDrawAndTenant(drawId: string, tenantId: string): Promise<VoidPlayerBreakdownRow[]> {
     const results = await this.aggregate([
       {
         $match: {

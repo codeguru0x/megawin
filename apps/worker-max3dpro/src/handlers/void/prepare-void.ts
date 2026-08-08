@@ -5,10 +5,7 @@
  * Validate draw có thể void, load context.
  */
 
-import {
-  PrepareVoidUseCase,
-  type PrepareVoidInput,
-} from "@megawin/game-max3dpro-application/use-cases/void";
+import { PrepareVoidUseCase, type PrepareVoidInput } from "@megawin/game-max3dpro-application/use-cases/void";
 
 const useCase = new PrepareVoidUseCase();
 

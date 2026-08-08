@@ -135,10 +135,7 @@ export const KENO_PICK_STYLES: Record<number, KenoPlayTypeStyle> = {
  * Màu + label cho 2 side bet (bigSmall/evenOdd). CHỈ dùng ở UI.
  * `label` lấy từ core labels (KHÔNG viết lại text tiếng Việt) — chỉ palette là UI-only.
  */
-export const KENO_SIDE_BET_STYLES: Record<
-  "bigSmall" | "evenOdd",
-  KenoPlayTypeStyle & { label: string }
-> = {
+export const KENO_SIDE_BET_STYLES: Record<"bigSmall" | "evenOdd", KenoPlayTypeStyle & { label: string }> = {
   bigSmall: {
     dot: "bg-sky-500",
     text: "text-sky-700 dark:text-sky-400",

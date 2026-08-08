@@ -32,11 +32,7 @@
  */
 
 import { PlayMode } from "@megawin/game-max3dpro/entities";
-import {
-  expandSelectionToPairs,
-  maxProBoardUnitWin,
-  toOrderedPairKey,
-} from "@megawin/game-max3dpro/rules";
+import { expandSelectionToPairs, maxProBoardUnitWin, toOrderedPairKey } from "@megawin/game-max3dpro/rules";
 import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
 import type {
   Max3dproByPlayType,
@@ -177,10 +173,7 @@ export class Max3dproDrawStatsAccumulator {
     const boardAmount = board.lineCount * board.betCount * unitPrice;
     this.sets += board.betCount;
 
-    const stat =
-      board.playMode === PlayMode.MultiDigit
-        ? this.byPlayType.multiDigit
-        : this.byPlayType.multiNumber;
+    const stat = board.playMode === PlayMode.MultiDigit ? this.byPlayType.multiDigit : this.byPlayType.multiNumber;
     stat.amount += boardAmount;
     stat.units += board.lineCount * board.betCount;
     stat.boards += 1;

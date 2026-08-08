@@ -6,17 +6,8 @@ export interface FormatCurrencyOptions {
   noDecimals?: boolean;
 }
 
-export function formatCurrency(
-  amount: number,
-  opts?: FormatCurrencyOptions,
-) {
-  const {
-    currency = "USD",
-    locale = "en-US",
-    minimumFractionDigits,
-    maximumFractionDigits,
-    noDecimals,
-  } = opts ?? {};
+export function formatCurrency(amount: number, opts?: FormatCurrencyOptions) {
+  const { currency = "USD", locale = "en-US", minimumFractionDigits, maximumFractionDigits, noDecimals } = opts ?? {};
 
   const formatOptions: Intl.NumberFormatOptions = {
     style: "currency",

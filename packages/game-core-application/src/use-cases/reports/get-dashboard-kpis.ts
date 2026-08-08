@@ -12,10 +12,7 @@ import type { GetDashboardKpisInput, GetDashboardKpisOutput } from "./types";
  *
  * Index: { financialDate: 1, gameProduct: 1 }
  */
-export class GetDashboardKpisUseCase extends NextApiUseCase<
-  GetDashboardKpisInput,
-  GetDashboardKpisOutput
-> {
+export class GetDashboardKpisUseCase extends NextApiUseCase<GetDashboardKpisInput, GetDashboardKpisOutput> {
   private readonly repo = new SystemSettleGameDailyRepository();
 
   protected async execute(input: GetDashboardKpisInput): Promise<GetDashboardKpisOutput> {

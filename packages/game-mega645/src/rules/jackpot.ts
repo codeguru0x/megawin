@@ -11,13 +11,7 @@
  *   JackpotContribution = Revenue - FixedPrizes - AgentCommission - CompanyTake
  */
 
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  Mega645OpsConfig,
-} from "../entities/types";
+import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules, Mega645OpsConfig } from "../entities/types";
 import { Mega645OpsAlertType } from "../entities/ops-alert";
 
 // ─────────────────────────────────────────────

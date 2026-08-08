@@ -87,10 +87,7 @@ export const KENO_BASIC_PLAY_TYPES: readonly KenoBasicPlayType[] = [
 ];
 
 /** Play types thuộc cách chơi bổ sung (side bet). */
-export const KENO_SIDE_BET_PLAY_TYPES: readonly KenoPlayType[] = [
-  KenoPlayType.BigSmall,
-  KenoPlayType.EvenOdd,
-];
+export const KENO_SIDE_BET_PLAY_TYPES: readonly KenoPlayType[] = [KenoPlayType.BigSmall, KenoPlayType.EvenOdd];
 
 /** Narrowed type cho side bet play types — dùng trong board interface khi playType thuộc nhóm bổ sung. */
 export type KenoSideBetPlayType = typeof KenoPlayType.BigSmall | typeof KenoPlayType.EvenOdd;
@@ -114,16 +111,13 @@ export type KenoBasicPlayType =
  * dồn cược khai thác. Dùng thay string literal trần `"pick8" | "pick9" | "pick10"` ở mọi nơi
  * cần tập giá trị đóng này (evaluator alert, exposure cap, combo stats).
  */
-export type KenoCappablePlayType =
-  typeof KenoPlayType.Pick8 | typeof KenoPlayType.Pick9 | typeof KenoPlayType.Pick10;
+export type KenoCappablePlayType = typeof KenoPlayType.Pick8 | typeof KenoPlayType.Pick9 | typeof KenoPlayType.Pick10;
 
 /** Set dùng cho runtime check: playType có thuộc basic (chọn số) hay không. */
 export const KENO_BASIC_PLAY_TYPE_SET: ReadonlySet<KenoPlayType> = new Set(KENO_BASIC_PLAY_TYPES);
 
 /** Set dùng cho runtime check: playType có thuộc side bet hay không. */
-export const KENO_SIDE_BET_PLAY_TYPE_SET: ReadonlySet<KenoPlayType> = new Set(
-  KENO_SIDE_BET_PLAY_TYPES,
-);
+export const KENO_SIDE_BET_PLAY_TYPE_SET: ReadonlySet<KenoPlayType> = new Set(KENO_SIDE_BET_PLAY_TYPES);
 
 // ─────────────────────────────────────────────
 // Side Bet Selection – Cách chơi bổ sung

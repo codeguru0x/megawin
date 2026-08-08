@@ -34,16 +34,9 @@ export interface UpdateScheduleOutput {
   drawTime: string;
 }
 
-const EDITABLE_STATUSES = new Set<string>([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-]);
+const EDITABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesOpen, DrawStatus.SalesClosed]);
 
-export class UpdateScheduleUseCase extends NextApiUseCase<
-  UpdateScheduleInput,
-  UpdateScheduleOutput
-> {
+export class UpdateScheduleUseCase extends NextApiUseCase<UpdateScheduleInput, UpdateScheduleOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: UpdateScheduleInput): Promise<UpdateScheduleOutput> {
@@ -77,9 +70,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
     }
 
     if (closeAt >= drawTime) {
-      throw AppException.badRequest(
-        `Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`,
-      );
+      throw AppException.badRequest(`Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`);
     }
 
     const updated = await this.drawRepo.updateSchedule(input.drawId, {

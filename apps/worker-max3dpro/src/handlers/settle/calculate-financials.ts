@@ -7,10 +7,7 @@
  * IDEMPOTENT: chạy lại cho kết quả giống nhau.
  */
 
-import {
-  CalculateFinancialsUseCase,
-  type SettleContext,
-} from "@megawin/game-max3dpro-application/use-cases/settle";
+import { CalculateFinancialsUseCase, type SettleContext } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 

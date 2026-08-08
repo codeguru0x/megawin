@@ -8,9 +8,10 @@ import type { ListSettleDrawReportsInput, ListSettleDrawReportsOutput } from "./
  * Dùng cho tab "Theo kỳ quay" cấp 1 trong Financial Reports page.
  * Index: { financialDate: 1 }
  */
-export class ListSettleDrawReportsUseCase
-  extends NextApiUseCase<ListSettleDrawReportsInput, ListSettleDrawReportsOutput>
-{
+export class ListSettleDrawReportsUseCase extends NextApiUseCase<
+  ListSettleDrawReportsInput,
+  ListSettleDrawReportsOutput
+> {
   private readonly repo = new SettleDrawReportRepository();
 
   protected async execute(input: ListSettleDrawReportsInput): Promise<ListSettleDrawReportsOutput> {

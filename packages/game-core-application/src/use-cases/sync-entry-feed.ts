@@ -115,10 +115,7 @@ export interface SyncEntryFeedResult {
  * CRASH-SAFE: cursor save sau mỗi batch. Mất tối đa 500 entries khi crash.
  * IDEMPOTENT: upsert với version guard — re-run an toàn.
  */
-export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
-  SyncEntryFeedInput,
-  SyncEntryFeedResult
-> {
+export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<SyncEntryFeedInput, SyncEntryFeedResult> {
   private readonly feedRepo = new EntryFeedRepository();
   private readonly cursorRepo = new FeedSyncCursorRepository();
 
@@ -139,10 +136,7 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
    * @param afterVersion Version cursor hiện tại (string, convert sang Long khi query).
    * @param batchSize    Số entries tối đa mỗi batch.
    */
-  protected abstract fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]>;
+  protected abstract fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]>;
 
   /**
    * Sync loop tự chứa: acquireLock → loop batches → releaseLock.

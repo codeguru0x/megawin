@@ -28,7 +28,10 @@ export default function Max3dproConfigPage() {
 
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
 
-  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["prizes", "rates", "play", "ops"]).withDefault("prizes"));
+  const [tab, setTab] = useQueryState(
+    "tab",
+    parseAsStringEnum(["prizes", "rates", "play", "ops"]).withDefault("prizes"),
+  );
 
   return (
     <div className="@container/main flex flex-col gap-2">

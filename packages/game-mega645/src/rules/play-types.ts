@@ -126,9 +126,7 @@ export function validateSelection(playType: PlayType, selection: BoardSelection)
 
   const config = PLAY_TYPE_CONFIGS[playType];
   if (numbers.length !== config.numberCount) {
-    errors.push(
-      `${config.label}: cần chọn đúng ${config.numberCount} số, nhận được ${numbers.length}`,
-    );
+    errors.push(`${config.label}: cần chọn đúng ${config.numberCount} số, nhận được ${numbers.length}`);
   }
 
   return { valid: errors.length === 0, errors };

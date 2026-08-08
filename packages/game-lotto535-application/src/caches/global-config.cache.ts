@@ -36,11 +36,9 @@ const fetcher = createCachedFetcher<void, GlobalConfigEntity>(
       // với lỗi hạ tầng khác (analysis §3.8, p0-03). Giữ statusCode 500 (lỗi vận
       // hành/config, không phải lỗi request của client) cho MỌI caller khác (game
       // logic, worker).
-      throw new AppException(
-        APP_ERROR_CODES.GAME_CONFIG_NOT_FOUND,
-        "Lotto 5/35 GameConfig chưa được khởi tạo.",
-        { statusCode: 500 },
-      );
+      throw new AppException(APP_ERROR_CODES.GAME_CONFIG_NOT_FOUND, "Lotto 5/35 GameConfig chưa được khởi tạo.", {
+        statusCode: 500,
+      });
     }
     return config;
   },

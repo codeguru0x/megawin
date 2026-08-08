@@ -68,10 +68,7 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
 
     // Range search: yêu cầu from + to, validate window.
     if (!input.from || !input.to) {
-      throw new AppException(
-        APP_ERROR_CODES.VALIDATION,
-        "Phải cung cấp từ & đến khi không search theo tx",
-      );
+      throw new AppException(APP_ERROR_CODES.VALIDATION, "Phải cung cấp từ & đến khi không search theo tx");
     }
 
     const from = this.parseBoundary(input.from, "start");
@@ -146,10 +143,7 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
 
     const maxLookbackMs = MAX_LOOKBACK_DAYS * msPerDay;
     if (Date.now() - from.getTime() > maxLookbackMs) {
-      throw new AppException(
-        APP_ERROR_CODES.VALIDATION,
-        `Chỉ tra cứu trong ${MAX_LOOKBACK_DAYS} ngày gần nhất`,
-      );
+      throw new AppException(APP_ERROR_CODES.VALIDATION, `Chỉ tra cứu trong ${MAX_LOOKBACK_DAYS} ngày gần nhất`);
     }
   }
 

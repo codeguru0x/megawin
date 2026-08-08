@@ -75,10 +75,8 @@ export function AnalyticsSection({ active }: { active: boolean }) {
   const { data: topAccounts } = useOpsSnapshot<TopAccountRow[]>(effectiveDrawId, isSettled, (s) =>
     toTopAccounts(s.topAccounts),
   );
-  const { data: topPotential } = useOpsSnapshot<TopPotentialRow[]>(
-    effectiveDrawId,
-    isSettled,
-    (s) => (s.stats ? toTopPotential(s.stats) : []),
+  const { data: topPotential } = useOpsSnapshot<TopPotentialRow[]>(effectiveDrawId, isSettled, (s) =>
+    s.stats ? toTopPotential(s.stats) : [],
   );
   const { data: tenants } = useOpsSnapshot<TenantRow[]>(effectiveDrawId, isSettled, (s) =>
     s.stats ? toTenantRows(s.stats) : [],
@@ -91,12 +89,8 @@ export function AnalyticsSection({ active }: { active: boolean }) {
     if (!liveData) return [];
     return liveData.entries.map((e) => {
       // Lấy board cơ bản đầu tiên để hiển thị preview, fallback side bet nếu không có.
-      const firstBasicBoard = e.boards.find(
-        (b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as never),
-      );
-      const firstSideBetBoard = e.boards.find((b) =>
-        KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as never),
-      );
+      const firstBasicBoard = e.boards.find((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as never));
+      const firstSideBetBoard = e.boards.find((b) => KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as never));
       const previewBoard = firstBasicBoard ?? firstSideBetBoard;
       const isSideBet = !firstBasicBoard && !!firstSideBetBoard;
       return {
@@ -137,11 +131,7 @@ export function AnalyticsSection({ active }: { active: boolean }) {
       {/* Cược gần nhất (feed, cột rộng chính — dữ liệu live hữu ích, cần diện tích) +
           Đại lý (card hẹp phải — RGS B2B ít tenant, card giàu thông tin thay bảng trống) (§4.8). */}
       <div className="grid gap-4 @[900px]/main:grid-cols-[1fr_24rem] items-start">
-        <LiveFeed
-          entries={liveEntries}
-          totalCount={liveData?.totalCount ?? 0}
-          isSettled={isSettled}
-        />
+        <LiveFeed entries={liveEntries} totalCount={liveData?.totalCount ?? 0} isSettled={isSettled} />
         <TenantBreakdownCard tenants={tenants ?? []} />
       </div>
     </section>

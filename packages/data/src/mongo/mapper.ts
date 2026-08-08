@@ -4,10 +4,7 @@ import { Document } from "mongodb";
 /**
  * Map document từ MongoDB sang Entity object
  */
-export abstract class MongoMapper<
-  TDoc extends Document,
-  TModel extends BaseEntity,
-> extends Mapper<TDoc, TModel> {
+export abstract class MongoMapper<TDoc extends Document, TModel extends BaseEntity> extends Mapper<TDoc, TModel> {
   /**
    * Map properties from document to entity
    * @param doc
@@ -31,10 +28,7 @@ export abstract class MongoMapper<
  * @template TDoc - Document type
  * @template TModel - Model type
  */
-export class DefaultMongoMapper<
-  TDoc extends Document,
-  TModel extends BaseEntity,
-> extends MongoMapper<TDoc, TModel> {
+export class DefaultMongoMapper<TDoc extends Document, TModel extends BaseEntity> extends MongoMapper<TDoc, TModel> {
   /**
    * constructor
    */

@@ -50,9 +50,7 @@ export class DisableMfaUseCase extends NextApiUseCase<DisableMfaInput, DisableMf
       }
 
       if (errName === "CodeMismatchException" || msg.includes("Code mismatch")) {
-        throw AppException.badRequest(
-          "Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.",
-        );
+        throw AppException.badRequest("Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.");
       }
 
       throw AppException.internal(`Xác thực thất bại: ${msg}`);

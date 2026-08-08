@@ -10,11 +10,7 @@ import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
 const VOID_SFN_ARN = process.env.MAX3DPRO_VOID_SFN_ARN!;
 
-const VOIDABLE_STATUSES = new Set<string>([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-]);
+const VOIDABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published]);
 
 export interface VoidDrawInput extends DrawIdInput {
   reason: string;
@@ -119,10 +115,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       // ExecutionAlreadyExists = phiên huỷ này đã được start trước đó
       // (retry/replay). KHÔNG phải lỗi — coi như thành công idempotent.
       if (!(err instanceof ExecutionAlreadyExists)) {
-        throw new AppException(
-          "SFN_START_FAILED",
-          `Không thể khởi chạy void worker: ${(err as Error).message}`,
-        );
+        throw new AppException("SFN_START_FAILED", `Không thể khởi chạy void worker: ${(err as Error).message}`);
       }
     }
 

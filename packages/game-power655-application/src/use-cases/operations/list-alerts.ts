@@ -57,8 +57,6 @@ export class ListAlertsUseCase extends NextApiUseCase<ListAlertsInput, ListAlert
       }
     }
 
-    return [...byType.values()].sort(
-      (a, b) => SEVERITY_RANK[b.severity]! - SEVERITY_RANK[a.severity]!,
-    );
+    return [...byType.values()].sort((a, b) => SEVERITY_RANK[b.severity]! - SEVERITY_RANK[a.severity]!);
   }
 }

@@ -94,10 +94,7 @@ export interface FinalizeSettleResult {
  *   - createCycle guard getActiveCycle() → skip nếu đã tạo.
  *   - resetJp2InCycle guard jackpot2CurrentAmount ≠ seed → idempotent (no-op nếu đã reset).
  */
-export class FinalizeSettleUseCase extends InternalUseCase<
-  SettleContextWithFinancials,
-  FinalizeSettleResult
-> {
+export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFinancials, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
@@ -136,9 +133,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Kỳ ${drawId} đã được hoàn tất, bỏ qua chuyển trạng thái.`);
       } else {
-        throw AppException.internal(
-          `Không thể hoàn tất kỳ ${drawId}. Trạng thái hiện tại: ${draw?.status}`,
-        );
+        throw AppException.internal(`Không thể hoàn tất kỳ ${drawId}. Trạng thái hiện tại: ${draw?.status}`);
       }
     }
 
@@ -217,9 +212,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       // → closeCycle đã chạy thành công lần trước → chỉ đảm bảo active cycle tồn tại.
       const alreadyClosed = await this.cycleRepo.findClosedByEndDrawId(drawId);
       if (alreadyClosed) {
-        console.log(
-          `Jackpot cycle ${alreadyClosed.cycleNo} đã đóng cho kỳ ${drawId}, đảm bảo tạo cycle mới.`,
-        );
+        console.log(`Jackpot cycle ${alreadyClosed.cycleNo} đã đóng cho kỳ ${drawId}, đảm bảo tạo cycle mới.`);
         await this.ensureNextCycleExists(drawId, input);
         return;
       }
@@ -297,9 +290,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     const jackpot2PrizePool = jp2CurrentAmount + jackpot2Contribution;
 
     // Build winners list từ jackpotWinners (đã được PatchJackpotPrize điền trước).
-    const jp2Winners = (input.jackpotWinners ?? []).filter(
-      (w) => w.jackpotType === JackpotType.Jackpot2,
-    );
+    const jp2Winners = (input.jackpotWinners ?? []).filter((w) => w.jackpotType === JackpotType.Jackpot2);
 
     await this.cycleRepo.resetJp2InCycle({
       cycleNo,
@@ -335,8 +326,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     input: SettleContextWithFinancials,
   ): Promise<void> {
     const { drawId, jp1CurrentAmount, jp2CurrentAmount, financials } = input;
-    const { hasJackpot1Winner, hasJackpot2Winner, jackpot1Contribution, jackpot2Contribution } =
-      financials;
+    const { hasJackpot1Winner, hasJackpot2Winner, jackpot1Contribution, jackpot2Contribution } = financials;
 
     // ── Xác định close reason ──────────────────────────────────────────────
     // Chỉ JP1 winner mới đóng cycle — BothWinner khi cùng kỳ JP2 cũng trúng.
@@ -359,9 +349,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 
     // JP1 winners từ jackpotWinners (PatchJackpotPrize đã điền).
     // JP2 winners KHÔNG lưu ở cycle.winners — đã lưu trong jackpot2Resets[].
-    const jp1Winners = (input.jackpotWinners ?? []).filter(
-      (w) => w.jackpotType === JackpotType.Jackpot1,
-    );
+    const jp1Winners = (input.jackpotWinners ?? []).filter((w) => w.jackpotType === JackpotType.Jackpot1);
 
     // ── Đóng cycle (idempotent: filter status = "active") ──
     await this.cycleRepo.closeCycle({
@@ -395,10 +383,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    *
    * Config cho cycle mới: luôn đọc từ GlobalConfig tại thời điểm tạo cycle mới.
    */
-  private async ensureNextCycleExists(
-    drawId: string,
-    input: SettleContextWithFinancials,
-  ): Promise<void> {
+  private async ensureNextCycleExists(drawId: string, input: SettleContextWithFinancials): Promise<void> {
     const existingActive = await this.cycleRepo.getActiveCycle();
     if (existingActive) {
       return;

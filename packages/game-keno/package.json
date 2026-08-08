@@ -64,12 +64,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "keno",
-    "game",
-    "domain"
-  ],
+  "keywords": ["megawin", "keno", "game", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

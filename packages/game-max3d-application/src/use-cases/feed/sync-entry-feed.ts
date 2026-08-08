@@ -18,11 +18,7 @@ import type {
   EntryVoidInfo,
   EntryResult,
 } from "@megawin/game-max3d/entities";
-import type {
-  Max3dFeedBetContent,
-  Max3dFeedDrawResult,
-  Max3dFeedPayoutDetail,
-} from "@megawin/game-max3d/entities";
+import type { Max3dFeedBetContent, Max3dFeedDrawResult, Max3dFeedPayoutDetail } from "@megawin/game-max3d/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
 
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
@@ -32,14 +28,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     super(GameProduct.Max3d);
   }
 
-  protected async fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
-    const entries = await this.entryRepo.getChangedEntries(
-      Long.fromString(afterVersion),
-      batchSize,
-    );
+  protected async fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
     return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }

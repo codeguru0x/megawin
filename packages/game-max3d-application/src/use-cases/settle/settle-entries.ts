@@ -51,10 +51,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 

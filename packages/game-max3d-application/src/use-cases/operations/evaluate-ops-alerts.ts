@@ -156,10 +156,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
 
   /** Đánh giá 1 doc đã đọc sẵn (KHÔNG đọc lại — `findChangedSince` đã trả full entity). */
   private async evaluateDoc(stats: Max3dDrawBettingStatsEntity): Promise<void> {
-    const topPairEntities = await this.pairStatsRepo.getTopPairs(
-      stats.drawId,
-      this.alertCtx.topCombosK,
-    );
+    const topPairEntities = await this.pairStatsRepo.getTopPairs(stats.drawId, this.alertCtx.topCombosK);
     const topPairs: Max3dTopPair[] = topPairEntities.map((p) => ({
       pairKey: p.pairKey,
       triplet1: p.triplet1,

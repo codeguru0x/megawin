@@ -14,12 +14,7 @@
  * nhiều doc trùng loại/scope trong 1 kỳ (payload cập nhật mỗi tick).
  */
 
-import {
-  Bingo18OpsAlertType,
-  Bingo18PlayType,
-  OpsAlertSeverity,
-  OpsAlertStatus,
-} from "@megawin/game-bingo18/entities";
+import { Bingo18OpsAlertType, Bingo18PlayType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
 import { BINGO18_HIGH_MULTIPLIER_BUCKETS } from "@megawin/game-bingo18/rules";
 import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
 import type {
@@ -70,9 +65,7 @@ export function evaluateBingo18Alerts(input: EvaluateAlertsInput): NewAlert[] {
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn ──
   // Đếm gộp theo largeBetCount; payload đính top potential entries để staff drill-down.
   if (alerts.enabled[Bingo18OpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       Bingo18OpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -95,9 +88,7 @@ export function evaluateBingo18Alerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Bingo18OpsAlertType.ExposureThreshold,
         // Gấp đôi ngưỡng % → critical.
-        pct >= alerts.exposureWarnRevenuePct * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        pct >= alerts.exposureWarnRevenuePct * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         `${Bingo18OpsAlertType.ExposureThreshold}:${drawId}`,
         {
           worstCase: worst,
@@ -154,9 +145,7 @@ export function evaluateBingo18Alerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Bingo18OpsAlertType.BucketConcentration,
         // Gấp đôi ngưỡng → critical.
-        bucket.amount >= alerts.bucketConcentrationAmount * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        bucket.amount >= alerts.bucketConcentrationAmount * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         `${Bingo18OpsAlertType.BucketConcentration}:${b.playType}:${b.key}`,
         {
           playType: b.playType,

@@ -23,12 +23,7 @@
 import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type {
-  Board,
-  TicketDoc,
-  TicketEntryDoc,
-  EntrySummary,
-} from "@megawin/game-power655/entities";
+import type { Board, TicketDoc, TicketEntryDoc, EntrySummary } from "@megawin/game-power655/entities";
 import { PlayType } from "@megawin/game-power655/entities";
 import { getLineCount } from "@megawin/game-power655/rules/play-types";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -57,15 +52,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
   /** @inheritdoc */
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      ipAddress,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -129,9 +116,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
       }
       if (draw.status !== DrawStatus.SalesOpen) {
-        throw AppException.badRequest(
-          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
-        );
+        throw AppException.badRequest(`Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`);
       }
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);

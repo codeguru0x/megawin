@@ -18,17 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-function ComponentStat({
-  label,
-  value,
-  tip,
-  danger,
-}: {
-  label: string;
-  value: number;
-  tip: string;
-  danger?: boolean;
-}) {
+function ComponentStat({ label, value, tip, danger }: { label: string; value: number; tip: string; danger?: boolean }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -67,8 +57,7 @@ export function ExposureCard({
 
   // Gauge scale: 100% thanh = ngưỡng tuyệt đối; ≥ ngưỡng → đỏ, ≥ 1/2 → amber.
   const ratio = warnAmount > 0 ? worst / warnAmount : 0;
-  const gaugeColor =
-    ratio >= 1 ? "bg-red-500" : ratio >= 0.5 ? "bg-amber-500" : "bg-emerald-500";
+  const gaugeColor = ratio >= 1 ? "bg-red-500" : ratio >= 0.5 ? "bg-amber-500" : "bg-emerald-500";
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
@@ -80,16 +69,12 @@ export function ExposureCard({
             </div>
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
-              <p className="text-xs text-muted-foreground">
-                Cặp ĐB có điều kiện (2 chiều) · Đuôi Năm/Sáu ước tính
-              </p>
+              <p className="text-xs text-muted-foreground">Cặp ĐB có điều kiện (2 chiều) · Đuôi Năm/Sáu ước tính</p>
             </div>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Worst-case tổng</p>
-            <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">
-              {formatNumber(worst)}
-            </p>
+            <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">{formatNumber(worst)}</p>
           </div>
         </div>
 
@@ -121,8 +106,7 @@ export function ExposureCard({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[11px] tabular-nums text-muted-foreground">
             <span>
-              Worst-case / Ngưỡng:{" "}
-              <span className="font-semibold text-foreground">{Math.round(ratio * 100)}%</span>
+              Worst-case / Ngưỡng: <span className="font-semibold text-foreground">{Math.round(ratio * 100)}%</span>
             </span>
             <span>Ngưỡng cảnh báo {formatNumber(warnAmount)} VND</span>
           </div>

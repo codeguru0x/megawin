@@ -19,10 +19,7 @@ export interface GetGameConfigPlayerInput {
   tenantId: string;
 }
 
-export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
-  GetGameConfigPlayerInput,
-  PlayerGetGameConfigOutput
-> {
+export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<GetGameConfigPlayerInput, PlayerGetGameConfigOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 

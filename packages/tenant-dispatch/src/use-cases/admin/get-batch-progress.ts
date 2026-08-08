@@ -11,10 +11,7 @@ export type GetBatchProgressOutput = BatchProgress | null;
 /**
  * BO use case — trả aggregate progress của 1 `batchKey` cho operations dashboard.
  */
-export class GetBatchProgressUseCase extends NextApiUseCase<
-  GetBatchProgressInput,
-  GetBatchProgressOutput
-> {
+export class GetBatchProgressUseCase extends NextApiUseCase<GetBatchProgressInput, GetBatchProgressOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: GetBatchProgressInput): Promise<GetBatchProgressOutput> {

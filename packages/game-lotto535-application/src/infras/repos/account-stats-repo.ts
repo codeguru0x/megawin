@@ -21,10 +21,7 @@
  */
 
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import type {
-  Lotto535DrawAccountStatsDoc,
-  Lotto535DrawAccountStatsEntity,
-} from "@megawin/game-lotto535/entities";
+import type { Lotto535DrawAccountStatsDoc, Lotto535DrawAccountStatsEntity } from "@megawin/game-lotto535/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -33,10 +30,7 @@ import type { AccountStatsDelta } from "./types";
 
 const f = docPath<Lotto535DrawAccountStatsDoc>();
 
-export class AccountStatsRepository extends BaseRepo<
-  Lotto535DrawAccountStatsEntity,
-  AccountStatsMapper
-> {
+export class AccountStatsRepository extends BaseRepo<Lotto535DrawAccountStatsEntity, AccountStatsMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.DrawAccountStats,
@@ -66,10 +60,7 @@ export class AccountStatsRepository extends BaseRepo<
   }
 
   /** Tích luỹ cược của 1 account trong kỳ — drill-down outstanding từ alert. */
-  async getByAccount(
-    drawId: string,
-    accountId: string,
-  ): Promise<Lotto535DrawAccountStatsEntity | null> {
+  async getByAccount(drawId: string, accountId: string): Promise<Lotto535DrawAccountStatsEntity | null> {
     return await this.findOne({ drawId, accountId });
   }
 

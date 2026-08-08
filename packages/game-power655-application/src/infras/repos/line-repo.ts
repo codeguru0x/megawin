@@ -159,11 +159,7 @@ export class LineRepository extends BaseRepo<any> {
    * mẫu số DETERMINISTIC (getAllJackpotLines) nên mọi retry đều dùng cùng đơn giá
    * → line patch ở lần retry khác nhau vẫn ra cùng winAmount.
    */
-  async patchJackpotLinesPerUnit(
-    drawId: string,
-    jackpotTier: string,
-    jackpotPerUnit: number,
-  ): Promise<number> {
+  async patchJackpotLinesPerUnit(drawId: string, jackpotTier: string, jackpotPerUnit: number): Promise<number> {
     // Chỉ lấy lines CHƯA patch để tránh ghi đè line đã có winAmount (idempotent).
     const unpatchedLines = await this.getUnpatchedJackpotLines(drawId, jackpotTier);
     if (unpatchedLines.length === 0) {

@@ -21,11 +21,7 @@ export const VALID_BOARD_NOS = ["A", "B", "C", "D"] as const;
  * - Basic combo6: 6 lines (hoặc 3 nếu 2 chữ số giống)
  * - Plus (bất kỳ type): 1 line (2 bộ ba số = 1 lần dự thưởng)
  */
-export function calculateLineCount(
-  playMode: PlayMode,
-  playType: PlayType,
-  selection: BoardSelection,
-): number {
+export function calculateLineCount(playMode: PlayMode, playType: PlayType, selection: BoardSelection): number {
   if (playMode === PlayMode.Plus) {
     return 1;
   }

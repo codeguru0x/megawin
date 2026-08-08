@@ -27,28 +27,17 @@ describe("checkAuthorization", () => {
   });
 
   it("account suspended → ACCOUNT_SUSPENDED", () => {
-    const err = checkAuthorization(
-      { ...companyAdmin, accountStatus: AccountStatus.Suspended },
-      {},
-    );
+    const err = checkAuthorization({ ...companyAdmin, accountStatus: AccountStatus.Suspended }, {});
     expect(err?.code).toBe(APP_ERROR_CODES.ACCOUNT_SUSPENDED);
   });
 
   it("account read_only + method ghi (POST) → ACCOUNT_READ_ONLY", () => {
-    const err = checkAuthorization(
-      { ...companyAdmin, accountStatus: AccountStatus.ReadOnly },
-      {},
-      "POST",
-    );
+    const err = checkAuthorization({ ...companyAdmin, accountStatus: AccountStatus.ReadOnly }, {}, "POST");
     expect(err?.code).toBe(APP_ERROR_CODES.ACCOUNT_READ_ONLY);
   });
 
   it("account read_only + method đọc (GET) → cho qua", () => {
-    const err = checkAuthorization(
-      { ...companyAdmin, accountStatus: AccountStatus.ReadOnly },
-      {},
-      "GET",
-    );
+    const err = checkAuthorization({ ...companyAdmin, accountStatus: AccountStatus.ReadOnly }, {}, "GET");
     expect(err).toBeUndefined();
   });
 

@@ -166,10 +166,7 @@ function buildJackpotInput(params: {
 }
 
 /** Build SettleContext tối thiểu cho ApplySplitBonusesUseCase.execute. */
-function buildSplitInput(params: {
-  drawId: string;
-  splitDetails: SettleFinancials["splitDetails"];
-}): SettleContext {
+function buildSplitInput(params: { drawId: string; splitDetails: SettleFinancials["splitDetails"] }): SettleContext {
   return {
     drawId: params.drawId,
     financials: {
@@ -564,16 +561,12 @@ describe("Lotto 5/35 – ApplySplitBonuses", () => {
     expect(result.entriesPatched).toBe(1);
 
     const docA = await entryRepo.getEntryById(entryA);
-    const splitTier = docA!.payout!.tiers.find(
-      (t) => t.tier === PrizeTier.Tier1 && t.isSplitBonus === true,
-    )!;
+    const splitTier = docA!.payout!.tiers.find((t) => t.tier === PrizeTier.Tier1 && t.isSplitBonus === true)!;
     expect(splitTier).toBeDefined();
     expect(splitTier.unitAmount).toBe(bonusPerUnit);
     expect(splitTier.amount).toBe(bonusPerUnit * 5);
 
-    const baseTier = docA!.payout!.tiers.find(
-      (t) => t.tier === PrizeTier.Tier1 && !t.isSplitBonus,
-    )!;
+    const baseTier = docA!.payout!.tiers.find((t) => t.tier === PrizeTier.Tier1 && !t.isSplitBonus)!;
     expect(baseTier.amount).toBe(50_000_000); // base tier1 KHÔNG bị đổi.
     expect(docA!.payout!.winAmount).toBe(50_000_000 + bonusPerUnit * 5);
   });
@@ -620,9 +613,7 @@ describe("Lotto 5/35 – ApplySplitBonuses", () => {
     expect(run2.entriesPatched).toBe(0); // $nor guard — lần 2 không có entry nào match.
 
     const docA = await entryRepo.getEntryById(entryA);
-    const splitTiers = docA!.payout!.tiers.filter(
-      (t) => t.tier === PrizeTier.Tier2 && t.isSplitBonus === true,
-    );
+    const splitTiers = docA!.payout!.tiers.filter((t) => t.tier === PrizeTier.Tier2 && t.isSplitBonus === true);
     expect(splitTiers).toHaveLength(1); // KHÔNG duplicate.
     expect(docA!.payout!.winAmount).toBe(5_000_000 + bonusPerUnit); // KHÔNG double.
   });

@@ -41,11 +41,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditPublishResult, auditRepublishResult } from "../../services/audit-log";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
-const PUBLISHABLE_STATUSES = new Set<string>([
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settled,
-]);
+const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settled]);
 
 export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -84,9 +80,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
         const updated = await this.drawRepo.updateVietlottRef(input.drawId, input.vietlottRef);
 
         if (!updated) {
-          throw AppException.internal(
-            `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
-          );
+          throw AppException.internal(`Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`);
         }
 
         // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
@@ -113,11 +107,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
       // settled → published + $unset data settle cũ → mở luồng resettle.
       // Ghi result + vietlottRef trong CÙNG 1 query (vietlottRef không kéo
       // resettle, nhưng gộp vào tránh thừa 1 round-trip mỗi lần sửa).
-      const updated = await this.drawRepo.republishResultAfterSettled(
-        input.drawId,
-        resultData,
-        input.vietlottRef,
-      );
+      const updated = await this.drawRepo.republishResultAfterSettled(input.drawId, resultData, input.vietlottRef);
 
       if (!updated) {
         throw AppException.internal(
@@ -142,10 +132,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
   }
 
   /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult`, → `Published`. */
-  private async publish(
-    input: PublishResultInput,
-    publishedAt: Date,
-  ): Promise<PublishResultOutput> {
+  private async publish(input: PublishResultInput, publishedAt: Date): Promise<PublishResultOutput> {
     const stats = computeDrawStats(input.winningNumbers);
     const resultData = { winningNumbers: input.winningNumbers, ...stats, publishedAt };
 
@@ -168,11 +155,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
   }
 
   /** Build output shape thống nhất. */
-  private toOutput(
-    input: PublishResultInput,
-    status: string,
-    publishedAt: Date,
-  ): PublishResultOutput {
+  private toOutput(input: PublishResultInput, status: string, publishedAt: Date): PublishResultOutput {
     return {
       drawId: input.drawId,
       status,

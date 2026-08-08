@@ -35,10 +35,7 @@ import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
  * Repository cho Cycle Ledger Mega 6/45.
  * Chỉ thực hiện DB operations — mọi business logic tính toán ở use-case layer.
  */
-export class JackpotCycleEntryRepository extends BaseRepo<
-  JackpotCycleEntryEntity,
-  JackpotCycleEntryMapper
-> {
+export class JackpotCycleEntryRepository extends BaseRepo<JackpotCycleEntryEntity, JackpotCycleEntryMapper> {
   constructor() {
     super({
       collName: Mega645Collections.JackpotCycleEntries,
@@ -68,10 +65,7 @@ export class JackpotCycleEntryRepository extends BaseRepo<
    * @param allowOpeningUpdate - `true` (cascade B2): ghi đè `openingJp` dù entry đã
    *   tồn tại. Mặc định `false`: opening bất biến qua `$setOnInsert`.
    */
-  async upsertEntry(
-    entry: Omit<JackpotCycleEntryDoc, "_id" | "updatedAt">,
-    allowOpeningUpdate = false,
-  ): Promise<void> {
+  async upsertEntry(entry: Omit<JackpotCycleEntryDoc, "_id" | "updatedAt">, allowOpeningUpdate = false): Promise<void> {
     // Tách opening ra khỏi rest: rest luôn nằm trong $set (cập nhật mỗi settle);
     // identity (cycleNo/drawId/drawNo/seq) luôn $setOnInsert.
     const { cycleNo, drawId, drawNo, seq, openingJp, ...mutable } = entry;

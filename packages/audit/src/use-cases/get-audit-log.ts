@@ -10,11 +10,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import type { AuditLogEntity } from "../entities";
-import {
-  AuditTargetType,
-  SELF_ACTIVITY_ACTION_SET,
-  SELF_ACTIVITY_TARGET_ACTION_SET,
-} from "../entities";
+import { AuditTargetType, SELF_ACTIVITY_ACTION_SET, SELF_ACTIVITY_TARGET_ACTION_SET } from "../entities";
 import { AuditLogRepository } from "../infras/repos";
 
 /** Input lấy chi tiết audit — chỉ cần `id` (`_id` hex string). */

@@ -76,9 +76,7 @@ export function TopTripletsCard({ rows }: { rows: TopTripletRow[] }) {
           <Grid3x3 className="size-4 shrink-0 text-muted-foreground" />
           <div>
             <CardTitle className="text-sm font-semibold">Bộ ba bị dồn tiền</CardTitle>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Mỗi triplet distinct trong board tính 1 lần
-            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Mỗi triplet distinct trong board tính 1 lần</p>
           </div>
         </div>
       </CardHeader>
@@ -97,12 +95,8 @@ export function TopTripletsCard({ rows }: { rows: TopTripletRow[] }) {
                 <span className="inline-flex h-6 items-center justify-center rounded-md bg-emerald-500/15 px-1.5 font-mono text-xs font-bold tabular-nums text-emerald-700 dark:text-emerald-400">
                   {r.triplet}
                 </span>
-                <span className="text-[11px] tabular-nums text-muted-foreground">
-                  {formatNumber(r.units)} bộ
-                </span>
-                <span className="text-right text-xs font-semibold tabular-nums">
-                  {formatNumber(r.amount)}
-                </span>
+                <span className="text-[11px] tabular-nums text-muted-foreground">{formatNumber(r.units)} bộ</span>
+                <span className="text-right text-xs font-semibold tabular-nums">{formatNumber(r.amount)}</span>
               </div>
             ))}
           </div>
@@ -164,9 +158,7 @@ export function PairTable({ rows }: { rows: PairRow[] }) {
                 <span
                   className={cn(
                     "text-right text-[11px] tabular-nums",
-                    r.overAccounts
-                      ? "font-semibold text-amber-600 dark:text-amber-400"
-                      : "text-muted-foreground",
+                    r.overAccounts ? "font-semibold text-amber-600 dark:text-amber-400" : "text-muted-foreground",
                   )}
                   title={r.overAccounts ? "Nhiều account cùng cược cặp này (nghi syndicate)" : undefined}
                 >
@@ -245,9 +237,7 @@ export function RiskCluster({
                       username={a.username}
                       className="text-xs"
                     />
-                    <p className="text-[10px] tabular-nums text-muted-foreground">
-                      {formatNumber(a.entries)} phiếu
-                    </p>
+                    <p className="text-[10px] tabular-nums text-muted-foreground">{formatNumber(a.entries)} phiếu</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                     {formatNumber(a.amount)}
@@ -278,10 +268,7 @@ export function RiskCluster({
             <div className="divide-y divide-border/40">
               {topPotential.slice(0, VISIBLE_ROWS).map((p, i) => (
                 <div key={p.entryId} className="flex items-center gap-2.5 py-2">
-                  <RankBadge
-                    rank={i + 1}
-                    topClass="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                  />
+                  <RankBadge rank={i + 1} topClass="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" />
                   <div className="min-w-0 flex-1">
                     <PlayerOutstandingLink
                       gameProduct={GameProduct.Max3dpro}
@@ -290,9 +277,7 @@ export function RiskCluster({
                       username={p.username}
                       className="text-xs"
                     />
-                    <p className="text-[10px] tabular-nums text-muted-foreground">
-                      Cược {formatNumber(p.amount)}
-                    </p>
+                    <p className="text-[10px] tabular-nums text-muted-foreground">Cược {formatNumber(p.amount)}</p>
                   </div>
                   <span className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold tabular-nums text-red-700 dark:text-red-300">
                     ≈ {formatNumber(p.potentialWin)}
@@ -332,12 +317,8 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
               <span className="text-right text-[11px] tabular-nums text-muted-foreground">
                 {formatNumber(t.entries)}
               </span>
-              <span className="text-right text-xs font-semibold tabular-nums">
-                {formatNumber(t.revenue)}
-              </span>
-              <span className="text-right text-[11px] tabular-nums text-muted-foreground">
-                {t.pct.toFixed(0)}%
-              </span>
+              <span className="text-right text-xs font-semibold tabular-nums">{formatNumber(t.revenue)}</span>
+              <span className="text-right text-[11px] tabular-nums text-muted-foreground">{t.pct.toFixed(0)}%</span>
             </div>
           ))}
         </div>

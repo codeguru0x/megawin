@@ -34,9 +34,7 @@ export function WorkersContent() {
       <Card>
         <CardContent className="flex h-60 flex-col items-center justify-center gap-3 text-center">
           <AlertCircle className="size-8 text-destructive/60" />
-          <p className="text-sm font-medium text-muted-foreground">
-            Không tải được trạng thái worker.
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">Không tải được trạng thái worker.</p>
           <Button variant="outline" size="sm" onClick={() => query.refetch()}>
             <RefreshCw className="size-3.5" />
             Thử lại
@@ -74,11 +72,7 @@ export function WorkersContent() {
         </CardContent>
       </Card>
 
-      <WorkerToggleDialog
-        row={pendingToggle}
-        onClose={() => setPendingToggle(null)}
-        mutation={toggleMutation}
-      />
+      <WorkerToggleDialog row={pendingToggle} onClose={() => setPendingToggle(null)} mutation={toggleMutation} />
       <StalledItemsDialog row={stalledDetail} onClose={() => setStalledDetail(null)} />
     </div>
   );

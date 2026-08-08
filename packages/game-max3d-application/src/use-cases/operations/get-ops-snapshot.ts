@@ -21,10 +21,7 @@ import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.d
  * + plus tail proxy) — doc chỉ lưu RAW tuyến tính (bài học Keno Risk #4).
  * `updatedAt` của stats dùng làm ETag ở route → 304 khi chưa đổi (0 re-render FE).
  */
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -51,15 +48,14 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
     const config = await this.getGlobalConfig.run();
     const ops = config.ops ?? DEFAULT_MAX3D_CONFIG.ops;
 
-    const [draw, stats, topPairEntities, topAccountEntities, newCount, criticalCount] =
-      await Promise.all([
-        this.drawRepo.getDrawById(drawId),
-        this.statsRepo.getByDrawId(drawId),
-        this.pairStatsRepo.getTopPairs(drawId, ops.stats.topCombosK),
-        this.accountStatsRepo.getTopAccounts(drawId, ops.stats.topAccountsK),
-        this.alertRepo.countByStatus(OpsAlertStatus.New),
-        this.alertRepo.countActiveCritical(),
-      ]);
+    const [draw, stats, topPairEntities, topAccountEntities, newCount, criticalCount] = await Promise.all([
+      this.drawRepo.getDrawById(drawId),
+      this.statsRepo.getByDrawId(drawId),
+      this.pairStatsRepo.getTopPairs(drawId, ops.stats.topCombosK),
+      this.accountStatsRepo.getTopAccounts(drawId, ops.stats.topAccountsK),
+      this.alertRepo.countByStatus(OpsAlertStatus.New),
+      this.alertRepo.countActiveCritical(),
+    ]);
 
     const topPairs: Max3dTopPair[] = topPairEntities.map((p) => ({
       pairKey: p.pairKey,

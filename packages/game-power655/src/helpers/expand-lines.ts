@@ -24,12 +24,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import {
-  ALL_MAIN_NUMBERS,
-  type LineValue,
-  type BoardSelection,
-  POWER655_MAIN_COUNT,
-} from "../entities/types";
+import { ALL_MAIN_NUMBERS, type LineValue, type BoardSelection, POWER655_MAIN_COUNT } from "../entities/types";
 import type { EntryBoardSnapshot } from "../entities/entry";
 
 /**

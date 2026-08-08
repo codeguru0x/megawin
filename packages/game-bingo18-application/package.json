@@ -86,12 +86,7 @@
       "default": "./dist/services/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "bingo18",
-    "game",
-    "application"
-  ],
+  "keywords": ["megawin", "bingo18", "game", "application"],
   "author": "",
   "license": "ISC",
   "dependencies": {

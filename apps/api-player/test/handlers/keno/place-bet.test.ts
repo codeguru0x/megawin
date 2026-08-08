@@ -122,9 +122,7 @@ describe("POST /player/keno/bets", () => {
   });
 
   it("should reject when drawIds exceed max (20)", async () => {
-    const drawIds = Array.from({ length: 21 }, (_, i) =>
-      `2026-02-28.${String(i + 1).padStart(3, "0")}`,
-    );
+    const drawIds = Array.from({ length: 21 }, (_, i) => `2026-02-28.${String(i + 1).padStart(3, "0")}`);
 
     const event = createMockEvent({
       body: { ...VALID_BODY_BOARDS, drawIds },
@@ -141,10 +139,7 @@ describe("POST /player/keno/bets", () => {
         boards: [
           {
             boardNo: "A",
-            numbers: [
-              "01", "02", "03", "04", "05",
-              "06", "07", "08", "09", "10", "11",
-            ],
+            numbers: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11"],
           },
         ],
         sideBets: [],

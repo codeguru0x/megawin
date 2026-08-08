@@ -43,10 +43,7 @@ export function ExposureCard({
 
   return (
     <Card
-      className={cn(
-        "gap-0 py-0 shadow-sm",
-        clickable && "cursor-pointer transition-colors hover:bg-muted/20",
-      )}
+      className={cn("gap-0 py-0 shadow-sm", clickable && "cursor-pointer transition-colors hover:bg-muted/20")}
       onClick={onOpenAnalysis}
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
@@ -68,15 +65,12 @@ export function ExposureCard({
               <ShieldAlert className="size-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                Rủi ro chi trả giải cố định (worst-case)
-              </p>
+              <p className="text-xs font-medium text-muted-foreground">Rủi ro chi trả giải cố định (worst-case)</p>
               <p className={cn("text-lg font-bold tabular-nums leading-tight", riskColor(ratio))}>
                 {formatNumber(exposure.fixedWorstCase)}
               </p>
               <p className="text-xs text-muted-foreground/70">
-                Tổng phải trả nếu mọi bộ trúng giải cố định tối đa · ngưỡng cảnh báo{" "}
-                {formatNumber(warnAmount)}
+                Tổng phải trả nếu mọi bộ trúng giải cố định tối đa · ngưỡng cảnh báo {formatNumber(warnAmount)}
               </p>
             </div>
           </div>
@@ -86,9 +80,7 @@ export function ExposureCard({
                 <CircleDollarSign className="size-5 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Exposure Jackpot (JP1+JP2)
-                </p>
+                <p className="text-xs font-medium text-muted-foreground">Exposure Jackpot (JP1+JP2)</p>
                 <p className="text-lg font-bold tabular-nums text-foreground leading-tight">
                   {formatNumber(exposure.jackpotExposure)}
                 </p>

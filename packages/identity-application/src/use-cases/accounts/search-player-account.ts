@@ -1,9 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AccountRepository } from "../../infras/repos/account-repo";
-import type {
-  SearchPlayerAccountsInput,
-  SearchPlayerAccountsOutput,
-} from "./dto/search-player-account.dto";
+import type { SearchPlayerAccountsInput, SearchPlayerAccountsOutput } from "./dto/search-player-account.dto";
 
 /**
  * Tìm kiếm tài khoản người chơi cross-tenant.
@@ -15,10 +12,7 @@ import type {
  *
  * Dùng cho tính năng search nhanh trên Backoffice > Tài khoản người chơi.
  */
-export class SearchPlayerAccountsUseCase extends NextApiUseCase<
-  SearchPlayerAccountsInput,
-  SearchPlayerAccountsOutput
-> {
+export class SearchPlayerAccountsUseCase extends NextApiUseCase<SearchPlayerAccountsInput, SearchPlayerAccountsOutput> {
   private readonly repo = new AccountRepository();
 
   protected async execute(input: SearchPlayerAccountsInput): Promise<SearchPlayerAccountsOutput> {

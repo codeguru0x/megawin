@@ -36,5 +36,5 @@ export const handler = withTenantAuth(
 
     return useCase.run({ playerExternalId, tenantId });
   },
-  { schemas: { body: bodySchema } }
+  { schemas: { body: bodySchema } },
 );

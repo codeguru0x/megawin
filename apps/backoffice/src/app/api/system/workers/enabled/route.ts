@@ -11,6 +11,4 @@ const useCase = new SetWorkerEnabledUseCase();
 export const PATCH = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(setWorkerEnabledSchema)
-  .handler(async ({ body, session, request }) =>
-    useCase.run({ ...body, actor: actorFromSession(session!, request) }),
-  );
+  .handler(async ({ body, session, request }) => useCase.run({ ...body, actor: actorFromSession(session!, request) }));

@@ -25,8 +25,7 @@ export function stepFunctionParserMiddleware() {
   return {
     before: async (request: { event: StepFunctionEvent }) => {
       const { event } = request;
-      event.parsed =
-        event.payload !== undefined ? event.payload : { ...event };
+      event.parsed = event.payload !== undefined ? event.payload : { ...event };
     },
   };
 }

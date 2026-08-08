@@ -85,11 +85,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<PlayerLoginInput, Play
     }
   }
 
-  private async createPlayerAccount(
-    cognitoUsername: string,
-    displayName: string,
-    tenantId: string,
-  ) {
+  private async createPlayerAccount(cognitoUsername: string, displayName: string, tenantId: string) {
     const accountId = generateULID();
     const password = derivePlayerPassword(cognitoUsername);
 
@@ -161,10 +157,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<PlayerLoginInput, Play
     }
   }
 
-  private async getCognitoTokens(
-    cognitoUsername: string,
-    password: string,
-  ): Promise<PlayerLoginOutput> {
+  private async getCognitoTokens(cognitoUsername: string, password: string): Promise<PlayerLoginOutput> {
     try {
       return await adminInitiateAuth({
         userPoolId: COGNITO_PLAYER_POOL_ID!,
@@ -181,9 +174,6 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<PlayerLoginInput, Play
 
   private isUsernameExistsError(err: unknown): boolean {
     const awsErr = err as { name?: string; __type?: string };
-    return (
-      awsErr.name === "UsernameExistsException" ||
-      !!awsErr.__type?.includes("UsernameExistsException")
-    );
+    return awsErr.name === "UsernameExistsException" || !!awsErr.__type?.includes("UsernameExistsException");
   }
 }

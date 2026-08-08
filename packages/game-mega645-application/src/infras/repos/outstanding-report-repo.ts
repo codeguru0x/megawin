@@ -34,9 +34,7 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
    * Luôn set snapshotAt = now để reset TTL timer.
    * Idempotent: retry ghi đè, không duplicate.
    */
-  async upsertDrawReport(
-    report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertDrawReport(report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {

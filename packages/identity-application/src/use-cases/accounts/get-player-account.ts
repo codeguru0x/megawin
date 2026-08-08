@@ -11,10 +11,7 @@ import type { GetPlayerAccountInput, GetPlayerAccountOutput } from "./dto/get-pl
  * Validate type = "player" trước khi trả về — tránh lấy nhầm Company/Agent account.
  * 1 DB query — findOne by accountId.
  */
-export class GetPlayerAccountUseCase extends NextApiUseCase<
-  GetPlayerAccountInput,
-  GetPlayerAccountOutput
-> {
+export class GetPlayerAccountUseCase extends NextApiUseCase<GetPlayerAccountInput, GetPlayerAccountOutput> {
   private readonly repo = new AccountRepository();
 
   protected async execute(input: GetPlayerAccountInput): Promise<GetPlayerAccountOutput> {

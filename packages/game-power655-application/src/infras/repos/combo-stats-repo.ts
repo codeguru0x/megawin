@@ -25,10 +25,7 @@
  */
 
 import { Power655Collections } from "@megawin/game-power655/entities";
-import type {
-  Power655DrawComboStatsDoc,
-  Power655DrawComboStatsEntity,
-} from "@megawin/game-power655/entities";
+import type { Power655DrawComboStatsDoc, Power655DrawComboStatsEntity } from "@megawin/game-power655/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -46,10 +43,7 @@ export class ComboStatsRepository extends BaseRepo<Power655DrawComboStatsEntity,
   }
 
   /** Đọc 1 combo cụ thể — tra cứu staff/player, O(1) theo unique index. */
-  async findByComboKey(
-    drawId: string,
-    comboKey: string,
-  ): Promise<Power655DrawComboStatsEntity | null> {
+  async findByComboKey(drawId: string, comboKey: string): Promise<Power655DrawComboStatsEntity | null> {
     return await this.findOne({ drawId, comboKey });
   }
 
@@ -77,15 +71,8 @@ export class ComboStatsRepository extends BaseRepo<Power655DrawComboStatsEntity,
    * @param minAccounts - Ngưỡng số người dồn cược (`ops.alerts.comboAccountsWarn`).
    * @param limit - Trần số alert combo xử lý 1 tick.
    */
-  async findConcentrated(
-    drawId: string,
-    minAccounts: number,
-    limit: number,
-  ): Promise<Power655DrawComboStatsEntity[]> {
-    return await this.findMany(
-      { drawId, accountCount: { $gte: minAccounts } },
-      { sort: { accountCount: -1 }, limit },
-    );
+  async findConcentrated(drawId: string, minAccounts: number, limit: number): Promise<Power655DrawComboStatsEntity[]> {
+    return await this.findMany({ drawId, accountCount: { $gte: minAccounts } }, { sort: { accountCount: -1 }, limit });
   }
 
   /**

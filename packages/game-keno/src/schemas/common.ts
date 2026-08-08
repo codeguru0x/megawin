@@ -21,14 +21,10 @@ import { KENO_DRAW_COUNT, KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "../entities/t
 // ─── Atomic schemas ───
 
 /** Schema validate 1 số Keno hợp lệ: string "01"-"80" (zero-padded). */
-export const kenoNumberSchema = z
-  .string()
-  .regex(/^(0[1-9]|[1-7][0-9]|80)$/, "Số Keno phải từ '01' đến '80'");
+export const kenoNumberSchema = z.string().regex(/^(0[1-9]|[1-7][0-9]|80)$/, "Số Keno phải từ '01' đến '80'");
 
 /** Schema validate drawId Keno: "YYYY-MM-DD.NNN". */
-export const kenoDrawIdSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
+export const kenoDrawIdSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
 
 // ─── Publish Result ────────────────────────────────────────────────────────────
 

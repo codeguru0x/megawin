@@ -18,11 +18,7 @@ import {
   TOTAL_OUTCOMES,
   type Bingo18PrizeSet,
 } from "@megawin/game-bingo18/rules";
-import {
-  Bingo18PlayType,
-  Bingo18TripleKind,
-  Bingo18BigSmallBet,
-} from "@megawin/game-bingo18/entities";
+import { Bingo18PlayType, Bingo18TripleKind, Bingo18BigSmallBet } from "@megawin/game-bingo18/entities";
 import type { Bingo18ByPlayType, Bingo18BucketStat } from "@megawin/game-bingo18/entities";
 
 const PRIZES: Bingo18PrizeSet = {

@@ -30,10 +30,7 @@ export interface SyncTicketSummariesResult {
   done: boolean;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SettleContext,
-  SyncTicketSummariesResult
-> {
+export class SyncTicketSummariesUseCase extends InternalUseCase<SettleContext, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

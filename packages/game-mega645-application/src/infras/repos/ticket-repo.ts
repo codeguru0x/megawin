@@ -141,9 +141,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     });
   }
 
-  async bulkSyncSummaries(
-    items: Array<{ ticketId: string; summary: TicketSummary }>,
-  ): Promise<number> {
+  async bulkSyncSummaries(items: Array<{ ticketId: string; summary: TicketSummary }>): Promise<number> {
     if (items.length === 0) return 0;
 
     const now = new Date();
@@ -156,11 +154,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       // isCompleted: tất cả kỳ đã xử lý xong (settled + voided >= totalDraws) → Completed.
       const isAllVoided = voidedCount === totalDraws && settledCount === 0;
       const isCompleted = processedCount >= totalDraws;
-      const status = isAllVoided
-        ? TicketStatus.Refunded
-        : isCompleted
-          ? TicketStatus.Completed
-          : undefined;
+      const status = isAllVoided ? TicketStatus.Refunded : isCompleted ? TicketStatus.Completed : undefined;
 
       const $set = {
         "progress.settledDraws": processedCount,

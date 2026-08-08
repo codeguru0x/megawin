@@ -5,10 +5,7 @@ import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
 /**
  * List draws của 1 tenant trong date range — drill-down cấp 2 tab "Theo Đại Lý".
  */
-export class ListTenantDrawsUseCase extends NextApiUseCase<
-  ListTenantDrawsInput,
-  ListTenantDrawsOutput
-> {
+export class ListTenantDrawsUseCase extends NextApiUseCase<ListTenantDrawsInput, ListTenantDrawsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListTenantDrawsInput): Promise<ListTenantDrawsOutput> {

@@ -16,9 +16,7 @@ export class GetPlayerDrawBreakdownUseCase extends NextApiUseCase<
 > {
   private readonly repo = new PlayerEntryRepository();
 
-  protected async execute(
-    input: GetPlayerDrawBreakdownInput,
-  ): Promise<GetPlayerDrawBreakdownOutput> {
+  protected async execute(input: GetPlayerDrawBreakdownInput): Promise<GetPlayerDrawBreakdownOutput> {
     const data = await this.repo.aggregatePlayerDrawsInDay(
       input.accountId,
       input.financialDate,

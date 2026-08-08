@@ -22,11 +22,7 @@
  * nhiều doc trùng loại/scope trong 1 kỳ. Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
-import {
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  Lotto535OpsAlertType,
-} from "@megawin/game-lotto535/entities";
+import { OpsAlertSeverity, OpsAlertStatus, Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
 import type {
   Lotto535DrawBettingStatsEntity,
   Lotto535DrawComboStatsEntity,
@@ -95,9 +91,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
 
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn ──
   if (alerts.enabled[Lotto535OpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       Lotto535OpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -116,9 +110,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Lotto535OpsAlertType.ExposureThreshold,
         // Chạm/vượt 2× ngưỡng → critical.
-        fixedWorstCase >= alerts.fixedExposureWarnAmount * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        fixedWorstCase >= alerts.fixedExposureWarnAmount * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         Lotto535OpsAlertType.ExposureThreshold,
         { fixedWorstCase, threshold: alerts.fixedExposureWarnAmount },
       );
@@ -135,9 +127,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
         push(
           Lotto535OpsAlertType.ComboConcentration,
           // Rất đông người dồn 1 bộ → critical.
-          players >= alerts.comboAccountsWarn * 2
-            ? OpsAlertSeverity.Critical
-            : OpsAlertSeverity.Warning,
+          players >= alerts.comboAccountsWarn * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
           `combo:${combo.comboKey}`,
           {
             comboKey: combo.comboKey,

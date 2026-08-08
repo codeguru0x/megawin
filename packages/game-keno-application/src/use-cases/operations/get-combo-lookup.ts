@@ -29,10 +29,7 @@ const ACCOUNTS_LIMIT = 200;
  * account từ `keno_draw_combo_accounts`. Trả tên + bộ + tiền để staff kiểm soát dồn cược
  * (syndicate) và giám sát giải cap. Chưa ai cược → `found: false`.
  */
-export class GetComboLookupUseCase extends NextApiUseCase<
-  GetComboLookupInput,
-  GetComboLookupOutput
-> {
+export class GetComboLookupUseCase extends NextApiUseCase<GetComboLookupInput, GetComboLookupOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly comboRepo = new ComboStatsRepository();
   private readonly comboAccountsRepo = new ComboAccountsRepository();

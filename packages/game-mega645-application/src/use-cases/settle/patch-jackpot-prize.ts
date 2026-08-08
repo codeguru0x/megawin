@@ -70,10 +70,7 @@ export interface PatchJackpotPrizeResult {
 }
 
 /** Patch tiền Jackpot thực tế vào entries + lines sau khi biết pool cuối kỳ. */
-export class PatchJackpotPrizeUseCase extends InternalUseCase<
-  SettleContextWithFinancials,
-  PatchJackpotPrizeResult
-> {
+export class PatchJackpotPrizeUseCase extends InternalUseCase<SettleContextWithFinancials, PatchJackpotPrizeResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
   private readonly drawRepo = new DrawRepository();

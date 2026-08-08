@@ -6,11 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  buildPayoutOrder,
-  buildRefundOrder,
-  buildReversalOrder,
-} from "../src/builders/build-dispatch-order";
+import { buildPayoutOrder, buildRefundOrder, buildReversalOrder } from "../src/builders/build-dispatch-order";
 import { DispatchSourceKind, DispatchOrderStatus } from "../src/entities/enums";
 import { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
 

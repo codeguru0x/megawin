@@ -34,10 +34,7 @@ export interface GetDrawResultPlayerInput {
  * settleSummary.prizes chỉ chứa giải có winnerCount > 0.
  * Nếu kỳ không có ai trúng giải nào → prizes = [].
  */
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
-  GetDrawResultPlayerInput,
-  PlayerDrawResultInfo
-> {
+export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

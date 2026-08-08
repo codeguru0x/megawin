@@ -23,10 +23,7 @@ export interface ListTxLogsByBatchOutput {
   nextCursor: { createdAt: string; id: string } | null;
 }
 
-export class ListTxLogsByBatchUseCase extends NextApiUseCase<
-  ListTxLogsByBatchInput,
-  ListTxLogsByBatchOutput
-> {
+export class ListTxLogsByBatchUseCase extends NextApiUseCase<ListTxLogsByBatchInput, ListTxLogsByBatchOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: ListTxLogsByBatchInput): Promise<ListTxLogsByBatchOutput> {

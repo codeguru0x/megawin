@@ -7,11 +7,7 @@
  * ở đây CHỈ dùng khi slice threshold chưa về (loading) — tô màu, KHÔNG sinh alert.
  */
 
-import {
-  Bingo18OpsAlertType,
-  Bingo18PlayType,
-  OpsAlertSeverity,
-} from "@megawin/game-bingo18/entities";
+import { Bingo18OpsAlertType, Bingo18PlayType, OpsAlertSeverity } from "@megawin/game-bingo18/entities";
 import { BINGO18_BIG_SMALL_BET_LABELS } from "@megawin/game-bingo18/labels";
 
 /**

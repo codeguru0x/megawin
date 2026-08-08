@@ -8,12 +8,7 @@ import {
   getPermutationCount,
   flattenDrawResult,
 } from "@megawin/game-max3d/rules/prize-tiers";
-import {
-  PlayMode,
-  PlayType,
-  BasicPrizeTier,
-  PlusPrizeTier,
-} from "@megawin/game-max3d/entities/enums";
+import { PlayMode, PlayType, BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities/enums";
 import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules/defaults";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities/draw-result";
 
@@ -363,9 +358,7 @@ describe("matchPlus – Max 3D+ (2 bộ ba số)", () => {
     expect(tierNames).toContain(PlusPrizeTier.Special);
     expect(tierNames).toContain(PlusPrizeTier.Fourth);
     expect(tierNames).toContain(PlusPrizeTier.Fifth);
-    expect(m.winAmount).toBe(
-      prizes.plus.special * 1 + prizes.plus.fourth * 2 + prizes.plus.fifth * 2,
-    );
+    expect(m.winAmount).toBe(prizes.plus.special * 1 + prizes.plus.fourth * 2 + prizes.plus.fifth * 2);
   });
 
   it("duplicate trùng 1 entry Nhất → giải Sáu ×2", () => {
@@ -389,9 +382,7 @@ describe("matchPlus – Max 3D+ (2 bộ ba số)", () => {
     expect(tierNames).toContain(PlusPrizeTier.First);
     expect(tierNames).toContain(PlusPrizeTier.Fourth);
     expect(tierNames).toContain(PlusPrizeTier.Sixth);
-    expect(m.winAmount).toBe(
-      prizes.plus.first * 2 + prizes.plus.fourth * 2 + prizes.plus.sixth * 2,
-    );
+    expect(m.winAmount).toBe(prizes.plus.first * 2 + prizes.plus.fourth * 2 + prizes.plus.sixth * 2);
   });
 });
 

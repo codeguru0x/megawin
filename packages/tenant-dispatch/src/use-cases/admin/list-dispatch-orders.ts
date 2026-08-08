@@ -60,10 +60,7 @@ export interface ListDispatchOrdersOutput {
  *
  * KHÔNG gọi MongoDB trực tiếp — mọi query xuyên qua `DispatchOrderRepository`.
  */
-export class ListDispatchOrdersUseCase extends NextApiUseCase<
-  ListDispatchOrdersInput,
-  ListDispatchOrdersOutput
-> {
+export class ListDispatchOrdersUseCase extends NextApiUseCase<ListDispatchOrdersInput, ListDispatchOrdersOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: ListDispatchOrdersInput): Promise<ListDispatchOrdersOutput> {

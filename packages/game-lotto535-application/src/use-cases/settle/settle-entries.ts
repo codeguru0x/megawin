@@ -90,10 +90,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
@@ -257,10 +254,7 @@ function buildPayoutTiersFromLines(
   lineDocs: Array<Omit<TicketLineDoc, "_id">>,
   prizeAmounts: Record<string, number>,
 ): EntryPayoutTier[] {
-  const tierMap = new Map<
-    string,
-    { hitCount: number; betUnitCount: number; totalAmount: number }
-  >();
+  const tierMap = new Map<string, { hitCount: number; betUnitCount: number; totalAmount: number }>();
 
   for (const line of lineDocs) {
     const { tier, winAmount } = line.matchResult;

@@ -1,8 +1,4 @@
-import type {
-  DrawSettleSummaryTier,
-  EntrySummary,
-  EntryPayoutTier,
-} from "@megawin/game-power655/entities";
+import type { DrawSettleSummaryTier, EntrySummary, EntryPayoutTier } from "@megawin/game-power655/entities";
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 

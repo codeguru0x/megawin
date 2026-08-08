@@ -8,11 +8,7 @@ import {
   type DrawResultForMatch,
 } from "@megawin/game-keno/helpers";
 import { KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
-import {
-  TEST_BASIC_PRIZE_TABLE,
-  TEST_BIG_SMALL_PRIZES,
-  TEST_EVEN_ODD_PRIZES,
-} from "./helpers/default-prize-tables";
+import { TEST_BASIC_PRIZE_TABLE, TEST_BIG_SMALL_PRIZES, TEST_EVEN_ODD_PRIZES } from "./helpers/default-prize-tables";
 
 // ─── Helpers ────────────────────────────────────────
 
@@ -632,8 +628,7 @@ describe("betCount multiplier – winAmount nhân betCount tại settle layer", 
   it("betUnitCount = Σ(board.betCount) + Σ(sideBet.betCount)", () => {
     const boards = [{ betCount: 3 }, { betCount: 2 }];
     const sideBets = [{ betCount: 1 }, { betCount: 4 }];
-    const betUnitCount =
-      boards.reduce((s, b) => s + b.betCount, 0) + sideBets.reduce((s, sb) => s + sb.betCount, 0);
+    const betUnitCount = boards.reduce((s, b) => s + b.betCount, 0) + sideBets.reduce((s, sb) => s + sb.betCount, 0);
     expect(betUnitCount).toBe(10); // 3+2+1+4
   });
 

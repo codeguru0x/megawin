@@ -12,11 +12,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  determineTier,
-  buildPrizeAmountMap,
-  DEFAULT_PRIZE_TIER_RULES,
-} from "@megawin/game-mega645/rules/prize-tiers";
+import { determineTier, buildPrizeAmountMap, DEFAULT_PRIZE_TIER_RULES } from "@megawin/game-mega645/rules/prize-tiers";
 import { matchLine, matchLines } from "@megawin/game-mega645/helpers/match-result";
 import type { DrawResultForMatch } from "@megawin/game-mega645/helpers/match-result";
 import { PrizeTier } from "@megawin/game-mega645/entities/enums";
@@ -30,9 +26,7 @@ function line(nums: readonly [string, string, string, string, string, string]): 
   return { numbers: [...nums] };
 }
 
-function drawResult(
-  winning: readonly [string, string, string, string, string, string],
-): DrawResultForMatch {
+function drawResult(winning: readonly [string, string, string, string, string, string]): DrawResultForMatch {
   return { winningNumbers: [...winning] };
 }
 
@@ -114,14 +108,7 @@ describe("Mega 6/45 – buildPrizeAmountMap: bản đồ giải thưởng", () =
 // ─── matchLine ───────────────────────────────────────────
 
 describe("Mega 6/45 – matchLine: so khớp 1 line với kết quả quay", () => {
-  const winning: readonly [string, string, string, string, string, string] = [
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-  ];
+  const winning: readonly [string, string, string, string, string, string] = ["01", "02", "03", "04", "05", "06"];
   const result = drawResult(winning);
 
   it("6/6 → jackpot", () => {
@@ -192,10 +179,7 @@ describe("Mega 6/45 – matchLines: batch match nhiều lines", () => {
   });
 
   it("all losing → winningLines = 0, tierCounts empty", () => {
-    const lines: LineValue[] = [
-      line(["10", "20", "30", "40", "41", "42"]),
-      line(["11", "21", "31", "41", "42", "43"]),
-    ];
+    const lines: LineValue[] = [line(["10", "20", "30", "40", "41", "42"]), line(["11", "21", "31", "41", "42", "43"])];
 
     const batch = matchLines(lines, result);
     expect(batch.totalLines).toBe(2);

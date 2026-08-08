@@ -34,10 +34,8 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOu
       this.getGlobalConfig.run(),
     ]);
 
-    const jackpot1CurrentAmount =
-      activeCycle?.jackpot1CurrentAmount ?? globalConfig.jackpot.jackpot1.seedAmount;
-    const jackpot2CurrentAmount =
-      activeCycle?.jackpot2CurrentAmount ?? globalConfig.jackpot.jackpot2.seedAmount;
+    const jackpot1CurrentAmount = activeCycle?.jackpot1CurrentAmount ?? globalConfig.jackpot.jackpot1.seedAmount;
+    const jackpot2CurrentAmount = activeCycle?.jackpot2CurrentAmount ?? globalConfig.jackpot.jackpot2.seedAmount;
 
     // getUnfinishedDraws trả về DESC (drawId:-1); re-sort ASC để currentDraw (mapped[0]) là kỳ
     // sớm nhất chưa đóng — không phải kỳ tương lai xa nhất khi có nhiều kỳ mở đồng thời.
@@ -77,11 +75,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOu
   }
 }
 
-function mapDrawInfo(
-  draw: DrawEntity,
-  jackpot1CurrentAmount: number,
-  jackpot2CurrentAmount: number,
-): CurrentDrawInfo {
+function mapDrawInfo(draw: DrawEntity, jackpot1CurrentAmount: number, jackpot2CurrentAmount: number): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,

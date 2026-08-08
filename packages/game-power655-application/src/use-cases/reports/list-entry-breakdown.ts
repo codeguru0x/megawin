@@ -8,18 +8,11 @@ import type { ListEntryBreakdownInput, ListEntryBreakdownOutput } from "./types"
  * Dùng cho Entry Breakdown table.
  * Index: { drawId: 1, tenantId: 1, accountId: 1 }
  */
-export class ListEntryBreakdownUseCase extends NextApiUseCase<
-  ListEntryBreakdownInput,
-  ListEntryBreakdownOutput
-> {
+export class ListEntryBreakdownUseCase extends NextApiUseCase<ListEntryBreakdownInput, ListEntryBreakdownOutput> {
   private readonly repo = new EntryRepository();
 
   protected async execute(input: ListEntryBreakdownInput): Promise<ListEntryBreakdownOutput> {
-    const data = await this.repo.findByDrawTenantPlayer(
-      input.drawId,
-      input.tenantId,
-      input.accountId,
-    );
+    const data = await this.repo.findByDrawTenantPlayer(input.drawId, input.tenantId, input.accountId);
     return { data };
   }
 }

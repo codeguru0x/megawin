@@ -1,11 +1,6 @@
 "use client";
 
-import type {
-  FinancialRates,
-  Max3dPrizeConfig,
-  OpsConfig,
-  PlayRules,
-} from "@megawin/game-max3d/entities/types";
+import type { FinancialRates, Max3dPrizeConfig, OpsConfig, PlayRules } from "@megawin/game-max3d/entities/types";
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

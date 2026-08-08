@@ -49,9 +49,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<SettleContext, Finali
         // Replay sau crash — đã transition rồi, OK.
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw AppException.internal(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
-        );
+        throw AppException.internal(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
 

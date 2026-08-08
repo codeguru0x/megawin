@@ -32,10 +32,7 @@ import type { NumberStatsDelta } from "./types";
 
 const f = docPath<Lotto535DrawNumberStatsDoc>();
 
-export class NumberStatsRepository extends BaseRepo<
-  Lotto535DrawNumberStatsEntity,
-  NumberStatsMapper
-> {
+export class NumberStatsRepository extends BaseRepo<Lotto535DrawNumberStatsEntity, NumberStatsMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.DrawNumberStats,

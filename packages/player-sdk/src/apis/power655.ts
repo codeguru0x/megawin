@@ -142,9 +142,7 @@ export interface Power655Api {
    * }
    * ```
    */
-  listPendingTickets(
-    params?: Power655ListPendingTicketsParams,
-  ): Promise<Power655ListTicketsResponse>;
+  listPendingTickets(params?: Power655ListPendingTicketsParams): Promise<Power655ListTicketsResponse>;
 
   /**
    * Lấy lịch sử vé Power 6/55 đã kết thúc.
@@ -219,10 +217,7 @@ export interface Power655Api {
    * }
    * ```
    */
-  getEntryLines(
-    entryId: string,
-    params?: Power655EntryLinesParams,
-  ): Promise<Power655EntryLinesResponse>;
+  getEntryLines(entryId: string, params?: Power655EntryLinesParams): Promise<Power655EntryLinesResponse>;
 
   /**
    * Lấy danh sách kết quả kỳ quay Power 6/55 đã công bố.

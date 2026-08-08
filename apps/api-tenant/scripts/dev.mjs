@@ -57,9 +57,7 @@ console.log(`  API Key: ${apiKey}`);
 console.log();
 console.log("  LƯU Ý: API key phải tồn tại trong collection 'tenants'");
 console.log("  trong MongoDB. Nếu chưa có, tạo document với:");
-console.log(
-  `    { tenantId, displayName, status: "active", apiKey: "${apiKey}" }`
-);
+console.log(`    { tenantId, displayName, status: "active", apiKey: "${apiKey}" }`);
 console.log();
 console.log("  Curl examples:");
 console.log();
@@ -78,9 +76,7 @@ console.log(`    curl "${baseUrl}/tenant/entries/feed?afterVersion=0" \\`);
 console.log(`      -H "X-Api-Key: ${apiKey}"`);
 console.log();
 console.log(`    # Revenue report`);
-console.log(
-  `    curl "${baseUrl}/tenant/reports/revenue?from=2026-01-01&to=2026-12-31" \\`
-);
+console.log(`    curl "${baseUrl}/tenant/reports/revenue?from=2026-01-01&to=2026-12-31" \\`);
 console.log(`      -H "X-Api-Key: ${apiKey}"`);
 console.log();
 console.log(SEP);

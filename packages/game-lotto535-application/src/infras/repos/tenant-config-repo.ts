@@ -6,10 +6,7 @@ import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
 import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
 import { nowVN } from "@megawin/shared/utils";
 
-export class TenantConfigRepository extends BaseRepo<
-  TenantConfigEntity,
-  TenantConfigMapper
-> {
+export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.GameConfigs,
@@ -26,13 +23,12 @@ export class TenantConfigRepository extends BaseRepo<
 
   async upsertTenantConfig(
     tenantId: string,
-    fields: Partial<Pick<TenantConfigDoc, "commissionRate" | "isEnabled">>
+    fields: Partial<Pick<TenantConfigDoc, "commissionRate" | "isEnabled">>,
   ): Promise<TenantConfigEntity | null> {
     const now = nowVN();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined)
-      $set.commissionRate = fields.commissionRate;
+    if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
     if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
 
     const $setOnInsert: Record<string, unknown> = {
@@ -51,14 +47,11 @@ export class TenantConfigRepository extends BaseRepo<
         $inc: { version: 1 },
         $setOnInsert,
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
   }
 
   async listTenantConfigs(): Promise<TenantConfigEntity[]> {
-    return await this.findMany(
-      { scope: GameConfigScope.Tenant },
-      { sort: { tenantId: 1 } }
-    );
+    return await this.findMany({ scope: GameConfigScope.Tenant }, { sort: { tenantId: 1 } });
   }
 }

@@ -29,9 +29,7 @@ export function generateKenoDrawId(drawDate: ISODateString, drawNo: number): str
  * @param drawId - DrawId format "YYYY-MM-DD.NNN"
  * @returns `{ drawDate, drawNo }` nếu hợp lệ, `null` nếu format sai
  */
-export function parseKenoDrawId(
-  drawId: string,
-): { drawDate: ISODateString; drawNo: number } | null {
+export function parseKenoDrawId(drawId: string): { drawDate: ISODateString; drawNo: number } | null {
   const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
 
@@ -97,11 +95,7 @@ export function generateKenoDrawIdSequence(
  * @param intervalMinutes - Khoảng cách giữa các kỳ (default 8)
  * @returns drawNo (1-based). Trả 0 nếu `time` trước `firstDrawTime`.
  */
-export function calculateDrawNo(
-  time: string,
-  firstDrawTime: string = "06:00",
-  intervalMinutes: number = 8,
-): number {
+export function calculateDrawNo(time: string, firstDrawTime: string = "06:00", intervalMinutes: number = 8): number {
   const [h, m] = time.split(":").map(Number);
   const [fh, fm] = firstDrawTime.split(":").map(Number);
 

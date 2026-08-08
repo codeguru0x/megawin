@@ -7,10 +7,7 @@ import type { ListDrawTenantsInput, ListDrawTenantsOutput } from "./types";
  *
  * Sort: commission desc (tenant doanh thu lớn lên trên).
  */
-export class ListDrawTenantsUseCase extends NextApiUseCase<
-  ListDrawTenantsInput,
-  ListDrawTenantsOutput
-> {
+export class ListDrawTenantsUseCase extends NextApiUseCase<ListDrawTenantsInput, ListDrawTenantsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListDrawTenantsInput): Promise<ListDrawTenantsOutput> {

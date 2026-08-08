@@ -9,11 +9,7 @@
  *   - Outcome tổng hợp: "win" | "partial_win"
  */
 
-import type {
-  Bingo18PlayType,
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-} from "@megawin/game-bingo18/entities";
+import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 

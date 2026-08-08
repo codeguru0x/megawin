@@ -23,12 +23,7 @@
 import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type {
-  Board,
-  TicketDoc,
-  TicketEntryDoc,
-  EntryBoardSnapshot,
-} from "@megawin/game-lotto535/entities";
+import type { Board, TicketDoc, TicketEntryDoc, EntryBoardSnapshot } from "@megawin/game-lotto535/entities";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { calculateLineCount } from "@megawin/game-lotto535/rules/play-types";
 
@@ -53,15 +48,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly debitService = new DebitPlayerService();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      ipAddress,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -116,8 +103,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
             playType === PlayType.MainCover || playType === PlayType.MainCover4
               ? bi.selection.mainNumbers.length
               : undefined,
-          specialCoverSize:
-            playType === PlayType.SpecialCover ? bi.selection.specialNumbers.length : undefined,
+          specialCoverSize: playType === PlayType.SpecialCover ? bi.selection.specialNumbers.length : undefined,
         },
         betCount,
       });

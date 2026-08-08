@@ -34,9 +34,7 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
     // Guard: chỉ chấp nhận status voiding. Nếu status khác (scheduled, void...)
     // → Step Function không nên chạy → throw để fail fast, tránh void nhầm draw.
     if (draw.status !== DrawStatus.Voiding) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}" – expected "voiding".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}" – expected "voiding".`);
     }
 
     return {

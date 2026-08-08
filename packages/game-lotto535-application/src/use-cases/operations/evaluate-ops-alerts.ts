@@ -32,10 +32,7 @@ import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers
 import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
 import { logError } from "@megawin/shared/utils";
 import { Lotto535NumberKind, Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
-import type {
-  Lotto535DrawBettingStatsEntity,
-  Lotto535OpsAlertsConfig,
-} from "@megawin/game-lotto535/entities";
+import type { Lotto535DrawBettingStatsEntity, Lotto535OpsAlertsConfig } from "@megawin/game-lotto535/entities";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
@@ -98,8 +95,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
       unitPrice: config.play.unitPrice,
     };
 
-    this.tickMs =
-      (config.ops?.stats.tickSeconds ?? DEFAULT_LOTTO535_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
+    this.tickMs = (config.ops?.stats.tickSeconds ?? DEFAULT_LOTTO535_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
     this.counters = { evaluated: 0, alertsUpserted: 0 }; // reset — container reuse
 
     // Đọc cursor cũ từ lock doc — rỗng/không parse được → epoch (quét từ đầu).
@@ -159,9 +155,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
 
     // ≤12 doc/kỳ (không gian ĐB cố định) — an toàn đọc trọn, không cần trần riêng.
     const specialNumberStats = this.alertCtx.alerts.enabled[Lotto535OpsAlertType.SpecialSkew]
-      ? (await this.numberStatsRepo.findByDrawId(stats.drawId)).filter(
-          (n) => n.kind === Lotto535NumberKind.Special,
-        )
+      ? (await this.numberStatsRepo.findByDrawId(stats.drawId)).filter((n) => n.kind === Lotto535NumberKind.Special)
       : [];
 
     const newAlerts = evaluateAlerts({

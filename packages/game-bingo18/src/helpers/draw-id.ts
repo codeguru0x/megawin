@@ -10,16 +10,11 @@
 
 import type { ISODateString } from "../entities/types";
 
-export function generateBingo18DrawId(
-  drawDate: ISODateString,
-  drawNo: number,
-): string {
+export function generateBingo18DrawId(drawDate: ISODateString, drawNo: number): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
-export function parseBingo18DrawId(
-  drawId: string,
-): { drawDate: ISODateString; drawNo: number } | null {
+export function parseBingo18DrawId(drawId: string): { drawDate: ISODateString; drawNo: number } | null {
   const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
 
@@ -63,11 +58,7 @@ export function generateBingo18DrawIdSequence(
 /**
  * Tính drawNo từ thời gian trong ngày.
  */
-export function calculateDrawNo(
-  time: string,
-  firstDrawTime: string = "06:00",
-  intervalMinutes: number = 6,
-): number {
+export function calculateDrawNo(time: string, firstDrawTime: string = "06:00", intervalMinutes: number = 6): number {
   const [h, m] = time.split(":").map(Number);
   const [fh, fm] = firstDrawTime.split(":").map(Number);
 

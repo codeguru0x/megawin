@@ -72,9 +72,7 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
 
     // ── Ownership gate: bộ số phải nằm trong board CHÍNH account đã cược ──
     const owned = await this.entryRepo.getBoardsByAccountDraw(accountId, drawId);
-    const ownedKeys = new Set(
-      owned.map((b) => buildComboKey(b.playType, b.mainNumbers, b.specialNumbers)),
-    );
+    const ownedKeys = new Set(owned.map((b) => buildComboKey(b.playType, b.mainNumbers, b.specialNumbers)));
 
     // Bộ không thuộc account → trả rỗng ĐỒNG NHẤT (chống dò — không phân biệt case).
     if (!ownedKeys.has(comboKey)) {
@@ -113,12 +111,7 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
         // = false để trả lời đúng câu hỏi "kỳ này CÓ ĐỦ ĐIỀU KIỆN chia NẾU không ai trúng".
         const jackpotAmount = activeCycle?.currentAmount ?? config.jackpot.seedAmount;
         const splitThreshold = activeCycle?.config.splitThreshold ?? config.jackpot.splitThreshold;
-        output.splitEligibleDraw = isSplitCycleDraw(
-          jackpotAmount,
-          splitThreshold,
-          false,
-          draw.drawNo,
-        );
+        output.splitEligibleDraw = isSplitCycleDraw(jackpotAmount, splitThreshold, false, draw.drawNo);
       }
     }
 

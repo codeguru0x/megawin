@@ -35,9 +35,7 @@ export function toTenantUsername(megawinUsername: string): string {
  *
  * @param username - Megawin username cần parse.
  */
-export function parseUsername(
-  megawinUsername: string,
-): { playerExternalId: string; tenantId: string } | null {
+export function parseUsername(megawinUsername: string): { playerExternalId: string; tenantId: string } | null {
   const atIndex = megawinUsername.indexOf("@");
 
   // Không có '@', hoặc '@' ở đầu / cuối → không hợp lệ.

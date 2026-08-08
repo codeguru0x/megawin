@@ -80,18 +80,14 @@ export interface PatchJackpotPrizeResult {
  * Đúng luật Vietlott: "Giải Jackpot chia đều theo tỷ lệ giá trị tham gia dự thưởng"
  * → jackpotPerUnit × betCount (không phải chia đều per entry/line).
  */
-export class PatchJackpotPrizeUseCase extends InternalUseCase<
-  SettleContextWithFinancials,
-  PatchJackpotPrizeResult
-> {
+export class PatchJackpotPrizeUseCase extends InternalUseCase<SettleContextWithFinancials, PatchJackpotPrizeResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: SettleContextWithFinancials): Promise<PatchJackpotPrizeResult> {
     const { drawId, jp1CurrentAmount, jp2CurrentAmount, financials } = input;
-    const { hasJackpot1Winner, hasJackpot2Winner, jackpot1Contribution, jackpot2Contribution } =
-      financials;
+    const { hasJackpot1Winner, hasJackpot2Winner, jackpot1Contribution, jackpot2Contribution } = financials;
 
     let jp1EntriesPatched = 0;
     let jp2EntriesPatched = 0;
@@ -104,11 +100,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     // ── JP1: patch theo tỷ lệ betCount ─────────────────────────────────────
     if (hasJackpot1Winner) {
-      const result = await this.patchJackpotTier(
-        drawId,
-        PrizeTier.Jackpot1,
-        jp1CurrentAmount + jackpot1Contribution,
-      );
+      const result = await this.patchJackpotTier(drawId, PrizeTier.Jackpot1, jp1CurrentAmount + jackpot1Contribution);
       jp1EntriesPatched = result.patchedCount;
       jp1WinnerCount = result.perEntryAmounts.size;
 
@@ -131,11 +123,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     // ── JP2: patch theo tỷ lệ betCount ─────────────────────────────────────
     if (hasJackpot2Winner) {
-      const result = await this.patchJackpotTier(
-        drawId,
-        PrizeTier.Jackpot2,
-        jp2CurrentAmount + jackpot2Contribution,
-      );
+      const result = await this.patchJackpotTier(drawId, PrizeTier.Jackpot2, jp2CurrentAmount + jackpot2Contribution);
       jp2EntriesPatched = result.patchedCount;
       jp2WinnerCount = result.perEntryAmounts.size;
 
@@ -187,9 +175,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     await Promise.all([
       this.drawRepo.setTotalPayout(drawId, totalPayout),
-      jackpotPatches.length > 0
-        ? this.drawRepo.patchSettleSummaryJackpot(drawId, jackpotPatches)
-        : Promise.resolve(),
+      jackpotPatches.length > 0 ? this.drawRepo.patchSettleSummaryJackpot(drawId, jackpotPatches) : Promise.resolve(),
     ]);
 
     return { drawId, jp1EntriesPatched, jp2EntriesPatched, winners };

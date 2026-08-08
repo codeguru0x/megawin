@@ -72,7 +72,7 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
         drawResultAt: d.result?.publishedAt.toISOString(),
         settledAt: d.settledAt?.toISOString(),
         status: d.status,
-        financialDate: d.financialDate ,
+        financialDate: d.financialDate,
         group,
       };
     };

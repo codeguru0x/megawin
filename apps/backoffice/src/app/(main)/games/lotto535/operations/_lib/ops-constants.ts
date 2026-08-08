@@ -7,11 +7,7 @@
  * `snapshot.thresholds` (server đọc GlobalConfig) — KHÔNG hardcode ở đây (mirror Power 6/55).
  */
 
-import {
-  Lotto535OpsAlertType,
-  Lotto535StatsPlayKey,
-  OpsAlertSeverity,
-} from "@megawin/game-lotto535/entities";
+import { Lotto535OpsAlertType, Lotto535StatsPlayKey, OpsAlertSeverity } from "@megawin/game-lotto535/entities";
 import { LOTTO535_PLAY_TYPE_LABELS } from "@megawin/game-lotto535/labels";
 
 /**

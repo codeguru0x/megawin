@@ -32,10 +32,7 @@ export interface GetDrawResultPlayerInput {
  * settleSummary.tiers được ghi bởi CalculateFinancials (JP = 0) và
  * patch bởi PatchJackpotPrize khi có winner → luôn đầy đủ sau settled.
  */
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
-  GetDrawResultPlayerInput,
-  PlayerDrawResultInfo
-> {
+export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

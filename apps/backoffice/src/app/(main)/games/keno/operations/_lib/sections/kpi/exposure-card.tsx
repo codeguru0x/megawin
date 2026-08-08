@@ -35,14 +35,9 @@ function CapRow({ row }: { row: ExposureCapRow }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground w-14 shrink-0">
-        {KENO_PLAY_TYPE_LABELS[row.playType]}
-      </span>
+      <span className="text-xs text-muted-foreground w-14 shrink-0">{KENO_PLAY_TYPE_LABELS[row.playType]}</span>
       <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all", c.bar)}
-          style={{ width: `${pct}%` }}
-        />
+        <div className={cn("h-full rounded-full transition-all", c.bar)} style={{ width: `${pct}%` }} />
       </div>
       <span className={cn("text-xs font-semibold tabular-nums w-16 text-right shrink-0", c.text)}>
         {formatNumber(row.sets)}/{formatNumber(row.max)}
@@ -65,10 +60,7 @@ export function ExposureCard({
 
   return (
     <Card
-      className={cn(
-        "gap-0 py-0 shadow-sm",
-        clickable && "cursor-pointer transition-colors hover:bg-muted/20",
-      )}
+      className={cn("gap-0 py-0 shadow-sm", clickable && "cursor-pointer transition-colors hover:bg-muted/20")}
       onClick={onOpenAnalysis}
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
@@ -90,9 +82,7 @@ export function ExposureCard({
               <ShieldAlert className="size-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">
-                Rủi ro chi trả (worst-case)
-              </p>
+              <p className="text-xs font-medium text-muted-foreground">Rủi ro chi trả (worst-case)</p>
               <p className="text-lg font-bold tabular-nums text-foreground leading-tight">
                 {formatNumber(exposure.worstCaseTotal)}
               </p>

@@ -281,10 +281,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     // Lấy active cycle song song với closed cycles để giảm latency.
     const [active, closed] = await Promise.all([
       this.findOne({ status: JackpotCycleStatus.Active }),
-      this.findMany(
-        { status: JackpotCycleStatus.Closed },
-        { sort: { cycleNo: -1 }, limit: closedLimit },
-      ),
+      this.findMany({ status: JackpotCycleStatus.Closed }, { sort: { cycleNo: -1 }, limit: closedLimit }),
     ]);
 
     // Active đứng đầu danh sách, closed theo sau.

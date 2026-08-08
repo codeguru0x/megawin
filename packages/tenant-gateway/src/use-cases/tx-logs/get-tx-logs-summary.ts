@@ -54,10 +54,7 @@ export interface GetTxLogsSummaryOutput {
   successRate: number | null;
 }
 
-export class GetTxLogsSummaryUseCase extends NextApiUseCase<
-  GetTxLogsSummaryInput,
-  GetTxLogsSummaryOutput
-> {
+export class GetTxLogsSummaryUseCase extends NextApiUseCase<GetTxLogsSummaryInput, GetTxLogsSummaryOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: GetTxLogsSummaryInput): Promise<GetTxLogsSummaryOutput> {
@@ -103,10 +100,7 @@ export class GetTxLogsSummaryUseCase extends NextApiUseCase<
     }
     const maxLookbackMs = MAX_LOOKBACK_DAYS * msPerDay;
     if (Date.now() - from.getTime() > maxLookbackMs) {
-      throw new AppException(
-        APP_ERROR_CODES.VALIDATION,
-        `Chỉ tra cứu trong ${MAX_LOOKBACK_DAYS} ngày gần nhất`,
-      );
+      throw new AppException(APP_ERROR_CODES.VALIDATION, `Chỉ tra cứu trong ${MAX_LOOKBACK_DAYS} ngày gần nhất`);
     }
   }
 }

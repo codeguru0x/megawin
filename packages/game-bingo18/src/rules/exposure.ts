@@ -20,12 +20,7 @@
  * biên dir() dùng hằng domain BINGO18_SMALL_MAX/BINGO18_BIG_MIN, KHÔNG hardcode.
  */
 
-import {
-  BINGO18_DICE_MIN,
-  BINGO18_DICE_MAX,
-  BINGO18_SMALL_MAX,
-  BINGO18_BIG_MIN,
-} from "../entities/types";
+import { BINGO18_DICE_MIN, BINGO18_DICE_MAX, BINGO18_SMALL_MAX, BINGO18_BIG_MIN } from "../entities/types";
 import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
 import { lookupSingleNumPrize, lookupSumTotalPrize } from "./prize-tables";
 import { TOTAL_OUTCOMES } from "./odds";
@@ -162,10 +157,7 @@ function forEachOutcome(visit: (a: number, b: number, c: number, sum: number) =>
  * @param byPlayType - Full-bucket stats từ `Bingo18DrawBettingStatsDoc.byPlayType`.
  * @param prizes - Bảng giải từ GlobalConfig (KHÔNG dùng default hardcode ở call site).
  */
-export function computeBingo18Exposure(
-  byPlayType: Bingo18ByPlayType,
-  prizes: Bingo18PrizeSet,
-): Bingo18ExposureResult {
+export function computeBingo18Exposure(byPlayType: Bingo18ByPlayType, prizes: Bingo18PrizeSet): Bingo18ExposureResult {
   const outcomes: Bingo18OutcomePayout[] = [];
   let total = 0;
 
@@ -230,9 +222,7 @@ export function computeBingo18Exposure(
  * @param prizes - Bảng giải từ GlobalConfig.
  */
 export function computeBingo18EntryPotentialWin(
-  boards: ReadonlyArray<
-    Pick<EntryBoardSnapshot, "playType" | "number" | "tripleKind" | "sum" | "bet" | "betCount">
-  >,
+  boards: ReadonlyArray<Pick<EntryBoardSnapshot, "playType" | "number" | "tripleKind" | "sum" | "bet" | "betCount">>,
   prizes: Bingo18PrizeSet,
 ): number {
   let max = 0;

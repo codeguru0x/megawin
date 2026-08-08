@@ -78,10 +78,7 @@ function validateOrder(order: TenantDispatchOrderInput): string[] {
  * Caller: game use-cases (EnqueueDispatchPayoutsUseCase của Keno/Lotto535/...).
  * Worker: không gọi use case này, worker chỉ read + update.
  */
-export class EnqueueDispatchOrdersUseCase extends InternalUseCase<
-  EnqueueDispatchOrdersInput,
-  void
-> {
+export class EnqueueDispatchOrdersUseCase extends InternalUseCase<EnqueueDispatchOrdersInput, void> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: EnqueueDispatchOrdersInput): Promise<void> {

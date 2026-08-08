@@ -144,10 +144,7 @@ export function calculateLineCount(playMode: PlayMode, selection: BoardSelection
  *
  * - multiDigit: tất cả hoán vị front × tất cả hoán vị back (Cartesian product, tự nhiên ordered)
  */
-export function expandSelectionToPairs(
-  playMode: PlayMode,
-  selection: BoardSelection,
-): TripletPair[] {
+export function expandSelectionToPairs(playMode: PlayMode, selection: BoardSelection): TripletPair[] {
   // Chọn nhiều bộ ba số: tạo P(n,2) = n×(n-1) ordered pairs.
   if (playMode === PlayMode.MultiNumber) {
     const triplets = selection.triplets;

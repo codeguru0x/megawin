@@ -21,10 +21,7 @@ export type GetDispatchFacetsOutput = DispatchFacets;
  * Dùng cho filter Combobox ở FE: Tenant (search-as-you-type) + Game (fixed list).
  * Sort theo count DESC nên tenant/game active nhất lên đầu.
  */
-export class GetDispatchFacetsUseCase extends NextApiUseCase<
-  GetDispatchFacetsInput,
-  GetDispatchFacetsOutput
-> {
+export class GetDispatchFacetsUseCase extends NextApiUseCase<GetDispatchFacetsInput, GetDispatchFacetsOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: GetDispatchFacetsInput): Promise<GetDispatchFacetsOutput> {

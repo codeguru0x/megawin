@@ -347,10 +347,9 @@ export function createMega645Api(http: HttpClient): Mega645Api {
     },
     async getComboPopularity(params) {
       // numbers gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
-      return http.get<Mega645ComboPopularityResponse>(
-        ENDPOINTS.mega645.getComboPopularity(params.drawId),
-        { params: { numbers: params.numbers.join(",") } },
-      );
+      return http.get<Mega645ComboPopularityResponse>(ENDPOINTS.mega645.getComboPopularity(params.drawId), {
+        params: { numbers: params.numbers.join(",") },
+      });
     },
   };
 }

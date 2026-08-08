@@ -52,12 +52,7 @@ export interface EvaluateAlertsInput {
 type NewAlert = Omit<Mega645OpsAlertDoc, "_id">;
 
 /** Nhóm playType Bao thuộc diện đánh giá `bao_high_stake` — bao13, bao14, bao15, bao18 (không có bao16/17). */
-const BAO_HIGH_STAKE_PLAY_TYPES: readonly PlayType[] = [
-  PlayType.Bao13,
-  PlayType.Bao14,
-  PlayType.Bao15,
-  PlayType.Bao18,
-];
+const BAO_HIGH_STAKE_PLAY_TYPES: readonly PlayType[] = [PlayType.Bao13, PlayType.Bao14, PlayType.Bao15, PlayType.Bao18];
 
 /** Số lượng số cần chọn của mỗi playType Bao cao — dùng tra `BAO_COMBINATIONS[N]` (bảng theo N, không theo playType). */
 const BAO_NUMBER_COUNT: Record<PlayType, number> = {
@@ -102,9 +97,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
 
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn ──
   if (alerts.enabled[Mega645OpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       Mega645OpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -123,9 +116,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Mega645OpsAlertType.ExposureThreshold,
         // Chạm/vượt 2× ngưỡng → critical.
-        fixedWorstCase >= alerts.fixedExposureWarnAmount * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        fixedWorstCase >= alerts.fixedExposureWarnAmount * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         Mega645OpsAlertType.ExposureThreshold,
         { fixedWorstCase, threshold: alerts.fixedExposureWarnAmount },
       );
@@ -142,9 +133,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
         push(
           Mega645OpsAlertType.ComboConcentration,
           // Rất đông người dồn 1 bộ → critical.
-          players >= alerts.comboAccountsWarn * 2
-            ? OpsAlertSeverity.Critical
-            : OpsAlertSeverity.Warning,
+          players >= alerts.comboAccountsWarn * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
           `combo:${combo.comboKey}`,
           {
             comboKey: combo.comboKey,

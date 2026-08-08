@@ -89,10 +89,7 @@
     },
     "./browser": "./dist/megawin-player-sdk-browser.global.js"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -108,11 +105,7 @@
     "upload:major": "bash scripts/upload-s3.sh major",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "megawin",
-    "sdk",
-    "player"
-  ],
+  "keywords": ["megawin", "sdk", "player"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

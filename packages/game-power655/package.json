@@ -64,12 +64,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "power655",
-    "game",
-    "domain"
-  ],
+  "keywords": ["megawin", "power655", "game", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

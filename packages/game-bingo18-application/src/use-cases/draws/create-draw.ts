@@ -26,9 +26,7 @@ export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDra
     for (const d of inputDraws) {
       const key = `${d.drawDate}.${String(d.drawNo).padStart(3, "0")}`;
       if (seen.has(key)) {
-        throw AppException.badRequest(
-          `Trùng drawId: ngày ${d.drawDate} kỳ ${d.drawNo} xuất hiện nhiều lần.`,
-        );
+        throw AppException.badRequest(`Trùng drawId: ngày ${d.drawDate} kỳ ${d.drawNo} xuất hiện nhiều lần.`);
       }
       seen.add(key);
     }

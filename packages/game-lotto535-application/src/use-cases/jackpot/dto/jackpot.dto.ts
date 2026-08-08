@@ -246,10 +246,7 @@ export interface JackpotCycleSummary {
      * Key: tên tier (tier1, tier2, ...).
      * Value: { winnerCount, bonusPerWinner, totalAmount }.
      */
-    tierAllocations: Record<
-      string,
-      { winnerCount: number; bonusPerWinner: number; totalAmount: number }
-    >;
+    tierAllocations: Record<string, { winnerCount: number; bonusPerWinner: number; totalAmount: number }>;
   };
   /** Danh sách người trúng Jackpot — chỉ có khi closeReason = "winner". */
   winners?: JackpotWinnerSummary[];

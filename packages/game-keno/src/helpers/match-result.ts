@@ -9,11 +9,7 @@
  */
 
 import { KenoBigSmallBet, KenoEvenOddBet, type KenoPlayType } from "../entities/enums";
-import {
-  KENO_BIG_SMALL_BOUNDARY,
-  type BigSmallPrizes,
-  type EvenOddPrizes,
-} from "../entities/types";
+import { KENO_BIG_SMALL_BOUNDARY, type BigSmallPrizes, type EvenOddPrizes } from "../entities/types";
 import { lookupBasicPrize } from "../rules/prize-tables";
 
 // ─────────────────────────────────────────────
@@ -150,20 +146,17 @@ export function matchBigSmallBet(
   switch (bet) {
     case KenoBigSmallBet.Big: {
       if (bigCount >= 13) return { outcome: "big13Plus", isWin: true, winAmount: prizes.big13Plus };
-      if (bigCount === 11 || bigCount === 12)
-        return { outcome: "big1112", isWin: true, winAmount: prizes.big1112 };
+      if (bigCount === 11 || bigCount === 12) return { outcome: "big1112", isWin: true, winAmount: prizes.big1112 };
       return { outcome: `big${bigCount}`, isWin: false, winAmount: 0 };
     }
 
     case KenoBigSmallBet.BigSmallDraw: {
-      if (bigCount === 10 && smallCount === 10)
-        return { outcome: "draw", isWin: true, winAmount: prizes.draw };
+      if (bigCount === 10 && smallCount === 10) return { outcome: "draw", isWin: true, winAmount: prizes.draw };
       return { outcome: `big${bigCount}_small${smallCount}`, isWin: false, winAmount: 0 };
     }
 
     case KenoBigSmallBet.Small: {
-      if (smallCount >= 13)
-        return { outcome: "small13Plus", isWin: true, winAmount: prizes.small13Plus };
+      if (smallCount >= 13) return { outcome: "small13Plus", isWin: true, winAmount: prizes.small13Plus };
       if (smallCount === 11 || smallCount === 12)
         return { outcome: "small1112", isWin: true, winAmount: prizes.small1112 };
       return { outcome: `small${smallCount}`, isWin: false, winAmount: 0 };
@@ -199,35 +192,29 @@ export function matchEvenOddBet(
 
   switch (bet) {
     case KenoEvenOddBet.Even: {
-      if (evenCount >= 15)
-        return { outcome: "even15Plus", isWin: true, winAmount: prizes.even15Plus };
-      if (evenCount === 13 || evenCount === 14)
-        return { outcome: "even1314", isWin: true, winAmount: prizes.even1314 };
+      if (evenCount >= 15) return { outcome: "even15Plus", isWin: true, winAmount: prizes.even15Plus };
+      if (evenCount === 13 || evenCount === 14) return { outcome: "even1314", isWin: true, winAmount: prizes.even1314 };
       return { outcome: `even${evenCount}`, isWin: false, winAmount: 0 };
     }
 
     case KenoEvenOddBet.Even1112: {
-      if (evenCount === 11 || evenCount === 12)
-        return { outcome: "even1112", isWin: true, winAmount: prizes.even1112 };
+      if (evenCount === 11 || evenCount === 12) return { outcome: "even1112", isWin: true, winAmount: prizes.even1112 };
       return { outcome: `even${evenCount}`, isWin: false, winAmount: 0 };
     }
 
     case KenoEvenOddBet.EvenOddDraw: {
-      if (evenCount === 10 && oddCount === 10)
-        return { outcome: "draw", isWin: true, winAmount: prizes.draw };
+      if (evenCount === 10 && oddCount === 10) return { outcome: "draw", isWin: true, winAmount: prizes.draw };
       return { outcome: `even${evenCount}_odd${oddCount}`, isWin: false, winAmount: 0 };
     }
 
     case KenoEvenOddBet.Odd1112: {
-      if (oddCount === 11 || oddCount === 12)
-        return { outcome: "odd1112", isWin: true, winAmount: prizes.odd1112 };
+      if (oddCount === 11 || oddCount === 12) return { outcome: "odd1112", isWin: true, winAmount: prizes.odd1112 };
       return { outcome: `odd${oddCount}`, isWin: false, winAmount: 0 };
     }
 
     case KenoEvenOddBet.Odd: {
       if (oddCount >= 15) return { outcome: "odd15Plus", isWin: true, winAmount: prizes.odd15Plus };
-      if (oddCount === 13 || oddCount === 14)
-        return { outcome: "odd1314", isWin: true, winAmount: prizes.odd1314 };
+      if (oddCount === 13 || oddCount === 14) return { outcome: "odd1314", isWin: true, winAmount: prizes.odd1314 };
       return { outcome: `odd${oddCount}`, isWin: false, winAmount: 0 };
     }
 

@@ -11,11 +11,7 @@
  */
 
 import { Bingo18BigSmallBet } from "@megawin/game-bingo18/entities";
-import type {
-  Bingo18BucketStat,
-  Bingo18DrawBettingStatsEntity,
-  TopAccountStat,
-} from "@megawin/game-bingo18/entities";
+import type { Bingo18BucketStat, Bingo18DrawBettingStatsEntity, TopAccountStat } from "@megawin/game-bingo18/entities";
 import {
   BINGO18_BIG_SMALL_BET_LABELS,
   BINGO18_PLAY_TYPE_LABELS,
@@ -59,10 +55,7 @@ function sumBuckets(rec: Record<string, Bingo18BucketStat>): Bingo18BucketStat {
 export function toKpi(stats: Stats, uniquePlayers: number): OpsKpi {
   const bp = stats.byPlayType;
   const sideBets =
-    sumBuckets(bp.sumTotal).sets +
-    bp.bigSmallDraw.big.sets +
-    bp.bigSmallDraw.draw.sets +
-    bp.bigSmallDraw.small.sets;
+    sumBuckets(bp.sumTotal).sets + bp.bigSmallDraw.big.sets + bp.bigSmallDraw.draw.sets + bp.bigSmallDraw.small.sets;
   return {
     totalRevenue: stats.totals.revenue,
     totalEntries: stats.totals.entries,
@@ -85,8 +78,7 @@ export function toPlayTypeRows(stats: Stats): PlayTypeRow[] {
   const bigSmall = {
     amount: bp.bigSmallDraw.big.amount + bp.bigSmallDraw.draw.amount + bp.bigSmallDraw.small.amount,
     sets: bp.bigSmallDraw.big.sets + bp.bigSmallDraw.draw.sets + bp.bigSmallDraw.small.sets,
-    entries:
-      bp.bigSmallDraw.big.entries + bp.bigSmallDraw.draw.entries + bp.bigSmallDraw.small.entries,
+    entries: bp.bigSmallDraw.big.entries + bp.bigSmallDraw.draw.entries + bp.bigSmallDraw.small.entries,
   };
 
   const rows: PlayTypeRow[] = [
@@ -113,9 +105,7 @@ export function toPlayTypeRows(stats: Stats): PlayTypeRow[] {
   return rows;
 }
 
-function toRowStat(
-  b: Bingo18BucketStat,
-): Pick<PlayTypeRow, "entries" | "sets" | "revenue" | "pct"> {
+function toRowStat(b: Bingo18BucketStat): Pick<PlayTypeRow, "entries" | "sets" | "revenue" | "pct"> {
   return { entries: b.entries, sets: b.sets, revenue: b.amount, pct: 0 };
 }
 

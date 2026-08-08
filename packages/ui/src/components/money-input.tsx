@@ -19,7 +19,19 @@ const INPUT_CLASSES = [
 ] as const;
 
 const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
-  ({ className, value, defaultValue, onValueChange, decimalScale = 0, thousandSeparator = true, allowNegative = false, ...props }, ref) => {
+  (
+    {
+      className,
+      value,
+      defaultValue,
+      onValueChange,
+      decimalScale = 0,
+      thousandSeparator = true,
+      allowNegative = false,
+      ...props
+    },
+    ref,
+  ) => {
     function handleValueChange(values: NumberFormatValues) {
       onValueChange?.(values.floatValue);
     }

@@ -23,5 +23,5 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, ticketId });
   },
-  { schemas: { path: pathSchema } }
+  { schemas: { path: pathSchema } },
 );

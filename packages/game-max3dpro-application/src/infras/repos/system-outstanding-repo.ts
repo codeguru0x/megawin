@@ -34,16 +34,23 @@ export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
 
     if (result.length === 0) {
       return {
-        activeDrawCount: 0, totalEntryCount: 0, totalPlayerCount: 0,
-        totalTenantCount: 0, totalOutstandingStake: 0, totalEstimatedCommission: 0,
+        activeDrawCount: 0,
+        totalEntryCount: 0,
+        totalPlayerCount: 0,
+        totalTenantCount: 0,
+        totalOutstandingStake: 0,
+        totalEstimatedCommission: 0,
       };
     }
 
     const r = result[0] as any;
     return {
-      activeDrawCount: r.activeDrawCount, totalEntryCount: r.totalEntryCount,
-      totalPlayerCount: r.totalPlayerCount, totalTenantCount: r.totalTenantCount,
-      totalOutstandingStake: r.totalOutstandingStake, totalEstimatedCommission: r.totalEstimatedCommission,
+      activeDrawCount: r.activeDrawCount,
+      totalEntryCount: r.totalEntryCount,
+      totalPlayerCount: r.totalPlayerCount,
+      totalTenantCount: r.totalTenantCount,
+      totalOutstandingStake: r.totalOutstandingStake,
+      totalEstimatedCommission: r.totalEstimatedCommission,
     };
   }
 }

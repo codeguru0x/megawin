@@ -38,8 +38,7 @@ export const KenoPlayType = {
 } as const;
 
 /** Kiểu chơi Keno (union type). */
-export type KenoPlayType =
-  (typeof KenoPlayType)[keyof typeof KenoPlayType];
+export type KenoPlayType = (typeof KenoPlayType)[keyof typeof KenoPlayType];
 
 // ─────────────────────────────────────────────
 // Side Bet Selections
@@ -60,8 +59,7 @@ export const KenoBigSmallBet = {
 } as const;
 
 /** Lựa chọn Lớn/Nhỏ (union type). */
-export type KenoBigSmallBet =
-  (typeof KenoBigSmallBet)[keyof typeof KenoBigSmallBet];
+export type KenoBigSmallBet = (typeof KenoBigSmallBet)[keyof typeof KenoBigSmallBet];
 
 /**
  * Lựa chọn cược Chẵn/Lẻ.
@@ -82,8 +80,7 @@ export const KenoEvenOddBet = {
 } as const;
 
 /** Lựa chọn Chẵn/Lẻ (union type). */
-export type KenoEvenOddBet =
-  (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet];
+export type KenoEvenOddBet = (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet];
 
 // ─────────────────────────────────────────────
 // Ticket Display Status
@@ -103,5 +100,4 @@ export const KenoTicketDisplayStatus = {
 } as const;
 
 /** Trạng thái vé Keno (union type). */
-export type KenoTicketDisplayStatus =
-  (typeof KenoTicketDisplayStatus)[keyof typeof KenoTicketDisplayStatus];
+export type KenoTicketDisplayStatus = (typeof KenoTicketDisplayStatus)[keyof typeof KenoTicketDisplayStatus];

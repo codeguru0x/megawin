@@ -32,10 +32,7 @@ export interface PublishPlayerDailyInput {
  * Bọc CorePublishPlayerDailyUseCase, tự inject PlayerDailyEntryRepository.
  * Handler chỉ cần gọi use case, không khởi tạo repo trực tiếp.
  */
-export class PublishPlayerDailyUseCase extends InternalUseCase<
-  PublishPlayerDailyInput,
-  PublishPlayerDailyResult
-> {
+export class PublishPlayerDailyUseCase extends InternalUseCase<PublishPlayerDailyInput, PublishPlayerDailyResult> {
   private readonly playerDailyEntryRepo = new PlayerDailyEntryRepository();
   private readonly coreUseCase = new CorePublishPlayerDailyUseCase();
 

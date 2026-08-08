@@ -69,31 +69,20 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.findOne({ _id: new ObjectId(entryId) });
   }
 
-  async getEntriesByDrawId(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
   }
 
-  async getScheduledEntriesBatch(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getScheduledEntriesBatch(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
       sort: { createdAt: 1 },
     });
   }
 
   async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
-      { drawId, status: EntryStatus.Scheduled },
-      { sort: { createdAt: 1 }, limit },
-    );
+    return await this.findMany({ drawId, status: EntryStatus.Scheduled }, { sort: { createdAt: 1 }, limit });
   }
 
   async countEntriesByDrawId(drawId: string): Promise<number> {
@@ -125,11 +114,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * @param afterId - Watermark: chỉ lấy entry có `_id` lớn hơn (exclusive). undefined = từ đầu.
    * @param limit - Kích thước batch.
    */
-  async getEntriesForStatsAfter(
-    drawId: string,
-    afterId: string | undefined,
-    limit: number,
-  ): Promise<EntryForStats[]> {
+  async getEntriesForStatsAfter(drawId: string, afterId: string | undefined, limit: number): Promise<EntryForStats[]> {
     const filter: Record<string, unknown> = { drawId, status: { $ne: EntryStatus.Void } };
     if (afterId) {
       filter._id = { $gt: new ObjectId(afterId) };
@@ -773,20 +758,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           },
           totalVoidedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.originalAmount", 0] }, 0],
             },
           },
           totalRefundedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.refundAmount", 0] }, 0],
             },
           },
           voidedDrawIds: {
@@ -975,9 +952,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * sau đó group by tenantId → đếm unique players.
    * Dùng song song với aggregateTenantSettleMetrics trong BuildSettleReport.
    */
-  async aggregatePlayerCountByTenant(
-    drawId: string,
-  ): Promise<Array<{ tenantId: string; playerCount: number }>> {
+  async aggregatePlayerCountByTenant(drawId: string): Promise<Array<{ tenantId: string; playerCount: number }>> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1139,9 +1114,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Keno không có lineCount.
    */
-  async aggregateOutstandingMetricsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1175,9 +1148,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1234,11 +1205,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Filter: payout.winAmount > 0 (entries thực sự trúng).
    * Sort: payout.winAmount desc để entries trúng lớn hiện trước.
    */
-  async getWinningEntries(
-    drawId: string,
-    cursor?: string,
-    limit?: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getWinningEntries(drawId: string, cursor?: string, limit?: number): Promise<TicketEntryEntity[]> {
     const pageSize = Math.min(limit ?? 50, 200);
     const filter: Record<string, unknown> = {
       drawId,
@@ -1341,11 +1308,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    *
    * Keno: không có lineCount trên TicketEntryDoc.
    */
-  async findByDrawTenantPlayer(
-    drawId: string,
-    tenantId: string,
-    accountId: string,
-  ): Promise<TicketEntryEntity[]> {
+  async findByDrawTenantPlayer(drawId: string, tenantId: string, accountId: string): Promise<TicketEntryEntity[]> {
     return this.findMany({ drawId, tenantId, accountId }, { sort: { createdAt: 1 } });
   }
 }

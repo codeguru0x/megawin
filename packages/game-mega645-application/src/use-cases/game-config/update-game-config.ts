@@ -5,16 +5,9 @@ import type { Mega645OpsConfig } from "@megawin/game-mega645/entities";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
 import { globalConfigCache } from "../../caches/global-config.cache";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-  UpdateOpsInput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
-export class UpdateGameConfigUseCase extends NextApiUseCase<
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput
-> {
+export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
@@ -39,9 +32,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
             ...input.defaultPrizes,
           }
         : undefined,
-      play: input.play
-        ? { ...(existing?.play ?? DEFAULT_MEGA645_CONFIG.play), ...input.play }
-        : undefined,
+      play: input.play ? { ...(existing?.play ?? DEFAULT_MEGA645_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 
@@ -81,10 +72,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
    * phần còn lại từ existing (fallback default). `enabled` merge shallow để đổi 1
    * khoá alert type mà không phải gửi cả object.
    */
-  private mergeOps(
-    existing: Mega645OpsConfig | undefined,
-    input: UpdateOpsInput,
-  ): Mega645OpsConfig {
+  private mergeOps(existing: Mega645OpsConfig | undefined, input: UpdateOpsInput): Mega645OpsConfig {
     const base = existing ?? DEFAULT_MEGA645_CONFIG.ops;
 
     const alerts = input.alerts

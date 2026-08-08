@@ -55,10 +55,7 @@ export interface EnqueueReversalsOutput {
   lockKey: string;
 }
 
-export class EnqueueReversalsUseCase extends InternalUseCase<
-  EnqueueReversalsInput,
-  EnqueueReversalsOutput
-> {
+export class EnqueueReversalsUseCase extends InternalUseCase<EnqueueReversalsInput, EnqueueReversalsOutput> {
   private readonly entryResettleRepo = new EntryResettleRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 
@@ -67,12 +64,7 @@ export class EnqueueReversalsUseCase extends InternalUseCase<
 
     // Build batchKey — single source of truth, đồng nhất với `payoutBatchKey`
     // ở settle path (game-core buildResettleBatchKey).
-    const reversalBatchKey = buildResettleBatchKey(
-      GameProduct.Mega645,
-      drawId,
-      resettleId,
-      "reversal",
-    );
+    const reversalBatchKey = buildResettleBatchKey(GameProduct.Mega645, drawId, resettleId, "reversal");
 
     let cursor: string | undefined;
     let enqueuedTotal = 0;

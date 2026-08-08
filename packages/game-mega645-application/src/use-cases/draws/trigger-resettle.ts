@@ -57,10 +57,7 @@ import type { ResettleContext } from "../settle/types";
 
 const RESETTLE_LOCK_TTL_SECONDS = 600;
 
-export class TriggerResettleUseCase extends NextApiUseCase<
-  TriggerResettleInput,
-  TriggerResettleOutput
-> {
+export class TriggerResettleUseCase extends NextApiUseCase<TriggerResettleInput, TriggerResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly lockCoordinator = new DistributedMutex();
   private readonly cycleRepo = new JackpotCycleRepository();
@@ -79,9 +76,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     }
 
     if (!draw.result) {
-      throw AppException.badRequest(
-        "Chưa có kết quả quay – phải republish result trước khi resettle.",
-      );
+      throw AppException.badRequest("Chưa có kết quả quay – phải republish result trước khi resettle.");
     }
 
     // ── Step 2: phân biệt Settle lần đầu vs Resettle ─────────────────────
@@ -94,10 +89,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
 
     const resultPublishedAt = draw.result.publishedAt;
     if (!resultPublishedAt || resultPublishedAt.getTime() <= draw.settledAt.getTime()) {
-      throw new AppException(
-        "DRAW_NO_NEW_RESULT",
-        `Không thể resettle – chưa có kết quả mới sau lần kết sổ gần nhất.`,
-      );
+      throw new AppException("DRAW_NO_NEW_RESULT", `Không thể resettle – chưa có kết quả mới sau lần kết sổ gần nhất.`);
     }
 
     // ── Step 3: validate status ──────────────────────────────────────────
@@ -105,10 +97,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     // (retry idempotent — phiên trước đã transition nhưng SFN start lỗi/DBA
     // bấm lại). Mọi status khác (Scheduled/Settled/Cancelled) bị reject.
     if (draw.status !== DrawStatus.Published && draw.status !== DrawStatus.Settling) {
-      throw new AppException(
-        "DRAW_INVALID_TRANSITION",
-        `Không thể resettle – draw đang ở "${draw.status}".`,
-      );
+      throw new AppException("DRAW_INVALID_TRANSITION", `Không thể resettle – draw đang ở "${draw.status}".`);
     }
 
     // ── Step 4: build resettleContext từ Cycle Ledger ────────────────────
@@ -137,8 +126,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     // (skipCycleUpdate=true). Cross-cycle restructure (gỡ winner đóng cycle) rơi vào
     // B2 vì chain detect xuyên cycle thấy các kỳ ở cycle kế.
     const requiresDbaCycle =
-      detection.scenario === ResettleScenario.TYPE_B1 ||
-      detection.scenario === ResettleScenario.TYPE_B2;
+      detection.scenario === ResettleScenario.TYPE_B1 || detection.scenario === ResettleScenario.TYPE_B2;
 
     if (requiresDbaCycle && !input.dbaConfirmed) {
       throw new AppException("RESETTLE_REQUIRES_DBA", detection.message);
@@ -159,10 +147,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     // Cascade B2: closing kỳ trước vừa đổi do resettle kỳ trước → đọc lại từ kỳ liền
     // trước (XUYÊN CYCLE, theo drawId), bật cascadeOpeningUpdate. Kỳ đầu cascade (T)
     // hoặc kỳ settle đầu tiên trong ledger → fallback ledger(T).openingJp (bất biến).
-    const { opening, cascadeOpeningUpdate } = await this.resolveOpening(
-      drawId,
-      ledgerEntry.openingJp,
-    );
+    const { opening, cascadeOpeningUpdate } = await this.resolveOpening(drawId, ledgerEntry.openingJp);
 
     const cycleDrawCountBefore = ledgerEntry.seq - 1;
 
@@ -222,10 +207,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
         const updated = await this.drawRepo.triggerSettle(drawId);
 
         if (!updated) {
-          throw new AppException(
-            "DRAW_INVALID_TRANSITION",
-            `Không thể resettle – draw không còn ở "published".`,
-          );
+          throw new AppException("DRAW_INVALID_TRANSITION", `Không thể resettle – draw không còn ở "published".`);
         }
 
         // Audit staff bấm kết sổ lại (chỉ ghi ở lần transition thật, không ghi

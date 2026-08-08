@@ -9,10 +9,7 @@
 
 import { describe, it, expect } from "vitest";
 import { PlayType, Lotto535NumberKind } from "@megawin/game-lotto535/entities";
-import {
-  Lotto535StatsAccumulator,
-  type PrizeContext,
-} from "../../src/use-cases/operations/stats-accumulator";
+import { Lotto535StatsAccumulator, type PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
 import type { EntryBoardForStats, EntryForStats } from "../../src/infras/repos/types";
 
 const DRAW_ID = "2000-01-01.001";
@@ -39,8 +36,7 @@ function board(overrides: Partial<EntryBoardForStats> = {}): EntryBoardForStats 
 
 function entry(overrides: Partial<EntryForStats> = {}): EntryForStats {
   const boards = overrides.boards ?? [board()];
-  const betUnitCount =
-    overrides.betUnitCount ?? boards.reduce((sum, b) => sum + b.expandedLines * b.betCount, 0);
+  const betUnitCount = overrides.betUnitCount ?? boards.reduce((sum, b) => sum + b.expandedLines * b.betCount, 0);
   return {
     id: "64b000000000000000000001",
     drawId: DRAW_ID,

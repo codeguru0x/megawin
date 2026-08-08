@@ -1,9 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { EntryVoidRepository } from "../../infras/repos/entry-void-repo";
-import type {
-  ListVoidPlayerEntriesInput,
-  ListVoidPlayerEntriesOutput,
-} from "./types";
+import type { ListVoidPlayerEntriesInput, ListVoidPlayerEntriesOutput } from "./types";
 
 /**
  * Lấy danh sách entries void của 1 player trong 1 draw × tenant. Drill cấp 4.
@@ -18,14 +15,8 @@ export class ListVoidPlayerEntriesUseCase extends NextApiUseCase<
 > {
   private readonly repo = new EntryVoidRepository();
 
-  protected async execute(
-    input: ListVoidPlayerEntriesInput,
-  ): Promise<ListVoidPlayerEntriesOutput> {
-    const data = await this.repo.findEntriesByDrawTenantPlayer(
-      input.drawId,
-      input.tenantId,
-      input.accountId,
-    );
+  protected async execute(input: ListVoidPlayerEntriesInput): Promise<ListVoidPlayerEntriesOutput> {
+    const data = await this.repo.findEntriesByDrawTenantPlayer(input.drawId, input.tenantId, input.accountId);
     return { data };
   }
 }

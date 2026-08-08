@@ -15,15 +15,9 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "@megawin/game-lotto535/entities";
 import type { PlayerGetCurrentDrawOutput, PlayerDrawInfo } from "./dto/player.dto";
 
-const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-];
+const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
 
-export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
-  void,
-  PlayerGetCurrentDrawOutput
-> {
+export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {

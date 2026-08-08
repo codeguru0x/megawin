@@ -21,9 +21,7 @@ function WorkersPageInner() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Workers</h1>
-            <p className="text-xs text-muted-foreground">
-              Trạng thái, tiến độ và kill-switch của các worker nền.
-            </p>
+            <p className="text-xs text-muted-foreground">Trạng thái, tiến độ và kill-switch của các worker nền.</p>
           </div>
         </div>
       </div>

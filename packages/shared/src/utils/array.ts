@@ -107,11 +107,7 @@ export function chunk<T>(arr: readonly T[], size: number): T[][] {
  * sortBy(draws, (d) => d.drawId, "desc")      // DESC theo drawId
  * sortBy(users, (u) => u.totalStake, "desc")  // DESC theo số
  */
-export function sortBy<T>(
-  arr: readonly T[],
-  keyFn: (item: T) => string | number,
-  order: "asc" | "desc" = "asc",
-): T[] {
+export function sortBy<T>(arr: readonly T[], keyFn: (item: T) => string | number, order: "asc" | "desc" = "asc"): T[] {
   const dir = order === "asc" ? 1 : -1;
   return arr.toSorted((a, b) => {
     const ka = keyFn(a);

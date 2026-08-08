@@ -149,9 +149,7 @@ export class TxLogRepository extends TenantGatewayBaseRepo<TxLogEntity, TxLogMap
    * Sort không cần — summary là aggregate không phân trang. Index
    * `{ createdAt: -1 }` đủ phục vụ `$match` range.
    */
-  async aggregateSummary(
-    filter: AggregateTxLogsSummaryFilter,
-  ): Promise<AggregateTxLogsSummaryResult> {
+  async aggregateSummary(filter: AggregateTxLogsSummaryFilter): Promise<AggregateTxLogsSummaryResult> {
     const matchStage = {
       createdAt: {
         $gte: filter.from,
@@ -207,10 +205,7 @@ export class TxLogRepository extends TenantGatewayBaseRepo<TxLogEntity, TxLogMap
     };
   }
 
-  private buildFilter(
-    filter: ListTxLogsFilter,
-    cursor: ListTxLogsOptions["cursor"],
-  ): Filter<TxLogDoc> {
+  private buildFilter(filter: ListTxLogsFilter, cursor: ListTxLogsOptions["cursor"]): Filter<TxLogDoc> {
     const conditions: Filter<TxLogDoc>[] = [];
 
     if (filter.tx) {

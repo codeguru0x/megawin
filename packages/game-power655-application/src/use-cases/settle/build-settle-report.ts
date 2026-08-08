@@ -47,10 +47,7 @@ export interface BuildSettleReportResult {
  *
  * Power 6/55 DUAL Jackpot: jackpotContribution = JP1 + JP2.
  */
-export class BuildSettleReportUseCase extends InternalUseCase<
-  SettleContext,
-  BuildSettleReportResult
-> {
+export class BuildSettleReportUseCase extends InternalUseCase<SettleContext, BuildSettleReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawReportRepo = new SettleDrawReportRepository();
   private readonly tenantReportRepo = new SettleTenantReportRepository();
@@ -68,9 +65,7 @@ export class BuildSettleReportUseCase extends InternalUseCase<
     ]);
 
     // Map playerCount per tenantId để merge vào tenant reports
-    const playerCountMap = new Map<string, number>(
-      playerAggs.map((p) => [p.tenantId, p.playerCount]),
-    );
+    const playerCountMap = new Map<string, number>(playerAggs.map((p) => [p.tenantId, p.playerCount]));
 
     // ── Bước 2: Upsert SettleTenantReport[] ─────────────────────────────────
     const tenantReports = tenantAggs.map((t) => {
@@ -118,8 +113,7 @@ export class BuildSettleReportUseCase extends InternalUseCase<
     // Power 6/55 DUAL Jackpot: jackpotContribution = JP1 + JP2 contribution
     // companyTake = actualCompanyTake từ CalculateFinancials
     const companyTake = financials?.actualCompanyTake ?? 0;
-    const jackpotContribution =
-      (financials?.jackpot1Contribution ?? 0) + (financials?.jackpot2Contribution ?? 0);
+    const jackpotContribution = (financials?.jackpot1Contribution ?? 0) + (financials?.jackpot2Contribution ?? 0);
 
     await this.drawReportRepo.upsertDrawReport({
       drawId,

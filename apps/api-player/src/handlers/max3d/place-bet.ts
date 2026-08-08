@@ -48,19 +48,12 @@ const max3dPlusBoardSchema = z.object({
   betCount: z.number().int().min(1).default(1),
 });
 
-export const max3dBoardSchema = z.discriminatedUnion("playMode", [
-  max3dBasicBoardSchema,
-  max3dPlusBoardSchema,
-]);
+export const max3dBoardSchema = z.discriminatedUnion("playMode", [max3dBasicBoardSchema, max3dPlusBoardSchema]);
 
 // ─── Place bet body schema ───
 
 export const max3dPlaceBetBodySchema = z.object({
-  drawIds: z
-    .array(max3dDrawIdSchema)
-    .min(1)
-    .max(6)
-    .refine(isUnique, { message: "Các drawId không được trùng lặp." }),
+  drawIds: z.array(max3dDrawIdSchema).min(1).max(6).refine(isUnique, { message: "Các drawId không được trùng lặp." }),
   boards: z.array(max3dBoardSchema).min(1).max(MAX3D_MAX_BOARDS).refine(boardsSequentialRefine(), {
     message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
   }),

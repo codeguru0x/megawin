@@ -5,10 +5,7 @@ import { isOnlyDuplicateKeyError } from "@megawin/data/mongo";
 import { TenantDispatchBaseRepo } from "./base-repo";
 import { DispatchOrderMapper } from "../mappers/dispatch-order-mapper";
 import { DispatchOrderStatus, DispatchSourceKind } from "../../entities/enums";
-import type {
-  TenantDispatchOrderEntity,
-  TenantDispatchOrderInput,
-} from "../../entities/dispatch-order";
+import type { TenantDispatchOrderEntity, TenantDispatchOrderInput } from "../../entities/dispatch-order";
 import type { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
 import type {
   PendingDispatchOrder,
@@ -46,10 +43,7 @@ import { RETRY_ALERT_THRESHOLD } from "../../config";
  * Lần fail đầu tiên chuyển order từ main sang retry lane (markAttemptFailed $inc retryCount).
  * Các lần fail sau chỉ tăng `retryCount`, order vẫn ở retry lane.
  */
-export class DispatchOrderRepository extends TenantDispatchBaseRepo<
-  TenantDispatchOrderEntity,
-  DispatchOrderMapper
-> {
+export class DispatchOrderRepository extends TenantDispatchBaseRepo<TenantDispatchOrderEntity, DispatchOrderMapper> {
   constructor() {
     super({
       collName: "tenant_dispatch_orders",
@@ -110,10 +104,7 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<
    * @param limit - The limit of the query
    * @returns The pending orders
    */
-  private async queryPending(
-    extraFilter: Record<string, unknown>,
-    limit: number,
-  ): Promise<PendingDispatchOrder[]> {
+  private async queryPending(extraFilter: Record<string, unknown>, limit: number): Promise<PendingDispatchOrder[]> {
     const now = new Date();
 
     const docs = await this.findManyAsDocuments(

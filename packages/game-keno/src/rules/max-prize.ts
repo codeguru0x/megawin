@@ -11,12 +11,7 @@
  */
 
 import type { BasicPrizes, BigSmallPrizes, EvenOddPrizes, PayoutCaps } from "../entities/types";
-import {
-  KENO_BASIC_PLAY_TYPE_SET,
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KenoPlayType,
-} from "../entities/enums";
+import { KENO_BASIC_PLAY_TYPE_SET, KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "../entities/enums";
 import { lookupBasicPrize } from "./prize-tables";
 
 /**
@@ -124,10 +119,7 @@ export interface CappedExposure {
  * @param raw - `worstCaseByPlayType` RAW từ doc (có thể chứa số âm tạm thời do void — floor 0).
  * @param caps - Cap trả thưởng kỳ từ GlobalConfig.
  */
-export function capExposureByPlayType(
-  raw: Record<string, number>,
-  caps: PayoutCaps,
-): CappedExposure {
+export function capExposureByPlayType(raw: Record<string, number>, caps: PayoutCaps): CappedExposure {
   const worstCaseByPlayType: Record<string, number> = {};
   let worstCaseTotal = 0;
 

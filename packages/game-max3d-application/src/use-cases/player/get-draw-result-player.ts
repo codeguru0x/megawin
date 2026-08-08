@@ -33,10 +33,7 @@ export interface GetDrawResultPlayerInput {
  * settleSummary.basicTiers + plusTiers ghi đủ cả tiers basic + plus mode.
  * Winnercount và prizeAmount aggregate từ tất cả entries kỳ đó.
  */
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
-  GetDrawResultPlayerInput,
-  PlayerDrawResultInfo
-> {
+export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

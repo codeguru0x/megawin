@@ -39,11 +39,7 @@ import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
 import { logError } from "@megawin/shared/utils";
 import { DRAW_COMPLETED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
-import type {
-  GlobalConfigEntity,
-  OpsConfig,
-  OpsStatsConfig,
-} from "@megawin/game-max3dpro/entities";
+import type { GlobalConfigEntity, OpsConfig, OpsStatsConfig } from "@megawin/game-max3dpro/entities";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -90,8 +86,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description =
-    "Max 3D Pro — đồng bộ thống kê cược theo delta (tick ~30s, mọi kỳ chưa final)";
+  protected readonly description = "Max 3D Pro — đồng bộ thống kê cược theo delta (tick ~30s, mọi kỳ chưa final)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -152,12 +147,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
       // 1 kỳ lỗi (data bẩn, doc quá cỡ…) KHÔNG được làm chết cả tick — các kỳ còn lại,
       // nhất là kỳ đang mở bán, vẫn phải được cập nhật.
       try {
-        const applied = await this.syncDraw(
-          drawCursor.drawId,
-          drawCursor.lastEntryId,
-          this.prize,
-          this.statsConfig,
-        );
+        const applied = await this.syncDraw(drawCursor.drawId, drawCursor.lastEntryId, this.prize, this.statsConfig);
         this.counters.entriesApplied += applied.entriesApplied;
         this.clearStalledItem(drawCursor.drawId); // kỳ qua được → xoá streak
 
@@ -287,10 +277,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   }
 
   /** Gom prize config từ GlobalConfig cho accumulator (unitPrice + prizes + ngưỡng cược lớn). */
-  private buildPrizeContext(
-    config: Pick<GlobalConfigEntity, "play" | "defaultPrizes">,
-    ops: OpsConfig,
-  ): PrizeContext {
+  private buildPrizeContext(config: Pick<GlobalConfigEntity, "play" | "defaultPrizes">, ops: OpsConfig): PrizeContext {
     return {
       unitPrice: config.play.unitPrice,
       prizes: config.defaultPrizes.standard,

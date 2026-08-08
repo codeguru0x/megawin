@@ -64,17 +64,14 @@ export function KpiSection() {
   );
 
   // Slice `exposure` + thresholds — ngưỡng TUYỆT ĐỐI VND từ config.
-  const { data: exposureSlice } = useOpsSnapshot<ExposureSlice | null>(
-    effectiveDrawId,
-    isSettled,
-    (s) =>
-      s.exposure && s.stats
-        ? {
-            exposure: s.exposure,
-            revenue: s.stats.totals.revenue,
-            warnAmount: s.thresholds.exposureWarnAmount,
-          }
-        : null,
+  const { data: exposureSlice } = useOpsSnapshot<ExposureSlice | null>(effectiveDrawId, isSettled, (s) =>
+    s.exposure && s.stats
+      ? {
+          exposure: s.exposure,
+          revenue: s.stats.totals.revenue,
+          warnAmount: s.thresholds.exposureWarnAmount,
+        }
+      : null,
   );
 
   if (!draw) return null;

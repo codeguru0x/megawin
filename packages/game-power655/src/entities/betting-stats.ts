@@ -120,8 +120,7 @@ export interface Power655TopPotential {
  * tạm (có thể mở bán lại) — đóng dấu ở đây thì cược sau khi mở lại không bao giờ
  * được cộng.
  */
-export interface Power655DrawBettingStatsDoc
-  extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
+export interface Power655DrawBettingStatsDoc extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
   /** MongoDB ObjectId. */
   _id: unknown;
 

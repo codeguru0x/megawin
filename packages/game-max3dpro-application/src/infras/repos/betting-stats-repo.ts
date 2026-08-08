@@ -37,10 +37,7 @@ import type { DrawStatsCursor, Max3dproStatsDelta } from "./types";
 
 const f = docPath<Max3dproDrawBettingStatsDoc>();
 
-export class BettingStatsRepository extends BaseRepo<
-  Max3dproDrawBettingStatsEntity,
-  BettingStatsMapper
-> {
+export class BettingStatsRepository extends BaseRepo<Max3dproDrawBettingStatsEntity, BettingStatsMapper> {
   constructor() {
     super({
       collName: Max3dproCollections.BettingStats,
@@ -154,10 +151,7 @@ export class BettingStatsRepository extends BaseRepo<
 
     // IDEMPOTENT theo watermark: `ensureDocs` seed `lastEntryId = MIN_OBJECT_ID` nên `$lt`
     // luôn khớp lần áp đầu (mọi ObjectId thật > MIN), các batch kế `$lt` bỏ batch đã áp.
-    return await this.updateOne(
-      { drawId, [f("lastEntryId")]: { $lt: batchMaxId } },
-      update as UpdateFilter<Document>,
-    );
+    return await this.updateOne({ drawId, [f("lastEntryId")]: { $lt: batchMaxId } }, update as UpdateFilter<Document>);
   }
 
   /**
@@ -237,11 +231,7 @@ function incBy(inc: Record<string, number>, path: string, value: number): void {
 }
 
 /** `$inc` 4 field của 1 `Max3dproPlayTypeStat` tại `basePath`. */
-function incPlayTypeStat(
-  inc: Record<string, number>,
-  basePath: string,
-  stat: Max3dproPlayTypeStat,
-): void {
+function incPlayTypeStat(inc: Record<string, number>, basePath: string, stat: Max3dproPlayTypeStat): void {
   incBy(inc, `${basePath}.amount`, stat.amount);
   incBy(inc, `${basePath}.units`, stat.units);
   incBy(inc, `${basePath}.boards`, stat.boards);

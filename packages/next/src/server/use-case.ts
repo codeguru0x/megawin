@@ -22,18 +22,8 @@
  */
 
 import { NextResponse } from "next/server";
-import {
-  type AppError,
-  type AppResult,
-  AppException,
-  isAppError,
-  APP_ERROR_CODES,
-} from "@megawin/shared/errors";
-import type {
-  ApiErrorResponse,
-  ApiResponseMeta,
-  ApiSuccessResponse,
-} from "../types";
+import { type AppError, type AppResult, AppException, isAppError, APP_ERROR_CODES } from "@megawin/shared/errors";
+import type { ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "../types";
 import { apiSuccess, appErrorToApiResponse, apiError } from "./response";
 
 // ============ Helpers ============
@@ -44,7 +34,7 @@ export function toNextResponse<O>(
     headers?: Record<string, string>;
     successStatus?: number;
     meta?: ApiResponseMeta;
-  }
+  },
 ): NextResponse<ApiSuccessResponse<O> | ApiErrorResponse> {
   if (result.success) {
     return apiSuccess(result.data, {
@@ -68,10 +58,7 @@ export abstract class NextApiUseCase<I = void, O = void> {
   async run(
     ...[input, options]: I extends void
       ? [options?: { successStatus?: number; meta?: ApiResponseMeta }]
-      : [
-          input: I,
-          options?: { successStatus?: number; meta?: ApiResponseMeta },
-        ]
+      : [input: I, options?: { successStatus?: number; meta?: ApiResponseMeta }]
   ): Promise<NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>> {
     try {
       const validationError = this.validate(input as I);

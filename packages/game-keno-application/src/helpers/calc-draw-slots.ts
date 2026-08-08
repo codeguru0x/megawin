@@ -47,20 +47,14 @@ function minutesToHHmm(minutes: number): string {
  * Tìm slot tiếp theo trong ngày dựa trên thời điểm hiện tại.
  * Trả về phút trong ngày của slot, hoặc -1 nếu không còn slot hợp lệ trong ngày.
  */
-function findNextSlotInDay(
-  nowMinutes: number,
-  nowSeconds: number,
-  config: DrawSlotConfig,
-  isToday: boolean,
-): number {
+function findNextSlotInDay(nowMinutes: number, nowSeconds: number, config: DrawSlotConfig, isToday: boolean): number {
   const firstMinutes = parseHHmm(config.firstDrawTime);
   const lastMinutes = parseHHmm(config.lastDrawTime);
 
   if (!isToday) return firstMinutes;
 
   const sinceFirst = nowMinutes - firstMinutes;
-  const slotsElapsed =
-    sinceFirst >= 0 ? Math.floor(sinceFirst / config.drawIntervalMinutes) + 1 : 0;
+  const slotsElapsed = sinceFirst >= 0 ? Math.floor(sinceFirst / config.drawIntervalMinutes) + 1 : 0;
 
   let candidate = firstMinutes + slotsElapsed * config.drawIntervalMinutes;
 

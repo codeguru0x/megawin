@@ -27,10 +27,7 @@ export class PlaceBetStore {
    *
    * version được stamp cho toàn bộ batch entries trước khi insert.
    */
-  async saveAtomically(
-    ticketDoc: TicketDoc,
-    entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">>,
-  ): Promise<void> {
+  async saveAtomically(ticketDoc: TicketDoc, entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">>): Promise<void> {
     if (entryDocs.length === 0) {
       throw AppException.businessRuleViolation("Danh sách entries không có dữ liệu.");
     }

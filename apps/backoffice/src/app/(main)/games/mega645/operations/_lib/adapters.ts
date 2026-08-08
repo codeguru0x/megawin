@@ -169,10 +169,7 @@ export function toTenantRows(stats: Stats): TenantRow[] {
  * jackpot đọc snapshot pool lúc build response — xem JSDoc {@link Mega645SnapshotExposure}).
  * KHÁC Power 6/55: `jackpotExposure` là 1 số duy nhất (không JP1/JP2).
  */
-export function toExposureView(exposure: {
-  fixedWorstCase: number;
-  jackpotExposure: number;
-}): ExposureView {
+export function toExposureView(exposure: { fixedWorstCase: number; jackpotExposure: number }): ExposureView {
   return {
     fixedWorstCase: exposure.fixedWorstCase,
     jackpotExposure: exposure.jackpotExposure,

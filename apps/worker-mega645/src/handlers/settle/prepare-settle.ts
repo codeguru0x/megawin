@@ -8,10 +8,7 @@
  * @output SettleContext
  */
 
-import {
-  PrepareSettleUseCase,
-  type PrepareSettleInput,
-} from "@megawin/game-mega645-application/use-cases/settle";
+import { PrepareSettleUseCase, type PrepareSettleInput } from "@megawin/game-mega645-application/use-cases/settle";
 
 const useCase = new PrepareSettleUseCase();
 

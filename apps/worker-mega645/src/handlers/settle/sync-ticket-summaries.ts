@@ -11,10 +11,7 @@
  * @output SyncTicketSummariesResult
  */
 
-import {
-  SyncTicketSummariesUseCase,
-  type DrawSyncInput,
-} from "@megawin/game-mega645-application/use-cases/settle";
+import { SyncTicketSummariesUseCase, type DrawSyncInput } from "@megawin/game-mega645-application/use-cases/settle";
 
 const useCase = new SyncTicketSummariesUseCase();
 

@@ -37,10 +37,7 @@ import { logError } from "@megawin/shared/utils";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
 import { computeBingo18Exposure } from "@megawin/game-bingo18/rules";
-import type {
-  Bingo18DrawBettingStatsEntity,
-  OpsAlertsConfig,
-} from "@megawin/game-bingo18/entities";
+import type { Bingo18DrawBettingStatsEntity, OpsAlertsConfig } from "@megawin/game-bingo18/entities";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
@@ -74,8 +71,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
-    "Bingo 18 — đánh giá cảnh báo vận hành (ngưỡng exposure/skew/bucket) cho kỳ đang mở";
+  protected readonly description = "Bingo 18 — đánh giá cảnh báo vận hành (ngưỡng exposure/skew/bucket) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly statsRepo = new BettingStatsRepository();

@@ -70,10 +70,7 @@ export interface SyncTicketSummariesResult {
   done: boolean;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<
-  DrawSyncInput,
-  SyncTicketSummariesResult
-> {
+export class SyncTicketSummariesUseCase extends InternalUseCase<DrawSyncInput, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

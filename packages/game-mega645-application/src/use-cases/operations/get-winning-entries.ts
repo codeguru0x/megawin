@@ -28,10 +28,7 @@ const TIER_LABELS: Record<string, string> = {
  *
  * Mega 6/45: board chỉ có numbers (01-45), không có specialNumbers.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

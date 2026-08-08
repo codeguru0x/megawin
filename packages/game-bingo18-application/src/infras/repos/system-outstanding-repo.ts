@@ -45,8 +45,12 @@ export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
 
     if (result.length === 0) {
       return {
-        activeDrawCount: 0, totalEntryCount: 0, totalPlayerCount: 0,
-        totalTenantCount: 0, totalOutstandingStake: 0, totalEstimatedCommission: 0,
+        activeDrawCount: 0,
+        totalEntryCount: 0,
+        totalPlayerCount: 0,
+        totalTenantCount: 0,
+        totalOutstandingStake: 0,
+        totalEstimatedCommission: 0,
       };
     }
 

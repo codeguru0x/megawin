@@ -40,10 +40,7 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       (d) => d.drawId,
     );
 
-    const toItem = (
-      draw: (typeof unfinishedDraws)[0],
-      group: DrawSelectorGroup,
-    ): DrawSelectorItem => ({
+    const toItem = (draw: (typeof unfinishedDraws)[0], group: DrawSelectorGroup): DrawSelectorItem => ({
       drawId: draw.drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,

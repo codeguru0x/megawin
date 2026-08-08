@@ -23,8 +23,7 @@ describe("GET /player/lotto535/tickets/{ticketId}/entries", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.resetModules();
-    const mod =
-      await import("../../../src/handlers/lotto535/get-ticket-entries");
+    const mod = await import("../../../src/handlers/lotto535/get-ticket-entries");
     handler = mod.handler;
   });
 

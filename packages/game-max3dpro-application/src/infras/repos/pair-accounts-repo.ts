@@ -18,10 +18,7 @@
  */
 
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
-import type {
-  Max3dproDrawPairAccountDoc,
-  Max3dproDrawPairAccountEntity,
-} from "@megawin/game-max3dpro/entities";
+import type { Max3dproDrawPairAccountDoc, Max3dproDrawPairAccountEntity } from "@megawin/game-max3dpro/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -30,10 +27,7 @@ import type { Max3dproPairStatsDelta } from "./types";
 
 const f = docPath<Max3dproDrawPairAccountDoc>();
 
-export class PairAccountsRepository extends BaseRepo<
-  Max3dproDrawPairAccountEntity,
-  PairAccountMapper
-> {
+export class PairAccountsRepository extends BaseRepo<Max3dproDrawPairAccountEntity, PairAccountMapper> {
   constructor() {
     super({
       collName: Max3dproCollections.PairAccounts,

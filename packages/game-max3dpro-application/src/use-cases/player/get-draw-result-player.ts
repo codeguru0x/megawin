@@ -31,10 +31,7 @@ export interface GetDrawResultPlayerInput {
  * settleSummary.tiers ghi đủ 8 hạng giải (kể cả winnerCount = 0).
  * Winnercount và prizeAmount aggregate từ tất cả entries kỳ đó.
  */
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
-  GetDrawResultPlayerInput,
-  PlayerDrawResultInfo
-> {
+export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

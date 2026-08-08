@@ -74,14 +74,10 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
     const currentAmount = activeCycle?.currentAmount ?? seedAmount;
 
     // Tính ngưỡng milestone giả định từ seedAmount và currentAmount.
-    const { milestoneThreshold, currentMultiple, nextMultiple } = calcMilestoneThreshold(
-      seedAmount,
-      currentAmount,
-    );
+    const { milestoneThreshold, currentMultiple, nextMultiple } = calcMilestoneThreshold(seedAmount, currentAmount);
 
     const remaining = Math.max(milestoneThreshold - currentAmount, 0);
-    const percentage =
-      milestoneThreshold > 0 ? Math.round((currentAmount / milestoneThreshold) * 1000) / 10 : 0;
+    const percentage = milestoneThreshold > 0 ? Math.round((currentAmount / milestoneThreshold) * 1000) / 10 : 0;
 
     return {
       cycle: activeCycle

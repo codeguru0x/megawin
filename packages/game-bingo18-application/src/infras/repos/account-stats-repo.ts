@@ -29,10 +29,7 @@
  */
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
-import type {
-  Bingo18DrawAccountStatsDoc,
-  Bingo18DrawAccountStatsEntity,
-} from "@megawin/game-bingo18/entities";
+import type { Bingo18DrawAccountStatsDoc, Bingo18DrawAccountStatsEntity } from "@megawin/game-bingo18/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -41,10 +38,7 @@ import type { AccountStatsDelta } from "./types";
 
 const f = docPath<Bingo18DrawAccountStatsDoc>();
 
-export class AccountStatsRepository extends BaseRepo<
-  Bingo18DrawAccountStatsEntity,
-  AccountStatsMapper
-> {
+export class AccountStatsRepository extends BaseRepo<Bingo18DrawAccountStatsEntity, AccountStatsMapper> {
   constructor() {
     super({
       collName: Bingo18Collections.AccountStats,
@@ -75,10 +69,7 @@ export class AccountStatsRepository extends BaseRepo<
   }
 
   /** Tích luỹ cược của 1 account trong kỳ — drill-down outstanding từ alert. */
-  async getByAccount(
-    drawId: string,
-    accountId: string,
-  ): Promise<Bingo18DrawAccountStatsEntity | null> {
+  async getByAccount(drawId: string, accountId: string): Promise<Bingo18DrawAccountStatsEntity | null> {
     return await this.findOne({ drawId, accountId });
   }
 

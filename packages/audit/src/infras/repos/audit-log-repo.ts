@@ -3,18 +3,9 @@ import { AuditRepo } from "@megawin/data/mongo";
 
 import { AUDIT_LOG_COLLECTION } from "../../indexes";
 import type { AuditLogDoc, AuditLogEntity, AuditLogInsertDoc } from "../../entities";
-import {
-  AuditTargetType,
-  SELF_ACTIVITY_ACTIONS,
-  SELF_ACTIVITY_TARGET_ACTIONS,
-} from "../../entities";
+import { AuditTargetType, SELF_ACTIVITY_ACTIONS, SELF_ACTIVITY_TARGET_ACTIONS } from "../../entities";
 import { AuditLogMapper } from "../mappers";
-import type {
-  AuditLogCursor,
-  AuditLogCursorPage,
-  AuditLogFilter,
-  AuditLogPageOptions,
-} from "./types";
+import type { AuditLogCursor, AuditLogCursorPage, AuditLogFilter, AuditLogPageOptions } from "./types";
 
 /**
  * Repository cho collection `audit_logs` (DB `megawin-audit`).
@@ -106,10 +97,7 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
    * 3. **Cursor** `(ts, _id)`: `$or` 2 nhánh (`ts < cursor.ts` HOẶC bằng `ts` +
    *    `_id < cursor.id`).
    */
-  private buildFilter(
-    filter: AuditLogFilter,
-    cursor: AuditLogCursor | null | undefined,
-  ): Filter<AuditLogDoc> {
+  private buildFilter(filter: AuditLogFilter, cursor: AuditLogCursor | null | undefined): Filter<AuditLogDoc> {
     const conditions: Filter<AuditLogDoc>[] = [];
 
     if (filter.from || filter.to) {
@@ -195,9 +183,7 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
    *   khớp record nào (an toàn: session thiếu accountId trả rỗng).
    */
   private buildSelfScopeConditions(me: string): Filter<AuditLogDoc>[] {
-    const conditions: Filter<AuditLogDoc>[] = [
-      { action: { $in: [...SELF_ACTIVITY_ACTIONS] } } as Filter<AuditLogDoc>,
-    ];
+    const conditions: Filter<AuditLogDoc>[] = [{ action: { $in: [...SELF_ACTIVITY_ACTIONS] } } as Filter<AuditLogDoc>];
 
     if (SELF_ACTIVITY_TARGET_ACTIONS.length > 0) {
       conditions.push({

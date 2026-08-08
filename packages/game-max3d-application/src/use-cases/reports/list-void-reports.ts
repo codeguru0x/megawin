@@ -7,10 +7,7 @@ import type { ListVoidReportsInput, ListVoidReportsOutput } from "./types";
  *
  * Sort: financialDate desc.
  */
-export class ListVoidReportsUseCase extends NextApiUseCase<
-  ListVoidReportsInput,
-  ListVoidReportsOutput
-> {
+export class ListVoidReportsUseCase extends NextApiUseCase<ListVoidReportsInput, ListVoidReportsOutput> {
   private readonly repo = new VoidReportRepository();
 
   protected async execute(input: ListVoidReportsInput): Promise<ListVoidReportsOutput> {

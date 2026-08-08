@@ -168,8 +168,6 @@ export class StalledItemTracker {
    * tín hiệu tự tắt. Owner KHÔNG được truyền `undefined` khi rỗng (sẽ làm mảng cũ sống mãi).
    */
   snapshot(): WorkerStalledItem[] {
-    return [...this.items.values()]
-      .toSorted((a, b) => b.failCount - a.failCount)
-      .slice(0, MAX_STALLED_ITEMS);
+    return [...this.items.values()].toSorted((a, b) => b.failCount - a.failCount).slice(0, MAX_STALLED_ITEMS);
   }
 }

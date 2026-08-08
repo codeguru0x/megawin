@@ -18,10 +18,7 @@ export interface GetDrawResultPlayerInput {
   drawId: string;
 }
 
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
-  GetDrawResultPlayerInput,
-  PlayerDrawResultInfo
-> {
+export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

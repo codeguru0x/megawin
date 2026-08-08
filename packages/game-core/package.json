@@ -44,11 +44,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "game-core",
-    "domain"
-  ],
+  "keywords": ["megawin", "game-core", "domain"],
   "author": "",
   "license": "ISC",
   "dependencies": {

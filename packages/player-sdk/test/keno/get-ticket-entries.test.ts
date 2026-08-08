@@ -27,9 +27,7 @@ const TICKET_WITH_ENTRIES = {
         boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
       },
       result: {
-        winningNumbers: [
-          1, 7, 15, 22, 33, 38, 44, 49, 55, 60, 63, 67, 70, 72, 74, 76, 78, 79, 80, 3,
-        ],
+        winningNumbers: [1, 7, 15, 22, 33, 38, 44, 49, 55, 60, 63, 67, 70, 72, 74, 76, 78, 79, 80, 3],
         publishedAt: "2026-02-25T13:05:00Z",
         bigCount: 12,
         smallCount: 8,
@@ -40,9 +38,7 @@ const TICKET_WITH_ENTRIES = {
       payout: {
         winAmount: 50000,
         payoutAmount: 50000,
-        boardPayouts: [
-          { boardNo: "A", playType: "pick5", matchCount: 3, pickCount: 5, winAmount: 50000 },
-        ],
+        boardPayouts: [{ boardNo: "A", playType: "pick5", matchCount: 3, pickCount: 5, winAmount: 50000 }],
       },
     },
     {

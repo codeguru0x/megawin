@@ -212,10 +212,7 @@ export abstract class MongoRepository<
    * @param options - Options query
    * @returns - One document found as document
    */
-  public async findOneAsDocument(
-    filter: Filter<Document>,
-    options?: FindOptions,
-  ): Promise<Document | null> {
+  public async findOneAsDocument(filter: Filter<Document>, options?: FindOptions): Promise<Document | null> {
     await this.initBeforeUse();
 
     const [doc] = await this._collection.find(filter, options).limit(1).toArray();
@@ -240,10 +237,7 @@ export abstract class MongoRepository<
    * @param options - Options query
    * @returns - Many documents found as documents
    */
-  public async findManyAsDocuments(
-    filter: Filter<Document>,
-    options?: FindOptions,
-  ): Promise<Document[]> {
+  public async findManyAsDocuments(filter: Filter<Document>, options?: FindOptions): Promise<Document[]> {
     await this.initBeforeUse();
 
     // Nếu không có limit thì mặc định lấy tối đa 500 bản ghi
@@ -280,17 +274,11 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async paging(
-    filter: Filter<Document>,
-    page: number,
-    size: number,
-    options?: FindOptions,
-  ): Promise<TEntity[]> {
+  public async paging(filter: Filter<Document>, page: number, size: number, options?: FindOptions): Promise<TEntity[]> {
     page = page <= 0 ? Constants.Default.Paging.Page : page;
 
     // Lấy tối đa số page size đã fix cứng
-    size =
-      size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
+    size = size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
 
     const skip = size * (page - 1);
 
@@ -622,11 +610,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async distinct(
-    key: string,
-    filter: Filter<Document> = {},
-    options: DistinctOptions = {},
-  ): Promise<any[]> {
+  public async distinct(key: string, filter: Filter<Document> = {}, options: DistinctOptions = {}): Promise<any[]> {
     await this.initBeforeUse();
 
     return await this._collection.distinct(key, filter, options);

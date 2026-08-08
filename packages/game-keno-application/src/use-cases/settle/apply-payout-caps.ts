@@ -62,9 +62,10 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { calculateCappedPrize } from "@megawin/game-keno/rules";
+import { sumBy } from "@megawin/shared/utils/array";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
-import { sumBy } from "@megawin/shared/utils/array";
 
 /** Số entries xử lý mỗi batch khi update cappable entries. */
 const BATCH_SIZE = 500;
@@ -140,24 +141,13 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
       if (winnerCount <= tier.maxSetsForFixed) continue;
 
       // ── Vượt ngưỡng → tính giải chia đều ──
-      const cappedPrize = calculateCappedPrize(
-        tier.fixedPrize,
-        winnerCount,
-        tier.maxPerDraw,
-        tier.maxSetsForFixed,
-      );
+      const cappedPrize = calculateCappedPrize(tier.fixedPrize, winnerCount, tier.maxPerDraw, tier.maxSetsForFixed);
 
       // ── Batch update entries bị ảnh hưởng ──
       let lastEntryId: string | undefined;
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
-        const entries = await this.entryRepo.getCappableEntries(
-          drawId,
-          tier.pickCount,
-          BATCH_SIZE,
-          lastEntryId,
-        );
+        const entries = await this.entryRepo.getCappableEntries(drawId, tier.pickCount, BATCH_SIZE, lastEntryId);
 
         if (entries.length === 0) break;
 

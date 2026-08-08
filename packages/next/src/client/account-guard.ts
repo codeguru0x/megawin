@@ -82,15 +82,9 @@ export interface AccountGuardResult {
 }
 
 export function createAccountGuard(config: CreateAccountGuardOptions) {
-  const {
-    useSession: useSessionHook,
-    suspendedRedirect = "/login",
-    unauthorizedRedirect = "/login",
-  } = config;
+  const { useSession: useSessionHook, suspendedRedirect = "/login", unauthorizedRedirect = "/login" } = config;
 
-  return function useAccountGuard(
-    options: UseAccountGuardOptions = {},
-  ): AccountGuardResult {
+  return function useAccountGuard(options: UseAccountGuardOptions = {}): AccountGuardResult {
     const { requireActive = false, redirectTo, skip = false } = options;
     const { data: session, isPending } = useSessionHook();
     const router = useRouter();
@@ -98,9 +92,7 @@ export function createAccountGuard(config: CreateAccountGuardOptions) {
 
     const accountStatus = session?.user?.accountStatus as string | undefined;
 
-    const result = useMemo<
-      Omit<AccountGuardResult, "isLoading">
-    >(() => {
+    const result = useMemo<Omit<AccountGuardResult, "isLoading">>(() => {
       const isAuthenticated = session != null && session.user != null;
       return {
         accountStatus,

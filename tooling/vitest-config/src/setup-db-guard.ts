@@ -98,9 +98,7 @@ async function installDangerousOperationGuard(): Promise<void> {
       continue;
     }
     proto[method] = function guarded() {
-      throw new Error(
-        `[test-guard] "${method}" bị CẤM TUYỆT ĐỐI trong test — xem .cursor/rules/test-data-safety.mdc.`,
-      );
+      throw new Error(`[test-guard] "${method}" bị CẤM TUYỆT ĐỐI trong test — xem .cursor/rules/test-data-safety.mdc.`);
     };
   }
 }

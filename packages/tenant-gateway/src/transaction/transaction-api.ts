@@ -99,10 +99,7 @@ function shouldSkipLog(policy: TxLoggingPolicy, outcome: ClassifiedOutcome): boo
   // HTTP-level uncertainty — 408 timeout (nếu không phải code TIMEOUT),
   // 429 rate limit, 5xx server error. Tenant chưa chắc đã nhận được / apply
   // transaction → WAL giữ cho scheduler.
-  if (
-    err.httpStatus !== undefined &&
-    (err.httpStatus >= 500 || err.httpStatus === 408 || err.httpStatus === 429)
-  ) {
+  if (err.httpStatus !== undefined && (err.httpStatus >= 500 || err.httpStatus === 408 || err.httpStatus === 429)) {
     return false;
   }
 
@@ -171,10 +168,7 @@ export interface TransactionApi {
    * // result.data!.balance — số dư sau giao dịch
    * ```
    */
-  transaction(
-    req: TransactionRequest,
-    options?: TransactionCallOptions,
-  ): Promise<TransactionResponse>;
+  transaction(req: TransactionRequest, options?: TransactionCallOptions): Promise<TransactionResponse>;
 
   /**
    * Thực hiện batch giao dịch trên ví nhiều players.
@@ -233,10 +227,7 @@ export interface TransactionApi {
    * }
    * ```
    */
-  batchTransaction(
-    req: BatchTransactionRequest,
-    options?: TransactionCallOptions,
-  ): Promise<BatchTransactionResponse>;
+  batchTransaction(req: BatchTransactionRequest, options?: TransactionCallOptions): Promise<BatchTransactionResponse>;
 
   /**
    * Kiểm tra trạng thái giao dịch — read-only, không side effect.
@@ -397,27 +388,18 @@ function logSingleSuccess(
     return;
   }
 
-  safeFireAndForget(
-    logTxUseCase.run(buildSingleLogInput({ tenantId, req, responsePayload: response, outcome })),
-  );
+  safeFireAndForget(logTxUseCase.run(buildSingleLogInput({ tenantId, req, responsePayload: response, outcome })));
 }
 
 /** Log 1 single transaction khi exception (timeout / network / HTTP 4xx/5xx). */
-function logSingleError(
-  tenantId: string,
-  req: TransactionRequest,
-  err: unknown,
-  policy: TxLoggingPolicy,
-): void {
+function logSingleError(tenantId: string, req: TransactionRequest, err: unknown, policy: TxLoggingPolicy): void {
   const outcome = classifyThrown(err);
 
   if (shouldSkipLog(policy, outcome)) {
     return;
   }
 
-  safeFireAndForget(
-    logTxUseCase.run(buildSingleLogInput({ tenantId, req, responsePayload: undefined, outcome })),
-  );
+  safeFireAndForget(logTxUseCase.run(buildSingleLogInput({ tenantId, req, responsePayload: undefined, outcome })));
 }
 
 /**
@@ -548,11 +530,9 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
       const batchId = generateId();
 
       try {
-        const response = await http.post<BatchTransactionResponse>(
-          CALLBACK_PATHS.batchTransaction,
-          req,
-          { rawResponse: true },
-        );
+        const response = await http.post<BatchTransactionResponse>(CALLBACK_PATHS.batchTransaction, req, {
+          rawResponse: true,
+        });
         logBatchSuccess(tenantId, req, batchId, response, policy);
         return response;
       } catch (err) {

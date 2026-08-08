@@ -169,11 +169,7 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
  * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
  * Trả CẢ item `ack` — UI v6: render dưới disclosure per-group (guideline §4).
  */
-export function useAlerts(
-  drawId: string | undefined,
-  status: string | undefined,
-  enabled: boolean,
-) {
+export function useAlerts(drawId: string | undefined, status: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: max3dproKeys.opsAlerts(drawId ?? "", status),
     queryFn: () =>

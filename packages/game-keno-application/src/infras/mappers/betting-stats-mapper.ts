@@ -107,9 +107,7 @@ function normalizeByPlayType(raw: Partial<KenoByPlayType> | undefined): KenoByPl
 }
 
 /** `numberFreq` là `Record` — reader đã tolerant `?? 0`, chỉ cần đảm bảo object tồn tại. */
-function normalizeNumberFreq(
-  raw: Record<string, Partial<KenoNumberStat>> | undefined,
-): Record<string, KenoNumberStat> {
+function normalizeNumberFreq(raw: Record<string, Partial<KenoNumberStat>> | undefined): Record<string, KenoNumberStat> {
   if (!raw) {
     return {};
   }

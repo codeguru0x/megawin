@@ -22,11 +22,7 @@
  *   lines — vé Bao 18 (18 số) là 1 combo doc, KHÔNG C(18,6) = 18.564 combo.
  */
 
-import type {
-  Power655PlayTypeStat,
-  Power655TopPotential,
-  TenantBettingStat,
-} from "@megawin/game-power655/entities";
+import type { Power655PlayTypeStat, Power655TopPotential, TenantBettingStat } from "@megawin/game-power655/entities";
 import { PlayType } from "@megawin/game-power655/entities";
 import { buildComboKey } from "@megawin/game-power655/rules";
 import type {

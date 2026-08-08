@@ -10,10 +10,7 @@
  * @output FinalizeVoidResult
  */
 
-import {
-  FinalizeVoidUseCase,
-  type VoidContext,
-} from "@megawin/game-mega645-application/use-cases/void";
+import { FinalizeVoidUseCase, type VoidContext } from "@megawin/game-mega645-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 

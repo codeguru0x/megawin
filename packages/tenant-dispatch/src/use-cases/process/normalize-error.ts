@@ -17,10 +17,7 @@ export interface TenantErrorShape {
 }
 
 /** Lỗi per-item hoặc outer response từ tenant `batchTransaction`. */
-export function normalizeTenantError(
-  err: TenantErrorShape | null | undefined,
-  prefix = "",
-): string {
+export function normalizeTenantError(err: TenantErrorShape | null | undefined, prefix = ""): string {
   const message = err?.message?.trim() || "Item failed";
   const code = err?.code?.trim();
   const base = code ? `[${code}] ${message}` : message;

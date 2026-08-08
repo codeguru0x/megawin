@@ -22,9 +22,7 @@ describe("identity labels", () => {
   });
 
   it("AccountStatusLabel phủ đủ 3 trạng thái", () => {
-    expect(Object.keys(AccountStatusLabel).sort()).toEqual(
-      ["active", "read_only", "suspended"].sort(),
-    );
+    expect(Object.keys(AccountStatusLabel).sort()).toEqual(["active", "read_only", "suspended"].sort());
   });
 
   it("Company/Agent/Mfa label không có giá trị rỗng", () => {

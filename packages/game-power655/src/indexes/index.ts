@@ -254,8 +254,7 @@ export const POWER655_INDEXES: readonly IndexSpec[] = [
     collection: Power655Collections.JackpotCycleEntries,
     key: { cycleNo: 1, seq: 1 },
     options: { unique: true, name: "idx_cycleNo_seq_unique" },
-    purpose:
-      "listByCycle, findLatestInCycle, sumContributionBefore, upsertEntry — sort chronological trong cycle",
+    purpose: "listByCycle, findLatestInCycle, sumContributionBefore, upsertEntry — sort chronological trong cycle",
   },
   {
     collection: Power655Collections.JackpotCycleEntries,

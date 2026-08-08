@@ -7,10 +7,7 @@ import type { ListTenantReportsInput, ListTenantReportsOutput } from "./types";
  *
  * Keno KHÔNG có lineCount.
  */
-export class ListTenantReportsUseCase extends NextApiUseCase<
-  ListTenantReportsInput,
-  ListTenantReportsOutput
-> {
+export class ListTenantReportsUseCase extends NextApiUseCase<ListTenantReportsInput, ListTenantReportsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListTenantReportsInput): Promise<ListTenantReportsOutput> {

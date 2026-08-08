@@ -11,10 +11,7 @@
  * @output SyncTicketSummariesResult
  */
 
-import {
-  SyncTicketSummariesUseCase,
-  type DrawSyncInput,
-} from "@megawin/game-max3dpro-application/use-cases/settle";
+import { SyncTicketSummariesUseCase, type DrawSyncInput } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new SyncTicketSummariesUseCase();
 

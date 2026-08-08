@@ -21,10 +21,7 @@ export interface ListOrdersBySourceOutput {
  *
  * VD: "Entry X của Keno đã có dispatch orders nào?" → gameId=keno, sourceKind=payout, sourceId=entryX.
  */
-export class ListOrdersBySourceUseCase extends NextApiUseCase<
-  ListOrdersBySourceInput,
-  ListOrdersBySourceOutput
-> {
+export class ListOrdersBySourceUseCase extends NextApiUseCase<ListOrdersBySourceInput, ListOrdersBySourceOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: ListOrdersBySourceInput): Promise<ListOrdersBySourceOutput> {

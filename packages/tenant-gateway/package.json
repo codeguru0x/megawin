@@ -17,12 +17,7 @@
     "docs:lint": "redocly lint openapi.yaml",
     "docs:build": "rm -rf docs && redocly build-docs openapi.yaml -o docs/index.html"
   },
-  "keywords": [
-    "megawin",
-    "tenant",
-    "gateway",
-    "outbound"
-  ],
+  "keywords": ["megawin", "tenant", "gateway", "outbound"],
   "author": "",
   "license": "ISC",
   "exports": {

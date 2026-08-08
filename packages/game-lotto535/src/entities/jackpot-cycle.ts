@@ -38,8 +38,7 @@ export const JackpotCycleCloseReason = {
   ManualReset: "manual_reset",
 } as const;
 
-export type JackpotCycleCloseReason =
-  (typeof JackpotCycleCloseReason)[keyof typeof JackpotCycleCloseReason];
+export type JackpotCycleCloseReason = (typeof JackpotCycleCloseReason)[keyof typeof JackpotCycleCloseReason];
 
 // ─────────────────────────────────────────────
 // Winner Detail

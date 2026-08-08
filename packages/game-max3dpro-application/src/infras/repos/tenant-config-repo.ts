@@ -36,10 +36,7 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
    * `$setOnInsert`). Nếu create mới (insert): commissionRate default = 0,
    * isEnabled default = true.
    */
-  async upsertTenantConfig(
-    tenantId: string,
-    fields: TenantConfigFields,
-  ): Promise<TenantConfigEntity | null> {
+  async upsertTenantConfig(tenantId: string, fields: TenantConfigFields): Promise<TenantConfigEntity | null> {
     const now = nowVN();
     const $set: Record<string, unknown> = { updatedAt: now };
 

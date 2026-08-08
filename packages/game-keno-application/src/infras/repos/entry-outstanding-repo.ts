@@ -103,10 +103,7 @@ export class EntryOutstandingRepository extends BaseRepo<TicketEntryEntity, Entr
    * @param drawId   - Format `YYYY-MM-DD.NNN`
    * @param tenantId - Tenant filter
    */
-  async aggregatePlayersByDrawAndTenant(
-    drawId: string,
-    tenantId: string,
-  ): Promise<OutstandingPlayerBreakdownRow[]> {
+  async aggregatePlayersByDrawAndTenant(drawId: string, tenantId: string): Promise<OutstandingPlayerBreakdownRow[]> {
     const col = await this.getCollection();
 
     const results = (await col

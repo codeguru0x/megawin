@@ -7,10 +7,7 @@ import type { GetOutstandingReportsOutput } from "./types";
  *
  * Keno có thể có ~10+ active draws cùng lúc.
  */
-export class GetOutstandingReportsUseCase extends NextApiUseCase<
-  Record<string, never>,
-  GetOutstandingReportsOutput
-> {
+export class GetOutstandingReportsUseCase extends NextApiUseCase<Record<string, never>, GetOutstandingReportsOutput> {
   private readonly repo = new OutstandingReportRepository();
 
   protected async execute(): Promise<GetOutstandingReportsOutput> {

@@ -43,10 +43,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
     // → không settle lại bằng use case này. Sau khi sửa kết quả của kỳ đã settle,
     // status về Published nhưng phải đi luồng resettle, không phải settle lần đầu.
     if (draw.settledAt) {
-      throw new AppException(
-        "DRAW_ALREADY_SETTLED",
-        `Không thể kết sổ – kỳ quay ${input.drawId} đã được kết sổ rồi.`,
-      );
+      throw new AppException("DRAW_ALREADY_SETTLED", `Không thể kết sổ – kỳ quay ${input.drawId} đã được kết sổ rồi.`);
     }
 
     // Guard thứ tự kết sổ: phải settle TUẦN TỰ theo thời gian. Nếu còn kỳ trước

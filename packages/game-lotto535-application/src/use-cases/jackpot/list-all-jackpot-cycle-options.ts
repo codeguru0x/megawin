@@ -10,10 +10,7 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type {
-  ListAllJackpotCycleOptionsOutput,
-  JackpotCycleOption,
-} from "./dto/jackpot.dto";
+import type { ListAllJackpotCycleOptionsOutput, JackpotCycleOption } from "./dto/jackpot.dto";
 
 export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<
   Record<string, never>,

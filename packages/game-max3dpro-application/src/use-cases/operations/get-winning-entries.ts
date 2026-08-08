@@ -35,10 +35,7 @@ const TIER_LABELS: Record<string, string> = {
  * - isDuplicate: 2 bộ ba trong 1 cặp giống nhau → giải thưởng × 2.
  * - multiDigit board có frontDigits + backDigits.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
@@ -71,9 +68,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
         // Max 3D Pro: isDuplicate khi tất cả P(n,2) ordered pairs từ 1 bộ ba giống nhau
         // Với multiNumber: chỉ có thể duplicate khi đúng 2 bộ ba trong board và giống nhau
         const isDuplicate =
-          b.playMode === "multiNumber" && b.triplets.length === 2
-            ? b.triplets[0] === b.triplets[1]
-            : undefined;
+          b.playMode === "multiNumber" && b.triplets.length === 2 ? b.triplets[0] === b.triplets[1] : undefined;
 
         return {
           boardNo: b.boardNo,
@@ -93,14 +88,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       // flatten + dedup để highlight bộ ba trúng trên board.
       const r = e.result;
       const winningTriplets: string[] = r
-        ? [
-            ...new Set([
-              ...(r.special ?? []),
-              ...(r.first ?? []),
-              ...(r.second ?? []),
-              ...(r.third ?? []),
-            ]),
-          ]
+        ? [...new Set([...(r.special ?? []), ...(r.first ?? []), ...(r.second ?? []), ...(r.third ?? [])])]
         : [];
 
       return {

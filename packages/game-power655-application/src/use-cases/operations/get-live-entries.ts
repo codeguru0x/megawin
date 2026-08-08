@@ -2,12 +2,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type {
-  GetLiveEntriesInput,
-  GetLiveEntriesOutput,
-  LiveEntryItem,
-  LiveEntryBoard,
-} from "./dto/live-entries.dto";
+import type { GetLiveEntriesInput, GetLiveEntriesOutput, LiveEntryItem, LiveEntryBoard } from "./dto/live-entries.dto";
 
 /**
  * Lấy N entries mới nhất của một kỳ quay Power 6/55.
@@ -19,10 +14,7 @@ import type {
  * Power 6/55: board có mainNumbers (01-55), không có specialNumbers trong selection.
  * Không validate status kỳ (cho phép load entries của mọi trạng thái).
  */
-export class GetLiveEntriesUseCase extends NextApiUseCase<
-  GetLiveEntriesInput,
-  GetLiveEntriesOutput
-> {
+export class GetLiveEntriesUseCase extends NextApiUseCase<GetLiveEntriesInput, GetLiveEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

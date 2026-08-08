@@ -15,17 +15,9 @@
  */
 
 import { DrawStatus } from "@megawin/game-core/entities";
-import type {
-  KenoDrawBettingStatsEntity,
-  KenoTopCombo,
-  TopAccountStat,
-} from "@megawin/game-keno/entities";
+import type { KenoDrawBettingStatsEntity, KenoTopCombo, TopAccountStat } from "@megawin/game-keno/entities";
 import { KENO_ALL_NUMBERS, KENO_BASIC_PLAY_TYPES } from "@megawin/game-keno/entities";
-import {
-  KENO_BIG_SMALL_BET_LABELS,
-  KENO_EVEN_ODD_BET_LABELS,
-  KENO_PLAY_TYPE_LABELS,
-} from "@megawin/game-keno/labels";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS, KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 
 import type {
   ExposureView,
@@ -111,15 +103,8 @@ export function toPlayTypeRows(stats: Stats): PlayTypeRow[] {
 
   // Side bet: cộng dồn mọi hướng thành 1 mức bigSmall / evenOdd.
   const bigSmallDirs = [bp.bigSmall.big, bp.bigSmall.small, bp.bigSmall.draw];
-  const evenOddDirs = [
-    bp.evenOdd.even,
-    bp.evenOdd.even1112,
-    bp.evenOdd.draw,
-    bp.evenOdd.odd1112,
-    bp.evenOdd.odd,
-  ];
-  const sum = (arr: { amount: number; sets: number }[], k: "amount" | "sets") =>
-    arr.reduce((a, d) => a + d[k], 0);
+  const evenOddDirs = [bp.evenOdd.even, bp.evenOdd.even1112, bp.evenOdd.draw, bp.evenOdd.odd1112, bp.evenOdd.odd];
+  const sum = (arr: { amount: number; sets: number }[], k: "amount" | "sets") => arr.reduce((a, d) => a + d[k], 0);
 
   const sideBets: PlayTypeRow[] = [
     {

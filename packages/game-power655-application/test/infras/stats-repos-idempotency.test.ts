@@ -136,9 +136,7 @@ describe("ComboStatsRepository + ComboAccountsRepository — thứ tự ghi & id
       mainNumbers,
       sets: 5,
       amount: 50_000,
-      accounts: new Map([
-        ["accA", { accountId: "accA", username: "userA", sets: 5, amount: 50_000 }],
-      ]),
+      accounts: new Map([["accA", { accountId: "accA", username: "userA", sets: 5, amount: 50_000 }]]),
     };
 
     await comboAccountsRepo.bulkUpsertDelta([delta], batchMaxId);

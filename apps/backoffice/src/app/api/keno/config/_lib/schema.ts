@@ -20,10 +20,7 @@ const ratesSchema = z
 const matchPrizesSchema = z.record(z.coerce.number().int().nonnegative(), nonNegativeInt);
 
 const basicPrizesSchema = z
-  .record(
-    z.string().regex(/^pick([1-9]|10)$/, 'Key phải là "pick1" đến "pick10"'),
-    matchPrizesSchema,
-  )
+  .record(z.string().regex(/^pick([1-9]|10)$/, 'Key phải là "pick1" đến "pick10"'), matchPrizesSchema)
   .refine((data) => Object.keys(data).length > 0, {
     message: "Phải có ít nhất 1 bậc chơi.",
   });
@@ -72,10 +69,7 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: z.number().int().min(1, "Tối thiểu 1"),
     maxBetCount: z.number().int().min(1, "Tối thiểu 1"),
-    maxBasicBoardsPerTicket: positiveInt.max(
-      KENO_MAX_BOARDS,
-      `Số board tối đa không được vượt ${KENO_MAX_BOARDS}.`,
-    ),
+    maxBasicBoardsPerTicket: positiveInt.max(KENO_MAX_BOARDS, `Số board tối đa không được vượt ${KENO_MAX_BOARDS}.`),
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,
     drawIntervalMinutes: positiveInt,

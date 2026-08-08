@@ -69,14 +69,11 @@ const DiceCell = memo(function DiceCell({
           <span className="text-base font-bold tabular-nums leading-tight">
             {amount > 0 ? formatCurrency(amount) : "—"}
           </span>
-          <span className="text-[11px] tabular-nums text-muted-foreground">
-            {formatNumber(sets)}x
-          </span>
+          <span className="text-[11px] tabular-nums text-muted-foreground">{formatNumber(sets)}x</span>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-xs tabular-nums">
-        Số {diceValue}: {formatNumber(amount)} VND · {formatNumber(sets)} bộ (Một số + Hai số trùng
-        + Ba số cụ thể)
+        Số {diceValue}: {formatNumber(amount)} VND · {formatNumber(sets)} bộ (Một số + Hai số trùng + Ba số cụ thể)
       </TooltipContent>
     </Tooltip>
   );

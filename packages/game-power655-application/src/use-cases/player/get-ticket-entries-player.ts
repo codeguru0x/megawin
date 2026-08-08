@@ -11,11 +11,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
-import type {
-  PlayerGetTicketEntriesInput,
-  PlayerGetTicketEntriesOutput,
-  PlayerEntryInfo,
-} from "./dto/player.dto";
+import type { PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput, PlayerEntryInfo } from "./dto/player.dto";
 
 /**
  * Lấy entries Power 6/55. Player chỉ xem ticket của mình.
@@ -28,9 +24,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
 
   /** @inheritdoc */
-  protected async execute(
-    input: PlayerGetTicketEntriesInput,
-  ): Promise<PlayerGetTicketEntriesOutput> {
+  protected async execute(input: PlayerGetTicketEntriesInput): Promise<PlayerGetTicketEntriesOutput> {
     const { tenantId, accountId, ticketId } = input;
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);

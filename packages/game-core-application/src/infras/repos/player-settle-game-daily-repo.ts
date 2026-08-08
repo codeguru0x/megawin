@@ -20,10 +20,7 @@
  * upsert overwrite doc cũ, không có trường hợp doc stale.
  */
 
-import type {
-  PlayerSettleGameDaily,
-  PlayerSettleGameDailyEntity,
-} from "@megawin/game-core/entities";
+import type { PlayerSettleGameDaily, PlayerSettleGameDailyEntity } from "@megawin/game-core/entities";
 import { PLAYER_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
 import { ReportRepo } from "@megawin/data/mongo";
 import { PlayerSettleGameDailyMapper } from "../mappers";
@@ -53,9 +50,7 @@ export class PlayerSettleGameDailyRepository extends ReportRepo<
    * Filter: { accountId, gameProduct, financialDate }.
    * IDEMPOTENT: chạy lại an toàn.
    */
-  async upsertPlayerDaily(
-    report: Omit<PlayerSettleGameDaily, "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertPlayerDaily(report: Omit<PlayerSettleGameDaily, "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {
@@ -86,9 +81,7 @@ export class PlayerSettleGameDailyRepository extends ReportRepo<
    * IDEMPOTENT: mỗi operation vẫn là upsert overwrite — chạy lại an toàn.
    * Noop-safe: nếu reports rỗng thì không gọi DB.
    */
-  async bulkUpsertPlayerDaily(
-    reports: Omit<PlayerSettleGameDaily, "createdAt" | "updatedAt">[],
-  ): Promise<void> {
+  async bulkUpsertPlayerDaily(reports: Omit<PlayerSettleGameDaily, "createdAt" | "updatedAt">[]): Promise<void> {
     if (reports.length === 0) return;
 
     const now = new Date();
@@ -123,11 +116,7 @@ export class PlayerSettleGameDailyRepository extends ReportRepo<
    * Group by gameProduct → SUM tất cả ngày cho mỗi game.
    * Index: { accountId: 1, financialDate: -1 }
    */
-  async aggregatePlayerOverview(
-    accountId: string,
-    from: string,
-    to: string,
-  ): Promise<PlayerOverviewResult> {
+  async aggregatePlayerOverview(accountId: string, from: string, to: string): Promise<PlayerOverviewResult> {
     const result = await this.aggregate([
       // Lọc tất cả docs của player trong date range
       {

@@ -29,10 +29,7 @@ const TIER_LABELS: Record<string, string> = {
  *
  * Power 6/55: 6 tiers (jackpot1, jackpot2, tier1-4), có bonus number trong result.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

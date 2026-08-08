@@ -55,9 +55,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     if (!draw.result) {

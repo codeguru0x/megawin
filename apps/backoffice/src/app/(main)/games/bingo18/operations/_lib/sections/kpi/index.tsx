@@ -45,19 +45,15 @@ export function KpiSection() {
   );
 
   // Slice `exposure` (chính xác 216) + thresholds — fallback default CHỈ lúc loading.
-  const { data: exposureSlice } = useOpsSnapshot<ExposureSlice | null>(
-    effectiveDrawId,
-    isSettled,
-    (s) =>
-      s.exposure && s.stats
-        ? {
-            exposure: s.exposure,
-            revenue: s.stats.totals.revenue,
-            warnRevenuePct:
-              s.thresholds.exposureWarnRevenuePct ?? EXPOSURE_WARN_REVENUE_PCT_DEFAULT,
-            warnMinAmount: s.thresholds.exposureWarnMinAmount ?? 0,
-          }
-        : null,
+  const { data: exposureSlice } = useOpsSnapshot<ExposureSlice | null>(effectiveDrawId, isSettled, (s) =>
+    s.exposure && s.stats
+      ? {
+          exposure: s.exposure,
+          revenue: s.stats.totals.revenue,
+          warnRevenuePct: s.thresholds.exposureWarnRevenuePct ?? EXPOSURE_WARN_REVENUE_PCT_DEFAULT,
+          warnMinAmount: s.thresholds.exposureWarnMinAmount ?? 0,
+        }
+      : null,
   );
 
   if (!draw || !KPI_SHOW.has(draw.status as string)) return null;

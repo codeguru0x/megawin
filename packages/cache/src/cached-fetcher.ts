@@ -142,9 +142,7 @@ export function createCachedFetcher<TArg = void, TResult = unknown>(
     // Arg không phải string và không có keyOf → lỗi lập trình, phải fail sớm
     // thay vì stringify ngầm ("[object Object]" gây collision key thầm lặng).
     if (typeof discriminator !== "string") {
-      throw new Error(
-        `CachedFetcher "${keyPrefix}": arg không phải string — bắt buộc truyền keyOf để derive key.`,
-      );
+      throw new Error(`CachedFetcher "${keyPrefix}": arg không phải string — bắt buộc truyền keyOf để derive key.`);
     }
 
     // Chuỗi rỗng gây key trùng keyPrefix → collision với fetcher global — fail sớm.

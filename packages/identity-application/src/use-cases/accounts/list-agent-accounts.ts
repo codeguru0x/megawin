@@ -1,15 +1,9 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { MfaStatus } from "@megawin/identity/entities";
 import { AccountRepository } from "../../infras/repos/account-repo";
-import type {
-  ListAgentAccountsOutput,
-  AgentAccountItem,
-} from "./dto/list-agent-accounts.dto";
+import type { ListAgentAccountsOutput, AgentAccountItem } from "./dto/list-agent-accounts.dto";
 
-export class ListAgentAccountsUseCase extends NextApiUseCase<
-  void,
-  ListAgentAccountsOutput
-> {
+export class ListAgentAccountsUseCase extends NextApiUseCase<void, ListAgentAccountsOutput> {
   protected async execute(): Promise<ListAgentAccountsOutput> {
     const repo = new AccountRepository();
     const agents = await repo.listAgentAccounts();

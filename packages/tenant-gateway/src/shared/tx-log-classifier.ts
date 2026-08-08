@@ -35,9 +35,7 @@ export interface ClassifiedOutcome {
  * Union discriminant giúp compiler bắt misuse (VD pass `success:true` kèm
  * `error` là bug → error chưa chắc có nghĩa gì).
  */
-export type ItemClassifyInput =
-  | { success: true }
-  | { success: false; error?: { code: string; message: string } };
+export type ItemClassifyInput = { success: true } | { success: false; error?: { code: string; message: string } };
 
 /**
  * Classify 1 item result (single transaction hoặc batch item).
@@ -67,10 +65,7 @@ export function classifyItem(item: ItemClassifyInput): ClassifiedOutcome {
  * Đánh dấu `batchOuterRejected: true` để UI phân biệt với item-level business
  * fail (giúp debug: "cả batch bị từ chối" vs "chỉ mình item này fail").
  */
-export function classifyBatchOuterReject(outerError?: {
-  code: string;
-  message: string;
-}): ClassifiedOutcome {
+export function classifyBatchOuterReject(outerError?: { code: string; message: string }): ClassifiedOutcome {
   return {
     status: TxLogStatus.Failed,
     error: {

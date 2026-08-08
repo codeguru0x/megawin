@@ -98,29 +98,17 @@ export class PlayerDailyEntryRepository
           },
           totalWin: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Settled] },
-                { $ifNull: ["$payout.winAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Settled] }, { $ifNull: ["$payout.winAmount", 0] }, 0],
             },
           },
           totalPayout: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Settled] },
-                { $ifNull: ["$payout.payoutAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Settled] }, { $ifNull: ["$payout.payoutAmount", 0] }, 0],
             },
           },
           totalCommission: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Settled] },
-                { $ifNull: ["$tenant.commissionAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Settled] }, { $ifNull: ["$tenant.commissionAmount", 0] }, 0],
             },
           },
         },

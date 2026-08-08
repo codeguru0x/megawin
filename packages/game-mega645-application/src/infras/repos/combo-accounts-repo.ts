@@ -18,10 +18,7 @@
  */
 
 import { Mega645Collections } from "@megawin/game-mega645/entities";
-import type {
-  Mega645DrawComboAccountDoc,
-  Mega645DrawComboAccountEntity,
-} from "@megawin/game-mega645/entities";
+import type { Mega645DrawComboAccountDoc, Mega645DrawComboAccountEntity } from "@megawin/game-mega645/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -30,10 +27,7 @@ import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Mega645DrawComboAccountDoc>();
 
-export class ComboAccountsRepository extends BaseRepo<
-  Mega645DrawComboAccountEntity,
-  ComboAccountMapper
-> {
+export class ComboAccountsRepository extends BaseRepo<Mega645DrawComboAccountEntity, ComboAccountMapper> {
   constructor() {
     super({
       collName: Mega645Collections.DrawComboAccounts,
@@ -51,11 +45,7 @@ export class ComboAccountsRepository extends BaseRepo<
    * @param comboKey - Khoá combo.
    * @param limit - Trần số account trả về.
    */
-  async listByCombo(
-    drawId: string,
-    comboKey: string,
-    limit: number,
-  ): Promise<Mega645DrawComboAccountEntity[]> {
+  async listByCombo(drawId: string, comboKey: string, limit: number): Promise<Mega645DrawComboAccountEntity[]> {
     return await this.findMany({ drawId, comboKey }, { sort: { amount: -1 }, limit });
   }
 

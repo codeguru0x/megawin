@@ -17,4 +17,3 @@ export function createKinesisClient(): KinesisClientType {
  * Chỉ được khởi tạo khi module Kinesis được import.
  */
 export const kinesisClient = createKinesisClient();
-

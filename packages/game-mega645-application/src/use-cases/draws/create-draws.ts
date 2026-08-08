@@ -55,9 +55,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
     if (uniqueInputIds.size !== inputDrawIds.length) {
       const seen = new Set<string>();
       const dupes = inputDrawIds.filter((id) => seen.size === seen.add(id).size);
-      throw AppException.badRequest(
-        `Kỳ quay bị trùng trong danh sách: ${[...new Set(dupes)].join(", ")}`,
-      );
+      throw AppException.badRequest(`Kỳ quay bị trùng trong danh sách: ${[...new Set(dupes)].join(", ")}`);
     }
 
     const existing = await this.drawRepo.getDrawsByIds(inputDrawIds);
@@ -81,9 +79,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
         drawNo: slot.drawNo as DrawNo,
         drawTime: slot.drawTimeDate,
         status,
-        sales: slot.openNow
-          ? { closeAt: slot.closeAtDate, openAt: now }
-          : { closeAt: slot.closeAtDate },
+        sales: slot.openNow ? { closeAt: slot.closeAtDate, openAt: now } : { closeAt: slot.closeAtDate },
         createdAt: now,
         updatedAt: now,
       });

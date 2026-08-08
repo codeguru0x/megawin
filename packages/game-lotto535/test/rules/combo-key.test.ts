@@ -22,11 +22,7 @@ describe("buildComboKey", () => {
   });
 
   it("Đúng logic — specialCover nhiều số ĐB → phần special sort đúng", () => {
-    const key = buildComboKey(
-      "specialCover",
-      ["01", "02", "03", "04", "05"],
-      ["12", "03", "07", "01"],
-    );
+    const key = buildComboKey("specialCover", ["01", "02", "03", "04", "05"], ["12", "03", "07", "01"]);
     expect(key).toBe("specialCover:01,02,03,04,05|01,03,07,12");
   });
 

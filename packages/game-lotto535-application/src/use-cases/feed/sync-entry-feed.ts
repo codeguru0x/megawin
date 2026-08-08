@@ -32,14 +32,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     super(GameProduct.Lotto535);
   }
 
-  protected async fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
-    const entries = await this.entryRepo.getChangedEntries(
-      Long.fromString(afterVersion),
-      batchSize,
-    );
+  protected async fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
     return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }
@@ -121,7 +115,7 @@ function mapPayoutDetail(payout: EntryPayout | undefined): Lotto535FeedPayoutDet
   if (!payout || !payout.tiers?.length) {
     return undefined;
   }
-  
+
   return {
     tiers: payout.tiers.map((t) => ({
       tier: t.tier,

@@ -26,9 +26,6 @@ export class TenantCallbackConfigRepo extends IdentityRepo<TenantEntity> {
    * @returns - Callback config của tenant.
    */
   async getCallbackConfig(tenantId: string): Promise<TenantCallbackConfig | null> {
-    return await this.findOne(
-      { tenantId },
-      { projection: { tenantId: 1, callbackBaseUrl: 1, apiKey: 1 } },
-    );
+    return await this.findOne({ tenantId }, { projection: { tenantId: 1, callbackBaseUrl: 1, apiKey: 1 } });
   }
 }

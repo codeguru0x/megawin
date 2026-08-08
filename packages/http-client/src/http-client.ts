@@ -347,7 +347,6 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
     patch: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
       request<T>("PATCH", path, body, options),
 
-    delete: <T = unknown>(path: string, options?: RequestOptions) =>
-      request<T>("DELETE", path, undefined, options),
+    delete: <T = unknown>(path: string, options?: RequestOptions) => request<T>("DELETE", path, undefined, options),
   };
 }

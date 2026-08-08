@@ -23,13 +23,7 @@ import { PlayerOutstandingLink } from "@/components/player-name";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import type {
-  PlayTypeRow,
-  TenantRow,
-  TopAccountRow,
-  TopComboRow,
-  TopPotentialRow,
-} from "../../types";
+import type { PlayTypeRow, TenantRow, TopAccountRow, TopComboRow, TopPotentialRow } from "../../types";
 import { describeStatsPlayKey, LOTTO535_STATS_PLAY_KEY_ORDER } from "../../ops-constants";
 import { NumberBadge } from "./number-heatmap";
 
@@ -37,102 +31,100 @@ import { NumberBadge } from "./number-heatmap";
 // standard/mainCover4 = lạnh (emerald/violet). mainCover6→15 → nóng dần (blue→rose)
 // để staff nhận diện nhanh nhóm rủi ro board đắt. specialCover = amber (brand).
 
-export const PLAY_TYPE_COLORS: Record<
-  string,
-  { dot: string; text: string; fill: string; bg: string; border: string }
-> = {
-  standard: {
-    dot: "bg-emerald-500",
-    text: "text-emerald-600 dark:text-emerald-400",
-    fill: "#10b981",
-    bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-    border: "border-emerald-200/60 dark:border-emerald-800/40",
-  },
-  mainCover4: {
-    dot: "bg-violet-500",
-    text: "text-violet-600 dark:text-violet-400",
-    fill: "#8b5cf6",
-    bg: "bg-violet-50/60 dark:bg-violet-950/20",
-    border: "border-violet-200/60 dark:border-violet-800/40",
-  },
-  mainCover6: {
-    dot: "bg-blue-500",
-    text: "text-blue-600 dark:text-blue-400",
-    fill: "#3b82f6",
-    bg: "bg-blue-50/60 dark:bg-blue-950/20",
-    border: "border-blue-200/60 dark:border-blue-800/40",
-  },
-  mainCover7: {
-    dot: "bg-sky-500",
-    text: "text-sky-600 dark:text-sky-400",
-    fill: "#0ea5e9",
-    bg: "bg-sky-50/60 dark:bg-sky-950/20",
-    border: "border-sky-200/60 dark:border-sky-800/40",
-  },
-  mainCover8: {
-    dot: "bg-cyan-500",
-    text: "text-cyan-600 dark:text-cyan-400",
-    fill: "#06b6d4",
-    bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
-    border: "border-cyan-200/60 dark:border-cyan-800/40",
-  },
-  mainCover9: {
-    dot: "bg-teal-500",
-    text: "text-teal-600 dark:text-teal-400",
-    fill: "#14b8a6",
-    bg: "bg-teal-50/60 dark:bg-teal-950/20",
-    border: "border-teal-200/60 dark:border-teal-800/40",
-  },
-  mainCover10: {
-    dot: "bg-lime-500",
-    text: "text-lime-600 dark:text-lime-400",
-    fill: "#84cc16",
-    bg: "bg-lime-50/60 dark:bg-lime-950/20",
-    border: "border-lime-200/60 dark:border-lime-800/40",
-  },
-  mainCover11: {
-    dot: "bg-yellow-500",
-    text: "text-yellow-600 dark:text-yellow-400",
-    fill: "#eab308",
-    bg: "bg-yellow-50/60 dark:bg-yellow-950/20",
-    border: "border-yellow-200/60 dark:border-yellow-800/40",
-  },
-  mainCover12: {
-    dot: "bg-orange-500",
-    text: "text-orange-600 dark:text-orange-400",
-    fill: "#f97316",
-    bg: "bg-orange-50/60 dark:bg-orange-950/20",
-    border: "border-orange-200/60 dark:border-orange-800/40",
-  },
-  mainCover13: {
-    dot: "bg-fuchsia-500",
-    text: "text-fuchsia-600 dark:text-fuchsia-400",
-    fill: "#d946ef",
-    bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
-    border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
-  },
-  mainCover14: {
-    dot: "bg-pink-500",
-    text: "text-pink-600 dark:text-pink-400",
-    fill: "#ec4899",
-    bg: "bg-pink-50/60 dark:bg-pink-950/20",
-    border: "border-pink-200/60 dark:border-pink-800/40",
-  },
-  mainCover15: {
-    dot: "bg-rose-500",
-    text: "text-rose-600 dark:text-rose-400",
-    fill: "#f43f5e",
-    bg: "bg-rose-50/60 dark:bg-rose-950/20",
-    border: "border-rose-200/60 dark:border-rose-800/40",
-  },
-  specialCover: {
-    dot: "bg-amber-500",
-    text: "text-amber-600 dark:text-amber-400",
-    fill: "#f59e0b",
-    bg: "bg-amber-50/60 dark:bg-amber-950/20",
-    border: "border-amber-200/60 dark:border-amber-800/40",
-  },
-};
+export const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
+  {
+    standard: {
+      dot: "bg-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-400",
+      fill: "#10b981",
+      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+      border: "border-emerald-200/60 dark:border-emerald-800/40",
+    },
+    mainCover4: {
+      dot: "bg-violet-500",
+      text: "text-violet-600 dark:text-violet-400",
+      fill: "#8b5cf6",
+      bg: "bg-violet-50/60 dark:bg-violet-950/20",
+      border: "border-violet-200/60 dark:border-violet-800/40",
+    },
+    mainCover6: {
+      dot: "bg-blue-500",
+      text: "text-blue-600 dark:text-blue-400",
+      fill: "#3b82f6",
+      bg: "bg-blue-50/60 dark:bg-blue-950/20",
+      border: "border-blue-200/60 dark:border-blue-800/40",
+    },
+    mainCover7: {
+      dot: "bg-sky-500",
+      text: "text-sky-600 dark:text-sky-400",
+      fill: "#0ea5e9",
+      bg: "bg-sky-50/60 dark:bg-sky-950/20",
+      border: "border-sky-200/60 dark:border-sky-800/40",
+    },
+    mainCover8: {
+      dot: "bg-cyan-500",
+      text: "text-cyan-600 dark:text-cyan-400",
+      fill: "#06b6d4",
+      bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
+      border: "border-cyan-200/60 dark:border-cyan-800/40",
+    },
+    mainCover9: {
+      dot: "bg-teal-500",
+      text: "text-teal-600 dark:text-teal-400",
+      fill: "#14b8a6",
+      bg: "bg-teal-50/60 dark:bg-teal-950/20",
+      border: "border-teal-200/60 dark:border-teal-800/40",
+    },
+    mainCover10: {
+      dot: "bg-lime-500",
+      text: "text-lime-600 dark:text-lime-400",
+      fill: "#84cc16",
+      bg: "bg-lime-50/60 dark:bg-lime-950/20",
+      border: "border-lime-200/60 dark:border-lime-800/40",
+    },
+    mainCover11: {
+      dot: "bg-yellow-500",
+      text: "text-yellow-600 dark:text-yellow-400",
+      fill: "#eab308",
+      bg: "bg-yellow-50/60 dark:bg-yellow-950/20",
+      border: "border-yellow-200/60 dark:border-yellow-800/40",
+    },
+    mainCover12: {
+      dot: "bg-orange-500",
+      text: "text-orange-600 dark:text-orange-400",
+      fill: "#f97316",
+      bg: "bg-orange-50/60 dark:bg-orange-950/20",
+      border: "border-orange-200/60 dark:border-orange-800/40",
+    },
+    mainCover13: {
+      dot: "bg-fuchsia-500",
+      text: "text-fuchsia-600 dark:text-fuchsia-400",
+      fill: "#d946ef",
+      bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
+      border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
+    },
+    mainCover14: {
+      dot: "bg-pink-500",
+      text: "text-pink-600 dark:text-pink-400",
+      fill: "#ec4899",
+      bg: "bg-pink-50/60 dark:bg-pink-950/20",
+      border: "border-pink-200/60 dark:border-pink-800/40",
+    },
+    mainCover15: {
+      dot: "bg-rose-500",
+      text: "text-rose-600 dark:text-rose-400",
+      fill: "#f43f5e",
+      bg: "bg-rose-50/60 dark:bg-rose-950/20",
+      border: "border-rose-200/60 dark:border-rose-800/40",
+    },
+    specialCover: {
+      dot: "bg-amber-500",
+      text: "text-amber-600 dark:text-amber-400",
+      fill: "#f59e0b",
+      bg: "bg-amber-50/60 dark:bg-amber-950/20",
+      border: "border-amber-200/60 dark:border-amber-800/40",
+    },
+  };
 
 const DEFAULT_COLOR = {
   dot: "bg-muted-foreground/40",
@@ -168,22 +160,9 @@ function MiniDonut({
   const fontSize = label.length >= 4 ? baseFontSize - 1.5 : baseFontSize;
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className={cn("shrink-0", className)}
-    >
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={cn("shrink-0", className)}>
       <title>{label}</title>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-        className="text-muted/60"
-      />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-muted/60" />
       <circle
         cx={cx}
         cy={cy}
@@ -282,9 +261,7 @@ export function PlayTypeCard({ distribution }: { distribution: PlayTypeRow[] }) 
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Standard · Bao 4 chính · Bao 6-15 · Bao ĐB
-              </CardDescription>
+              <CardDescription className="text-xs mt-0.5">Standard · Bao 4 chính · Bao 6-15 · Bao ĐB</CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
@@ -354,9 +331,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top người chơi</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Theo tổng tiền cược trong kỳ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Theo tổng tiền cược trong kỳ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -382,9 +357,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   <p className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                     {formatNumber(a.amount)}
                   </p>
-                  <p className="text-[11px] tabular-nums text-muted-foreground/60">
-                    {formatNumber(a.entries)} vé
-                  </p>
+                  <p className="text-[11px] tabular-nums text-muted-foreground/60">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -406,9 +379,7 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Entry rủi ro giải cố định cao nhất nếu trúng
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Entry rủi ro giải cố định cao nhất nếu trúng</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -432,8 +403,7 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     className="text-sm"
                   />
                   <p className="text-[11px] text-muted-foreground/70 tabular-nums mt-0.5">
-                    Cược{" "}
-                    <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
+                    Cược <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
                 <div className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-right">
@@ -484,9 +454,7 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                 key={c.rank}
                 className="flex items-start gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
               >
-                <span className="text-sm leading-none shrink-0 pt-0.5">
-                  {medals[c.rank - 1] ?? `#${c.rank}`}
-                </span>
+                <span className="text-sm leading-none shrink-0 pt-0.5">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 flex-wrap">
                     {c.mainNumbers.map((n) => (
@@ -501,12 +469,8 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-semibold tabular-nums text-foreground">
-                    {formatNumber(c.sets)} bộ
-                  </p>
-                  <p className="text-xs tabular-nums text-muted-foreground">
-                    {formatNumber(c.accounts)} người
-                  </p>
+                  <p className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(c.sets)} bộ</p>
+                  <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(c.accounts)} người</p>
                 </div>
               </div>
             ))}
@@ -582,15 +546,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
 }
 
 /** 1 card đại lý giàu thông tin — dùng khi ít đại lý (≤3). */
-function TenantDetailCard({
-  tenant,
-  rank,
-  maxRevenue,
-}: {
-  tenant: TenantRow;
-  rank: number;
-  maxRevenue: number;
-}) {
+function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; rank: number; maxRevenue: number }) {
   return (
     <div className="rounded-xl border bg-muted/10 p-3.5">
       <div className="flex items-center gap-2">
@@ -684,21 +640,15 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
               style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
             />
             <div className="relative flex items-center gap-2 min-w-0">
-              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">
-                {i + 1}
-              </span>
+              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">{i + 1}</span>
               <span className="text-sm font-medium truncate">{t.tenantId}</span>
               <span className="text-xs text-muted-foreground/50 shrink-0">{t.pct.toFixed(0)}%</span>
             </div>
-            <span className="relative text-right tabular-nums text-sm">
-              {formatNumber(t.entries)}
-            </span>
+            <span className="relative text-right tabular-nums text-sm">{formatNumber(t.entries)}</span>
             <span className="relative text-right tabular-nums text-sm text-muted-foreground">
               {t.players === null ? "—" : formatNumber(t.players)}
             </span>
-            <span className="relative text-right tabular-nums text-sm font-medium">
-              {formatNumber(t.revenue)}
-            </span>
+            <span className="relative text-right tabular-nums text-sm font-medium">{formatNumber(t.revenue)}</span>
           </div>
         ))}
       </div>

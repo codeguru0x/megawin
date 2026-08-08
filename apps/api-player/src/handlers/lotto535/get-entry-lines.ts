@@ -26,5 +26,5 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, entryId, size, cursor });
   },
-  { schemas: { path: pathSchema, query: lineCursorQuerySchema } }
+  { schemas: { path: pathSchema, query: lineCursorQuerySchema } },
 );

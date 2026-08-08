@@ -65,12 +65,7 @@ function actorFields(a: AuditActor) {
  * @param args.prevStatus - Trạng thái draw trước khi void (dữ liệu runtime).
  * @param args.reason - Lý do huỷ (tuỳ chọn).
  */
-export function auditDrawVoid(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-  reason?: string;
-}): void {
+export function auditDrawVoid(args: { actor: AuditActor; drawId: string; prevStatus: string; reason?: string }): void {
   record({
     ...actorFields(args.actor),
     action: AUDIT_ACTIONS.draw.void,
@@ -232,11 +227,7 @@ export function auditResettle(args: {
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi mở lại (thường `settled`).
  */
-export function auditReopenForCascade(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-}): void {
+export function auditReopenForCascade(args: { actor: AuditActor; drawId: string; prevStatus: string }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.reopenForCascade, {
     actor: args.actor,
     drawId: args.drawId,
@@ -251,11 +242,7 @@ export function auditReopenForCascade(args: {
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi mở bán.
  */
-export function auditOpenSales(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-}): void {
+export function auditOpenSales(args: { actor: AuditActor; drawId: string; prevStatus: string }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.openSales, {
     ...args,
   });
@@ -268,11 +255,7 @@ export function auditOpenSales(args: {
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi đóng bán.
  */
-export function auditCloseSales(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-}): void {
+export function auditCloseSales(args: { actor: AuditActor; drawId: string; prevStatus: string }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.closeSales, {
     ...args,
   });

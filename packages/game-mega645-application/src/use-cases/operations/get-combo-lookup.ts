@@ -34,10 +34,7 @@ import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
  */
 const ACCOUNTS_LIMIT = 200;
 
-export class GetComboLookupUseCase extends NextApiUseCase<
-  GetComboLookupInput,
-  GetComboLookupOutput
-> {
+export class GetComboLookupUseCase extends NextApiUseCase<GetComboLookupInput, GetComboLookupOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly comboRepo = new ComboStatsRepository();
@@ -47,10 +44,7 @@ export class GetComboLookupUseCase extends NextApiUseCase<
     const { drawId, numbers } = input;
     const pt = input.playType as PlayType;
 
-    const [draw, config] = await Promise.all([
-      this.drawRepo.getDrawById(drawId),
-      this.getGlobalConfig.run(),
-    ]);
+    const [draw, config] = await Promise.all([this.drawRepo.getDrawById(drawId), this.getGlobalConfig.run()]);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${drawId} không tồn tại.`);
     }

@@ -12,13 +12,7 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  Power655OpsConfig,
-} from "./types";
+import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules, Power655OpsConfig } from "./types";
 
 /**
  * MongoDB document cho global config.

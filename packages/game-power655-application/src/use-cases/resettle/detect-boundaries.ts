@@ -146,9 +146,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
 
-  protected async execute(
-    input: DetectResettleBoundariesInput,
-  ): Promise<DetectResettleBoundariesOutput> {
+  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     const { drawId, proposedWinningMain, proposedBonusNumber } = input;
 
     // ── Step 1: validate draw tồn tại + đã settle ────────────────────────────
@@ -158,9 +156,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     }
 
     if (!draw.settledAt) {
-      throw AppException.businessRuleViolation(
-        `Kỳ quay ${drawId} chưa từng settle — không cần resettle.`,
-      );
+      throw AppException.businessRuleViolation(`Kỳ quay ${drawId} chưa từng settle — không cần resettle.`);
     }
 
     // ── Step 2: kiểm tra ledger entry của kỳ T ───────────────────────────────
@@ -181,11 +177,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     // ── Step 3: Pre-flight re-match — phát hiện JP winner MỚI tại T ─────────
     // Scan entries của kỳ T (status: Settled hoặc Published nếu đang chờ resettle).
     // Load boards → matchLine vs proposed result → check tier = Jackpot1 | Jackpot2.
-    const hasNewJpWinner = await this.detectNewJpWinner(
-      drawId,
-      proposedWinningMain,
-      proposedBonusNumber,
-    );
+    const hasNewJpWinner = await this.detectNewJpWinner(drawId, proposedWinningMain, proposedBonusNumber);
 
     // Trạng thái winner CŨ — đọc trực tiếp từ ledger (ghi lúc settle trước),
     // KHÔNG cần re-match. Dùng để bắt case 2 (gỡ winner cũ: có → không).
@@ -227,13 +219,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
       return {
         drawId,
         scenario: ResettleScenario.TYPE_B2,
-        message: buildB2Message(
-          drawId,
-          hasNewJpWinner,
-          hadOldJpWinner,
-          chainLength,
-          chainHasWinner,
-        ),
+        message: buildB2Message(drawId, hasNewJpWinner, hadOldJpWinner, chainLength, chainHasWinner),
         hasNewJpWinner,
         hadOldJpWinner,
         chainLength,
@@ -303,9 +289,7 @@ export class DetectResettleBoundariesUseCase extends NextApiUseCase<
 > {
   private readonly internal = new DetectResettleBoundariesInternalUseCase();
 
-  protected async execute(
-    input: DetectResettleBoundariesInput,
-  ): Promise<DetectResettleBoundariesOutput> {
+  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     return this.internal.run(input);
   }
 }
@@ -341,23 +325,17 @@ function buildB2Message(
   if (hasNewJpWinner && !hadOldJpWinner) {
     parts.push(`Kết quả mới phát sinh người trúng Jackpot tại kỳ này — ảnh hưởng đến cycle.`);
   } else if (!hasNewJpWinner && hadOldJpWinner) {
-    parts.push(
-      `Kết quả mới gỡ bỏ người trúng Jackpot cũ tại kỳ này — cycle cũ đáng lẽ không đóng.`,
-    );
+    parts.push(`Kết quả mới gỡ bỏ người trúng Jackpot cũ tại kỳ này — cycle cũ đáng lẽ không đóng.`);
   } else if (hasNewJpWinner && hadOldJpWinner) {
     parts.push(`Kết quả mới vẫn có người trúng Jackpot tại kỳ này — cấu trúc cycle có thể đổi.`);
   }
 
   if (chainLength > 0) {
-    parts.push(
-      `Có ${chainLength} kỳ settle sau (chain) bị ảnh hưởng pool — có thể tồn tại qua nhiều cycle.`,
-    );
+    parts.push(`Có ${chainLength} kỳ settle sau (chain) bị ảnh hưởng pool — có thể tồn tại qua nhiều cycle.`);
   }
 
   if (chainHasWinner) {
-    parts.push(
-      `Chain sau kỳ này đã có người trúng Jackpot — số tiền trúng cần tính lại theo pool mới.`,
-    );
+    parts.push(`Chain sau kỳ này đã có người trúng Jackpot — số tiền trúng cần tính lại theo pool mới.`);
   }
 
   parts.push(

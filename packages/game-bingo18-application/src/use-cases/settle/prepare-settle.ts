@@ -50,9 +50,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     // - Settle lần đầu: TriggerSettleUseCase đã transition Published → Settling.
     // - Resettle: TriggerResettleUseCase đã transition Published → Settling.
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.badRequest(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.badRequest(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     if (!draw.result) {

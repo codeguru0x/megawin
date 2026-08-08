@@ -7,11 +7,7 @@
 
 import { describe, it, expect } from "vitest";
 import { ApiClientError } from "@megawin/http-client";
-import {
-  classifyItem,
-  classifyBatchOuterReject,
-  classifyThrown,
-} from "../src/shared/tx-log-classifier";
+import { classifyItem, classifyBatchOuterReject, classifyThrown } from "../src/shared/tx-log-classifier";
 import { TxLogStatus } from "../src/entities/enums";
 
 describe("classifyItem", () => {

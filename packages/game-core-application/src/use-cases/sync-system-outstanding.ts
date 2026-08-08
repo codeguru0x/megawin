@@ -12,10 +12,7 @@
  */
 
 import type { GameProduct } from "@megawin/game-core/entities";
-import type {
-  OutstandingPerGameAggregateResult,
-  SystemOutstandingReportRepository,
-} from "../infras/repos";
+import type { OutstandingPerGameAggregateResult, SystemOutstandingReportRepository } from "../infras/repos";
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 
 /** Interface per-game repo phải implement để aggregate per-game outstanding reports. */

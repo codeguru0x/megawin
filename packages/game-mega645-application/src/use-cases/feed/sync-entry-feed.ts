@@ -32,14 +32,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     super(GameProduct.Mega645);
   }
 
-  protected async fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
-    const entries = await this.entryRepo.getChangedEntries(
-      Long.fromString(afterVersion),
-      batchSize,
-    );
+  protected async fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
     return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }

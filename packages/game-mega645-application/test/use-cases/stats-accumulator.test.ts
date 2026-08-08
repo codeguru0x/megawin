@@ -43,14 +43,10 @@ function board(playType: PlayType, numbers: string[], betCount = 1): EntryBoardF
 }
 
 let entrySeq = 0;
-function entry(
-  overrides: Partial<EntryForStats> & { boards: EntryBoardForStats[] },
-): EntryForStats {
+function entry(overrides: Partial<EntryForStats> & { boards: EntryBoardForStats[] }): EntryForStats {
   entrySeq += 1;
   // betUnitCount mặc định = Σ(expandedLines × betCount) — khớp cách place-bet tính.
-  const betUnitCount =
-    overrides.betUnitCount ??
-    overrides.boards.reduce((s, b) => s + b.expandedLines * b.betCount, 0);
+  const betUnitCount = overrides.betUnitCount ?? overrides.boards.reduce((s, b) => s + b.expandedLines * b.betCount, 0);
   const amount = overrides.amount ?? betUnitCount * UNIT_PRICE;
   return {
     id: `entry${entrySeq}`,
@@ -95,12 +91,8 @@ describe("Mega645StatsAccumulator – totals cộng dồn đúng Σ", () => {
 
   it("INVARIANT: totals.sets == Σ byPlayType.sets", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"], 3)] }),
-    );
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"], 2)] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"], 3)] }));
+    acc.addEntry(entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"], 2)] }));
     acc.addEntry(entry({ boards: [board(PlayType.Bao5, ["10", "11", "12", "13", "14"])] }));
 
     const d = acc.drainStatsDelta();
@@ -143,12 +135,8 @@ describe("Mega645StatsAccumulator – fixedWorstCase", () => {
   it("= Σ(betUnitCount) × tier1", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
     // entry1 betUnitCount 1, entry2 bao7 betUnitCount 7 → Σ = 8
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }),
-    );
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"])] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }));
+    acc.addEntry(entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"])] }));
 
     const d = acc.drainStatsDelta();
     expect(d.fixedWorstCase).toBe(8 * TIER1);
@@ -160,9 +148,7 @@ describe("Mega645StatsAccumulator – fixedWorstCase", () => {
 describe("Mega645StatsAccumulator – byPlayType (boards vs sets)", () => {
   it("bao7 betCount 5: boards=1 nhưng sets=35 (7×5), amount=350k", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"], 5)] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"], 5)] }));
 
     const d = acc.drainStatsDelta();
     const stat = d.byPlayType[PlayType.Bao7]!;
@@ -173,12 +159,8 @@ describe("Mega645StatsAccumulator – byPlayType (boards vs sets)", () => {
 
   it("2 board cùng playType từ 2 entry → boards=2, sets cộng dồn", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }),
-    );
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["07", "08", "09", "10", "11", "12"], 3)] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }));
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["07", "08", "09", "10", "11", "12"], 3)] }));
 
     const stat = acc.drainStatsDelta().byPlayType[PlayType.Standard]!;
     expect(stat.boards).toBe(2);
@@ -187,9 +169,7 @@ describe("Mega645StatsAccumulator – byPlayType (boards vs sets)", () => {
 
   it("play type không cược → không xuất hiện trong delta (partial)", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }));
     const d = acc.drainStatsDelta();
     expect(d.byPlayType[PlayType.Standard]).toBeDefined();
     expect(d.byPlayType[PlayType.Bao18]).toBeUndefined();
@@ -201,9 +181,7 @@ describe("Mega645StatsAccumulator – byPlayType (boards vs sets)", () => {
 describe("Mega645StatsAccumulator – numberFreq (theo board, không expand)", () => {
   it("bao7 (7 số) chạm ĐÚNG 7 doc số — không phải 7 (expanded) lines", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"], 2)] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Bao7, ["01", "02", "03", "04", "05", "06", "07"], 2)] }));
 
     const nums = acc.drainNumberDeltas();
     expect(nums).toHaveLength(7);
@@ -217,12 +195,8 @@ describe("Mega645StatsAccumulator – numberFreq (theo board, không expand)", (
 
   it("số xuất hiện ở 2 board → cộng dồn sets/amount/boards", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }),
-    );
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["01", "07", "08", "09", "10", "11"])] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["01", "02", "03", "04", "05", "06"])] }));
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["01", "07", "08", "09", "10", "11"])] }));
 
     const nums = acc.drainNumberDeltas();
     const num01 = nums.find((n) => n.number === "01")!;
@@ -236,15 +210,11 @@ describe("Mega645StatsAccumulator – numberFreq (theo board, không expand)", (
 describe("Mega645StatsAccumulator – combo delta", () => {
   it("key ổn định bất kể thứ tự số (buildComboKey tự sort)", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
-    acc.addEntry(
-      entry({ boards: [board(PlayType.Standard, ["06", "05", "04", "03", "02", "01"])] }),
-    );
+    acc.addEntry(entry({ boards: [board(PlayType.Standard, ["06", "05", "04", "03", "02", "01"])] }));
 
     const combos = acc.drainComboDeltas();
     expect(combos).toHaveLength(1);
-    expect(combos[0]!.comboKey).toBe(
-      buildComboKey(PlayType.Standard, ["01", "02", "03", "04", "05", "06"]),
-    );
+    expect(combos[0]!.comboKey).toBe(buildComboKey(PlayType.Standard, ["01", "02", "03", "04", "05", "06"]));
     expect(combos[0]!.numbers).toEqual(["01", "02", "03", "04", "05", "06"]);
   });
 
@@ -278,12 +248,8 @@ describe("Mega645StatsAccumulator – combo delta", () => {
   it("cùng account cược combo 2 lần → dedupe 1 account, sets cộng dồn", () => {
     const acc = new Mega645StatsAccumulator(DRAW_ID, PRIZE);
     const set6 = ["01", "02", "03", "04", "05", "06"];
-    acc.addEntry(
-      entry({ accountId: "a1", username: "u1", boards: [board(PlayType.Standard, set6, 1)] }),
-    );
-    acc.addEntry(
-      entry({ accountId: "a1", username: "u1", boards: [board(PlayType.Standard, set6, 4)] }),
-    );
+    acc.addEntry(entry({ accountId: "a1", username: "u1", boards: [board(PlayType.Standard, set6, 1)] }));
+    acc.addEntry(entry({ accountId: "a1", username: "u1", boards: [board(PlayType.Standard, set6, 4)] }));
 
     const c = acc.drainComboDeltas().find((x) => x.playType === PlayType.Standard)!;
     expect(c.accounts.size).toBe(1);

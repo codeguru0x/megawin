@@ -158,12 +158,7 @@ function isRetryable(err: unknown, statuses: Set<number>): boolean {
  */
 export async function withRetry<T>(fn: () => Promise<T>, config: RetryConfig | number): Promise<T> {
   const resolved = typeof config === "number" ? { maxRetries: config } : config;
-  const {
-    maxRetries,
-    baseDelay = DEFAULT_BASE_DELAY_MS,
-    retryableStatuses,
-    onRetry,
-  } = resolved;
+  const { maxRetries, baseDelay = DEFAULT_BASE_DELAY_MS, retryableStatuses, onRetry } = resolved;
 
   const statusSet = retryableStatuses ? new Set(retryableStatuses) : DEFAULT_RETRYABLE_STATUSES;
 

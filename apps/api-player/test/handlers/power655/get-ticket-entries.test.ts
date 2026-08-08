@@ -24,8 +24,7 @@ describe("GET /player/power655/tickets/{ticketId}/entries", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.resetModules();
-    const mod =
-      await import("../../../src/handlers/power655/get-ticket-entries");
+    const mod = await import("../../../src/handlers/power655/get-ticket-entries");
     handler = mod.handler;
   });
 

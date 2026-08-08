@@ -50,16 +50,13 @@ export function useUpdateBingo18GameConfig() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiClient.put<UpdateGameConfigOutput>("/bingo18/config", data),
+    mutationFn: (data: Record<string, unknown>) => apiClient.put<UpdateGameConfigOutput>("/bingo18/config", data),
     onSuccess: (res) => {
       queryClient.setQueryData(bingo18Keys.config, res.config);
       toast.success(`Đã lưu cấu hình Bingo 18 (v${res.version}).`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình Bingo 18.",
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình Bingo 18.");
     },
   });
 }

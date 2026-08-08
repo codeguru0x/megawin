@@ -127,10 +127,7 @@ export const DEFAULT_BIG_SMALL_DRAW_PRIZES: BigSmallDrawPrizes = {
 /**
  * Tra cứu giải thưởng "Một số" theo số lần xuất hiện.
  */
-export function lookupSingleNumPrize(
-  matchCount: number,
-  prizes: SingleNumPrizes = DEFAULT_SINGLE_NUM_PRIZES,
-): number {
+export function lookupSingleNumPrize(matchCount: number, prizes: SingleNumPrizes = DEFAULT_SINGLE_NUM_PRIZES): number {
   switch (matchCount) {
     case 1:
       return prizes.match1;
@@ -147,10 +144,7 @@ export function lookupSingleNumPrize(
  * Tra cứu giải thưởng "Cộng tổng" theo tổng.
  * Chuyển sum (number) sang string key vì SumTotalPrizes dùng string key (MongoDB convention).
  */
-export function lookupSumTotalPrize(
-  sum: number,
-  prizes: SumTotalPrizes = DEFAULT_SUM_TOTAL_PRIZES,
-): number {
+export function lookupSumTotalPrize(sum: number, prizes: SumTotalPrizes = DEFAULT_SUM_TOTAL_PRIZES): number {
   return prizes[String(sum)] ?? 0;
 }
 

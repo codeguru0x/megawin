@@ -15,11 +15,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import {
-  determineTier,
-  determineTiers,
-  highestTier,
-} from "@megawin/game-power655/rules/prize-tiers";
+import { determineTier, determineTiers, highestTier } from "@megawin/game-power655/rules/prize-tiers";
 import { matchLine, matchLines } from "@megawin/game-power655/helpers/match-result";
 import type { DrawResultForMatch } from "@megawin/game-power655/helpers/match-result";
 import { PrizeTier } from "@megawin/game-power655/entities/enums";
@@ -100,9 +96,7 @@ describe("Power 6/55 – determineTiers: trả về mảng hạng giải", () =>
 
 describe("Power 6/55 – highestTier: chọn hạng cao nhất", () => {
   it("jackpot1 luôn ưu tiên cao nhất", () => {
-    expect(highestTier([PrizeTier.Tier3, PrizeTier.Jackpot1, PrizeTier.Tier1])).toBe(
-      PrizeTier.Jackpot1,
-    );
+    expect(highestTier([PrizeTier.Tier3, PrizeTier.Jackpot1, PrizeTier.Tier1])).toBe(PrizeTier.Jackpot1);
   });
 
   it("jackpot2 ưu tiên trên tier1", () => {
@@ -240,10 +234,7 @@ describe("Power 6/55 – matchLines: batch match nhiều lines", () => {
   });
 
   it("all losing → winningLines = 0, tierCounts empty", () => {
-    const lines: LineValue[] = [
-      line(["10", "20", "30", "40", "41", "42"]),
-      line(["11", "21", "31", "41", "42", "43"]),
-    ];
+    const lines: LineValue[] = [line(["10", "20", "30", "40", "41", "42"]), line(["11", "21", "31", "41", "42", "43"])];
 
     const batch = matchLines(lines, result);
     expect(batch.totalLines).toBe(2);

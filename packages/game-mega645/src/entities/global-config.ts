@@ -5,13 +5,7 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  Mega645OpsConfig,
-} from "./types";
+import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules, Mega645OpsConfig } from "./types";
 
 /** Cấu hình game Mega 6/45 cấp toàn cục (scope = "global"). */
 export interface GlobalConfigDoc {

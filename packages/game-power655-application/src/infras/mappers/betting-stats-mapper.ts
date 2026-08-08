@@ -52,9 +52,7 @@ function normalizeTotals(raw: Partial<DrawBettingTotals> | undefined): DrawBetti
 }
 
 /** 1 slot `Power655PlayTypeStat` — merge field CÓ trong doc lên nền zero-stat. */
-function normalizePlayTypeStat(
-  raw: Partial<Power655PlayTypeStat> | undefined,
-): Power655PlayTypeStat {
+function normalizePlayTypeStat(raw: Partial<Power655PlayTypeStat> | undefined): Power655PlayTypeStat {
   return {
     amount: raw?.amount ?? 0,
     sets: raw?.sets ?? 0,

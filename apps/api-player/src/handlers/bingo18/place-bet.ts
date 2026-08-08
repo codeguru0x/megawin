@@ -36,17 +36,9 @@ import { withPlayerAuth } from "@megawin/auth";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 
 import { PlaceBetUseCase } from "@megawin/game-bingo18-application/use-cases/place-bet";
-import {
-  bingo18NumberSchema,
-  bingo18SumSchema,
-  bingo18DrawIdSchema,
-} from "@megawin/game-bingo18/schemas";
+import { bingo18NumberSchema, bingo18SumSchema, bingo18DrawIdSchema } from "@megawin/game-bingo18/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
-import {
-  Bingo18PlayType,
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-} from "@megawin/game-bingo18/entities";
+import { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 import z from "zod";
 import { boardsSequentialRefine } from "../../lib/schemas";

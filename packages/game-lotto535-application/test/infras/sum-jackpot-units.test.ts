@@ -67,10 +67,7 @@ const specialCoverDoc = {
  */
 function stubFindMany(repo: ComboStatsRepository) {
   return vi
-    .spyOn(
-      repo as unknown as { findMany: (f: Record<string, unknown>) => Promise<unknown[]> },
-      "findMany",
-    )
+    .spyOn(repo as unknown as { findMany: (f: Record<string, unknown>) => Promise<unknown[]> }, "findMany")
     .mockImplementation(async (filter: Record<string, unknown>) => {
       if (filter.comboKey && typeof filter.comboKey === "object") {
         return [standardDoc, mc4Doc];
@@ -154,10 +151,7 @@ describe("sumJackpotUnitsForStandardSet — tổng đúng 4 nhánh + fix order s
 
   it("không doc nào phủ (mọi nhánh rỗng) → units = 0", async () => {
     const repo = new ComboStatsRepository();
-    vi.spyOn(
-      repo as unknown as { findMany: () => Promise<unknown[]> },
-      "findMany",
-    ).mockResolvedValue([]);
+    vi.spyOn(repo as unknown as { findMany: () => Promise<unknown[]> }, "findMany").mockResolvedValue([]);
 
     const units = await repo.sumJackpotUnitsForStandardSet(DRAW_ID, M_SORTED, [SPECIAL]);
     expect(units).toBe(0);

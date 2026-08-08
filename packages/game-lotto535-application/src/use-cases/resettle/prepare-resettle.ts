@@ -32,10 +32,7 @@ export interface PrepareResettleOutput {
   lockKey: string;
 }
 
-export class PrepareResettleUseCase extends InternalUseCase<
-  PrepareResettleInput,
-  PrepareResettleOutput
-> {
+export class PrepareResettleUseCase extends InternalUseCase<PrepareResettleInput, PrepareResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryResettleRepo = new EntryResettleRepository();
 
@@ -52,9 +49,7 @@ export class PrepareResettleUseCase extends InternalUseCase<
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.badRequest(
-        `Kỳ quay ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.badRequest(`Kỳ quay ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     await this.entryResettleRepo.clearReversalSnapshot(drawId);

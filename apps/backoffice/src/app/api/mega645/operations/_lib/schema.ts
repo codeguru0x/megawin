@@ -3,10 +3,7 @@ import { MEGA645_PLAY_TYPE_VALUES, OpsAlertStatus, PlayType } from "@megawin/gam
 import { getRequiredNumberCount } from "@megawin/game-mega645/rules";
 
 /** Tuple giá trị status alert từ const-as-const (§5.3) — KHÔNG string literal trần. */
-const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [
-  OpsAlertStatus,
-  ...OpsAlertStatus[],
-];
+const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [OpsAlertStatus, ...OpsAlertStatus[]];
 
 /** Tuple mọi playType hợp lệ — derive từ `PlayType` (§5.3). */
 const MEGA645_PLAY_TYPE_TUPLE = MEGA645_PLAY_TYPE_VALUES as [PlayType, ...PlayType[]];

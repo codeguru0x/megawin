@@ -9,7 +9,7 @@
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";;
+import type { DrawEntity } from "@megawin/game-lotto535/entities";
 import type {
   PlayerListDrawResultsInput,
   PlayerListDrawResultsOutput,

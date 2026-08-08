@@ -88,8 +88,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description =
-    "Power 6/55 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
+  protected readonly description = "Power 6/55 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -155,12 +154,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
       // 1 kỳ lỗi (data bẩn, doc quá cỡ…) KHÔNG được làm chết cả tick — các kỳ còn lại,
       // nhất là kỳ đang mở bán, vẫn phải được cập nhật.
       try {
-        const applied = await this.syncDraw(
-          drawCursor.drawId,
-          drawCursor.lastEntryId,
-          this.prize,
-          this.statsConfig,
-        );
+        const applied = await this.syncDraw(drawCursor.drawId, drawCursor.lastEntryId, this.prize, this.statsConfig);
         this.counters.entriesApplied += applied.entriesApplied;
         this.clearStalledItem(drawCursor.drawId); // kỳ qua được → xoá streak
 
@@ -293,15 +287,12 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   }
 
   /** Gom prize config từ GlobalConfig để tính worst-case exposure. */
-  private buildPrizeContext(
-    config: Pick<GlobalConfigEntity, "play" | "defaultPrizes" | "ops">,
-  ): PrizeContext {
+  private buildPrizeContext(config: Pick<GlobalConfigEntity, "play" | "defaultPrizes" | "ops">): PrizeContext {
     return {
       unitPrice: config.play.unitPrice,
       tier1: config.defaultPrizes.tier1,
       // Cùng lý do merge-default ở `beforeLoop` — xem comment tại đó.
-      largeBetAmount:
-        config.ops?.alerts.largeBetAmount ?? DEFAULT_POWER655_CONFIG.ops.alerts.largeBetAmount,
+      largeBetAmount: config.ops?.alerts.largeBetAmount ?? DEFAULT_POWER655_CONFIG.ops.alerts.largeBetAmount,
     };
   }
 }

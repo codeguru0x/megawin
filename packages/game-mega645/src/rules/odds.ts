@@ -68,11 +68,7 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import {
-  MEGA645_NUMBER_MAX,
-  MEGA645_NUMBER_COUNT,
-  type PrizeAmounts,
-} from "../entities/types";
+import { MEGA645_NUMBER_MAX, MEGA645_NUMBER_COUNT, type PrizeAmounts } from "../entities/types";
 import { combination } from "./play-types";
 
 const NUMBER_POOL = MEGA645_NUMBER_MAX; // 45
@@ -89,10 +85,7 @@ export const TOTAL_OUTCOMES = combination(NUMBER_POOL, NUMBER_PICK);
  * = C(6,k) × C(39, 6-k)
  */
 function matchWays(k: number): number {
-  return (
-    combination(NUMBER_PICK, k) *
-    combination(NUMBER_POOL - NUMBER_PICK, NUMBER_PICK - k)
-  );
+  return combination(NUMBER_PICK, k) * combination(NUMBER_POOL - NUMBER_PICK, NUMBER_PICK - k);
 }
 
 export interface TierOdds {
@@ -134,12 +127,7 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 export function getOddsTable(): TierOdds[] {
-  const tiers: PrizeTier[] = [
-    PrizeTier.Jackpot,
-    PrizeTier.Tier1,
-    PrizeTier.Tier2,
-    PrizeTier.Tier3,
-  ];
+  const tiers: PrizeTier[] = [PrizeTier.Jackpot, PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
 
   return tiers.map((tier) => {
     const ways = TIER_WAYS.get(tier)!;
@@ -177,16 +165,9 @@ export interface ProfitSummary {
   grossMarginPercent: number;
 }
 
-const FIXED_TIERS: PrizeTier[] = [
-  PrizeTier.Tier1,
-  PrizeTier.Tier2,
-  PrizeTier.Tier3,
-];
+const FIXED_TIERS: PrizeTier[] = [PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
 
-export function analyzeProfitability(
-  prizes: PrizeAmounts,
-  unitPrice: number
-): ProfitSummary {
+export function analyzeProfitability(prizes: PrizeAmounts, unitPrice: number): ProfitSummary {
   const amounts = prizes as unknown as Record<string, number>;
 
   const tiers: TierProfitAnalysis[] = FIXED_TIERS.map((tier) => {
@@ -211,8 +192,7 @@ export function analyzeProfitability(
   const totalExpectedPayout = tiers.reduce((s, t) => s + t.expectedPayout, 0);
   const totalPayoutRatio = unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
   const grossMarginPerLine = unitPrice - totalExpectedPayout;
-  const grossMarginPercent =
-    unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0;
+  const grossMarginPercent = unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0;
 
   return {
     unitPrice,

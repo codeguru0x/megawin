@@ -18,10 +18,7 @@
  */
 
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import type {
-  Lotto535DrawComboAccountDoc,
-  Lotto535DrawComboAccountEntity,
-} from "@megawin/game-lotto535/entities";
+import type { Lotto535DrawComboAccountDoc, Lotto535DrawComboAccountEntity } from "@megawin/game-lotto535/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -30,10 +27,7 @@ import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Lotto535DrawComboAccountDoc>();
 
-export class ComboAccountsRepository extends BaseRepo<
-  Lotto535DrawComboAccountEntity,
-  ComboAccountMapper
-> {
+export class ComboAccountsRepository extends BaseRepo<Lotto535DrawComboAccountEntity, ComboAccountMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.DrawComboAccounts,
@@ -51,11 +45,7 @@ export class ComboAccountsRepository extends BaseRepo<
    * @param comboKey - Khoá combo.
    * @param limit - Trần số account trả về.
    */
-  async listByCombo(
-    drawId: string,
-    comboKey: string,
-    limit: number,
-  ): Promise<Lotto535DrawComboAccountEntity[]> {
+  async listByCombo(drawId: string, comboKey: string, limit: number): Promise<Lotto535DrawComboAccountEntity[]> {
     return await this.findMany({ drawId, comboKey }, { sort: { amount: -1 }, limit });
   }
 

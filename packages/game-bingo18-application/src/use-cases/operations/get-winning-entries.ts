@@ -3,11 +3,7 @@ import { AppException } from "@megawin/shared/errors";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type {
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput,
-  WinningBoardDetail,
-} from "./dto/winning-entries.dto";
+import type { GetWinningEntriesInput, GetWinningEntriesOutput, WinningBoardDetail } from "./dto/winning-entries.dto";
 
 /**
  * Danh sách entries trúng thưởng của một kỳ quay Bingo 18.
@@ -18,10 +14,7 @@ import type {
  *   - Bổ sung: sum/bet + outcome + isWin + winAmount, matchCount = null
  *   - KHÔNG có payout cap (giải cố định, đơn giản hơn Keno)
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
@@ -56,8 +49,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           .map((b: any) => ({
             boardNo: b.boardNo as string,
             playType: b.playType as any,
-            number: (e.entrySummary?.boards ?? []).find((sb: any) => sb.boardNo === b.boardNo)
-              ?.number,
+            number: (e.entrySummary?.boards ?? []).find((sb: any) => sb.boardNo === b.boardNo)?.number,
             tripleKind: b.tripleKind as any,
             matchCount: b.matchCount as number | null,
             sum: b.sum as number | undefined,

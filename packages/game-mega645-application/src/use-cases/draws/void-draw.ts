@@ -10,11 +10,7 @@ import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
 const VOID_SFN_ARN = process.env.MEGA645_VOID_SFN_ARN!;
 
-const VOIDABLE_STATUSES = new Set<string>([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-]);
+const VOIDABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published]);
 
 export interface VoidDrawInput extends DrawIdInput {
   reason: string;
@@ -60,10 +56,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       // nguyên — không huỷ. Defense-in-depth: status Settled vốn không nằm
       // trong VOIDABLE_STATUSES, guard này cho thông báo rõ ràng hơn.
       if (draw.settledAt) {
-        throw new AppException(
-          "DRAW_INVALID_TRANSITION",
-          `Không thể huỷ kỳ quay đã kết sổ (${input.drawId}).`,
-        );
+        throw new AppException("DRAW_INVALID_TRANSITION", `Không thể huỷ kỳ quay đã kết sổ (${input.drawId}).`);
       }
 
       // Guard thứ tự đóng kỳ: phải xử lý TUẦN TỰ theo thời gian. Nếu còn kỳ
@@ -118,10 +111,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       // ExecutionAlreadyExists = phiên huỷ này đã được start trước đó
       // (retry/replay). KHÔNG phải lỗi — coi như thành công idempotent.
       if (!(err instanceof ExecutionAlreadyExists)) {
-        throw new AppException(
-          "SFN_START_FAILED",
-          `Không thể khởi chạy void worker: ${(err as Error).message}`,
-        );
+        throw new AppException("SFN_START_FAILED", `Không thể khởi chạy void worker: ${(err as Error).message}`);
       }
     }
 

@@ -31,10 +31,7 @@ export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, Previ
     const countersMap = new Map<string, number>();
 
     for (const date of uniqueDates) {
-      const counter = await this.counterRepo.findOne(
-        { drawDate: date },
-        { sort: { drawDate: -1 } },
-      );
+      const counter = await this.counterRepo.findOne({ drawDate: date }, { sort: { drawDate: -1 } });
       countersMap.set(date, counter?.lastDrawNo ?? 0);
     }
 

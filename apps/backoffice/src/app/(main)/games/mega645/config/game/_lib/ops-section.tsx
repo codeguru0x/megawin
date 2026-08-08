@@ -16,29 +16,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Mega645OpsAlertType, OpsAlertSeverity } from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import {
-  BellOff,
-  Coins,
-  HelpCircle,
-  Layers,
-  Save,
-  ShieldAlert,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { BellOff, Coins, HelpCircle, Layers, Save, ShieldAlert, Users, type LucideIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,10 +33,7 @@ import type { GameConfig } from "./use-game-config";
 type AlertSeverity = (typeof OpsAlertSeverity)[keyof typeof OpsAlertSeverity];
 
 /** Style token severity — icon + accent của từng hàng alert. */
-const SEVERITY_STYLES: Record<
-  AlertSeverity,
-  { badge: string; icon: string; ring: string; label: string }
-> = {
+const SEVERITY_STYLES: Record<AlertSeverity, { badge: string; icon: string; ring: string; label: string }> = {
   [OpsAlertSeverity.Critical]: {
     badge: "bg-red-50 dark:bg-red-950/40",
     icon: "text-red-600 dark:text-red-400",
@@ -146,15 +127,7 @@ interface OpsSectionProps {
   isPending: boolean;
 }
 
-function LabelWithTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function LabelWithTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <span className={`inline-flex items-center gap-1 ${className ?? ""}`}>
       {label}
@@ -260,13 +233,7 @@ function AlertToggleRow({
           >
             {meta.label}
           </span>
-          <span
-            className={cn(
-              "rounded px-1.5 py-px text-[10px] font-medium leading-tight",
-              style.badge,
-              style.icon,
-            )}
-          >
+          <span className={cn("rounded px-1.5 py-px text-[10px] font-medium leading-tight", style.badge, style.icon)}>
             {style.label}
           </span>
           <Tooltip>
@@ -327,10 +294,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   }
 
   const enabled = form.watch("enabled");
-  const enabledCount = ALERT_META.reduce(
-    (count, meta) => count + (enabled?.[meta.type] ? 1 : 0),
-    0,
-  );
+  const enabledCount = ALERT_META.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -343,8 +307,8 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Ngưỡng cảnh báo rủi ro</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Worker so ngưỡng này mỗi chu kỳ để sinh alert. Đổi có hiệu lực trong ~1 chu kỳ
-                    worker (không cần deploy).
+                    Worker so ngưỡng này mỗi chu kỳ để sinh alert. Đổi có hiệu lực trong ~1 chu kỳ worker (không cần
+                    deploy).
                   </p>
                 </div>
 
@@ -389,9 +353,9 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                           <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-80 text-xs">
-                          Chọn loại rủi ro worker sẽ giám sát và sinh alert mỗi chu kỳ. Tắt một loại
-                          nghĩa là ngưng theo dõi rủi ro đó — dùng khi muốn giảm nhiễu, KHÔNG nên
-                          tắt loại 'Nghiêm trọng' trừ khi có lý do rõ ràng.
+                          Chọn loại rủi ro worker sẽ giám sát và sinh alert mỗi chu kỳ. Tắt một loại nghĩa là ngưng theo
+                          dõi rủi ro đó — dùng khi muốn giảm nhiễu, KHÔNG nên tắt loại 'Nghiêm trọng' trừ khi có lý do
+                          rõ ràng.
                         </TooltipContent>
                       </Tooltip>
                     </p>
@@ -414,11 +378,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                         meta={meta}
                         checked={enabled?.[meta.type] ?? false}
                         onToggle={(v) =>
-                          form.setValue(
-                            "enabled",
-                            { ...enabled, [meta.type]: v },
-                            { shouldDirty: true },
-                          )
+                          form.setValue("enabled", { ...enabled, [meta.type]: v }, { shouldDirty: true })
                         }
                       />
                     ))}
@@ -431,8 +391,8 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Nhịp worker & Top-K</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Điều chỉnh tần suất cập nhật stats và số bản ghi top lưu mỗi kỳ. Ảnh hưởng chi
-                    phí worker và độ 'tươi' của dashboard.
+                    Điều chỉnh tần suất cập nhật stats và số bản ghi top lưu mỗi kỳ. Ảnh hưởng chi phí worker và độ
+                    'tươi' của dashboard.
                   </p>
                 </div>
 

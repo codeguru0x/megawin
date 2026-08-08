@@ -46,10 +46,7 @@ export interface FinalizeVoidResult {
  * IDEMPOTENT: voidComplete dùng filter status=voiding → nếu draw đã void, không update.
  * Crash recovery: kiểm tra status sau khi update trả false → nếu đã void thì bỏ qua.
  */
-export class FinalizeVoidUseCase extends InternalUseCase<
-  VoidContext,
-  FinalizeVoidResult
-> {
+export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVoidResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 
@@ -77,9 +74,7 @@ export class FinalizeVoidUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Void) {
         console.log(`Draw ${drawId} already void, skipping transition.`);
       } else {
-        throw new Error(
-          `Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`,
-        );
+        throw new Error(`Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
 

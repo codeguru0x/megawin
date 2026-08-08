@@ -26,10 +26,7 @@ import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.d
  *
  * `updatedAt` của stats dùng làm ETag ở route → 304 khi chưa đổi (0 re-render FE).
  */
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -85,12 +82,14 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
       drawStatus: draw?.status ?? null,
       stats,
       exposure,
-      topAccounts: topAccounts.map((a): TopAccountStat => ({
-        accountId: a.accountId,
-        username: a.username,
-        amount: a.amount,
-        entries: a.entries,
-      })),
+      topAccounts: topAccounts.map(
+        (a): TopAccountStat => ({
+          accountId: a.accountId,
+          username: a.username,
+          amount: a.amount,
+          entries: a.entries,
+        }),
+      ),
       uniquePlayers,
       alertCounts: { new: newCount, critical: criticalCount },
       // Ngưỡng từ config → FE tô màu đúng cấu hình thực, không hardcode default.

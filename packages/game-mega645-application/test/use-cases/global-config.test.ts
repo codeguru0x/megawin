@@ -42,9 +42,7 @@ describe("GameConfigRepository – Mega 6/45 Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.rates).toBeDefined();
-    expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_MEGA645_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.rates.defaultCommissionRate).toBe(DEFAULT_MEGA645_CONFIG.rates.defaultCommissionRate);
     expect(config!.rates.companyRate).toBe(DEFAULT_MEGA645_CONFIG.rates.companyRate);
   });
 
@@ -64,9 +62,7 @@ describe("GameConfigRepository – Mega 6/45 Global Config", () => {
     expect(config!.play.unitPrice).toBe(10_000);
     expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_MEGA645_CONFIG.play.maxBoardsPerTicket);
     expect(config!.play.maxDrawCount).toBe(DEFAULT_MEGA645_CONFIG.play.maxDrawCount);
-    expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_MEGA645_CONFIG.play.salesCloseBeforeMinutes,
-    );
+    expect(config!.play.salesCloseBeforeMinutes).toBe(DEFAULT_MEGA645_CONFIG.play.salesCloseBeforeMinutes);
     expect(config!.play.drawsPerWeek).toBe(3);
     expect(config!.play.drawDaysOfWeek).toEqual([0, 3, 5]);
     expect(config!.play.drawTime).toBe("18:00");

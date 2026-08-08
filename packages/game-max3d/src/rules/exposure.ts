@@ -92,11 +92,7 @@ const TIER_SLOTS: ReadonlyArray<{ tier: BasicPrizeTier; slots: number }> = [
 ];
 
 /** Liability của 1 triplet nếu được quay vào 1 tier (VND) — cộng 3 nhóm units. */
-function tripletTierLiability(
-  stake: Max3dTripletStake,
-  tier: BasicPrizeTier,
-  prizes: Max3dPrizeSet,
-): number {
+function tripletTierLiability(stake: Max3dTripletStake, tier: BasicPrizeTier, prizes: Max3dPrizeSet): number {
   return (
     stake.straightUnits * prizes.basic[tier] +
     stake.combo3Units * prizes.combo.combo3[tier] +
@@ -144,10 +140,7 @@ export function computeBasicWorstCase(
  * "top K cặp"). Duplicate pair (t1===t2): ĐB KHÔNG ×2 theo luật (`matchPair`) —
  * công thức units × special vẫn đúng vì units đã là số bộ cược cặp đó.
  */
-export function computePairLiabilities(
-  topPairs: Max3dTopPair[],
-  prizes: Max3dPrizeSet,
-): Max3dPairLiability[] {
+export function computePairLiabilities(topPairs: Max3dTopPair[], prizes: Max3dPrizeSet): Max3dPairLiability[] {
   return topPairs
     .map((p) => ({
       pairKey: p.pairKey,
@@ -210,11 +203,7 @@ export function computeMax3dExposure(
  * prize ĐB của playType; plus lấy special (mỗi board plus chỉ 1 cặp → tối đa 1 lần ĐB).
  * Nhân betCount ở caller.
  */
-export function maxBoardUnitWin(
-  playMode: PlayMode,
-  playType: PlayType,
-  prizes: Max3dPrizeSet,
-): number {
+export function maxBoardUnitWin(playMode: PlayMode, playType: PlayType, prizes: Max3dPrizeSet): number {
   if (playMode === PlayMode.Plus) return prizes.plus.special;
   if (playType === PlayType.Combo3) return prizes.combo.combo3.special;
   if (playType === PlayType.Combo6) return prizes.combo.combo6.special;

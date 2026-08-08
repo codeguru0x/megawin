@@ -178,15 +178,9 @@ export interface TierOdds {
   plannedPayoutRate: number;
 }
 
-function computeTierOdds(): Map<
-  PrizeTier,
-  { ways: number; probability: number; plannedPayoutRate: number }
-> {
+function computeTierOdds(): Map<PrizeTier, { ways: number; probability: number; plannedPayoutRate: number }> {
   const totalMainCombos = TOTAL_MAIN_OUTCOMES;
-  const odds = new Map<
-    PrizeTier,
-    { ways: number; probability: number; plannedPayoutRate: number }
-  >();
+  const odds = new Map<PrizeTier, { ways: number; probability: number; plannedPayoutRate: number }>();
 
   const match6ways = mainMatchWays(6); // 1
   const match5ways = mainMatchWays(5); // C(6,5)×C(49,1) = 6×49 = 294

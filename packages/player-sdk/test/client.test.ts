@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  createPlayerClient,
-  MemoryTokenStorage,
-  type PlayerClient,
-  type PlayerSdkConfig,
-} from "../src";
+import { createPlayerClient, MemoryTokenStorage, type PlayerClient, type PlayerSdkConfig } from "../src";
 import { BASE_URL, TOKENS, mockFetch, mockFetchError } from "./helpers";
 
 function createMockSessionStorage(): Storage {

@@ -64,11 +64,7 @@
  */
 
 import { BasicPrizeTier, PlusPrizeTier } from "../entities/enums";
-import type {
-  BasicPrizeAmounts,
-  PlusPrizeAmounts,
-  Max3dPrizeConfig,
-} from "../entities/types";
+import type { BasicPrizeAmounts, PlusPrizeAmounts, Max3dPrizeConfig } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -206,14 +202,11 @@ export function getPlusOddsTable(): PlusTierOdds[] {
   const waysThird = RESULT_THIRD * RESULT_THIRD;
 
   const waysBothInAny = RESULT_TOTAL * RESULT_TOTAL;
-  const waysFourth =
-    waysBothInAny - waysSpecial - waysFirst - waysSecond - waysThird;
+  const waysFourth = waysBothInAny - waysSpecial - waysFirst - waysSecond - waysThird;
 
-  const waysOneSpecialOnly =
-    2 * RESULT_SPECIAL * (TOTAL_TRIPLETS - RESULT_TOTAL);
+  const waysOneSpecialOnly = 2 * RESULT_SPECIAL * (TOTAL_TRIPLETS - RESULT_TOTAL);
 
-  const waysOnlyNonSpecial =
-    2 * (RESULT_TOTAL - RESULT_SPECIAL) * (TOTAL_TRIPLETS - RESULT_TOTAL);
+  const waysOnlyNonSpecial = 2 * (RESULT_TOTAL - RESULT_SPECIAL) * (TOTAL_TRIPLETS - RESULT_TOTAL);
 
   const waysSixth = waysOnlyNonSpecial;
 
@@ -302,10 +295,7 @@ export interface ProfitSummary {
   grossMarginPercent: number;
 }
 
-export function analyzeBasicStraightProfitability(
-  prizes: BasicPrizeAmounts,
-  unitPrice: number
-): ProfitSummary {
+export function analyzeBasicStraightProfitability(prizes: BasicPrizeAmounts, unitPrice: number): ProfitSummary {
   const oddsTable = getBasicOddsTable();
 
   const tiers: TierProfitAnalysis[] = oddsTable.map((odds) => {
@@ -319,8 +309,7 @@ export function analyzeBasicStraightProfitability(
       currentPrize,
       expectedPayout,
       payoutRatio: unitPrice > 0 ? expectedPayout / unitPrice : 0,
-      breakEvenPrize:
-        odds.probability > 0 ? unitPrice / odds.probability : Infinity,
+      breakEvenPrize: odds.probability > 0 ? unitPrice / odds.probability : Infinity,
     };
   });
 
@@ -335,15 +324,11 @@ export function analyzeBasicStraightProfitability(
     totalExpectedPayout,
     totalPayoutRatio,
     grossMarginPerLine,
-    grossMarginPercent:
-      unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0,
+    grossMarginPercent: unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0,
   };
 }
 
-export function analyzePlusProfitability(
-  prizes: PlusPrizeAmounts,
-  unitPrice: number
-): ProfitSummary {
+export function analyzePlusProfitability(prizes: PlusPrizeAmounts, unitPrice: number): ProfitSummary {
   const oddsTable = getPlusOddsTable();
 
   const tiers: TierProfitAnalysis[] = oddsTable.map((odds) => {
@@ -357,8 +342,7 @@ export function analyzePlusProfitability(
       currentPrize,
       expectedPayout,
       payoutRatio: unitPrice > 0 ? expectedPayout / unitPrice : 0,
-      breakEvenPrize:
-        odds.probability > 0 ? unitPrice / odds.probability : Infinity,
+      breakEvenPrize: odds.probability > 0 ? unitPrice / odds.probability : Infinity,
     };
   });
 
@@ -373,7 +357,6 @@ export function analyzePlusProfitability(
     totalExpectedPayout,
     totalPayoutRatio,
     grossMarginPerLine,
-    grossMarginPercent:
-      unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0,
+    grossMarginPercent: unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0,
   };
 }

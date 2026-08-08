@@ -221,9 +221,7 @@ describe("Lotto 5/35 – expandBoardToLines", () => {
       expect(line.main).toHaveLength(5);
       expect(line.special).toBe("07");
       expect(
-        line.main
-          .slice(0, -1)
-          .every((n: string) => ["01", "02", "03", "04"].some((m) => line.main.includes(m))),
+        line.main.slice(0, -1).every((n: string) => ["01", "02", "03", "04"].some((m) => line.main.includes(m))),
       ).toBe(true);
     }
   });

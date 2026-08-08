@@ -27,12 +27,7 @@
 import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type {
-  Board,
-  TicketDoc,
-  TicketEntryDoc,
-  EntryBoardSnapshot,
-} from "@megawin/game-keno/entities";
+import type { Board, TicketDoc, TicketEntryDoc, EntryBoardSnapshot } from "@megawin/game-keno/entities";
 import { KENO_BASIC_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 import { getPlayTypeFromPickCount } from "@megawin/game-keno/rules";
 
@@ -57,15 +52,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly debitService = new DebitPlayerService();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      ipAddress,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();

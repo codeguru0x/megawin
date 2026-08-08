@@ -10,10 +10,7 @@
  * @output SyncTicketSummariesResult
  */
 
-import {
-  SyncTicketSummariesUseCase,
-  type DrawSyncInput,
-} from "@megawin/game-lotto535-application/use-cases/settle";
+import { SyncTicketSummariesUseCase, type DrawSyncInput } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new SyncTicketSummariesUseCase();
 

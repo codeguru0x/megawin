@@ -28,12 +28,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import type {
-  TicketLineDoc,
-  EntryBoardSnapshot,
-  EntryPayout,
-  EntryResult,
-} from "@megawin/game-max3dpro/entities";
+import type { TicketLineDoc, EntryBoardSnapshot, EntryPayout, EntryResult } from "@megawin/game-max3dpro/entities";
 import {
   matchPair,
   flattenDrawResult,
@@ -52,10 +47,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
@@ -111,13 +103,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
           for (const pair of pairs) {
             // So khớp cặp triplets với kết quả quay.
-            const pairResult = matchPair(
-              pair.first,
-              pair.second,
-              drawResult,
-              prizeConfig.standard,
-              flatDrawResult,
-            );
+            const pairResult = matchPair(pair.first, pair.second, drawResult, prizeConfig.standard, flatDrawResult);
 
             // entryWinAmount tích luỹ đã nhân betCount — tổng thực tế player nhận.
             entryWinAmount += pairResult.winAmount * betCount;

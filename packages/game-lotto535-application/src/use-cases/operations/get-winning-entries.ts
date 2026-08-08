@@ -29,10 +29,7 @@ const TIER_LABELS: Record<string, string> = {
  * Kèm summary tổng hợp (totalWinningEntries, totalWinningLines, totalWinAmount).
  * Dùng cho dialog báo cáo trúng thưởng trên trang operations backoffice.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

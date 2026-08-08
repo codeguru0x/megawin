@@ -2,10 +2,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { ListTenantConfigsOutput } from "./dto/tenant-config.dto";
 
-export class ListTenantConfigsUseCase extends NextApiUseCase<
-  void,
-  ListTenantConfigsOutput
-> {
+export class ListTenantConfigsUseCase extends NextApiUseCase<void, ListTenantConfigsOutput> {
   private readonly repo = new TenantConfigRepository();
 
   protected async execute(): Promise<ListTenantConfigsOutput> {

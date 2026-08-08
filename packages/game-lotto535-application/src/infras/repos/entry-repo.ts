@@ -78,11 +78,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.findMany({ ticketId }, { sort: { drawId: 1 } });
   }
 
-  async getEntriesByDrawId(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -92,11 +88,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Danh sách entries trúng thưởng (winAmount > 0) của 1 kỳ, cursor-based pagination.
    * Sort: winAmount desc, sau đó createdAt asc.
    */
-  async getWinningEntries(
-    drawId: string,
-    limit: number,
-    afterEntryId?: string,
-  ): Promise<TicketEntryEntity[]> {
+  async getWinningEntries(drawId: string, limit: number, afterEntryId?: string): Promise<TicketEntryEntity[]> {
     const filter: Record<string, unknown> = {
       drawId,
       status: EntryStatus.Settled,
@@ -154,8 +146,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    const row = rows[0] as
-      { totalEntries?: number; totalLines?: number; totalWin?: number } | undefined;
+    const row = rows[0] as { totalEntries?: number; totalLines?: number; totalWin?: number } | undefined;
     return {
       totalWinningEntries: row?.totalEntries ?? 0,
       totalWinningLines: row?.totalLines ?? 0,
@@ -178,11 +169,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /** Lấy batch entries theo drawId + status (cho settle batch loop). */
-  async getScheduledEntriesBatch(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getScheduledEntriesBatch(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -190,10 +177,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /** Lấy entries scheduled cho settle — luôn page 1, dùng findMany + limit. */
   async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
-      { drawId, status: EntryStatus.Scheduled },
-      { sort: { createdAt: 1 }, limit },
-    );
+    return await this.findMany({ drawId, status: EntryStatus.Scheduled }, { sort: { createdAt: 1 }, limit });
   }
 
   async countEntriesByDrawId(drawId: string): Promise<number> {
@@ -223,11 +207,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * @param afterId - Watermark đọc — ObjectId hex string. `undefined` = đọc từ đầu.
    * @param limit - Trần entries đọc 1 batch.
    */
-  async getEntriesForStatsAfter(
-    drawId: string,
-    afterId: string | undefined,
-    limit: number,
-  ): Promise<EntryForStats[]> {
+  async getEntriesForStatsAfter(drawId: string, afterId: string | undefined, limit: number): Promise<EntryForStats[]> {
     const filter: Record<string, unknown> = { drawId, status: { $ne: EntryStatus.Void } };
     if (afterId) {
       filter._id = { $gt: new ObjectId(afterId) };
@@ -526,9 +506,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * activeDrawIds từ DrawRepo.findActiveDrawIds() — tăng selectivity, tránh full scan.
    * Index: { drawId: 1, status: 1 }
    */
-  async aggregateOutstandingMetricsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
     if (activeDrawIds.length === 0) return [];
 
     const result = await this.aggregate([
@@ -570,9 +548,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Chạy song song với aggregateOutstandingMetricsByDraw.
    * Index: { drawId: 1, status: 1 }
    */
-  async aggregateOutstandingCountsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
     if (activeDrawIds.length === 0) return [];
 
     const result = await this.aggregate([
@@ -616,9 +592,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate số player unique per tenant cho 1 draw đã settle.
    */
-  async aggregatePlayerCountByTenant(
-    drawId: string,
-  ): Promise<Array<{ tenantId: string; playerCount: number }>> {
+  async aggregatePlayerCountByTenant(drawId: string): Promise<Array<{ tenantId: string; playerCount: number }>> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1053,20 +1027,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           },
           totalVoidedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.originalAmount", 0] }, 0],
             },
           },
           totalRefundedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.refundAmount", 0] }, 0],
             },
           },
           voidedDrawIds: {
@@ -1123,20 +1089,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           },
           totalVoidedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.originalAmount", 0] }, 0],
             },
           },
           totalRefundedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.refundAmount", 0] }, 0],
             },
           },
           voidedDrawIds: {
@@ -1355,9 +1313,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     const ops = matchingEntries.map((entry) => {
       const tiers = (entry.payout as any)?.tiers ?? [];
-      const jpTier = tiers.find(
-        (t: any) => t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0,
-      );
+      const jpTier = tiers.find((t: any) => t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0);
       const hitCount = jpTier?.hitCount ?? 0;
       const entryId = entry._id.toString();
 
@@ -1422,10 +1378,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * BẮT BUỘC drawId + tenantId — KHÔNG query cross-draw.
    * Index: { drawId: 1, tenantId: 1, accountId: 1 }
    */
-  async aggregatePlayersByDrawAndTenant(
-    drawId: string,
-    tenantId: string,
-  ): Promise<PlayerBreakdownRow[]> {
+  async aggregatePlayersByDrawAndTenant(drawId: string, tenantId: string): Promise<PlayerBreakdownRow[]> {
     const result = await this.aggregate([
       // Lọc entries đã settle trong 1 draw + 1 tenant
       {
@@ -1471,11 +1424,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    *
    * Index: { drawId: 1, tenantId: 1, accountId: 1 }
    */
-  async findByDrawTenantPlayer(
-    drawId: string,
-    tenantId: string,
-    accountId: string,
-  ): Promise<TicketEntryEntity[]> {
+  async findByDrawTenantPlayer(drawId: string, tenantId: string, accountId: string): Promise<TicketEntryEntity[]> {
     return this.findMany({
       drawId,
       tenantId,

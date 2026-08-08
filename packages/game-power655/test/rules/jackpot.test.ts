@@ -27,8 +27,7 @@ describe("calculateDrawFinancials", () => {
   it("Đúng logic — không overflow: JP1/JP2 chia đúng tỷ lệ 90/10, JP1+JP2 = totalJackpotContribution", () => {
     const result = calculateDrawFinancials(baseInput);
 
-    const remainAfterPrizes =
-      baseInput.totalRevenue - baseInput.totalFixedPrizes - baseInput.totalAgentCommission;
+    const remainAfterPrizes = baseInput.totalRevenue - baseInput.totalFixedPrizes - baseInput.totalAgentCommission;
     const expectedCompanyTake = Math.round(baseInput.totalRevenue * baseInput.companyRate);
     const expectedActualCompanyTake = Math.min(expectedCompanyTake, Math.max(remainAfterPrizes, 0));
     const expectedTotalContribution = Math.max(remainAfterPrizes - expectedActualCompanyTake, 0);
@@ -62,8 +61,7 @@ describe("calculateDrawFinancials", () => {
     };
     const result = calculateDrawFinancials(input);
 
-    const remainAfterPrizes =
-      input.totalRevenue - input.totalFixedPrizes - input.totalAgentCommission;
+    const remainAfterPrizes = input.totalRevenue - input.totalFixedPrizes - input.totalAgentCommission;
     const companyTake = Math.round(input.totalRevenue * input.companyRate);
     const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
     const totalJackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
@@ -88,9 +86,7 @@ describe("calculateDrawFinancials", () => {
 
     expect(result.jp1Overflow).toBe(0);
     // JP1 contribution đầy đủ, không bị cap — có thể vượt threshold.
-    expect(input.jp1CurrentAmount + result.jackpot1Contribution).toBeGreaterThan(
-      input.jp1OverflowThreshold,
-    );
+    expect(input.jp1CurrentAmount + result.jackpot1Contribution).toBeGreaterThan(input.jp1OverflowThreshold);
   });
 
   it("Logic ngược — vượt threshold nhưng CÓ JP1 winner → overflow KHÔNG kích hoạt, JP1 winner nhận đủ", () => {
@@ -103,9 +99,7 @@ describe("calculateDrawFinancials", () => {
     const result = calculateDrawFinancials(input);
 
     expect(result.jp1Overflow).toBe(0);
-    expect(input.jp1CurrentAmount + result.jackpot1Contribution).toBeGreaterThan(
-      input.jp1OverflowThreshold,
-    );
+    expect(input.jp1CurrentAmount + result.jackpot1Contribution).toBeGreaterThan(input.jp1OverflowThreshold);
   });
 
   it("Logic ngược — jp1OverflowThreshold = 0 (operator tắt overflow) → không kích hoạt dù vượt ngưỡng cũ", () => {

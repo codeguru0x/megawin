@@ -20,10 +20,7 @@ export interface EnqueueDispatchRefundsOutput {
   done: boolean;
 }
 
-export class EnqueueDispatchRefundsUseCase extends InternalUseCase<
-  VoidContext,
-  EnqueueDispatchRefundsOutput
-> {
+export class EnqueueDispatchRefundsUseCase extends InternalUseCase<VoidContext, EnqueueDispatchRefundsOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 

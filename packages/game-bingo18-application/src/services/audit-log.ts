@@ -69,12 +69,7 @@ function actorFields(a: AuditActor) {
  * @param args.prevStatus - Trạng thái draw trước khi void (để ghi diff).
  * @param args.reason - Lý do huỷ (tuỳ chọn).
  */
-export function auditDrawVoid(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-  reason?: string;
-}): void {
+export function auditDrawVoid(args: { actor: AuditActor; drawId: string; prevStatus: string; reason?: string }): void {
   record({
     ...actorFields(args.actor),
     action: AUDIT_ACTIONS.draw.void,
@@ -226,11 +221,7 @@ export function auditResettle(args: {
  * @param args.drawId - Id kỳ quay (`bingo18_{drawDate}_{drawNo}`).
  * @param args.prevStatus - Trạng thái draw trước khi mở bán.
  */
-export function auditOpenSales(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-}): void {
+export function auditOpenSales(args: { actor: AuditActor; drawId: string; prevStatus: string }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.openSales, {
     ...args,
   });
@@ -243,11 +234,7 @@ export function auditOpenSales(args: {
  * @param args.drawId - Id kỳ quay (`bingo18_{drawDate}_{drawNo}`).
  * @param args.prevStatus - Trạng thái draw trước khi đóng bán.
  */
-export function auditCloseSales(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-}): void {
+export function auditCloseSales(args: { actor: AuditActor; drawId: string; prevStatus: string }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.closeSales, {
     ...args,
   });

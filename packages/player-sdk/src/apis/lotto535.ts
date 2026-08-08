@@ -437,9 +437,7 @@ export interface Lotto535Api {
    * console.log(cover.boardPrice); // 1.260.000 (C(9,5) × 10.000)
    * ```
    */
-  getComboPopularity(
-    params: Lotto535ComboPopularityParams,
-  ): Promise<Lotto535ComboPopularityResponse>;
+  getComboPopularity(params: Lotto535ComboPopularityParams): Promise<Lotto535ComboPopularityResponse>;
 }
 
 // ─────────────────────────────────────────────
@@ -465,9 +463,7 @@ export function createLotto535Api(http: HttpClient): Lotto535Api {
       return http.post<Lotto535PlaceBetResponse>(ENDPOINTS.lotto535.placeBet, input);
     },
 
-    async listPendingTickets(
-      params?: Lotto535ListTicketsParams,
-    ): Promise<Lotto535ListTicketsResponse> {
+    async listPendingTickets(params?: Lotto535ListTicketsParams): Promise<Lotto535ListTicketsResponse> {
       return http.get<Lotto535ListTicketsResponse>(ENDPOINTS.lotto535.listPendingTickets, {
         params: params as Record<string, string | number | undefined>,
       });
@@ -487,9 +483,7 @@ export function createLotto535Api(http: HttpClient): Lotto535Api {
       return http.get<Lotto535EntryLinesResponse>(ENDPOINTS.lotto535.getEntryLines(entryId));
     },
 
-    async listDrawResults(
-      params?: Lotto535ListDrawResultsParams,
-    ): Promise<Lotto535ListDrawResultsResponse> {
+    async listDrawResults(params?: Lotto535ListDrawResultsParams): Promise<Lotto535ListDrawResultsResponse> {
       return http.get<Lotto535ListDrawResultsResponse>(ENDPOINTS.lotto535.listDrawResults, {
         params: params as Record<string, string | number | undefined>,
       });
@@ -499,14 +493,11 @@ export function createLotto535Api(http: HttpClient): Lotto535Api {
       return http.get<Lotto535DrawResultDetail>(ENDPOINTS.lotto535.getDrawResult(drawId));
     },
 
-    async getComboPopularity(
-      params: Lotto535ComboPopularityParams,
-    ): Promise<Lotto535ComboPopularityResponse> {
+    async getComboPopularity(params: Lotto535ComboPopularityParams): Promise<Lotto535ComboPopularityResponse> {
       // numbers/specials gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
-      return http.get<Lotto535ComboPopularityResponse>(
-        ENDPOINTS.lotto535.getComboPopularity(params.drawId),
-        { params: { numbers: params.numbers.join(","), specials: params.specials.join(",") } },
-      );
+      return http.get<Lotto535ComboPopularityResponse>(ENDPOINTS.lotto535.getComboPopularity(params.drawId), {
+        params: { numbers: params.numbers.join(","), specials: params.specials.join(",") },
+      });
     },
   };
 }

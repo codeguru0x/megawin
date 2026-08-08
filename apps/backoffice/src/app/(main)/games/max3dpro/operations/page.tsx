@@ -74,10 +74,7 @@ function OperationsContent() {
   } = useDrawContext();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const [tab, setTab] = useQueryState(
-    "tab",
-    parseAsStringEnum(["monitor", "analysis"]).withDefault("monitor"),
-  );
+  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["monitor", "analysis"]).withDefault("monitor"));
 
   // Badge alert đọc `alertCounts` từ snapshot (timer 1) — không timer riêng.
   const { data: alertCounts } = useOpsSnapshot(effectiveDrawId, isSettled, (s) => s.alertCounts);
@@ -109,9 +106,7 @@ function OperationsContent() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {alertCounts ? (
-            <AlertHeaderBadge counts={alertCounts} onClick={() => setTab("monitor")} />
-          ) : null}
+          {alertCounts ? <AlertHeaderBadge counts={alertCounts} onClick={() => setTab("monitor")} /> : null}
           <DrawSelector
             draws={draws}
             selectedDrawId={effectiveDrawId}

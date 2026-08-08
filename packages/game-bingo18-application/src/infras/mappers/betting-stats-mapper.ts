@@ -83,10 +83,7 @@ function normalizeBucket(raw: unknown): Bingo18BucketStat {
 }
 
 /** Record đủ `keys`, merge bucket có sẵn trong doc lên nền zero — FE luôn render đủ grid. */
-function fillBucketRecord(
-  raw: unknown,
-  keys: readonly string[],
-): Record<string, Bingo18BucketStat> {
+function fillBucketRecord(raw: unknown, keys: readonly string[]): Record<string, Bingo18BucketStat> {
   const r = (raw ?? {}) as Record<string, unknown>;
   const out: Record<string, Bingo18BucketStat> = {};
   for (const key of keys) {

@@ -35,9 +35,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOu
 
     // getUnfinishedDraws trả về DESC (drawId:-1); re-sort ASC để currentDraw (mapped[0]) là kỳ
     // sớm nhất chưa đóng — không phải kỳ tương lai xa nhất khi có nhiều kỳ mở đồng thời.
-    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map((d) =>
-      mapDrawInfo(d, jackpotCurrentAmount),
-    );
+    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map((d) => mapDrawInfo(d, jackpotCurrentAmount));
 
     return {
       currentDraw: mapped[0] ?? null,

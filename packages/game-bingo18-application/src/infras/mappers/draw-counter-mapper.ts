@@ -2,10 +2,7 @@ import { MongoMapper } from "@megawin/data/mongo";
 import type { DrawCounterDoc, DrawCounterEntity } from "@megawin/game-bingo18/entities";
 import { Document } from "mongodb";
 
-export class DrawCounterMapper extends MongoMapper<
-  Document,
-  DrawCounterEntity
-> {
+export class DrawCounterMapper extends MongoMapper<Document, DrawCounterEntity> {
   constructor() {
     super();
   }

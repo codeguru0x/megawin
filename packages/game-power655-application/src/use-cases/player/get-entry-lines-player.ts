@@ -15,20 +15,13 @@ import { EntryStatus } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
-import type {
-  PlayerGetEntryLinesInput,
-  PlayerGetEntryLinesOutput,
-  PlayerLineInfo,
-} from "./dto/player.dto";
+import type { PlayerGetEntryLinesInput, PlayerGetEntryLinesOutput, PlayerLineInfo } from "./dto/player.dto";
 
 /**
  * Lấy lines + match result cho 1 entry Power 6/55.
  * Lines chỉ có sau settle. matchResult chứa bonusMatched.
  */
-export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
-  PlayerGetEntryLinesInput,
-  PlayerGetEntryLinesOutput
-> {
+export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<PlayerGetEntryLinesInput, PlayerGetEntryLinesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 

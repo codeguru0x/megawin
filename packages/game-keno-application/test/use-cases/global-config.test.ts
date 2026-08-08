@@ -23,9 +23,7 @@ describe("GameConfigRepository – Keno Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.rates).toBeDefined();
-    expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_KENO_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.rates.defaultCommissionRate).toBe(DEFAULT_KENO_CONFIG.rates.defaultCommissionRate);
   });
 
   it("global config có đầy đủ basic prizes (pick1-pick10)", async () => {
@@ -69,19 +67,11 @@ describe("GameConfigRepository – Keno Global Config", () => {
 
     expect(config!.payoutCaps).toBeDefined();
     expect(config!.payoutCaps.pick8MaxPerDraw).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick8MaxPerDraw);
-    expect(config!.payoutCaps.pick8MaxSetsForFixed).toBe(
-      DEFAULT_KENO_CONFIG.payoutCaps.pick8MaxSetsForFixed,
-    );
+    expect(config!.payoutCaps.pick8MaxSetsForFixed).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick8MaxSetsForFixed);
     expect(config!.payoutCaps.pick9MaxPerDraw).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick9MaxPerDraw);
-    expect(config!.payoutCaps.pick9MaxSetsForFixed).toBe(
-      DEFAULT_KENO_CONFIG.payoutCaps.pick9MaxSetsForFixed,
-    );
-    expect(config!.payoutCaps.pick10MaxPerDraw).toBe(
-      DEFAULT_KENO_CONFIG.payoutCaps.pick10MaxPerDraw,
-    );
-    expect(config!.payoutCaps.pick10MaxSetsForFixed).toBe(
-      DEFAULT_KENO_CONFIG.payoutCaps.pick10MaxSetsForFixed,
-    );
+    expect(config!.payoutCaps.pick9MaxSetsForFixed).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick9MaxSetsForFixed);
+    expect(config!.payoutCaps.pick10MaxPerDraw).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick10MaxPerDraw);
+    expect(config!.payoutCaps.pick10MaxSetsForFixed).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick10MaxSetsForFixed);
   });
 
   it("global config có đầy đủ play rules", async () => {
@@ -89,13 +79,9 @@ describe("GameConfigRepository – Keno Global Config", () => {
 
     expect(config!.play).toBeDefined();
     expect(config!.play.unitPrice).toBe(DEFAULT_KENO_CONFIG.play.unitPrice);
-    expect(config!.play.maxBasicBoardsPerTicket).toBe(
-      DEFAULT_KENO_CONFIG.play.maxBasicBoardsPerTicket,
-    );
+    expect(config!.play.maxBasicBoardsPerTicket).toBe(DEFAULT_KENO_CONFIG.play.maxBasicBoardsPerTicket);
     expect(config!.play.maxDrawCount).toBe(DEFAULT_KENO_CONFIG.play.maxDrawCount);
-    expect(config!.play.salesCloseBeforeSeconds).toBe(
-      DEFAULT_KENO_CONFIG.play.salesCloseBeforeSeconds,
-    );
+    expect(config!.play.salesCloseBeforeSeconds).toBe(DEFAULT_KENO_CONFIG.play.salesCloseBeforeSeconds);
     expect(config!.play.drawIntervalMinutes).toBe(DEFAULT_KENO_CONFIG.play.drawIntervalMinutes);
     expect(config!.play.firstDrawTime).toBe(DEFAULT_KENO_CONFIG.play.firstDrawTime);
     expect(config!.play.lastDrawTime).toBe(DEFAULT_KENO_CONFIG.play.lastDrawTime);
@@ -165,8 +151,6 @@ describe("GameConfigRepository – Keno Global Config", () => {
     expect(updated).not.toBeNull();
     expect(updated!.payoutCaps.pick10MaxPerDraw).toBe(15_000_000_000);
     expect(updated!.payoutCaps.pick10MaxSetsForFixed).toBe(7);
-    expect(updated!.payoutCaps.pick8MaxPerDraw).toBe(
-      DEFAULT_KENO_CONFIG.payoutCaps.pick8MaxPerDraw,
-    );
+    expect(updated!.payoutCaps.pick8MaxPerDraw).toBe(DEFAULT_KENO_CONFIG.payoutCaps.pick8MaxPerDraw);
   });
 });

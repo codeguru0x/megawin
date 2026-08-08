@@ -19,10 +19,7 @@
  */
 
 import { KenoCollections } from "@megawin/game-keno/entities";
-import type {
-  KenoDrawComboAccountDoc,
-  KenoDrawComboAccountEntity,
-} from "@megawin/game-keno/entities";
+import type { KenoDrawComboAccountDoc, KenoDrawComboAccountEntity } from "@megawin/game-keno/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -31,10 +28,7 @@ import type { ComboStatsDelta } from "./types";
 
 const f = docPath<KenoDrawComboAccountDoc>();
 
-export class ComboAccountsRepository extends BaseRepo<
-  KenoDrawComboAccountEntity,
-  ComboAccountMapper
-> {
+export class ComboAccountsRepository extends BaseRepo<KenoDrawComboAccountEntity, ComboAccountMapper> {
   constructor() {
     super({
       collName: KenoCollections.ComboAccounts,
@@ -52,11 +46,7 @@ export class ComboAccountsRepository extends BaseRepo<
    * @param comboKey - Khoá combo.
    * @param limit - Trần số account trả về.
    */
-  async listByCombo(
-    drawId: string,
-    comboKey: string,
-    limit: number,
-  ): Promise<KenoDrawComboAccountEntity[]> {
+  async listByCombo(drawId: string, comboKey: string, limit: number): Promise<KenoDrawComboAccountEntity[]> {
     return await this.findMany({ drawId, comboKey }, { sort: { amount: -1 }, limit });
   }
 

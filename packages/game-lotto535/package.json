@@ -64,12 +64,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "lotto535",
-    "game",
-    "domain"
-  ],
+  "keywords": ["megawin", "lotto535", "game", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

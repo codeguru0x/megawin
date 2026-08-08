@@ -12,10 +12,7 @@ import type { GetPlayerOutstandingInput, GetPlayerOutstandingOutput } from "./ty
  * Filter: { accountId, status: "scheduled" }.
  * Index cần: { accountId: 1, status: 1 } trên mỗi {game}_ticket_entries.
  */
-export class GetPlayerOutstandingUseCase extends NextApiUseCase<
-  GetPlayerOutstandingInput,
-  GetPlayerOutstandingOutput
-> {
+export class GetPlayerOutstandingUseCase extends NextApiUseCase<GetPlayerOutstandingInput, GetPlayerOutstandingOutput> {
   private readonly repo = new PlayerOutstandingRepository();
 
   protected async execute(input: GetPlayerOutstandingInput): Promise<GetPlayerOutstandingOutput> {

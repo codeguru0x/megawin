@@ -15,12 +15,7 @@ import {
   appErrorToStatusCode,
 } from "@megawin/shared/errors";
 
-import type {
-  ApiErrorDetail,
-  ApiErrorResponse,
-  ApiResponseMeta,
-  ApiSuccessResponse,
-} from "../types";
+import type { ApiErrorDetail, ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "../types";
 import { logError } from "@megawin/shared/utils";
 
 // ============ Success ============
@@ -160,10 +155,7 @@ function formatZodIssues(error: import("zod").ZodError): Array<{ field: string; 
   }));
 }
 
-export function validationError(
-  message: string,
-  details?: unknown,
-): NextResponse<ApiErrorResponse> {
+export function validationError(message: string, details?: unknown): NextResponse<ApiErrorResponse> {
   let formattedDetails = details;
   // Nếu details là ZodError → format thành mảng { field, message } có full path
   if (details && typeof details === "object" && "issues" in details) {

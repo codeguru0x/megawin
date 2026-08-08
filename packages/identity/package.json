@@ -19,11 +19,7 @@
       "default": "./dist/entities/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "identity",
-    "domain"
-  ],
+  "keywords": ["megawin", "identity", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

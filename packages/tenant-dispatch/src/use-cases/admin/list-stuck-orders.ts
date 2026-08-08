@@ -21,10 +21,7 @@ export interface ListStuckOrdersOutput {
  * Dùng cho trang "Stuck orders" để staff check khi tenant fail kéo dài hoặc nhiều
  * giờ không xử lý xong. Không đổi state order — chỉ read-only.
  */
-export class ListStuckOrdersUseCase extends NextApiUseCase<
-  ListStuckOrdersInput,
-  ListStuckOrdersOutput
-> {
+export class ListStuckOrdersUseCase extends NextApiUseCase<ListStuckOrdersInput, ListStuckOrdersOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: ListStuckOrdersInput): Promise<ListStuckOrdersOutput> {

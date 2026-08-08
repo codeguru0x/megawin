@@ -36,10 +36,7 @@ function TenantRichCard({ tenant, rank }: { tenant: TenantRow; rank: number }) {
         </span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full bg-amber-500/60 transition-all"
-          style={{ width: `${tenant.pct}%` }}
-        />
+        <div className="h-full rounded-full bg-amber-500/60 transition-all" style={{ width: `${tenant.pct}%` }} />
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <div className="rounded-md bg-muted/40 px-1 py-1.5">
@@ -91,12 +88,8 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
                 <span className="text-right text-[11px] tabular-nums text-muted-foreground">
                   {formatNumber(t.entries)}
                 </span>
-                <span className="text-right text-xs font-semibold tabular-nums">
-                  {formatNumber(t.revenue)}
-                </span>
-                <span className="text-right text-[11px] tabular-nums text-muted-foreground">
-                  {t.pct.toFixed(0)}%
-                </span>
+                <span className="text-right text-xs font-semibold tabular-nums">{formatNumber(t.revenue)}</span>
+                <span className="text-right text-[11px] tabular-nums text-muted-foreground">{t.pct.toFixed(0)}%</span>
               </div>
             ))}
           </div>

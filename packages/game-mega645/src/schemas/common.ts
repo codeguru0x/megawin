@@ -17,9 +17,7 @@ export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;
  * Số hợp lệ: "01"-"45" (string 2 ký tự, zero-padded).
  * Regex bắt: 01-09, 10-39, 40-45.
  */
-export const mega645NumberSchema = z
-  .string()
-  .regex(/^(0[1-9]|[1-3][0-9]|4[0-5])$/, "Số phải từ '01' đến '45'");
+export const mega645NumberSchema = z.string().regex(/^(0[1-9]|[1-3][0-9]|4[0-5])$/, "Số phải từ '01' đến '45'");
 
 /**
  * Schema validate Draw ID Mega 6/45.
@@ -55,10 +53,7 @@ export const publishResultSchema = z.object({
         ),
     )
     .length(MEGA645_NUMBER_COUNT, `Cần đúng ${MEGA645_NUMBER_COUNT} số chính`)
-    .refine(
-      (nums) => new Set(nums.map(Number)).size === MEGA645_NUMBER_COUNT,
-      "Các số phải khác nhau",
-    ),
+    .refine((nums) => new Set(nums.map(Number)).size === MEGA645_NUMBER_COUNT, "Các số phải khác nhau"),
 });
 
 /** Inferred type từ publishResultSchema. */

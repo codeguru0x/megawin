@@ -150,9 +150,6 @@ export function companyAuth(options?: CompanyAuthOptions) {
 // ============ Generic auth ============
 
 /** @deprecated Ưu tiên dùng playerAuth(), agentAuth(), companyAuth() */
-export function authorizationMiddleware(
-  requirements: AuthRequirements,
-  adapterOptions?: AuthContextAdapterOptions,
-) {
+export function authorizationMiddleware(requirements: AuthRequirements, adapterOptions?: AuthContextAdapterOptions) {
   return buildAuthMiddleware(requirements, undefined, adapterOptions);
 }

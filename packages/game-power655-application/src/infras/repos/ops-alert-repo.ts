@@ -101,10 +101,7 @@ export class OpsAlertRepository extends BaseRepo<Power655OpsAlertEntity, OpsAler
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByFilter(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<Power655OpsAlertEntity[]> {
+  async listByFilter(drawId: string, status?: OpsAlertStatusType): Promise<Power655OpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) {
       filter.status = status;

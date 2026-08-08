@@ -86,8 +86,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description =
-    "Keno — đồng bộ thống kê cược theo delta (tick ~20s, mọi kỳ đang mở)";
+  protected readonly description = "Keno — đồng bộ thống kê cược theo delta (tick ~20s, mọi kỳ đang mở)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -148,12 +147,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
       // 1 kỳ lỗi (data bẩn, doc quá cỡ…) KHÔNG được làm chết cả tick — các kỳ còn lại,
       // nhất là kỳ đang mở bán, vẫn phải được cập nhật (p2-01 R10).
       try {
-        const applied = await this.syncDraw(
-          drawCursor.drawId,
-          drawCursor.lastEntryId,
-          this.prize,
-          this.statsConfig,
-        );
+        const applied = await this.syncDraw(drawCursor.drawId, drawCursor.lastEntryId, this.prize, this.statsConfig);
         this.counters.entriesApplied += applied.entriesApplied;
         this.clearStalledItem(drawCursor.drawId); // kỳ qua được → xoá streak (thay consecutiveFails.delete)
 
@@ -287,10 +281,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
 
   /** Gom prize config từ GlobalConfig để tính worst-case exposure. */
   private buildPrizeContext(
-    config: Pick<
-      GlobalConfigEntity,
-      "play" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "ops"
-    >,
+    config: Pick<GlobalConfigEntity, "play" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "ops">,
   ): PrizeContext {
     return {
       unitPrice: config.play.unitPrice,

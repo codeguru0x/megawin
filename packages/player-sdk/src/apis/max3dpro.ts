@@ -123,9 +123,7 @@ export interface Max3dproApi {
    * }
    * ```
    */
-  listPendingTickets(
-    params?: Max3dproListPendingTicketsParams,
-  ): Promise<Max3dproListTicketsResponse>;
+  listPendingTickets(params?: Max3dproListPendingTicketsParams): Promise<Max3dproListTicketsResponse>;
 
   /**
    * Lấy lịch sử vé Max 3D Pro đã kết thúc.
@@ -194,10 +192,7 @@ export interface Max3dproApi {
    * }
    * ```
    */
-  getEntryLines(
-    entryId: string,
-    params?: Max3dproEntryLinesParams,
-  ): Promise<Max3dproEntryLinesResponse>;
+  getEntryLines(entryId: string, params?: Max3dproEntryLinesParams): Promise<Max3dproEntryLinesResponse>;
 
   /**
    * Lấy danh sách kết quả kỳ quay Max 3D Pro đã công bố.

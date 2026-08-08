@@ -20,10 +20,7 @@ const DEFAULT_LOCK_TTL_MS = 3 * 60 * 1000;
  *   acquireLock → loop batches → saveAndExtendLock (mỗi batch) → releaseLock
  *   Nếu crash → lock auto-expire sau TTL (3 phút) → Lambda tiếp theo acquire lại.
  */
-export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<
-  FeedSyncCursorEntity,
-  FeedSyncCursorMapper
-> {
+export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<FeedSyncCursorEntity, FeedSyncCursorMapper> {
   constructor() {
     super({
       collName: GameCoreCollections.FeedSyncCursor,
@@ -40,10 +37,7 @@ export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<
    *
    * Trả acquired=false nếu ai đó đang giữ lock chưa hết hạn.
    */
-  async acquireLock(
-    gameProduct: GameProduct,
-    lockTtlMs: number = DEFAULT_LOCK_TTL_MS,
-  ): Promise<AcquireLockResult> {
+  async acquireLock(gameProduct: GameProduct, lockTtlMs: number = DEFAULT_LOCK_TTL_MS): Promise<AcquireLockResult> {
     const now = new Date();
     const lockedUntil = new Date(now.getTime() + lockTtlMs);
 

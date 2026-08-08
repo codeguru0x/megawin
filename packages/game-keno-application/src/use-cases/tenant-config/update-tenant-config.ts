@@ -16,10 +16,7 @@ import type { UpdateTenantConfigInput, UpdateTenantConfigOutput } from "./dto/te
  * - commissionRate lấy từ global config defaultCommissionRate
  * - isEnabled = true
  */
-export class UpdateTenantConfigUseCase extends NextApiUseCase<
-  UpdateTenantConfigInput,
-  UpdateTenantConfigOutput
-> {
+export class UpdateTenantConfigUseCase extends NextApiUseCase<UpdateTenantConfigInput, UpdateTenantConfigOutput> {
   private readonly repo = new TenantConfigRepository();
   private readonly globalRepo = new GameConfigRepository();
 
@@ -31,8 +28,7 @@ export class UpdateTenantConfigUseCase extends NextApiUseCase<
 
     if (isCreating) {
       const globalConfig = await this.globalRepo.getGlobalConfig();
-      fields.commissionRate =
-        input.commissionRate ?? globalConfig?.rates.defaultCommissionRate ?? 0.2;
+      fields.commissionRate = input.commissionRate ?? globalConfig?.rates.defaultCommissionRate ?? 0.2;
       fields.isEnabled = input.isEnabled ?? true;
     } else {
       if (input.commissionRate !== undefined) fields.commissionRate = input.commissionRate;

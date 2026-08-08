@@ -14,9 +14,7 @@ import { GameProduct } from "../../src/entities";
 
 describe("buildResettleLockKey", () => {
   it("Đúng logic — format {game}:resettle:{drawId}", () => {
-    expect(buildResettleLockKey(GameProduct.Bingo18, "2026-03-07.001")).toBe(
-      "bingo18:resettle:2026-03-07.001",
-    );
+    expect(buildResettleLockKey(GameProduct.Bingo18, "2026-03-07.001")).toBe("bingo18:resettle:2026-03-07.001");
   });
 
   it("Đúng logic — cùng game + drawId → luôn sinh ra CÙNG key (acquire/release phải khớp)", () => {
@@ -40,41 +38,19 @@ describe("buildResettleBatchKey", () => {
       "01919b8f-abcd-7000-8000-000000000000",
       "reversal",
     );
-    expect(key).toBe(
-      "keno:resettle:2026-03-07.045:01919b8f-abcd-7000-8000-000000000000:reversal",
-    );
+    expect(key).toBe("keno:resettle:2026-03-07.045:01919b8f-abcd-7000-8000-000000000000:reversal");
   });
 
   it("Đúng logic — kind khác nhau (reversal vs payout) → batchKey khác nhau, tránh trộn batch", () => {
     const resettleId = "01919b8f-abcd-7000-8000-000000000000";
-    const reversalKey = buildResettleBatchKey(
-      GameProduct.Mega645,
-      "2026-03-07.001",
-      resettleId,
-      "reversal",
-    );
-    const payoutKey = buildResettleBatchKey(
-      GameProduct.Mega645,
-      "2026-03-07.001",
-      resettleId,
-      "payout",
-    );
+    const reversalKey = buildResettleBatchKey(GameProduct.Mega645, "2026-03-07.001", resettleId, "reversal");
+    const payoutKey = buildResettleBatchKey(GameProduct.Mega645, "2026-03-07.001", resettleId, "payout");
     expect(reversalKey).not.toBe(payoutKey);
   });
 
   it("Logic ngược — resettleId khác nhau (2 phiên resettle cùng drawId) → batchKey khác nhau", () => {
-    const keyA = buildResettleBatchKey(
-      GameProduct.Power655,
-      "2026-03-07.001",
-      "resettle-session-1",
-      "payout",
-    );
-    const keyB = buildResettleBatchKey(
-      GameProduct.Power655,
-      "2026-03-07.001",
-      "resettle-session-2",
-      "payout",
-    );
+    const keyA = buildResettleBatchKey(GameProduct.Power655, "2026-03-07.001", "resettle-session-1", "payout");
+    const keyB = buildResettleBatchKey(GameProduct.Power655, "2026-03-07.001", "resettle-session-2", "payout");
     expect(keyA).not.toBe(keyB);
   });
 });

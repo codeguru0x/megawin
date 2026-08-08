@@ -50,10 +50,7 @@ import type {
   Power655TopCombo,
 } from "./dto/ops.dto";
 
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -103,14 +100,16 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
       drawStatus: draw?.status ?? null,
       stats,
       numberStats,
-      topCombos: topCombos.map((c): Power655TopCombo => ({
-        comboKey: c.comboKey,
-        playType: c.playType,
-        mainNumbers: c.mainNumbers,
-        sets: c.sets,
-        accounts: c.accountCount,
-        amount: c.amount,
-      })),
+      topCombos: topCombos.map(
+        (c): Power655TopCombo => ({
+          comboKey: c.comboKey,
+          playType: c.playType,
+          mainNumbers: c.mainNumbers,
+          sets: c.sets,
+          accounts: c.accountCount,
+          amount: c.amount,
+        }),
+      ),
       topAccounts: topAccounts.map((a) => ({
         accountId: a.accountId,
         username: a.username,

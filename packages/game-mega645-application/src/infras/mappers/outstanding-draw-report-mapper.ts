@@ -8,10 +8,7 @@ import type { Document } from "mongodb";
  * Chuyển đổi `_id` (ObjectId) → `id` (hex string).
  * Tất cả field khác giữ nguyên kiểu — Date vẫn là Date.
  */
-export class OutstandingDrawReportMapper extends MongoMapper<
-  Document,
-  OutstandingDrawReportEntity
-> {
+export class OutstandingDrawReportMapper extends MongoMapper<Document, OutstandingDrawReportEntity> {
   protected mapProps(doc: Document): OutstandingDrawReportEntity {
     const { _id, ...rest } = doc as any;
 

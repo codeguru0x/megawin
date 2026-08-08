@@ -23,10 +23,7 @@ export interface SetAccountPasswordOutput {
   username: string;
 }
 
-export class SetAccountPasswordUseCase extends NextApiUseCase<
-  SetAccountPasswordInput,
-  SetAccountPasswordOutput
-> {
+export class SetAccountPasswordUseCase extends NextApiUseCase<SetAccountPasswordInput, SetAccountPasswordOutput> {
   private readonly accountRepo = new AccountRepository();
 
   protected async execute(input: SetAccountPasswordInput): Promise<SetAccountPasswordOutput> {
@@ -57,10 +54,7 @@ export class SetAccountPasswordUseCase extends NextApiUseCase<
    *
    * @throws notFound nếu target không tồn tại; forbidden nếu Staff đụng Admin.
    */
-  private async assertCallerCanSetPassword(
-    callerRoles: CompanyRole[],
-    targetUsername: string,
-  ): Promise<void> {
+  private async assertCallerCanSetPassword(callerRoles: CompanyRole[], targetUsername: string): Promise<void> {
     if (callerRoles.includes(CompanyRole.Admin)) {
       return;
     }

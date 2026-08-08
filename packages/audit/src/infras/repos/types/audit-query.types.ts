@@ -7,13 +7,7 @@
 
 import type { CursorPage } from "@megawin/data/mongo";
 
-import type {
-  AuditAction,
-  AuditActorType,
-  AuditCategory,
-  AuditStatus,
-  AuditTargetType,
-} from "../../../entities";
+import type { AuditAction, AuditActorType, AuditCategory, AuditStatus, AuditTargetType } from "../../../entities";
 
 /**
  * Filter list audit log — mọi field optional, combine theo `$and`.

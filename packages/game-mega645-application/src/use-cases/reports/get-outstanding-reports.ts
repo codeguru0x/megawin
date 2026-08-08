@@ -3,10 +3,7 @@ import { OutstandingReportRepository } from "../../infras/repos/outstanding-repo
 import type { GetOutstandingReportsOutput } from "./types";
 
 /** Tất cả outstanding draws hiện đang active cho Mega 6/45. */
-export class GetOutstandingReportsUseCase extends NextApiUseCase<
-  void,
-  GetOutstandingReportsOutput
-> {
+export class GetOutstandingReportsUseCase extends NextApiUseCase<void, GetOutstandingReportsOutput> {
   private readonly repo = new OutstandingReportRepository();
   protected async execute(): Promise<GetOutstandingReportsOutput> {
     return { data: await this.repo.findAll() };

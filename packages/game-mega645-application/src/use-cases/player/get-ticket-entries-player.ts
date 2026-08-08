@@ -9,11 +9,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
-import type {
-  PlayerGetTicketEntriesInput,
-  PlayerGetTicketEntriesOutput,
-  PlayerEntryInfo,
-} from "./dto/player.dto";
+import type { PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput, PlayerEntryInfo } from "./dto/player.dto";
 
 export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   PlayerGetTicketEntriesInput,
@@ -22,9 +18,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(
-    input: PlayerGetTicketEntriesInput,
-  ): Promise<PlayerGetTicketEntriesOutput> {
+  protected async execute(input: PlayerGetTicketEntriesInput): Promise<PlayerGetTicketEntriesOutput> {
     const { tenantId, accountId, ticketId } = input;
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);

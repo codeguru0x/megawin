@@ -27,13 +27,9 @@ export const lotto535MainNumberSchema = z
   .string()
   .regex(/^(0[1-9]|[12][0-9]|3[0-5])$/, "Số chính phải từ '01' đến '35'");
 
-export const lotto535SpecialNumberSchema = z
-  .string()
-  .regex(/^(0[1-9]|1[0-2])$/, "Số đặc biệt phải từ '01' đến '12'");
+export const lotto535SpecialNumberSchema = z.string().regex(/^(0[1-9]|1[0-2])$/, "Số đặc biệt phải từ '01' đến '12'");
 
-export const lotto535DrawIdSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
+export const lotto535DrawIdSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
 
 // ─── Publish Result ────────────────────────────────────────────────────────────
 
@@ -61,10 +57,7 @@ export const publishResultSchema = z.object({
         ),
     )
     .length(LOTTO535_MAIN_COUNT, `Cần đúng ${LOTTO535_MAIN_COUNT} số chính`)
-    .refine(
-      (nums) => new Set(nums.map(Number)).size === LOTTO535_MAIN_COUNT,
-      "Các số chính phải khác nhau",
-    ),
+    .refine((nums) => new Set(nums.map(Number)).size === LOTTO535_MAIN_COUNT, "Các số chính phải khác nhau"),
   winningSpecial: z
     .string()
     .min(1, "Chưa nhập số đặc biệt")

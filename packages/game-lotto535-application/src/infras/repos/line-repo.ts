@@ -95,10 +95,7 @@ export class LineRepository extends BaseRepo<any> {
    * Chỉ lấy entryId, betCount để build map betUnits per entry per tier.
    * Được gọi bởi ApplySplitBonuses (step 4b).
    */
-  async getWinningLinesForTier(
-    drawId: string,
-    tier: string,
-  ): Promise<Array<{ entryId: unknown; betCount: number }>> {
+  async getWinningLinesForTier(drawId: string, tier: string): Promise<Array<{ entryId: unknown; betCount: number }>> {
     return this.findManyAsDocuments(
       {
         drawId,
@@ -114,9 +111,7 @@ export class LineRepository extends BaseRepo<any> {
    * Chỉ lấy _id, entryId, betCount để tính tổng bet units.
    * Được gọi bởi PatchJackpotPrize (step 4a).
    */
-  async getJackpotLinesForDraw(
-    drawId: string,
-  ): Promise<Array<{ _id: unknown; entryId: unknown; betCount: number }>> {
+  async getJackpotLinesForDraw(drawId: string): Promise<Array<{ _id: unknown; entryId: unknown; betCount: number }>> {
     return this.findManyAsDocuments(
       {
         drawId,

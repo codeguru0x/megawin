@@ -12,10 +12,7 @@
 import { z } from "zod";
 import { withPlayerAuth } from "@megawin/auth";
 import { GetComboPopularityPlayerUseCase } from "@megawin/game-lotto535-application/use-cases/player";
-import {
-  lotto535MainNumberSchema,
-  lotto535SpecialNumberSchema,
-} from "@megawin/game-lotto535/schemas";
+import { lotto535MainNumberSchema, lotto535SpecialNumberSchema } from "@megawin/game-lotto535/schemas";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
 
 const pathSchema = z.object({

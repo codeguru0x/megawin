@@ -29,10 +29,7 @@ export interface PublishSettleDailyInput {
  * Bọc CorePublishSettleDailyUseCase, tự inject per-game repos.
  * Handler chỉ cần gọi use case, không khởi tạo repo trực tiếp.
  */
-export class PublishSettleDailyUseCase extends InternalUseCase<
-  PublishSettleDailyInput,
-  PublishSettleDailyResult
-> {
+export class PublishSettleDailyUseCase extends InternalUseCase<PublishSettleDailyInput, PublishSettleDailyResult> {
   private readonly gameDailyRepo = new SystemSettleGameDailyRepo();
   private readonly tenantDailyRepo = new SystemSettleTenantDailyRepo();
   private readonly coreUseCase = new CorePublishSettleDailyUseCase();

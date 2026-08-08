@@ -68,10 +68,7 @@ export interface PatchJackpotPrizeResult {
   winners: JackpotWinnerInfo[];
 }
 
-export class PatchJackpotPrizeUseCase extends InternalUseCase<
-  SettleContext,
-  PatchJackpotPrizeResult
-> {
+export class PatchJackpotPrizeUseCase extends InternalUseCase<SettleContext, PatchJackpotPrizeResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
   private readonly drawRepo = new DrawRepository();

@@ -23,15 +23,7 @@ export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJa
       throw AppException.notFound("Không tìm thấy jackpot hiện tại.");
     }
 
-    const {
-      cycleNo,
-      currentAmount,
-      seedAmount,
-      peakAmount,
-      totalContribution,
-      drawCount,
-      startDrawId,
-    } = activeCycle;
+    const { cycleNo, currentAmount, seedAmount, peakAmount, totalContribution, drawCount, startDrawId } = activeCycle;
     const splitThreshold = activeCycle.config.splitThreshold;
     const percentage = Math.min(Math.round((currentAmount / splitThreshold) * 10000) / 100, 100);
 

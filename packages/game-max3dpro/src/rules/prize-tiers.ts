@@ -84,10 +84,7 @@ export function flattenDrawResult(result: Max3dproDrawResult): FlattenedDrawResu
  * Duyệt theo thứ tự ưu tiên ĐB > Nhất > Nhì > Ba, trả ngay khi khớp.
  * Nếu triplet không khớp bất kỳ hạng nào → null.
  */
-export function findTierInResult(
-  triplet: Triplet,
-  byTier: Map<BasicTier, Triplet[]>,
-): BasicTier | null {
+export function findTierInResult(triplet: Triplet, byTier: Map<BasicTier, Triplet[]>): BasicTier | null {
   for (const tier of BASIC_TIER_PRIORITY) {
     if (byTier.get(tier)!.includes(triplet)) {
       return tier;

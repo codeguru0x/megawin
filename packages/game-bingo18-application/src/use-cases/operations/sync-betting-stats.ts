@@ -40,11 +40,7 @@ import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
 import { logError } from "@megawin/shared/utils";
 import { DRAW_COMPLETED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
-import type {
-  GlobalConfigEntity,
-  OpsConfig,
-  OpsStatsConfigBase,
-} from "@megawin/game-bingo18/entities";
+import type { GlobalConfigEntity, OpsConfig, OpsStatsConfigBase } from "@megawin/game-bingo18/entities";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -151,12 +147,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
       // 1 kỳ lỗi (data bẩn, doc quá cỡ…) KHÔNG được làm chết cả tick — các kỳ còn lại,
       // nhất là kỳ đang mở bán, vẫn phải được cập nhật (F4-d).
       try {
-        const applied = await this.syncDraw(
-          drawCursor.drawId,
-          drawCursor.lastEntryId,
-          this.prize,
-          this.statsConfig,
-        );
+        const applied = await this.syncDraw(drawCursor.drawId, drawCursor.lastEntryId, this.prize, this.statsConfig);
 
         this.counters.entriesApplied += applied.entriesApplied;
         this.clearStalledItem(drawCursor.drawId); // kỳ qua được → xoá streak
@@ -280,12 +271,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   private buildPrizeContext(
     config: Pick<
       GlobalConfigEntity,
-      | "play"
-      | "singleNumPrizes"
-      | "doubleMatchPrizes"
-      | "tripleMatchPrizes"
-      | "sumTotalPrizes"
-      | "bigSmallDrawPrizes"
+      "play" | "singleNumPrizes" | "doubleMatchPrizes" | "tripleMatchPrizes" | "sumTotalPrizes" | "bigSmallDrawPrizes"
     >,
     ops: OpsConfig,
   ): PrizeContext {

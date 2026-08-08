@@ -21,10 +21,7 @@
  */
 
 import { Mega645Collections } from "@megawin/game-mega645/entities";
-import type {
-  Mega645DrawAccountStatsDoc,
-  Mega645DrawAccountStatsEntity,
-} from "@megawin/game-mega645/entities";
+import type { Mega645DrawAccountStatsDoc, Mega645DrawAccountStatsEntity } from "@megawin/game-mega645/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -33,10 +30,7 @@ import type { AccountStatsDelta } from "./types";
 
 const f = docPath<Mega645DrawAccountStatsDoc>();
 
-export class AccountStatsRepository extends BaseRepo<
-  Mega645DrawAccountStatsEntity,
-  AccountStatsMapper
-> {
+export class AccountStatsRepository extends BaseRepo<Mega645DrawAccountStatsEntity, AccountStatsMapper> {
   constructor() {
     super({
       collName: Mega645Collections.DrawAccountStats,
@@ -66,10 +60,7 @@ export class AccountStatsRepository extends BaseRepo<
   }
 
   /** Tích luỹ cược của 1 account trong kỳ — drill-down outstanding từ alert. */
-  async getByAccount(
-    drawId: string,
-    accountId: string,
-  ): Promise<Mega645DrawAccountStatsEntity | null> {
+  async getByAccount(drawId: string, accountId: string): Promise<Mega645DrawAccountStatsEntity | null> {
     return await this.findOne({ drawId, accountId });
   }
 

@@ -132,8 +132,7 @@ const ENQUEUE_RETRY = [
 ];
 
 export const RESETTLE_STATE_MACHINE = {
-  Comment:
-    "Lotto 5/35 Resettle Step Function – Kết sổ lại kỳ quay (crash-safe, single JP + Split Cycle)",
+  Comment: "Lotto 5/35 Resettle Step Function – Kết sổ lại kỳ quay (crash-safe, single JP + Split Cycle)",
   QueryLanguage: "JSONata",
   StartAt: "PrepareResettle",
   States: {

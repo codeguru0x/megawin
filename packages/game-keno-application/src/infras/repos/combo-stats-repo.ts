@@ -84,15 +84,8 @@ export class ComboStatsRepository extends BaseRepo<KenoDrawComboStatsEntity, Com
    * @param minPlayers - Ngưỡng số người dồn cược.
    * @param limit - Trần số alert combo xử lý 1 tick (evaluator chỉ cần các combo nóng nhất).
    */
-  async findConcentrated(
-    drawId: string,
-    minPlayers: number,
-    limit: number,
-  ): Promise<KenoDrawComboStatsEntity[]> {
-    return await this.findMany(
-      { drawId, accountCount: { $gte: minPlayers } },
-      { sort: { accountCount: -1 }, limit },
-    );
+  async findConcentrated(drawId: string, minPlayers: number, limit: number): Promise<KenoDrawComboStatsEntity[]> {
+    return await this.findMany({ drawId, accountCount: { $gte: minPlayers } }, { sort: { accountCount: -1 }, limit });
   }
 
   /**

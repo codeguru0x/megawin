@@ -78,9 +78,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: DetectResettleBoundariesInput,
-  ): Promise<DetectResettleBoundariesOutput> {
+  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     const { drawId, proposedWinningMain, proposedWinningSpecial } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
@@ -89,9 +87,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     }
 
     if (!draw.settledAt) {
-      throw AppException.businessRuleViolation(
-        `Kỳ quay ${drawId} chưa từng settle — không cần resettle.`,
-      );
+      throw AppException.businessRuleViolation(`Kỳ quay ${drawId} chưa từng settle — không cần resettle.`);
     }
 
     const ledgerEntry = await this.cycleEntryRepo.findByDraw(drawId);
@@ -135,8 +131,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     const hadOldJpWinner = ledgerEntry.hasJpWinner;
     const hadOldSplit = ledgerEntry.didSplit;
 
-    const newWouldSplit =
-      draw.drawNo === DrawNo.Evening && ledgerEntry.opening >= splitThreshold && !hasNewJpWinner;
+    const newWouldSplit = draw.drawNo === DrawNo.Evening && ledgerEntry.opening >= splitThreshold && !hasNewJpWinner;
 
     const jpOrSplitAffected = hasNewJpWinner || hadOldJpWinner || newWouldSplit || hadOldSplit;
 
@@ -216,9 +211,7 @@ export class DetectResettleBoundariesUseCase extends NextApiUseCase<
 > {
   private readonly internal = new DetectResettleBoundariesInternalUseCase();
 
-  protected async execute(
-    input: DetectResettleBoundariesInput,
-  ): Promise<DetectResettleBoundariesOutput> {
+  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     return this.internal.run(input);
   }
 }

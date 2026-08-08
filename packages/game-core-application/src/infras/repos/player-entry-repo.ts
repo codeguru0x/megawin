@@ -99,8 +99,7 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
       const entrySummary = doc.entrySummary as Record<string, unknown> | undefined;
 
       // lineCount: dùng lineCount nếu có (games có lines), ngược lại dùng selectionCount (keno, bingo18)
-      const lineCount =
-        (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined) ?? 0;
+      const lineCount = (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined) ?? 0;
 
       // boardCount = số boards trong entrySummary
       const boards = entrySummary?.boards as unknown[] | undefined;
@@ -203,11 +202,7 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
           },
           totalCommission: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", "settled"] },
-                { $ifNull: ["$tenant.commissionAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", "settled"] }, { $ifNull: ["$tenant.commissionAmount", 0] }, 0],
             },
           },
         },

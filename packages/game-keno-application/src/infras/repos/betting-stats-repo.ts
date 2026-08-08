@@ -42,10 +42,7 @@ import type { DrawStatsCursor, DrawStatsDelta } from "./types";
 
 const f = docPath<KenoDrawBettingStatsDoc>();
 
-export class BettingStatsRepository extends BaseRepo<
-  KenoDrawBettingStatsEntity,
-  BettingStatsMapper
-> {
+export class BettingStatsRepository extends BaseRepo<KenoDrawBettingStatsEntity, BettingStatsMapper> {
   constructor() {
     super({
       collName: KenoCollections.BettingStats,
@@ -193,10 +190,7 @@ export class BettingStatsRepository extends BaseRepo<
 
     // IDEMPOTENT theo watermark: `ensureDocs` seed `lastEntryId = MIN_OBJECT_ID` nên `$lt`
     // luôn khớp lần áp đầu (mọi ObjectId thật > MIN), các batch kế `$lt` bỏ batch đã áp.
-    return await this.updateOne(
-      { drawId, [f("lastEntryId")]: { $lt: batchMaxId } },
-      update as UpdateFilter<Document>,
-    );
+    return await this.updateOne({ drawId, [f("lastEntryId")]: { $lt: batchMaxId } }, update as UpdateFilter<Document>);
   }
 
   /**
@@ -300,11 +294,7 @@ function incBy(inc: Record<string, number>, path: string, value: number): void {
 }
 
 /** `$inc` 2 field của 1 `KenoPlayTypeStat` tại `basePath`. */
-function incPlayTypeStat(
-  inc: Record<string, number>,
-  basePath: string,
-  stat: KenoPlayTypeStat,
-): void {
+function incPlayTypeStat(inc: Record<string, number>, basePath: string, stat: KenoPlayTypeStat): void {
   incBy(inc, `${basePath}.amount`, stat.amount);
   incBy(inc, `${basePath}.sets`, stat.sets);
 }

@@ -152,10 +152,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
    * → exposure = 0, KHÔNG crash.
    */
   private async evaluateDoc(stats: Max3dproDrawBettingStatsEntity): Promise<void> {
-    const pairEntities = await this.pairStatsRepo.getTopPairs(
-      stats.drawId,
-      this.alertCtx.stats.topCombosK,
-    );
+    const pairEntities = await this.pairStatsRepo.getTopPairs(stats.drawId, this.alertCtx.stats.topCombosK);
     const topPairs: Max3dproTopPair[] = pairEntities.map((p) => ({
       pairKey: p.pairKey,
       first: p.first,

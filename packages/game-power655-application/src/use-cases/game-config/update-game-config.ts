@@ -5,11 +5,7 @@ import type { Power655OpsConfig } from "@megawin/game-power655/entities";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
 import { globalConfigCache } from "../../caches/global-config.cache";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-  UpdateOpsInput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game Power 6/55 toàn cục (upsert).
@@ -24,10 +20,7 @@ import type {
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
  */
-export class UpdateGameConfigUseCase extends NextApiUseCase<
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput
-> {
+export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   /** @inheritdoc */
@@ -53,9 +46,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
             ...input.defaultPrizes,
           }
         : undefined,
-      play: input.play
-        ? { ...(existing?.play ?? DEFAULT_POWER655_CONFIG.play), ...input.play }
-        : undefined,
+      play: input.play ? { ...(existing?.play ?? DEFAULT_POWER655_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 
@@ -95,10 +86,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
    * phần còn lại từ existing (fallback default). `enabled` merge shallow để đổi 1
    * khoá alert type mà không phải gửi cả object.
    */
-  private mergeOps(
-    existing: Power655OpsConfig | undefined,
-    input: UpdateOpsInput,
-  ): Power655OpsConfig {
+  private mergeOps(existing: Power655OpsConfig | undefined, input: UpdateOpsInput): Power655OpsConfig {
     const base = existing ?? DEFAULT_POWER655_CONFIG.ops;
 
     const alerts = input.alerts

@@ -67,11 +67,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOu
   }
 }
 
-function mapDrawInfo(
-  draw: DrawEntity,
-  jackpotCurrentAmount: number,
-  splitThreshold: number,
-): CurrentDrawInfo {
+function mapDrawInfo(draw: DrawEntity, jackpotCurrentAmount: number, splitThreshold: number): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,

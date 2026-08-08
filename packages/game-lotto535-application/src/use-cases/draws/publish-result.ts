@@ -15,11 +15,7 @@ import { auditPublishResult, auditRepublishResult } from "../../services/audit-l
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
 
-const PUBLISHABLE_STATUSES = new Set<string>([
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settled,
-]);
+const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settled]);
 
 export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -100,9 +96,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
       );
 
       if (!updated) {
-        throw AppException.internal(
-          `Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled".`,
-        );
+        throw AppException.internal(`Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled".`);
       }
 
       // Sửa kết quả sau settle → republish (mở luồng resettle). Fire-and-forget.

@@ -374,10 +374,7 @@ describe("matchPair – bipartite matching edge cases", () => {
 // XIII. play-types – calculateLineCount & expandSelectionToPairs (multiNumber ordered pairs)
 // ─────────────────────────────────────────────
 
-import {
-  calculateLineCount,
-  expandSelectionToPairs,
-} from "@megawin/game-max3dpro/rules/play-types";
+import { calculateLineCount, expandSelectionToPairs } from "@megawin/game-max3dpro/rules/play-types";
 import { PlayMode, PlayType } from "@megawin/game-max3dpro/entities/enums";
 import type { BoardSelection } from "@megawin/game-max3dpro/entities/types";
 

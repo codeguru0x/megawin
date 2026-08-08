@@ -197,10 +197,7 @@ export type CompletedDrawStatus = typeof DrawStatus.Settled | typeof DrawStatus.
  * kỳ hoàn thành vs chưa hoàn thành (guard thứ tự kết sổ, báo cáo, …) phải derive
  * từ đây thay vì liệt kê tay — để khi thêm status mới không bị sót.
  */
-export const DRAW_COMPLETED_STATUSES: readonly CompletedDrawStatus[] = [
-  DrawStatus.Settled,
-  DrawStatus.Void,
-];
+export const DRAW_COMPLETED_STATUSES: readonly CompletedDrawStatus[] = [DrawStatus.Settled, DrawStatus.Void];
 
 const COMPLETED_STATUS_SET = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 

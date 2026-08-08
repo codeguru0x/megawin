@@ -38,9 +38,7 @@ describe("TenantConfigRepository – Power 6/55 Tenant Config", () => {
   it("tenant config có commissionRate đúng với default", async () => {
     const config = await repo.getTenantConfig(TENANT_A);
 
-    expect(config!.commissionRate).toBe(
-      DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.commissionRate).toBe(DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate);
   });
 
   /** Validates custom commissionRate override is persisted. */

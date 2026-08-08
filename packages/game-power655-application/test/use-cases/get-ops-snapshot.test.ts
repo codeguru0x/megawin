@@ -34,12 +34,7 @@ import type {
   DrawStatsDelta,
   NumberStatsDelta,
 } from "../../src/infras/repos/types";
-import {
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  PlayType,
-  Power655OpsAlertType,
-} from "@megawin/game-power655/entities";
+import { OpsAlertSeverity, OpsAlertStatus, PlayType, Power655OpsAlertType } from "@megawin/game-power655/entities";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 import type { GetOpsSnapshotOutput } from "../../src/use-cases/operations/dto/ops.dto";
@@ -50,9 +45,7 @@ import type { NextResponse } from "next/server";
  * `NextApiUseCase.run()` trả về `NextResponse` — PHẢI gọi `.json()` để lấy body. Helper
  * unwrap `data`, throw nếu response là error (giống `global-config.test.ts`).
  */
-async function unwrapSuccess<O>(
-  response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>,
-): Promise<O> {
+async function unwrapSuccess<O>(response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>): Promise<O> {
   const body = await response.json();
   if (!body.success) {
     throw new Error(`Use-case trả lỗi: ${body.error.code} — ${body.error.message}`);
@@ -123,18 +116,12 @@ describe("GetOpsSnapshotUseCase — R1: kỳ CHƯA có stats doc (worker chưa c
       [OpsAlertStatus.Resolved]: 0,
     });
     // Thresholds + pollSeconds LUÔN có (lấy từ config, KHÔNG phụ thuộc stats doc).
-    expect(snapshot.thresholds.largeBetAmount).toBe(
-      DEFAULT_POWER655_CONFIG.ops.alerts.largeBetAmount,
-    );
+    expect(snapshot.thresholds.largeBetAmount).toBe(DEFAULT_POWER655_CONFIG.ops.alerts.largeBetAmount);
     expect(snapshot.thresholds.fixedExposureWarnAmount).toBe(
       DEFAULT_POWER655_CONFIG.ops.alerts.fixedExposureWarnAmount,
     );
-    expect(snapshot.thresholds.comboAccountsWarn).toBe(
-      DEFAULT_POWER655_CONFIG.ops.alerts.comboAccountsWarn,
-    );
-    expect(snapshot.thresholds.baoHighStakeAmount).toBe(
-      DEFAULT_POWER655_CONFIG.ops.alerts.baoHighStakeAmount,
-    );
+    expect(snapshot.thresholds.comboAccountsWarn).toBe(DEFAULT_POWER655_CONFIG.ops.alerts.comboAccountsWarn);
+    expect(snapshot.thresholds.baoHighStakeAmount).toBe(DEFAULT_POWER655_CONFIG.ops.alerts.baoHighStakeAmount);
     expect(snapshot.pollSeconds).toBe(DEFAULT_POWER655_CONFIG.ops.stats.tickSeconds);
   });
 });

@@ -8,9 +8,7 @@ import type { GetDrawSummaryInput, GetDrawSummaryOutput } from "./types";
  * Trả 1 object tổng (drawCount, entryCount, totalStake, ggr...).
  * Dùng cho KPI strip tab "Theo kỳ quay" trong Financial Reports page.
  */
-export class GetDrawSummaryUseCase
-  extends NextApiUseCase<GetDrawSummaryInput, GetDrawSummaryOutput>
-{
+export class GetDrawSummaryUseCase extends NextApiUseCase<GetDrawSummaryInput, GetDrawSummaryOutput> {
   private readonly repo = new SettleDrawReportRepository();
 
   protected async execute(input: GetDrawSummaryInput): Promise<GetDrawSummaryOutput> {

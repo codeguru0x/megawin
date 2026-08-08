@@ -18,11 +18,7 @@ import type {
   EntryVoidInfo,
   EntryResult,
 } from "@megawin/game-keno/entities";
-import type {
-  KenoFeedBetContent,
-  KenoFeedDrawResult,
-  KenoFeedPayoutDetail,
-} from "@megawin/game-keno/entities";
+import type { KenoFeedBetContent, KenoFeedDrawResult, KenoFeedPayoutDetail } from "@megawin/game-keno/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
 
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
@@ -32,14 +28,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     super(GameProduct.Keno);
   }
 
-  protected async fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
-    const entries = await this.entryRepo.getChangedEntries(
-      Long.fromString(afterVersion),
-      batchSize,
-    );
+  protected async fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
     return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }

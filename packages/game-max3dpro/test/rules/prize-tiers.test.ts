@@ -38,9 +38,7 @@ describe("matchPair", () => {
     const result = matchPair("096", "389", drawResult, prizes, flat);
     const tiers = result.wonTiers.map((t) => t.tier);
     expect(tiers).toContain(PrizeTier.Special);
-    expect(result.wonTiers.find((t) => t.tier === PrizeTier.Special)?.winAmount).toBe(
-      prizes.special,
-    );
+    expect(result.wonTiers.find((t) => t.tier === PrizeTier.Special)?.winAmount).toBe(prizes.special);
   });
 
   it("Đúng logic — NGƯỢC thứ tự quay (389,096) → Giải phụ ĐB (400 triệu), KHÔNG phải Giải ĐB", () => {
@@ -48,9 +46,7 @@ describe("matchPair", () => {
     const tiers = result.wonTiers.map((t) => t.tier);
     expect(tiers).toContain(PrizeTier.SpecialSub);
     expect(tiers).not.toContain(PrizeTier.Special);
-    expect(result.wonTiers.find((t) => t.tier === PrizeTier.SpecialSub)?.winAmount).toBe(
-      prizes.specialSub,
-    );
+    expect(result.wonTiers.find((t) => t.tier === PrizeTier.SpecialSub)?.winAmount).toBe(prizes.specialSub);
   });
 
   it("Đúng logic — duplicate trúng ĐB (096,096) với Special=[096,096] → winAmount = special + specialSub, KHÔNG phải special×2", () => {

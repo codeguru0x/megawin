@@ -8,11 +8,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditDrawVoid } from "../../services/audit-log";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
-const VOIDABLE_STATUSES = new Set<string>([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-]);
+const VOIDABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published]);
 
 export interface VoidDrawInput extends DrawIdInput {
   reason: string;

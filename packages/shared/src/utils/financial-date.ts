@@ -42,10 +42,7 @@ const FINANCIAL_DATE_FORMAT = "yyyy-MM-dd";
  * @param timezone - IANA timezone. Mặc định = "Asia/Ho_Chi_Minh".
  * @returns Ngày tài chính dạng "YYYY-MM-DD".
  */
-export function getFinancialDate(
-  date: Date | string = new Date(),
-  timezone: string = DEFAULT_TIMEZONE,
-): string {
+export function getFinancialDate(date: Date | string = new Date(), timezone: string = DEFAULT_TIMEZONE): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const tzDate = new TZDate(d, timezone);
   const hour = tzDate.getHours();

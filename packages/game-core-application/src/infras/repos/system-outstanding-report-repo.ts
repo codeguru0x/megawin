@@ -17,10 +17,7 @@
  * TTL: snapshotAt + 300s → MongoDB tự xoá doc cũ.
  */
 
-import type {
-  SystemOutstandingGameDaily,
-  SystemOutstandingGameDailyEntity,
-} from "@megawin/game-core/entities";
+import type { SystemOutstandingGameDaily, SystemOutstandingGameDailyEntity } from "@megawin/game-core/entities";
 import { SYSTEM_OUTSTANDING_GAME_DAILY } from "@megawin/game-core/entities";
 import { ReportRepo } from "@megawin/data/mongo";
 import { SystemOutstandingGameDailyMapper } from "../mappers";
@@ -49,9 +46,7 @@ export class SystemOutstandingReportRepository extends ReportRepo<
    * Filter: { gameProduct }.
    * IDEMPOTENT: chạy lại an toàn.
    */
-  async upsertGameOutstanding(
-    report: Omit<SystemOutstandingGameDaily, "updatedAt">,
-  ): Promise<void> {
+  async upsertGameOutstanding(report: Omit<SystemOutstandingGameDaily, "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {

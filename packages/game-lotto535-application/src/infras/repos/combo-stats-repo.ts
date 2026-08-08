@@ -23,10 +23,7 @@
  */
 
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import type {
-  Lotto535DrawComboStatsDoc,
-  Lotto535DrawComboStatsEntity,
-} from "@megawin/game-lotto535/entities";
+import type { Lotto535DrawComboStatsDoc, Lotto535DrawComboStatsEntity } from "@megawin/game-lotto535/entities";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { buildComboKey, calculateLineCount } from "@megawin/game-lotto535/rules";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
@@ -46,10 +43,7 @@ export class ComboStatsRepository extends BaseRepo<Lotto535DrawComboStatsEntity,
   }
 
   /** Đọc 1 combo cụ thể — tra cứu staff/player, O(1) theo unique index. */
-  async findByComboKey(
-    drawId: string,
-    comboKey: string,
-  ): Promise<Lotto535DrawComboStatsEntity | null> {
+  async findByComboKey(drawId: string, comboKey: string): Promise<Lotto535DrawComboStatsEntity | null> {
     return await this.findOne({ drawId, comboKey });
   }
 
@@ -77,15 +71,8 @@ export class ComboStatsRepository extends BaseRepo<Lotto535DrawComboStatsEntity,
    * @param minAccounts - Ngưỡng số người dồn cược (`ops.alerts.comboAccountsWarn`).
    * @param limit - Trần số alert combo xử lý 1 tick.
    */
-  async findConcentrated(
-    drawId: string,
-    minAccounts: number,
-    limit: number,
-  ): Promise<Lotto535DrawComboStatsEntity[]> {
-    return await this.findMany(
-      { drawId, accountCount: { $gte: minAccounts } },
-      { sort: { accountCount: -1 }, limit },
-    );
+  async findConcentrated(drawId: string, minAccounts: number, limit: number): Promise<Lotto535DrawComboStatsEntity[]> {
+    return await this.findMany({ drawId, accountCount: { $gte: minAccounts } }, { sort: { accountCount: -1 }, limit });
   }
 
   /**
@@ -210,10 +197,7 @@ export class ComboStatsRepository extends BaseRepo<Lotto535DrawComboStatsEntity,
         specialNumbers,
       ),
     );
-    const exactKeys = [
-      buildComboKey(PlayType.Standard, sortedMain, specialNumbers),
-      ...mainCover4Keys,
-    ];
+    const exactKeys = [buildComboKey(PlayType.Standard, sortedMain, specialNumbers), ...mainCover4Keys];
 
     const [exactDocs, mainCoverDocs, specialCoverDocs] = await Promise.all([
       this.findMany({ drawId, comboKey: { $in: exactKeys } }),

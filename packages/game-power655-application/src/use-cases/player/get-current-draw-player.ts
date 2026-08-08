@@ -16,18 +16,12 @@ import type { DrawEntity } from "@megawin/game-power655/entities";
 import type { PlayerGetCurrentDrawOutput, PlayerDrawInfo } from "./dto/player.dto";
 
 /** Player chỉ thấy kỳ đang mở/đóng bán — không lộ Settling/Voiding (chỉ dành cho staff). */
-const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-];
+const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
 
 /**
  * Lấy kỳ quay hiện tại cho player Power 6/55.
  */
-export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
-  void,
-  PlayerGetCurrentDrawOutput
-> {
+export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {

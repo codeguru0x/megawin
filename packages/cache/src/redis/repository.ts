@@ -137,10 +137,7 @@ export class RedisRepository {
    * @param commandOptions - Command options (VD timeout ngắn cho hot path cache).
    * @returns Số key thực sự bị xoá (key không tồn tại không tính).
    */
-  public async delete(
-    keys: string | string[],
-    commandOptions?: RedisCommandOptions,
-  ): Promise<number> {
+  public async delete(keys: string | string[], commandOptions?: RedisCommandOptions): Promise<number> {
     const list = Array.isArray(keys) ? keys : [keys];
     if (list.length === 0) return 0;
 
@@ -289,11 +286,7 @@ export class RedisRepository {
    * @returns Số member MỚI được thêm (member đã có, chỉ update score, không tính —
    * trừ khi truyền `{ CH: true }` để đếm cả member bị thay đổi score).
    */
-  public async zAdd(
-    key: string,
-    members: SortedSetMember | SortedSetMember[],
-    options?: ZAddOptions,
-  ): Promise<number> {
+  public async zAdd(key: string, members: SortedSetMember | SortedSetMember[], options?: ZAddOptions): Promise<number> {
     const client = await this.getClient();
     return await client.zAdd(key, members, options);
   }
@@ -356,11 +349,7 @@ export class RedisRepository {
    * Dùng cho sliding-window rate-limit: xoá event cũ hơn window trước khi ZCARD đếm.
    * @returns Số member đã xoá.
    */
-  public async zRemRangeByScore(
-    key: string,
-    min: number | string,
-    max: number | string,
-  ): Promise<number> {
+  public async zRemRangeByScore(key: string, min: number | string, max: number | string): Promise<number> {
     const client = await this.getClient();
     return await client.zRemRangeByScore(key, min, max);
   }

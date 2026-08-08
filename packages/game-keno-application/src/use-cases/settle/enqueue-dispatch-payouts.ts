@@ -48,9 +48,7 @@ export class EnqueueDispatchPayoutsUseCase extends InternalUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 
-  protected async execute(
-    input: EnqueueDispatchPayoutsInput,
-  ): Promise<EnqueueDispatchPayoutsOutput> {
+  protected async execute(input: EnqueueDispatchPayoutsInput): Promise<EnqueueDispatchPayoutsOutput> {
     const { drawId, resettleContext } = input;
 
     // Resettle path dùng batchKey riêng để separate metrics + audit so với

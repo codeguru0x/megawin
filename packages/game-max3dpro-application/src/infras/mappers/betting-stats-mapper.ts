@@ -55,9 +55,7 @@ function normalizeTotals(raw: Partial<DrawBettingTotals> | undefined): DrawBetti
 }
 
 /** 1 slot `Max3dproPlayTypeStat` — merge field CÓ trong doc lên nền zero-stat. */
-function normalizePlayTypeStat(
-  raw: Partial<Max3dproPlayTypeStat> | undefined,
-): Max3dproPlayTypeStat {
+function normalizePlayTypeStat(raw: Partial<Max3dproPlayTypeStat> | undefined): Max3dproPlayTypeStat {
   return {
     amount: raw?.amount ?? 0,
     units: raw?.units ?? 0,

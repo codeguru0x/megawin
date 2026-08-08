@@ -15,15 +15,7 @@ import type {
 } from "@megawin/game-max3dpro/entities";
 import type { Max3dproExposureResult } from "@megawin/game-max3dpro/rules";
 
-import type {
-  OpsKpi,
-  PairRow,
-  PlayTypeRow,
-  TenantRow,
-  TopAccountRow,
-  TopPotentialRow,
-  TopTripletRow,
-} from "./types";
+import type { OpsKpi, PairRow, PlayTypeRow, TenantRow, TopAccountRow, TopPotentialRow, TopTripletRow } from "./types";
 
 type Stats = Max3dproDrawBettingStatsEntity;
 

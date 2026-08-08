@@ -24,10 +24,7 @@ import type { DrawSummaryResult } from "./types";
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<
-  SettleDrawReportEntity,
-  SettleDrawReportMapper
-> {
+export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
   constructor() {
     super({
       collName: MEGA645_SETTLE_DRAW_REPORTS,

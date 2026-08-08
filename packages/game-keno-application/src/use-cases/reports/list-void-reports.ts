@@ -5,10 +5,7 @@ import type { ListVoidReportsInput, ListVoidReportsOutput } from "./types";
 /**
  * Lấy danh sách void reports trong date range.
  */
-export class ListVoidReportsUseCase extends NextApiUseCase<
-  ListVoidReportsInput,
-  ListVoidReportsOutput
-> {
+export class ListVoidReportsUseCase extends NextApiUseCase<ListVoidReportsInput, ListVoidReportsOutput> {
   private readonly repo = new VoidReportRepository();
 
   protected async execute(input: ListVoidReportsInput): Promise<ListVoidReportsOutput> {

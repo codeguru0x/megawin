@@ -16,9 +16,7 @@ export async function seedTenantConfig(
   const repo = new TenantConfigRepository();
 
   const result = await repo.upsertTenantConfig(tenantId, {
-    commissionRate:
-      overrides?.commissionRate ??
-      DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate,
+    commissionRate: overrides?.commissionRate ?? DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate,
     isEnabled: overrides?.isEnabled ?? true,
   });
 

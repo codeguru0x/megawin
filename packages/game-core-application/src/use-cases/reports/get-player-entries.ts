@@ -10,10 +10,7 @@ import type { GetPlayerEntriesInput, GetPlayerEntriesOutput } from "./types";
  * Query {game}_ticket_entries WHERE { accountId, financialDate, status ∈ [settled, void] }.
  * 1 player = 1 tenant duy nhất — không cần tenantId param.
  */
-export class GetPlayerEntriesUseCase extends NextApiUseCase<
-  GetPlayerEntriesInput,
-  GetPlayerEntriesOutput
-> {
+export class GetPlayerEntriesUseCase extends NextApiUseCase<GetPlayerEntriesInput, GetPlayerEntriesOutput> {
   private readonly repo = new PlayerEntryRepository();
 
   protected async execute(input: GetPlayerEntriesInput): Promise<GetPlayerEntriesOutput> {

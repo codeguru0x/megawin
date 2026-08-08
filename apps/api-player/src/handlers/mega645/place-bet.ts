@@ -170,13 +170,9 @@ export const mega645PlaceBetBodySchema = z.object({
     .refine((ids) => isUnique(ids), {
       message: "Các kỳ quay không được trùng lặp.",
     }),
-  boards: z
-    .array(mega645BoardSchema)
-    .min(1)
-    .max(MEGA645_MAX_BOARDS)
-    .refine(boardsSequentialRefine(), {
-      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
-    }),
+  boards: z.array(mega645BoardSchema).min(1).max(MEGA645_MAX_BOARDS).refine(boardsSequentialRefine(), {
+    message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
+  }),
 });
 
 export type Mega645Board = z.infer<typeof mega645BoardSchema>;

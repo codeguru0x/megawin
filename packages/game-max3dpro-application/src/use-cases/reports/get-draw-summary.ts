@@ -7,10 +7,7 @@ import type { GetDrawSummaryInput, GetDrawSummaryOutput } from "./types";
  *
  * Max 3D Pro KHÔNG CÓ jackpotContribution.
  */
-export class GetDrawSummaryUseCase extends NextApiUseCase<
-  GetDrawSummaryInput,
-  GetDrawSummaryOutput
-> {
+export class GetDrawSummaryUseCase extends NextApiUseCase<GetDrawSummaryInput, GetDrawSummaryOutput> {
   private readonly repo = new SettleDrawReportRepository();
 
   protected async execute(input: GetDrawSummaryInput): Promise<GetDrawSummaryOutput> {

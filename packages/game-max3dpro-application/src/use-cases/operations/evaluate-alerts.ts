@@ -65,9 +65,7 @@ export function evaluateMax3dproAlerts(input: EvaluateAlertsInput): NewAlert[] {
 
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn ──
   if (alerts.enabled[Max3dproOpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       Max3dproOpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -86,9 +84,7 @@ export function evaluateMax3dproAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Max3dproOpsAlertType.ExposureThreshold,
         // Gấp đôi ngưỡng → critical.
-        worst >= alerts.exposureWarnAmount * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        worst >= alerts.exposureWarnAmount * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         `${Max3dproOpsAlertType.ExposureThreshold}:${drawId}`,
         {
           worstCaseTotal: worst,
@@ -134,9 +130,7 @@ export function evaluateMax3dproAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Max3dproOpsAlertType.ComboConcentration,
         // Gấp đôi ngưỡng account → critical.
-        p.accounts >= alerts.comboAccountsWarn * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        p.accounts >= alerts.comboAccountsWarn * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         `${Max3dproOpsAlertType.ComboConcentration}:${p.pairKey}`,
         {
           pairKey: p.pairKey,

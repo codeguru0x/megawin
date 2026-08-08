@@ -1,12 +1,7 @@
 import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type {
-  Board,
-  TicketDoc,
-  TicketEntryDoc,
-  EntryBoardSnapshot,
-} from "@megawin/game-mega645/entities";
+import type { Board, TicketDoc, TicketEntryDoc, EntryBoardSnapshot } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
 import { calculateLineCount, getRequiredNumberCount } from "@megawin/game-mega645/rules/play-types";
 
@@ -31,15 +26,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly debitService = new DebitPlayerService();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      ipAddress,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
 
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
@@ -64,9 +51,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       const betCount = bi.betCount ?? 1;
 
       if (betCount < minBetCount || betCount > maxBetCount) {
-        throw AppException.badRequest(
-          `betCount ${betCount} phải nằm trong khoảng [${minBetCount}, ${maxBetCount}].`,
-        );
+        throw AppException.badRequest(`betCount ${betCount} phải nằm trong khoảng [${minBetCount}, ${maxBetCount}].`);
       }
 
       const lineCount = calculateLineCount(playType);
@@ -109,10 +94,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const drawCount = drawIds.length;
     const unitPrice = play.unitPrice;
     // betUnitsPerDraw = tổng đơn vị cược thực tế (lines × betCount per board).
-    const betUnitsPerDraw = builtBoards.reduce(
-      (sum, b) => sum + b.derived.expandedLines * b.betCount,
-      0,
-    );
+    const betUnitsPerDraw = builtBoards.reduce((sum, b) => sum + b.derived.expandedLines * b.betCount, 0);
     const amountPerDraw = unitPrice * betUnitsPerDraw;
     const totalAmount = amountPerDraw * drawCount;
 

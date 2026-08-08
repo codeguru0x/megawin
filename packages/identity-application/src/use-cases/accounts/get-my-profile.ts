@@ -19,13 +19,8 @@ export interface GetMyProfileOutput {
   createdAt: string;
 }
 
-export class GetMyProfileUseCase extends NextApiUseCase<
-  GetMyProfileInput,
-  GetMyProfileOutput
-> {
-  protected async execute(
-    input: GetMyProfileInput
-  ): Promise<GetMyProfileOutput> {
+export class GetMyProfileUseCase extends NextApiUseCase<GetMyProfileInput, GetMyProfileOutput> {
+  protected async execute(input: GetMyProfileInput): Promise<GetMyProfileOutput> {
     const repo = new AccountRepository();
     const accounts = await repo.findMany({ username: input.username });
     const account = accounts[0];

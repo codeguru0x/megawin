@@ -47,13 +47,11 @@ export class TicketCounterRepository extends GameCoreBaseRepo<BaseEntity> {
         $inc: { seq: 1 },
         $set: { updatedAt: new Date() },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     if (!result) {
-      throw new Error(
-        `Failed to allocate ticket seq for account ${accountId} date ${date}`
-      );
+      throw new Error(`Failed to allocate ticket seq for account ${accountId} date ${date}`);
     }
 
     return {

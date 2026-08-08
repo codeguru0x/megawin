@@ -33,10 +33,7 @@ import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.d
  *
  * `updatedAt` của stats dùng làm ETag ở route → 304 khi chưa đổi (0 re-render FE).
  */
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -82,27 +79,29 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
       : [[], [], 0];
 
     // Cap exposure lúc BUILD RESPONSE (doc lưu RAW — analysis §3.4). null khi chưa có stats.
-    const cappedExposure = stats
-      ? capExposureByPlayType(stats.exposure.worstCaseByPlayType, caps)
-      : null;
+    const cappedExposure = stats ? capExposureByPlayType(stats.exposure.worstCaseByPlayType, caps) : null;
 
     return {
       drawId,
       drawStatus: drawStatuses.get(drawId) ?? null,
       stats,
-      topCombos: topCombos.map((c): KenoTopCombo => ({
-        playType: c.playType,
-        numbers: c.numbers,
-        sets: c.sets,
-        accounts: c.accountCount,
-        amount: c.amount,
-      })),
-      topAccounts: topAccounts.map((a): TopAccountStat => ({
-        accountId: a.accountId,
-        username: a.username,
-        amount: a.amount,
-        entries: a.entries,
-      })),
+      topCombos: topCombos.map(
+        (c): KenoTopCombo => ({
+          playType: c.playType,
+          numbers: c.numbers,
+          sets: c.sets,
+          accounts: c.accountCount,
+          amount: c.amount,
+        }),
+      ),
+      topAccounts: topAccounts.map(
+        (a): TopAccountStat => ({
+          accountId: a.accountId,
+          username: a.username,
+          amount: a.amount,
+          entries: a.entries,
+        }),
+      ),
       uniquePlayers,
       cappedExposure,
       alertCounts: { new: newCount, critical: criticalCount },

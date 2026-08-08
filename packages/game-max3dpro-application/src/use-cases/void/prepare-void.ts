@@ -29,9 +29,7 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
     }
 
     if (draw.status !== DrawStatus.Voiding) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}" – expected "voiding".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}" – expected "voiding".`);
     }
 
     return {

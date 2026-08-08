@@ -21,9 +21,7 @@ vi.mock("@megawin/app-core/lambda/middleware", () => ({
       try {
         const rawBody = event.body ? JSON.parse(event.body as string) : {};
         parsed.body = schemas.body ? schemas.body.parse(rawBody) : rawBody;
-        parsed.path = schemas.path
-          ? schemas.path.parse(event.pathParameters ?? {})
-          : (event.pathParameters ?? {});
+        parsed.path = schemas.path ? schemas.path.parse(event.pathParameters ?? {}) : (event.pathParameters ?? {});
         parsed.query = schemas.query
           ? schemas.query.parse(event.queryStringParameters ?? {})
           : (event.queryStringParameters ?? {});

@@ -1,10 +1,4 @@
-import type {
-  AuditAction,
-  AuditActorType,
-  AuditCategory,
-  AuditStatus,
-  AuditTargetType,
-} from "./audit-log.enums";
+import type { AuditAction, AuditActorType, AuditCategory, AuditStatus, AuditTargetType } from "./audit-log.enums";
 
 /**
  * Context worker / job hệ thống (Step Function, cron, queue consumer).

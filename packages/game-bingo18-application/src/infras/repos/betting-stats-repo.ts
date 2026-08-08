@@ -42,10 +42,7 @@ import type { DrawStatsCursor, DrawStatsDelta } from "./types";
 
 const f = docPath<Bingo18DrawBettingStatsDoc>();
 
-export class BettingStatsRepository extends BaseRepo<
-  Bingo18DrawBettingStatsEntity,
-  BettingStatsMapper
-> {
+export class BettingStatsRepository extends BaseRepo<Bingo18DrawBettingStatsEntity, BettingStatsMapper> {
   constructor() {
     super({
       collName: Bingo18Collections.BettingStats,
@@ -183,10 +180,7 @@ export class BettingStatsRepository extends BaseRepo<
 
     // IDEMPOTENT theo watermark: `ensureDocs` seed `lastEntryId = MIN_OBJECT_ID` nên `$lt`
     // luôn khớp lần áp đầu (mọi ObjectId thật > MIN), các batch kế `$lt` bỏ batch đã áp.
-    return await this.updateOne(
-      { drawId, [f("lastEntryId")]: { $lt: batchMaxId } },
-      update as UpdateFilter<Document>,
-    );
+    return await this.updateOne({ drawId, [f("lastEntryId")]: { $lt: batchMaxId } }, update as UpdateFilter<Document>);
   }
 
   /**

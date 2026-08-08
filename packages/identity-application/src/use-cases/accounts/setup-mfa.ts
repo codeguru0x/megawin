@@ -44,9 +44,7 @@ export class SetupMfaUseCase extends NextApiUseCase<SetupMfaInput, SetupMfaOutpu
         throw AppException.badRequest("Mật khẩu không đúng");
       }
 
-      throw AppException.internal(
-        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw AppException.internal(`Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     try {
@@ -62,9 +60,7 @@ export class SetupMfaUseCase extends NextApiUseCase<SetupMfaInput, SetupMfaOutpu
         accessToken,
       };
     } catch (error: unknown) {
-      throw AppException.internal(
-        `Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw AppException.internal(`Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 }

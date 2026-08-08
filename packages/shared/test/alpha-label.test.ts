@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  numberToAlphaLabel,
-  alphaLabelToNumber,
-  alphaLabelSequence,
-} from "../src/utils/alpha-label";
+import { numberToAlphaLabel, alphaLabelToNumber, alphaLabelSequence } from "../src/utils/alpha-label";
 
 describe("alpha-label", () => {
   describe("numberToAlphaLabel (base-1)", () => {
@@ -63,11 +59,7 @@ describe("alpha-label", () => {
 
     it("returns continuous sequence from A", () => {
       expect(alphaLabelSequence(3)).toEqual(["A", "B", "C"]);
-      expect(alphaLabelSequence(28)).toEqual([
-        ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
-        "AA",
-        "AB",
-      ]);
+      expect(alphaLabelSequence(28)).toEqual([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""), "AA", "AB"]);
     });
   });
 });

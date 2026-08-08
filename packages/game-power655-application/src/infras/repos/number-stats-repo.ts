@@ -24,10 +24,7 @@
  */
 
 import { Power655Collections } from "@megawin/game-power655/entities";
-import type {
-  Power655DrawNumberStatsDoc,
-  Power655DrawNumberStatsEntity,
-} from "@megawin/game-power655/entities";
+import type { Power655DrawNumberStatsDoc, Power655DrawNumberStatsEntity } from "@megawin/game-power655/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -36,10 +33,7 @@ import type { NumberStatsDelta } from "./types";
 
 const f = docPath<Power655DrawNumberStatsDoc>();
 
-export class NumberStatsRepository extends BaseRepo<
-  Power655DrawNumberStatsEntity,
-  NumberStatsMapper
-> {
+export class NumberStatsRepository extends BaseRepo<Power655DrawNumberStatsEntity, NumberStatsMapper> {
   constructor() {
     super({
       collName: Power655Collections.DrawNumberStats,

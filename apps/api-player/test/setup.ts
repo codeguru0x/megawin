@@ -17,7 +17,9 @@ vi.mock("@megawin/app-core/lambda/middleware", () => ({
         const rawBody = event.body ? JSON.parse(event.body as string) : {};
         parsed.body = schemas.body ? schemas.body.parse(rawBody) : rawBody;
         parsed.path = schemas.path ? schemas.path.parse(event.pathParameters ?? {}) : (event.pathParameters ?? {});
-        parsed.query = schemas.query ? schemas.query.parse(event.queryStringParameters ?? {}) : (event.queryStringParameters ?? {});
+        parsed.query = schemas.query
+          ? schemas.query.parse(event.queryStringParameters ?? {})
+          : (event.queryStringParameters ?? {});
       } catch (err: any) {
         request.earlyResponse = {
           statusCode: 400,
