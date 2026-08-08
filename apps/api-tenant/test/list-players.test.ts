@@ -22,7 +22,7 @@ describe("GET /tenant/players — list-players handler", () => {
   it("trả 200 + tenantId + filters từ query", async () => {
     const event = createMockEvent({ queryStringParameters: { status: "active", page: "1" } });
 
-    const res = (await handler(event as never)) as { statusCode: number; body: string };
+    const res = (await handler(event as never, {} as never)) as { statusCode: number; body: string };
 
     expect(res.statusCode).toBe(200);
     const parsed = parseBody<{ tenantId: string; players: unknown[]; filters: unknown }>(res);
