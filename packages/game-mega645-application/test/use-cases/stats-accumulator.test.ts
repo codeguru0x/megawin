@@ -61,7 +61,6 @@ function entry(
     amount,
     betUnitCount,
     commission: overrides.commission ?? 0,
-    boards: overrides.boards,
     ...overrides,
   };
 }
