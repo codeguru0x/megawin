@@ -1,9 +1,4 @@
 {
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
   "files.exclude": {
     "**/.next": true,
     "**/node_modules": true,
@@ -15,36 +10,25 @@
   "editor.formatOnSaveMode": "file",
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
-  "eslint.format.enable": true,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
   },
 
-  "[javascript]": {
+  "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
+  "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
   "prettier.resolveGlobalModules": false,
-  "prettier.documentSelectors": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
+  "prettier.documentSelectors": ["**/*.md", "**/*.yml", "**/*.yaml"],
   "prettier.requireConfig": true,
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
   "git.ignoreLimitWarning": true,
   "vitest.disableWorkspaceWarning": true,
   "yaml.customTags": [

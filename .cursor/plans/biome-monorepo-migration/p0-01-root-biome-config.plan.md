@@ -18,7 +18,7 @@ Thêm vào `devDependencies`:
 
 **Pin exact version, không dùng caret** — lint rule mới ở minor version có thể làm CI đỏ đột ngột; và bài học 2.5.0 (73 rule đổi nhóm) cho thấy bump version phải là hành động có chủ đích kèm đọc changelog. Cài ở root duy nhất; pnpm đưa `node_modules/.bin` của workspace root vào PATH khi chạy script ở package con nên mọi package vẫn gọi được `biome`.
 
-**Đồng thời trong cùng bước này**: bump `apps/backoffice/package.json` `"@biomejs/biome": "2.5.5"` → `"2.5.7"` (dep này sẽ bị xoá hẳn ở p0-03, nhưng trong giai đoạn p0-01→p0-03 không được tồn tại 2 version — editor extension và CLI sẽ resolve version khác nhau tuỳ cwd).
+**Đồng thời trong cùng bước này**: bump `apps/backoffice/package.json` `"@biomejs/biome"` → `"2.5.7"` — **✅ đã xong trước (verify 07/08 21:50: dep đã là 2.5.7, lockfile đã có 2.5.7, binary chạy `Version: 2.5.7`)**. Không được tồn tại 2 version song song; dep này sẽ bị xoá hẳn ở p0-03.
 
 ### 1b. Bước chuyển tiếp BẮT BUỘC: đánh dấu `apps/backoffice/biome.json` là nested
 
@@ -27,6 +27,7 @@ Thêm vào `devDependencies`:
 ```jsonc
 {
   "root": false,
+  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json", // bump từ 2.5.5 luôn thể (dep đã 2.5.7)
   // giữ nguyên toàn bộ phần còn lại — KHÔNG thêm "extends": "//"
   // để backoffice tiếp tục dùng đúng config cũ của nó, không trộn với root mới.
 }

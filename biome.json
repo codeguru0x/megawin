@@ -1,0 +1,196 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**", "!**/dist", "!**/.next", "!**/.turbo", "!**/.serverless", "!**/coverage", "!**/*.tsbuildinfo"]
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              "react",
+              "react/**",
+              ":BLANK_LINE:",
+              "next/**",
+              ":BLANK_LINE:",
+              ":PACKAGE:",
+              ":BLANK_LINE:",
+              ":ALIAS:",
+              ":BLANK_LINE:",
+              ":PATH:"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 120,
+    "attributePosition": "auto",
+    "bracketSpacing": true,
+    "expand": "auto",
+    "useEditorconfig": false
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always",
+      "bracketSameLine": false
+    }
+  },
+  "json": {
+    "formatter": { "trailingCommas": "none" }
+  },
+  "css": {
+    "parser": { "tailwindDirectives": true }
+  },
+  "html": {
+    "formatter": { "indentScriptAndStyle": false, "selfCloseVoidElements": "always" }
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "test": "recommended"
+    },
+    "rules": {
+      "recommended": true,
+      "style": {
+        "useBlockStatements": "warn",
+        "noEnum": "error",
+        "useAsConstAssertion": "error",
+        "useImportType": "error",
+        "useExportType": "error",
+        "noNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error",
+        "noParameterAssign": "error",
+        "noNonNullAssertion": "warn",
+        "noProcessEnv": "warn",
+        "useFilenamingConvention": {
+          "level": "warn",
+          "options": { "strictCase": false, "requireAscii": true, "filenameCases": ["kebab-case"] }
+        }
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "noConstantBinaryExpressions": "error",
+        "noEmptyBlockStatements": "error",
+        "noDoubleEquals": "error",
+        "noConsole": "off",
+        "noUnknownAtRules": "off"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "warn",
+        "noUnusedFunctionParameters": "warn"
+      },
+      "performance": {
+        "noBarrelFile": "off",
+        "noReExportAll": "off",
+        "noDelete": "error"
+      },
+      "complexity": {
+        "noUselessTernary": "error",
+        "useOptionalChain": "error",
+        "noImportantStyles": "off"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "on",
+          "options": {
+            "attributes": ["className"],
+            "functions": ["clsx", "cva", "cn", "twMerge"]
+          }
+        }
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.config.ts", "**/*.config.mts", "**/*.config.js", "**/*.config.mjs", "**/next.config.ts"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "off", "useFilenamingConvention": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["**/test/**", "**/*.test.ts", "**/*.test.tsx", "**/*.type-test.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noExplicitAny": "off" },
+          "style": { "noNonNullAssertion": "off", "useFilenamingConvention": "off" },
+          "complexity": { "noExcessiveCognitiveComplexity": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["packages/*/src/**", "tooling/*/src/**"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "error" }
+        }
+      }
+    },
+    {
+      "includes": ["packages/*-application/src/infras/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noExplicitAny": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["apps/api-*/**", "apps/worker-*/**"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" },
+          "style": { "noDefaultExport": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["apps/backoffice/src/app/**"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "off", "useFilenamingConvention": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["apps/backoffice/**"],
+      "linter": {
+        "rules": {
+          "performance": { "noImgElement": "warn" },
+          "style": { "noHeadElement": "warn", "noCommonJs": "error" },
+          "suspicious": { "noArrayIndexKey": "warn" }
+        }
+      }
+    },
+    {
+      "includes": ["apps/backoffice/src/components/ui/**"],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
+    }
+  ]
+}

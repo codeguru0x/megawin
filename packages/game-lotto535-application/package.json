@@ -12,9 +12,6 @@
     "pretest": "pnpm build:deps",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "lint": "eslint . --max-warnings 0",
-    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
     "clean": "rm -rf dist"
   },
   "exports": {
