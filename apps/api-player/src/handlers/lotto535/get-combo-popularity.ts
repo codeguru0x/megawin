@@ -9,14 +9,11 @@
  * `?numbers=01,05,12,20,33&specials=07`.
  */
 
-import { z } from "zod";
 import { withPlayerAuth } from "@megawin/auth";
+import { lotto535MainNumberSchema, lotto535SpecialNumberSchema } from "@megawin/game-lotto535/schemas";
 import { GetComboPopularityPlayerUseCase } from "@megawin/game-lotto535-application/use-cases/player";
-import {
-  lotto535MainNumberSchema,
-  lotto535SpecialNumberSchema,
-} from "@megawin/game-lotto535/schemas";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
+import { z } from "zod";
 
 const pathSchema = z.object({
   drawId: z.string().regex(DRAW_ID_REGEX, "Expected drawId format YYYY-MM-DD.NNN"),

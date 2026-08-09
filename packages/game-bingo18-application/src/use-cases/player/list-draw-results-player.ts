@@ -13,12 +13,13 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import type { DrawEntity } from "@megawin/game-bingo18/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-bingo18/entities";;
 import type {
+  PlayerDrawResultSummary,
   PlayerListDrawResultsInput,
   PlayerListDrawResultsOutput,
-  PlayerDrawResultSummary,
 } from "./dto/player.dto";
 
 /**

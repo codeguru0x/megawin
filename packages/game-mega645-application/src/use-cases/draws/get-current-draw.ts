@@ -10,13 +10,14 @@
  * Mega 6/45 theo luật Vietlott: không có split cycle.
  */
 
+import type { DrawEntity } from "@megawin/game-mega645/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { DrawEntity } from "@megawin/game-mega645/entities";
-import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
+import type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 
 export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -35,9 +36,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOu
 
     // getUnfinishedDraws trả về DESC (drawId:-1); re-sort ASC để currentDraw (mapped[0]) là kỳ
     // sớm nhất chưa đóng — không phải kỳ tương lai xa nhất khi có nhiều kỳ mở đồng thời.
-    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map((d) =>
-      mapDrawInfo(d, jackpotCurrentAmount),
-    );
+    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map((d) => mapDrawInfo(d, jackpotCurrentAmount));
 
     return {
       currentDraw: mapped[0] ?? null,

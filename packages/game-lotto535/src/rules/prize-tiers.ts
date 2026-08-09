@@ -178,10 +178,7 @@ export interface LineMatchResult {
  * determineTier(2, false)  // → null (không trúng)
  * ```
  */
-export function determineTier(
-  mainMatchCount: number,
-  specialMatched: boolean
-): PrizeTier | null {
+export function determineTier(mainMatchCount: number, specialMatched: boolean): PrizeTier | null {
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {
     if (rule.specialMatch === "only") {
       // Consolation: trùng đặc biệt + ≤ 2 số chính (không đủ điều kiện tier cao hơn)
@@ -219,9 +216,7 @@ export function getPrizeTierRule(tier: PrizeTier): PrizeTierRule | undefined {
  * @param prizeAmounts - Giá trị giải thưởng tuỳ chỉnh (từ gameConfig.defaultPrizes)
  * @returns Map<tier, amount>
  */
-export function buildPrizeAmountMap(
-  prizeAmounts: PrizeAmounts
-): ReadonlyMap<PrizeTier, number> {
+export function buildPrizeAmountMap(prizeAmounts: PrizeAmounts): ReadonlyMap<PrizeTier, number> {
   const map = new Map<PrizeTier, number>();
 
   const amounts = prizeAmounts as unknown as Record<string, number>;

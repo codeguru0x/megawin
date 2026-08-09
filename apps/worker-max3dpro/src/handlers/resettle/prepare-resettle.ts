@@ -9,8 +9,8 @@
  */
 
 import {
-  PrepareResettleUseCase,
   type PrepareResettleInput,
+  PrepareResettleUseCase,
 } from "@megawin/game-max3dpro-application/use-cases/resettle";
 
 const useCase = new PrepareResettleUseCase();

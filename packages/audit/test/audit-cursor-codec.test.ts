@@ -5,8 +5,9 @@
  * Codec chỉ base64url + validate shape, không chạm DB.
  */
 
-import { describe, it, expect } from "vitest";
-import { encodeAuditCursor, decodeAuditCursor } from "../src/use-cases/audit-cursor-codec";
+import { describe, expect, it } from "vitest";
+
+import { decodeAuditCursor, encodeAuditCursor } from "../src/use-cases/audit-cursor-codec";
 
 const VALID_ID = "507f1f77bcf86cd799439011"; // ObjectId hex 24 ký tự
 const TS = "2026-01-01T00:00:00.000Z";

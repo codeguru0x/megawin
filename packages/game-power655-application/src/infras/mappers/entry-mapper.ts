@@ -1,4 +1,4 @@
-import { MongoMapper, longToString } from "@megawin/data/mongo";
+import { longToString, MongoMapper } from "@megawin/data/mongo";
 import type { TicketEntryDoc, TicketEntryEntity } from "@megawin/game-power655/entities";
 
 export class EntryMapper extends MongoMapper<TicketEntryDoc, TicketEntryEntity> {

@@ -1,10 +1,11 @@
+import { generateBingo18DrawId } from "@megawin/game-bingo18/helpers";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { generateBingo18DrawId } from "@megawin/game-bingo18/helpers";
 import { getFinancialDate } from "@megawin/shared/utils";
-import { DrawRepository } from "../../infras/repos/draw-repo";
+
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { CreateDrawInput, CreateDrawOutput, CreateDrawOutputItem } from "./dto/draw.dto";
 
 export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDrawOutput> {
@@ -26,9 +27,7 @@ export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDra
     for (const d of inputDraws) {
       const key = `${d.drawDate}.${String(d.drawNo).padStart(3, "0")}`;
       if (seen.has(key)) {
-        throw AppException.badRequest(
-          `Trùng drawId: ngày ${d.drawDate} kỳ ${d.drawNo} xuất hiện nhiều lần.`,
-        );
+        throw AppException.badRequest(`Trùng drawId: ngày ${d.drawDate} kỳ ${d.drawNo} xuất hiện nhiều lần.`);
       }
       seen.add(key);
     }

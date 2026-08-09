@@ -6,6 +6,7 @@
 
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Document } from "mongodb";
+
 import type { TxLogEntity } from "../../entities";
 
 export class TxLogMapper extends MongoMapper<Document, TxLogEntity> {

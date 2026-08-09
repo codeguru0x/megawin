@@ -18,6 +18,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 
@@ -36,10 +37,7 @@ export interface DrawSyncInput {
   drawId: string;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<
-  DrawSyncInput,
-  SyncTicketSummariesResult
-> {
+export class SyncTicketSummariesUseCase extends InternalUseCase<DrawSyncInput, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

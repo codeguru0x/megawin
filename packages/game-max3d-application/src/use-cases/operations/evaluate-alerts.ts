@@ -11,14 +11,14 @@
  * theo pairKey) để staff track từng cặp riêng.
  */
 
-import { Max3dOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3d/entities";
-import type { Max3dExposureResult } from "@megawin/game-max3d/rules";
 import type {
   Max3dDrawBettingStatsDoc,
   Max3dOpsAlertDoc,
   Max3dTopPair,
   OpsAlertsConfig,
 } from "@megawin/game-max3d/entities";
+import { Max3dOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3d/entities";
+import type { Max3dExposureResult } from "@megawin/game-max3d/rules";
 
 /** Snapshot stats + exposure cần cho evaluate (đã có in-memory ở worker). */
 export interface EvaluateAlertsInput {
@@ -65,9 +65,7 @@ export function evaluateMax3dAlerts(input: EvaluateAlertsInput): NewAlert[] {
 
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn ──
   if (alerts.enabled[Max3dOpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       Max3dOpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -86,9 +84,7 @@ export function evaluateMax3dAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Max3dOpsAlertType.ExposureThreshold,
         // Gấp đôi ngưỡng → critical.
-        worst >= alerts.exposureWarnAmount * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        worst >= alerts.exposureWarnAmount * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         `${Max3dOpsAlertType.ExposureThreshold}:${drawId}`,
         {
           worstCaseTotal: worst,
@@ -134,9 +130,7 @@ export function evaluateMax3dAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Max3dOpsAlertType.ComboConcentration,
         // Gấp đôi ngưỡng account → critical.
-        p.accounts >= alerts.comboAccountsWarn * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        p.accounts >= alerts.comboAccountsWarn * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         `${Max3dOpsAlertType.ComboConcentration}:${p.pairKey}`,
         {
           pairKey: p.pairKey,

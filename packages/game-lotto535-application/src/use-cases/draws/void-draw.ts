@@ -1,18 +1,15 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { AppException } from "@megawin/shared/errors";
+import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import type { AuditActor } from "@megawin/audit/logger";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
-import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
-import type { AuditActor } from "@megawin/audit/logger";
+import { NextApiUseCase } from "@megawin/next/server";
+import { AppException } from "@megawin/shared/errors";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditDrawVoid } from "../../services/audit-log";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
-const VOIDABLE_STATUSES = new Set<string>([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-]);
+const VOIDABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published]);
 
 export interface VoidDrawInput extends DrawIdInput {
   /** ARN của Step Function huỷ kỳ quay Lotto 5/35. */
@@ -64,10 +61,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       // nguyên — không huỷ. Defense-in-depth: status Settled vốn không nằm
       // trong VOIDABLE_STATUSES, guard này cho thông báo rõ ràng hơn.
       if (draw.settledAt) {
-        throw new AppException(
-          "DRAW_INVALID_TRANSITION",
-          `Không thể huỷ kỳ quay đã kết sổ (${input.drawId}).`,
-        );
+        throw new AppException("DRAW_INVALID_TRANSITION", `Không thể huỷ kỳ quay đã kết sổ (${input.drawId}).`);
       }
 
       // Guard thứ tự đóng kỳ: phải xử lý TUẦN TỰ theo thời gian. Nếu còn kỳ
@@ -122,10 +116,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       // ExecutionAlreadyExists = phiên huỷ này đã được start trước đó
       // (retry/replay). KHÔNG phải lỗi — coi như thành công idempotent.
       if (!(err instanceof ExecutionAlreadyExists)) {
-        throw new AppException(
-          "SFN_START_FAILED",
-          `Không thể khởi chạy void worker: ${(err as Error).message}`,
-        );
+        throw new AppException("SFN_START_FAILED", `Không thể khởi chạy void worker: ${(err as Error).message}`);
       }
     }
 

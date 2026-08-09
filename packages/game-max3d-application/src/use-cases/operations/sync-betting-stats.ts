@@ -32,19 +32,20 @@
  * `SingleRunWorker.recordStalledItem`/`clearStalledItem` — KHÔNG bắn alert riêng.
  */
 
-import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DRAW_COMPLETED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
-import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
+import { DRAW_COMPLETED_STATUSES, type DrawStatus } from "@megawin/game-core/entities";
 import type { GlobalConfigEntity, OpsConfig, OpsStatsConfig } from "@megawin/game-max3d/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+
+import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
 import { PairAccountsRepository } from "../../infras/repos/pair-accounts-repo";
-import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { Max3dDrawStatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -84,8 +85,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description =
-    "Max 3D — đồng bộ thống kê cược theo delta (tick ~30s, mọi kỳ chưa final)";
+  protected override readonly description = "Max 3D — đồng bộ thống kê cược theo delta (tick ~30s, mọi kỳ chưa final)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -106,7 +106,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
     return "max3d:stats-sync";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     // Doc cũ (trước khi thêm section ops) chưa có field → fallback default để worker
     // không crash trước lần staff save config đầu tiên.
@@ -151,12 +151,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
       // 1 kỳ lỗi (data bẩn, doc quá cỡ…) KHÔNG được làm chết cả tick — các kỳ còn lại,
       // nhất là kỳ đang mở bán, vẫn phải được cập nhật.
       try {
-        const applied = await this.syncDraw(
-          drawCursor.drawId,
-          drawCursor.lastEntryId,
-          this.prize,
-          this.statsConfig,
-        );
+        const applied = await this.syncDraw(drawCursor.drawId, drawCursor.lastEntryId, this.prize, this.statsConfig);
         this.counters.entriesApplied += applied.entriesApplied;
         this.clearStalledItem(drawCursor.drawId); // kỳ qua được → xoá streak
 
@@ -288,10 +283,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   }
 
   /** Gom prize config từ GlobalConfig cho accumulator + exposure. */
-  private buildPrizeContext(
-    config: Pick<GlobalConfigEntity, "play" | "defaultPrizes">,
-    ops: OpsConfig,
-  ): PrizeContext {
+  private buildPrizeContext(config: Pick<GlobalConfigEntity, "play" | "defaultPrizes">, ops: OpsConfig): PrizeContext {
     return {
       unitPrice: config.play.unitPrice,
       prizes: {

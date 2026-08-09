@@ -1,15 +1,16 @@
+import type { JackpotCycleEntity } from "@megawin/game-lotto535/entities";
 import {
-  Lotto535Collections,
-  JackpotCycleStatus,
-  type JackpotCycleDoc,
   type JackpotCycleCloseReason,
+  type JackpotCycleDoc,
+  JackpotCycleStatus,
   type JackpotSplitDetail,
   type JackpotWinnerInfo,
+  Lotto535Collections,
   type SplitRatios,
 } from "@megawin/game-lotto535/entities";
-import { BaseRepo } from "./base-repo";
+
 import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
-import type { JackpotCycleEntity } from "@megawin/game-lotto535/entities";
+import { BaseRepo } from "./base-repo";
 
 export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, JackpotCycleMapper> {
   constructor() {
@@ -168,7 +169,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
    * Active cycle (nếu có) luôn xuất hiện đầu tiên.
    * Số lượng cycles thường nhỏ (hàng chục), Lấy mặc định 10 cycles.
    */
-  async listAllCycles(limit: number = 10): Promise<JackpotCycleEntity[]> {
+  async listAllCycles(limit = 10): Promise<JackpotCycleEntity[]> {
     return this.findMany(
       {},
       {

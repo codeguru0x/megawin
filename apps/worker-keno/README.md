@@ -4,12 +4,12 @@ Keno Background Worker — xử lý kỳ quay Keno: settle, payout, void, auto-e
 
 ## Loại app
 
-| Thuộc tính | Giá trị |
-|------------|---------|
-| **Loại** | Background Worker (AWS Step Functions + Lambda) |
-| **Runtime** | Node.js 24, AWS Lambda |
-| **Framework** | Serverless Framework v4 |
-| **Build** | esbuild |
+| Thuộc tính    | Giá trị                                         |
+| ------------- | ----------------------------------------------- |
+| **Loại**      | Background Worker (AWS Step Functions + Lambda) |
+| **Runtime**   | Node.js 24, AWS Lambda                          |
+| **Framework** | Serverless Framework v4                         |
+| **Build**     | esbuild                                         |
 
 ## Đối tượng sử dụng
 
@@ -27,20 +27,20 @@ Xử lý kết quả kỳ quay — tính toán thắng/thua, báo cáo tài chí
 prepare-settle → settle-entries → calculate-financials → build-report → finalize-settle → dispatch-payouts
 ```
 
-| Step | Handler | Mô tả |
-|------|---------|-------|
-| 1 | `settle/prepare-settle` | Chuẩn bị dữ liệu settle cho kỳ quay |
-| 2 | `settle/settle-entries` | Duyệt từng entry, xác định thắng/thua |
-| 3 | `settle/calculate-financials` | Tính toán tài chính (revenue, payout, profit) |
-| 4 | `settle/build-report` | Tạo báo cáo kỳ quay |
-| 5 | `settle/finalize-settle` | Finalize kết quả settle |
-| 6 | `settle/dispatch-payouts` | Chi trả giải thưởng cho players |
+| Step | Handler                       | Mô tả                                         |
+| ---- | ----------------------------- | --------------------------------------------- |
+| 1    | `settle/prepare-settle`       | Chuẩn bị dữ liệu settle cho kỳ quay           |
+| 2    | `settle/settle-entries`       | Duyệt từng entry, xác định thắng/thua         |
+| 3    | `settle/calculate-financials` | Tính toán tài chính (revenue, payout, profit) |
+| 4    | `settle/build-report`         | Tạo báo cáo kỳ quay                           |
+| 5    | `settle/finalize-settle`      | Finalize kết quả settle                       |
+| 6    | `settle/dispatch-payouts`     | Chi trả giải thưởng cho players               |
 
 ### Auto-Enroll
 
-| Handler | Timeout | Mô tả |
-|---------|---------|-------|
-| `enroll/auto-enroll-entries` | 300s | Tự động đăng ký entries cho kỳ quay tiếp theo (vé multi-draw) |
+| Handler                      | Timeout | Mô tả                                                         |
+| ---------------------------- | ------- | ------------------------------------------------------------- |
+| `enroll/auto-enroll-entries` | 300s    | Tự động đăng ký entries cho kỳ quay tiếp theo (vé multi-draw) |
 
 ### Void Pipeline
 
@@ -50,35 +50,35 @@ Hủy kỳ quay — hoàn tiền cho players.
 prepare-void → void-entries → dispatch-refunds → finalize-void
 ```
 
-| Step | Handler | Mô tả |
-|------|---------|-------|
-| 1 | `void/prepare-void` | Chuẩn bị dữ liệu void |
-| 2 | `void/void-entries` | Đánh dấu entries bị void |
-| 3 | `void/dispatch-refunds` | Hoàn tiền cho players |
-| 4 | `void/finalize-void` | Finalize void |
+| Step | Handler                 | Mô tả                    |
+| ---- | ----------------------- | ------------------------ |
+| 1    | `void/prepare-void`     | Chuẩn bị dữ liệu void    |
+| 2    | `void/void-entries`     | Đánh dấu entries bị void |
+| 3    | `void/dispatch-refunds` | Hoàn tiền cho players    |
+| 4    | `void/finalize-void`    | Finalize void            |
 
 ### Feed Sync
 
 Đồng bộ entry feed cho tenants — chạy theo schedule.
 
-| Handler | Trigger | Mô tả |
-|---------|---------|-------|
-| `feed/feed-scheduler` | EventBridge rate(30s) | Scheduler trigger feed sync |
-| `feed/sync-entry-feed` | Step Function | Đồng bộ entries mới vào feed |
-| `feed/save-cursor` | Step Function | Lưu cursor position cho lần sync tiếp theo |
+| Handler                | Trigger               | Mô tả                                      |
+| ---------------------- | --------------------- | ------------------------------------------ |
+| `feed/feed-scheduler`  | EventBridge rate(30s) | Scheduler trigger feed sync                |
+| `feed/sync-entry-feed` | Step Function         | Đồng bộ entries mới vào feed               |
+| `feed/save-cursor`     | Step Function         | Lưu cursor position cho lần sync tiếp theo |
 
 ## Packages phụ thuộc
 
-| Package | Vai trò |
-|---------|---------|
-| `@megawin/game-keno` | Domain logic game Keno |
-| `@megawin/game-keno-application` | Use cases Keno — settle, enroll, void |
-| `@megawin/game-core` | Shared game domain (Draw, Entry, Board) |
-| `@megawin/game-core-application` | Shared use cases — feed, reports |
-| `@megawin/data` | Data access layer (DynamoDB, repositories) |
-| `@megawin/tenant-gateway` | Multi-tenant data routing |
-| `@megawin/app-core` | Lambda middleware, logging |
-| `@megawin/shared` | Shared types |
+| Package                          | Vai trò                                    |
+| -------------------------------- | ------------------------------------------ |
+| `@megawin/game-keno`             | Domain logic game Keno                     |
+| `@megawin/game-keno-application` | Use cases Keno — settle, enroll, void      |
+| `@megawin/game-core`             | Shared game domain (Draw, Entry, Board)    |
+| `@megawin/game-core-application` | Shared use cases — feed, reports           |
+| `@megawin/data`                  | Data access layer (DynamoDB, repositories) |
+| `@megawin/tenant-gateway`        | Multi-tenant data routing                  |
+| `@megawin/app-core`              | Lambda middleware, logging                 |
+| `@megawin/shared`                | Shared types                               |
 
 ## Scripts
 

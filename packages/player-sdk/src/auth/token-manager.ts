@@ -173,7 +173,9 @@ export class TokenManager {
   private async refreshIfNeeded(tokens: AuthTokens): Promise<AuthTokens | null> {
     if (!this.refreshFn) return null;
 
-    if (this.refreshPromise) return this.refreshPromise;
+    if (this.refreshPromise !== null) {
+      return this.refreshPromise;
+    }
 
     this.refreshPromise = this.doRefresh(tokens.refreshToken);
 

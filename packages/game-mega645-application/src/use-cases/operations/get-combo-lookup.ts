@@ -17,14 +17,15 @@
  * số line, chỉ khác nguồn tra cứu.
  */
 
+import type { PlayType } from "@megawin/game-mega645/entities";
+import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
-import type { PlayType } from "@megawin/game-mega645/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+
 import { ComboAccountsRepository } from "../../infras/repos/combo-accounts-repo";
+import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
 
 /**
@@ -34,10 +35,7 @@ import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
  */
 const ACCOUNTS_LIMIT = 200;
 
-export class GetComboLookupUseCase extends NextApiUseCase<
-  GetComboLookupInput,
-  GetComboLookupOutput
-> {
+export class GetComboLookupUseCase extends NextApiUseCase<GetComboLookupInput, GetComboLookupOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly comboRepo = new ComboStatsRepository();
@@ -47,10 +45,7 @@ export class GetComboLookupUseCase extends NextApiUseCase<
     const { drawId, numbers } = input;
     const pt = input.playType as PlayType;
 
-    const [draw, config] = await Promise.all([
-      this.drawRepo.getDrawById(drawId),
-      this.getGlobalConfig.run(),
-    ]);
+    const [draw, config] = await Promise.all([this.drawRepo.getDrawById(drawId), this.getGlobalConfig.run()]);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${drawId} không tồn tại.`);
     }

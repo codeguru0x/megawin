@@ -44,14 +44,14 @@
  * @see RecoverOrphanTxIntentsUseCase — recovery logic
  */
 
-import { AppException } from "@megawin/shared/errors";
-import { ApiClientError } from "@megawin/shared/api-types";
-import { TransactionAction, TransactionReason } from "@megawin/shared/types";
-import type { Currency } from "@megawin/shared/types";
-import { tenantGateway, TxLoggingPolicy } from "@megawin/tenant-gateway";
-import type { TenantGatewayClient, TransactionRequest } from "@megawin/tenant-gateway";
-import { generateId, logError, toTenantUsername } from "@megawin/shared/utils";
 import { TxIntentPhase } from "@megawin/game-core/entities";
+import { ApiClientError } from "@megawin/shared/api-types";
+import { AppException } from "@megawin/shared/errors";
+import type { Currency } from "@megawin/shared/types";
+import { TransactionAction, TransactionReason } from "@megawin/shared/types";
+import { generateId, logError, toTenantUsername } from "@megawin/shared/utils";
+import type { TenantGatewayClient, TransactionRequest } from "@megawin/tenant-gateway";
+import { TxLoggingPolicy, tenantGateway } from "@megawin/tenant-gateway";
 
 import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
 
@@ -247,15 +247,11 @@ export class DebitPlayerService {
         updatedAt: now,
       });
     } catch (walError) {
-      logError(
-        "DebitPlayerService.insertWal",
-        walError instanceof Error ? walError : new Error(String(walError)),
-        { ...input },
-      );
+      logError("DebitPlayerService.insertWal", walError instanceof Error ? walError : new Error(String(walError)), {
+        ...input,
+      });
 
-      throw AppException.serviceUnavailable(
-        "Hệ thống đang bận, không thể thực hiện giao dịch. Vui lòng thử lại.",
-      );
+      throw AppException.serviceUnavailable("Hệ thống đang bận, không thể thực hiện giao dịch. Vui lòng thử lại.");
     }
   }
 
@@ -290,10 +286,7 @@ export class DebitPlayerService {
    * - Mọi status khác (0, 408, 429, 500, 502–504) → không chắc debit đã apply
    *   → giữ WAL cho scheduler recovery.
    */
-  private async callTenantDebit(
-    input: DebitPlayerInput,
-    client: TenantGatewayClient,
-  ): Promise<DebitPlayerResult> {
+  private async callTenantDebit(input: DebitPlayerInput, client: TenantGatewayClient): Promise<DebitPlayerResult> {
     const { tx } = input;
 
     try {
@@ -330,15 +323,12 @@ export class DebitPlayerService {
       if (!response.success) {
         await this.safeDeleteWal(tx);
         throw AppException.badRequest(
-          response.error?.message ||
-            "Không thể thực hiện giao dịch số dư tài khoản, hãy thử lại sau.",
+          response.error?.message || "Không thể thực hiện giao dịch số dư tài khoản, hãy thử lại sau.",
         );
       }
 
       return { balance: response.data!.balance };
     } catch (error) {
-     
-
       if (error instanceof ApiClientError && this.isTenantRejection(error)) {
         await this.safeDeleteWal(tx);
         throw AppException.badRequest(
@@ -346,15 +336,11 @@ export class DebitPlayerService {
         );
       }
 
-      logError(
-        "DebitPlayerService.callTenantDebit",
-        error instanceof Error ? error : new Error(String(error)),
-        { ...input },
-      );
+      logError("DebitPlayerService.callTenantDebit", error instanceof Error ? error : new Error(String(error)), {
+        ...input,
+      });
 
-      throw AppException.serviceUnavailable(
-        "Không thể thực hiện giao dịch số dư tài khoản, hãy thử lại sau.",
-      );
+      throw AppException.serviceUnavailable("Không thể thực hiện giao dịch số dư tài khoản, hãy thử lại sau.");
     }
   }
 

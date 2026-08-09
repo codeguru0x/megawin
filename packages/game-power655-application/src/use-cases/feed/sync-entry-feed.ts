@@ -6,24 +6,23 @@
  * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
 import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
+import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
-import { Long } from "mongodb";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
-  TicketEntryEntity,
   EntryBoardSnapshot,
   EntryPayout,
-  EntryVoidInfo,
   EntryResult,
-} from "@megawin/game-power655/entities";
-import type {
+  EntryVoidInfo,
   Power655FeedBetContent,
   Power655FeedDrawResult,
   Power655FeedPayoutDetail,
+  TicketEntryEntity,
 } from "@megawin/game-power655/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
+import { Long } from "mongodb";
+
+import { EntryRepository } from "../../infras/repos/entry-repo";
 
 /**
  * Sync Power 6/55 entries vào unified entry feed.
@@ -36,14 +35,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     super(GameProduct.Power655);
   }
 
-  protected async fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
-    const entries = await this.entryRepo.getChangedEntries(
-      Long.fromString(afterVersion),
-      batchSize,
-    );
+  protected async fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
     return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }

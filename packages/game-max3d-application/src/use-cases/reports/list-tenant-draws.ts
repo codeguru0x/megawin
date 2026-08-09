@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
 
@@ -7,10 +8,7 @@ import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
  *
  * Paginated, sort financialDate desc.
  */
-export class ListTenantDrawsUseCase extends NextApiUseCase<
-  ListTenantDrawsInput,
-  ListTenantDrawsOutput
-> {
+export class ListTenantDrawsUseCase extends NextApiUseCase<ListTenantDrawsInput, ListTenantDrawsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListTenantDrawsInput): Promise<ListTenantDrawsOutput> {

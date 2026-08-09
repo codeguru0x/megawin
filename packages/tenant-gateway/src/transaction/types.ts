@@ -27,11 +27,11 @@
  * Mọi response theo {@link CallbackResponse} envelope — xem `shared/types.ts`.
  */
 
-import type { TransactionAction, TransactionReason } from "@megawin/shared/types";
-import type { Currency } from "@megawin/shared/types";
+import type { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
+
 import type {
-  CallbackResponse,
   CallbackErrorInfo,
+  CallbackResponse,
   TransactionErrorCode,
   TransactionStatusErrorCode,
 } from "../shared/types";
@@ -591,7 +591,4 @@ export interface TransactionStatusData {
  * // Scheduler xử lý mọi success: false giống nhau → xoá WAL, không rollback
  * ```
  */
-export type TransactionStatusResponse = CallbackResponse<
-  TransactionStatusData,
-  TransactionStatusErrorCode
->;
+export type TransactionStatusResponse = CallbackResponse<TransactionStatusData, TransactionStatusErrorCode>;

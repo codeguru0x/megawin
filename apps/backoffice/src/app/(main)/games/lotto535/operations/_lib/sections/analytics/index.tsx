@@ -60,15 +60,11 @@ export function AnalyticsSection({ active }: { active: boolean }) {
   const { data: playTypes } = useOpsSnapshot<PlayTypeRow[]>(effectiveDrawId, isSettled, (s) =>
     s.stats ? toPlayTypeRows(s.stats) : [],
   );
-  const { data: mainNumberFreq } = useOpsSnapshot<NumberFreqItem[]>(
-    effectiveDrawId,
-    isSettled,
-    (s) => toMainNumberFreq(s.mainNumberStats),
+  const { data: mainNumberFreq } = useOpsSnapshot<NumberFreqItem[]>(effectiveDrawId, isSettled, (s) =>
+    toMainNumberFreq(s.mainNumberStats),
   );
-  const { data: specialNumberFreq } = useOpsSnapshot<NumberFreqItem[]>(
-    effectiveDrawId,
-    isSettled,
-    (s) => toSpecialNumberFreq(s.specialNumberStats),
+  const { data: specialNumberFreq } = useOpsSnapshot<NumberFreqItem[]>(effectiveDrawId, isSettled, (s) =>
+    toSpecialNumberFreq(s.specialNumberStats),
   );
   const { data: topCombos } = useOpsSnapshot<TopComboRow[]>(effectiveDrawId, isSettled, (s) =>
     toTopCombos(s.topCombos),
@@ -76,20 +72,14 @@ export function AnalyticsSection({ active }: { active: boolean }) {
   const { data: topAccounts } = useOpsSnapshot<TopAccountRow[]>(effectiveDrawId, isSettled, (s) =>
     toTopAccounts(s.topAccounts),
   );
-  const { data: topPotential } = useOpsSnapshot<TopPotentialRow[]>(
-    effectiveDrawId,
-    isSettled,
-    (s) => (s.stats ? toTopPotential(s.stats) : []),
+  const { data: topPotential } = useOpsSnapshot<TopPotentialRow[]>(effectiveDrawId, isSettled, (s) =>
+    s.stats ? toTopPotential(s.stats) : [],
   );
   const { data: tenants } = useOpsSnapshot<TenantRow[]>(effectiveDrawId, isSettled, (s) =>
     s.stats ? toTenantRows(s.stats) : [],
   );
   // Nhịp poll chung cho toàn trang — live feed khớp cadence snapshot, không hardcode.
-  const { data: pollSeconds } = useOpsSnapshot<number>(
-    effectiveDrawId,
-    isSettled,
-    (s) => s.pollSeconds,
-  );
+  const { data: pollSeconds } = useOpsSnapshot<number>(effectiveDrawId, isSettled, (s) => s.pollSeconds);
 
   const { data: liveData } = useOpsLiveEntries(
     active && effectiveDrawId ? effectiveDrawId : undefined,
@@ -102,9 +92,7 @@ export function AnalyticsSection({ active }: { active: boolean }) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
 
       <PlayTypeCard distribution={playTypes ?? []} />
 

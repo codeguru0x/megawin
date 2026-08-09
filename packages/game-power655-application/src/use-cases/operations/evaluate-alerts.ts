@@ -20,18 +20,18 @@
  * nhiều doc trùng loại/scope trong 1 kỳ. Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
+import type {
+  Power655DrawBettingStatsEntity,
+  Power655DrawComboStatsEntity,
+  Power655OpsAlertDoc,
+  Power655OpsAlertsConfig,
+} from "@megawin/game-power655/entities";
 import {
   BAO_COMBINATIONS,
   OpsAlertSeverity,
   OpsAlertStatus,
   PlayType,
   Power655OpsAlertType,
-} from "@megawin/game-power655/entities";
-import type {
-  Power655DrawBettingStatsEntity,
-  Power655DrawComboStatsEntity,
-  Power655OpsAlertDoc,
-  Power655OpsAlertsConfig,
 } from "@megawin/game-power655/entities";
 
 /** Snapshot stats + combo cần cho evaluate. */
@@ -50,12 +50,7 @@ export interface EvaluateAlertsInput {
 type NewAlert = Omit<Power655OpsAlertDoc, "_id">;
 
 /** Nhóm playType Bao thuộc diện đánh giá `bao_high_stake` — bao13, bao14, bao15, bao18 (không có bao16/17). */
-const BAO_HIGH_STAKE_PLAY_TYPES: readonly PlayType[] = [
-  PlayType.Bao13,
-  PlayType.Bao14,
-  PlayType.Bao15,
-  PlayType.Bao18,
-];
+const BAO_HIGH_STAKE_PLAY_TYPES: readonly PlayType[] = [PlayType.Bao13, PlayType.Bao14, PlayType.Bao15, PlayType.Bao18];
 
 /**
  * Đánh giá toàn bộ rule, trả alert cần upsert. Chỉ rule `enabled` mới chạy.
@@ -84,9 +79,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
 
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn ──
   if (alerts.enabled[Power655OpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       Power655OpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -105,9 +98,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
       push(
         Power655OpsAlertType.ExposureThreshold,
         // Chạm/vượt 2× ngưỡng → critical.
-        fixedWorstCase >= alerts.fixedExposureWarnAmount * 2
-          ? OpsAlertSeverity.Critical
-          : OpsAlertSeverity.Warning,
+        fixedWorstCase >= alerts.fixedExposureWarnAmount * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
         Power655OpsAlertType.ExposureThreshold,
         { fixedWorstCase, threshold: alerts.fixedExposureWarnAmount },
       );
@@ -124,9 +115,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
         push(
           Power655OpsAlertType.ComboConcentration,
           // Rất đông người dồn 1 bộ → critical.
-          players >= alerts.comboAccountsWarn * 2
-            ? OpsAlertSeverity.Critical
-            : OpsAlertSeverity.Warning,
+          players >= alerts.comboAccountsWarn * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
           `combo:${combo.comboKey}`,
           {
             comboKey: combo.comboKey,

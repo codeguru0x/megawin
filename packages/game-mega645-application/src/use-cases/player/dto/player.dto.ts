@@ -5,12 +5,8 @@
  * Mega 6/45 không có số đặc biệt — chỉ numbers.
  */
 
-import { EntryOutcome } from "@megawin/game-core/entities";
-import type {
-  DrawSettleSummaryTier,
-  EntrySummary,
-  EntryPayoutTier,
-} from "@megawin/game-mega645/entities";
+import type { EntryOutcome } from "@megawin/game-core/entities";
+import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary } from "@megawin/game-mega645/entities";
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 

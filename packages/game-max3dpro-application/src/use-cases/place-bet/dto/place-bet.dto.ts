@@ -1,6 +1,5 @@
-import type { PlayMode, PlayType } from "@megawin/game-max3dpro/entities";
-import type { BoardSelection } from "@megawin/game-max3dpro/entities";
 import type { TicketChannel } from "@megawin/game-core/entities";
+import type { BoardSelection, PlayMode, PlayType } from "@megawin/game-max3dpro/entities";
 
 // ─────────────────────────────────────────────
 // PlaceBet Input (từ player)

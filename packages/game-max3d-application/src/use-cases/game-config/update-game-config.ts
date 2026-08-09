@@ -1,15 +1,12 @@
+import type { OpsConfig } from "@megawin/game-max3d/entities";
+import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
-import type { OpsConfig } from "@megawin/game-max3d/entities";
+
+import { globalConfigCache } from "../../caches/global-config.cache";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
-import { globalConfigCache } from "../../caches/global-config.cache";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-  UpdateOpsInput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game toàn cục (upsert).
@@ -24,10 +21,7 @@ import type {
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
  */
-export class UpdateGameConfigUseCase extends NextApiUseCase<
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput
-> {
+export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {

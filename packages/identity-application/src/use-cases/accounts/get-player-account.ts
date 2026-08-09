@@ -1,6 +1,7 @@
+import { AccountType } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { AccountType } from "@megawin/identity/entities";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type { GetPlayerAccountInput, GetPlayerAccountOutput } from "./dto/get-player-account.dto";
 
@@ -11,10 +12,7 @@ import type { GetPlayerAccountInput, GetPlayerAccountOutput } from "./dto/get-pl
  * Validate type = "player" trước khi trả về — tránh lấy nhầm Company/Agent account.
  * 1 DB query — findOne by accountId.
  */
-export class GetPlayerAccountUseCase extends NextApiUseCase<
-  GetPlayerAccountInput,
-  GetPlayerAccountOutput
-> {
+export class GetPlayerAccountUseCase extends NextApiUseCase<GetPlayerAccountInput, GetPlayerAccountOutput> {
   private readonly repo = new AccountRepository();
 
   protected async execute(input: GetPlayerAccountInput): Promise<GetPlayerAccountOutput> {

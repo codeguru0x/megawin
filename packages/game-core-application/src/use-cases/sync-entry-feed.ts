@@ -49,10 +49,11 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { longToString } from "@megawin/data/mongo";
 import type { EntryFeedDoc, GameProduct } from "@megawin/game-core/entities";
+
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
 import { FeedSyncCursorRepository } from "../infras/repos/feed-sync-cursor-repo";
-import { longToString } from "@megawin/data/mongo";
 
 /** Batch size mặc định nếu không truyền vào. */
 const DEFAULT_BATCH_SIZE = 500;
@@ -115,18 +116,17 @@ export interface SyncEntryFeedResult {
  * CRASH-SAFE: cursor save sau mỗi batch. Mất tối đa 500 entries khi crash.
  * IDEMPOTENT: upsert với version guard — re-run an toàn.
  */
-export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
-  SyncEntryFeedInput,
-  SyncEntryFeedResult
-> {
+export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<SyncEntryFeedInput, SyncEntryFeedResult> {
   private readonly feedRepo = new EntryFeedRepository();
   private readonly cursorRepo = new FeedSyncCursorRepository();
+  protected readonly gameProduct: GameProduct;
 
   /**
    * @param gameProduct GameProduct enum value cho game này.
    */
-  constructor(protected readonly gameProduct: GameProduct) {
+  constructor(gameProduct: GameProduct) {
     super();
+    this.gameProduct = gameProduct;
   }
 
   /**
@@ -139,10 +139,7 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
    * @param afterVersion Version cursor hiện tại (string, convert sang Long khi query).
    * @param batchSize    Số entries tối đa mỗi batch.
    */
-  protected abstract fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]>;
+  protected abstract fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]>;
 
   /**
    * Sync loop tự chứa: acquireLock → loop batches → releaseLock.

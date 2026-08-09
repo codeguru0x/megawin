@@ -16,14 +16,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import { Mega645Collections, OpsAlertStatus } from "@megawin/game-mega645/entities";
-import type { Mega645OpsAlertDoc, Mega645OpsAlertEntity } from "@megawin/game-mega645/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-mega645/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  Mega645OpsAlertDoc,
+  Mega645OpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-mega645/entities";
+import { Mega645Collections, OpsAlertStatus } from "@megawin/game-mega645/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<Mega645OpsAlertDoc>();
 
@@ -99,10 +103,7 @@ export class OpsAlertRepository extends BaseRepo<Mega645OpsAlertEntity, OpsAlert
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByFilter(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<Mega645OpsAlertEntity[]> {
+  async listByFilter(drawId: string, status?: OpsAlertStatusType): Promise<Mega645OpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) {
       filter.status = status;

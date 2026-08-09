@@ -1,8 +1,9 @@
+import { adminSetUserPassword, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import type { AuditActor } from "@megawin/audit/logger";
+import { CompanyRole } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { adminSetUserPassword, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
-import { CompanyRole } from "@megawin/identity/entities";
-import type { AuditActor } from "@megawin/audit/logger";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 import { auditSetAccountPassword } from "../../services/audit-log";
 
@@ -23,10 +24,7 @@ export interface SetAccountPasswordOutput {
   username: string;
 }
 
-export class SetAccountPasswordUseCase extends NextApiUseCase<
-  SetAccountPasswordInput,
-  SetAccountPasswordOutput
-> {
+export class SetAccountPasswordUseCase extends NextApiUseCase<SetAccountPasswordInput, SetAccountPasswordOutput> {
   private readonly accountRepo = new AccountRepository();
 
   protected async execute(input: SetAccountPasswordInput): Promise<SetAccountPasswordOutput> {
@@ -57,10 +55,7 @@ export class SetAccountPasswordUseCase extends NextApiUseCase<
    *
    * @throws notFound nếu target không tồn tại; forbidden nếu Staff đụng Admin.
    */
-  private async assertCallerCanSetPassword(
-    callerRoles: CompanyRole[],
-    targetUsername: string,
-  ): Promise<void> {
+  private async assertCallerCanSetPassword(callerRoles: CompanyRole[], targetUsername: string): Promise<void> {
     if (callerRoles.includes(CompanyRole.Admin)) {
       return;
     }

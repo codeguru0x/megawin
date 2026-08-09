@@ -1,9 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { EntryVoidRepository } from "../../infras/repos/entry-void-repo";
-import type {
-  ListVoidTenantPlayersInput,
-  ListVoidTenantPlayersOutput,
-} from "./types";
+import type { ListVoidTenantPlayersInput, ListVoidTenantPlayersOutput } from "./types";
 
 /**
  * Aggregate player breakdown cho 1 draw × 1 tenant đã void. Drill cấp 3.
@@ -18,9 +16,7 @@ export class ListVoidTenantPlayersUseCase extends NextApiUseCase<
 > {
   private readonly repo = new EntryVoidRepository();
 
-  protected async execute(
-    input: ListVoidTenantPlayersInput,
-  ): Promise<ListVoidTenantPlayersOutput> {
+  protected async execute(input: ListVoidTenantPlayersInput): Promise<ListVoidTenantPlayersOutput> {
     const data = await this.repo.aggregatePlayersByDrawAndTenant(input.drawId, input.tenantId);
     return { data };
   }

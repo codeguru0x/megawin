@@ -13,7 +13,9 @@
 // ─────────────────────────────────────────────
 
 export type { ISODateString } from "@megawin/game-core/types";
+
 import type { OpsStatsConfig } from "@megawin/game-core/types";
+
 import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
 import type { KenoOpsAlertType } from "./ops-alert";
 

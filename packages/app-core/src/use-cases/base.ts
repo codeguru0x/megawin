@@ -13,22 +13,22 @@
 
 export {
   APP_ERROR_CODES,
-  type AppErrorCode,
   type AppError,
+  type AppErrorCode,
+  AppException,
   type AppResult,
   isAppError,
-  AppException,
 } from "@megawin/shared/errors";
 
 // ============ Legacy aliases (backward compat) ============
 
 import {
   APP_ERROR_CODES,
-  type AppErrorCode,
   type AppError,
+  type AppErrorCode,
+  AppException,
   type AppResult,
   isAppError,
-  AppException,
 } from "@megawin/shared/errors";
 
 /** @deprecated Dùng APP_ERROR_CODES */

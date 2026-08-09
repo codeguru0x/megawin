@@ -81,22 +81,17 @@ export function AnalyticsSection({ active }: { active: boolean }) {
       const rawType = firstBoard?.playType ?? "unknown";
       // Key hoá tripleMatch theo tripleKind
       const playType =
-        rawType === "tripleMatch" && firstBoard
-          ? `tripleMatch-${(firstBoard as any).tripleKind ?? "any"}`
-          : rawType;
+        rawType === "tripleMatch" && firstBoard ? `tripleMatch-${(firstBoard as any).tripleKind ?? "any"}` : rawType;
       return {
         entryId: e.entryId,
         time: e.createdAt,
         playType,
         numbers:
-          firstBoard &&
-          BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) &&
-          (firstBoard as any).number !== undefined
+          firstBoard && BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) && (firstBoard as any).number !== undefined
             ? [(firstBoard as any).number as number]
             : [],
         sum: rawType === "sumTotal" ? ((firstBoard as any).sum as number | undefined) : undefined,
-        bet:
-          rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
+        bet: rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,
@@ -124,17 +119,10 @@ export function AnalyticsSection({ active }: { active: boolean }) {
         <DiceBoard cells={view.diceCells} />
         <SideBetCard split={view.sideBetSplit} skewPct={view.thresholds.sidebetSkewPct} />
       </div>
-      <SumTotalBar
-        bars={view.sumBars}
-        concentrationThreshold={view.thresholds.bucketConcentrationAmount}
-      />
+      <SumTotalBar bars={view.sumBars} concentrationThreshold={view.thresholds.bucketConcentrationAmount} />
 
       {/* 3. Cụm rủi ro — TRƯỚC monitoring (guideline §5) */}
-      <RiskCluster
-        drawId={effectiveDrawId}
-        topAccounts={view.topAccounts}
-        topPotential={view.topPotential}
-      />
+      <RiskCluster drawId={effectiveDrawId} topAccounts={view.topAccounts} topPotential={view.topPotential} />
 
       {/* 4. [Live feed (rộng) | Đại lý (hẹp)] */}
       <div className="grid items-start gap-4 @[64rem]/main:[grid-template-columns:1fr_24rem]">

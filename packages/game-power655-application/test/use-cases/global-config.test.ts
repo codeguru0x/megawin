@@ -9,27 +9,27 @@
  * - Version auto-increments on each update
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import type { NextResponse } from "next/server";
+
+import { systemActor } from "@megawin/audit/logger";
+import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
+import { Power655OpsAlertType } from "@megawin/game-power655/entities";
+import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
+import type { ApiErrorResponse, ApiSuccessResponse } from "@megawin/shared/api-types";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { globalConfigCache } from "../../src/caches/global-config.cache";
 import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { GetGlobalConfigUseCase } from "../../src/use-cases/game-config/get-global-config";
 import { UpdateGameConfigUseCase } from "../../src/use-cases/game-config/update-game-config";
-import { globalConfigCache } from "../../src/caches/global-config.cache";
-import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
-import { Power655OpsAlertType } from "@megawin/game-power655/entities";
-import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
-import { systemActor } from "@megawin/audit/logger";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
-import type { ApiSuccessResponse, ApiErrorResponse } from "@megawin/shared/api-types";
-import type { NextResponse } from "next/server";
 
 /**
  * `NextApiUseCase.run()` trả về `NextResponse` (Web `Response`) — PHẢI gọi `.json()`
  * để lấy body, KHÔNG được truy cập field trực tiếp trên kết quả `run()`. Helper này
  * unwrap `data`, throw nếu response là error (test success-path không cần tự check).
  */
-async function unwrapSuccess<O>(
-  response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>,
-): Promise<O> {
+async function unwrapSuccess<O>(response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>): Promise<O> {
   const body = await response.json();
   if (!body.success) {
     throw new Error(`Use-case trả lỗi: ${body.error.code} — ${body.error.message}`);
@@ -58,21 +58,11 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.jackpot).toBeDefined();
-    expect(config!.jackpot.jackpot1.seedAmount).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jackpot1.seedAmount,
-    );
-    expect(config!.jackpot.jackpot2.seedAmount).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount,
-    );
-    expect(config!.jackpot.jp1ContributionRatio).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp1ContributionRatio,
-    );
-    expect(config!.jackpot.jp2ContributionRatio).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp2ContributionRatio,
-    );
-    expect(config!.jackpot.jp1OverflowThreshold).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold,
-    );
+    expect(config!.jackpot.jackpot1.seedAmount).toBe(DEFAULT_POWER655_CONFIG.jackpot.jackpot1.seedAmount);
+    expect(config!.jackpot.jackpot2.seedAmount).toBe(DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount);
+    expect(config!.jackpot.jp1ContributionRatio).toBe(DEFAULT_POWER655_CONFIG.jackpot.jp1ContributionRatio);
+    expect(config!.jackpot.jp2ContributionRatio).toBe(DEFAULT_POWER655_CONFIG.jackpot.jp2ContributionRatio);
+    expect(config!.jackpot.jp1OverflowThreshold).toBe(DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold);
   });
 
   /** Validates financial rates: commission and company rates. */
@@ -80,9 +70,7 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.rates).toBeDefined();
-    expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.rates.defaultCommissionRate).toBe(DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate);
     expect(config!.rates.companyRate).toBe(DEFAULT_POWER655_CONFIG.rates.companyRate);
   });
 
@@ -104,9 +92,7 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     expect(config!.play.unitPrice).toBe(DEFAULT_POWER655_CONFIG.play.unitPrice);
     expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_POWER655_CONFIG.play.maxBoardsPerTicket);
     expect(config!.play.maxDrawCount).toBe(DEFAULT_POWER655_CONFIG.play.maxDrawCount);
-    expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_POWER655_CONFIG.play.salesCloseBeforeMinutes,
-    );
+    expect(config!.play.salesCloseBeforeMinutes).toBe(DEFAULT_POWER655_CONFIG.play.salesCloseBeforeMinutes);
     expect(config!.play.drawsPerDay).toBe(DEFAULT_POWER655_CONFIG.play.drawsPerDay);
     expect(config!.play.drawTimes).toEqual(DEFAULT_POWER655_CONFIG.play.drawTimes);
     expect(config!.play.drawDaysOfWeek).toEqual(DEFAULT_POWER655_CONFIG.play.drawDaysOfWeek);
@@ -123,12 +109,8 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
 
     expect(updated).not.toBeNull();
     expect(updated!.jackpot.jackpot1.seedAmount).toBe(50_000_000_000);
-    expect(updated!.jackpot.jackpot2.seedAmount).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount,
-    );
-    expect(updated!.jackpot.jp1OverflowThreshold).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold,
-    );
+    expect(updated!.jackpot.jackpot2.seedAmount).toBe(DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount);
+    expect(updated!.jackpot.jp1OverflowThreshold).toBe(DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold);
   });
 
   /** Validates version auto-increments on each upsert call. */
@@ -242,9 +224,7 @@ describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section",
     expect(config.ops.alerts.largeBetAmount).toBe(99_000_000);
     expect(config.ops.stats.tickSeconds).toBe(5);
     // Field thiếu lấp default.
-    expect(config.ops.alerts.baoHighStakeAmount).toBe(
-      DEFAULT_POWER655_CONFIG.ops.alerts.baoHighStakeAmount,
-    );
+    expect(config.ops.alerts.baoHighStakeAmount).toBe(DEFAULT_POWER655_CONFIG.ops.alerts.baoHighStakeAmount);
     expect(config.ops.stats.topCombosK).toBe(DEFAULT_POWER655_CONFIG.ops.stats.topCombosK);
     // `enabled` merge từng key — key có giữ, key thiếu lấp default.
     expect(config.ops.alerts.enabled[Power655OpsAlertType.LargeBet]).toBe(true);
@@ -273,8 +253,6 @@ describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section",
     expect(config.ops.stats.tickSeconds).toBe(15);
     // Field KHÔNG gửi trong input vẫn giữ default (existing lúc merge = insertDefaultGlobalConfig
     // không có `ops` → base = DEFAULT_POWER655_CONFIG.ops).
-    expect(config.ops.alerts.fixedExposureWarnAmount).toBe(
-      DEFAULT_POWER655_CONFIG.ops.alerts.fixedExposureWarnAmount,
-    );
+    expect(config.ops.alerts.fixedExposureWarnAmount).toBe(DEFAULT_POWER655_CONFIG.ops.alerts.fixedExposureWarnAmount);
   });
 });

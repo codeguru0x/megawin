@@ -34,11 +34,7 @@ export function lambdaTimeoutProtection(options?: LambdaTimeoutProtectionOptions
 
       return new Promise<void>((_resolve, reject) => {
         timeoutId = setTimeout(() => {
-          reject(
-            AppException.serviceUnavailable(
-              "Hệ thống xử lý quá thời gian cho phép, vui lòng thử lại.",
-            ),
-          );
+          reject(AppException.serviceUnavailable("Hệ thống xử lý quá thời gian cho phép, vui lòng thử lại."));
         }, deadline);
 
         // Store resolve so `after`/`onError` can cancel.

@@ -25,6 +25,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { AppException } from "@megawin/shared/errors";
 import { DistributedMutex } from "@megawin/worker-core/locks";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { SettleContext } from "./types";
 
@@ -53,9 +54,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<SettleContext, Finali
         // Replay sau crash — đã transition rồi, OK.
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw AppException.internal(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
-        );
+        throw AppException.internal(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
 

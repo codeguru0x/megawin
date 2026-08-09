@@ -64,17 +64,14 @@ export function KpiSection() {
   );
 
   // Slice `exposure` + thresholds — ngưỡng TUYỆT ĐỐI VND từ config.
-  const { data: exposureSlice } = useOpsSnapshot<ExposureSlice | null>(
-    effectiveDrawId,
-    isSettled,
-    (s) =>
-      s.exposure && s.stats
-        ? {
-            exposure: s.exposure,
-            revenue: s.stats.totals.revenue,
-            warnAmount: s.thresholds.exposureWarnAmount,
-          }
-        : null,
+  const { data: exposureSlice } = useOpsSnapshot<ExposureSlice | null>(effectiveDrawId, isSettled, (s) =>
+    s.exposure && s.stats
+      ? {
+          exposure: s.exposure,
+          revenue: s.stats.totals.revenue,
+          warnAmount: s.thresholds.exposureWarnAmount,
+        }
+      : null,
   );
 
   if (!draw) return null;
@@ -83,9 +80,7 @@ export function KpiSection() {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Tổng quan
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tổng quan</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <KpiCard
           icon={CircleDollarSign}

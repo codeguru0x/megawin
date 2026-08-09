@@ -41,8 +41,7 @@
  *   trực tiếp từ document fields — không cần transform.
  */
 
-import type { TransactionAction, TransactionReason } from "@megawin/shared/types";
-import type { Currency } from "@megawin/shared/types";
+import type { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────
 // Phase State Machine

@@ -32,21 +32,22 @@
  * lặp lại, worker khoẻ/kẹt) do `worker-core` theo dõi qua `stalledItems` trên lock doc.
  */
 
-import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DRAW_COMPLETED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
-import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
+import { DRAW_COMPLETED_STATUSES, type DrawStatus } from "@megawin/game-core/entities";
 import type { OpsStatsConfig } from "@megawin/game-core/types";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
+import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+
+import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
+import { ComboAccountsRepository } from "../../infras/repos/combo-accounts-repo";
+import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
-import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
-import { ComboAccountsRepository } from "../../infras/repos/combo-accounts-repo";
-import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { Lotto535StatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -89,8 +90,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description =
-    "Lotto 5/35 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
+  protected override readonly description = "Lotto 5/35 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -112,7 +112,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
     return "lotto535:stats-sync";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.prize = this.buildPrizeContext(config);
     // R7 (p0-02 plan): doc GlobalConfig cũ (trước p0-01) KHÔNG có field `ops` — mapper
@@ -156,12 +156,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
       // 1 kỳ lỗi (data bẩn, doc quá cỡ…) KHÔNG được làm chết cả tick — các kỳ còn lại,
       // nhất là kỳ đang mở bán, vẫn phải được cập nhật.
       try {
-        const applied = await this.syncDraw(
-          drawCursor.drawId,
-          drawCursor.lastEntryId,
-          this.prize,
-          this.statsConfig,
-        );
+        const applied = await this.syncDraw(drawCursor.drawId, drawCursor.lastEntryId, this.prize, this.statsConfig);
         this.counters.entriesApplied += applied.entriesApplied;
         this.clearStalledItem(drawCursor.drawId); // kỳ qua được → xoá streak
 
@@ -294,15 +289,12 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   }
 
   /** Gom prize config từ GlobalConfig để tính worst-case exposure. */
-  private buildPrizeContext(
-    config: Pick<GlobalConfigEntity, "play" | "defaultPrizes" | "ops">,
-  ): PrizeContext {
+  private buildPrizeContext(config: Pick<GlobalConfigEntity, "play" | "defaultPrizes" | "ops">): PrizeContext {
     return {
       unitPrice: config.play.unitPrice,
       tier1: config.defaultPrizes.tier1,
       // Cùng lý do merge-default ở `beforeLoop` — xem comment tại đó.
-      largeBetAmount:
-        config.ops?.alerts.largeBetAmount ?? DEFAULT_LOTTO535_CONFIG.ops.alerts.largeBetAmount,
+      largeBetAmount: config.ops?.alerts.largeBetAmount ?? DEFAULT_LOTTO535_CONFIG.ops.alerts.largeBetAmount,
     };
   }
 }

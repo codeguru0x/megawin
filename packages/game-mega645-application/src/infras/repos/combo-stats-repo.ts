@@ -23,16 +23,14 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Mega645Collections, PlayType } from "@megawin/game-mega645/entities";
-import type {
-  Mega645DrawComboStatsDoc,
-  Mega645DrawComboStatsEntity,
-} from "@megawin/game-mega645/entities";
-import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Mega645DrawComboStatsDoc, Mega645DrawComboStatsEntity } from "@megawin/game-mega645/entities";
+import { Mega645Collections, PlayType } from "@megawin/game-mega645/entities";
+import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Mega645DrawComboStatsDoc>();
@@ -60,10 +58,7 @@ export class ComboStatsRepository extends BaseRepo<Mega645DrawComboStatsEntity, 
   }
 
   /** Đọc 1 combo cụ thể — tra cứu staff/player, O(1) theo unique index. */
-  async findByComboKey(
-    drawId: string,
-    comboKey: string,
-  ): Promise<Mega645DrawComboStatsEntity | null> {
+  async findByComboKey(drawId: string, comboKey: string): Promise<Mega645DrawComboStatsEntity | null> {
     return await this.findOne({ drawId, comboKey });
   }
 
@@ -91,15 +86,8 @@ export class ComboStatsRepository extends BaseRepo<Mega645DrawComboStatsEntity, 
    * @param minAccounts - Ngưỡng số người dồn cược (`ops.alerts.comboAccountsWarn`).
    * @param limit - Trần số alert combo xử lý 1 tick.
    */
-  async findConcentrated(
-    drawId: string,
-    minAccounts: number,
-    limit: number,
-  ): Promise<Mega645DrawComboStatsEntity[]> {
-    return await this.findMany(
-      { drawId, accountCount: { $gte: minAccounts } },
-      { sort: { accountCount: -1 }, limit },
-    );
+  async findConcentrated(drawId: string, minAccounts: number, limit: number): Promise<Mega645DrawComboStatsEntity[]> {
+    return await this.findMany({ drawId, accountCount: { $gte: minAccounts } }, { sort: { accountCount: -1 }, limit });
   }
 
   /**

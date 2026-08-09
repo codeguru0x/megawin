@@ -21,7 +21,6 @@
  */
 export const MAX3D_MAX_BOARDS = 100;
 
-
 export interface DrawFinancialInput {
   /** Tổng doanh thu = Σ(entry.amount). */
   totalRevenue: number;

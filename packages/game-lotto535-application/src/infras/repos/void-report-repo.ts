@@ -9,6 +9,7 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-lotto535/entities";
 import { LOTTO535_VOID_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+
 import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 

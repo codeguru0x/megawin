@@ -16,10 +16,11 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "@megawin/game-power655/entities";
+import { AppException } from "@megawin/shared/errors";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PlayerDrawResultInfo } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
@@ -32,10 +33,7 @@ export interface GetDrawResultPlayerInput {
  * settleSummary.tiers được ghi bởi CalculateFinancials (JP = 0) và
  * patch bởi PatchJackpotPrize khi có winner → luôn đầy đủ sau settled.
  */
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
-  GetDrawResultPlayerInput,
-  PlayerDrawResultInfo
-> {
+export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

@@ -11,14 +11,8 @@
  *       Khi entity đổi field → chỉ sửa repo, compiler sẽ bắt lỗi ở use case.
  */
 
-import { KenoCollections } from "@megawin/game-keno/entities";
-import {
-  DrawStatus,
-  DRAW_UNFINISHED_STATUSES,
-  DRAW_COMPLETED_STATUSES,
-} from "@megawin/game-core/entities";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import type { FindOptions } from "mongodb";
+import { DRAW_COMPLETED_STATUSES, DRAW_UNFINISHED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
 import type {
   DrawDoc,
   DrawEntity,
@@ -30,8 +24,11 @@ import type {
   DrawVoidInfo,
   DrawVoidSummary,
 } from "@megawin/game-keno/entities";
-import { BaseRepo } from "./base-repo";
+import { KenoCollections } from "@megawin/game-keno/entities";
+import type { FindOptions } from "mongodb";
+
 import { DrawMapper } from "../mappers/draw-mapper";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Valid status transitions cho Keno Draw.
@@ -46,11 +43,7 @@ import { DrawMapper } from "../mappers/draw-mapper";
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Voiding]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([
-    DrawStatus.SalesOpen,
-    DrawStatus.Published,
-    DrawStatus.Voiding,
-  ]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Voiding]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Voiding]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
   [DrawStatus.Settled]: new Set([DrawStatus.Published]),
@@ -178,10 +171,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     statuses: readonly UnfinishedDrawStatus[] = DRAW_UNFINISHED_STATUSES,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    return await this.findMany(
-      { status: { $in: [...statuses] } },
-      { sort: { drawId: -1 }, ...options },
-    );
+    return await this.findMany({ status: { $in: [...statuses] } }, { sort: { drawId: -1 }, ...options });
   }
 
   /**
@@ -295,11 +285,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Stamp sales.openAt nếu lần đầu mở bán.
    * Dùng dot notation để chỉ set field cần thiết, tránh overwrite toàn bộ sales embedded doc.
    */
-  async openSales(
-    drawId: string,
-    fromStatus: string,
-    salesOpenAt?: Date,
-  ): Promise<DrawEntity | null> {
+  async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
 
@@ -358,11 +344,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Void draw: transition → voiding + ghi voidInfo embedded doc.
    * voidInfo là DrawVoidInfo từ entity layer — type-safe, đồng bộ với DrawDoc.
    */
-  async voidDraw(
-    drawId: string,
-    fromStatus: string,
-    voidInfo: DrawVoidInfo,
-  ): Promise<DrawEntity | null> {
+  async voidDraw(drawId: string, fromStatus: string, voidInfo: DrawVoidInfo): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Voiding)) return null;
 
@@ -419,11 +401,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Cả hai trường hợp đều set `status: published` + ghi `result` + optional `vietlottRef`.
    * Atomic — trả về null nếu draw không ở trạng thái hợp lệ.
    */
-  async publishResult(
-    drawId: string,
-    result: DrawResult,
-    vietlottRef?: DrawVietlottRef,
-  ): Promise<DrawEntity | null> {
+  async publishResult(drawId: string, result: DrawResult, vietlottRef?: DrawVietlottRef): Promise<DrawEntity | null> {
     const $set: Record<string, unknown> = {
       status: DrawStatus.Published,
       result,
@@ -515,10 +493,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Atomic, idempotent — gọi nhiều lần với cùng giá trị OK.
    * Return null nếu draw status không nằm trong scope cho phép.
    */
-  async updateVietlottRef(
-    drawId: string,
-    vietlottRef: DrawVietlottRef,
-  ): Promise<DrawEntity | null> {
+  async updateVietlottRef(drawId: string, vietlottRef: DrawVietlottRef): Promise<DrawEntity | null> {
     return await this.findOneAndUpdate(
       {
         drawId,
@@ -539,10 +514,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Cập nhật lịch bán: openAt, closeAt, drawTime cho kỳ chưa mở bán hoặc đã lên lịch.
    * Dùng dot notation để partial update sales, không overwrite toàn bộ embedded doc.
    */
-  async updateSchedule(
-    drawId: string,
-    sales: { openAt: Date; closeAt: Date; drawTime?: Date },
-  ): Promise<boolean> {
+  async updateSchedule(drawId: string, sales: { openAt: Date; closeAt: Date; drawTime?: Date }): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "sales.openAt": sales.openAt,
       "sales.closeAt": sales.closeAt,
@@ -597,11 +569,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    *
    * Index dùng: { status: 1, drawId: -1 } → idx_status_drawId_desc
    */
-  async listSettledDraws(filter: {
-    from: string;
-    size: number;
-    cursor?: string;
-  }): Promise<DrawEntity[]> {
+  async listSettledDraws(filter: { from: string; size: number; cursor?: string }): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {
       status: DrawStatus.Settled,
       result: { $exists: true },

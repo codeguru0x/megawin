@@ -27,23 +27,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { KenoCollections } from "@megawin/game-keno/entities";
-import type {
-  KenoDrawAccountStatsDoc,
-  KenoDrawAccountStatsEntity,
-} from "@megawin/game-keno/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { KenoDrawAccountStatsDoc, KenoDrawAccountStatsEntity } from "@megawin/game-keno/entities";
+import { KenoCollections } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { AccountStatsMapper } from "../mappers/account-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { AccountStatsDelta } from "./types";
 
 const f = docPath<KenoDrawAccountStatsDoc>();
 
-export class AccountStatsRepository extends BaseRepo<
-  KenoDrawAccountStatsEntity,
-  AccountStatsMapper
-> {
+export class AccountStatsRepository extends BaseRepo<KenoDrawAccountStatsEntity, AccountStatsMapper> {
   constructor() {
     super({
       collName: KenoCollections.AccountStats,
@@ -74,10 +69,7 @@ export class AccountStatsRepository extends BaseRepo<
   }
 
   /** Tích luỹ cược của 1 account trong kỳ — drill-down outstanding từ alert. */
-  async getByAccount(
-    drawId: string,
-    accountId: string,
-  ): Promise<KenoDrawAccountStatsEntity | null> {
+  async getByAccount(drawId: string, accountId: string): Promise<KenoDrawAccountStatsEntity | null> {
     return await this.findOne({ drawId, accountId });
   }
 

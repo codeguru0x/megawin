@@ -90,9 +90,7 @@ export function extractClientIp(headers: HttpHeaders): string | undefined {
  * @param headers - Web `Headers` (`request.headers`, `ctx.headers`).
  * @returns IP client, hoặc `undefined`.
  */
-export function extractClientIpFromWebHeaders(
-  headers: Headers | null | undefined,
-): string | undefined {
+export function extractClientIpFromWebHeaders(headers: Headers | null | undefined): string | undefined {
   if (!headers) return undefined;
 
   const cfIp = headers.get("cf-connecting-ip");
@@ -169,10 +167,7 @@ export function extractHttpContext(headers: HttpHeaders): HttpRequestContext {
   return {
     userAgent: cleanHeader(headers["user-agent"] ?? headers["User-Agent"]),
     requestId: cleanHeader(
-      headers["x-request-id"] ??
-        headers["X-Request-Id"] ??
-        headers["x-amzn-trace-id"] ??
-        headers["X-Amzn-Trace-Id"],
+      headers["x-request-id"] ?? headers["X-Request-Id"] ?? headers["x-amzn-trace-id"] ?? headers["X-Amzn-Trace-Id"],
     ),
   };
 }
@@ -184,9 +179,7 @@ export function extractHttpContext(headers: HttpHeaders): HttpRequestContext {
  * @param headers - Web `Headers` (`request.headers`, `ctx.headers`).
  * @returns `{ userAgent?, requestId? }`.
  */
-export function extractHttpContextFromWebHeaders(
-  headers: Headers | null | undefined,
-): HttpRequestContext {
+export function extractHttpContextFromWebHeaders(headers: Headers | null | undefined): HttpRequestContext {
   if (!headers) return {};
   return {
     userAgent: cleanHeader(headers.get("user-agent")),

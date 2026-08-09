@@ -5,7 +5,8 @@
  * and correct response shape. Also verifies 401 when auth context is missing.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { createMockEvent, parseBody } from "#test/helpers/mock-event";
 
 const MOCK_TICKET_ID = "507f1f77bcf86cd799439011";
@@ -24,8 +25,7 @@ describe("GET /player/power655/tickets/{ticketId}/entries", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.resetModules();
-    const mod =
-      await import("../../../src/handlers/power655/get-ticket-entries");
+    const mod = await import("../../../src/handlers/power655/get-ticket-entries");
     handler = mod.handler;
   });
 

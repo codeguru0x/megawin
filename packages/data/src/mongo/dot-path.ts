@@ -30,18 +30,7 @@ import type { Binary, Decimal128, Long, ObjectId } from "mongodb";
  */
 
 /** Leaf types — không đi sâu thêm khi sinh path (BSON scalar + wrapper types). */
-type MongoLeaf =
-  | string
-  | number
-  | boolean
-  | bigint
-  | Date
-  | ObjectId
-  | Long
-  | Decimal128
-  | Binary
-  | null
-  | undefined;
+type MongoLeaf = string | number | boolean | bigint | Date | ObjectId | Long | Decimal128 | Binary | null | undefined;
 
 /** Đếm lùi depth để chặn đệ quy vô hạn trên type tự tham chiếu. */
 type Prev = [never, 0, 1, 2, 3, 4, 5];

@@ -7,23 +7,18 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawStatus } from "@megawin/game-core/entities";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { sortBy } from "@megawin/shared/utils";
-import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "@megawin/game-bingo18/entities";
-import type { PlayerGetCurrentDrawOutput, PlayerDrawInfo } from "./dto/player.dto";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
+import { sortBy } from "@megawin/shared/utils";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import type { PlayerDrawInfo, PlayerGetCurrentDrawOutput } from "./dto/player.dto";
 
 /** Player chỉ thấy kỳ đang mở/đóng bán — không lộ Settling/Voiding (chỉ dành cho staff). */
-const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-];
+const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
 
-export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
-  void,
-  PlayerGetCurrentDrawOutput
-> {
+export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {

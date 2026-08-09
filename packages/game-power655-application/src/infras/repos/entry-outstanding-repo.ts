@@ -13,13 +13,14 @@
  * Tất cả methods là READ-ONLY — không write/update entries.
  */
 
-import { Power655Collections } from "@megawin/game-power655/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import { ObjectId } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { EntryMapper } from "../mappers/entry-mapper";
-import type { OutstandingTenantBreakdownRow, OutstandingPlayerBreakdownRow } from "./types";
+import { BaseRepo } from "./base-repo";
+import type { OutstandingPlayerBreakdownRow, OutstandingTenantBreakdownRow } from "./types";
 
 export class EntryOutstandingRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   constructor() {
@@ -102,10 +103,7 @@ export class EntryOutstandingRepository extends BaseRepo<TicketEntryEntity, Entr
    * @param drawId   - Format `YYYY-MM-DD.NNN`
    * @param tenantId - Tenant filter
    */
-  async aggregatePlayersByDrawAndTenant(
-    drawId: string,
-    tenantId: string,
-  ): Promise<OutstandingPlayerBreakdownRow[]> {
+  async aggregatePlayersByDrawAndTenant(drawId: string, tenantId: string): Promise<OutstandingPlayerBreakdownRow[]> {
     const col = await this.getCollection();
 
     const results = (await col

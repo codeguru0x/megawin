@@ -8,14 +8,12 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { ListAllJackpotCycleOptionsOutput, JackpotCycleOption } from "./dto/jackpot.dto";
+import type { JackpotCycleOption, ListAllJackpotCycleOptionsOutput } from "./dto/jackpot.dto";
 
 /** Lấy danh sách cycle options cho selector "Lịch sử Jackpot" (tối đa 10 vòng). */
-export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<
-  void,
-  ListAllJackpotCycleOptionsOutput
-> {
+export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<void, ListAllJackpotCycleOptionsOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
 
   /** @inheritdoc */
@@ -32,8 +30,7 @@ export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<
 
     // active cycle là phần tử đầu tiên nếu tồn tại (listAllCycles đặt active trước).
     const firstOption = options[0];
-    const activeCycleNo =
-      firstOption != null && firstOption.status === "active" ? firstOption.cycleNo : null;
+    const activeCycleNo = firstOption != null && firstOption.status === "active" ? firstOption.cycleNo : null;
 
     return { cycles: options, activeCycleNo };
   }

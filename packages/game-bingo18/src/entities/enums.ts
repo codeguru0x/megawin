@@ -79,8 +79,7 @@ export const BINGO18_SIDE_BET_PLAY_TYPES: readonly Bingo18PlayType[] = [
 ];
 
 /** Narrowed type cho side bet play types. */
-export type Bingo18SideBetPlayType =
-  typeof Bingo18PlayType.SumTotal | typeof Bingo18PlayType.BigSmallDraw;
+export type Bingo18SideBetPlayType = typeof Bingo18PlayType.SumTotal | typeof Bingo18PlayType.BigSmallDraw;
 
 /** Narrowed type cho basic play types. */
 export type Bingo18BasicPlayType =
@@ -89,14 +88,10 @@ export type Bingo18BasicPlayType =
   | typeof Bingo18PlayType.TripleMatch;
 
 /** Set dùng cho runtime check: playType có thuộc basic hay không. */
-export const BINGO18_BASIC_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(
-  BINGO18_BASIC_PLAY_TYPES,
-);
+export const BINGO18_BASIC_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(BINGO18_BASIC_PLAY_TYPES);
 
 /** Set dùng cho runtime check: playType có thuộc side bet hay không. */
-export const BINGO18_SIDE_BET_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(
-  BINGO18_SIDE_BET_PLAY_TYPES,
-);
+export const BINGO18_SIDE_BET_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(BINGO18_SIDE_BET_PLAY_TYPES);
 
 // ─────────────────────────────────────────────
 // Side Bet Selection – Cách chơi bổ sung

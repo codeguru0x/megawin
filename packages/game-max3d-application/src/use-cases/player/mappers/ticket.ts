@@ -6,6 +6,7 @@
  */
 
 import type { Board, TicketEntity } from "@megawin/game-max3d/entities";
+
 import type { PlayerTicketSummary } from "../dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {

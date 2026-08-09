@@ -10,16 +10,11 @@
 
 import type { ISODateString } from "../entities/types";
 
-export function generateBingo18DrawId(
-  drawDate: ISODateString,
-  drawNo: number,
-): string {
+export function generateBingo18DrawId(drawDate: ISODateString, drawNo: number): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
-export function parseBingo18DrawId(
-  drawId: string,
-): { drawDate: ISODateString; drawNo: number } | null {
+export function parseBingo18DrawId(drawId: string): { drawDate: ISODateString; drawNo: number } | null {
   const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
 
@@ -32,18 +27,14 @@ export function parseBingo18DrawId(
 /**
  * Tạo danh sách drawIds liên tiếp cho multi-draw.
  */
-export function generateBingo18DrawIdSequence(
-  startDrawId: string,
-  drawCount: number,
-  drawsPerDay: number = 160,
-): string[] {
+export function generateBingo18DrawIdSequence(startDrawId: string, drawCount: number, drawsPerDay = 160): string[] {
   const parsed = parseBingo18DrawId(startDrawId);
   if (!parsed) {
     throw new Error(`Invalid startDrawId: ${startDrawId}`);
   }
 
   const ids: string[] = [];
-  let currentDate = new Date(parsed.drawDate + "T00:00:00");
+  const currentDate = new Date(parsed.drawDate + "T00:00:00");
   let currentDrawNo = parsed.drawNo;
 
   for (let i = 0; i < drawCount; i++) {
@@ -63,11 +54,7 @@ export function generateBingo18DrawIdSequence(
 /**
  * Tính drawNo từ thời gian trong ngày.
  */
-export function calculateDrawNo(
-  time: string,
-  firstDrawTime: string = "06:00",
-  intervalMinutes: number = 6,
-): number {
+export function calculateDrawNo(time: string, firstDrawTime = "06:00", intervalMinutes = 6): number {
   const [h, m] = time.split(":").map(Number);
   const [fh, fm] = firstDrawTime.split(":").map(Number);
 

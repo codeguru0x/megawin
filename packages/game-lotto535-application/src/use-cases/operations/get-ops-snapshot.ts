@@ -34,16 +34,17 @@
  *      snapshot phải luôn trả được cho UI).
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
 import { Lotto535NumberKind } from "@megawin/game-lotto535/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
-import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
-import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
+import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
+import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type {
   GetOpsSnapshotInput,
   GetOpsSnapshotOutput,
@@ -51,10 +52,7 @@ import type {
   Lotto535TopCombo,
 } from "./dto/ops.dto";
 
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -106,15 +104,17 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
       // Tách 2 mảng theo `kind` ngay tại use-case — UI vẽ 2 lưới không phải tự phân loại.
       mainNumberStats: numberStats.filter((n) => n.kind === Lotto535NumberKind.Main),
       specialNumberStats: numberStats.filter((n) => n.kind === Lotto535NumberKind.Special),
-      topCombos: topCombos.map((c): Lotto535TopCombo => ({
-        comboKey: c.comboKey,
-        playType: c.playType,
-        mainNumbers: c.mainNumbers,
-        specialNumbers: c.specialNumbers,
-        sets: c.sets,
-        accounts: c.accountCount,
-        amount: c.amount,
-      })),
+      topCombos: topCombos.map(
+        (c): Lotto535TopCombo => ({
+          comboKey: c.comboKey,
+          playType: c.playType,
+          mainNumbers: c.mainNumbers,
+          specialNumbers: c.specialNumbers,
+          sets: c.sets,
+          accounts: c.accountCount,
+          amount: c.amount,
+        }),
+      ),
       topAccounts: topAccounts.map((a) => ({
         accountId: a.accountId,
         username: a.username,

@@ -7,10 +7,7 @@
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.
  */
 
-import {
-  SettleEntriesBatchUseCase,
-  type SettleContext,
-} from "@megawin/game-max3dpro-application/use-cases/settle";
+import { type SettleContext, SettleEntriesBatchUseCase } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new SettleEntriesBatchUseCase();
 

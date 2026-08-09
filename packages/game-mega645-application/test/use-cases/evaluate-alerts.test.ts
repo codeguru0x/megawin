@@ -12,14 +12,15 @@
  * - dedupeKey ổn định để upsert idempotent (không sinh doc trùng).
  */
 
-import { describe, it, expect } from "vitest";
-import { OpsAlertSeverity, PlayType, Mega645OpsAlertType } from "@megawin/game-mega645/entities";
 import type {
   Mega645DrawBettingStatsEntity,
   Mega645DrawComboStatsEntity,
   Mega645OpsAlertsConfig,
   Mega645PlayTypeStat,
 } from "@megawin/game-mega645/entities";
+import { Mega645OpsAlertType, OpsAlertSeverity, PlayType } from "@megawin/game-mega645/entities";
+import { describe, expect, it } from "vitest";
+
 import { evaluateAlerts } from "../../src/use-cases/operations/evaluate-alerts";
 
 const DRAW_ID = "2999-01-01.001";
@@ -48,14 +49,13 @@ function alertsConfig(overrides: Partial<Mega645OpsAlertsConfig> = {}): Mega645O
 }
 
 function emptyByPlayType(): Record<PlayType, Mega645PlayTypeStat> {
-  return Object.fromEntries(
-    Object.values(PlayType).map((pt) => [pt, { amount: 0, sets: 0, boards: 0 }]),
-  ) as Record<PlayType, Mega645PlayTypeStat>;
+  return Object.fromEntries(Object.values(PlayType).map((pt) => [pt, { amount: 0, sets: 0, boards: 0 }])) as Record<
+    PlayType,
+    Mega645PlayTypeStat
+  >;
 }
 
-function stats(
-  overrides: Partial<Mega645DrawBettingStatsEntity> = {},
-): Mega645DrawBettingStatsEntity {
+function stats(overrides: Partial<Mega645DrawBettingStatsEntity> = {}): Mega645DrawBettingStatsEntity {
   return {
     id: "stats1",
     drawId: DRAW_ID,
@@ -150,25 +150,19 @@ describe("evaluateAlerts – large_bet", () => {
 
 describe("evaluateAlerts – exposure_threshold", () => {
   it("fixedWorstCase == ngưỡng → bắn warning (>=)", () => {
-    const out = evaluateAlerts(
-      base({ stats: stats({ exposure: { fixedWorstCase: 500_000_000 } }) }),
-    );
+    const out = evaluateAlerts(base({ stats: stats({ exposure: { fixedWorstCase: 500_000_000 } }) }));
     const a = out.find((x) => x.type === Mega645OpsAlertType.ExposureThreshold)!;
     expect(a.severity).toBe(OpsAlertSeverity.Warning);
   });
 
   it("fixedWorstCase >= 2× ngưỡng → critical", () => {
-    const out = evaluateAlerts(
-      base({ stats: stats({ exposure: { fixedWorstCase: 1_000_000_000 } }) }),
-    );
+    const out = evaluateAlerts(base({ stats: stats({ exposure: { fixedWorstCase: 1_000_000_000 } }) }));
     const a = out.find((x) => x.type === Mega645OpsAlertType.ExposureThreshold)!;
     expect(a.severity).toBe(OpsAlertSeverity.Critical);
   });
 
   it("fixedWorstCase = ngưỡng - 1 → KHÔNG bắn", () => {
-    const out = evaluateAlerts(
-      base({ stats: stats({ exposure: { fixedWorstCase: 499_999_999 } }) }),
-    );
+    const out = evaluateAlerts(base({ stats: stats({ exposure: { fixedWorstCase: 499_999_999 } }) }));
     expect(out.find((x) => x.type === Mega645OpsAlertType.ExposureThreshold)).toBeUndefined();
   });
 });
@@ -177,9 +171,7 @@ describe("evaluateAlerts – exposure_threshold", () => {
 
 describe("evaluateAlerts – combo_concentration", () => {
   it("accountCount == warn → warning, dedupeKey theo comboKey", () => {
-    const out = evaluateAlerts(
-      base({ combos: [combo({ accountCount: 5, comboKey: "standard:01,02,03,04,05,06" })] }),
-    );
+    const out = evaluateAlerts(base({ combos: [combo({ accountCount: 5, comboKey: "standard:01,02,03,04,05,06" })] }));
     const a = out.find((x) => x.type === Mega645OpsAlertType.ComboConcentration)!;
     expect(a.severity).toBe(OpsAlertSeverity.Warning);
     expect(a.dedupeKey).toBe("combo:standard:01,02,03,04,05,06");
@@ -226,9 +218,7 @@ describe("evaluateAlerts – bao_high_stake (BAO_COMBINATIONS[N] × unitPrice)",
     const a = out.find((x) => x.type === Mega645OpsAlertType.BaoHighStake)!;
     expect(a).toBeDefined();
     expect(a.severity).toBe(OpsAlertSeverity.Warning); // không có bao18
-    const triggered = (
-      a.payload as { triggered: Array<{ playType: PlayType; boardPrice: number }> }
-    ).triggered;
+    const triggered = (a.payload as { triggered: Array<{ playType: PlayType; boardPrice: number }> }).triggered;
     expect(triggered[0]!.boardPrice).toBe(3003 * UNIT_PRICE);
   });
 
@@ -241,12 +231,8 @@ describe("evaluateAlerts – bao_high_stake (BAO_COMBINATIONS[N] × unitPrice)",
     const out = evaluateAlerts(base({ stats: withBaoBoards([PlayType.Bao18]) }));
     const a = out.find((x) => x.type === Mega645OpsAlertType.BaoHighStake)!;
     expect(a.severity).toBe(OpsAlertSeverity.Critical);
-    const triggered = (
-      a.payload as { triggered: Array<{ playType: PlayType; boardPrice: number }> }
-    ).triggered;
-    expect(triggered.find((t) => t.playType === PlayType.Bao18)!.boardPrice).toBe(
-      18564 * UNIT_PRICE,
-    );
+    const triggered = (a.payload as { triggered: Array<{ playType: PlayType; boardPrice: number }> }).triggered;
+    expect(triggered.find((t) => t.playType === PlayType.Bao18)!.boardPrice).toBe(18564 * UNIT_PRICE);
   });
 
   it("boards = 0 → KHÔNG bắn dù playType trong nhóm", () => {
@@ -257,9 +243,7 @@ describe("evaluateAlerts – bao_high_stake (BAO_COMBINATIONS[N] × unitPrice)",
   });
 
   it("gộp 1 alert cho draw dù nhiều bao playType cùng vượt ngưỡng", () => {
-    const out = evaluateAlerts(
-      base({ stats: withBaoBoards([PlayType.Bao14, PlayType.Bao15, PlayType.Bao18]) }),
-    );
+    const out = evaluateAlerts(base({ stats: withBaoBoards([PlayType.Bao14, PlayType.Bao15, PlayType.Bao18]) }));
     const alerts = out.filter((x) => x.type === Mega645OpsAlertType.BaoHighStake);
     expect(alerts).toHaveLength(1); // gộp
     const triggered = (alerts[0]!.payload as { triggered: unknown[] }).triggered;
@@ -271,9 +255,10 @@ describe("evaluateAlerts – bao_high_stake (BAO_COMBINATIONS[N] × unitPrice)",
 
 describe("evaluateAlerts – tổng thể", () => {
   it("không rule nào enabled → mảng rỗng", () => {
-    const disabled = Object.fromEntries(
-      Object.values(Mega645OpsAlertType).map((t) => [t, false]),
-    ) as Record<Mega645OpsAlertType, boolean>;
+    const disabled = Object.fromEntries(Object.values(Mega645OpsAlertType).map((t) => [t, false])) as Record<
+      Mega645OpsAlertType,
+      boolean
+    >;
     const out = evaluateAlerts(
       base({
         stats: stats({

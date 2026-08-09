@@ -9,8 +9,8 @@ import type {
   DrawBettingTotals,
   Mega645PlayTypeStat,
   Mega645TopPotential,
-  TenantBettingStat,
   PlayType,
+  TenantBettingStat,
 } from "@megawin/game-mega645/entities";
 
 /** 1 entry tối thiểu để worker aggregate delta — projection từ `mega645_ticket_entries`. */

@@ -79,11 +79,7 @@ export interface TicketCounterDoc {
  * @param seq - 1, 2, 3...
  * @returns "KENO-20260227-00001"
  */
-export function buildTicketNo(
-  gameProduct: GameProduct,
-  date: string,
-  seq: number
-): string {
+export function buildTicketNo(gameProduct: GameProduct, date: string, seq: number): string {
   const prefix = GameTicketPrefix[gameProduct];
   const compactDate = date.replace(/-/g, "");
   const paddedSeq = String(seq).padStart(5, "0");

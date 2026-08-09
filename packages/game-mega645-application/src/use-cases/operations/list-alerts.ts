@@ -5,11 +5,12 @@
  * Mặc định gộp theo `type` cho gọn; `grouped=false` trả raw để staff drill-down điều tra.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
-import { OpsAlertSeverity } from "@megawin/game-mega645/entities";
 import type { Mega645OpsAlertEntity, Mega645OpsAlertType } from "@megawin/game-mega645/entities";
+import { OpsAlertSeverity } from "@megawin/game-mega645/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
-import type { Mega645AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/ops.dto";
+import type { ListAlertsInput, ListAlertsOutput, Mega645AlertGroup } from "./dto/ops.dto";
 
 /** Rank severity để chọn cao nhất trong nhóm (critical > warning > info). */
 const SEVERITY_RANK: Record<string, number> = {
@@ -56,8 +57,6 @@ export class ListAlertsUseCase extends NextApiUseCase<ListAlertsInput, ListAlert
       }
     }
 
-    return [...byType.values()].sort(
-      (a, b) => SEVERITY_RANK[b.severity]! - SEVERITY_RANK[a.severity]!,
-    );
+    return [...byType.values()].sort((a, b) => SEVERITY_RANK[b.severity]! - SEVERITY_RANK[a.severity]!);
   }
 }

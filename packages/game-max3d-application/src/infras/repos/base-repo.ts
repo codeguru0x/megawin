@@ -1,6 +1,6 @@
-import { GameRepo, MongoMapper } from "@megawin/data/mongo";
 import type { BaseEntity } from "@megawin/data/mongo";
-import { Document } from "mongodb";
+import { GameRepo, type MongoMapper } from "@megawin/data/mongo";
+import type { Document } from "mongodb";
 
 /**
  * Base repo cho mọi collection game (DB `megawin-game`).

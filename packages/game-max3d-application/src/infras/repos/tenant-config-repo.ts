@@ -1,7 +1,8 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { TenantConfigEntity } from "@megawin/game-max3d/entities";
+import { Max3dCollections } from "@megawin/game-max3d/entities";
 import { nowVN } from "@megawin/shared/utils";
+
 import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
 import { BaseRepo } from "./base-repo";
 import type { TenantConfigFields } from "./types/config.types";
@@ -36,10 +37,7 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
    * `$setOnInsert`). Nếu create mới (insert): commissionRate default = 0,
    * isEnabled default = true.
    */
-  async upsertTenantConfig(
-    tenantId: string,
-    fields: TenantConfigFields,
-  ): Promise<TenantConfigEntity | null> {
+  async upsertTenantConfig(tenantId: string, fields: TenantConfigFields): Promise<TenantConfigEntity | null> {
     const now = nowVN();
     const $set: Record<string, unknown> = { updatedAt: now };
 

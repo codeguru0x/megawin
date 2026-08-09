@@ -1,12 +1,12 @@
+import type { AuditActor } from "@megawin/audit/logger";
 import type {
   FinancialRates,
+  GlobalConfigEntity,
   Max3dOpsAlertType,
   Max3dPrizeConfig,
   OpsStatsConfig,
   PlayRules,
 } from "@megawin/game-max3d/entities";
-import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
-import type { AuditActor } from "@megawin/audit/logger";
 
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];

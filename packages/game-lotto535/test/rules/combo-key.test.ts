@@ -4,7 +4,8 @@
  * PURE — không DB, không cần quy tắc test staging chung.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { buildComboKey } from "../../src/rules/combo-key";
 
 describe("buildComboKey", () => {
@@ -22,11 +23,7 @@ describe("buildComboKey", () => {
   });
 
   it("Đúng logic — specialCover nhiều số ĐB → phần special sort đúng", () => {
-    const key = buildComboKey(
-      "specialCover",
-      ["01", "02", "03", "04", "05"],
-      ["12", "03", "07", "01"],
-    );
+    const key = buildComboKey("specialCover", ["01", "02", "03", "04", "05"], ["12", "03", "07", "01"]);
     expect(key).toBe("specialCover:01,02,03,04,05|01,03,07,12");
   });
 

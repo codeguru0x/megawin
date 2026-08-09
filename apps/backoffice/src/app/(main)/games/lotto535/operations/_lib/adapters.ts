@@ -20,12 +20,12 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import type {
   Lotto535DrawBettingStatsEntity,
   Lotto535DrawNumberStatsEntity,
+  TopAccountStat,
 } from "@megawin/game-lotto535/entities";
 import type {
   Lotto535SnapshotExposure,
   Lotto535TopCombo,
 } from "@megawin/game-lotto535-application/use-cases/operations";
-import type { TopAccountStat } from "@megawin/game-lotto535/entities";
 
 import { describeStatsPlayKey, LOTTO535_STATS_PLAY_KEY_ORDER } from "./ops-constants";
 import type {
@@ -133,9 +133,7 @@ export function toMainNumberFreq(numberStats: Lotto535DrawNumberStatsEntity[]): 
  * `lotto535_draw_number_stats` (đã lọc `kind=special`) → NumberFreqItem[12] — điền
  * "01".."12" đầy đủ. Input trực tiếp cho hiển thị rule `special_skew` ở panel alert.
  */
-export function toSpecialNumberFreq(
-  numberStats: Lotto535DrawNumberStatsEntity[],
-): NumberFreqItem[] {
+export function toSpecialNumberFreq(numberStats: Lotto535DrawNumberStatsEntity[]): NumberFreqItem[] {
   const byNum = new Map(numberStats.map((n) => [n.number, n]));
   return Array.from({ length: 12 }, (_, i) => {
     const num = String(i + 1).padStart(2, "0");

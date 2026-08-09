@@ -1,6 +1,7 @@
 import { MongoMapper } from "@megawin/data/mongo";
+import type { Document } from "mongodb";
+
 import type { TenantDispatchOrderEntity } from "../../entities";
-import { Document } from "mongodb";
 
 /**
  * Mapper convert raw MongoDB document → TenantDispatchOrderEntity.

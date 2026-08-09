@@ -1,4 +1,4 @@
-import type { JackpotCycleStatus, JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
+import type { JackpotCycleCloseReason, JackpotCycleStatus } from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
 // GetJackpotCurrent

@@ -17,9 +17,10 @@
  * truyền input UNSORTED — chứng minh repo phải sort nội bộ để đếm đúng cả 4 nhánh.
  */
 
-import { describe, it, expect, vi } from "vitest";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { buildComboKey } from "@megawin/game-lotto535/rules";
+import { describe, expect, it, vi } from "vitest";
+
 import { ComboStatsRepository } from "../../src/infras/repos/combo-stats-repo";
 
 const DRAW_ID = "2999-01-01.001";
@@ -67,10 +68,7 @@ const specialCoverDoc = {
  */
 function stubFindMany(repo: ComboStatsRepository) {
   return vi
-    .spyOn(
-      repo as unknown as { findMany: (f: Record<string, unknown>) => Promise<unknown[]> },
-      "findMany",
-    )
+    .spyOn(repo as unknown as { findMany: (f: Record<string, unknown>) => Promise<unknown[]> }, "findMany")
     .mockImplementation(async (filter: Record<string, unknown>) => {
       if (filter.comboKey && typeof filter.comboKey === "object") {
         return [standardDoc, mc4Doc];
@@ -154,10 +152,7 @@ describe("sumJackpotUnitsForStandardSet — tổng đúng 4 nhánh + fix order s
 
   it("không doc nào phủ (mọi nhánh rỗng) → units = 0", async () => {
     const repo = new ComboStatsRepository();
-    vi.spyOn(
-      repo as unknown as { findMany: () => Promise<unknown[]> },
-      "findMany",
-    ).mockResolvedValue([]);
+    vi.spyOn(repo as unknown as { findMany: () => Promise<unknown[]> }, "findMany").mockResolvedValue([]);
 
     const units = await repo.sumJackpotUnitsForStandardSet(DRAW_ID, M_SORTED, [SPECIAL]);
     expect(units).toBe(0);

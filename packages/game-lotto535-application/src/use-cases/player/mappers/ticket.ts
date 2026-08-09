@@ -6,6 +6,7 @@
  */
 
 import type { Board, TicketEntity } from "@megawin/game-lotto535/entities";
+
 import type { PlayerTicketSummary } from "../dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {

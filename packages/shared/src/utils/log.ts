@@ -187,10 +187,7 @@ const DEFAULT_TRUNCATE_LENGTH = 500;
  *   lastError: truncateErrorMessage(err),
  * });
  */
-export function truncateErrorMessage(
-  err: unknown,
-  maxLength: number = DEFAULT_TRUNCATE_LENGTH,
-): string {
+export function truncateErrorMessage(err: unknown, maxLength: number = DEFAULT_TRUNCATE_LENGTH): string {
   const raw = err instanceof Error ? err.message : String(err);
   return raw.length > maxLength ? `${raw.slice(0, maxLength)}… [truncated]` : raw;
 }

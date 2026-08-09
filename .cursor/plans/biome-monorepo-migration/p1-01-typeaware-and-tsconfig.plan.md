@@ -163,3 +163,44 @@ pnpm check-types   # xanh trở lại sau khi revert probe
 **5. Kiểm tra cam kết "không ignore code tài chính":** `rg -n "biome-ignore.*(noFloatingPromises|noMisusedPromises)" packages apps` → 0 kết quả trong path chứa `settle|payout|financial`.
 
 **6. Rollback:** revert `biome.json` (tắt domain) độc lập với revert tsconfig flags — 2 phần không phụ thuộc nhau, rollback riêng lẻ được.
+
+## Kết quả thực thi (08/08/2026)
+
+### Phần 1 — domain type-aware (đã bật toàn repo)
+
+- **Hiệu năng** (`biome check .`, không có hyperfine → `/usr/bin/time -p`, 3 lần):
+  - Baseline (chưa bật domain): **0.62 / 0.56 / 0.55s** (~0.55s).
+  - Sau khi bật `project` + `types` + 6 rule: **2.29 / 2.03 / 2.07s** (~2.1s).
+  - → **< 10s → bật toàn repo** (đúng ngưỡng đầu tiên). Không cần `experimentalScannerIgnores` hay thu hẹp override.
+- **Diagnostic mới sau khi bật** (triage đầy đủ):
+
+| Rule | Số | Xử lý |
+|---|---|---|
+| `noFloatingPromises` | 16 | **Fix thật** — tất cả ở UI backoffice (`layout-controls.tsx`, `theme-switcher.tsx`, `login-client.tsx`) + SDK. Không có cái nào ở code tài chính. Fire-and-forget preference → bỏ `async` thừa + `void`. |
+| `useAwaitThenable` | 2 | `client.ts:313` fix thật (nới `onError` type → `void \| Promise<void>`); `api-route.ts:170` là **false-positive** (Biome chưa resolve `Promise` qua generic type alias `GetSessionFn`) → `biome-ignore` kèm lý do (infra, không phải financial). |
+| `noMisusedPromises` | 1 | `token-manager.ts:176` fix thật (`if (promise)` → `if (promise !== null)`). |
+| `useExhaustiveSwitchCases` | 0 | — |
+| `noImportCycles` | 0 | Repo **không có** circular import (tốt — 275 barrel file nhưng sạch cycle). |
+| `noUnnecessaryConditions` | 297 | **Backlog** (level `warn` đúng như plan — nhiều false-positive với `noUncheckedIndexedAccess`). |
+
+- Sau fix: 0 error type-aware mới; `biome check` về đúng **107 error backlog P0-06** (không phát sinh error mới).
+- Negative test (`probe-types.ts`): bắt đúng `noFloatingPromises` + `useExhaustiveSwitchCases`. ✅
+- Cam kết code tài chính: `rg "biome-ignore.*(noFloatingPromises|noMisusedPromises)"` trong `settle|payout|financial` → **0 kết quả**. ✅
+
+### Phần 2 — 4 compiler flag (đã bật)
+
+`verbatimModuleSyntax`, `erasableSyntaxOnly`, `noImplicitOverride`, `noFallthroughCasesInSwitch` thêm vào `tooling/typescript-config/base.json`.
+
+- `verbatimModuleSyntax`: **0 lỗi phát sinh** — `biome check --write` (P0-06) đã thêm sẵn `import type` toàn repo.
+- `erasableSyntaxOnly`: refactor **9 parameter property** (drift từ khảo sát 07/08 vốn chỉ ghi 2):
+  - `distributed-mutex.ts`, `sync-entry-feed.ts` (2 gốc trong plan) + **7 `stats-accumulator.ts`** (mỗi game 1) — chuyển sang field declaration + gán trong constructor body.
+- `noImplicitOverride`: thêm `override` cho **37 member**:
+  - `data/src/mongo/mapper.ts` `mapProps` (1).
+  - 14 worker file (`evaluate-ops-alerts.ts` + `sync-betting-stats.ts` × 7 game): `description` + `beforeLoop` (28).
+  - 8 repo file (`outstanding-report-repo.ts` × 7 + core `system-outstanding-report-repo.ts`): `findAll` (8).
+- `noFallthroughCasesInSwitch`: 0 lỗi.
+- **`pnpm check-types` XANH toàn repo** (46 package) sau khi fix. ✅
+
+### Phần 3 — `dependency-cruiser` boundary
+
+Vẫn là backlog độc lập (không block P1) — chưa thực thi trong đợt này.

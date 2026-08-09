@@ -1,6 +1,7 @@
-import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
-import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import type { GlobalConfigEntity } from "@megawin/game-keno/entities";
+import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
+
+import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 
 /**
  * Insert default Keno global config vào database.

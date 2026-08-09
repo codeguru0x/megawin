@@ -36,12 +36,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { KenoCollections } from "@megawin/game-keno/entities";
-import type { KenoDrawComboStatsDoc, KenoDrawComboStatsEntity } from "@megawin/game-keno/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { KenoDrawComboStatsDoc, KenoDrawComboStatsEntity } from "@megawin/game-keno/entities";
+import { KenoCollections } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<KenoDrawComboStatsDoc>();
@@ -84,15 +85,8 @@ export class ComboStatsRepository extends BaseRepo<KenoDrawComboStatsEntity, Com
    * @param minPlayers - Ngưỡng số người dồn cược.
    * @param limit - Trần số alert combo xử lý 1 tick (evaluator chỉ cần các combo nóng nhất).
    */
-  async findConcentrated(
-    drawId: string,
-    minPlayers: number,
-    limit: number,
-  ): Promise<KenoDrawComboStatsEntity[]> {
-    return await this.findMany(
-      { drawId, accountCount: { $gte: minPlayers } },
-      { sort: { accountCount: -1 }, limit },
-    );
+  async findConcentrated(drawId: string, minPlayers: number, limit: number): Promise<KenoDrawComboStatsEntity[]> {
+    return await this.findMany({ drawId, accountCount: { $gte: minPlayers } }, { sort: { accountCount: -1 }, limit });
   }
 
   /**

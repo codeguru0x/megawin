@@ -20,14 +20,8 @@
  *   là mặc định tham khảo — đọc từ GlobalConfig, operator có thể thay đổi.
  */
 
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  Power655OpsConfig,
-} from "../entities/types";
 import { Power655OpsAlertType } from "../entities/ops-alert";
+import type { FinancialRates, JackpotConfig, PlayRules, Power655OpsConfig, PrizeAmounts } from "../entities/types";
 
 // ─── Draw Financial Calculation ───
 
@@ -205,12 +199,7 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
   //   rawJp2Contribution += jp1Overflow → JP2 winner nhận thêm phần overflow.
   let jp1Overflow = 0;
   const projectedJp1 = jp1CurrentAmount + rawJp1Contribution;
-  if (
-    !hasJackpot1Winner &&
-    hasJackpot2Winner &&
-    projectedJp1 > jp1OverflowThreshold &&
-    jp1OverflowThreshold > 0
-  ) {
+  if (!hasJackpot1Winner && hasJackpot2Winner && projectedJp1 > jp1OverflowThreshold && jp1OverflowThreshold > 0) {
     // Tính tiền vượt ngưỡng = tổng JP1 sau contribution - threshold
     jp1Overflow = projectedJp1 - jp1OverflowThreshold;
     // JP1 cap tại threshold: trừ overflow khỏi contribution

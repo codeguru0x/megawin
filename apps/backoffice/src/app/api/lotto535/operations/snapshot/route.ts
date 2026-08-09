@@ -1,8 +1,9 @@
-import { GetOpsSnapshotUseCase } from "@megawin/game-lotto535-application/use-cases/operations";
+import { NextResponse } from "next/server";
+
 import { OpsAlertStatus } from "@megawin/game-lotto535/entities";
+import { GetOpsSnapshotUseCase } from "@megawin/game-lotto535-application/use-cases/operations";
 import { CompanyRole } from "@megawin/identity/entities";
 import { apiSuccess } from "@megawin/next/server";
-import { NextResponse } from "next/server";
 
 import { withApi } from "@/lib/api";
 

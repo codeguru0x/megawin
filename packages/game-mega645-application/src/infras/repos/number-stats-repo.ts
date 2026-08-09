@@ -18,23 +18,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Mega645Collections } from "@megawin/game-mega645/entities";
-import type {
-  Mega645DrawNumberStatsDoc,
-  Mega645DrawNumberStatsEntity,
-} from "@megawin/game-mega645/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Mega645DrawNumberStatsDoc, Mega645DrawNumberStatsEntity } from "@megawin/game-mega645/entities";
+import { Mega645Collections } from "@megawin/game-mega645/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { NumberStatsMapper } from "../mappers/number-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { NumberStatsDelta } from "./types";
 
 const f = docPath<Mega645DrawNumberStatsDoc>();
 
-export class NumberStatsRepository extends BaseRepo<
-  Mega645DrawNumberStatsEntity,
-  NumberStatsMapper
-> {
+export class NumberStatsRepository extends BaseRepo<Mega645DrawNumberStatsEntity, NumberStatsMapper> {
   constructor() {
     super({
       collName: Mega645Collections.DrawNumberStats,

@@ -8,11 +8,11 @@
 import type { GlobalConfigDoc } from "../entities/global-config";
 import { Bingo18OpsAlertType } from "../entities/ops-alert";
 import {
-  DEFAULT_SINGLE_NUM_PRIZES,
-  DEFAULT_DOUBLE_MATCH_PRIZES,
-  DEFAULT_TRIPLE_MATCH_PRIZES,
-  DEFAULT_SUM_TOTAL_PRIZES,
   DEFAULT_BIG_SMALL_DRAW_PRIZES,
+  DEFAULT_DOUBLE_MATCH_PRIZES,
+  DEFAULT_SINGLE_NUM_PRIZES,
+  DEFAULT_SUM_TOTAL_PRIZES,
+  DEFAULT_TRIPLE_MATCH_PRIZES,
 } from "./prize-tables";
 
 // ─────────────────────────────────────────────

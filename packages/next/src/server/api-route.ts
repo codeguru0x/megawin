@@ -36,9 +36,11 @@
  *   });
  */
 
-import { type NextRequest, NextResponse } from "next/server";
-import type { z } from "zod";
+import type { NextRequest, NextResponse } from "next/server";
+
 import { APP_ERROR_CODES } from "@megawin/shared/errors";
+import type { z } from "zod";
+
 import { apiError, catchToApiResponse, validationError } from "./response";
 
 // ============ Read-only HTTP methods ============
@@ -64,9 +66,7 @@ export interface RouteSession<TRole extends string = string> {
   [key: string]: unknown;
 }
 
-export type GetSessionFn<TRole extends string = string> = (
-  req: NextRequest,
-) => Promise<RouteSession<TRole> | null>;
+export type GetSessionFn<TRole extends string = string> = (req: NextRequest) => Promise<RouteSession<TRole> | null>;
 
 export interface RouteAuthRequirements<TRole extends string = string> {
   /** Roles cho phép (ít nhất 1). Nếu không set → chỉ check login. */
@@ -125,9 +125,7 @@ export class ApiRouteBuilder<
   }
 
   /** Yêu cầu authentication. Truyền options nếu cần phân quyền theo roles. */
-  auth(
-    requirements?: RouteAuthRequirements<TRole>,
-  ): ApiRouteBuilder<TBody, TQuery, TParams, TRole> {
+  auth(requirements?: RouteAuthRequirements<TRole>): ApiRouteBuilder<TBody, TQuery, TParams, TRole> {
     return new ApiRouteBuilder<TBody, TQuery, TParams, TRole>({
       ...this.config,
       authRequirements: { ...requirements },
@@ -155,9 +153,7 @@ export class ApiRouteBuilder<
     });
   }
 
-  handler(
-    fn: (ctx: RouteContext<TBody, TQuery, TParams, TRole>) => Promise<NextResponse>,
-  ): NextRouteHandler {
+  handler(fn: (ctx: RouteContext<TBody, TQuery, TParams, TRole>) => Promise<NextResponse>): NextRouteHandler {
     const cfg = this.config;
 
     return async (req: NextRequest, routeCtx: { params: Promise<Record<string, string>> }) => {
@@ -171,6 +167,7 @@ export class ApiRouteBuilder<
                 "Use createApiRouteBuilder() to bind getSession once.",
             );
           }
+          // biome-ignore lint/nursery/useAwaitThenable: GetSessionFn luôn trả Promise<RouteSession | null>; Biome chưa resolve được return type qua generic type alias (limitation type inference đã ghi ở p1-01).
           session = await cfg.getSession(req);
 
           if (!session) {

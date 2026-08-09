@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Lotto535DrawComboStatsEntity } from "@megawin/game-lotto535/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `lotto535_draw_combo_stats` → entity (ObjectId → id hex).

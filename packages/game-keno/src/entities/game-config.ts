@@ -8,5 +8,4 @@
 export type { GlobalConfigDoc } from "./global-config";
 export type { TenantConfigDoc } from "./tenant-config";
 
-export type GameConfigDoc =
-  import("./global-config").GlobalConfigDoc | import("./tenant-config").TenantConfigDoc;
+export type GameConfigDoc = import("./global-config").GlobalConfigDoc | import("./tenant-config").TenantConfigDoc;

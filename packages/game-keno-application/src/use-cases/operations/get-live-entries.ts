@@ -1,12 +1,9 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type {
-  GetLiveEntriesInput,
-  GetLiveEntriesOutput,
-  LiveEntryBoard,
-} from "./dto/live-entries.dto";
+import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { GetLiveEntriesInput, GetLiveEntriesOutput, LiveEntryBoard } from "./dto/live-entries.dto";
 
 /**
  * Live feed entries mới nhất cho một kỳ quay Keno.
@@ -15,10 +12,7 @@ import type {
  * Dùng cho panel realtime trên Operations Dashboard.
  * boards[] chứa cả basic (pick1-10) và side bets (bigSmall, evenOdd).
  */
-export class GetLiveEntriesUseCase extends NextApiUseCase<
-  GetLiveEntriesInput,
-  GetLiveEntriesOutput
-> {
+export class GetLiveEntriesUseCase extends NextApiUseCase<GetLiveEntriesInput, GetLiveEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

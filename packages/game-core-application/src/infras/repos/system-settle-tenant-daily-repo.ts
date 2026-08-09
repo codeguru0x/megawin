@@ -17,15 +17,12 @@
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
  */
 
-import type {
-  SystemSettleTenantDaily,
-  SystemSettleTenantDailyEntity,
-} from "@megawin/game-core/entities";
-import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
-import type { GameProduct } from "@megawin/game-core/entities";
 import { ReportRepo } from "@megawin/data/mongo";
+import type { GameProduct, SystemSettleTenantDaily, SystemSettleTenantDailyEntity } from "@megawin/game-core/entities";
+import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
+
 import { SystemSettleTenantDailyMapper } from "../mappers";
-import type { TenantSummaryRow, TenantGameBreakdownRow } from "./types";
+import type { TenantGameBreakdownRow, TenantSummaryRow } from "./types";
 
 /**
  * Base repository ghi và query system tenant daily settle reports.
@@ -51,9 +48,7 @@ export class SystemSettleTenantDailyRepository extends ReportRepo<
    * Filter: { financialDate, tenantId, gameProduct }.
    * IDEMPOTENT: chạy lại an toàn.
    */
-  async upsertTenantDaily(
-    report: Omit<SystemSettleTenantDaily, "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertTenantDaily(report: Omit<SystemSettleTenantDaily, "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {
@@ -84,9 +79,7 @@ export class SystemSettleTenantDailyRepository extends ReportRepo<
    * IDEMPOTENT: chạy lại an toàn — mỗi operation vẫn là upsert overwrite.
    * Noop-safe: nếu reports rỗng thì không gọi DB.
    */
-  async bulkUpsertTenantDaily(
-    reports: Omit<SystemSettleTenantDaily, "createdAt" | "updatedAt">[],
-  ): Promise<void> {
+  async bulkUpsertTenantDaily(reports: Omit<SystemSettleTenantDaily, "createdAt" | "updatedAt">[]): Promise<void> {
     if (reports.length === 0) return;
 
     const now = new Date();
@@ -121,11 +114,7 @@ export class SystemSettleTenantDailyRepository extends ReportRepo<
    * Sort theo totalStake descending. Dùng tab "Theo đại lý".
    * Index: { financialDate: 1, tenantId: 1, gameProduct: 1 }
    */
-  async aggregateByTenantId(
-    from: string,
-    to: string,
-    gameProduct?: GameProduct,
-  ): Promise<TenantSummaryRow[]> {
+  async aggregateByTenantId(from: string, to: string, gameProduct?: GameProduct): Promise<TenantSummaryRow[]> {
     const matchStage: Record<string, unknown> = {
       financialDate: {
         $gte: from,
@@ -190,11 +179,7 @@ export class SystemSettleTenantDailyRepository extends ReportRepo<
    * Sort theo gameProduct ascending.
    * Index: { financialDate: 1, tenantId: 1, gameProduct: 1 }
    */
-  async findTenantGameBreakdown(
-    tenantId: string,
-    from: string,
-    to: string,
-  ): Promise<TenantGameBreakdownRow[]> {
+  async findTenantGameBreakdown(tenantId: string, from: string, to: string): Promise<TenantGameBreakdownRow[]> {
     const result = await this.aggregate([
       // Lọc theo tenant + date range
       {

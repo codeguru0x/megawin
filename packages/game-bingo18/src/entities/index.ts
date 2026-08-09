@@ -4,17 +4,17 @@
  * Import: `import { ... } from "@megawin/game-bingo18/entities"`
  */
 
-export * from "./enums";
-export * from "./types";
-export * from "./global-config";
-export * from "./tenant-config";
-export * from "./game-config";
-export * from "./ticket";
-export * from "./entry";
+export * from "./account-stats";
+export * from "./betting-stats";
 export * from "./draw";
 export * from "./draw-counter";
-export * from "./report";
+export * from "./entry";
+export * from "./enums";
 export * from "./feed-types";
-export * from "./betting-stats";
-export * from "./account-stats";
+export * from "./game-config";
+export * from "./global-config";
 export * from "./ops-alert";
+export * from "./report";
+export * from "./tenant-config";
+export * from "./ticket";
+export * from "./types";

@@ -8,15 +8,7 @@ import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Banknote,
-  CalendarClock,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  HandCoins,
-  Ticket,
-} from "lucide-react";
+import { Banknote, CalendarClock, ChevronLeft, ChevronRight, Clock, HandCoins, Ticket } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
 import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
@@ -25,14 +17,7 @@ import type { OutstandingEntryRow } from "@/components/reports/game/outstanding/
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getGameColors } from "@/lib/game-colors";
 import { playerDetailKeys } from "@/lib/query-keys/player-detail";
@@ -311,9 +296,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       {isLoading ? (
         <TableSkeleton cols={5} />
       ) : isError ? (
-        <div className="flex h-40 items-center justify-center text-sm text-destructive">
-          Không thể tải dữ liệu.
-        </div>
+        <div className="flex h-40 items-center justify-center text-sm text-destructive">Không thể tải dữ liệu.</div>
       ) : !data || data.entries.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Không có đơn cược đang chờ</p>
@@ -420,12 +403,8 @@ function GamesView({
                         <span className="text-sm font-medium">{label}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(group.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(group.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(group.drawCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(group.entryCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(group.totalCommission)}
                     </TableCell>
@@ -439,9 +418,7 @@ function GamesView({
             {byGame.length > 0 && (
               <tfoot>
                 <TableRow className="border-t bg-muted/30 font-semibold">
-                  <TableCell className="pl-5 text-sm font-semibold">
-                    {REPORT_COLUMN_LABELS.summary}
-                  </TableCell>
+                  <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                   <TableCell className="text-right text-sm tabular-nums font-semibold">
                     {formatNumber(totals.drawCount)}
                   </TableCell>
@@ -530,9 +507,7 @@ function DrawsView({
                   onClick={() => onSelectDraw(draw.drawId)}
                 >
                   <TableCell className="pl-5 font-mono text-sm">{draw.drawId}</TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(draw.entryCount)}
-                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(draw.entryCount)}</TableCell>
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(draw.totalCommission)}
                   </TableCell>
@@ -544,9 +519,7 @@ function DrawsView({
             </TableBody>
             <tfoot>
               <TableRow className="border-t bg-muted/30">
-                <TableCell className="pl-5 text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
+                <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.entryCount)}
                 </TableCell>

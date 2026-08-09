@@ -13,14 +13,15 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+
 import type {
-  FinancialRates,
   BasicPrizes,
   BigSmallPrizes,
   EvenOddPrizes,
+  FinancialRates,
+  OpsConfig,
   PayoutCaps,
   PlayRules,
-  OpsConfig,
 } from "./types";
 
 /**

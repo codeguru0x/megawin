@@ -2,7 +2,7 @@
 /**
  * postpack: Restore package.json from backup created by prepack.mjs.
  */
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 
 const pkgPath = new URL("../package.json", import.meta.url).pathname;
 const bakPath = pkgPath + ".bak";

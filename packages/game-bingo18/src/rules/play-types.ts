@@ -4,11 +4,7 @@
  * Validate lựa chọn theo play type.
  */
 
-import {
-  Bingo18PlayType,
-  BINGO18_BASIC_PLAY_TYPES,
-  Bingo18TripleKind,
-} from "../entities/enums";
+import { BINGO18_BASIC_PLAY_TYPES, type Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
 import { BINGO18_VALID_NUMBERS, BINGO18_VALID_SUMS } from "../entities/types";
 
 // ─────────────────────────────────────────────
@@ -45,10 +41,7 @@ export function validateDoubleMatchSelection(number: number): ValidationResult {
 /**
  * Validate lựa chọn cho board cơ bản "Ba số trùng nhau".
  */
-export function validateTripleMatchSelection(
-  kind: string,
-  number?: number,
-): ValidationResult {
+export function validateTripleMatchSelection(kind: string, number?: number): ValidationResult {
   const errors: string[] = [];
 
   if (kind !== Bingo18TripleKind.Specific && kind !== Bingo18TripleKind.Any) {

@@ -2,10 +2,7 @@
 
 import { useEffect, useEffectEvent } from "react";
 
-import type {
-  GetDrawDetailOutput,
-  PreviewDrawsOutput,
-} from "@megawin/game-keno-application/use-cases/draws";
+import type { GetDrawDetailOutput, PreviewDrawsOutput } from "@megawin/game-keno-application/use-cases/draws";
 import type {
   GetComboLookupOutput,
   GetDrawSelectorOutput,
@@ -131,11 +128,7 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
  * List alert 1 kỳ (grouped theo type) — chỉ fetch khi panel mở (`enabled`).
  * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
  */
-export function useAlerts(
-  drawId: string | undefined,
-  status: string | undefined,
-  enabled: boolean,
-) {
+export function useAlerts(drawId: string | undefined, status: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: kenoKeys.opsAlerts(drawId ?? "", status),
     queryFn: () =>
@@ -256,14 +249,10 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Winning Entries Dialog để xem lại phiếu cược gốc (board, side bet, kết quả).
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  */
-export function useWinningEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: kenoKeys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/keno/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/keno/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 
@@ -312,9 +301,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success(successMessage);
@@ -370,11 +357,7 @@ export function useTriggerResettle() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/keno/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/keno/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {

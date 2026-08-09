@@ -10,6 +10,7 @@
  */
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 import type { PlayerOutstandingEntry, PlayerOutstandingSummary } from "./types";
 
@@ -97,8 +98,7 @@ export class PlayerOutstandingRepository extends GameCoreBaseRepo<any> {
             ? (doc.entrySummary.boards as unknown[]).length
             : undefined,
           // lineCount: games có lines; undefined → keno/bingo18
-          lineCount:
-            (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined),
+          lineCount: (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined),
           betUnitCount: doc.betUnitCount as number | undefined,
           createdAt: doc.createdAt ? new Date(doc.createdAt as Date).toISOString() : "",
         }),

@@ -1,15 +1,12 @@
+import type { Lotto535OpsConfig } from "@megawin/game-lotto535/entities";
+import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import type { Lotto535OpsConfig } from "@megawin/game-lotto535/entities";
+
+import { globalConfigCache } from "../../caches/global-config.cache";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
-import { globalConfigCache } from "../../caches/global-config.cache";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-  UpdateOpsInput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game toàn cục (upsert).
@@ -24,10 +21,7 @@ import type {
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
  */
-export class UpdateGameConfigUseCase extends NextApiUseCase<
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput
-> {
+export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
@@ -52,9 +46,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
             ...input.defaultPrizes,
           }
         : undefined,
-      play: input.play
-        ? { ...(existing?.play ?? DEFAULT_LOTTO535_CONFIG.play), ...input.play }
-        : undefined,
+      play: input.play ? { ...(existing?.play ?? DEFAULT_LOTTO535_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 
@@ -94,10 +86,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
    * phần còn lại từ existing (fallback default). `enabled` merge shallow để đổi 1
    * khoá alert type mà không phải gửi cả object.
    */
-  private mergeOps(
-    existing: Lotto535OpsConfig | undefined,
-    input: UpdateOpsInput,
-  ): Lotto535OpsConfig {
+  private mergeOps(existing: Lotto535OpsConfig | undefined, input: UpdateOpsInput): Lotto535OpsConfig {
     const base = existing ?? DEFAULT_LOTTO535_CONFIG.ops;
 
     const alerts = input.alerts

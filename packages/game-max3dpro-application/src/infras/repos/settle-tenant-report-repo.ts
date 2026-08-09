@@ -17,8 +17,9 @@
 
 import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_SETTLE_TENANT_REPORTS } from "@megawin/game-max3dpro/entities";
-import { BaseRepo } from "./base-repo";
+
 import { SettleTenantReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";
 
 /**
@@ -26,10 +27,7 @@ import type { TenantAggregateSummary } from "./types";
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<
-  SettleTenantReportEntity,
-  SettleTenantReportMapper
-> {
+export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEntity, SettleTenantReportMapper> {
   constructor() {
     super({ collName: MAX3DPRO_SETTLE_TENANT_REPORTS, dataMapper: new SettleTenantReportMapper() });
   }
@@ -40,9 +38,7 @@ export class SettleTenantReportRepository extends BaseRepo<
    * Dùng bulkWrite để giảm số lần round-trip DB.
    * Idempotent: chạy lại overwrite.
    */
-  async upsertTenantReports(
-    reports: Omit<SettleTenantReport, "createdAt" | "updatedAt">[],
-  ): Promise<void> {
+  async upsertTenantReports(reports: Omit<SettleTenantReport, "createdAt" | "updatedAt">[]): Promise<void> {
     if (reports.length === 0) return;
     const now = new Date();
     const ops = reports.map((report) => ({

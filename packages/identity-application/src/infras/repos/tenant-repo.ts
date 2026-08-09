@@ -1,11 +1,9 @@
-import { TenantEntity, TenantStatus, TenantOption } from "@megawin/identity/entities";
-import { IdentityBaseRepo } from "./identity-base-repo";
-import { TenantMapper } from "../mappers/tenant-mapper";
+import { type TenantEntity, type TenantOption, TenantStatus } from "@megawin/identity/entities";
 
-export class TenantRepository extends IdentityBaseRepo<
-  TenantEntity,
-  TenantMapper
-> {
+import { TenantMapper } from "../mappers/tenant-mapper";
+import { IdentityBaseRepo } from "./identity-base-repo";
+
+export class TenantRepository extends IdentityBaseRepo<TenantEntity, TenantMapper> {
   constructor() {
     super({
       collName: "tenants",
@@ -43,21 +41,15 @@ export class TenantRepository extends IdentityBaseRepo<
           updatedAt: now,
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
   }
 
-  public async getTenantById(
-    tenantId: string,
-    projection?: object
-  ): Promise<TenantEntity | null> {
+  public async getTenantById(tenantId: string, projection?: object): Promise<TenantEntity | null> {
     return await this.findOne({ tenantId }, { projection });
   }
 
-  public async getTenantByApiKey(
-    apiKey: string,
-    projection?: object
-  ): Promise<TenantEntity | null> {
+  public async getTenantByApiKey(apiKey: string, projection?: object): Promise<TenantEntity | null> {
     return await this.findOne({ apiKey }, { projection });
   }
 
@@ -77,21 +69,15 @@ export class TenantRepository extends IdentityBaseRepo<
     }));
   }
 
-  public async updateTenantStatus(
-    tenantId: string,
-    status: TenantStatus
-  ): Promise<TenantEntity | null> {
+  public async updateTenantStatus(tenantId: string, status: TenantStatus): Promise<TenantEntity | null> {
     return await this.findOneAndUpdate(
       { tenantId },
       { $set: { status, updatedAt: new Date() } },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
-  public async regenerateApiKey(
-    tenantId: string,
-    newApiKey: string
-  ): Promise<TenantEntity | null> {
+  public async regenerateApiKey(tenantId: string, newApiKey: string): Promise<TenantEntity | null> {
     const now = new Date();
     return await this.findOneAndUpdate(
       { tenantId },
@@ -102,7 +88,7 @@ export class TenantRepository extends IdentityBaseRepo<
           updatedAt: now,
         },
       },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -112,19 +98,14 @@ export class TenantRepository extends IdentityBaseRepo<
       displayName?: string;
       description?: string;
       callbackBaseUrl?: string;
-    }
+    },
   ): Promise<TenantEntity | null> {
     const $set: Record<string, unknown> = { updatedAt: new Date() };
 
     if (fields.displayName !== undefined) $set.displayName = fields.displayName;
     if (fields.description !== undefined) $set.description = fields.description;
-    if (fields.callbackBaseUrl !== undefined)
-      $set.callbackBaseUrl = fields.callbackBaseUrl;
+    if (fields.callbackBaseUrl !== undefined) $set.callbackBaseUrl = fields.callbackBaseUrl;
 
-    return await this.findOneAndUpdate(
-      { tenantId },
-      { $set },
-      { returnDocument: "after" }
-    );
+    return await this.findOneAndUpdate({ tenantId }, { $set }, { returnDocument: "after" });
   }
 }

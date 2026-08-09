@@ -11,12 +11,9 @@
  *   2. Per-tenant (scope = "tenant", tenantId = "xxx"): override cho từng tenant.
  */
 
-export type { GlobalConfigDoc } from "./global-config";
-export type { TenantConfigDoc } from "./tenant-config";
-
 /** Union type cho collection lotto535GameConfigs. */
-export type { GlobalConfigDoc as _GlobalConfigDoc } from "./global-config";
-export type { TenantConfigDoc as _TenantConfigDoc } from "./tenant-config";
+export type { GlobalConfigDoc, GlobalConfigDoc as _GlobalConfigDoc } from "./global-config";
+export type { TenantConfigDoc, TenantConfigDoc as _TenantConfigDoc } from "./tenant-config";
 
 import type { GlobalConfigDoc } from "./global-config";
 import type { TenantConfigDoc } from "./tenant-config";

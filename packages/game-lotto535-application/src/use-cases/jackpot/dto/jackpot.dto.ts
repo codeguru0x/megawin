@@ -5,7 +5,7 @@
  * Dùng cho cả API response và client-side type.
  */
 
-import type { JackpotCycleStatus, JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
+import type { JackpotCycleCloseReason, JackpotCycleStatus } from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
 // GetJackpotCurrent
@@ -246,10 +246,7 @@ export interface JackpotCycleSummary {
      * Key: tên tier (tier1, tier2, ...).
      * Value: { winnerCount, bonusPerWinner, totalAmount }.
      */
-    tierAllocations: Record<
-      string,
-      { winnerCount: number; bonusPerWinner: number; totalAmount: number }
-    >;
+    tierAllocations: Record<string, { winnerCount: number; bonusPerWinner: number; totalAmount: number }>;
   };
   /** Danh sách người trúng Jackpot — chỉ có khi closeReason = "winner". */
   winners?: JackpotWinnerSummary[];

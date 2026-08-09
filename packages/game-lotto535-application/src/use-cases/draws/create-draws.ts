@@ -17,15 +17,16 @@
  * Jackpot snapshot chỉ ghi lên draw khi settle (finalize-settle).
  */
 
+import { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawDoc, DrawNo } from "@megawin/game-lotto535/entities";
+import { generateDrawId } from "@megawin/game-lotto535/helpers";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { generateDrawId } from "@megawin/game-lotto535/helpers";
 import { getFinancialDate, subtractMinutes } from "@megawin/shared/utils";
-import type { DrawNo, DrawDoc } from "@megawin/game-lotto535/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
 export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
@@ -64,9 +65,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
     if (uniqueInputIds.size !== inputDrawIds.length) {
       const seen = new Set<string>();
       const dupes = inputDrawIds.filter((id) => seen.size === seen.add(id).size);
-      throw AppException.badRequest(
-        `Kỳ quay bị trùng trong danh sách: ${[...new Set(dupes)].join(", ")}`,
-      );
+      throw AppException.badRequest(`Kỳ quay bị trùng trong danh sách: ${[...new Set(dupes)].join(", ")}`);
     }
 
     const existing = await this.drawRepo.getDrawsByIds(inputDrawIds);
@@ -90,9 +89,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
         drawNo: slot.drawNo as DrawNo,
         drawTime: slot.drawTimeDate,
         status,
-        sales: slot.openNow
-          ? { closeAt: slot.closeAtDate, openAt: now }
-          : { closeAt: slot.closeAtDate },
+        sales: slot.openNow ? { closeAt: slot.closeAtDate, openAt: now } : { closeAt: slot.closeAtDate },
         createdAt: now,
         updatedAt: now,
       });

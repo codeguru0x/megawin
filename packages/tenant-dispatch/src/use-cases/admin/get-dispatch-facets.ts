@@ -1,6 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
-import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
+import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
 import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { DispatchFacets } from "../../infras/repos/types";
@@ -21,10 +21,7 @@ export type GetDispatchFacetsOutput = DispatchFacets;
  * Dùng cho filter Combobox ở FE: Tenant (search-as-you-type) + Game (fixed list).
  * Sort theo count DESC nên tenant/game active nhất lên đầu.
  */
-export class GetDispatchFacetsUseCase extends NextApiUseCase<
-  GetDispatchFacetsInput,
-  GetDispatchFacetsOutput
-> {
+export class GetDispatchFacetsUseCase extends NextApiUseCase<GetDispatchFacetsInput, GetDispatchFacetsOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: GetDispatchFacetsInput): Promise<GetDispatchFacetsOutput> {

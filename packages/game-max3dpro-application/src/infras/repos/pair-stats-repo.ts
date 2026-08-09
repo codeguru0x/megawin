@@ -25,15 +25,13 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
-import type {
-  Max3dproDrawPairStatsDoc,
-  Max3dproDrawPairStatsEntity,
-} from "@megawin/game-max3dpro/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Max3dproDrawPairStatsDoc, Max3dproDrawPairStatsEntity } from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { PairStatsMapper } from "../mappers/pair-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { Max3dproPairStatsDelta } from "./types";
 
 const f = docPath<Max3dproDrawPairStatsDoc>();
@@ -70,15 +68,8 @@ export class PairStatsRepository extends BaseRepo<Max3dproDrawPairStatsEntity, P
    * @param minPlayers - Ngưỡng số người dồn cược.
    * @param limit - Trần số cặp xử lý 1 tick (chỉ cần các cặp nóng nhất).
    */
-  async findConcentrated(
-    drawId: string,
-    minPlayers: number,
-    limit: number,
-  ): Promise<Max3dproDrawPairStatsEntity[]> {
-    return await this.findMany(
-      { drawId, accountCount: { $gte: minPlayers } },
-      { sort: { accountCount: -1 }, limit },
-    );
+  async findConcentrated(drawId: string, minPlayers: number, limit: number): Promise<Max3dproDrawPairStatsEntity[]> {
+    return await this.findMany({ drawId, accountCount: { $gte: minPlayers } }, { sort: { accountCount: -1 }, limit });
   }
 
   /**

@@ -1,13 +1,14 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { OpsAlertStatus } from "@megawin/game-max3dpro/entities";
 import type { Max3dproTopPair, TopAccountStat } from "@megawin/game-max3dpro/entities";
+import { OpsAlertStatus } from "@megawin/game-max3dpro/entities";
 import { computeMax3dproExposure, DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.dto";
 
 /**
@@ -26,10 +27,7 @@ import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.d
  * + plus tail proxy) — doc chỉ lưu RAW tuyến tính (bài học Keno Risk #4). `updatedAt` của stats
  * dùng làm ETag ở route → 304 khi chưa đổi (0 re-render FE).
  */
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();

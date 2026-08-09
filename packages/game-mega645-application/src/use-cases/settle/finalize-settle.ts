@@ -37,9 +37,10 @@
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleConfig, SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
@@ -85,10 +86,7 @@ export interface FinalizeSettleResult {
  *   - skipCycleUpdate=true (Type B1/B2) → BỎ QUA updateJackpotCycle (DBA chốt cycle).
  *   - cascadeOpeningUpdate=true (cascade B2) → upsertEntry ghi đè openingJp ledger.
  */
-export class FinalizeSettleUseCase extends InternalUseCase<
-  SettleContextWithFinancials,
-  FinalizeSettleResult
-> {
+export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFinancials, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
@@ -109,9 +107,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} đã được hoàn tất, bỏ qua chuyển trạng thái.`);
       } else {
-        throw AppException.internal(
-          `Không thể hoàn tất draw ${drawId}. Trạng thái hiện tại: ${draw?.status}`,
-        );
+        throw AppException.internal(`Không thể hoàn tất draw ${drawId}. Trạng thái hiện tại: ${draw?.status}`);
       }
     }
 
@@ -183,9 +179,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       // → closeCycle đã chạy thành công lần trước → chỉ đảm bảo active cycle tồn tại.
       const alreadyClosed = await this.cycleRepo.findClosedByEndDrawId(drawId);
       if (alreadyClosed) {
-        console.log(
-          `Cycle ${alreadyClosed.cycleNo} đã đóng cho draw ${drawId}, đảm bảo cycle tiếp theo tồn tại.`,
-        );
+        console.log(`Cycle ${alreadyClosed.cycleNo} đã đóng cho draw ${drawId}, đảm bảo cycle tiếp theo tồn tại.`);
         await this.ensureNextCycleExists(drawId, input.config);
         return;
       }

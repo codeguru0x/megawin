@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import { TenantEntity } from "@megawin/identity/entities";
-import { Document } from "mongodb";
+import type { TenantEntity } from "@megawin/identity/entities";
+import type { Document } from "mongodb";
 
 export class TenantMapper extends MongoMapper<Document, TenantEntity> {
   constructor() {

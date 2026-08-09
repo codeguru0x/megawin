@@ -6,9 +6,10 @@
  * key từ board.
  */
 
-import { describe, it, expect } from "vitest";
-import { PlayType } from "../../src/entities/enums";
+import { describe, expect, it } from "vitest";
+
 import { Lotto535StatsPlayKey, toStatsPlayKey } from "../../src/entities/betting-stats";
+import { PlayType } from "../../src/entities/enums";
 
 describe("Lotto535StatsPlayKey", () => {
   it("Đúng logic — có đúng 13 giá trị, không trùng nhau", () => {
@@ -22,12 +23,7 @@ describe("Lotto535StatsPlayKey", () => {
     // "maincover6" (sai case) hoặc "mainCover16" (N ngoài range), test sẽ CHƯA bắt
     // được lỗi thực thi (giá trị vẫn hợp lệ về mặt string) nhưng ít nhất đảm bảo
     // toàn bộ set giá trị nằm trong 4 tiền tố PlayType hợp lệ.
-    const validPrefixes = [
-      PlayType.Standard,
-      PlayType.MainCover4,
-      PlayType.MainCover,
-      PlayType.SpecialCover,
-    ];
+    const validPrefixes = [PlayType.Standard, PlayType.MainCover4, PlayType.MainCover, PlayType.SpecialCover];
     for (const value of Object.values(Lotto535StatsPlayKey)) {
       const matchesPrefix = validPrefixes.some((p) => value === p || value.startsWith(p));
       expect(matchesPrefix).toBe(true);
@@ -46,15 +42,15 @@ describe("Lotto535StatsPlayKey", () => {
 
 describe("toStatsPlayKey", () => {
   it("Đúng logic — board standard → PlayType.Standard", () => {
-    expect(
-      toStatsPlayKey({ playType: PlayType.Standard, mainNumbers: ["01", "02", "03", "04", "05"] }),
-    ).toBe(PlayType.Standard);
+    expect(toStatsPlayKey({ playType: PlayType.Standard, mainNumbers: ["01", "02", "03", "04", "05"] })).toBe(
+      PlayType.Standard,
+    );
   });
 
   it("Đúng logic — board mainCover4 → PlayType.MainCover4 (KHÔNG suy theo mainNumbers.length)", () => {
-    expect(
-      toStatsPlayKey({ playType: PlayType.MainCover4, mainNumbers: ["01", "02", "03", "04"] }),
-    ).toBe(PlayType.MainCover4);
+    expect(toStatsPlayKey({ playType: PlayType.MainCover4, mainNumbers: ["01", "02", "03", "04"] })).toBe(
+      PlayType.MainCover4,
+    );
   });
 
   it("Đúng logic — board mainCover 6 số → mainCover6", () => {
@@ -80,13 +76,11 @@ describe("toStatsPlayKey", () => {
   });
 
   it("Logic ngược — mainCover với mainNumbers.length ngoài phạm vi khai báo (5 hoặc 16) vẫn trả key theo công thức, không throw (hợp đồng: caller đảm bảo N hợp lệ qua validateSelection trước khi gọi)", () => {
-    expect(
-      toStatsPlayKey({ playType: PlayType.MainCover, mainNumbers: ["01", "02", "03", "04", "05"] }),
-    ).toBe("mainCover5");
-    const mainNumbers16 = Array.from({ length: 16 }, (_, i) => String(i + 1).padStart(2, "0"));
-    expect(toStatsPlayKey({ playType: PlayType.MainCover, mainNumbers: mainNumbers16 })).toBe(
-      "mainCover16",
+    expect(toStatsPlayKey({ playType: PlayType.MainCover, mainNumbers: ["01", "02", "03", "04", "05"] })).toBe(
+      "mainCover5",
     );
+    const mainNumbers16 = Array.from({ length: 16 }, (_, i) => String(i + 1).padStart(2, "0"));
+    expect(toStatsPlayKey({ playType: PlayType.MainCover, mainNumbers: mainNumbers16 })).toBe("mainCover16");
   });
 });
 

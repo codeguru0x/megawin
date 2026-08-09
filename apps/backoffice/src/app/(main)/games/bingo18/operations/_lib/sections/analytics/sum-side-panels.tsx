@@ -79,8 +79,7 @@ const SumBarColumn = memo(function SumBarColumn({
       </TooltipTrigger>
       <TooltipContent side="top" className="text-xs tabular-nums">
         Tổng {sum}
-        {isHighMultiplier ? " (×120 — cửa nhân cao)" : ""}: {formatNumber(amount)} VND ·{" "}
-        {formatNumber(sets)} bộ
+        {isHighMultiplier ? " (×120 — cửa nhân cao)" : ""}: {formatNumber(amount)} VND · {formatNumber(sets)} bộ
       </TooltipContent>
     </Tooltip>
   );
@@ -106,8 +105,7 @@ export function SumTotalBar({
           <div>
             <CardTitle className="text-sm font-semibold">Phân bổ Cộng tổng (3–18)</CardTitle>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Tổng 3/18 trả ×120 (viền đỏ) — vượt {formatNumber(concentrationThreshold)} VND → cảnh
-              báo dồn cửa
+              Tổng 3/18 trả ×120 (viền đỏ) — vượt {formatNumber(concentrationThreshold)} VND → cảnh báo dồn cửa
             </p>
           </div>
         </div>
@@ -188,10 +186,7 @@ export function SideBetCard({
             return (
               <div
                 key={d.key}
-                className={cn(
-                  "h-full transition-all",
-                  isTopSkewed ? "bg-amber-500" : SEGMENT_COLORS[d.key],
-                )}
+                className={cn("h-full transition-all", isTopSkewed ? "bg-amber-500" : SEGMENT_COLORS[d.key])}
                 style={{ width: `${pct}%` }}
               />
             );
@@ -213,9 +208,7 @@ export function SideBetCard({
                 )}
               >
                 <p className="text-xs font-medium">{d.label}</p>
-                <p className="text-sm font-bold tabular-nums leading-tight">
-                  {formatNumber(d.amount)}
-                </p>
+                <p className="text-sm font-bold tabular-nums leading-tight">{formatNumber(d.amount)}</p>
                 <p className="text-[10px] tabular-nums text-muted-foreground">
                   {Math.round(pct)}% · nền {d.base}
                 </p>

@@ -1,12 +1,13 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type {
   FinancialRates,
+  GlobalConfigEntity,
   Max3dPrizeConfig,
   OpsConfig,
   PlayRules,
-  GlobalConfigEntity,
 } from "@megawin/game-max3d/entities";
+import { Max3dCollections } from "@megawin/game-max3d/entities";
+
 import { GameConfigMapper } from "../mappers/global-config-mapper";
 import { BaseRepo } from "./base-repo";
 

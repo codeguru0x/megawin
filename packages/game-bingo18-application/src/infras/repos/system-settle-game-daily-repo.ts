@@ -9,11 +9,12 @@
  *   → SUM tất cả draws → 1 summary row → dùng cho upsertGameDaily().
  */
 
-import {
-  SystemSettleGameDailyRepository,
-  type SettleGameDailyAggregateResult,
-} from "@megawin/game-core-application/repos";
 import { BINGO18_SETTLE_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
+import {
+  type SettleGameDailyAggregateResult,
+  SystemSettleGameDailyRepository,
+} from "@megawin/game-core-application/repos";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleGameDailyRepo extends SystemSettleGameDailyRepository {

@@ -9,8 +9,9 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_VOID_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { VoidDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository ghi void report cho Bingo 18.
@@ -51,9 +52,6 @@ export class VoidReportRepository extends BaseRepo<VoidDrawReportEntity, VoidDra
 
   /** Lấy danh sách void reports trong khoảng ngày tài chính. */
   async findByDateRange(from: string, to: string): Promise<VoidDrawReport[]> {
-    return await this.findMany(
-      { financialDate: { $gte: from, $lte: to } },
-      { sort: { financialDate: -1 } },
-    );
+    return await this.findMany({ financialDate: { $gte: from, $lte: to } }, { sort: { financialDate: -1 } });
   }
 }

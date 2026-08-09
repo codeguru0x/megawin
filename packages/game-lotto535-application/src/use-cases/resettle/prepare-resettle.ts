@@ -11,8 +11,9 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { generateId } from "@megawin/shared/utils";
 import type { EntryReversal } from "@megawin/game-lotto535/entities";
+import { generateId } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryResettleRepository } from "../../infras/repos/entry-resettle-repo";
 
@@ -32,10 +33,7 @@ export interface PrepareResettleOutput {
   lockKey: string;
 }
 
-export class PrepareResettleUseCase extends InternalUseCase<
-  PrepareResettleInput,
-  PrepareResettleOutput
-> {
+export class PrepareResettleUseCase extends InternalUseCase<PrepareResettleInput, PrepareResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryResettleRepo = new EntryResettleRepository();
 
@@ -52,9 +50,7 @@ export class PrepareResettleUseCase extends InternalUseCase<
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.badRequest(
-        `Kỳ quay ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.badRequest(`Kỳ quay ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     await this.entryResettleRepo.clearReversalSnapshot(drawId);

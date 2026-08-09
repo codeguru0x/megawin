@@ -27,16 +27,17 @@
  * 7. betUnitsByEntry thiếu 1 entryId (bất thường dữ liệu) → winners prizeAmount = 0.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { ObjectId, Long } from "mongodb";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
+import type { EntryPayoutTier, TicketLineDoc } from "@megawin/game-lotto535/entities";
+import { PrizeTier } from "@megawin/game-lotto535/entities/enums";
+import { Long, ObjectId } from "mongodb";
+import { describe, expect, it, vi } from "vitest";
+
 import { EntryRepository } from "../../src/infras/repos/entry-repo";
 import { LineRepository } from "../../src/infras/repos/line-repo";
-import { PatchJackpotPrizeUseCase } from "../../src/use-cases/settle/patch-jackpot-prize";
 import { ApplySplitBonusesUseCase } from "../../src/use-cases/settle/apply-split-bonuses";
+import { PatchJackpotPrizeUseCase } from "../../src/use-cases/settle/patch-jackpot-prize";
 import type { SettleContext, SettleFinancials } from "../../src/use-cases/settle/types";
-import { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import { PrizeTier } from "@megawin/game-lotto535/entities/enums";
-import type { EntryPayoutTier, TicketLineDoc } from "@megawin/game-lotto535/entities";
 
 const entryRepo = new EntryRepository();
 const lineRepo = new LineRepository();
@@ -166,10 +167,7 @@ function buildJackpotInput(params: {
 }
 
 /** Build SettleContext tối thiểu cho ApplySplitBonusesUseCase.execute. */
-function buildSplitInput(params: {
-  drawId: string;
-  splitDetails: SettleFinancials["splitDetails"];
-}): SettleContext {
+function buildSplitInput(params: { drawId: string; splitDetails: SettleFinancials["splitDetails"] }): SettleContext {
   return {
     drawId: params.drawId,
     financials: {
@@ -564,16 +562,12 @@ describe("Lotto 5/35 – ApplySplitBonuses", () => {
     expect(result.entriesPatched).toBe(1);
 
     const docA = await entryRepo.getEntryById(entryA);
-    const splitTier = docA!.payout!.tiers.find(
-      (t) => t.tier === PrizeTier.Tier1 && t.isSplitBonus === true,
-    )!;
+    const splitTier = docA!.payout!.tiers.find((t) => t.tier === PrizeTier.Tier1 && t.isSplitBonus === true)!;
     expect(splitTier).toBeDefined();
     expect(splitTier.unitAmount).toBe(bonusPerUnit);
     expect(splitTier.amount).toBe(bonusPerUnit * 5);
 
-    const baseTier = docA!.payout!.tiers.find(
-      (t) => t.tier === PrizeTier.Tier1 && !t.isSplitBonus,
-    )!;
+    const baseTier = docA!.payout!.tiers.find((t) => t.tier === PrizeTier.Tier1 && !t.isSplitBonus)!;
     expect(baseTier.amount).toBe(50_000_000); // base tier1 KHÔNG bị đổi.
     expect(docA!.payout!.winAmount).toBe(50_000_000 + bonusPerUnit * 5);
   });
@@ -620,9 +614,7 @@ describe("Lotto 5/35 – ApplySplitBonuses", () => {
     expect(run2.entriesPatched).toBe(0); // $nor guard — lần 2 không có entry nào match.
 
     const docA = await entryRepo.getEntryById(entryA);
-    const splitTiers = docA!.payout!.tiers.filter(
-      (t) => t.tier === PrizeTier.Tier2 && t.isSplitBonus === true,
-    );
+    const splitTiers = docA!.payout!.tiers.filter((t) => t.tier === PrizeTier.Tier2 && t.isSplitBonus === true);
     expect(splitTiers).toHaveLength(1); // KHÔNG duplicate.
     expect(docA!.payout!.winAmount).toBe(5_000_000 + bonusPerUnit); // KHÔNG double.
   });

@@ -36,22 +36,23 @@
  * - plus: pairKey UNORDERED (2 triplet sort tăng) → `pairs` map (units/amount/accounts).
  */
 
-import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
-import { getUniquePermutations, maxBoardUnitWin } from "@megawin/game-max3d/rules";
-import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
 import type {
   Max3dPlayTypeStat,
-  Max3dTripletStake,
   Max3dTopPotential,
+  Max3dTripletStake,
   TenantBettingStat,
 } from "@megawin/game-max3d/entities";
+import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
+import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
+import { getUniquePermutations, maxBoardUnitWin } from "@megawin/game-max3d/rules";
+
 import type {
-  DrawStatsDelta,
-  EntryForStats,
-  EntryBoardForStats,
-  PartialByPlayTypeDelta,
-  PairStatsDelta,
   AccountStatsDelta,
+  DrawStatsDelta,
+  EntryBoardForStats,
+  EntryForStats,
+  PairStatsDelta,
+  PartialByPlayTypeDelta,
 } from "../../infras/repos/types";
 
 /** Prize config + ngưỡng cược lớn gom lại — truyền 1 lần cho accumulator. */
@@ -105,10 +106,13 @@ export class Max3dDrawStatsAccumulator {
   private readonly accounts = new Map<string, AccountDeltaState>();
   private readonly potentials: Max3dTopPotential[] = [];
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /**
    * Cộng 1 entry vào delta.
@@ -147,8 +151,7 @@ export class Max3dDrawStatsAccumulator {
       this.applyBoard(board, unitPrice, entry.accountId);
       // PROXY thiên cao: Σ max per board (outcome space 1000²⁰ không enumerate; UI ghi
       // rõ "ước tính").
-      potentialWin +=
-        maxBoardUnitWin(board.playMode, board.playType, this.prize.prizes) * board.betCount;
+      potentialWin += maxBoardUnitWin(board.playMode, board.playType, this.prize.prizes) * board.betCount;
     }
 
     this.potentials.push({
@@ -195,12 +198,7 @@ export class Max3dDrawStatsAccumulator {
     }
 
     const isCombo3 = board.playType === PlayType.Combo3;
-    this.applyStat(
-      isCombo3 ? "basicCombo3" : "basicCombo6",
-      boardAmount,
-      board.betCount,
-      board.lineCount,
-    );
+    this.applyStat(isCombo3 ? "basicCombo3" : "basicCombo6", boardAmount, board.betCount, board.lineCount);
     // Mỗi hoán vị là 1 line dự thưởng riêng — nhận units += betCount (khớp settle).
     for (const perm of getUniquePermutations(triplet)) {
       this.bumpTriplet(perm, isCombo3 ? "combo3Units" : "combo6Units", board.betCount, boardAmount);
@@ -208,12 +206,7 @@ export class Max3dDrawStatsAccumulator {
   }
 
   /** Cộng 1 board vào delta nhóm playType (partial — tạo slot nếu chưa có). units = lineCount × betCount. */
-  private applyStat(
-    key: keyof PartialByPlayTypeDelta,
-    boardAmount: number,
-    betCount: number,
-    lineCount = 1,
-  ): void {
+  private applyStat(key: keyof PartialByPlayTypeDelta, boardAmount: number, betCount: number, lineCount = 1): void {
     const stat: Max3dPlayTypeStat = this.byPlayType[key] ?? {
       amount: 0,
       units: 0,

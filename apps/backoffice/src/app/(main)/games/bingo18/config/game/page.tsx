@@ -40,9 +40,7 @@ export default function Bingo18ConfigPage() {
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">
-            Bingo 18 — Cấu hình
-          </h1>
+          <h1 className="text-base font-semibold tracking-tight text-foreground">Bingo 18 — Cấu hình</h1>
           {config && (
             <p className="text-xs tabular-nums text-muted-foreground">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}

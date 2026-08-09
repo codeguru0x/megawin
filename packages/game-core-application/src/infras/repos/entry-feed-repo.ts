@@ -1,9 +1,10 @@
-import { Long } from "mongodb";
-import type { AnyBulkWriteOperation, Document } from "mongodb";
+import type { EntryFeedDoc, EntryFeedEntity, GameProduct } from "@megawin/game-core/entities";
 import { GameCoreCollections } from "@megawin/game-core/entities";
-import type { GameProduct, EntryFeedDoc, EntryFeedEntity } from "@megawin/game-core/entities";
-import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
+import type { AnyBulkWriteOperation, Document } from "mongodb";
+import { Long } from "mongodb";
+
 import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
+import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
 
 /**
  * Repository cho collection entryFeed.
@@ -13,10 +14,7 @@ import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
  * - pollFeed: tenant polling (Long → string conversion).
  * - upsertFeedEntry: worker sync ghi/cập nhật snapshot.
  */
-export class EntryFeedRepository extends MegawinTenantCoreBaseRepo<
-  EntryFeedEntity,
-  EntryFeedMapper
-> {
+export class EntryFeedRepository extends MegawinTenantCoreBaseRepo<EntryFeedEntity, EntryFeedMapper> {
   constructor() {
     super({
       collName: GameCoreCollections.EntryFeed,
@@ -57,31 +55,27 @@ export class EntryFeedRepository extends MegawinTenantCoreBaseRepo<
    * Key: entryId. Chỉ ghi đè nếu version mới > version cũ (idempotent).
    * ordered: false — tối đa hoá throughput, lỗi 1 entry không chặn các entry khác.
    */
-  async bulkUpsertFeedEntries(
-    docs: Omit<EntryFeedDoc, "_id">[],
-  ): Promise<{ upserted: number; skipped: number }> {
+  async bulkUpsertFeedEntries(docs: Omit<EntryFeedDoc, "_id">[]): Promise<{ upserted: number; skipped: number }> {
     if (docs.length === 0) {
       return { upserted: 0, skipped: 0 };
     }
 
-    const operations: AnyBulkWriteOperation<Document>[] = docs.map(
-      (doc: Omit<EntryFeedDoc, "_id">) => {
-        const { entryId, ...setFields } = doc;
-        return {
-          updateOne: {
-            filter: {
-              entryId,
-              version: { $lt: doc.version },
-            },
-            update: {
-              $set: setFields,
-              $setOnInsert: { entryId },
-            },
-            upsert: true,
+    const operations: AnyBulkWriteOperation<Document>[] = docs.map((doc: Omit<EntryFeedDoc, "_id">) => {
+      const { entryId, ...setFields } = doc;
+      return {
+        updateOne: {
+          filter: {
+            entryId,
+            version: { $lt: doc.version },
           },
-        };
-      },
-    );
+          update: {
+            $set: setFields,
+            $setOnInsert: { entryId },
+          },
+          upsert: true,
+        },
+      };
+    });
 
     const result = await this.bulkWrite(operations, { ordered: false });
 

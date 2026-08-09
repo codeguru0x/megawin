@@ -12,28 +12,20 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import {
-  PlaceBetUseCase,
-  type PlaceBetBoardInput,
-} from "@megawin/game-max3dpro-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
 import {
-  max3dproTripletSchema,
-  max3dproDrawIdSchema,
-  max3dproDigitSchema,
-} from "@megawin/game-max3dpro/schemas";
-import {
+  MAX3D_PRO_MULTI_NUMBER_MAX,
+  MAX3D_PRO_MULTI_NUMBER_MIN,
   PlayMode,
   PlayType,
-  MAX3D_PRO_MULTI_NUMBER_MIN,
-  MAX3D_PRO_MULTI_NUMBER_MAX,
 } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
+import { max3dproDigitSchema, max3dproDrawIdSchema, max3dproTripletSchema } from "@megawin/game-max3dpro/schemas";
+import { type PlaceBetBoardInput, PlaceBetUseCase } from "@megawin/game-max3dpro-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───
@@ -45,10 +37,7 @@ const max3dproMultiNumberBoardSchema = z.object({
   boardNo: z.string(),
   playMode: z.literal(PlayMode.MultiNumber),
   playType: z.literal(PlayType.Straight),
-  triplets: z
-    .array(max3dproTripletSchema)
-    .min(MAX3D_PRO_MULTI_NUMBER_MIN)
-    .max(MAX3D_PRO_MULTI_NUMBER_MAX),
+  triplets: z.array(max3dproTripletSchema).min(MAX3D_PRO_MULTI_NUMBER_MIN).max(MAX3D_PRO_MULTI_NUMBER_MAX),
   /** Số lần cược nhân bội (≥ 1). Mặc định 1 cho backward compat. */
   betCount: z.number().int().min(1).default(1),
 });
@@ -79,13 +68,9 @@ export const max3dproPlaceBetBodySchema = z.object({
     .min(1)
     .max(6)
     .refine(isUnique, { message: "Các kỳ quay không được trùng lặp." }),
-  boards: z
-    .array(max3dproBoardSchema)
-    .min(1)
-    .max(MAX3DPRO_MAX_BOARDS)
-    .refine(boardsSequentialRefine(), {
-      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
-    }),
+  boards: z.array(max3dproBoardSchema).min(1).max(MAX3DPRO_MAX_BOARDS).refine(boardsSequentialRefine(), {
+    message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
+  }),
 });
 
 export type Max3dproBoard = z.infer<typeof max3dproBoardSchema>;

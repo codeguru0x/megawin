@@ -11,7 +11,7 @@
  */
 
 import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -43,10 +43,7 @@ const get = (key, fallback) => process.env[key] ?? env[key] ?? fallback;
 
 const claims = {
   sub: get("MOCK_SUB", "local-dev-sub-001"),
-  iss: get(
-    "COGNITO_PLAYER_POOL_ISSUER_URL",
-    "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_LOCAL",
-  ),
+  iss: get("COGNITO_PLAYER_POOL_ISSUER_URL", "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_LOCAL"),
   aud: get("COGNITO_PLAYER_POOL_CLIENT_ID", "local-test-client"),
   exp: Math.floor(Date.now() / 1000) + 30 * 86400,
   "cognito:username": get("MOCK_USERNAME", "player001@local"),

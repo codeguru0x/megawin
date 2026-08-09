@@ -10,8 +10,9 @@
  * 3. Mỗi game tự quản lý cách check ticket — decoupled khỏi worker
  */
 
-import { TicketRepository } from "../infras/repos/ticket-repo";
 import type { TicketLookupService } from "@megawin/game-core-application/services";
+
+import { TicketRepository } from "../infras/repos/ticket-repo";
 
 export class Max3dproTicketLookupService implements TicketLookupService {
   private readonly ticketRepo = new TicketRepository();

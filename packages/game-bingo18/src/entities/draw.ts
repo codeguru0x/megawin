@@ -11,7 +11,8 @@
 
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
-import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
+
+import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./enums";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────

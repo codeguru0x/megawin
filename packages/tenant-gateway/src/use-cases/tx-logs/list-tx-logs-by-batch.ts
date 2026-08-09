@@ -6,11 +6,11 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { Pagination } from "@megawin/shared/constants/pagination";
+import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 
 import type { TxLogEntity } from "../../entities/tx-log";
-import { TxLogRepository, type ListTxLogsResult } from "../../infras/repos";
+import { type ListTxLogsResult, TxLogRepository } from "../../infras/repos";
 
 export interface ListTxLogsByBatchInput {
   batchId: string;
@@ -23,10 +23,7 @@ export interface ListTxLogsByBatchOutput {
   nextCursor: { createdAt: string; id: string } | null;
 }
 
-export class ListTxLogsByBatchUseCase extends NextApiUseCase<
-  ListTxLogsByBatchInput,
-  ListTxLogsByBatchOutput
-> {
+export class ListTxLogsByBatchUseCase extends NextApiUseCase<ListTxLogsByBatchInput, ListTxLogsByBatchOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: ListTxLogsByBatchInput): Promise<ListTxLogsByBatchOutput> {

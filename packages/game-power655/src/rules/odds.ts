@@ -155,7 +155,7 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import { POWER655_MAIN_MAX, POWER655_MAIN_COUNT, type PrizeAmounts } from "../entities/types";
+import { POWER655_MAIN_COUNT, POWER655_MAIN_MAX, type PrizeAmounts } from "../entities/types";
 import { combination } from "./play-types";
 
 const MAIN_POOL = POWER655_MAIN_MAX; // 55
@@ -178,15 +178,9 @@ export interface TierOdds {
   plannedPayoutRate: number;
 }
 
-function computeTierOdds(): Map<
-  PrizeTier,
-  { ways: number; probability: number; plannedPayoutRate: number }
-> {
+function computeTierOdds(): Map<PrizeTier, { ways: number; probability: number; plannedPayoutRate: number }> {
   const totalMainCombos = TOTAL_MAIN_OUTCOMES;
-  const odds = new Map<
-    PrizeTier,
-    { ways: number; probability: number; plannedPayoutRate: number }
-  >();
+  const odds = new Map<PrizeTier, { ways: number; probability: number; plannedPayoutRate: number }>();
 
   const match6ways = mainMatchWays(6); // 1
   const match5ways = mainMatchWays(5); // C(6,5)×C(49,1) = 6×49 = 294

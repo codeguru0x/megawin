@@ -6,9 +6,10 @@
  * thống nhất với Next.js: success/error envelope + status code).
  */
 
-import { describe, it, expect } from "vitest";
-import { toApiGatewayResponse } from "../src/use-cases/api-gateway";
 import { APP_ERROR_CODES } from "@megawin/shared/errors";
+import { describe, expect, it } from "vitest";
+
+import { toApiGatewayResponse } from "../src/use-cases/api-gateway";
 
 describe("toApiGatewayResponse", () => {
   it("success → 200 + { success: true, data }", () => {

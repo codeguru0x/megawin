@@ -6,6 +6,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import { buildRefundOrder } from "@megawin/tenant-dispatch/builders";
 import { EnqueueDispatchOrdersUseCase } from "@megawin/tenant-dispatch/use-cases/enqueue";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 
@@ -18,10 +19,7 @@ export interface EnqueueDispatchRefundsOutput {
   done: boolean;
 }
 
-export class EnqueueDispatchRefundsUseCase extends InternalUseCase<
-  VoidContext,
-  EnqueueDispatchRefundsOutput
-> {
+export class EnqueueDispatchRefundsUseCase extends InternalUseCase<VoidContext, EnqueueDispatchRefundsOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 

@@ -1,6 +1,5 @@
-import type { PlayType } from "@megawin/game-mega645/entities";
-import type { BoardSelection } from "@megawin/game-mega645/entities";
 import type { TicketChannel } from "@megawin/game-core/entities";
+import type { BoardSelection, PlayType } from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
 // PlaceBet Input (từ player)

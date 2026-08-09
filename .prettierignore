@@ -12,3 +12,11 @@ release
 .cursorrules
 .vscode
 .cursor
+
+# Biome quản format cho các loại file này — Prettier chỉ lo .md/.yml/.yaml
+*.ts
+*.tsx
+*.js
+*.mjs
+*.json
+*.css

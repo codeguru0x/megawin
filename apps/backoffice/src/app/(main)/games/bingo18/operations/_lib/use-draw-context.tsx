@@ -43,9 +43,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const { data: selectorData, isLoading: selectorLoading } = useDrawSelectorList();
   const draws = selectorData?.draws ?? [];
 
-  const selectedInList = selectedDrawId
-    ? draws.some((d: DrawSelectorItem) => d.drawId === selectedDrawId)
-    : false;
+  const selectedInList = selectedDrawId ? draws.some((d: DrawSelectorItem) => d.drawId === selectedDrawId) : false;
 
   // Auto-select: kỳ active trước, sau đó future, cuối cùng kỳ đầu tiên trong list
   const effectiveDrawId =
@@ -63,15 +61,10 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
 
   const remoteDraw = remoteDrawData?.draw;
 
-  const isHistorical =
-    !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
+  const isHistorical = !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
 
   const drawNotFound =
-    !!selectedDrawId &&
-    !selectorLoading &&
-    !selectedInList &&
-    !remoteLoading &&
-    (remoteError || !remoteDraw);
+    !!selectedDrawId && !selectorLoading && !selectedInList && !remoteLoading && (remoteError || !remoteDraw);
 
   const noDrawAvailable = !selectedDrawId && !selectorLoading && draws.length === 0;
 
@@ -101,8 +94,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const status = draw?.status ?? remoteDraw?.status;
   const isSettled = status === DrawStatus.Settled;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
-  const isActiveForRefresh =
-    !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
+  const isActiveForRefresh = !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
   const onSelectDraw = useCallback(
     (drawId: string) => {

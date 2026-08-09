@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SystemOutstandingReportRepository } from "../../infras/repos/system-outstanding-report-repo";
 import type { GetSystemOutstandingOutput } from "./types";
 
@@ -8,13 +9,11 @@ import type { GetSystemOutstandingOutput } from "./types";
  * Không có input filter — luôn trả tất cả docs active (TTL chưa expire).
  * Dùng cho trang System Outstanding.
  */
-export class GetSystemOutstandingUseCase
-  extends NextApiUseCase<void, GetSystemOutstandingOutput>
-{
+export class GetSystemOutstandingUseCase extends NextApiUseCase<void, GetSystemOutstandingOutput> {
   private readonly repo = new SystemOutstandingReportRepository();
 
   protected async execute(_input: void): Promise<GetSystemOutstandingOutput> {
-    const data = await this.repo.findAll();
+    const data = await this.repo.findAllSorted();
     return { data };
   }
 }

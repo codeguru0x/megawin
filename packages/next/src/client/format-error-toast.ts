@@ -43,14 +43,10 @@ export function formatErrorToast(err: unknown, fallback: string): ErrorToast {
   if (errors.length === 1) {
     const e = errors[0]!;
     // Field rỗng = form-level error → dùng message làm title trực tiếp
-    return e.field
-      ? { title: err.message, description: `${e.field}: ${e.message}` }
-      : { title: e.message };
+    return e.field ? { title: err.message, description: `${e.field}: ${e.message}` } : { title: e.message };
   }
 
   // Nhiều lỗi: gộp thành bullet list
-  const description = errors
-    .map((e) => (e.field ? `• ${e.field}: ${e.message}` : `• ${e.message}`))
-    .join("\n");
+  const description = errors.map((e) => (e.field ? `• ${e.field}: ${e.message}` : `• ${e.message}`)).join("\n");
   return { title: err.message, description };
 }

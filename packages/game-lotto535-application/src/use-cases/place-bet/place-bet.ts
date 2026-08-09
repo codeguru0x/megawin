@@ -20,29 +20,23 @@
  *   - Crash sau markCompleted → đã hoàn tất, TTL cleanup 14 ngày
  */
 
-import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type {
-  Board,
-  TicketDoc,
-  TicketEntryDoc,
-  EntryBoardSnapshot,
-} from "@megawin/game-lotto535/entities";
+import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
+import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { DebitPlayerService } from "@megawin/game-core-application/services";
+import type { Board, EntryBoardSnapshot, TicketDoc, TicketEntryDoc } from "@megawin/game-lotto535/entities";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { calculateLineCount } from "@megawin/game-lotto535/rules/play-types";
+import { AppException } from "@megawin/shared/errors";
+import { Currency } from "@megawin/shared/types";
+import { getFinancialDate, nowVN } from "@megawin/shared/utils";
+import { ObjectId } from "mongodb";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
-import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { DebitPlayerService } from "@megawin/game-core-application/services";
-import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
-import { Currency } from "@megawin/shared/types";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
-import { nowVN, getFinancialDate } from "@megawin/shared/utils";
-import { ObjectId } from "mongodb";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -53,15 +47,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly debitService = new DebitPlayerService();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      ipAddress,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -116,8 +102,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
             playType === PlayType.MainCover || playType === PlayType.MainCover4
               ? bi.selection.mainNumbers.length
               : undefined,
-          specialCoverSize:
-            playType === PlayType.SpecialCover ? bi.selection.specialNumbers.length : undefined,
+          specialCoverSize: playType === PlayType.SpecialCover ? bi.selection.specialNumbers.length : undefined,
         },
         betCount,
       });

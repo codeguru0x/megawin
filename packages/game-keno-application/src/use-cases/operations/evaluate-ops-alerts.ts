@@ -28,16 +28,16 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import { TickLoopWorker } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
+import type { KenoDrawBettingStatsEntity, OpsAlertsConfig, PayoutCaps } from "@megawin/game-keno/entities";
 import { KenoOpsAlertType } from "@megawin/game-keno/entities";
-import type { OpsAlertsConfig, PayoutCaps } from "@megawin/game-keno/entities";
-import type { KenoDrawBettingStatsEntity } from "@megawin/game-keno/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -65,7 +65,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
+  protected override readonly description =
     "Keno — đánh giá cảnh báo vận hành (ngưỡng exposure/cap/combo) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -84,7 +84,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "keno:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.alertCtx = {
       alerts: config.ops.alerts,

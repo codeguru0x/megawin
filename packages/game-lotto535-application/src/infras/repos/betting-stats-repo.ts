@@ -15,25 +15,23 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi field update đi qua method typed ở đây.
  */
 
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
 import type {
   Lotto535DrawBettingStatsDoc,
   Lotto535DrawBettingStatsEntity,
   Lotto535PlayTypeStat,
   Lotto535TopPotential,
 } from "@megawin/game-lotto535/entities";
-import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
+import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { DrawStatsCursor, DrawStatsDelta } from "./types";
 
 const f = docPath<Lotto535DrawBettingStatsDoc>();
 
-export class BettingStatsRepository extends BaseRepo<
-  Lotto535DrawBettingStatsEntity,
-  BettingStatsMapper
-> {
+export class BettingStatsRepository extends BaseRepo<Lotto535DrawBettingStatsEntity, BettingStatsMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.DrawBettingStats,
@@ -59,7 +57,7 @@ export class BettingStatsRepository extends BaseRepo<
    *
    * @param limit - Trần số kỳ xử lý 1 tick.
    */
-  async findNotFinal(limit: number = 500): Promise<DrawStatsCursor[]> {
+  async findNotFinal(limit = 500): Promise<DrawStatsCursor[]> {
     const docs = await this.findManyAsDocuments(
       { final: false },
       { projection: { _id: 0, drawId: 1, lastEntryId: 1 }, sort: { drawId: 1 }, limit },
@@ -92,12 +90,7 @@ export class BettingStatsRepository extends BaseRepo<
    * @param topPotentialK - `ops.stats.topPotentialK` — trần `$slice` cho `topPotential`.
    * @returns `true` nếu doc được cập nhật; `false` nếu batch đã áp trước đó (no-op).
    */
-  async applyDelta(
-    drawId: string,
-    delta: DrawStatsDelta,
-    batchMaxId: string,
-    topPotentialK: number,
-  ): Promise<boolean> {
+  async applyDelta(drawId: string, delta: DrawStatsDelta, batchMaxId: string, topPotentialK: number): Promise<boolean> {
     const inc: Record<string, number> = {};
 
     // ── totals ──
@@ -147,10 +140,7 @@ export class BettingStatsRepository extends BaseRepo<
 
     // IDEMPOTENT theo watermark: `ensureDocs` seed `lastEntryId = MIN_OBJECT_ID` nên `$lt`
     // luôn khớp lần áp đầu (mọi ObjectId thật > MIN), các batch kế `$lt` bỏ batch đã áp.
-    return await this.updateOne(
-      { drawId, [f("lastEntryId")]: { $lt: batchMaxId } },
-      update as UpdateFilter<Document>,
-    );
+    return await this.updateOne({ drawId, [f("lastEntryId")]: { $lt: batchMaxId } }, update as UpdateFilter<Document>);
   }
 
   /**
@@ -231,11 +221,7 @@ function incBy(inc: Record<string, number>, path: string, value: number): void {
 }
 
 /** `$inc` 3 field của 1 `Lotto535PlayTypeStat` tại `basePath`. */
-function incPlayTypeStat(
-  inc: Record<string, number>,
-  basePath: string,
-  stat: Lotto535PlayTypeStat,
-): void {
+function incPlayTypeStat(inc: Record<string, number>, basePath: string, stat: Lotto535PlayTypeStat): void {
   incBy(inc, `${basePath}.amount`, stat.amount);
   incBy(inc, `${basePath}.sets`, stat.sets);
   incBy(inc, `${basePath}.boards`, stat.boards);

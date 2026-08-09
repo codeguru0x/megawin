@@ -1,28 +1,25 @@
-import type { AnyBulkWriteOperation, Filter, Document } from "mongodb";
-import { ObjectId } from "mongodb";
 import { isOnlyDuplicateKeyError } from "@megawin/data/mongo";
+import type { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
+import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
+import { ObjectId } from "mongodb";
 
-import { TenantDispatchBaseRepo } from "./base-repo";
+import { RETRY_ALERT_THRESHOLD } from "../../config";
+import type { TenantDispatchOrderEntity, TenantDispatchOrderInput } from "../../entities/dispatch-order";
+import { DispatchOrderStatus, type DispatchSourceKind } from "../../entities/enums";
 import { DispatchOrderMapper } from "../mappers/dispatch-order-mapper";
-import { DispatchOrderStatus, DispatchSourceKind } from "../../entities/enums";
+import { TenantDispatchBaseRepo } from "./base-repo";
 import type {
-  TenantDispatchOrderEntity,
-  TenantDispatchOrderInput,
-} from "../../entities/dispatch-order";
-import type { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
-import type {
-  PendingDispatchOrder,
   BatchProgress,
-  ListBySourceFilter,
-  ListStuckFilter,
-  ListDispatchOrdersFilter,
-  ListDispatchOrdersResult,
-  DispatchSummary,
-  DispatchSummaryFilter,
   DispatchFacets,
   DispatchFacetsFilter,
+  DispatchSummary,
+  DispatchSummaryFilter,
+  ListBySourceFilter,
+  ListDispatchOrdersFilter,
+  ListDispatchOrdersResult,
+  ListStuckFilter,
+  PendingDispatchOrder,
 } from "./types";
-import { RETRY_ALERT_THRESHOLD } from "../../config";
 
 /**
  * Repository cho collection `tenant_dispatch_orders` (DB `megawin-tenant`).
@@ -46,10 +43,7 @@ import { RETRY_ALERT_THRESHOLD } from "../../config";
  * Lần fail đầu tiên chuyển order từ main sang retry lane (markAttemptFailed $inc retryCount).
  * Các lần fail sau chỉ tăng `retryCount`, order vẫn ở retry lane.
  */
-export class DispatchOrderRepository extends TenantDispatchBaseRepo<
-  TenantDispatchOrderEntity,
-  DispatchOrderMapper
-> {
+export class DispatchOrderRepository extends TenantDispatchBaseRepo<TenantDispatchOrderEntity, DispatchOrderMapper> {
   constructor() {
     super({
       collName: "tenant_dispatch_orders",
@@ -110,10 +104,7 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<
    * @param limit - The limit of the query
    * @returns The pending orders
    */
-  private async queryPending(
-    extraFilter: Record<string, unknown>,
-    limit: number,
-  ): Promise<PendingDispatchOrder[]> {
+  private async queryPending(extraFilter: Record<string, unknown>, limit: number): Promise<PendingDispatchOrder[]> {
     const now = new Date();
 
     const docs = await this.findManyAsDocuments(

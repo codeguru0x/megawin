@@ -45,20 +45,13 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
 
   // Slice `exposure` → ExposureCard (query dedupe với slice trên, không request thêm).
   // worstCaseTotal lấy từ `cappedExposure` (ĐÃ cap); mẫu số + ngưỡng từ `thresholds` config.
-  const { data: exposure } = useOpsSnapshot<ExposureViewWithThreshold | null>(
-    effectiveDrawId,
-    isSettled,
-    (s) =>
-      s.stats
-        ? {
-            view: toExposureView(
-              s.stats,
-              s.cappedExposure?.worstCaseTotal ?? 0,
-              s.thresholds.maxSetsForFixed,
-            ),
-            warnPct: s.thresholds.exposureWarnPct,
-          }
-        : null,
+  const { data: exposure } = useOpsSnapshot<ExposureViewWithThreshold | null>(effectiveDrawId, isSettled, (s) =>
+    s.stats
+      ? {
+          view: toExposureView(s.stats, s.cappedExposure?.worstCaseTotal ?? 0, s.thresholds.maxSetsForFixed),
+          warnPct: s.thresholds.exposureWarnPct,
+        }
+      : null,
   );
 
   if (!effectiveDrawId) return null;
@@ -78,13 +71,7 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
   return (
     <div className="space-y-3">
       <KpiStrip kpi={kpi} />
-      {exposure && (
-        <ExposureCard
-          exposure={exposure.view}
-          warnPct={exposure.warnPct}
-          onOpenAnalysis={onOpenAnalysis}
-        />
-      )}
+      {exposure && <ExposureCard exposure={exposure.view} warnPct={exposure.warnPct} onOpenAnalysis={onOpenAnalysis} />}
     </div>
   );
 }

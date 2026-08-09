@@ -17,23 +17,24 @@
  */
 
 import type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 } from "@megawin/game-core/types";
-import { PlayType } from "./enums";
+
 import type { EntryBoardSnapshot } from "./entry";
+import { PlayType } from "./enums";
 
 export type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 };
 
 /**
@@ -74,9 +75,7 @@ export type Lotto535StatsPlayKey = (typeof Lotto535StatsPlayKey)[keyof typeof Lo
  * duplicate validation Zod/business rule đã chặn ở tầng trên). 3 playType còn lại
  * (`standard`, `mainCover4`, `specialCover`) giữ nguyên giá trị `PlayType`.
  */
-export function toStatsPlayKey(
-  board: Pick<EntryBoardSnapshot, "playType" | "mainNumbers">,
-): Lotto535StatsPlayKey {
+export function toStatsPlayKey(board: Pick<EntryBoardSnapshot, "playType" | "mainNumbers">): Lotto535StatsPlayKey {
   if (board.playType === PlayType.MainCover) {
     return `${PlayType.MainCover}${board.mainNumbers.length}` as Lotto535StatsPlayKey;
   }
@@ -166,8 +165,7 @@ export interface Lotto535TopPotential {
  * tạm (có thể mở bán lại) — đóng dấu ở đây thì cược sau khi mở lại không bao giờ
  * được cộng.
  */
-export interface Lotto535DrawBettingStatsDoc
-  extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
+export interface Lotto535DrawBettingStatsDoc extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
   /** MongoDB ObjectId. */
   _id: unknown;
 

@@ -1,4 +1,5 @@
 import { vi } from "vitest";
+
 import { createPlayerClient, MemoryTokenStorage, type PlayerClient } from "../src";
 
 export const BASE_URL = "http://localhost:4010";

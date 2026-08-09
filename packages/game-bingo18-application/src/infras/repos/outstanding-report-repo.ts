@@ -9,13 +9,11 @@
  * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
  */
 
-import type {
-  OutstandingDrawReport,
-  OutstandingDrawReportEntity,
-} from "@megawin/game-bingo18/entities";
+import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { OutstandingDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";
 
 /**
@@ -24,10 +22,7 @@ import type { OutstandingGameSummary } from "./types";
  * Scheduled job (mỗi 5 phút) gọi bulkUpsertDrawReports để refresh tất cả draws active trong 1 DB call.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<
-  OutstandingDrawReportEntity,
-  OutstandingDrawReportMapper
-> {
+export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
   constructor() {
     super({
       collName: BINGO18_OUTSTANDING_DRAW_REPORTS,
@@ -41,9 +36,7 @@ export class OutstandingReportRepository extends BaseRepo<
    * Luôn set snapshotAt = now để reset TTL timer.
    * Idempotent: retry ghi đè, không duplicate.
    */
-  async upsertDrawReport(
-    report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertDrawReport(report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {
@@ -145,8 +138,8 @@ export class OutstandingReportRepository extends BaseRepo<
     };
   }
 
-  /** Lấy tất cả outstanding draw reports hiện tại — dùng cho UI dashboard. */
-  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+  /** Lấy tất cả outstanding draw reports hiện tại, sort theo financialDate ascending — dùng cho UI dashboard. */
+  async findAllSorted(): Promise<OutstandingDrawReportEntity[]> {
     return await this.findMany({}, { sort: { financialDate: 1 } });
   }
 }

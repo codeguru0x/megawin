@@ -36,9 +36,7 @@ export const max3dproKeys = {
 
   /** Operations dashboard – alert list 1 kỳ (on-demand khi mở panel). */
   opsAlerts: (drawId: string, status?: string) =>
-    status
-      ? ([MODULE, "ops-alerts", drawId, status] as const)
-      : ([MODULE, "ops-alerts", drawId] as const),
+    status ? ([MODULE, "ops-alerts", drawId, status] as const) : ([MODULE, "ops-alerts", drawId] as const),
 
   /** Operations dashboard – live feed entries cho 1 kỳ quay */
   opsLiveEntries: (drawId: string) => [MODULE, "ops-live-entries", drawId] as const,

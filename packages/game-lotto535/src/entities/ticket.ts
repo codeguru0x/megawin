@@ -19,9 +19,10 @@
  * Pattern naming: {Game}TicketDoc, {Game}Board – áp dụng cho mọi game.
  */
 
-import type { PlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
-import type { ISODateString, BoardSelection } from "./types";
+
+import type { PlayType } from "./enums";
+import type { BoardSelection, ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces

@@ -26,7 +26,7 @@ import type {
   AuditStatus,
   AuditTargetType,
 } from "../entities";
-import { AuditLogRepository, type AuditLogCursor, type AuditLogFilter } from "../infras/repos";
+import { type AuditLogCursor, type AuditLogFilter, AuditLogRepository } from "../infras/repos";
 import { encodeAuditCursor } from "./audit-cursor-codec";
 
 /**

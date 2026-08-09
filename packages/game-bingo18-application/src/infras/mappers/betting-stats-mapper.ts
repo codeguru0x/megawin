@@ -18,7 +18,7 @@ import type {
   Bingo18DrawBettingStatsEntity,
 } from "@megawin/game-bingo18/entities";
 import type { DrawBettingTotals, TenantBettingStat } from "@megawin/game-core/types";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /** Key số "1".."6" — singleNum/doubleMatch/tripleMatch.specific. */
 const NUMBER_KEYS = ["1", "2", "3", "4", "5", "6"] as const;
@@ -83,10 +83,7 @@ function normalizeBucket(raw: unknown): Bingo18BucketStat {
 }
 
 /** Record đủ `keys`, merge bucket có sẵn trong doc lên nền zero — FE luôn render đủ grid. */
-function fillBucketRecord(
-  raw: unknown,
-  keys: readonly string[],
-): Record<string, Bingo18BucketStat> {
+function fillBucketRecord(raw: unknown, keys: readonly string[]): Record<string, Bingo18BucketStat> {
   const r = (raw ?? {}) as Record<string, unknown>;
   const out: Record<string, Bingo18BucketStat> = {};
   for (const key of keys) {

@@ -31,27 +31,24 @@
  * KHÔNG giữ watermark ở đây: worker lấy `batchMaxId` từ entry cuối của batch (đã sort `_id`).
  */
 
-import { PlayMode } from "@megawin/game-max3dpro/entities";
-import {
-  expandSelectionToPairs,
-  maxProBoardUnitWin,
-  toOrderedPairKey,
-} from "@megawin/game-max3dpro/rules";
-import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
 import type {
   Max3dproByPlayType,
   Max3dproPlayTypeStat,
-  Max3dproTripletStake,
   Max3dproTopPotential,
+  Max3dproTripletStake,
   TenantBettingStat,
 } from "@megawin/game-max3dpro/entities";
+import { PlayMode } from "@megawin/game-max3dpro/entities";
+import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
+import { expandSelectionToPairs, maxProBoardUnitWin, toOrderedPairKey } from "@megawin/game-max3dpro/rules";
+
 import type {
-  EntryForStats,
   EntryBoardForStats,
-  Max3dproStatsDelta,
-  Max3dproPairStatsDelta,
-  Max3dproPairAccountDelta,
+  EntryForStats,
   Max3dproAccountStatsDelta,
+  Max3dproPairAccountDelta,
+  Max3dproPairStatsDelta,
+  Max3dproStatsDelta,
 } from "../../infras/repos/types";
 
 /** Prize config + ngưỡng cược lớn gom lại — truyền 1 lần cho accumulator. */
@@ -111,10 +108,13 @@ export class Max3dproDrawStatsAccumulator {
   private readonly accounts = new Map<string, AccountDeltaState>();
   private readonly potentials: Max3dproTopPotential[] = [];
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /** Cộng 1 entry vào delta của tick. */
   addEntry(entry: EntryForStats): void {
@@ -177,10 +177,7 @@ export class Max3dproDrawStatsAccumulator {
     const boardAmount = board.lineCount * board.betCount * unitPrice;
     this.sets += board.betCount;
 
-    const stat =
-      board.playMode === PlayMode.MultiDigit
-        ? this.byPlayType.multiDigit
-        : this.byPlayType.multiNumber;
+    const stat = board.playMode === PlayMode.MultiDigit ? this.byPlayType.multiDigit : this.byPlayType.multiNumber;
     stat.amount += boardAmount;
     stat.units += board.lineCount * board.betCount;
     stat.boards += 1;

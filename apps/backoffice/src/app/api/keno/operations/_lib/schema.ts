@@ -1,18 +1,11 @@
+import { KenoPlayType, OpsAlertStatus } from "@megawin/game-keno/entities";
 import { z } from "zod";
-import { OpsAlertStatus, KenoPlayType } from "@megawin/game-keno/entities";
 
 /** Tuple giá trị status alert từ const-as-const (§5.3) — KHÔNG string literal trần. */
-const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [
-  OpsAlertStatus,
-  ...OpsAlertStatus[],
-];
+const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [OpsAlertStatus, ...OpsAlertStatus[]];
 
 /** Kiểu chơi cappable pick8/9/10 — derive từ `KenoPlayType` (§5.3). */
-const CAPPABLE_PLAY_TYPE_VALUES = [
-  KenoPlayType.Pick8,
-  KenoPlayType.Pick9,
-  KenoPlayType.Pick10,
-] as const;
+const CAPPABLE_PLAY_TYPE_VALUES = [KenoPlayType.Pick8, KenoPlayType.Pick9, KenoPlayType.Pick10] as const;
 
 /**
  * Schema cho live-entries — cần drawId bắt buộc + limit optional.

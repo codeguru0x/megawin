@@ -4,7 +4,6 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-
 import { GetCurrentDrawPlayerUseCase } from "@megawin/game-max3d-application/use-cases/player";
 
 const useCase = new GetCurrentDrawPlayerUseCase();

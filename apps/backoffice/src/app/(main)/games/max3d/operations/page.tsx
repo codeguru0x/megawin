@@ -74,10 +74,7 @@ function OperationsContent() {
   } = useDrawContext();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const [tab, setTab] = useQueryState(
-    "tab",
-    parseAsStringEnum(["monitor", "analysis"]).withDefault("monitor"),
-  );
+  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["monitor", "analysis"]).withDefault("monitor"));
 
   // Badge alert đọc `alertCounts` từ snapshot (timer 1) — không timer riêng.
   const { data: alertCounts } = useOpsSnapshot(effectiveDrawId, isSettled, (s) => s.alertCounts);
@@ -101,9 +98,7 @@ function OperationsContent() {
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Max 3D — Vận hành
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D — Vận hành</h1>
             <div className="flex items-center gap-2">
               <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
               {isActiveForRefresh ? <LastUpdatedBadge drawId={effectiveDrawId} /> : null}
@@ -111,9 +106,7 @@ function OperationsContent() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {alertCounts ? (
-            <AlertHeaderBadge counts={alertCounts} onClick={() => setTab("monitor")} />
-          ) : null}
+          {alertCounts ? <AlertHeaderBadge counts={alertCounts} onClick={() => setTab("monitor")} /> : null}
           <DrawSelector
             draws={draws}
             selectedDrawId={effectiveDrawId}
@@ -180,9 +173,7 @@ function DrawNotFound({
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Max 3D — Vận hành
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D — Vận hành</h1>
             <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
           </div>
         </div>

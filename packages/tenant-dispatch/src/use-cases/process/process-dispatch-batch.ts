@@ -50,17 +50,13 @@
  * Heartbeat chỉ có giá trị khi TTL < total runtime — không đúng với use case này.
  */
 
-import {
-  tenantGateway,
-  type BatchTransactionItem,
-  type TenantGatewayClient,
-} from "@megawin/tenant-gateway";
 import { chunk, toTenantUsername } from "@megawin/shared/utils";
+import { type BatchTransactionItem, type TenantGatewayClient, tenantGateway } from "@megawin/tenant-gateway";
 import { SingleRunWorker } from "@megawin/worker-core/workers";
 
+import { DISPATCH_CHUNK_SIZE } from "../../config";
 import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { PendingDispatchOrder } from "../../infras/repos/types";
-import { DISPATCH_CHUNK_SIZE } from "../../config";
 import { computeNextAttemptAt } from "./backoff";
 import { normalizeDispatchError } from "./normalize-error";
 
@@ -107,9 +103,7 @@ export abstract class ProcessDispatchBatchBaseUseCase extends SingleRunWorker<
    * tránh bị throw error vì input.limit is undefined
    * @param input - The input to the process
    * @returns The output of the process
-   */ protected async runLocked(
-    input: ProcessDispatchBatchInput = {},
-  ): Promise<ProcessDispatchBatchOutput> {
+   */ protected async runLocked(input: ProcessDispatchBatchInput = {}): Promise<ProcessDispatchBatchOutput> {
     const limit = input.limit ?? this.defaultLimit();
     const maxExecutionMs = input.maxExecutionMs ?? this.defaultMaxExecutionMs();
     const startTime = Date.now();
@@ -314,11 +308,7 @@ export abstract class ProcessDispatchBatchBaseUseCase extends SingleRunWorker<
    * @param acc - The accumulator to queue failure for
    * @param acc
    */
-  private queueFailure(
-    order: PendingDispatchOrder,
-    errMsg: string,
-    acc: BatchResultAccumulator,
-  ): void {
+  private queueFailure(order: PendingDispatchOrder, errMsg: string, acc: BatchResultAccumulator): void {
     const currentRetry = order.retryCount ?? 0;
     // Compute the next attempt at
     const nextAttemptAt = computeNextAttemptAt(currentRetry + 1);

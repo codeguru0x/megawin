@@ -15,20 +15,17 @@
  *   vẫn chỉ tính phần giải cố định, jackpot đọc snapshot pool lúc build response).
  */
 
-import type {
-  Mega645PlayTypeStat,
-  Mega645TopPotential,
-  TenantBettingStat,
-} from "@megawin/game-mega645/entities";
+import type { Mega645PlayTypeStat, Mega645TopPotential, TenantBettingStat } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
 import { buildComboKey } from "@megawin/game-mega645/rules";
+
 import type {
   AccountStatsDelta,
   ComboAccountDelta,
   ComboStatsDelta,
   DrawStatsDelta,
-  EntryForStats,
   EntryBoardForStats,
+  EntryForStats,
   NumberStatsDelta,
   PartialPlayTypeDelta,
 } from "../../infras/repos/types";
@@ -95,10 +92,13 @@ export class Mega645StatsAccumulator {
   private readonly accounts = new Map<string, AccountDeltaState>();
   private readonly potentials: Mega645TopPotential[] = [];
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /**
    * Cộng 1 entry vào delta.

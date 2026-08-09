@@ -28,19 +28,16 @@ import type {
   PlayType,
   TenantBettingStat,
 } from "@megawin/game-lotto535/entities";
-import {
-  Lotto535NumberKind,
-  Lotto535StatsPlayKey,
-  toStatsPlayKey,
-} from "@megawin/game-lotto535/entities";
+import { Lotto535NumberKind, Lotto535StatsPlayKey, toStatsPlayKey } from "@megawin/game-lotto535/entities";
 import { buildComboKey } from "@megawin/game-lotto535/rules";
+
 import type {
   AccountStatsDelta,
   ComboAccountDelta,
   ComboStatsDelta,
   DrawStatsDelta,
-  EntryForStats,
   EntryBoardForStats,
+  EntryForStats,
   NumberStatsDelta,
   PartialPlayTypeDelta,
 } from "../../infras/repos/types";
@@ -98,10 +95,9 @@ export class Lotto535StatsAccumulator {
    * key có delta khi build `$inc` (chỉ ghi key `!== undefined` sau khi accumulator lọc ở
    * {@link drainStatsDelta}) — đơn giản hơn giữ partial ngay tại đây.
    */
-  private readonly byPlayType: Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat> =
-    Object.fromEntries(
-      Object.values(Lotto535StatsPlayKey).map((key) => [key, createEmptyPlayTypeStat()]),
-    ) as Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat>;
+  private readonly byPlayType: Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat> = Object.fromEntries(
+    Object.values(Lotto535StatsPlayKey).map((key) => [key, createEmptyPlayTypeStat()]),
+  ) as Record<Lotto535StatsPlayKey, Lotto535PlayTypeStat>;
 
   private readonly byTenant = new Map<string, TenantBettingStat>();
   /** number → delta, tách riêng theo `kind` (main "01".."35" / special "01".."12"). */
@@ -111,10 +107,13 @@ export class Lotto535StatsAccumulator {
   private readonly accounts = new Map<string, AccountDeltaState>();
   private readonly potentials: Lotto535TopPotential[] = [];
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /**
    * Cộng 1 entry vào delta.

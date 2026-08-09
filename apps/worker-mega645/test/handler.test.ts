@@ -6,7 +6,7 @@
  * không kết nối DB thật. Logic nghiệp vụ đã test ở game-mega645-application.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const runMock = vi.fn().mockResolvedValue({ settledCount: 3 });
 

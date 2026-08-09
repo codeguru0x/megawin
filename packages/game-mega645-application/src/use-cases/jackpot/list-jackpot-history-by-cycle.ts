@@ -8,14 +8,15 @@
  * Mega 6/45 không có isSplitCycle — không map field này.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
 import { PrizeTier } from "@megawin/game-mega645/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type {
+  JackpotHistoryItem,
   ListJackpotHistoryByCycleInput,
   ListJackpotHistoryByCycleOutput,
-  JackpotHistoryItem,
 } from "./dto/jackpot.dto";
 
 export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
@@ -25,9 +26,7 @@ export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
 
-  protected async execute(
-    input: ListJackpotHistoryByCycleInput,
-  ): Promise<ListJackpotHistoryByCycleOutput> {
+  protected async execute(input: ListJackpotHistoryByCycleInput): Promise<ListJackpotHistoryByCycleOutput> {
     const page = input.page ?? 1;
     const size = input.size ?? 20;
 
@@ -54,12 +53,7 @@ export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
       endDrawId = cycle.endDrawId ?? null;
     }
 
-    const { draws: rawDraws, total } = await this.drawRepo.getSettledDrawsInCycle(
-      startDrawId,
-      endDrawId,
-      page,
-      size,
-    );
+    const { draws: rawDraws, total } = await this.drawRepo.getSettledDrawsInCycle(startDrawId, endDrawId, page, size);
 
     const items: JackpotHistoryItem[] = rawDraws.map((d) => {
       const jpTier = d.settleSummary?.tiers?.find((t) => t.tier === PrizeTier.Jackpot);

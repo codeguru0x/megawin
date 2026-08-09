@@ -6,6 +6,7 @@
  */
 
 import type { TicketEntity } from "@megawin/game-keno/entities";
+
 import type { PlayerTicketSummary } from "../dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {

@@ -5,14 +5,11 @@
  * Builder thuần, không chạm DB.
  */
 
-import { describe, it, expect } from "vitest";
-import {
-  buildPayoutOrder,
-  buildRefundOrder,
-  buildReversalOrder,
-} from "../src/builders/build-dispatch-order";
-import { DispatchSourceKind, DispatchOrderStatus } from "../src/entities/enums";
-import { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
+import { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
+import { describe, expect, it } from "vitest";
+
+import { buildPayoutOrder, buildRefundOrder, buildReversalOrder } from "../src/builders/build-dispatch-order";
+import { DispatchOrderStatus, DispatchSourceKind } from "../src/entities/enums";
 
 const COMMON = {
   tenantId: "tenant-1",

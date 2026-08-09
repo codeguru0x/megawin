@@ -1,9 +1,10 @@
+import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import { DrawStatus } from "@megawin/game-core/entities";
+import { toExecutionName } from "@megawin/game-core/utils";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { toExecutionName } from "@megawin/game-core/utils";
-import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditSettle } from "../../services/audit-log";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
@@ -44,10 +45,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
     // Đã từng kết sổ (settledAt là high-water mark) → không settle lại bằng use
     // case này. Power 6/55 không có resettle nên kỳ đã settle là trạng thái cuối.
     if (draw.settledAt) {
-      throw new AppException(
-        "DRAW_ALREADY_SETTLED",
-        `Không thể kết sổ – kỳ quay ${input.drawId} đã được kết sổ rồi.`,
-      );
+      throw new AppException("DRAW_ALREADY_SETTLED", `Không thể kết sổ – kỳ quay ${input.drawId} đã được kết sổ rồi.`);
     }
 
     // Guard thứ tự kết sổ: phải settle TUẦN TỰ theo thời gian. Nếu còn kỳ trước

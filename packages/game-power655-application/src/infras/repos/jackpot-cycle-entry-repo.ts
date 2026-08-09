@@ -26,22 +26,17 @@
  * `findByDraw` trả null cho kỳ cũ → caller phải guard và chuyển về DBA thủ công.
  */
 
-import type {
-  JackpotCycleEntryDoc,
-  JackpotCycleEntryEntity,
-} from "@megawin/game-power655/entities";
+import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-power655/entities";
 import { Power655Collections } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
+
 import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Repository cho Cycle Ledger Power 6/55.
  * Chỉ thực hiện DB operations — mọi business logic tính toán ở use-case layer.
  */
-export class JackpotCycleEntryRepository extends BaseRepo<
-  JackpotCycleEntryEntity,
-  JackpotCycleEntryMapper
-> {
+export class JackpotCycleEntryRepository extends BaseRepo<JackpotCycleEntryEntity, JackpotCycleEntryMapper> {
   constructor() {
     super({
       collName: Power655Collections.JackpotCycleEntries,
@@ -71,10 +66,7 @@ export class JackpotCycleEntryRepository extends BaseRepo<
    * @param allowOpeningUpdate - `true` (cascade B2): ghi đè `openingJp1/2` dù entry đã
    *   tồn tại. Mặc định `false`: opening bất biến qua `$setOnInsert`.
    */
-  async upsertEntry(
-    entry: Omit<JackpotCycleEntryDoc, "_id" | "updatedAt">,
-    allowOpeningUpdate = false,
-  ): Promise<void> {
+  async upsertEntry(entry: Omit<JackpotCycleEntryDoc, "_id" | "updatedAt">, allowOpeningUpdate = false): Promise<void> {
     // Tách opening ra khỏi rest: rest luôn nằm trong $set (cập nhật mỗi settle);
     // identity (cycleNo/drawId/drawNo/seq) luôn $setOnInsert.
     const { cycleNo, drawId, drawNo, seq, openingJp1, openingJp2, ...mutable } = entry;

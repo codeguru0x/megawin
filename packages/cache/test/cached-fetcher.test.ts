@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+
 import { createCachedFetcher } from "../src/cached-fetcher";
 import { MemoryCacheStore } from "../src/stores/memory-store";
 import { NoopCacheStore } from "../src/stores/noop-store";

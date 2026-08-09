@@ -1,11 +1,11 @@
+import {
+  adminAssociateSoftwareToken,
+  adminInitiateAuth,
+  COGNITO_WORKFORCE_CLIENT_ID,
+  COGNITO_WORKFORCE_POOL_ID,
+} from "@megawin/app-core/aws/cognito";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  adminInitiateAuth,
-  adminAssociateSoftwareToken,
-  COGNITO_WORKFORCE_POOL_ID,
-  COGNITO_WORKFORCE_CLIENT_ID,
-} from "@megawin/app-core/aws/cognito";
 
 export interface SetupMfaInput {
   username: string;
@@ -44,9 +44,7 @@ export class SetupMfaUseCase extends NextApiUseCase<SetupMfaInput, SetupMfaOutpu
         throw AppException.badRequest("Mật khẩu không đúng");
       }
 
-      throw AppException.internal(
-        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw AppException.internal(`Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     try {
@@ -62,9 +60,7 @@ export class SetupMfaUseCase extends NextApiUseCase<SetupMfaInput, SetupMfaOutpu
         accessToken,
       };
     } catch (error: unknown) {
-      throw AppException.internal(
-        `Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw AppException.internal(`Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
 }

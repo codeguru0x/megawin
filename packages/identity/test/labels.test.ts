@@ -5,12 +5,13 @@
  * Kiểm tra các label map (const-as-const) phủ đủ mọi giá trị enum tương ứng.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  AccountTypeLabel,
   AccountStatusLabel,
-  CompanyRoleLabel,
+  AccountTypeLabel,
   AgentRoleLabel,
+  CompanyRoleLabel,
   MfaStatusLabel,
 } from "../src/entities/labels";
 
@@ -22,9 +23,7 @@ describe("identity labels", () => {
   });
 
   it("AccountStatusLabel phủ đủ 3 trạng thái", () => {
-    expect(Object.keys(AccountStatusLabel).sort()).toEqual(
-      ["active", "read_only", "suspended"].sort(),
-    );
+    expect(Object.keys(AccountStatusLabel).sort()).toEqual(["active", "read_only", "suspended"].sort());
   });
 
   it("Company/Agent/Mfa label không có giá trị rỗng", () => {

@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Mega645DrawNumberStatsEntity } from "@megawin/game-mega645/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `mega645_draw_number_stats` → entity (ObjectId → id hex).

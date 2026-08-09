@@ -24,15 +24,16 @@
  * 6. JP1 + JP2 cùng kỳ: 2 tier tính mẫu số độc lập.
  */
 
-import { describe, it, expect, afterAll, beforeAll } from "vitest";
-import { ObjectId, Long } from "mongodb";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
+import type { EntryPayoutTier, TicketLineDoc } from "@megawin/game-power655/entities";
+import { JackpotType, PlayType, PrizeTier } from "@megawin/game-power655/entities";
+import { Long, ObjectId } from "mongodb";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { EntryRepository } from "../../src/infras/repos/entry-repo";
 import { LineRepository } from "../../src/infras/repos/line-repo";
 import { PatchJackpotPrizeUseCase } from "../../src/use-cases/settle/patch-jackpot-prize";
 import type { SettleContextWithFinancials } from "../../src/use-cases/settle/types";
-import { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import { PrizeTier, PlayType, JackpotType } from "@megawin/game-power655/entities";
-import type { TicketLineDoc, EntryPayoutTier } from "@megawin/game-power655/entities";
 
 const TEST_DRAW_ID = "9999-01-02.001"; // Không trùng draw thật.
 const FINANCIAL_DATE = "9999-01-02";
@@ -52,10 +53,7 @@ function jpTierPending(tier: PrizeTier, hitCount: number): EntryPayoutTier {
  * Seed 1 entry trúng JP (Settled + Win + tiers có JP pending) và trả về hex id.
  * Tự sinh _id trước để dùng làm entryId cho lines.
  */
-async function seedJpEntry(params: {
-  tiers: EntryPayoutTier[];
-  accountSuffix: string;
-}): Promise<string> {
+async function seedJpEntry(params: { tiers: EntryPayoutTier[]; accountSuffix: string }): Promise<string> {
   const _id = new ObjectId();
   await entryRepo.insertMany([
     {
@@ -425,17 +423,11 @@ describe("PatchJackpotPrize — retry-safe sau crash giữa chừng (bug chính)
     expect(result.winners).toHaveLength(3);
     const doc2 = await entryRepo.getEntryById(e2);
     const doc3 = await entryRepo.getEntryById(e3);
-    expect(doc2!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(
-      perUnit * 3,
-    );
-    expect(doc3!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(
-      perUnit * 5,
-    );
+    expect(doc2!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(perUnit * 3);
+    expect(doc3!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(perUnit * 5);
     // e1 không bị ghi 0 dù line của nó đã patch trước.
     const doc1 = await entryRepo.getEntryById(e1);
-    expect(doc1!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(
-      perUnit * 2,
-    );
+    expect(doc1!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(perUnit * 2);
   });
 });
 
@@ -474,9 +466,7 @@ describe("PatchJackpotPrize — idempotency thuần + dual jackpot", () => {
     expect(run2.winners[0]!.prizeAmount).toBe(run1.winners[0]!.prizeAmount);
 
     const docA = await entryRepo.getEntryById(entryA);
-    expect(docA!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(
-      perUnit * 4,
-    );
+    expect(docA!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(perUnit * 4);
   });
 
   it("JP1 + JP2 cùng kỳ → 2 tier tính mẫu số độc lập", async () => {
@@ -525,13 +515,9 @@ describe("PatchJackpotPrize — idempotency thuần + dual jackpot", () => {
     const docJp1 = await entryRepo.getEntryById(eJp1);
     const docJp2 = await entryRepo.getEntryById(eJp2);
     // perUnit1 = 40M / 2 = 20M → amount = 20M × 2 = 40M.
-    expect(docJp1!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(
-      40_000_000,
-    );
+    expect(docJp1!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot1)!.amount).toBe(40_000_000);
     // perUnit2 = 30M / 3 = 10M → amount = 10M × 3 = 30M.
-    expect(docJp2!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot2)!.amount).toBe(
-      30_000_000,
-    );
+    expect(docJp2!.payout!.tiers.find((t) => t.tier === PrizeTier.Jackpot2)!.amount).toBe(30_000_000);
 
     const wJp1 = result.winners.find((w) => w.jackpotType === JackpotType.Jackpot1)!;
     const wJp2 = result.winners.find((w) => w.jackpotType === JackpotType.Jackpot2)!;

@@ -33,23 +33,21 @@
  * - `DistributedMutex` chống 2 staff click cùng lúc → 1 thắng, 1 fail 409.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
-import { AppException } from "@megawin/shared/errors";
+import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { buildResettleLockKey, toExecutionName } from "@megawin/game-core/utils";
-import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
+import { NextApiUseCase } from "@megawin/next/server";
+import { AppException } from "@megawin/shared/errors";
 import { generateId, logError } from "@megawin/shared/utils";
 import { DistributedMutex } from "@megawin/worker-core/locks";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditResettle } from "../../services/audit-log";
 import type { TriggerResettleInput, TriggerResettleOutput } from "./dto/draw.dto";
 
 const RESETTLE_LOCK_TTL_SECONDS = 300; // 5 phút — đủ cho 1 phiên resettle Bingo 18.
 
-export class TriggerResettleUseCase extends NextApiUseCase<
-  TriggerResettleInput,
-  TriggerResettleOutput
-> {
+export class TriggerResettleUseCase extends NextApiUseCase<TriggerResettleInput, TriggerResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly lockCoordinator = new DistributedMutex();
 
@@ -63,9 +61,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     }
 
     if (!draw.result) {
-      throw AppException.badRequest(
-        "Chưa có kết quả quay – phải republish result trước khi resettle.",
-      );
+      throw AppException.badRequest("Chưa có kết quả quay – phải republish result trước khi resettle.");
     }
 
     // ── Step 2: phân biệt Settle lần đầu vs Resettle ─────────────────────
@@ -89,10 +85,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     const resultPublishedAt = draw.result.publishedAt;
 
     if (!resultPublishedAt || resultPublishedAt.getTime() <= draw.settledAt.getTime()) {
-      throw new AppException(
-        "DRAW_NO_NEW_RESULT",
-        `Không thể resettle – chưa có kết quả mới sau lần kết sổ gần nhất.`,
-      );
+      throw new AppException("DRAW_NO_NEW_RESULT", `Không thể resettle – chưa có kết quả mới sau lần kết sổ gần nhất.`);
     }
 
     // ── Step 3: validate status ──────────────────────────────────────────
@@ -100,10 +93,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
     // (retry sau khi lần trước startExecution fail nhưng status đã transition).
     // Mọi status khác → invalid.
     if (draw.status !== DrawStatus.Published && draw.status !== DrawStatus.Settling) {
-      throw new AppException(
-        "DRAW_INVALID_TRANSITION",
-        `Không thể resettle – draw đang ở "${draw.status}".`,
-      );
+      throw new AppException("DRAW_INVALID_TRANSITION", `Không thể resettle – draw đang ở "${draw.status}".`);
     }
 
     // ── Step 4: sinh resettleId (session key cho SFN input) ──────────────
@@ -138,10 +128,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
         const updated = await this.drawRepo.triggerSettle(drawId);
 
         if (!updated) {
-          throw new AppException(
-            "DRAW_INVALID_TRANSITION",
-            `Không thể resettle – draw không còn ở "published".`,
-          );
+          throw new AppException("DRAW_INVALID_TRANSITION", `Không thể resettle – draw không còn ở "published".`);
         }
 
         // Audit staff bấm kết sổ lại (chỉ ghi ở lần transition thật, không ghi

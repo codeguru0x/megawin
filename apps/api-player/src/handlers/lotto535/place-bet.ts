@@ -6,19 +6,18 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
+import { PlayType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import {
+  lotto535DrawIdSchema,
   lotto535MainNumberSchema,
   lotto535SpecialNumberSchema,
-  lotto535DrawIdSchema,
 } from "@megawin/game-lotto535/schemas";
-import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
-import { PlayType } from "@megawin/game-lotto535/entities";
+import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
@@ -31,12 +30,7 @@ export const lotto535SelectionSchema = z.object({
 export const lotto535BoardSchema = z
   .object({
     boardNo: z.string(),
-    playType: z.enum([
-      PlayType.Standard,
-      PlayType.MainCover,
-      PlayType.MainCover4,
-      PlayType.SpecialCover,
-    ]),
+    playType: z.enum([PlayType.Standard, PlayType.MainCover, PlayType.MainCover4, PlayType.SpecialCover]),
     selection: lotto535SelectionSchema,
     betCount: z.number().int().min(1).default(1),
   })
@@ -134,13 +128,9 @@ export const lotto535PlaceBetBodySchema = z.object({
     .refine((ids) => new Set(ids).size === ids.length, {
       message: "Các kỳ không được trùng lặp.",
     }),
-  boards: z
-    .array(lotto535BoardSchema)
-    .min(1)
-    .max(LOTTO535_MAX_BOARDS)
-    .refine(boardsSequentialRefine(), {
-      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
-    }),
+  boards: z.array(lotto535BoardSchema).min(1).max(LOTTO535_MAX_BOARDS).refine(boardsSequentialRefine(), {
+    message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
+  }),
 });
 
 export type Lotto535Board = z.infer<typeof lotto535BoardSchema>;

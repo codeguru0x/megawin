@@ -12,37 +12,35 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
+import type { Bingo18BigSmallBet, Bingo18TripleKind, TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import {
   Bingo18Collections,
   type EntryPayout,
-  type EntryVoidInfo,
   type EntryResult,
+  type EntryVoidInfo,
 } from "@megawin/game-bingo18/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import { ObjectId, Long } from "mongodb";
+import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
+import { type Long, ObjectId } from "mongodb";
+
+import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
+import { EntryMapper } from "../mappers/entry-mapper";
+import { BaseRepo } from "./base-repo";
 import type {
+  EntryForStats,
+  OutstandingDrawCounts,
+  OutstandingDrawMetrics,
+  PrizeSummaryRow,
   SettledFinancialSummary,
-  TenantSettleMetrics,
   TenantPlayerCount,
+  TenantSettleMetrics,
+  TicketAggregateResult,
+  VoidedEntryForDispatch,
   VoidMetrics,
   VoidRefundSummary,
-  TicketAggregateResult,
   WinningEntriesSummary,
-  PrizeSummaryRow,
   WinningEntryForDispatch,
-  VoidedEntryForDispatch,
 } from "./types";
-import { BaseRepo } from "./base-repo";
-import { EntryMapper } from "../mappers/entry-mapper";
-import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
-import type {
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-  TicketEntryEntity,
-} from "@megawin/game-bingo18/entities";
-import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { OutstandingDrawMetrics, OutstandingDrawCounts } from "./types";
-import type { EntryForStats } from "./types";
 
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   private readonly seqRepo = new EntryChangeSeqRepository();
@@ -97,11 +95,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * @param afterId - Watermark: chỉ lấy entry có `_id` lớn hơn (exclusive). undefined = từ đầu.
    * @param limit - Kích thước batch.
    */
-  async getEntriesForStatsAfter(
-    drawId: string,
-    afterId: string | undefined,
-    limit: number,
-  ): Promise<EntryForStats[]> {
+  async getEntriesForStatsAfter(drawId: string, afterId: string | undefined, limit: number): Promise<EntryForStats[]> {
     const filter: Record<string, unknown> = { drawId, status: { $ne: EntryStatus.Void } };
     if (afterId) {
       filter._id = { $gt: new ObjectId(afterId) };
@@ -125,10 +119,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
-      { drawId, status: EntryStatus.Scheduled },
-      { sort: { createdAt: 1 }, limit },
-    );
+    return await this.findMany({ drawId, status: EntryStatus.Scheduled }, { sort: { createdAt: 1 }, limit });
   }
 
   async countEntriesByDrawId(drawId: string): Promise<number> {
@@ -371,9 +362,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Batch aggregate summaries cho nhiều tickets cùng lúc.
    * $match ticketId ∈ batch → $group by ticketId → Map<ticketId, summary>.
    */
-  async aggregateTicketSummariesBatch(
-    ticketIds: string[],
-  ): Promise<Map<string, TicketAggregateResult>> {
+  async aggregateTicketSummariesBatch(ticketIds: string[]): Promise<Map<string, TicketAggregateResult>> {
     const result = await this.aggregate([
       { $match: { ticketId: { $in: ticketIds } } },
       {
@@ -390,20 +379,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           },
           totalVoidedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.originalAmount", 0] }, 0],
             },
           },
           totalRefundedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.refundAmount", 0] }, 0],
             },
           },
           voidedDrawIds: {
@@ -588,9 +569,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Bingo 18 không có lineCount.
    */
-  async aggregateOutstandingMetricsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -624,9 +603,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -695,11 +672,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Sort: payout.winAmount desc để entries trúng lớn hiện trước.
    * Bingo 18: KHÔNG có payout cap → không cần flag hasCappablePrize.
    */
-  async getWinningEntries(
-    drawId: string,
-    cursor?: string,
-    limit?: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getWinningEntries(drawId: string, cursor?: string, limit?: number): Promise<TicketEntryEntity[]> {
     const pageSize = Math.min(limit ?? 50, 200);
     const filter: Record<string, unknown> = {
       drawId,
@@ -845,11 +818,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Lấy entries của 1 player trong 1 draw × tenant — dùng cho drill-down level 4.
    */
-  async findByDrawTenantPlayer(
-    drawId: string,
-    tenantId: string,
-    accountId: string,
-  ): Promise<TicketEntryEntity[]> {
+  async findByDrawTenantPlayer(drawId: string, tenantId: string, accountId: string): Promise<TicketEntryEntity[]> {
     return this.findMany({ drawId, tenantId, accountId }, { sort: { createdAt: 1 } });
   }
 }

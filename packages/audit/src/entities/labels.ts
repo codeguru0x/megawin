@@ -1,11 +1,5 @@
-import {
-  AUDIT_ACTIONS,
-  AuditActorType,
-  AuditCategory,
-  AuditStatus,
-  AuditTargetType,
-} from "./audit-log.enums";
 import type { AuditAction } from "./audit-log.enums";
+import { AUDIT_ACTIONS, AuditActorType, AuditCategory, AuditStatus, AuditTargetType } from "./audit-log.enums";
 
 /** Nhãn tiếng Việt cho loại chủ thể thực hiện hành động. */
 export const AuditActorTypeLabel: Record<AuditActorType, string> = {

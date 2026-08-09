@@ -37,20 +37,12 @@
  * seed đủ 38 bucket rồi lọc sau (F2-a) — tránh tốn RAM + vòng lặp vô ích mỗi tick × D kỳ.
  */
 
+import type { Bingo18BucketStat, Bingo18TopPotential, TenantBettingStat } from "@megawin/game-bingo18/entities";
 import { Bingo18PlayType, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
-import { computeBingo18EntryPotentialWin } from "@megawin/game-bingo18/rules";
 import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
-import type {
-  Bingo18BucketStat,
-  Bingo18TopPotential,
-  TenantBettingStat,
-} from "@megawin/game-bingo18/entities";
-import type {
-  DrawStatsDelta,
-  AccountStatsDelta,
-  EntryForStats,
-  EntryBoardForStats,
-} from "../../infras/repos/types";
+import { computeBingo18EntryPotentialWin } from "@megawin/game-bingo18/rules";
+
+import type { AccountStatsDelta, DrawStatsDelta, EntryBoardForStats, EntryForStats } from "../../infras/repos/types";
 
 /** Prize config + ngưỡng cược lớn gom lại — truyền 1 lần cho accumulator. */
 export interface PrizeContext {
@@ -95,10 +87,13 @@ export class Bingo18DrawStatsAccumulator {
   private readonly accounts = new Map<string, AccountDeltaState>();
   private readonly potentials: Bingo18TopPotential[] = [];
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /**
    * Cộng 1 entry vào delta.
@@ -195,10 +190,7 @@ export class Bingo18DrawStatsAccumulator {
   }
 
   /** Lazy-get-or-create bucket trong 1 record theo key số (undefined key → invalid). */
-  private lazyRecordBucket(
-    map: Map<string, Bingo18BucketStat>,
-    key: number | undefined,
-  ): Bingo18BucketStat | null {
+  private lazyRecordBucket(map: Map<string, Bingo18BucketStat>, key: number | undefined): Bingo18BucketStat | null {
     if (key === undefined) return null;
     const k = String(key);
     let bucket = map.get(k);
@@ -246,18 +238,13 @@ export class Bingo18DrawStatsAccumulator {
         tripleMatch:
           this.tripleSpecific.size > 0 || this.tripleAny
             ? {
-                specific:
-                  this.tripleSpecific.size > 0
-                    ? Object.fromEntries(this.tripleSpecific)
-                    : undefined,
+                specific: this.tripleSpecific.size > 0 ? Object.fromEntries(this.tripleSpecific) : undefined,
                 any: this.tripleAny,
               }
             : undefined,
         sumTotal: this.sumTotal.size > 0 ? Object.fromEntries(this.sumTotal) : undefined,
         bigSmallDraw:
-          this.big || this.draw || this.small
-            ? { big: this.big, draw: this.draw, small: this.small }
-            : undefined,
+          this.big || this.draw || this.small ? { big: this.big, draw: this.draw, small: this.small } : undefined,
       },
       byTenant: Object.fromEntries(this.byTenant),
       topPotential: this.potentials,

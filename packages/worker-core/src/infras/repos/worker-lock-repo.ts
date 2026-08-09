@@ -1,8 +1,9 @@
 import { isDuplicateKeyError } from "@megawin/data/mongo";
-import { WorkerCoreCollections } from "../../entities";
+
 import type { WorkerLockEntity, WorkerLockKind, WorkerStalledItem } from "../../entities";
-import { WorkerLockMapper } from "../mappers";
+import { WorkerCoreCollections } from "../../entities";
 import { WorkerCoreBaseRepo } from "../base-repo";
+import { WorkerLockMapper } from "../mappers";
 import type { AcquireOptions } from "./types/worker-lock.types";
 
 /**
@@ -55,13 +56,7 @@ export class WorkerLockRepository extends WorkerCoreBaseRepo<WorkerLockEntity, W
    * propagate lên doc đã tồn tại. `$setOnInsert` sẽ đóng băng mô tả của lần acquire
    * đầu tiên vĩnh viễn — đây là bẫy copy-paste dễ mắc nhất của method này.
    */
-  async tryAcquire({
-    lockKey,
-    ownerToken,
-    ttlSeconds,
-    description,
-    kind,
-  }: AcquireOptions): Promise<boolean> {
+  async tryAcquire({ lockKey, ownerToken, ttlSeconds, description, kind }: AcquireOptions): Promise<boolean> {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
 
@@ -241,10 +236,6 @@ export class WorkerLockRepository extends WorkerCoreBaseRepo<WorkerLockEntity, W
    * (use-case) tự quyết định coi đây là lỗi "không tìm thấy" hay no-op.
    */
   async setEnabled(lockKey: string, isEnabled: boolean): Promise<WorkerLockEntity | null> {
-    return await this.findOneAndUpdate(
-      { lockKey },
-      { $set: { isEnabled } },
-      { returnDocument: "after" },
-    );
+    return await this.findOneAndUpdate({ lockKey }, { $set: { isEnabled } }, { returnDocument: "after" });
   }
 }

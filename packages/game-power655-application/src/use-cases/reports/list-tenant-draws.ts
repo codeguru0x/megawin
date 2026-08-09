@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
 
@@ -8,20 +9,15 @@ import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
  * Sắp xếp theo financialDate DESC.
  * Index: { financialDate: 1, tenantId: 1 }
  */
-export class ListTenantDrawsUseCase extends NextApiUseCase<
-  ListTenantDrawsInput,
-  ListTenantDrawsOutput
-> {
+export class ListTenantDrawsUseCase extends NextApiUseCase<ListTenantDrawsInput, ListTenantDrawsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListTenantDrawsInput): Promise<ListTenantDrawsOutput> {
     const skip = (input.page - 1) * input.limit;
-    const { data, total } = await this.repo.findByTenantAndDateRange(
-      input.tenantId,
-      input.from,
-      input.to,
-      { skip, limit: input.limit },
-    );
+    const { data, total } = await this.repo.findByTenantAndDateRange(input.tenantId, input.from, input.to, {
+      skip,
+      limit: input.limit,
+    });
     return { data, total, page: input.page, limit: input.limit };
   }
 }

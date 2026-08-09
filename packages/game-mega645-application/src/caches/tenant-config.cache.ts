@@ -9,8 +9,9 @@
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
-import { TenantConfigRepository } from "../infras/repos/tenant-config-repo";
 import type { TenantConfigEntity } from "@megawin/game-mega645/entities";
+
+import { TenantConfigRepository } from "../infras/repos/tenant-config-repo";
 import { MEGA645_CACHE_KEYS } from "./keys";
 
 let repo: TenantConfigRepository | null = null;

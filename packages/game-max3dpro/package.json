@@ -64,12 +64,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "max3dpro",
-    "game",
-    "domain"
-  ],
+  "keywords": ["megawin", "max3dpro", "game", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -77,7 +72,7 @@
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
     "typescript": "^6.0.3",
-    "vite": "^8.1.4",
+    "vite": "^8.2.1",
     "vitest": "^4.1.10"
   },
   "dependencies": {

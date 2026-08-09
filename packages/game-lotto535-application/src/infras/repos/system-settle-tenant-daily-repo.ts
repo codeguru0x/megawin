@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemSettleTenantDailyRepository,
   type SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { LOTTO535_SETTLE_TENANT_REPORTS } from "@megawin/game-lotto535/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyRepository {
@@ -28,9 +29,7 @@ export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyReposito
    * Group by tenantId → SUM tất cả draws trong financialDate.
    * Trả về mảng per-tenant summaries.
    */
-  async aggregateTenantsFromPerGame(
-    financialDate: string,
-  ): Promise<SettleTenantDailyAggregateResult[]> {
+  async aggregateTenantsFromPerGame(financialDate: string): Promise<SettleTenantDailyAggregateResult[]> {
     const result = await this.perGameColl.aggregate([
       { $match: { financialDate } },
       {

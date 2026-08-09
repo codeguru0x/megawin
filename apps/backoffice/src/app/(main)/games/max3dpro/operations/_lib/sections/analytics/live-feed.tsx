@@ -87,18 +87,8 @@ export function LiveFeed({
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play mode label */}
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <div
-                        className={cn(
-                          "size-1.5 rounded-full shrink-0",
-                          color?.dot ?? "bg-muted-foreground",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs font-semibold truncate",
-                          color?.text ?? "text-muted-foreground",
-                        )}
-                      >
+                      <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
+                      <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>
                         {e.playModeLabel}
                       </span>
                       {isLargeBet && (
@@ -115,14 +105,10 @@ export function LiveFeed({
                         <TripletDisplay key={idx} value={t} variant="default" size="sm" />
                       ))}
                       {e.triplets.length > 4 && (
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          +{e.triplets.length - 4}
-                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">+{e.triplets.length - 4}</span>
                       )}
                       {e.lineCount > 1 && (
-                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">
-                          ({e.lineCount} cặp)
-                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">({e.lineCount} cặp)</span>
                       )}
                       {e.betCount > 1 && (
                         <span className="text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded shrink-0 ml-0.5">

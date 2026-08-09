@@ -47,10 +47,11 @@ import {
   type JackpotSplitDetail,
   type SplitTierAllocation,
 } from "@megawin/game-lotto535/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
-import type { SettleContextWithFinancials, LottoSplitTierDetail } from "./types";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import type { LottoSplitTierDetail, SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
   /** ID kỳ quay đã hoàn tất settle. */
@@ -87,10 +88,7 @@ export interface FinalizeSettleResult {
  * updateCycleStats dùng giá trị snapshot từ PrepareSettle (không cộng dồn từ activeCycle)
  * → idempotent.
  */
-export class FinalizeSettleUseCase extends InternalUseCase<
-  SettleContextWithFinancials,
-  FinalizeSettleResult
-> {
+export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFinancials, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
@@ -112,9 +110,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw AppException.internal(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
-        );
+        throw AppException.internal(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
 
@@ -183,9 +179,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       // → closeCycle đã chạy thành công lần trước → chỉ đảm bảo active cycle tồn tại.
       const alreadyClosed = await this.cycleRepo.findClosedByEndDrawId(drawId);
       if (alreadyClosed) {
-        console.log(
-          `Cycle ${alreadyClosed.cycleNo} already closed for draw ${drawId}, ensuring next cycle exists.`,
-        );
+        console.log(`Cycle ${alreadyClosed.cycleNo} already closed for draw ${drawId}, ensuring next cycle exists.`);
         await this.ensureNextCycleExists(drawId, input.config);
         return;
       }
@@ -227,7 +221,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 
     // ── Build split detail (nếu split thực tế) ──
     const splitExecuted = isSplitCycle && splitDetails != null;
-    let splitDetail: JackpotSplitDetail | undefined = undefined;
+    let splitDetail: JackpotSplitDetail | undefined;
     if (splitExecuted && splitDetails) {
       const tierEntries = Object.entries(splitDetails) as [string, LottoSplitTierDetail][];
       let totalWinners = 0;
@@ -258,12 +252,8 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     await this.cycleRepo.closeCycle({
       cycleNo: activeCycle.cycleNo,
       endDrawId: drawId,
-      closeReason: hasJackpotWinner
-        ? JackpotCycleCloseReason.Winner
-        : JackpotCycleCloseReason.Split,
-      finalAmount: hasJackpotWinner
-        ? jackpotOpeningAmount + jackpotContribution
-        : activeCycle.currentAmount,
+      closeReason: hasJackpotWinner ? JackpotCycleCloseReason.Winner : JackpotCycleCloseReason.Split,
+      finalAmount: hasJackpotWinner ? jackpotOpeningAmount + jackpotContribution : activeCycle.currentAmount,
       // cycleDrawCountBefore + 1 = số kỳ bao gồm kỳ đang đóng (tuyệt đối → idempotent khi retry).
       drawCount: input.config.cycleDrawCountBefore + 1,
       splitDetail,
@@ -279,10 +269,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    * createCycle có guard findOne({ status: Active }) → skip nếu đã tồn tại (idempotent).
    * Nếu không có draw tiếp → skip (create-draws hoặc prepare-settle sẽ tạo sau).
    */
-  private async ensureNextCycleExists(
-    drawId: string,
-    config: SettleContextWithFinancials["config"],
-  ): Promise<void> {
+  private async ensureNextCycleExists(drawId: string, config: SettleContextWithFinancials["config"]): Promise<void> {
     const existingActive = await this.cycleRepo.getActiveCycle();
     if (existingActive) return;
 

@@ -44,11 +44,7 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "game-core",
-    "domain"
-  ],
+  "keywords": ["megawin", "game-core", "domain"],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -60,7 +56,7 @@
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
     "typescript": "^6.0.3",
-    "vite": "^8.1.4",
+    "vite": "^8.2.1",
     "vitest": "^4.1.10"
   }
 }

@@ -10,8 +10,8 @@
  * IDEMPOTENT: replay an toàn, duplicate `tx` bị skip.
  */
 
-import { EnqueueDispatchRefundsUseCase } from "@megawin/game-keno-application/use-cases/void";
 import type { VoidContext } from "@megawin/game-keno-application/use-cases/void";
+import { EnqueueDispatchRefundsUseCase } from "@megawin/game-keno-application/use-cases/void";
 
 const useCase = new EnqueueDispatchRefundsUseCase();
 

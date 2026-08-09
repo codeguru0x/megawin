@@ -1,5 +1,5 @@
-import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs

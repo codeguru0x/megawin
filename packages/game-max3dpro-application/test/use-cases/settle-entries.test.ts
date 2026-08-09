@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { matchPair, flattenDrawResult } from "@megawin/game-max3dpro/rules/prize-tiers";
+import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities/draw-result";
 import { PrizeTier } from "@megawin/game-max3dpro/entities/enums";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules/defaults";
-import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities/draw-result";
+import { flattenDrawResult, matchPair } from "@megawin/game-max3dpro/rules/prize-tiers";
+import { describe, expect, it } from "vitest";
 
 // ─────────────────────────────────────────────
 // Fixtures
@@ -374,12 +374,9 @@ describe("matchPair – bipartite matching edge cases", () => {
 // XIII. play-types – calculateLineCount & expandSelectionToPairs (multiNumber ordered pairs)
 // ─────────────────────────────────────────────
 
-import {
-  calculateLineCount,
-  expandSelectionToPairs,
-} from "@megawin/game-max3dpro/rules/play-types";
 import { PlayMode, PlayType } from "@megawin/game-max3dpro/entities/enums";
 import type { BoardSelection } from "@megawin/game-max3dpro/entities/types";
+import { calculateLineCount, expandSelectionToPairs } from "@megawin/game-max3dpro/rules/play-types";
 
 describe("calculateLineCount – multiNumber → P(n,2) ordered pairs", () => {
   it("3 bộ ba → P(3,2) = 6", () => {

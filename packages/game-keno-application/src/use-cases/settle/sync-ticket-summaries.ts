@@ -18,6 +18,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import type { SettleContext } from "./types";
@@ -30,10 +31,7 @@ export interface SyncTicketSummariesResult {
   done: boolean;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SettleContext,
-  SyncTicketSummariesResult
-> {
+export class SyncTicketSummariesUseCase extends InternalUseCase<SettleContext, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

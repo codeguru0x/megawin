@@ -1,8 +1,9 @@
-import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
+import { ALL_LISTABLE_STATUSES, TicketStatus } from "@megawin/game-core/entities";
 import type { TicketDoc, TicketEntity } from "@megawin/game-max3d/entities";
+import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
+
 import { TicketMapper } from "../mappers/ticket-mapper";
 import { BaseRepo } from "./base-repo";
 import type { TicketSummary } from "./types/ticket.types";
@@ -139,9 +140,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    * Dùng `$expr: { $lte: [settledDraws, processedCount] }` để guard idempotency.
    * Trả về modifiedCount.
    */
-  async bulkSyncSummaries(
-    items: Array<{ ticketId: string; summary: TicketSummary }>,
-  ): Promise<number> {
+  async bulkSyncSummaries(items: Array<{ ticketId: string; summary: TicketSummary }>): Promise<number> {
     if (items.length === 0) return 0;
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = [];
@@ -153,11 +152,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       // isCompleted: tất cả kỳ đã xử lý xong (settled + voided >= totalDraws) → Completed.
       const isAllVoided = voidedCount === totalDraws && settledCount === 0;
       const isCompleted = processedCount >= totalDraws;
-      const status = isAllVoided
-        ? TicketStatus.Refunded
-        : isCompleted
-          ? TicketStatus.Completed
-          : undefined;
+      const status = isAllVoided ? TicketStatus.Refunded : isCompleted ? TicketStatus.Completed : undefined;
 
       const $set: Record<string, unknown> = {
         "progress.settledDraws": processedCount,

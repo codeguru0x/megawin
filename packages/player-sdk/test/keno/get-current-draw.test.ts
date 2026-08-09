@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { PlayerClient } from "../../src";
-import { createTestClient, mockFetch, BASE_URL, TOKENS } from "../helpers";
+import { BASE_URL, createTestClient, mockFetch, TOKENS } from "../helpers";
 
 describe("keno.getCurrentDraw", () => {
   let client: PlayerClient;
@@ -34,9 +35,7 @@ describe("keno.getCurrentDraw", () => {
         drawId: "2026-02-25.099",
         drawDate: "2026-02-25",
         drawNo: 99,
-        winningNumbers: [
-          3, 7, 12, 18, 22, 25, 31, 36, 40, 44, 49, 53, 57, 61, 65, 69, 72, 75, 78, 80,
-        ],
+        winningNumbers: [3, 7, 12, 18, 22, 25, 31, 36, 40, 44, 49, 53, 57, 61, 65, 69, 72, 75, 78, 80],
         publishedAt: "2026-02-25T12:55:00Z",
       },
     };

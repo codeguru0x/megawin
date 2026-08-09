@@ -14,17 +14,18 @@
  */
 
 import {
-  Power655Collections,
-  type JackpotCycleDoc,
-  type JackpotCycleConfig,
-  type JackpotCycleClosedReason,
-  type JackpotWinnerInfo,
   type Jackpot2ResetRecord,
+  type JackpotCycleClosedReason,
+  type JackpotCycleConfig,
+  type JackpotCycleDoc,
   type JackpotCycleEntity,
   JackpotCycleStatus,
+  type JackpotWinnerInfo,
+  Power655Collections,
 } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
+
 import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, JackpotCycleMapper> {
   constructor() {
@@ -281,10 +282,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     // Lấy active cycle song song với closed cycles để giảm latency.
     const [active, closed] = await Promise.all([
       this.findOne({ status: JackpotCycleStatus.Active }),
-      this.findMany(
-        { status: JackpotCycleStatus.Closed },
-        { sort: { cycleNo: -1 }, limit: closedLimit },
-      ),
+      this.findMany({ status: JackpotCycleStatus.Closed }, { sort: { cycleNo: -1 }, limit: closedLimit }),
     ]);
 
     // Active đứng đầu danh sách, closed theo sau.

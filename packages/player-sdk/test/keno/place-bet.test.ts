@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { PlayerClient } from "../../src";
 import type { KenoTicketPurchaseInput } from "../../src/keno";
-import { createTestClient, mockFetch, mockFetchError, BASE_URL, TOKENS } from "../helpers";
+import { BASE_URL, createTestClient, mockFetch, mockFetchError, TOKENS } from "../helpers";
 
 describe("keno.placeBet", () => {
   let client: PlayerClient;

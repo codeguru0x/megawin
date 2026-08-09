@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
-import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { GameConfigScope } from "@megawin/game-core/entities";
+import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 
 describe("GameConfigRepository – Global Config", () => {
@@ -32,9 +33,7 @@ describe("GameConfigRepository – Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.rates).toBeDefined();
-    expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_LOTTO535_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.rates.defaultCommissionRate).toBe(DEFAULT_LOTTO535_CONFIG.rates.defaultCommissionRate);
     expect(config!.rates.companyRate).toBe(DEFAULT_LOTTO535_CONFIG.rates.companyRate);
   });
 
@@ -47,9 +46,7 @@ describe("GameConfigRepository – Global Config", () => {
     expect(config!.defaultPrizes.tier3).toBe(DEFAULT_LOTTO535_CONFIG.defaultPrizes.tier3);
     expect(config!.defaultPrizes.tier4).toBe(DEFAULT_LOTTO535_CONFIG.defaultPrizes.tier4);
     expect(config!.defaultPrizes.tier5).toBe(DEFAULT_LOTTO535_CONFIG.defaultPrizes.tier5);
-    expect(config!.defaultPrizes.consolation).toBe(
-      DEFAULT_LOTTO535_CONFIG.defaultPrizes.consolation,
-    );
+    expect(config!.defaultPrizes.consolation).toBe(DEFAULT_LOTTO535_CONFIG.defaultPrizes.consolation);
   });
 
   it("global config có đầy đủ play rules", async () => {
@@ -59,9 +56,7 @@ describe("GameConfigRepository – Global Config", () => {
     expect(config!.play.unitPrice).toBe(DEFAULT_LOTTO535_CONFIG.play.unitPrice);
     expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_LOTTO535_CONFIG.play.maxBoardsPerTicket);
     expect(config!.play.maxDrawCount).toBe(DEFAULT_LOTTO535_CONFIG.play.maxDrawCount);
-    expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_LOTTO535_CONFIG.play.salesCloseBeforeMinutes,
-    );
+    expect(config!.play.salesCloseBeforeMinutes).toBe(DEFAULT_LOTTO535_CONFIG.play.salesCloseBeforeMinutes);
     expect(config!.play.drawsPerDay).toBe(DEFAULT_LOTTO535_CONFIG.play.drawsPerDay);
     expect(config!.play.drawTimes).toEqual(DEFAULT_LOTTO535_CONFIG.play.drawTimes);
   });

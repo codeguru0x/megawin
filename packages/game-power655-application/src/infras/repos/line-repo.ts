@@ -9,10 +9,11 @@
  * khi re-settle, vừa giữ `createdAt` immutable kể cả khi settle retry sau crash.
  */
 
-import { Power655Collections } from "@megawin/game-power655/entities";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import { chunk } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
+
 import { BaseRepo } from "./base-repo";
 
 export class LineRepository extends BaseRepo<any> {
@@ -159,11 +160,7 @@ export class LineRepository extends BaseRepo<any> {
    * mẫu số DETERMINISTIC (getAllJackpotLines) nên mọi retry đều dùng cùng đơn giá
    * → line patch ở lần retry khác nhau vẫn ra cùng winAmount.
    */
-  async patchJackpotLinesPerUnit(
-    drawId: string,
-    jackpotTier: string,
-    jackpotPerUnit: number,
-  ): Promise<number> {
+  async patchJackpotLinesPerUnit(drawId: string, jackpotTier: string, jackpotPerUnit: number): Promise<number> {
     // Chỉ lấy lines CHƯA patch để tránh ghi đè line đã có winAmount (idempotent).
     const unpatchedLines = await this.getUnpatchedJackpotLines(drawId, jackpotTier);
     if (unpatchedLines.length === 0) {

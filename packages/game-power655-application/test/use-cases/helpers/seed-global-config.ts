@@ -1,6 +1,7 @@
-import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
-import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
 import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
+import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
+
+import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 
 /**
  * Insert default global config vào database.

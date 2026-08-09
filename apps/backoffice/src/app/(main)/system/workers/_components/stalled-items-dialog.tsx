@@ -2,25 +2,12 @@
 
 import { calcRelativeTime } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 import type { WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
+import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface StalledItemsDialogProps {
@@ -41,9 +28,7 @@ export function StalledItemsDialog({ row, onClose }: StalledItemsDialogProps) {
         {row && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-base font-semibold">
-                Item kẹt — {row.description}
-              </DialogTitle>
+              <DialogTitle className="text-base font-semibold">Item kẹt — {row.description}</DialogTitle>
               <DialogDescription>
                 Các đơn vị công việc đang lỗi lặp lại. Tự biến mất khi item xử lý thành công.
               </DialogDescription>
@@ -63,11 +48,7 @@ export function StalledItemsDialog({ row, onClose }: StalledItemsDialogProps) {
                   <TableRow key={item.itemKey}>
                     <TableCell className="font-mono text-xs">{item.itemKey}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      <Badge
-                        variant={
-                          item.failCount >= STALLED_ALERT_THRESHOLD ? "destructive" : "secondary"
-                        }
-                      >
+                      <Badge variant={item.failCount >= STALLED_ALERT_THRESHOLD ? "destructive" : "secondary"}>
                         {item.failCount}
                       </Badge>
                     </TableCell>
@@ -90,9 +71,7 @@ export function StalledItemsDialog({ row, onClose }: StalledItemsDialogProps) {
                             {item.lastError}
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-sm break-words">
-                          {item.lastError}
-                        </TooltipContent>
+                        <TooltipContent className="max-w-sm break-words">{item.lastError}</TooltipContent>
                       </Tooltip>
                     </TableCell>
                   </TableRow>

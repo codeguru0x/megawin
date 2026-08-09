@@ -9,8 +9,8 @@
  */
 
 import {
-  PrepareResettleUseCase,
   type PrepareResettleInput,
+  PrepareResettleUseCase,
 } from "@megawin/game-bingo18-application/use-cases/resettle";
 
 const useCase = new PrepareResettleUseCase();

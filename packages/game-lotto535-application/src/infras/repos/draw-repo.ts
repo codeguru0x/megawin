@@ -1,25 +1,22 @@
-import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
-import {
-  DrawStatus,
-  DRAW_UNFINISHED_STATUSES,
-  DRAW_COMPLETED_STATUSES,
-} from "@megawin/game-core/entities";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { formatVNDate } from "@megawin/shared/utils";
-import type { FindOptions } from "mongodb";
+import { DRAW_COMPLETED_STATUSES, DRAW_UNFINISHED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
 import type {
   DrawDoc,
-  DrawResult,
-  DrawJackpotSnapshot,
+  DrawEntity,
   DrawFinancial,
-  DrawStats,
+  DrawJackpotSnapshot,
+  DrawResult,
   DrawSettleSummary,
+  DrawStats,
   DrawVietlottRef,
   DrawVoidSummary,
 } from "@megawin/game-lotto535/entities";
-import { BaseRepo } from "./base-repo";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
+import { formatVNDate } from "@megawin/shared/utils";
+import type { FindOptions } from "mongodb";
+
 import { DrawMapper } from "../mappers/draw-mapper";
+import { BaseRepo } from "./base-repo";
 
 /**
  * Valid status transitions.
@@ -31,11 +28,7 @@ import { DrawMapper } from "../mappers/draw-mapper";
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Voiding]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([
-    DrawStatus.SalesOpen,
-    DrawStatus.Published,
-    DrawStatus.Voiding,
-  ]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Voiding]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Voiding]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
   [DrawStatus.Settled]: new Set([DrawStatus.Published]),
@@ -191,22 +184,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       $set["jackpot.isSplitCycle"] = jackpot.isSplitCycle;
     }
 
-    return await this.findOneAndUpdate(
-      { drawId, status: DrawStatus.Settling },
-      { $set },
-      { returnDocument: "after" },
-    );
+    return await this.findOneAndUpdate({ drawId, status: DrawStatus.Settling }, { $set }, { returnDocument: "after" });
   }
 
   /**
    * Open sales: scheduled/salesClosed → salesOpen.
    * Stamp sales.openAt nếu lần đầu mở bán.
    */
-  async openSales(
-    drawId: string,
-    fromStatus: string,
-    salesOpenAt?: Date,
-  ): Promise<DrawEntity | null> {
+  async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
 
@@ -218,11 +203,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       $set["sales.openAt"] = salesOpenAt;
     }
 
-    return await this.findOneAndUpdate(
-      { drawId, status: fromStatus },
-      { $set },
-      { returnDocument: "after" },
-    );
+    return await this.findOneAndUpdate({ drawId, status: fromStatus }, { $set }, { returnDocument: "after" });
   }
 
   /**
@@ -241,21 +222,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       $set["sales.closeAt"] = salesCloseAt;
     }
 
-    return await this.findOneAndUpdate(
-      { drawId, status: DrawStatus.SalesOpen },
-      { $set },
-      { returnDocument: "after" },
-    );
+    return await this.findOneAndUpdate({ drawId, status: DrawStatus.SalesOpen }, { $set }, { returnDocument: "after" });
   }
 
   /**
    * Void draw: transition → void + ghi voidInfo embedded doc.
    */
-  async voidDraw(
-    drawId: string,
-    fromStatus: string,
-    voidInfo: VoidInfo,
-  ): Promise<DrawEntity | null> {
+  async voidDraw(drawId: string, fromStatus: string, voidInfo: VoidInfo): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Voiding)) return null;
 
@@ -301,11 +274,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Caller truyền đầy đủ result (kể cả publishedAt).
    * Luôn set status = published bất kể trạng thái trước đó.
    */
-  async publishResult(
-    drawId: string,
-    result: DrawResult,
-    vietlottRef?: DrawVietlottRef,
-  ): Promise<DrawEntity | null> {
+  async publishResult(drawId: string, result: DrawResult, vietlottRef?: DrawVietlottRef): Promise<DrawEntity | null> {
     const $set: Record<string, unknown> = {
       status: DrawStatus.Published,
       result,
@@ -344,11 +313,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       $set["jackpot.isSplitCycle"] = isSplitCycle;
     }
 
-    return await this.findOneAndUpdate(
-      { drawId, status: DrawStatus.Published },
-      { $set },
-      { returnDocument: "after" },
-    );
+    return await this.findOneAndUpdate({ drawId, status: DrawStatus.Published }, { $set }, { returnDocument: "after" });
   }
 
   async updateSettleResult(
@@ -392,10 +357,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Dùng dot notation để chỉ cập nhật 1 phần tử mảng (tier = "jackpot").
    * Idempotent: set cùng giá trị nhiều lần cho kết quả giống nhau.
    */
-  async patchSettleSummaryJackpotPrize(
-    drawId: string,
-    jackpotPrizeAmount: number,
-  ): Promise<boolean> {
+  async patchSettleSummaryJackpotPrize(drawId: string, jackpotPrizeAmount: number): Promise<boolean> {
     return await this.updateOne(
       {
         drawId,
@@ -428,11 +390,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    *
    * Index dùng: { status: 1, drawId: -1 } → idx_status_drawId_desc
    */
-  async listSettledDraws(filter: {
-    from: string;
-    size: number;
-    cursor?: string;
-  }): Promise<DrawEntity[]> {
+  async listSettledDraws(filter: { from: string; size: number; cursor?: string }): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {
       status: DrawStatus.Settled,
       result: { $exists: true },
@@ -453,10 +411,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   async getLatestSettledDraw(): Promise<DrawEntity | null> {
-    return await this.findOne(
-      { status: DrawStatus.Settled },
-      { sort: { drawDate: -1, drawNo: -1 } },
-    );
+    return await this.findOne({ status: DrawStatus.Settled }, { sort: { drawDate: -1, drawNo: -1 } });
   }
 
   async getSettledDrawsWithJackpot(page: number, size: number): Promise<DrawEntity[]> {
@@ -535,10 +490,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     statuses: readonly UnfinishedDrawStatus[] = DRAW_UNFINISHED_STATUSES,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    return await this.findMany(
-      { status: { $in: [...statuses] } },
-      { sort: { drawId: -1 }, ...options },
-    );
+    return await this.findMany({ status: { $in: [...statuses] } }, { sort: { drawId: -1 }, ...options });
   }
 
   /**
@@ -625,10 +577,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  async updateSchedule(
-    drawId: string,
-    sales: { openAt: Date; closeAt: Date; drawTime?: Date },
-  ): Promise<boolean> {
+  async updateSchedule(drawId: string, sales: { openAt: Date; closeAt: Date; drawTime?: Date }): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "sales.openAt": sales.openAt,
       "sales.closeAt": sales.closeAt,

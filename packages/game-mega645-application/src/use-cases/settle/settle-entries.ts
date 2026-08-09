@@ -29,21 +29,21 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
-import { PrizeTier } from "@megawin/game-mega645/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
-  TicketLineDoc,
   EntryPayout,
   EntryPayoutTier,
   EntryResult,
   PrizeAmounts,
+  TicketLineDoc,
 } from "@megawin/game-mega645/entities";
-import { expandAllBoards } from "@megawin/game-mega645/helpers";
-import { matchLines, type DrawResultForMatch } from "@megawin/game-mega645/helpers";
+import { PrizeTier } from "@megawin/game-mega645/entities";
+import { type DrawResultForMatch, expandAllBoards, matchLines } from "@megawin/game-mega645/helpers";
+import { generateId } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
-import { EntryOutcome } from "@megawin/game-core/entities";
 
 /** Số entry xử lý mỗi vòng lặp. Giữ nhỏ để tránh timeout Lambda và OOM. */
 const BATCH_SIZE = 500;
@@ -58,10 +58,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 

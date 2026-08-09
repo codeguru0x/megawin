@@ -1,9 +1,9 @@
+import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-bingo18/entities";
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type { TenantConfigDoc } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
+
 import { TenantConfigMapper } from "../mappers/game-config-mapper";
-import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";
+import { BaseRepo } from "./base-repo";
 
 export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {

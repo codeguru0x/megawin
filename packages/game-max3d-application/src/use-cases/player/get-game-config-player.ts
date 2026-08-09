@@ -3,6 +3,7 @@
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlayerGetGameConfigOutput } from "./dto/player-game-config.dto";
@@ -11,10 +12,7 @@ export interface GetGameConfigPlayerInput {
   tenantId: string;
 }
 
-export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
-  GetGameConfigPlayerInput,
-  PlayerGetGameConfigOutput
-> {
+export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<GetGameConfigPlayerInput, PlayerGetGameConfigOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 

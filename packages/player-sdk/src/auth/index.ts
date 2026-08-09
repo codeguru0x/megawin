@@ -4,11 +4,9 @@
  * @module
  */
 
-// ---- Types ----
-export type { AuthTokens, AuthenticateInput, AuthResult, TokenStorage } from "./types";
-
-// ---- Token management ----
-export { TokenManager, MemoryTokenStorage, SessionStorageTokenStorage } from "./token-manager";
-
 // ---- Auth API ----
-export { createAuthApi, type AuthApi, type AuthApiDeps } from "./auth-api";
+export { type AuthApi, type AuthApiDeps, createAuthApi } from "./auth-api";
+// ---- Token management ----
+export { MemoryTokenStorage, SessionStorageTokenStorage, TokenManager } from "./token-manager";
+// ---- Types ----
+export type { AuthenticateInput, AuthResult, AuthTokens, TokenStorage } from "./types";

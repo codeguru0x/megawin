@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemOutstandingReportRepository,
   type OutstandingPerGameAggregateResult,
+  SystemOutstandingReportRepository,
 } from "@megawin/game-core-application/repos";
 import { LOTTO535_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
@@ -45,8 +46,12 @@ export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
 
     if (result.length === 0) {
       return {
-        activeDrawCount: 0, totalEntryCount: 0, totalPlayerCount: 0,
-        totalTenantCount: 0, totalOutstandingStake: 0, totalEstimatedCommission: 0,
+        activeDrawCount: 0,
+        totalEntryCount: 0,
+        totalPlayerCount: 0,
+        totalTenantCount: 0,
+        totalOutstandingStake: 0,
+        totalEstimatedCommission: 0,
       };
     }
 

@@ -17,9 +17,6 @@ import { BACKOFF_BASE_SECONDS, BACKOFF_MAX_SECONDS } from "../../config";
  * @returns Timestamp attempt tiếp theo.
  */
 export function computeNextAttemptAt(retryCount: number, now: Date = new Date()): Date {
-  const delaySeconds = Math.min(
-    BACKOFF_BASE_SECONDS * Math.pow(2, retryCount),
-    BACKOFF_MAX_SECONDS,
-  );
+  const delaySeconds = Math.min(BACKOFF_BASE_SECONDS * 2 ** retryCount, BACKOFF_MAX_SECONDS);
   return new Date(now.getTime() + delaySeconds * 1000);
 }

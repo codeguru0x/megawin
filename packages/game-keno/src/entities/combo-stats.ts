@@ -25,6 +25,7 @@
  */
 
 import type { DeltaAccumulatedDoc } from "@megawin/game-core/types";
+
 import type { KenoPlayType } from "./enums";
 
 /**

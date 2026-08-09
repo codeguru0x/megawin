@@ -18,16 +18,15 @@
  *   - Crash giữa tenant upserts: partial update. Retry re-aggregate → idempotent.
  */
 
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
+
 import type {
   SettleGameDailyAggregateResult,
-  SystemSettleGameDailyRepository,
-} from "../infras/repos";
-import type {
   SettleTenantDailyAggregateResult,
+  SystemSettleGameDailyRepository,
   SystemSettleTenantDailyRepository,
 } from "../infras/repos";
-import { InternalUseCase } from "@megawin/app-core/use-cases";
 
 /** Interface per-game repo phải implement để aggregate per-game draw reports. */
 export interface SystemGameDailyPublisher extends SystemSettleGameDailyRepository {

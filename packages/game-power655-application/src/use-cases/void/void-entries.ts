@@ -15,10 +15,11 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { EntryVoidInfo } from "@megawin/game-power655/entities";
 import { generateId } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
-import type { EntryVoidInfo } from "@megawin/game-power655/entities";
 
 export interface VoidEntriesBatchResult {
   /** ID kỳ quay đang void. */

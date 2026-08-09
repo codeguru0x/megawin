@@ -105,15 +105,7 @@ function MiniDonut({ pct, fill, size }: { pct: number; fill: string; size: numbe
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
       <title>{Math.round(pct)}%</title>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-        className="text-muted/60"
-      />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-muted/60" />
       <circle
         cx={cx}
         cy={cy}
@@ -164,12 +156,8 @@ function BasicCard({ row }: { row: PlayTypeRow }) {
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={32} />
       </div>
-      <p className="text-xs font-bold tabular-nums text-foreground leading-tight">
-        {formatNumber(row.sets)} bộ
-      </p>
-      <p className="text-xs text-muted-foreground tabular-nums leading-none">
-        {formatNumber(row.entries)} entries
-      </p>
+      <p className="text-xs font-bold tabular-nums text-foreground leading-tight">{formatNumber(row.sets)} bộ</p>
+      <p className="text-xs text-muted-foreground tabular-nums leading-none">{formatNumber(row.entries)} entries</p>
     </div>
   );
 }
@@ -179,13 +167,7 @@ function BasicCard({ row }: { row: PlayTypeRow }) {
 function SideBetCard({ row }: { row: PlayTypeRow }) {
   const s = SIDE_BET_STYLES[row.playType] ?? SIDE_BET_STYLES.sumTotal!;
   return (
-    <div
-      className={cn(
-        "rounded-xl border p-3.5 flex flex-col gap-2 flex-1 transition-all",
-        s.bg,
-        s.border,
-      )}
-    >
+    <div className={cn("rounded-xl border p-3.5 flex flex-col gap-2 flex-1 transition-all", s.bg, s.border)}>
       <div className="flex items-center gap-2">
         <div className={cn("size-2 rounded-full shrink-0", s.dot)} />
         <span className={cn("text-xs font-semibold flex-1", s.text)}>{s.label}</span>
@@ -197,8 +179,7 @@ function SideBetCard({ row }: { row: PlayTypeRow }) {
             <span className="text-xs font-normal text-muted-foreground ml-1">bộ</span>
           </p>
           <p className="text-xs text-muted-foreground tabular-nums mt-1">
-            <span className="font-semibold text-foreground">{formatNumber(row.entries)}</span>{" "}
-            entries
+            <span className="font-semibold text-foreground">{formatNumber(row.entries)}</span> entries
           </p>
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={46} />
@@ -278,9 +259,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
 
             {/* ── Cột phải: Side bets stretch full height ── */}
             <div className="flex flex-col gap-2">
-              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">
-                Side Bets
-              </p>
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">Side Bets</p>
               <div className="flex-1 flex flex-col gap-2.5">
                 {sideBets.map((row) => (
                   <SideBetCard key={row.playType} row={row} />

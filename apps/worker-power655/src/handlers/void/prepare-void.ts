@@ -8,8 +8,8 @@
  * @output VoidContext
  */
 
-import { PrepareVoidUseCase } from "@megawin/game-power655-application/use-cases/void";
 import type { PrepareVoidInput } from "@megawin/game-power655-application/use-cases/void";
+import { PrepareVoidUseCase } from "@megawin/game-power655-application/use-cases/void";
 
 const useCase = new PrepareVoidUseCase();
 

@@ -7,21 +7,17 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
+
+import { calcLotto535DrawSlots } from "../../helpers/calc-draw-slots";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { calcLotto535DrawSlots } from "../../helpers/calc-draw-slots";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
-export class PreviewDrawsUseCase extends NextApiUseCase<
-  PreviewDrawsInput,
-  PreviewDrawsOutput
-> {
+export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, PreviewDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: PreviewDrawsInput
-  ): Promise<PreviewDrawsOutput> {
+  protected async execute(input: PreviewDrawsInput): Promise<PreviewDrawsOutput> {
     const { count } = input;
 
     const globalConfig = await this.getGlobalConfig.run();
@@ -35,12 +31,7 @@ export class PreviewDrawsUseCase extends NextApiUseCase<
     const existingActiveDraws = await this.drawRepo.getUnfinishedDraws();
     const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
 
-    const slots = calcLotto535DrawSlots(
-      new Date(),
-      count,
-      globalConfig.play,
-      existingDrawIds
-    );
+    const slots = calcLotto535DrawSlots(new Date(), count, globalConfig.play, existingDrawIds);
 
     return {
       draws: slots.map((s) => ({

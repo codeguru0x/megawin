@@ -31,6 +31,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { buildResettleBatchKey } from "@megawin/game-core/utils";
 import { buildReversalOrder } from "@megawin/tenant-dispatch/builders";
 import { EnqueueDispatchOrdersUseCase } from "@megawin/tenant-dispatch/use-cases/enqueue";
+
 import { EntryResettleRepository } from "../../infras/repos/entry-resettle-repo";
 
 const BATCH_SIZE = 500;
@@ -54,10 +55,7 @@ export interface EnqueueReversalsOutput {
   lockKey: string;
 }
 
-export class EnqueueReversalsUseCase extends InternalUseCase<
-  EnqueueReversalsInput,
-  EnqueueReversalsOutput
-> {
+export class EnqueueReversalsUseCase extends InternalUseCase<EnqueueReversalsInput, EnqueueReversalsOutput> {
   private readonly entryResettleRepo = new EntryResettleRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 
@@ -68,12 +66,7 @@ export class EnqueueReversalsUseCase extends InternalUseCase<
     // qua helper `buildResettleBatchKey` ở `@megawin/game-core/utils` — single
     // source of truth cross-game cho format key, đồng nhất với `payoutBatchKey`
     // ở settle path (chỉ khác kind suffix).
-    const reversalBatchKey = buildResettleBatchKey(
-      GameProduct.Keno,
-      drawId,
-      resettleId,
-      "reversal",
-    );
+    const reversalBatchKey = buildResettleBatchKey(GameProduct.Keno, drawId, resettleId, "reversal");
 
     let cursor: string | undefined;
     let enqueuedTotal = 0;

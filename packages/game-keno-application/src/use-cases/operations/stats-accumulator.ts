@@ -26,28 +26,26 @@
  * + `$slice` lo phần cắt).
  */
 
-import { maxBoardPrize, buildComboKey, createEmptyByPlayType } from "@megawin/game-keno/rules";
-import type { BasicPrizes, BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
-import {
-  KenoPlayType,
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KENO_VALID_NUMBERS,
-} from "@megawin/game-keno/entities";
 import type {
+  BasicPrizes,
+  BigSmallPrizes,
+  EvenOddPrizes,
   KenoByPlayType,
-  KenoPlayTypeStat,
   KenoNumberStat,
+  KenoPlayTypeStat,
   KenoTopPotential,
   TenantBettingStat,
 } from "@megawin/game-keno/entities";
+import { KENO_VALID_NUMBERS, KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
+import { buildComboKey, createEmptyByPlayType, maxBoardPrize } from "@megawin/game-keno/rules";
+
 import type {
   AccountStatsDelta,
   ComboAccountDelta,
   ComboStatsDelta,
   DrawStatsDelta,
-  EntryForStats,
   EntryBoardForStats,
+  EntryForStats,
 } from "../../infras/repos/types";
 
 /** Prize config gom lại để truyền cho tính worst-case. */
@@ -100,10 +98,13 @@ export class DrawStatsAccumulator {
   private worstCaseTotal = 0;
   private readonly capSets = { pick8: 0, pick9: 0, pick10: 0 };
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /**
    * Cộng 1 entry vào delta.
@@ -176,10 +177,7 @@ export class DrawStatsAccumulator {
 
     // ── worst-case exposure theo playType (RAW, chưa cap — analysis §3.4) ──
     const wc = this.boardWorstCase(board);
-    this.worstCaseByPlayType.set(
-      board.playType,
-      (this.worstCaseByPlayType.get(board.playType) ?? 0) + wc,
-    );
+    this.worstCaseByPlayType.set(board.playType, (this.worstCaseByPlayType.get(board.playType) ?? 0) + wc);
     this.worstCaseTotal += wc;
 
     // ── numberFreq + combo (chỉ basic có numbers) ──
@@ -216,21 +214,16 @@ export class DrawStatsAccumulator {
     // `board.playType` là `string` (projection thô từ `keno_ticket_entries`) — cast sang
     // `KenoPlayType` hợp lệ vì Zod đã validate giá trị này lúc place-bet (không phải đọc lại
     // input chưa qua validate, xem code-quality §5.4).
-    const perUnit = maxBoardPrize(
-      board.playType as KenoPlayType,
-      board.bet,
-      board.numbers?.length ?? 0,
-      { basic: this.prize.basic, bigSmall: this.prize.bigSmall, evenOdd: this.prize.evenOdd },
-    );
+    const perUnit = maxBoardPrize(board.playType as KenoPlayType, board.bet, board.numbers?.length ?? 0, {
+      basic: this.prize.basic,
+      bigSmall: this.prize.bigSmall,
+      evenOdd: this.prize.evenOdd,
+    });
     return perUnit * board.betCount;
   }
 
   /** Gom delta 1 combo trong tick (accountId → Δsets/Δamount + tên). */
-  private recordComboDelta(
-    entry: EntryForStats,
-    board: EntryBoardForStats,
-    boardAmount: number,
-  ): void {
+  private recordComboDelta(entry: EntryForStats, board: EntryBoardForStats, boardAmount: number): void {
     const numbers = [...(board.numbers ?? [])].sort();
     const key = buildComboKey(board.playType, numbers);
 

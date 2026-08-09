@@ -7,15 +7,13 @@
  * Dùng $inc + upsert để đảm bảo race-safe.
  */
 
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
-import { BaseRepo } from "./base-repo";
-import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
 import type { DrawCounterEntity } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 
-export class DrawCounterRepository extends BaseRepo<
-  DrawCounterEntity,
-  DrawCounterMapper
-> {
+import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
+import { BaseRepo } from "./base-repo";
+
+export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCounterMapper> {
   constructor() {
     super({
       collName: Bingo18Collections.DrawCounters,
@@ -34,7 +32,7 @@ export class DrawCounterRepository extends BaseRepo<
     const result = await this._collection.findOneAndUpdate(
       { drawDate },
       { $inc: { lastDrawNo: 1 } },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     return result!.lastDrawNo as number;
@@ -54,7 +52,7 @@ export class DrawCounterRepository extends BaseRepo<
     const result = await this._collection.findOneAndUpdate(
       { drawDate },
       { $inc: { lastDrawNo: count } },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     const lastDrawNo = result!.lastDrawNo as number;
@@ -70,10 +68,6 @@ export class DrawCounterRepository extends BaseRepo<
   async upsertLastDrawNo(drawDate: string, drawNo: number): Promise<void> {
     await this.initBeforeUse();
 
-    await this._collection.updateOne(
-      { drawDate },
-      { $max: { lastDrawNo: drawNo } },
-      { upsert: true },
-    );
+    await this._collection.updateOne({ drawDate }, { $max: { lastDrawNo: drawNo } }, { upsert: true });
   }
 }

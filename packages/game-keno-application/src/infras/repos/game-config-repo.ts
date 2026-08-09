@@ -1,17 +1,18 @@
-import { KenoCollections } from "@megawin/game-keno/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type {
-  FinancialRates,
   BasicPrizes,
   BigSmallPrizes,
   EvenOddPrizes,
+  FinancialRates,
+  GlobalConfigEntity,
+  OpsConfig,
   PayoutCaps,
   PlayRules,
-  OpsConfig,
 } from "@megawin/game-keno/entities";
-import { BaseRepo } from "./base-repo";
+import { KenoCollections } from "@megawin/game-keno/entities";
+
 import { GameConfigMapper } from "../mappers/game-config-mapper";
-import type { GlobalConfigEntity } from "@megawin/game-keno/entities";
+import { BaseRepo } from "./base-repo";
 
 export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {

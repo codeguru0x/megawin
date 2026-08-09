@@ -12,14 +12,14 @@
 
 import { DrawStatus } from "@megawin/game-core/entities";
 import type {
+  PlayType,
   Power655DrawBettingStatsEntity,
   Power655DrawNumberStatsEntity,
-  PlayType,
   TopAccountStat,
 } from "@megawin/game-power655/entities";
-import type { Power655TopCombo } from "@megawin/game-power655-application/use-cases/operations";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 import { PLAY_TYPE_CONFIGS } from "@megawin/game-power655/rules";
+import type { Power655TopCombo } from "@megawin/game-power655-application/use-cases/operations";
 
 import type {
   ExposureView,

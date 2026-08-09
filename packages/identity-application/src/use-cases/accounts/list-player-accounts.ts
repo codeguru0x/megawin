@@ -1,10 +1,11 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type {
-  ListPlayerAccountsInput,
-  ListPlayerAccountsOutput,
   ListPlayerAccountsCursorInput,
   ListPlayerAccountsCursorOutput,
+  ListPlayerAccountsInput,
+  ListPlayerAccountsOutput,
   PlayerAccountItem,
 } from "./dto/list-player-accounts.dto";
 
@@ -18,10 +19,7 @@ const DEFAULT_LIMIT = 50;
  * Bắt buộc truyền tenantId — KHÔNG list toàn bộ cross-tenant.
  * Hỗ trợ page/limit để phân trang phía server.
  */
-export class ListPlayerAccountsUseCase extends NextApiUseCase<
-  ListPlayerAccountsInput,
-  ListPlayerAccountsOutput
-> {
+export class ListPlayerAccountsUseCase extends NextApiUseCase<ListPlayerAccountsInput, ListPlayerAccountsOutput> {
   protected async execute(input: ListPlayerAccountsInput): Promise<ListPlayerAccountsOutput> {
     const repo = new AccountRepository();
 
@@ -64,9 +62,7 @@ export class ListPlayerAccountsCursorUseCase extends NextApiUseCase<
 > {
   private readonly repo = new AccountRepository();
 
-  protected async execute(
-    input: ListPlayerAccountsCursorInput,
-  ): Promise<ListPlayerAccountsCursorOutput> {
+  protected async execute(input: ListPlayerAccountsCursorInput): Promise<ListPlayerAccountsCursorOutput> {
     const limit = input.limit ?? DEFAULT_LIMIT;
 
     const {

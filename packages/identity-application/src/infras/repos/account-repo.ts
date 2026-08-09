@@ -1,16 +1,17 @@
-import { nowVN, generateULID } from "@megawin/shared/utils";
-import { ObjectId, type Document } from "mongodb";
-import { AccountMapper } from "../mappers/account-mapper";
-import { IdentityBaseRepo } from "./identity-base-repo";
-import { AccountType, AccountStatus, AgentRole, PlayerRole } from "@megawin/identity/entities";
 import type {
   AccountEntity,
-  CompanyAccountEntity,
   AgentAccountEntity,
-  PlayerAccountEntity,
+  CompanyAccountEntity,
   CompanyRole,
   MfaStatus,
+  PlayerAccountEntity,
 } from "@megawin/identity/entities";
+import { AccountStatus, AccountType, type AgentRole, PlayerRole } from "@megawin/identity/entities";
+import { generateULID, nowVN } from "@megawin/shared/utils";
+import { type Document, ObjectId } from "mongodb";
+
+import { AccountMapper } from "../mappers/account-mapper";
+import { IdentityBaseRepo } from "./identity-base-repo";
 
 export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMapper> {
   constructor() {
@@ -160,10 +161,7 @@ export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMa
    * Prefix regex (`^abc`) sử dụng được index `{ type: 1, username: 1 }` hiệu quả.
    * Limit mặc định 20 — search là để tìm nhanh, không phải để duyệt.
    */
-  public async searchPlayerAccounts(
-    rawKeyword: string,
-    options?: { limit?: number },
-  ): Promise<PlayerAccountEntity[]> {
+  public async searchPlayerAccounts(rawKeyword: string, options?: { limit?: number }): Promise<PlayerAccountEntity[]> {
     const keyword = rawKeyword.trim();
     const limit = options?.limit ?? 20;
     const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/i;

@@ -119,30 +119,15 @@ export function PlayerSettleContent({ accountId }: PlayerSettleContentProps) {
 
       {/* Views */}
       {currentLevel === 1 && (
-        <GameOverviewView
-          data={overviewData}
-          isLoading={overviewLoading}
-          onRowClick={navigateToGame}
-        />
+        <GameOverviewView data={overviewData} isLoading={overviewLoading} onRowClick={navigateToGame} />
       )}
 
       {currentLevel === 2 && game && (
-        <DailyByGameView
-          accountId={accountId}
-          from={from}
-          to={to}
-          game={game}
-          onRowClick={navigateToDate}
-        />
+        <DailyByGameView accountId={accountId} from={from} to={to} game={game} onRowClick={navigateToDate} />
       )}
 
       {currentLevel === 3 && game && fd && (
-        <DrawBreakdownView
-          accountId={accountId}
-          financialDate={fd}
-          game={game}
-          onRowClick={navigateToDraw}
-        />
+        <DrawBreakdownView accountId={accountId} financialDate={fd} game={game} onRowClick={navigateToDraw} />
       )}
 
       {currentLevel === 4 && game && fd && draw && (
@@ -185,11 +170,7 @@ function SettleBreadcrumb({
 
   return (
     <div className="flex items-center gap-1 text-sm">
-      <button
-        type="button"
-        className="font-medium text-muted-foreground hover:text-foreground"
-        onClick={onClickRoot}
-      >
+      <button type="button" className="font-medium text-muted-foreground hover:text-foreground" onClick={onClickRoot}>
         Tài chính
       </button>
 

@@ -12,7 +12,8 @@
  */
 
 import { z } from "zod";
-import { POWER655_MAIN_MIN, POWER655_MAIN_MAX, POWER655_MAIN_COUNT } from "../entities/types";
+
+import { POWER655_MAIN_COUNT, POWER655_MAIN_MAX, POWER655_MAIN_MIN } from "../entities/types";
 
 /**
  * Board labels hợp lệ cho Power 6/55.
@@ -39,9 +40,7 @@ export const power655MainNumberSchema = z
  * Lưu ý: schema chỉ validate format, KHÔNG kiểm tra ngày có phải ngày quay hợp lệ
  * (T3, T5, T7) — business rule đó nằm trong use case layer.
  */
-export const power655DrawIdSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
+export const power655DrawIdSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
 
 // ─── Publish Result ────────────────────────────────────────────────────────────
 
@@ -71,10 +70,7 @@ export const publishResultSchema = z
           ),
       )
       .length(POWER655_MAIN_COUNT, `Cần đúng ${POWER655_MAIN_COUNT} số chính`)
-      .refine(
-        (nums) => new Set(nums.map(Number)).size === POWER655_MAIN_COUNT,
-        "Các số chính phải khác nhau",
-      ),
+      .refine((nums) => new Set(nums.map(Number)).size === POWER655_MAIN_COUNT, "Các số chính phải khác nhau"),
     bonusNumber: z
       .string()
       .min(1, "Chưa nhập số thưởng")

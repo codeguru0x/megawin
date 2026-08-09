@@ -9,11 +9,9 @@
  * Keno KHÔNG có lineCount — không aggregate lineCount.
  */
 
-import type {
-  OutstandingDrawReport,
-  OutstandingDrawReportEntity,
-} from "@megawin/game-keno/entities";
+import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-keno/entities";
 import { KENO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-keno/entities";
+
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";
@@ -24,10 +22,7 @@ import type { OutstandingGameSummary } from "./types";
  * Scheduled job (mỗi 5 phút) gọi bulkUpsertDrawReports để refresh tất cả draws active trong 1 DB call.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<
-  OutstandingDrawReportEntity,
-  OutstandingDrawReportMapper
-> {
+export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
   constructor() {
     super({
       collName: KENO_OUTSTANDING_DRAW_REPORTS,
@@ -41,9 +36,7 @@ export class OutstandingReportRepository extends BaseRepo<
    * Luôn set snapshotAt = now để reset TTL timer.
    * Idempotent: retry ghi đè, không duplicate.
    */
-  async upsertDrawReport(
-    report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertDrawReport(report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {
@@ -148,7 +141,7 @@ export class OutstandingReportRepository extends BaseRepo<
    *
    * Sort: financialDate ASC để kỳ cũ nhất (sắp đến hạn) lên đầu.
    */
-  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+  async findAllSorted(): Promise<OutstandingDrawReportEntity[]> {
     return this.findMany(
       {},
       {

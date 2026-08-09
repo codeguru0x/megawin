@@ -1,4 +1,4 @@
-import type { AccountType, AccountStatus, CompanyRole, AgentRole, MfaStatus } from "./account";
+import type { AccountStatus, AccountType, AgentRole, CompanyRole, MfaStatus } from "./account";
 
 export const AccountTypeLabel: Record<AccountType, string> = {
   company: "Công ty",

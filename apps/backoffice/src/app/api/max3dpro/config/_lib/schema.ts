@@ -1,5 +1,5 @@
-import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
 import { Max3dproOpsAlertType } from "@megawin/game-max3dpro/entities";
+import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -51,9 +51,10 @@ const playSchema = z
 /** Bật/tắt từng loại alert — khoá theo `Max3dproOpsAlertType` (derive const-as-const §5.3). */
 const alertEnabledSchema = z
   .object(
-    Object.fromEntries(
-      Object.values(Max3dproOpsAlertType).map((t) => [t, z.boolean()]),
-    ) as Record<Max3dproOpsAlertType, z.ZodBoolean>,
+    Object.fromEntries(Object.values(Max3dproOpsAlertType).map((t) => [t, z.boolean()])) as Record<
+      Max3dproOpsAlertType,
+      z.ZodBoolean
+    >,
   )
   .partial();
 

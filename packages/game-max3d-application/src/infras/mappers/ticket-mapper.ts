@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { TicketEntity } from "@megawin/game-max3d/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 export class TicketMapper extends MongoMapper<Document, TicketEntity> {
   constructor() {

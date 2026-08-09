@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { ListDrawTenantsInput, ListDrawTenantsOutput } from "./types";
 
@@ -8,9 +9,7 @@ import type { ListDrawTenantsInput, ListDrawTenantsOutput } from "./types";
  * Mỗi row = 1 tenant × 1 draw với metrics tài chính đầy đủ.
  * Index: { drawId: 1 }
  */
-export class ListDrawTenantsUseCase
-  extends NextApiUseCase<ListDrawTenantsInput, ListDrawTenantsOutput>
-{
+export class ListDrawTenantsUseCase extends NextApiUseCase<ListDrawTenantsInput, ListDrawTenantsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListDrawTenantsInput): Promise<ListDrawTenantsOutput> {

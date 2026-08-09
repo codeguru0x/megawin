@@ -8,7 +8,8 @@
  * Mỗi board tạo ra nhiều cặp (pairs) hai bộ ba số.
  */
 
-import type { TicketStatus, TicketChannel } from "@megawin/game-core/entities";
+import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+
 import type { PlayMode, PlayType } from "./enums";
 import type { BoardSelection, ISODateString } from "./types";
 

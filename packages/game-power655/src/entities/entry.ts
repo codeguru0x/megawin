@@ -19,10 +19,10 @@
  * Collection: power655_ticket_entries.
  */
 
-import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
-import type { PrizeTier } from "./enums";
-import type { PlayType } from "./enums";
+
+import type { PlayType, PrizeTier } from "./enums";
 import type { Board } from "./ticket";
 import type { ISODateString } from "./types";
 

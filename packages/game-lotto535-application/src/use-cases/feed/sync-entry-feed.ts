@@ -6,24 +6,23 @@
  * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
 import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
+import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
-import { Long } from "mongodb";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
-  TicketEntryEntity,
   EntryBoardSnapshot,
   EntryPayout,
-  EntryVoidInfo,
   EntryResult,
-} from "@megawin/game-lotto535/entities";
-import type {
+  EntryVoidInfo,
   Lotto535FeedBetContent,
   Lotto535FeedDrawResult,
   Lotto535FeedPayoutDetail,
+  TicketEntryEntity,
 } from "@megawin/game-lotto535/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
+import { Long } from "mongodb";
+
+import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
   private readonly entryRepo = new EntryRepository();
@@ -32,14 +31,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     super(GameProduct.Lotto535);
   }
 
-  protected async fetchNextBatch(
-    afterVersion: string,
-    batchSize: number,
-  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
-    const entries = await this.entryRepo.getChangedEntries(
-      Long.fromString(afterVersion),
-      batchSize,
-    );
+  protected async fetchNextBatch(afterVersion: string, batchSize: number): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
     return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }
@@ -121,7 +114,7 @@ function mapPayoutDetail(payout: EntryPayout | undefined): Lotto535FeedPayoutDet
   if (!payout || !payout.tiers?.length) {
     return undefined;
   }
-  
+
   return {
     tiers: payout.tiers.map((t) => ({
       tier: t.tier,

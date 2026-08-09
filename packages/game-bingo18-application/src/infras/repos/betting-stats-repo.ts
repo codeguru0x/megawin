@@ -27,25 +27,23 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi field update đi qua method typed ở đây.
  */
 
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
 import type {
   Bingo18BucketStat,
   Bingo18DrawBettingStatsDoc,
   Bingo18DrawBettingStatsEntity,
   OpsStatsConfigBase,
 } from "@megawin/game-bingo18/entities";
-import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
+import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { DrawStatsCursor, DrawStatsDelta } from "./types";
 
 const f = docPath<Bingo18DrawBettingStatsDoc>();
 
-export class BettingStatsRepository extends BaseRepo<
-  Bingo18DrawBettingStatsEntity,
-  BettingStatsMapper
-> {
+export class BettingStatsRepository extends BaseRepo<Bingo18DrawBettingStatsEntity, BettingStatsMapper> {
   constructor() {
     super({
       collName: Bingo18Collections.BettingStats,
@@ -77,7 +75,7 @@ export class BettingStatsRepository extends BaseRepo<
    * @param limit - Trần số kỳ xử lý 1 tick. Vượt trần → kỳ còn lại chờ tick sau (sort
    *   `drawId` asc để kỳ cũ nhất — sắp settle — được ưu tiên, không bị bỏ rơi).
    */
-  async findNotFinal(limit: number = 500): Promise<DrawStatsCursor[]> {
+  async findNotFinal(limit = 500): Promise<DrawStatsCursor[]> {
     const docs = await this.findManyAsDocuments(
       { final: false },
       { projection: { _id: 0, drawId: 1, lastEntryId: 1 }, sort: { drawId: 1 }, limit },
@@ -183,10 +181,7 @@ export class BettingStatsRepository extends BaseRepo<
 
     // IDEMPOTENT theo watermark: `ensureDocs` seed `lastEntryId = MIN_OBJECT_ID` nên `$lt`
     // luôn khớp lần áp đầu (mọi ObjectId thật > MIN), các batch kế `$lt` bỏ batch đã áp.
-    return await this.updateOne(
-      { drawId, [f("lastEntryId")]: { $lt: batchMaxId } },
-      update as UpdateFilter<Document>,
-    );
+    return await this.updateOne({ drawId, [f("lastEntryId")]: { $lt: batchMaxId } }, update as UpdateFilter<Document>);
   }
 
   /**

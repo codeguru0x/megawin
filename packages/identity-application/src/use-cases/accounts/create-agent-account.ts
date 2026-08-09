@@ -1,17 +1,9 @@
+import { adminCreateAccount, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import { AccountStatus, AccountType, AgentRole, ClaimKey } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  adminCreateAccount,
-  COGNITO_WORKFORCE_POOL_ID,
-} from "@megawin/app-core/aws/cognito";
-import {
-  AccountType,
-  AccountStatus,
-  AgentRole,
-} from "@megawin/identity/entities";
-
-import { ClaimKey } from "@megawin/identity/entities";
 import { generateULID } from "@megawin/shared/utils";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 
 export interface CreateAgentAccountInput {
@@ -27,20 +19,13 @@ export interface CreateAgentAccountOutput {
   roles: AgentRole[];
 }
 
-export class CreateAgentAccountUseCase extends NextApiUseCase<
-  CreateAgentAccountInput,
-  CreateAgentAccountOutput
-> {
-  protected async execute(
-    input: CreateAgentAccountInput
-  ): Promise<CreateAgentAccountOutput> {
+export class CreateAgentAccountUseCase extends NextApiUseCase<CreateAgentAccountInput, CreateAgentAccountOutput> {
+  protected async execute(input: CreateAgentAccountInput): Promise<CreateAgentAccountOutput> {
     const accountRepo = new AccountRepository();
 
     const existingAgent = await accountRepo.findAgentByTenantId(input.tenantId);
     if (existingAgent) {
-      throw AppException.conflict(
-        `Tenant "${input.tenantId}" đã có tài khoản đại lý "${existingAgent.username}".`
-      );
+      throw AppException.conflict(`Tenant "${input.tenantId}" đã có tài khoản đại lý "${existingAgent.username}".`);
     }
 
     const accountId = generateULID();
@@ -70,9 +55,7 @@ export class CreateAgentAccountUseCase extends NextApiUseCase<
     }
 
     const cognitoUsername = result.User.Username ?? input.username;
-    const cognitoSub =
-      result.User.Attributes?.find((attr) => attr.Name === ClaimKey.Sub)
-        ?.Value ?? cognitoUsername;
+    const cognitoSub = result.User.Attributes?.find((attr) => attr.Name === ClaimKey.Sub)?.Value ?? cognitoUsername;
 
     const account = await accountRepo.findOrCreateAgentAccount(
       username,
@@ -81,7 +64,7 @@ export class CreateAgentAccountUseCase extends NextApiUseCase<
       input.tenantId,
       COGNITO_WORKFORCE_POOL_ID!,
       cognitoSub,
-      cognitoUsername
+      cognitoUsername,
     );
 
     if (!account) {

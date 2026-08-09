@@ -195,8 +195,7 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     collection: KenoCollections.Draws,
     key: { status: 1, drawId: -1 },
     options: { name: "idx_status_drawId_desc" },
-    purpose:
-      "Player draw results: filter settled draws + cursor pagination theo drawId (upper bound từ ngày)",
+    purpose: "Player draw results: filter settled draws + cursor pagination theo drawId (upper bound từ ngày)",
   },
   {
     collection: KenoCollections.Draws,

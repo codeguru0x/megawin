@@ -13,7 +13,7 @@
  */
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { PlayType } from "@megawin/game-mega645/entities";
+import type { PlayType } from "@megawin/game-mega645/entities";
 import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 import { PLAY_TYPE_CONFIGS } from "@megawin/game-mega645/rules";
 import { formatNumber } from "@megawin/shared/utils";
@@ -23,108 +23,100 @@ import { PlayerOutstandingLink } from "@/components/player-name";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import type {
-  PlayTypeRow,
-  TenantRow,
-  TopAccountRow,
-  TopComboRow,
-  TopPotentialRow,
-} from "../../types";
+import type { PlayTypeRow, TenantRow, TopAccountRow, TopComboRow, TopPotentialRow } from "../../types";
 import { NumberBadge } from "./number-heatmap";
 
 // ─── Color palette — Mega 6/45 (teal brand + phân biệt bao) ────────────────
 // Standard = teal (brand). Bao thấp → lạnh (green/blue), Bao cao (13-18) → nóng
 // (violet→rose) để staff nhận diện nhanh nhóm rủi ro board đắt.
 
-export const PLAY_TYPE_COLORS: Record<
-  string,
-  { dot: string; text: string; fill: string; bg: string; border: string }
-> = {
-  standard: {
-    dot: "bg-teal-500",
-    text: "text-teal-600 dark:text-teal-400",
-    fill: "#0d9488",
-    bg: "bg-teal-50/60 dark:bg-teal-950/20",
-    border: "border-teal-200/60 dark:border-teal-800/40",
-  },
-  bao5: {
-    dot: "bg-green-500",
-    text: "text-green-600 dark:text-green-400",
-    fill: "#22c55e",
-    bg: "bg-green-50/60 dark:bg-green-950/20",
-    border: "border-green-200/60 dark:border-green-800/40",
-  },
-  bao7: {
-    dot: "bg-indigo-500",
-    text: "text-indigo-600 dark:text-indigo-400",
-    fill: "#6366f1",
-    bg: "bg-indigo-50/60 dark:bg-indigo-950/20",
-    border: "border-indigo-200/60 dark:border-indigo-800/40",
-  },
-  bao8: {
-    dot: "bg-blue-500",
-    text: "text-blue-600 dark:text-blue-400",
-    fill: "#3b82f6",
-    bg: "bg-blue-50/60 dark:bg-blue-950/20",
-    border: "border-blue-200/60 dark:border-blue-800/40",
-  },
-  bao9: {
-    dot: "bg-sky-500",
-    text: "text-sky-600 dark:text-sky-400",
-    fill: "#0ea5e9",
-    bg: "bg-sky-50/60 dark:bg-sky-950/20",
-    border: "border-sky-200/60 dark:border-sky-800/40",
-  },
-  bao10: {
-    dot: "bg-cyan-500",
-    text: "text-cyan-600 dark:text-cyan-400",
-    fill: "#06b6d4",
-    bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
-    border: "border-cyan-200/60 dark:border-cyan-800/40",
-  },
-  bao11: {
-    dot: "bg-emerald-500",
-    text: "text-emerald-600 dark:text-emerald-400",
-    fill: "#10b981",
-    bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-    border: "border-emerald-200/60 dark:border-emerald-800/40",
-  },
-  bao12: {
-    dot: "bg-violet-500",
-    text: "text-violet-600 dark:text-violet-400",
-    fill: "#8b5cf6",
-    bg: "bg-violet-50/60 dark:bg-violet-950/20",
-    border: "border-violet-200/60 dark:border-violet-800/40",
-  },
-  bao13: {
-    dot: "bg-purple-500",
-    text: "text-purple-600 dark:text-purple-400",
-    fill: "#a855f7",
-    bg: "bg-purple-50/60 dark:bg-purple-950/20",
-    border: "border-purple-200/60 dark:border-purple-800/40",
-  },
-  bao14: {
-    dot: "bg-fuchsia-500",
-    text: "text-fuchsia-600 dark:text-fuchsia-400",
-    fill: "#d946ef",
-    bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
-    border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
-  },
-  bao15: {
-    dot: "bg-pink-500",
-    text: "text-pink-600 dark:text-pink-400",
-    fill: "#ec4899",
-    bg: "bg-pink-50/60 dark:bg-pink-950/20",
-    border: "border-pink-200/60 dark:border-pink-800/40",
-  },
-  bao18: {
-    dot: "bg-rose-500",
-    text: "text-rose-600 dark:text-rose-400",
-    fill: "#f43f5e",
-    bg: "bg-rose-50/60 dark:bg-rose-950/20",
-    border: "border-rose-200/60 dark:border-rose-800/40",
-  },
-};
+export const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
+  {
+    standard: {
+      dot: "bg-teal-500",
+      text: "text-teal-600 dark:text-teal-400",
+      fill: "#0d9488",
+      bg: "bg-teal-50/60 dark:bg-teal-950/20",
+      border: "border-teal-200/60 dark:border-teal-800/40",
+    },
+    bao5: {
+      dot: "bg-green-500",
+      text: "text-green-600 dark:text-green-400",
+      fill: "#22c55e",
+      bg: "bg-green-50/60 dark:bg-green-950/20",
+      border: "border-green-200/60 dark:border-green-800/40",
+    },
+    bao7: {
+      dot: "bg-indigo-500",
+      text: "text-indigo-600 dark:text-indigo-400",
+      fill: "#6366f1",
+      bg: "bg-indigo-50/60 dark:bg-indigo-950/20",
+      border: "border-indigo-200/60 dark:border-indigo-800/40",
+    },
+    bao8: {
+      dot: "bg-blue-500",
+      text: "text-blue-600 dark:text-blue-400",
+      fill: "#3b82f6",
+      bg: "bg-blue-50/60 dark:bg-blue-950/20",
+      border: "border-blue-200/60 dark:border-blue-800/40",
+    },
+    bao9: {
+      dot: "bg-sky-500",
+      text: "text-sky-600 dark:text-sky-400",
+      fill: "#0ea5e9",
+      bg: "bg-sky-50/60 dark:bg-sky-950/20",
+      border: "border-sky-200/60 dark:border-sky-800/40",
+    },
+    bao10: {
+      dot: "bg-cyan-500",
+      text: "text-cyan-600 dark:text-cyan-400",
+      fill: "#06b6d4",
+      bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
+      border: "border-cyan-200/60 dark:border-cyan-800/40",
+    },
+    bao11: {
+      dot: "bg-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-400",
+      fill: "#10b981",
+      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+      border: "border-emerald-200/60 dark:border-emerald-800/40",
+    },
+    bao12: {
+      dot: "bg-violet-500",
+      text: "text-violet-600 dark:text-violet-400",
+      fill: "#8b5cf6",
+      bg: "bg-violet-50/60 dark:bg-violet-950/20",
+      border: "border-violet-200/60 dark:border-violet-800/40",
+    },
+    bao13: {
+      dot: "bg-purple-500",
+      text: "text-purple-600 dark:text-purple-400",
+      fill: "#a855f7",
+      bg: "bg-purple-50/60 dark:bg-purple-950/20",
+      border: "border-purple-200/60 dark:border-purple-800/40",
+    },
+    bao14: {
+      dot: "bg-fuchsia-500",
+      text: "text-fuchsia-600 dark:text-fuchsia-400",
+      fill: "#d946ef",
+      bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
+      border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
+    },
+    bao15: {
+      dot: "bg-pink-500",
+      text: "text-pink-600 dark:text-pink-400",
+      fill: "#ec4899",
+      bg: "bg-pink-50/60 dark:bg-pink-950/20",
+      border: "border-pink-200/60 dark:border-pink-800/40",
+    },
+    bao18: {
+      dot: "bg-rose-500",
+      text: "text-rose-600 dark:text-rose-400",
+      fill: "#f43f5e",
+      bg: "bg-rose-50/60 dark:bg-rose-950/20",
+      border: "border-rose-200/60 dark:border-rose-800/40",
+    },
+  };
 
 const DEFAULT_COLOR = {
   dot: "bg-muted-foreground/40",
@@ -160,22 +152,9 @@ function MiniDonut({
   const fontSize = label.length >= 4 ? baseFontSize - 1.5 : baseFontSize;
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className={cn("shrink-0", className)}
-    >
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={cn("shrink-0", className)}>
       <title>{label}</title>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-        className="text-muted/60"
-      />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-muted/60" />
       <circle
         cx={cx}
         cy={cy}
@@ -276,9 +255,7 @@ export function PlayTypeCard({ distribution }: { distribution: PlayTypeRow[] }) 
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Standard · Bao 5 · Bao 7–18
-              </CardDescription>
+              <CardDescription className="text-xs mt-0.5">Standard · Bao 5 · Bao 7–18</CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
@@ -348,9 +325,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top người chơi</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Theo tổng tiền cược trong kỳ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Theo tổng tiền cược trong kỳ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -376,9 +351,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   <p className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                     {formatNumber(a.amount)}
                   </p>
-                  <p className="text-[11px] tabular-nums text-muted-foreground/60">
-                    {formatNumber(a.entries)} vé
-                  </p>
+                  <p className="text-[11px] tabular-nums text-muted-foreground/60">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -400,9 +373,7 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Entry rủi ro giải cố định cao nhất nếu trúng
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Entry rủi ro giải cố định cao nhất nếu trúng</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -426,8 +397,7 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     className="text-sm"
                   />
                   <p className="text-[11px] text-muted-foreground/70 tabular-nums mt-0.5">
-                    Cược{" "}
-                    <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
+                    Cược <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
                 <div className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-right">
@@ -478,9 +448,7 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                 key={c.rank}
                 className="flex items-start gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
               >
-                <span className="text-sm leading-none shrink-0 pt-0.5">
-                  {medals[c.rank - 1] ?? `#${c.rank}`}
-                </span>
+                <span className="text-sm leading-none shrink-0 pt-0.5">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 flex-wrap">
                     {c.numbers.map((n) => (
@@ -492,12 +460,8 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-semibold tabular-nums text-foreground">
-                    {formatNumber(c.sets)} bộ
-                  </p>
-                  <p className="text-xs tabular-nums text-muted-foreground">
-                    {formatNumber(c.accounts)} người
-                  </p>
+                  <p className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(c.sets)} bộ</p>
+                  <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(c.accounts)} người</p>
                 </div>
               </div>
             ))}
@@ -573,15 +537,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
 }
 
 /** 1 card đại lý giàu thông tin — dùng khi ít đại lý (≤3). */
-function TenantDetailCard({
-  tenant,
-  rank,
-  maxRevenue,
-}: {
-  tenant: TenantRow;
-  rank: number;
-  maxRevenue: number;
-}) {
+function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; rank: number; maxRevenue: number }) {
   return (
     <div className="rounded-xl border bg-muted/10 p-3.5">
       <div className="flex items-center gap-2">
@@ -675,21 +631,15 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
               style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
             />
             <div className="relative flex items-center gap-2 min-w-0">
-              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">
-                {i + 1}
-              </span>
+              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">{i + 1}</span>
               <span className="text-sm font-medium truncate">{t.tenantId}</span>
               <span className="text-xs text-muted-foreground/50 shrink-0">{t.pct.toFixed(0)}%</span>
             </div>
-            <span className="relative text-right tabular-nums text-sm">
-              {formatNumber(t.entries)}
-            </span>
+            <span className="relative text-right tabular-nums text-sm">{formatNumber(t.entries)}</span>
             <span className="relative text-right tabular-nums text-sm text-muted-foreground">
               {t.players === null ? "—" : formatNumber(t.players)}
             </span>
-            <span className="relative text-right tabular-nums text-sm font-medium">
-              {formatNumber(t.revenue)}
-            </span>
+            <span className="relative text-right tabular-nums text-sm font-medium">{formatNumber(t.revenue)}</span>
           </div>
         ))}
       </div>

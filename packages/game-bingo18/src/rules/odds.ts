@@ -57,12 +57,12 @@
  */
 
 import {
-  BINGO18_DICE_MIN,
-  BINGO18_DICE_MAX,
-  BINGO18_SUM_MIN,
-  BINGO18_SUM_MAX,
-  BINGO18_SMALL_MAX,
   BINGO18_BIG_MIN,
+  BINGO18_DICE_MAX,
+  BINGO18_DICE_MIN,
+  BINGO18_SMALL_MAX,
+  BINGO18_SUM_MAX,
+  BINGO18_SUM_MIN,
 } from "../entities/types";
 
 /** Tổng không gian mẫu = 6^3. */
@@ -103,7 +103,7 @@ export function getSingleNumOdds(): SingleNumOdds[] {
   const results: SingleNumOdds[] = [];
 
   for (let m = 1; m <= 3; m++) {
-    const ways = C[m]! * Math.pow(5, 3 - m);
+    const ways = C[m]! * 5 ** (3 - m);
     const probability = ways / TOTAL_OUTCOMES;
     results.push({
       matchCount: m,
@@ -249,11 +249,7 @@ export interface PlayTypeProfitSummary {
   grossMarginPercent: number;
 }
 
-function buildSummary(
-  playType: string,
-  unitPrice: number,
-  tiers: TierProfitAnalysis[],
-): PlayTypeProfitSummary {
+function buildSummary(playType: string, unitPrice: number, tiers: TierProfitAnalysis[]): PlayTypeProfitSummary {
   const totalExpectedPayout = tiers.reduce((s, t) => s + t.expectedPayout, 0);
   const totalPayoutRatio = unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
   return {
@@ -267,12 +263,7 @@ function buildSummary(
   };
 }
 
-function tier(
-  label: string,
-  probability: number,
-  prize: number,
-  unitPrice: number,
-): TierProfitAnalysis {
+function tier(label: string, probability: number, prize: number, unitPrice: number): TierProfitAnalysis {
   const expectedPayout = probability * prize;
   return {
     label,
@@ -291,21 +282,15 @@ export function analyzeSingleNumProfitability(
 ): PlayTypeProfitSummary {
   const odds = getSingleNumOdds();
   const tiers = odds.map((o) => {
-    const prize =
-      o.matchCount === 1 ? prizes.match1 : o.matchCount === 2 ? prizes.match2 : prizes.match3;
+    const prize = o.matchCount === 1 ? prizes.match1 : o.matchCount === 2 ? prizes.match2 : prizes.match3;
     return tier(`Trùng ${o.matchCount}/3`, o.probability, prize, unitPrice);
   });
   return buildSummary("singleNum", unitPrice, tiers);
 }
 
-export function analyzeDoubleMatchProfitability(
-  prizes: { win: number },
-  unitPrice: number,
-): PlayTypeProfitSummary {
+export function analyzeDoubleMatchProfitability(prizes: { win: number }, unitPrice: number): PlayTypeProfitSummary {
   const odds = getDoubleMatchOdds();
-  return buildSummary("doubleMatch", unitPrice, [
-    tier("Trùng ≥2/3", odds.probability, prizes.win, unitPrice),
-  ]);
+  return buildSummary("doubleMatch", unitPrice, [tier("Trùng ≥2/3", odds.probability, prizes.win, unitPrice)]);
 }
 
 export function analyzeTripleMatchProfitability(
@@ -326,15 +311,10 @@ export function analyzeTripleMatchProfitability(
   };
 }
 
-export function analyzeSumTotalProfitability(
-  prizes: Record<string, number>,
-  unitPrice: number,
-): PlayTypeProfitSummary {
+export function analyzeSumTotalProfitability(prizes: Record<string, number>, unitPrice: number): PlayTypeProfitSummary {
   const odds = getSumTotalOdds();
   // Tra string key vì SumTotalPrizes dùng string key (MongoDB convention).
-  const tiers = odds.map((o) =>
-    tier(`Tổng ${o.sum}`, o.probability, prizes[String(o.sum)] ?? 0, unitPrice),
-  );
+  const tiers = odds.map((o) => tier(`Tổng ${o.sum}`, o.probability, prizes[String(o.sum)] ?? 0, unitPrice));
   return buildSummary("sumTotal", unitPrice, tiers);
 }
 

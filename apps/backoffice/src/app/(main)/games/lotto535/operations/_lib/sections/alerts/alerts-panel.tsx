@@ -19,32 +19,21 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { Lotto535OpsAlertEntity, Lotto535TopPotential } from "@megawin/game-lotto535/entities";
 import {
   Lotto535OpsAlertType,
-  Lotto535StatsPlayKey,
+  type Lotto535StatsPlayKey,
   OpsAlertSeverity,
   OpsAlertStatus,
 } from "@megawin/game-lotto535/entities";
 import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
-import {
-  AlertTriangle,
-  BellRing,
-  Check,
-  ChevronDown,
-  ExternalLink,
-  ShieldCheck,
-} from "lucide-react";
-import Link from "next/link";
+import { AlertTriangle, BellRing, Check, ChevronDown, ExternalLink, ShieldCheck } from "lucide-react";
 
 import { buildOutstandingHref, PlayerName } from "@/components/player-name";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -165,9 +154,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
     case Lotto535OpsAlertType.CoverHighStake: {
       const triggered = readCoverTriggered(payload);
       const threshold = toNum(payload.threshold);
-      const names = triggered
-        .map((t) => describeStatsPlayKey(t.key as Lotto535StatsPlayKey))
-        .join(", ");
+      const names = triggered.map((t) => describeStatsPlayKey(t.key as Lotto535StatsPlayKey)).join(", ");
       return {
         summary: `Có vé Bao mức cao (${names}) — giá 1 board ≥ ${formatNumber(threshold)} VND.`,
         chips: triggered.map((t) => ({
@@ -217,13 +204,7 @@ function readTopEntries(payload: Record<string, unknown>): Lotto535TopPotential[
  * (fixedPotential), mỗi dòng link → outstanding player kỳ này. Alert không có `top` →
  * không render gì.
  */
-function AlertTopEntries({
-  drawId,
-  payload,
-}: {
-  drawId: string;
-  payload: Record<string, unknown>;
-}) {
+function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<string, unknown> }) {
   const entries = readTopEntries(payload);
   if (entries.length === 0) return null;
 
@@ -266,9 +247,7 @@ function AlertTopEntries({
 /** Render số chính + số ĐB liên quan alert `combo_concentration` — 2 chiều số Lotto 5/35. */
 function AlertComboNumbers({ payload }: { payload: Record<string, unknown> }) {
   const mainNumbers = Array.isArray(payload.mainNumbers) ? (payload.mainNumbers as string[]) : [];
-  const specialNumbers = Array.isArray(payload.specialNumbers)
-    ? (payload.specialNumbers as string[])
-    : [];
+  const specialNumbers = Array.isArray(payload.specialNumbers) ? (payload.specialNumbers as string[]) : [];
   if (mainNumbers.length === 0 && specialNumbers.length === 0) return null;
 
   return (
@@ -301,11 +280,7 @@ function AlertItemRow({ alert }: { alert: Lotto535OpsAlertEntity }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-1.5">
-          {summary && (
-            <p className="text-xs font-medium text-foreground leading-snug wrap-break-word">
-              {summary}
-            </p>
-          )}
+          {summary && <p className="text-xs font-medium text-foreground leading-snug wrap-break-word">{summary}</p>}
           {chips.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
               {chips.map((c) => (
@@ -313,9 +288,7 @@ function AlertItemRow({ alert }: { alert: Lotto535OpsAlertEntity }) {
                   key={c.label}
                   className={cn(
                     "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] tabular-nums",
-                    c.danger
-                      ? "bg-red-500/10 text-red-700 dark:text-red-300"
-                      : "bg-muted text-muted-foreground",
+                    c.danger ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground",
                   )}
                 >
                   <span className="opacity-70">{c.label}</span>
@@ -357,15 +330,7 @@ function AlertItemRow({ alert }: { alert: Lotto535OpsAlertEntity }) {
 // ─── 1 nhóm alert (tách new/acked, thu gọn phần đã xử lý) ─────────────────────
 
 /** Nút thu gọn "N đã xử lý ▾" cuối 1 nhóm — bấm để mở xem lịch sử ack trong nhóm đó. */
-function AckedDisclosure({
-  count,
-  open,
-  onToggle,
-}: {
-  count: number;
-  open: boolean;
-  onToggle: () => void;
-}) {
+function AckedDisclosure({ count, open, onToggle }: { count: number; open: boolean; onToggle: () => void }) {
   if (count === 0) return null;
   return (
     <button
@@ -398,15 +363,9 @@ function AlertGroupContent({ items }: { items: Lotto535OpsAlertEntity[] }) {
         <AlertItemRow key={item.id} alert={item} />
       ))}
       {activeItems.length === 0 && ackedItems.length > 0 && (
-        <p className="px-1 py-1 text-xs text-muted-foreground">
-          Đã xử lý hết cảnh báo mới của nhóm này.
-        </p>
+        <p className="px-1 py-1 text-xs text-muted-foreground">Đã xử lý hết cảnh báo mới của nhóm này.</p>
       )}
-      <AckedDisclosure
-        count={ackedItems.length}
-        open={showAcked}
-        onToggle={() => setShowAcked((v) => !v)}
-      />
+      <AckedDisclosure count={ackedItems.length} open={showAcked} onToggle={() => setShowAcked((v) => !v)} />
       {showAcked && ackedItems.map((item) => <AlertItemRow key={item.id} alert={item} />)}
     </>
   );
@@ -442,9 +401,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
   }
 
   // Nhóm còn alert cần xử lý → mở sẵn; nhóm chỉ toàn alert đã ack → đóng.
-  const defaultOpen = groups
-    .filter((g) => g.items.some((it) => it.status === OpsAlertStatus.New))
-    .map((g) => g.type);
+  const defaultOpen = groups.filter((g) => g.items.some((it) => it.status === OpsAlertStatus.New)).map((g) => g.type);
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
@@ -455,9 +412,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Cảnh báo vận hành</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Gộp theo loại · Ack từng cảnh báo
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Gộp theo loại · Ack từng cảnh báo</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -472,17 +427,12 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                 <AccordionTrigger className="py-3 hover:no-underline">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span className={cn("size-2 rounded-full shrink-0", accent.dot)} />
-                    {isCritical && activeCount > 0 && (
-                      <AlertTriangle className="size-3.5 text-red-500 shrink-0" />
-                    )}
+                    {isCritical && activeCount > 0 && <AlertTriangle className="size-3.5 text-red-500 shrink-0" />}
                     <span className="text-sm font-semibold truncate">
                       {LOTTO535_OPS_ALERT_TYPE_LABELS[g.type] ?? g.type}
                     </span>
                     {/* Badge đếm CHỈ alert cần xử lý — khớp badge header (mới/critical). */}
-                    <Badge
-                      variant={activeCount > 0 ? "secondary" : "outline"}
-                      className="tabular-nums shrink-0"
-                    >
+                    <Badge variant={activeCount > 0 ? "secondary" : "outline"} className="tabular-nums shrink-0">
                       {formatNumber(activeCount)}
                     </Badge>
                     {activeCount > 0 && (

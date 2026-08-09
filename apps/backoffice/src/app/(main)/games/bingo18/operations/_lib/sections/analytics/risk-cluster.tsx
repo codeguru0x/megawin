@@ -75,9 +75,7 @@ export function RiskCluster({
                       username={a.username}
                       className="text-xs"
                     />
-                    <p className="text-[10px] tabular-nums text-muted-foreground">
-                      {formatNumber(a.entries)} phiếu
-                    </p>
+                    <p className="text-[10px] tabular-nums text-muted-foreground">{formatNumber(a.entries)} phiếu</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
                     {formatNumber(a.amount)}
@@ -99,9 +97,7 @@ export function RiskCluster({
               </div>
               <div>
                 <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Worst-case per vé — chính xác trên 216 kết quả
-                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Worst-case per vé — chính xác trên 216 kết quả</p>
               </div>
             </div>
           </CardHeader>
@@ -109,10 +105,7 @@ export function RiskCluster({
             <div className="divide-y divide-border/40">
               {topPotential.slice(0, VISIBLE_ROWS).map((p, i) => (
                 <div key={p.entryId} className="flex items-center gap-2.5 py-2">
-                  <RankBadge
-                    rank={i + 1}
-                    topClass="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                  />
+                  <RankBadge rank={i + 1} topClass="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" />
                   <div className="min-w-0 flex-1">
                     <PlayerOutstandingLink
                       gameProduct={GameProduct.Bingo18}
@@ -121,9 +114,7 @@ export function RiskCluster({
                       username={p.username}
                       className="text-xs"
                     />
-                    <p className="text-[10px] tabular-nums text-muted-foreground">
-                      Cược {formatNumber(p.amount)}
-                    </p>
+                    <p className="text-[10px] tabular-nums text-muted-foreground">Cược {formatNumber(p.amount)}</p>
                   </div>
                   <span className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold tabular-nums text-red-700 dark:text-red-300">
                     Phải trả {formatNumber(p.potentialWin)}

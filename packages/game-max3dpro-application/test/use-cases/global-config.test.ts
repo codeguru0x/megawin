@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
-import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
 import { GameConfigScope } from "@megawin/game-core/entities";
+import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 
 describe("GameConfigRepository – Global Config (Max 3D Pro)", () => {
@@ -23,39 +24,21 @@ describe("GameConfigRepository – Global Config (Max 3D Pro)", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.rates).toBeDefined();
-    expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.rates.defaultCommissionRate).toBe(DEFAULT_MAX3D_PRO_CONFIG.rates.defaultCommissionRate);
   });
 
   it("global config có đầy đủ default prizes – standard", async () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.defaultPrizes).toBeDefined();
-    expect(config!.defaultPrizes.standard.special).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.special,
-    );
-    expect(config!.defaultPrizes.standard.specialSub).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.specialSub,
-    );
-    expect(config!.defaultPrizes.standard.first).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.first,
-    );
-    expect(config!.defaultPrizes.standard.second).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.second,
-    );
-    expect(config!.defaultPrizes.standard.third).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.third,
-    );
-    expect(config!.defaultPrizes.standard.fourth).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.fourth,
-    );
-    expect(config!.defaultPrizes.standard.fifth).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.fifth,
-    );
-    expect(config!.defaultPrizes.standard.sixth).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.sixth,
-    );
+    expect(config!.defaultPrizes.standard.special).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.special);
+    expect(config!.defaultPrizes.standard.specialSub).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.specialSub);
+    expect(config!.defaultPrizes.standard.first).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.first);
+    expect(config!.defaultPrizes.standard.second).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.second);
+    expect(config!.defaultPrizes.standard.third).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.third);
+    expect(config!.defaultPrizes.standard.fourth).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.fourth);
+    expect(config!.defaultPrizes.standard.fifth).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.fifth);
+    expect(config!.defaultPrizes.standard.sixth).toBe(DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes.standard.sixth);
   });
 
   it("global config có đầy đủ play rules", async () => {
@@ -65,9 +48,7 @@ describe("GameConfigRepository – Global Config (Max 3D Pro)", () => {
     expect(config!.play.unitPrice).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.unitPrice);
     expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.maxBoardsPerTicket);
     expect(config!.play.maxDrawCount).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.maxDrawCount);
-    expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.salesCloseBeforeMinutes,
-    );
+    expect(config!.play.salesCloseBeforeMinutes).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.salesCloseBeforeMinutes);
     expect(config!.play.drawsPerDay).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.drawsPerDay);
     expect(config!.play.drawTimes).toEqual(DEFAULT_MAX3D_PRO_CONFIG.play.drawTimes);
     expect(config!.play.drawDaysOfWeek).toEqual([2, 4, 6]);

@@ -7,11 +7,12 @@
  * điểm chỉ có ở Max 3D Pro, và quy tắc duplicate đặc biệt (special + specialSub, KHÔNG × 2).
  */
 
-import { describe, it, expect } from "vitest";
-import { flattenDrawResult, matchPair } from "../../src/rules/prize-tiers";
-import { PrizeTier } from "../../src/entities/enums";
+import { describe, expect, it } from "vitest";
+
 import type { Max3dproDrawResult } from "../../src/entities/draw-result";
+import { PrizeTier } from "../../src/entities/enums";
 import type { PrizeAmounts } from "../../src/entities/types";
+import { flattenDrawResult, matchPair } from "../../src/rules/prize-tiers";
 
 const drawResult: Max3dproDrawResult = {
   special: ["096", "389"],
@@ -38,9 +39,7 @@ describe("matchPair", () => {
     const result = matchPair("096", "389", drawResult, prizes, flat);
     const tiers = result.wonTiers.map((t) => t.tier);
     expect(tiers).toContain(PrizeTier.Special);
-    expect(result.wonTiers.find((t) => t.tier === PrizeTier.Special)?.winAmount).toBe(
-      prizes.special,
-    );
+    expect(result.wonTiers.find((t) => t.tier === PrizeTier.Special)?.winAmount).toBe(prizes.special);
   });
 
   it("Đúng logic — NGƯỢC thứ tự quay (389,096) → Giải phụ ĐB (400 triệu), KHÔNG phải Giải ĐB", () => {
@@ -48,9 +47,7 @@ describe("matchPair", () => {
     const tiers = result.wonTiers.map((t) => t.tier);
     expect(tiers).toContain(PrizeTier.SpecialSub);
     expect(tiers).not.toContain(PrizeTier.Special);
-    expect(result.wonTiers.find((t) => t.tier === PrizeTier.SpecialSub)?.winAmount).toBe(
-      prizes.specialSub,
-    );
+    expect(result.wonTiers.find((t) => t.tier === PrizeTier.SpecialSub)?.winAmount).toBe(prizes.specialSub);
   });
 
   it("Đúng logic — duplicate trúng ĐB (096,096) với Special=[096,096] → winAmount = special + specialSub, KHÔNG phải special×2", () => {

@@ -103,7 +103,7 @@ export function formatVNDCompact(amount: number | undefined | null): string {
  * formatPercent(-3.14, 2)      → "-3.14%"
  * formatPercent(undefined)     → "0.0%"
  */
-export function formatPercent(value: number | undefined | null, decimals: number = 1): string {
+export function formatPercent(value: number | undefined | null, decimals = 1): string {
   return `${(value ?? 0).toFixed(decimals)}%`;
 }
 

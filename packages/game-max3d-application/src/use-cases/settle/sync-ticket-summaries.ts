@@ -18,9 +18,10 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { ObjectId } from "mongodb";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { ObjectId } from "mongodb";
 
 const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
@@ -35,10 +36,7 @@ export interface DrawSyncInput {
   drawId: string;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<
-  DrawSyncInput,
-  SyncTicketSummariesResult
-> {
+export class SyncTicketSummariesUseCase extends InternalUseCase<DrawSyncInput, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

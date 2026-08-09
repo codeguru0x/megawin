@@ -13,10 +13,7 @@
  * @output FinalizeSettleResult
  */
 
-import {
-  FinalizeSettleUseCase,
-  type SettleContext,
-} from "@megawin/game-max3dpro-application/use-cases/settle";
+import { FinalizeSettleUseCase, type SettleContext } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new FinalizeSettleUseCase();
 

@@ -9,13 +9,13 @@
 
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type {
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  PlayType,
   Power655DrawBettingStatsEntity,
   Power655DrawNumberStatsEntity,
   Power655OpsAlertEntity,
   Power655OpsAlertType,
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  PlayType,
   TopAccountStat,
 } from "@megawin/game-power655/entities";
 

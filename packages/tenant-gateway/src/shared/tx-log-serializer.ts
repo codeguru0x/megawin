@@ -31,18 +31,14 @@ const TRUNCATE_PREFIX_LEN = 8_000;
  * `responsePayload` chỉ stringify khi caller truyền khác `undefined` — giữ
  * semantics "không có response" rõ ràng (timeout / network error).
  */
-export function buildTxLogInsertDoc(
-  input: Omit<TxLogInput, "createdAt">,
-  createdAt: Date,
-): TxLogInsertDoc {
+export function buildTxLogInsertDoc(input: Omit<TxLogInput, "createdAt">, createdAt: Date): TxLogInsertDoc {
   return {
     eventType: input.eventType,
     tx: input.tx,
     batchId: input.batchId,
     tenantId: input.tenantId,
     requestPayload: capPayload(input.requestPayload),
-    responsePayload:
-      input.responsePayload !== undefined ? capPayload(input.responsePayload) : undefined,
+    responsePayload: input.responsePayload !== undefined ? capPayload(input.responsePayload) : undefined,
     status: input.status,
     error: input.error,
     createdAt,

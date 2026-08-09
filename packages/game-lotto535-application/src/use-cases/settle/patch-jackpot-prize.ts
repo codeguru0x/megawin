@@ -55,10 +55,11 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
 import type { SettleContext } from "./types";
 
 export interface PatchJackpotPrizeResult {
@@ -68,10 +69,7 @@ export interface PatchJackpotPrizeResult {
   winners: JackpotWinnerInfo[];
 }
 
-export class PatchJackpotPrizeUseCase extends InternalUseCase<
-  SettleContext,
-  PatchJackpotPrizeResult
-> {
+export class PatchJackpotPrizeUseCase extends InternalUseCase<SettleContext, PatchJackpotPrizeResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
   private readonly drawRepo = new DrawRepository();

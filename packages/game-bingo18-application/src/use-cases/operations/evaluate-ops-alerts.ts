@@ -31,19 +31,16 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import { TickLoopWorker } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
+import type { Bingo18DrawBettingStatsEntity, OpsAlertsConfig } from "@megawin/game-bingo18/entities";
 import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
-import { computeBingo18Exposure } from "@megawin/game-bingo18/rules";
-import type {
-  Bingo18DrawBettingStatsEntity,
-  OpsAlertsConfig,
-} from "@megawin/game-bingo18/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { computeBingo18Exposure, DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateBingo18Alerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -74,7 +71,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
+  protected override readonly description =
     "Bingo 18 — đánh giá cảnh báo vận hành (ngưỡng exposure/skew/bucket) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -92,7 +89,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "bingo18:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     // Doc cũ (trước khi thêm section ops) chưa có field → fallback default.
     const ops = config.ops ?? DEFAULT_BINGO18_CONFIG.ops;

@@ -10,8 +10,8 @@
  * @output SettleFinancials
  */
 
-import { CalculateFinancialsUseCase } from "@megawin/game-power655-application/use-cases/settle";
 import type { SettleContext } from "@megawin/game-power655-application/use-cases/settle";
+import { CalculateFinancialsUseCase } from "@megawin/game-power655-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 

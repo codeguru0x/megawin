@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  CircleCheckIcon,
-  CircleXIcon,
-  InfoIcon,
-  Loader2Icon,
-  TriangleAlertIcon,
-} from "lucide-react";
+import { CircleCheckIcon, CircleXIcon, InfoIcon, Loader2Icon, TriangleAlertIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
@@ -40,14 +34,12 @@ function MegawinToaster(props: ToasterProps) {
       }}
       toastOptions={{
         classNames: {
-          toast:
-            "!rounded-lg !shadow-lg !border !py-3.5 !px-4 !gap-3 !items-start",
+          toast: "!rounded-lg !shadow-lg !border !py-3.5 !px-4 !gap-3 !items-start",
           title: "!text-sm !font-semibold !leading-snug",
           description: "!text-xs !leading-relaxed !mt-0.5",
           icon: "!mt-0.5 !mr-0",
           actionButton: "!text-xs !font-medium !rounded-md !px-3 !py-1.5",
-          closeButton:
-            "!border-0 !bg-transparent !opacity-60 hover:!opacity-100 !transition-opacity",
+          closeButton: "!border-0 !bg-transparent !opacity-60 hover:!opacity-100 !transition-opacity",
         },
       }}
       style={

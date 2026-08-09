@@ -32,9 +32,10 @@
  * ```
  */
 
-import { createTenantGatewayClient, type TenantGatewayClient } from "./client";
-import { tenantCallbackConfigCache } from "./caches";
 import { logWarn } from "@megawin/shared/utils";
+
+import { tenantCallbackConfigCache } from "./caches";
+import { createTenantGatewayClient, type TenantGatewayClient } from "./client";
 
 /**
  * Timeout cho mỗi HTTP request tới tenant gateway (ms).

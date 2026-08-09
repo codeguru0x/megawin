@@ -26,11 +26,12 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { sumBy } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { SettleContext } from "./types";
-import { sumBy } from "@megawin/shared/utils";
 
 export interface BuildSettleReportResult {
   /** Mã kỳ quay. */
@@ -49,10 +50,7 @@ export interface BuildSettleReportResult {
  * Bingo 18 KHÔNG có Jackpot: KHÔNG có field jackpotContribution.
  * companyTake = financials.companyTake (toàn bộ profit sau prizes + commission).
  */
-export class BuildSettleReportUseCase extends InternalUseCase<
-  SettleContext,
-  BuildSettleReportResult
-> {
+export class BuildSettleReportUseCase extends InternalUseCase<SettleContext, BuildSettleReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawReportRepo = new SettleDrawReportRepository();
   private readonly tenantReportRepo = new SettleTenantReportRepository();
@@ -70,9 +68,7 @@ export class BuildSettleReportUseCase extends InternalUseCase<
     ]);
 
     // Map playerCount per tenantId để merge vào tenant reports
-    const playerCountMap = new Map<string, number>(
-      playerAggs.map((p) => [p.tenantId, p.playerCount]),
-    );
+    const playerCountMap = new Map<string, number>(playerAggs.map((p) => [p.tenantId, p.playerCount]));
 
     // ── Bước 2: Upsert SettleTenantReport[] ─────────────────────────────────
     // Bingo 18 KHÔNG có lineCount — bỏ qua lineCount trong tenant reports

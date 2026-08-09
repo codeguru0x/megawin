@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { ListEntryBreakdownInput, ListEntryBreakdownOutput } from "./types";
 
@@ -7,10 +8,7 @@ import type { ListEntryBreakdownInput, ListEntryBreakdownOutput } from "./types"
  *
  * Trả TicketEntryDoc thô để UI hiển thị chi tiết bộ ba, giải trúng.
  */
-export class ListEntryBreakdownUseCase extends NextApiUseCase<
-  ListEntryBreakdownInput,
-  ListEntryBreakdownOutput
-> {
+export class ListEntryBreakdownUseCase extends NextApiUseCase<ListEntryBreakdownInput, ListEntryBreakdownOutput> {
   private readonly repo = new EntryRepository();
 
   protected async execute(input: ListEntryBreakdownInput): Promise<ListEntryBreakdownOutput> {

@@ -18,21 +18,23 @@
  */
 
 import type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 } from "@megawin/game-core/types";
+
 import type { PlayType } from "./enums";
+
 export type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 };
 
 /** Thống kê tiền/bộ cược của 1 kiểu chơi (standard hoặc 1 loại Bao). */
@@ -120,8 +122,7 @@ export interface Mega645TopPotential {
  * tạm (có thể mở bán lại) — đóng dấu ở đây thì cược sau khi mở lại không bao giờ
  * được cộng.
  */
-export interface Mega645DrawBettingStatsDoc
-  extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
+export interface Mega645DrawBettingStatsDoc extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
   /** MongoDB ObjectId. */
   _id: unknown;
 

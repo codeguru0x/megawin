@@ -7,7 +7,7 @@ import type {
   TenantBettingStat,
 } from "@megawin/game-lotto535/entities";
 import { Lotto535StatsPlayKey } from "@megawin/game-lotto535/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `lotto535_draw_betting_stats` → entity, NORMALIZE shape phía đọc.
@@ -52,9 +52,7 @@ function normalizeTotals(raw: Partial<DrawBettingTotals> | undefined): DrawBetti
 }
 
 /** 1 slot `Lotto535PlayTypeStat` — merge field CÓ trong doc lên nền zero-stat. */
-function normalizePlayTypeStat(
-  raw: Partial<Lotto535PlayTypeStat> | undefined,
-): Lotto535PlayTypeStat {
+function normalizePlayTypeStat(raw: Partial<Lotto535PlayTypeStat> | undefined): Lotto535PlayTypeStat {
   return {
     amount: raw?.amount ?? 0,
     sets: raw?.sets ?? 0,

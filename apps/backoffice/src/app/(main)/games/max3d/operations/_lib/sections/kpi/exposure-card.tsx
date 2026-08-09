@@ -19,17 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-function ComponentStat({
-  label,
-  value,
-  tip,
-  danger,
-}: {
-  label: string;
-  value: number;
-  tip: string;
-  danger?: boolean;
-}) {
+function ComponentStat({ label, value, tip, danger }: { label: string; value: number; tip: string; danger?: boolean }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -87,9 +77,7 @@ export function ExposureCard({
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Worst-case tổng</p>
-            <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">
-              {formatNumber(worst)}
-            </p>
+            <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">{formatNumber(worst)}</p>
           </div>
         </div>
 
@@ -127,8 +115,7 @@ export function ExposureCard({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[11px] tabular-nums text-muted-foreground">
             <span>
-              Worst-case / Ngưỡng:{" "}
-              <span className="font-semibold text-foreground">{Math.round(ratio * 100)}%</span>
+              Worst-case / Ngưỡng: <span className="font-semibold text-foreground">{Math.round(ratio * 100)}%</span>
             </span>
             <span>Ngưỡng cảnh báo {formatNumber(warnAmount)} VND</span>
           </div>

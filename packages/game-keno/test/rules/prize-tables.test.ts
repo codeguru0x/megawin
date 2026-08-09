@@ -7,7 +7,8 @@
  * từ `DEFAULT_KENO_CONFIG` (đã có coverage riêng ở game-keno-application).
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { lookupBasicPrize } from "../../src/rules/prize-tables";
 
 const fixturePrizeTable: Record<string, Record<string, number>> = {

@@ -15,14 +15,14 @@
  * Overlap ở cold-start giữa 2 invocation được lock phủ tiếp.
  */
 
-import { ProcessDispatchBatchBaseUseCase } from "./process-dispatch-batch";
-import type { PendingDispatchOrder } from "../../infras/repos/types";
 import {
   DISPATCH_MAIN_LOCK_KEY,
   DISPATCH_MAIN_LOCK_TTL_SECONDS,
   DISPATCH_MAIN_MAX_EXECUTION_MS,
   DISPATCH_MAIN_QUERY_LIMIT,
 } from "../../config";
+import type { PendingDispatchOrder } from "../../infras/repos/types";
+import { ProcessDispatchBatchBaseUseCase } from "./process-dispatch-batch";
 
 export class ProcessMainDispatchBatchUseCase extends ProcessDispatchBatchBaseUseCase {
   protected readonly ttlSeconds = DISPATCH_MAIN_LOCK_TTL_SECONDS;

@@ -15,6 +15,7 @@
 
 import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-keno/entities";
 import { KENO_SETTLE_DRAW_REPORTS } from "@megawin/game-keno/entities";
+
 import { SettleDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { DrawSummaryResult } from "./types";
@@ -24,10 +25,7 @@ import type { DrawSummaryResult } from "./types";
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<
-  SettleDrawReportEntity,
-  SettleDrawReportMapper
-> {
+export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
   constructor() {
     super({
       collName: KENO_SETTLE_DRAW_REPORTS,

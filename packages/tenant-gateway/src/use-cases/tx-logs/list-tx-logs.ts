@@ -9,13 +9,13 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { Pagination } from "@megawin/shared/constants/pagination";
-import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
+import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
+import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
-import type { TxLogStatus, TxLogEventType } from "../../entities/enums";
+import type { TxLogEventType, TxLogStatus } from "../../entities/enums";
 import type { TxLogEntity } from "../../entities/tx-log";
-import { TxLogRepository, type ListTxLogsResult } from "../../infras/repos";
+import { type ListTxLogsResult, TxLogRepository } from "../../infras/repos";
 
 /** Date-only format `YYYY-MM-DD` — không chứa ký tự `T`. */
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -68,10 +68,7 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
 
     // Range search: yêu cầu from + to, validate window.
     if (!input.from || !input.to) {
-      throw new AppException(
-        APP_ERROR_CODES.VALIDATION,
-        "Phải cung cấp từ & đến khi không search theo tx",
-      );
+      throw new AppException(APP_ERROR_CODES.VALIDATION, "Phải cung cấp từ & đến khi không search theo tx");
     }
 
     const from = this.parseBoundary(input.from, "start");
@@ -146,10 +143,7 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
 
     const maxLookbackMs = MAX_LOOKBACK_DAYS * msPerDay;
     if (Date.now() - from.getTime() > maxLookbackMs) {
-      throw new AppException(
-        APP_ERROR_CODES.VALIDATION,
-        `Chỉ tra cứu trong ${MAX_LOOKBACK_DAYS} ngày gần nhất`,
-      );
+      throw new AppException(APP_ERROR_CODES.VALIDATION, `Chỉ tra cứu trong ${MAX_LOOKBACK_DAYS} ngày gần nhất`);
     }
   }
 

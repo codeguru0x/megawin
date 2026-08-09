@@ -1,12 +1,9 @@
+import { adminUpdateMfa, adminVerifySoftwareToken, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import type { AuditActor } from "@megawin/audit/logger";
+import { MfaStatus } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  adminVerifySoftwareToken,
-  adminUpdateMfa,
-  COGNITO_WORKFORCE_POOL_ID,
-} from "@megawin/app-core/aws/cognito";
-import { MfaStatus } from "@megawin/identity/entities";
-import type { AuditActor } from "@megawin/audit/logger";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 import { auditEnableMfa } from "../../services/audit-log";
 
@@ -22,10 +19,7 @@ export interface VerifyAndEnableMfaOutput {
   success: boolean;
 }
 
-export class VerifyAndEnableMfaUseCase extends NextApiUseCase<
-  VerifyAndEnableMfaInput,
-  VerifyAndEnableMfaOutput
-> {
+export class VerifyAndEnableMfaUseCase extends NextApiUseCase<VerifyAndEnableMfaInput, VerifyAndEnableMfaOutput> {
   protected async execute(input: VerifyAndEnableMfaInput): Promise<VerifyAndEnableMfaOutput> {
     if (!COGNITO_WORKFORCE_POOL_ID) {
       throw AppException.internal("Cognito pool configuration is missing");
@@ -47,14 +41,10 @@ export class VerifyAndEnableMfaUseCase extends NextApiUseCase<
       const errName = error instanceof Error ? error.constructor.name : "UnknownError";
 
       if (errName === "EnableSoftwareTokenMFAException" || errName === "CodeMismatchException") {
-        throw AppException.badRequest(
-          "Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.",
-        );
+        throw AppException.badRequest("Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.");
       }
 
-      throw AppException.internal(
-        `Xác thực MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw AppException.internal(`Xác thực MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     await adminUpdateMfa({

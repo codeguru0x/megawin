@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { EntryOutstandingRepository } from "../../infras/repos/entry-outstanding-repo";
 import type { ListOutstandingDrawTenantsInput, ListOutstandingDrawTenantsOutput } from "./types";
 
@@ -15,9 +16,7 @@ export class ListOutstandingDrawTenantsUseCase extends NextApiUseCase<
 > {
   private readonly repo = new EntryOutstandingRepository();
 
-  protected async execute(
-    input: ListOutstandingDrawTenantsInput,
-  ): Promise<ListOutstandingDrawTenantsOutput> {
+  protected async execute(input: ListOutstandingDrawTenantsInput): Promise<ListOutstandingDrawTenantsOutput> {
     const data = await this.repo.aggregateTenantsByDraw(input.drawId);
     return { data };
   }

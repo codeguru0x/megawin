@@ -6,10 +6,11 @@
  */
 
 import {
-  SystemSettleTenantDailyRepository,
   type SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { MAX3DPRO_SETTLE_TENANT_REPORTS } from "@megawin/game-max3dpro/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyRepository {
@@ -17,9 +18,7 @@ export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyReposito
     collName: MAX3DPRO_SETTLE_TENANT_REPORTS,
   });
 
-  async aggregateTenantsFromPerGame(
-    financialDate: string,
-  ): Promise<SettleTenantDailyAggregateResult[]> {
+  async aggregateTenantsFromPerGame(financialDate: string): Promise<SettleTenantDailyAggregateResult[]> {
     const result = await this.perGameColl.aggregate([
       { $match: { financialDate } },
       {

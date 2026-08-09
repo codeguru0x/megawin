@@ -17,18 +17,13 @@
  * 4. Audit/đối soát: `listByCycle(cycleNo)` → toàn bộ kỳ trong cycle.
  */
 
-import type {
-  JackpotCycleEntryDoc,
-  JackpotCycleEntryEntity,
-} from "@megawin/game-lotto535/entities";
+import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-lotto535/entities";
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import { BaseRepo } from "./base-repo";
-import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
 
-export class JackpotCycleEntryRepository extends BaseRepo<
-  JackpotCycleEntryEntity,
-  JackpotCycleEntryMapper
-> {
+import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
+import { BaseRepo } from "./base-repo";
+
+export class JackpotCycleEntryRepository extends BaseRepo<JackpotCycleEntryEntity, JackpotCycleEntryMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.JackpotCycleEntries,
@@ -42,10 +37,7 @@ export class JackpotCycleEntryRepository extends BaseRepo<
    * `opening` mặc định `$setOnInsert` (bất biến). Cascade B2: `allowOpeningUpdate=true`
    * chuyển `opening` sang `$set` để ghi đè sau khi closing kỳ trước đổi.
    */
-  async upsertEntry(
-    entry: Omit<JackpotCycleEntryDoc, "_id" | "updatedAt">,
-    allowOpeningUpdate = false,
-  ): Promise<void> {
+  async upsertEntry(entry: Omit<JackpotCycleEntryDoc, "_id" | "updatedAt">, allowOpeningUpdate = false): Promise<void> {
     const { cycleNo, drawId, drawNo, seq, opening, ...mutable } = entry;
 
     await this.updateOne(

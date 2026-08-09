@@ -10,8 +10,8 @@
  */
 
 import {
-  PrepareResettleUseCase,
   type PrepareResettleInput,
+  PrepareResettleUseCase,
 } from "@megawin/game-mega645-application/use-cases/resettle";
 
 const useCase = new PrepareResettleUseCase();

@@ -5,10 +5,9 @@
  * Schemas đặc thù cho 1 handler → inline trong handler file đó.
  */
 
-import { z } from "zod";
-
-import { Pagination, OBJECT_ID_REGEX } from "@megawin/shared/constants";
+import { OBJECT_ID_REGEX, Pagination } from "@megawin/shared/constants";
 import { alphaLabelSequence } from "@megawin/shared/utils";
+import { z } from "zod";
 
 // ─── Primitives ───
 
@@ -19,9 +18,7 @@ export const objectIdSchema = z.string().regex(OBJECT_ID_REGEX, "Invalid ID form
 export const sizeSchema = z
   .string()
   .default(String(Pagination.Default.Size))
-  .transform((v) =>
-    Math.min(Pagination.Max.Size, Math.max(1, parseInt(v, 10) || Pagination.Default.Size)),
-  );
+  .transform((v) => Math.min(Pagination.Max.Size, Math.max(1, parseInt(v, 10) || Pagination.Default.Size)));
 
 // ─── Composed shared schemas ───
 
@@ -58,9 +55,7 @@ export const lineCursorQuerySchema = z.object({
  *
  * @param validBoardNos Mảng boardNo hợp lệ theo thứ tự chuẩn của từng game.
  */
-export function boardsOrderRefine(
-  validBoardNos: readonly string[],
-): (boards: Array<{ boardNo: string }>) => boolean {
+export function boardsOrderRefine(validBoardNos: readonly string[]): (boards: Array<{ boardNo: string }>) => boolean {
   return (boards) => boards.every((board, i) => board.boardNo === validBoardNos[i]);
 }
 

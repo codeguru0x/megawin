@@ -1,10 +1,11 @@
-import { KenoCollections } from "@megawin/game-keno/entities";
-import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
-import { BaseRepo } from "./base-repo";
-import { TicketMapper } from "../mappers/ticket-mapper";
+import { ALL_LISTABLE_STATUSES, TicketStatus } from "@megawin/game-core/entities";
 import type { TicketEntity } from "@megawin/game-keno/entities";
+import { KenoCollections } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
+
+import { TicketMapper } from "../mappers/ticket-mapper";
+import { BaseRepo } from "./base-repo";
 
 /** Aggregate summary từ entries, dùng để sync lại ticket document. */
 export interface TicketSummary {
@@ -133,9 +134,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    * Dùng conditional filter: chỉ ghi nếu processedCount mới >= cũ.
    * Idempotent + race-safe.
    */
-  async bulkSyncSummaries(
-    items: Array<{ ticketId: string; summary: TicketSummary }>,
-  ): Promise<number> {
+  async bulkSyncSummaries(items: Array<{ ticketId: string; summary: TicketSummary }>): Promise<number> {
     if (items.length === 0) return 0;
 
     const now = new Date();
@@ -148,11 +147,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       // isCompleted: tất cả kỳ đã xử lý xong (settled + voided >= totalDraws) → Completed.
       const isAllVoided = voidedCount === totalDraws && settledCount === 0;
       const isCompleted = processedCount >= totalDraws;
-      const status = isAllVoided
-        ? TicketStatus.Refunded
-        : isCompleted
-          ? TicketStatus.Completed
-          : undefined;
+      const status = isAllVoided ? TicketStatus.Refunded : isCompleted ? TicketStatus.Completed : undefined;
 
       const $set = {
         "progress.settledDraws": processedCount,

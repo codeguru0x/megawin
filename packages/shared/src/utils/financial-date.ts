@@ -23,6 +23,7 @@
 
 import { TZDate } from "@date-fns/tz";
 import { format, subDays } from "date-fns";
+
 import { VN_UTC_OFFSET } from "./date";
 
 const DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh";
@@ -42,10 +43,7 @@ const FINANCIAL_DATE_FORMAT = "yyyy-MM-dd";
  * @param timezone - IANA timezone. Mặc định = "Asia/Ho_Chi_Minh".
  * @returns Ngày tài chính dạng "YYYY-MM-DD".
  */
-export function getFinancialDate(
-  date: Date | string = new Date(),
-  timezone: string = DEFAULT_TIMEZONE,
-): string {
+export function getFinancialDate(date: Date | string = new Date(), timezone: string = DEFAULT_TIMEZONE): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const tzDate = new TZDate(d, timezone);
   const hour = tzDate.getHours();
@@ -105,4 +103,4 @@ export function isInFinancialDate(
   return d >= start && d < end;
 }
 
-export { FINANCIAL_DAY_START_HOUR, DEFAULT_TIMEZONE as FINANCIAL_TIMEZONE };
+export { DEFAULT_TIMEZONE as FINANCIAL_TIMEZONE, FINANCIAL_DAY_START_HOUR };

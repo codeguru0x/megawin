@@ -111,4 +111,3 @@ export interface ReversalEntryForDispatch {
   /** Idempotency key cho reversal dispatch (UUIDv7). */
   reversalTx: string;
 }
-

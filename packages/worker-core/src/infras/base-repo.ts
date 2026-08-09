@@ -1,5 +1,5 @@
-import { SharedRepo } from "@megawin/data/mongo";
 import type { BaseEntity, MongoMapper } from "@megawin/data/mongo";
+import { SharedRepo } from "@megawin/data/mongo";
 import type { Document } from "mongodb";
 
 /**

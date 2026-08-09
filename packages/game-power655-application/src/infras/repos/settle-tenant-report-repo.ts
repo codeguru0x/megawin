@@ -14,8 +14,9 @@
 
 import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-power655/entities";
 import { POWER655_SETTLE_TENANT_REPORTS } from "@megawin/game-power655/entities";
-import { BaseRepo } from "./base-repo";
+
 import { SettleTenantReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";
 
 /**
@@ -34,9 +35,7 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
    * Dùng bulkWrite để giảm số lần round-trip DB.
    * Idempotent: chạy lại overwrite.
    */
-  async upsertTenantReports(
-    reports: Omit<SettleTenantReport, "createdAt" | "updatedAt">[],
-  ): Promise<void> {
+  async upsertTenantReports(reports: Omit<SettleTenantReport, "createdAt" | "updatedAt">[]): Promise<void> {
     if (reports.length === 0) return;
     const now = new Date();
     const ops = reports.map((report) => ({

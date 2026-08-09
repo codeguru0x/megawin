@@ -1,6 +1,7 @@
 import type { TicketDoc, TicketEntryDoc } from "@megawin/game-bingo18/entities";
-import { TicketRepository } from "./ticket-repo";
+
 import { EntryRepository } from "./entry-repo";
+import { TicketRepository } from "./ticket-repo";
 
 /**
  * Atomic write coordinator cho place-bet — Bingo 18.
@@ -26,10 +27,7 @@ export class PlaceBetStore {
    *
    * version được stamp cho toàn bộ batch entries trước khi insert.
    */
-  async saveAtomically(
-    ticketDoc: TicketDoc,
-    entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">>,
-  ): Promise<void> {
+  async saveAtomically(ticketDoc: TicketDoc, entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">>): Promise<void> {
     if (entryDocs.length === 0) {
       throw new Error("entryDocs must not be empty.");
     }

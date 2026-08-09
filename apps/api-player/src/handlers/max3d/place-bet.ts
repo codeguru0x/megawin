@@ -10,17 +10,16 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
-import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
-import { max3dTripletSchema, max3dDrawIdSchema } from "@megawin/game-max3d/schemas";
-import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
+import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
+import { max3dDrawIdSchema, max3dTripletSchema } from "@megawin/game-max3d/schemas";
+import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
+import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───
@@ -48,19 +47,12 @@ const max3dPlusBoardSchema = z.object({
   betCount: z.number().int().min(1).default(1),
 });
 
-export const max3dBoardSchema = z.discriminatedUnion("playMode", [
-  max3dBasicBoardSchema,
-  max3dPlusBoardSchema,
-]);
+export const max3dBoardSchema = z.discriminatedUnion("playMode", [max3dBasicBoardSchema, max3dPlusBoardSchema]);
 
 // ─── Place bet body schema ───
 
 export const max3dPlaceBetBodySchema = z.object({
-  drawIds: z
-    .array(max3dDrawIdSchema)
-    .min(1)
-    .max(6)
-    .refine(isUnique, { message: "Các drawId không được trùng lặp." }),
+  drawIds: z.array(max3dDrawIdSchema).min(1).max(6).refine(isUnique, { message: "Các drawId không được trùng lặp." }),
   boards: z.array(max3dBoardSchema).min(1).max(MAX3D_MAX_BOARDS).refine(boardsSequentialRefine(), {
     message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
   }),

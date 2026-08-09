@@ -158,12 +158,7 @@ function isRetryable(err: unknown, statuses: Set<number>): boolean {
  */
 export async function withRetry<T>(fn: () => Promise<T>, config: RetryConfig | number): Promise<T> {
   const resolved = typeof config === "number" ? { maxRetries: config } : config;
-  const {
-    maxRetries,
-    baseDelay = DEFAULT_BASE_DELAY_MS,
-    retryableStatuses,
-    onRetry,
-  } = resolved;
+  const { maxRetries, baseDelay = DEFAULT_BASE_DELAY_MS, retryableStatuses, onRetry } = resolved;
 
   const statusSet = retryableStatuses ? new Set(retryableStatuses) : DEFAULT_RETRYABLE_STATUSES;
 
@@ -185,7 +180,7 @@ export async function withRetry<T>(fn: () => Promise<T>, config: RetryConfig | n
 
       // Exponential backoff + jitter ±30%.
       // Range: [delay × 0.7, delay × 1.3] — phân tán requests tránh thundering herd.
-      const delay = baseDelay * Math.pow(2, attempt);
+      const delay = baseDelay * 2 ** attempt;
       const jitter = delay * 0.3 * (Math.random() * 2 - 1);
       await new Promise((r) => setTimeout(r, delay + jitter));
     }

@@ -28,19 +28,17 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
+import type { Mega645DrawBettingStatsEntity, Mega645OpsAlertsConfig } from "@megawin/game-mega645/entities";
 import { Mega645OpsAlertType } from "@megawin/game-mega645/entities";
-import type {
-  Mega645DrawBettingStatsEntity,
-  Mega645OpsAlertsConfig,
-} from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -68,7 +66,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
+  protected override readonly description =
     "Mega 6/45 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/bao) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -87,7 +85,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "mega645:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.alertCtx = {
       // Cùng lý do merge-default ở sync worker — doc GlobalConfig cũ (trước p0-01) có thể
@@ -96,8 +94,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
       unitPrice: config.play.unitPrice,
     };
 
-    this.tickMs =
-      (config.ops?.stats.tickSeconds ?? DEFAULT_MEGA645_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
+    this.tickMs = (config.ops?.stats.tickSeconds ?? DEFAULT_MEGA645_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
     this.counters = { evaluated: 0, alertsUpserted: 0 }; // reset — container reuse
 
     // Đọc cursor cũ từ lock doc — rỗng/không parse được → epoch (quét từ đầu).

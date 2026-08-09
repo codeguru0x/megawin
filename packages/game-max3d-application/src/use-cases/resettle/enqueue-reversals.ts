@@ -31,6 +31,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { buildResettleBatchKey } from "@megawin/game-core/utils";
 import { buildReversalOrder } from "@megawin/tenant-dispatch/builders";
 import { EnqueueDispatchOrdersUseCase } from "@megawin/tenant-dispatch/use-cases/enqueue";
+
 import { EntryResettleRepository } from "../../infras/repos/entry-resettle-repo";
 
 const BATCH_SIZE = 500;
@@ -55,10 +56,7 @@ export interface EnqueueReversalsOutput {
   lockKey: string;
 }
 
-export class EnqueueReversalsUseCase extends InternalUseCase<
-  EnqueueReversalsInput,
-  EnqueueReversalsOutput
-> {
+export class EnqueueReversalsUseCase extends InternalUseCase<EnqueueReversalsInput, EnqueueReversalsOutput> {
   private readonly entryResettleRepo = new EntryResettleRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 
@@ -67,12 +65,7 @@ export class EnqueueReversalsUseCase extends InternalUseCase<
 
     // Build batchKey qua helper centralize ở `@megawin/game-core/utils` —
     // single source of truth, đồng nhất với `payoutBatchKey` ở settle path.
-    const reversalBatchKey = buildResettleBatchKey(
-      GameProduct.Max3d,
-      drawId,
-      resettleId,
-      "reversal",
-    );
+    const reversalBatchKey = buildResettleBatchKey(GameProduct.Max3d, drawId, resettleId, "reversal");
 
     let cursor: string | undefined;
     let enqueuedTotal = 0;

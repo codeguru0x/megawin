@@ -5,10 +5,7 @@
  * Max 3D Pro không có Jackpot tích lũy → không load jackpot cycle.
  */
 
-import {
-  PrepareSettleUseCase,
-  type PrepareSettleInput,
-} from "@megawin/game-max3dpro-application/use-cases/settle";
+import { type PrepareSettleInput, PrepareSettleUseCase } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new PrepareSettleUseCase();
 

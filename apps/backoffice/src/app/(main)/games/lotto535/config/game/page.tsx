@@ -41,9 +41,7 @@ export default function Lotto535ConfigPage() {
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">
-            Lotto 5/35 — Cấu hình
-          </h1>
+          <h1 className="text-base font-semibold tracking-tight text-foreground">Lotto 5/35 — Cấu hình</h1>
           {config && (
             <p className="text-xs tabular-nums text-muted-foreground">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}

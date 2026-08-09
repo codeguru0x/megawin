@@ -80,14 +80,8 @@ function FeedRow({
     >
       <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
         <div className="flex min-w-0 items-center gap-1.5">
-          <div
-            className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")}
-          />
-          <span
-            className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}
-          >
-            {label}
-          </span>
+          <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
+          <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>{label}</span>
           {isLargeBet && (
             <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
               Cược lớn
@@ -120,9 +114,7 @@ function FeedRow({
           ) : null}
         </div>
         <div className="flex items-start justify-end">
-          <span className="text-xs font-semibold tabular-nums text-foreground">
-            {formatNumber(entry.amount)}
-          </span>
+          <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
         </div>
         <div className="min-w-0">
           <PlayerName username={entry.username} className="text-xs" />
@@ -154,21 +146,14 @@ function FeedColumn({
       <div className="mb-1.5 flex items-center gap-1.5">
         <Icon className="size-3.5 shrink-0 text-muted-foreground" />
         <span className="text-xs font-semibold text-muted-foreground">{title}</span>
-        <span className="text-[11px] tabular-nums text-muted-foreground/60">
-          {formatNumber(entries.length)}
-        </span>
+        <span className="text-[11px] tabular-nums text-muted-foreground/60">{formatNumber(entries.length)}</span>
       </div>
       <div className="max-h-[560px] space-y-0.5 overflow-y-auto pr-1">
         {entries.length === 0 ? (
           <p className="py-4 text-center text-xs text-muted-foreground/50">Chưa có cược</p>
         ) : (
           entries.map((e, i) => (
-            <FeedRow
-              key={e.entryId}
-              entry={e}
-              isFirst={i === 0}
-              largeBetThreshold={largeBetThreshold}
-            />
+            <FeedRow key={e.entryId} entry={e} isFirst={i === 0} largeBetThreshold={largeBetThreshold} />
           ))
         )}
       </div>
@@ -188,12 +173,8 @@ export function LiveFeed({
   /** Ngưỡng cược lớn (VND) từ `snapshot.thresholds` — 0 khi chưa load (không tô). */
   largeBetThreshold: number;
 }) {
-  const basicEntries = entries.filter(
-    (e) => !SIDE_PLAY_TYPES.has(e.playType.split("-")[0] ?? e.playType),
-  );
-  const sideEntries = entries.filter((e) =>
-    SIDE_PLAY_TYPES.has(e.playType.split("-")[0] ?? e.playType),
-  );
+  const basicEntries = entries.filter((e) => !SIDE_PLAY_TYPES.has(e.playType.split("-")[0] ?? e.playType));
+  const sideEntries = entries.filter((e) => SIDE_PLAY_TYPES.has(e.playType.split("-")[0] ?? e.playType));
 
   return (
     <Card className="@container/feed flex flex-col gap-0 py-0 shadow-sm">
@@ -201,9 +182,7 @@ export function LiveFeed({
         <div className="flex items-center gap-2">
           <Activity className="size-4 shrink-0 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
-          <span className="text-[11px] tabular-nums text-muted-foreground/60">
-            {formatNumber(totalCount)} phiếu
-          </span>
+          <span className="text-[11px] tabular-nums text-muted-foreground/60">{formatNumber(totalCount)} phiếu</span>
           {!isSettled && (
             <span className="ml-auto flex items-center gap-1 text-xs font-medium text-green-600">
               <span className="size-1.5 animate-pulse rounded-full bg-green-500" />
@@ -221,18 +200,8 @@ export function LiveFeed({
         ) : (
           // 2 cột lệch: Cơ bản rộng (1.7fr) | Bổ sung hẹp (1fr); stack dọc khi hẹp.
           <div className="grid gap-4 @[32rem]/feed:[grid-template-columns:1.7fr_1fr]">
-            <FeedColumn
-              icon={Activity}
-              title="Cơ bản"
-              entries={basicEntries}
-              largeBetThreshold={largeBetThreshold}
-            />
-            <FeedColumn
-              icon={Layers}
-              title="Bổ sung"
-              entries={sideEntries}
-              largeBetThreshold={largeBetThreshold}
-            />
+            <FeedColumn icon={Activity} title="Cơ bản" entries={basicEntries} largeBetThreshold={largeBetThreshold} />
+            <FeedColumn icon={Layers} title="Bổ sung" entries={sideEntries} largeBetThreshold={largeBetThreshold} />
           </div>
         )}
       </div>

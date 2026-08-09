@@ -22,11 +22,11 @@
  */
 
 import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
   BigSmallDrawPrizes,
+  DoubleMatchPrizes,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
 } from "@megawin/game-bingo18/entities";
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -15,14 +15,14 @@
  * Tách khỏi main lane để 2 lane chạy song song khi cần.
  */
 
-import { ProcessDispatchBatchBaseUseCase } from "./process-dispatch-batch";
-import type { PendingDispatchOrder } from "../../infras/repos/types";
 import {
   DISPATCH_RETRY_LOCK_KEY,
   DISPATCH_RETRY_LOCK_TTL_SECONDS,
   DISPATCH_RETRY_MAX_EXECUTION_MS,
   DISPATCH_RETRY_QUERY_LIMIT,
 } from "../../config";
+import type { PendingDispatchOrder } from "../../infras/repos/types";
+import { ProcessDispatchBatchBaseUseCase } from "./process-dispatch-batch";
 
 export class ProcessRetryDispatchBatchUseCase extends ProcessDispatchBatchBaseUseCase {
   protected readonly ttlSeconds = DISPATCH_RETRY_LOCK_TTL_SECONDS;

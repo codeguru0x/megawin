@@ -64,22 +64,22 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
-import { PrizeTier } from "@megawin/game-lotto535/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
-  TicketLineDoc,
+  Board,
   EntryBoardSnapshot,
   EntryPayout,
-  EntryResult,
   EntryPayoutTier,
-  Board,
+  EntryResult,
+  TicketLineDoc,
 } from "@megawin/game-lotto535/entities";
-import { expandAllBoards } from "@megawin/game-lotto535/helpers";
-import { matchLines, type DrawResultForMatch } from "@megawin/game-lotto535/helpers";
+import { PrizeTier } from "@megawin/game-lotto535/entities";
+import { type DrawResultForMatch, expandAllBoards, matchLines } from "@megawin/game-lotto535/helpers";
+import { generateId } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
-import { EntryOutcome } from "@megawin/game-core/entities";
 
 /** Số entries xử lý mỗi batch DB query. */
 const BATCH_SIZE = 500;
@@ -90,10 +90,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
@@ -257,10 +254,7 @@ function buildPayoutTiersFromLines(
   lineDocs: Array<Omit<TicketLineDoc, "_id">>,
   prizeAmounts: Record<string, number>,
 ): EntryPayoutTier[] {
-  const tierMap = new Map<
-    string,
-    { hitCount: number; betUnitCount: number; totalAmount: number }
-  >();
+  const tierMap = new Map<string, { hitCount: number; betUnitCount: number; totalAmount: number }>();
 
   for (const line of lineDocs) {
     const { tier, winAmount } = line.matchResult;

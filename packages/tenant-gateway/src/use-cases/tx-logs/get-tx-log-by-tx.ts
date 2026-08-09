@@ -28,10 +28,7 @@ export class GetTxLogByTxUseCase extends NextApiUseCase<GetTxLogByTxInput, GetTx
     }
     const log = await this.repo.findByTx(input.tx);
     if (!log) {
-      throw new AppException(
-        APP_ERROR_CODES.NOT_FOUND,
-        `Không tìm thấy transaction log cho tx=${input.tx}`,
-      );
+      throw new AppException(APP_ERROR_CODES.NOT_FOUND, `Không tìm thấy transaction log cho tx=${input.tx}`);
     }
     return { data: log };
   }

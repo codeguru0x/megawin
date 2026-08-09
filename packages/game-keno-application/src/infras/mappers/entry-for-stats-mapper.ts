@@ -10,6 +10,7 @@
  */
 
 import type { Document } from "mongodb";
+
 import type { EntryForStats } from "../repos/types";
 
 /** Map 1 raw entry doc (projection stats) → `EntryForStats`. */

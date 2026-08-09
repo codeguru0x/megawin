@@ -1,4 +1,5 @@
 import { MongoMapper } from "@megawin/data/mongo";
+
 import type { WorkerLockDoc, WorkerLockEntity } from "../../entities";
 
 /**

@@ -271,12 +271,7 @@ function NumberCell({
       <Tooltip>
         <TooltipTrigger asChild>
           {/* Bảng số LUÔN cho chọn → <button> (a11y: aria-pressed + keyboard native). */}
-          <button
-            type="button"
-            className={cellClass}
-            onClick={() => onToggle(n.number)}
-            aria-pressed={selected}
-          >
+          <button type="button" className={cellClass} onClick={() => onToggle(n.number)} aria-pressed={selected}>
             <span className="absolute top-1 left-1">
               <NumberBadge
                 num={n.number}
@@ -292,20 +287,10 @@ function NumberCell({
               ) : (
                 <>
                   {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_DATA_SIZE,
-                      "font-bold tabular-nums leading-tight text-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
                     {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
                   </span>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_SUB_SIZE,
-                      "tabular-nums leading-none text-muted-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
                     {formatNumber(n.sets)}x
                   </span>
                 </>
@@ -330,15 +315,11 @@ function NumberCell({
             <div className="space-y-1 min-w-37">
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Số bộ cược chứa số</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.sets)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.sets)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Tổng cược</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.amount)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.amount)}</span>
               </div>
             </div>
           )}
@@ -579,8 +560,8 @@ function ComboLookupDialog({
             Tra cứu bộ số dồn cược
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Chọn số chính + số đặc biệt trên 2 bảng để xem có bao nhiêu người/bộ đang dồn cược bộ
-            này trong kỳ. Kiểu chơi tự suy theo số lượng đã chọn.
+            Chọn số chính + số đặc biệt trên 2 bảng để xem có bao nhiêu người/bộ đang dồn cược bộ này trong kỳ. Kiểu
+            chơi tự suy theo số lượng đã chọn.
           </DialogDescription>
         </DialogHeader>
 
@@ -639,9 +620,7 @@ function ComboLookupDialog({
             </div>
           )}
 
-          {lookup.isError && (
-            <p className="text-xs text-destructive">Không tra cứu được — kiểm tra lại bộ số.</p>
-          )}
+          {lookup.isError && <p className="text-xs text-destructive">Không tra cứu được — kiểm tra lại bộ số.</p>}
 
           {result &&
             (result.found ? (
@@ -649,21 +628,15 @@ function ComboLookupDialog({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 border-b bg-muted/20 text-xs">
                   <span className="text-muted-foreground">
                     Người chơi:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">
-                      {formatNumber(result.players)}
-                    </span>
+                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.players)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Số bộ:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">
-                      {formatNumber(result.sets)}
-                    </span>
+                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.sets)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Tổng tiền:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">
-                      {formatNumber(result.amount)}
-                    </span>
+                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.amount)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Giá 1 bộ:{" "}
@@ -674,16 +647,11 @@ function ComboLookupDialog({
                 </div>
                 <div className="divide-y divide-border/50 max-h-64 overflow-y-auto">
                   {result.accounts.map((a) => (
-                    <div
-                      key={a.accountId}
-                      className="grid grid-cols-[1fr_4rem_6rem] items-center gap-2 px-3 py-1.5"
-                    >
+                    <div key={a.accountId} className="grid grid-cols-[1fr_4rem_6rem] items-center gap-2 px-3 py-1.5">
                       <div className="min-w-0" title={a.accountId}>
                         <p className="text-xs font-medium truncate">{a.username || a.accountId}</p>
                         {a.username && (
-                          <p className="text-xs text-muted-foreground/60 truncate tabular-nums">
-                            {a.accountId}
-                          </p>
+                          <p className="text-xs text-muted-foreground/60 truncate tabular-nums">{a.accountId}</p>
                         )}
                       </div>
                       <span className="text-xs tabular-nums text-muted-foreground text-right">
@@ -745,14 +713,10 @@ export function NumberHeatmap({
   const lookup = useComboLookup(drawId);
 
   const toggleMain = useCallback((num: string) => {
-    setSelectedMain((curr) =>
-      curr.includes(num) ? curr.filter((n) => n !== num) : [...curr, num],
-    );
+    setSelectedMain((curr) => (curr.includes(num) ? curr.filter((n) => n !== num) : [...curr, num]));
   }, []);
   const toggleSpecial = useCallback((num: string) => {
-    setSelectedSpecial((curr) =>
-      curr.includes(num) ? curr.filter((n) => n !== num) : [...curr, num],
-    );
+    setSelectedSpecial((curr) => (curr.includes(num) ? curr.filter((n) => n !== num) : [...curr, num]));
   }, []);
   const clearAll = useCallback(() => {
     setSelectedMain([]);
@@ -783,9 +747,7 @@ export function NumberHeatmap({
           <div className="flex items-center gap-1.5">
             {totalSelected > 0 && (
               <>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  Đã chọn {totalSelected} số
-                </span>
+                <span className="text-xs tabular-nums text-muted-foreground">Đã chọn {totalSelected} số</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -829,11 +791,7 @@ export function NumberHeatmap({
             <MainGrid numbers={mainNumbers} selected={selectedMainSet} onToggle={toggleMain} />
           </div>
           <div className="flex-[4_4_0%] min-w-0">
-            <SpecialGrid
-              numbers={specialNumbers}
-              selected={selectedSpecialSet}
-              onToggle={toggleSpecial}
-            />
+            <SpecialGrid numbers={specialNumbers} selected={selectedSpecialSet} onToggle={toggleSpecial} />
           </div>
         </div>
       </CardContent>

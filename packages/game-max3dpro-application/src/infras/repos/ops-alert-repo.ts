@@ -12,14 +12,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import { Max3dproCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3dpro/entities";
-import type { Max3dproOpsAlertDoc, Max3dproOpsAlertEntity } from "@megawin/game-max3dpro/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-max3dpro/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  Max3dproOpsAlertDoc,
+  Max3dproOpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<Max3dproOpsAlertDoc>();
 
@@ -86,10 +90,7 @@ export class OpsAlertRepository extends BaseRepo<Max3dproOpsAlertEntity, OpsAler
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByDrawAndStatus(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<Max3dproOpsAlertEntity[]> {
+  async listByDrawAndStatus(drawId: string, status?: OpsAlertStatusType): Promise<Max3dproOpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) filter.status = status;
     return await this.findMany(filter, { sort: { createdAt: -1 } });

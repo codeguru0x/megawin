@@ -1,16 +1,16 @@
-import type {
-  FinancialRates,
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
-  BigSmallDrawPrizes,
-  PlayRules,
-  Bingo18OpsAlertType,
-} from "@megawin/game-bingo18/entities";
-import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
-import type { OpsStatsConfigBase } from "@megawin/game-core/types";
 import type { AuditActor } from "@megawin/audit/logger";
+import type {
+  BigSmallDrawPrizes,
+  Bingo18OpsAlertType,
+  DoubleMatchPrizes,
+  FinancialRates,
+  GlobalConfigEntity,
+  PlayRules,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
+} from "@megawin/game-bingo18/entities";
+import type { OpsStatsConfigBase } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
 // GetGameConfig

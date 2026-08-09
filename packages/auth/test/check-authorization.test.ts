@@ -5,11 +5,12 @@
  * (accountType/roles/accountStatus). Không verify token, không chạm DB.
  */
 
-import { describe, it, expect } from "vitest";
-import { checkAuthorization } from "../src/authorization-api-gateway";
-import type { AuthContext } from "../src/authorization-api-gateway";
-import { AccountType, AccountStatus, CompanyRole } from "@megawin/identity/entities";
+import { AccountStatus, AccountType, CompanyRole } from "@megawin/identity/entities";
 import { APP_ERROR_CODES } from "@megawin/shared/errors";
+import { describe, expect, it } from "vitest";
+
+import type { AuthContext } from "../src/authorization-api-gateway";
+import { checkAuthorization } from "../src/authorization-api-gateway";
 
 const companyAdmin: AuthContext = {
   sub: "sub-1",
@@ -27,28 +28,17 @@ describe("checkAuthorization", () => {
   });
 
   it("account suspended → ACCOUNT_SUSPENDED", () => {
-    const err = checkAuthorization(
-      { ...companyAdmin, accountStatus: AccountStatus.Suspended },
-      {},
-    );
+    const err = checkAuthorization({ ...companyAdmin, accountStatus: AccountStatus.Suspended }, {});
     expect(err?.code).toBe(APP_ERROR_CODES.ACCOUNT_SUSPENDED);
   });
 
   it("account read_only + method ghi (POST) → ACCOUNT_READ_ONLY", () => {
-    const err = checkAuthorization(
-      { ...companyAdmin, accountStatus: AccountStatus.ReadOnly },
-      {},
-      "POST",
-    );
+    const err = checkAuthorization({ ...companyAdmin, accountStatus: AccountStatus.ReadOnly }, {}, "POST");
     expect(err?.code).toBe(APP_ERROR_CODES.ACCOUNT_READ_ONLY);
   });
 
   it("account read_only + method đọc (GET) → cho qua", () => {
-    const err = checkAuthorization(
-      { ...companyAdmin, accountStatus: AccountStatus.ReadOnly },
-      {},
-      "GET",
-    );
+    const err = checkAuthorization({ ...companyAdmin, accountStatus: AccountStatus.ReadOnly }, {}, "GET");
     expect(err).toBeUndefined();
   });
 

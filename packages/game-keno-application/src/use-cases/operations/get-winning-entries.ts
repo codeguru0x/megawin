@@ -1,9 +1,10 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { AppException } from "@megawin/shared/errors";
-import { Pagination } from "@megawin/shared/constants/pagination";
-import { EntryRepository } from "../../infras/repos/entry-repo";
-import { DrawRepository } from "../../infras/repos/draw-repo";
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { AppException } from "@megawin/shared/errors";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
   GetWinningEntriesInput,
   GetWinningEntriesOutput,
@@ -16,10 +17,7 @@ import type {
  * Cursor-based pagination: sort by payout.winAmount desc.
  * boardDetails[] chứa cả cơ bản (matchCount/pickCount) và bổ sung (outcome/isWin).
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
@@ -52,9 +50,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           .filter((b: any) => b.winAmount > 0)
           .map((b: any) => {
             const isSideBet = KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType);
-            const board = (e.entrySummary?.boards ?? []).find(
-              (sb: any) => sb.boardNo === b.boardNo,
-            );
+            const board = (e.entrySummary?.boards ?? []).find((sb: any) => sb.boardNo === b.boardNo);
 
             return {
               boardNo: b.boardNo as string,
@@ -68,11 +64,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
               ...(b.outcome !== undefined ? { outcome: b.outcome as string } : {}),
               isWin: b.isWin as boolean,
               winAmount: b.winAmount as number,
-              isCapped:
-                !isSideBet &&
-                (e.hasCappablePrize ?? false) &&
-                b.pickCount >= 8 &&
-                b.matchCount === b.pickCount,
+              isCapped: !isSideBet && (e.hasCappablePrize ?? false) && b.pickCount >= 8 && b.matchCount === b.pickCount,
             };
           });
 

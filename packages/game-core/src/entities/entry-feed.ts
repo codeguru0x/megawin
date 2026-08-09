@@ -41,6 +41,7 @@
  */
 
 import type { Long } from "mongodb";
+
 import type { EntryOutcome, EntryStatus, GameProduct } from "./game-core.enums";
 
 // ─────────────────────────────────────────────

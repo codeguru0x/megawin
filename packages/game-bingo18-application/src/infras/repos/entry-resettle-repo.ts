@@ -14,12 +14,13 @@
  * sinh UUID, không tự build object.
  */
 
-import { ObjectId } from "mongodb";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import type { EntryReversal, TicketEntryEntity } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { EntryMapper } from "../mappers/entry-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ReversalCandidate, ReversalEntryForDispatch } from "./types";
 
 export class EntryResettleRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {

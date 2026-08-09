@@ -1,6 +1,7 @@
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { TicketLineDoc } from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import { chunk } from "@megawin/shared/utils";
+
 import { BaseRepo } from "./base-repo";
 
 /** Số lượng ops mỗi chunk khi bulk upsert lines. */

@@ -21,23 +21,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
-import type {
-  Max3dproDrawAccountStatsDoc,
-  Max3dproDrawAccountStatsEntity,
-} from "@megawin/game-max3dpro/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Max3dproDrawAccountStatsDoc, Max3dproDrawAccountStatsEntity } from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { AccountStatsMapper } from "../mappers/account-stats-mapper";
+import { BaseRepo } from "./base-repo";
 import type { Max3dproAccountStatsDelta } from "./types";
 
 const f = docPath<Max3dproDrawAccountStatsDoc>();
 
-export class AccountStatsRepository extends BaseRepo<
-  Max3dproDrawAccountStatsEntity,
-  AccountStatsMapper
-> {
+export class AccountStatsRepository extends BaseRepo<Max3dproDrawAccountStatsEntity, AccountStatsMapper> {
   constructor() {
     super({
       collName: Max3dproCollections.AccountStats,
@@ -63,10 +58,7 @@ export class AccountStatsRepository extends BaseRepo<
   }
 
   /** Tích luỹ cược của 1 account trong kỳ — drill-down outstanding từ alert. */
-  async getByAccount(
-    drawId: string,
-    accountId: string,
-  ): Promise<Max3dproDrawAccountStatsEntity | null> {
+  async getByAccount(drawId: string, accountId: string): Promise<Max3dproDrawAccountStatsEntity | null> {
     return await this.findOne({ drawId, accountId });
   }
 

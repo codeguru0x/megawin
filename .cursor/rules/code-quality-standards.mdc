@@ -353,11 +353,10 @@ if (!config) {
 }
 ```
 
-**Lưu ý hạ tầng:** ESLint rule `curly` (`tooling/eslint-config/base.js`) đã enforce đúng điều
-này (option mặc định `"all"`) cho các package CÓ chạy ESLint (`packages/ui`, các app dùng
-`react-internal`/`next-js` config). Nhưng `packages/game-*-application` và nhiều package backend
-khác **hiện chưa có ESLint/Biome nào chạy** — nên rule tooling không tự bắt được ở đó. Coi mục
-này là nguồn chân lý khi viết code trong các package chưa có lint, không dựa vào tooling.
+**Lưu ý hạ tầng:** Biome rule `style/useBlockStatements` (root `biome.json`) đã enforce đúng điều
+này trên **toàn bộ 3.122 file** của monorepo (không còn giới hạn ở vài package như thời ESLint) —
+xem `.cursor/plans/biome-monorepo-migration/`. Coi mục này là nguồn chân lý khi viết code, tooling
+đã đồng bộ đầy đủ.
 
 ## 7. Vị Trí Import — LUÔN Ở ĐẦU FILE, Ngay Sau Header Comment
 

@@ -1,22 +1,18 @@
-import {
-  DrawStatus,
-  DRAW_UNFINISHED_STATUSES,
-  DRAW_COMPLETED_STATUSES,
-} from "@megawin/game-core/entities";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
+import { DRAW_COMPLETED_STATUSES, DRAW_UNFINISHED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
+import type { DrawEntity, DrawVietlottRef, Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
-import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
-import type { DrawEntity, DrawVietlottRef } from "@megawin/game-max3dpro/entities";
 import type { FindOptions } from "mongodb";
+
 import { DrawMapper } from "../mappers/draw-mapper";
 import { BaseRepo } from "./base-repo";
 import type {
-  VoidInfo,
   DrawDocBase,
   DrawDocBaseFinancial,
   DrawDocBaseStats,
   DrawDocBaseVoidSummary,
   DrawSettleSummary,
+  VoidInfo,
 } from "./types/draw.types";
 
 /**
@@ -29,11 +25,7 @@ import type {
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Voiding]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([
-    DrawStatus.SalesOpen,
-    DrawStatus.Published,
-    DrawStatus.Voiding,
-  ]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Voiding]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Voiding]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
   [DrawStatus.Settled]: new Set([DrawStatus.Published]),
@@ -133,11 +125,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Mở bán: scheduled/salesClosed → salesOpen.
    * Stamp sales.openAt nếu được truyền vào.
    */
-  async openSales(
-    drawId: string,
-    fromStatus: string,
-    salesOpenAt?: Date,
-  ): Promise<DrawEntity | null> {
+  async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
 
@@ -296,10 +284,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Atomic, idempotent — gọi nhiều lần với cùng giá trị OK.
    * Return null nếu draw status không nằm trong scope cho phép.
    */
-  async updateVietlottRef(
-    drawId: string,
-    vietlottRef: DrawVietlottRef,
-  ): Promise<DrawEntity | null> {
+  async updateVietlottRef(drawId: string, vietlottRef: DrawVietlottRef): Promise<DrawEntity | null> {
     return await this.findOneAndUpdate(
       {
         drawId,
@@ -397,11 +382,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Bắt đầu void: scheduled/salesClosed/published → voiding.
    * Ghi voidInfo (lý do, người thực hiện).
    */
-  async voidDraw(
-    drawId: string,
-    fromStatus: string,
-    voidInfo: VoidInfo,
-  ): Promise<DrawEntity | null> {
+  async voidDraw(drawId: string, fromStatus: string, voidInfo: VoidInfo): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Voiding)) return null;
 
@@ -427,10 +408,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary.
    * Atomic, idempotent.
    */
-  async voidComplete(
-    drawId: string,
-    voidSummary: DrawDocBaseVoidSummary,
-  ): Promise<DrawEntity | null> {
+  async voidComplete(drawId: string, voidSummary: DrawDocBaseVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
     if (!allowed?.has(DrawStatus.Void)) return null;
 
@@ -481,10 +459,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /** Lấy draw đã settle mới nhất. */
   async getLatestSettledDraw(): Promise<DrawEntity | null> {
-    return await this.findOne(
-      { status: DrawStatus.Settled },
-      { sort: { drawDate: -1, drawNo: -1 } },
-    );
+    return await this.findOne({ status: DrawStatus.Settled }, { sort: { drawDate: -1, drawNo: -1 } });
   }
 
   /**
@@ -503,10 +478,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     statuses: readonly UnfinishedDrawStatus[] = DRAW_UNFINISHED_STATUSES,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    return await this.findMany(
-      { status: { $in: [...statuses] } },
-      { sort: { drawId: -1 }, ...options },
-    );
+    return await this.findMany({ status: { $in: [...statuses] } }, { sort: { drawId: -1 }, ...options });
   }
 
   /**
@@ -530,10 +502,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Cập nhật lịch bán: openAt, closeAt, drawTime (optional).
    * Idempotent — chạy lại overwrite.
    */
-  async updateSchedule(
-    drawId: string,
-    sales: { openAt: Date; closeAt: Date; drawTime?: Date },
-  ): Promise<boolean> {
+  async updateSchedule(drawId: string, sales: { openAt: Date; closeAt: Date; drawTime?: Date }): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "sales.openAt": sales.openAt,
       "sales.closeAt": sales.closeAt,
@@ -553,11 +522,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * @param filter.size - Số lượng kỳ cần lấy.
    * @param filter.cursor - Cursor từ response trước: drawId của kỳ cuối.
    */
-  async listSettledDraws(filter: {
-    from: string;
-    size: number;
-    cursor?: string;
-  }): Promise<DrawEntity[]> {
+  async listSettledDraws(filter: { from: string; size: number; cursor?: string }): Promise<DrawEntity[]> {
     const { from, size, cursor } = filter;
     const query: Record<string, unknown> = {
       status: DrawStatus.Settled,
@@ -569,10 +534,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         // Cast sang DrawDocBase để đọc drawDate từ cursor draw.
         const doc = cursorDraw as unknown as DrawDocBase;
         query.drawDate = { $lte: doc.drawDate };
-        query.$or = [
-          { drawDate: { $lt: doc.drawDate } },
-          { drawDate: doc.drawDate, drawId: { $gt: cursor } },
-        ];
+        query.$or = [{ drawDate: { $lt: doc.drawDate } }, { drawDate: doc.drawDate, drawId: { $gt: cursor } }];
       }
     }
     return await this.findMany(query, { sort: { drawDate: -1, drawId: -1 }, limit: size });

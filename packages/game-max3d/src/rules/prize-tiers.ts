@@ -38,17 +38,18 @@
  *    7 hạng giải.
  */
 
-import { BasicPrizeTier, PlusPrizeTier, PlayMode, PlayType } from "../entities/enums";
 import { sumBy } from "@megawin/shared/utils";
-import type {
-  Triplet,
-  BasicPrizeAmounts,
-  PlusPrizeAmounts,
-  ComboPrizeAmounts,
-  Max3dPrizeConfig,
-} from "../entities/types";
+
 import type { Max3dDrawResult } from "../entities/draw-result";
 import type { EntryPayoutTier } from "../entities/entry";
+import { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "../entities/enums";
+import type {
+  BasicPrizeAmounts,
+  ComboPrizeAmounts,
+  Max3dPrizeConfig,
+  PlusPrizeAmounts,
+  Triplet,
+} from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Module-level Constants
@@ -112,10 +113,7 @@ export function flattenDrawResult(result: Max3dDrawResult): FlattenedDrawResult 
  *   findTierInResult("683", byTier) → "first"
  *   findTierInResult("999", byTier) → null
  */
-export function findTierInResult(
-  triplet: Triplet,
-  byTier: Map<BasicPrizeTier, Triplet[]>,
-): BasicPrizeTier | null {
+export function findTierInResult(triplet: Triplet, byTier: Map<BasicPrizeTier, Triplet[]>): BasicPrizeTier | null {
   for (const tier of BASIC_TIER_PRIORITY) {
     if (byTier.get(tier)!.includes(triplet)) {
       return tier;
@@ -141,10 +139,7 @@ export function findTierInResult(
  *   findAllTiersInResult("683", byTier) → ["first"]
  *   findAllTiersInResult("999", byTier) → []
  */
-export function findAllTiersInResult(
-  triplet: Triplet,
-  byTier: Map<BasicPrizeTier, Triplet[]>,
-): BasicPrizeTier[] {
+export function findAllTiersInResult(triplet: Triplet, byTier: Map<BasicPrizeTier, Triplet[]>): BasicPrizeTier[] {
   const matched: BasicPrizeTier[] = [];
   for (const tier of BASIC_TIER_PRIORITY) {
     if (byTier.get(tier)!.includes(triplet)) {
@@ -279,9 +274,7 @@ export function matchBasicCombo(
 
   // Expand tất cả hoán vị → thu thập tất cả (perm, tier) trúng.
   // Một hoán vị có thể trùng nhiều hạng → không bỏ hạng nào.
-  const tiers = getUniquePermutations(playerTriplet).flatMap((perm) =>
-    findAllTiersInResult(perm, byTier),
-  );
+  const tiers = getUniquePermutations(playerTriplet).flatMap((perm) => findAllTiersInResult(perm, byTier));
 
   return { tiers, winAmount: sumBy(tiers, (t) => prizeSet[t]) };
 }
@@ -385,40 +378,28 @@ export function matchPlus(
 
   // Giải ĐB: cả 2 khớp 2 entry ĐB riêng biệt
   // Duplicate KHÔNG áp dụng ×2 cho giải ĐB — chỉ áp dụng từ giải Nhất trở xuống.
-  const specialMatches = countDistinctMatches(
-    playerTriplets,
-    drawResultByTier.get(BasicPrizeTier.Special)!,
-  );
+  const specialMatches = countDistinctMatches(playerTriplets, drawResultByTier.get(BasicPrizeTier.Special)!);
 
   if (specialMatches >= 2) {
     wonTiers.push({ tier: PlusPrizeTier.Special, winAmount: prizes.special });
   }
 
   // Giải Nhất: cả 2 khớp 2 entry Nhất riêng biệt
-  const firstMatches = countDistinctMatches(
-    playerTriplets,
-    drawResultByTier.get(BasicPrizeTier.First)!,
-  );
+  const firstMatches = countDistinctMatches(playerTriplets, drawResultByTier.get(BasicPrizeTier.First)!);
 
   if (firstMatches >= 2) {
     wonTiers.push({ tier: PlusPrizeTier.First, winAmount: prizes.first * multiplier });
   }
 
   // Giải Nhì: cả 2 khớp 2 entry Nhì riêng biệt
-  const secondMatches = countDistinctMatches(
-    playerTriplets,
-    drawResultByTier.get(BasicPrizeTier.Second)!,
-  );
+  const secondMatches = countDistinctMatches(playerTriplets, drawResultByTier.get(BasicPrizeTier.Second)!);
 
   if (secondMatches >= 2) {
     wonTiers.push({ tier: PlusPrizeTier.Second, winAmount: prizes.second * multiplier });
   }
 
   // Giải Ba: cả 2 khớp 2 entry Ba riêng biệt
-  const thirdMatches = countDistinctMatches(
-    playerTriplets,
-    drawResultByTier.get(BasicPrizeTier.Third)!,
-  );
+  const thirdMatches = countDistinctMatches(playerTriplets, drawResultByTier.get(BasicPrizeTier.Third)!);
 
   if (thirdMatches >= 2) {
     wonTiers.push({ tier: PlusPrizeTier.Third, winAmount: prizes.third * multiplier });

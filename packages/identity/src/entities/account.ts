@@ -56,11 +56,7 @@ export type AccountRole = CompanyRole | AgentRole | PlayerRole;
 export const COMPANY_ROLE_VALUES = Object.values(CompanyRole);
 export const AGENT_ROLE_VALUES = Object.values(AgentRole);
 export const PLAYER_ROLE_VALUES = Object.values(PlayerRole);
-export const ALL_ROLE_VALUES = [
-  ...COMPANY_ROLE_VALUES,
-  ...AGENT_ROLE_VALUES,
-  ...PLAYER_ROLE_VALUES,
-] as const;
+export const ALL_ROLE_VALUES = [...COMPANY_ROLE_VALUES, ...AGENT_ROLE_VALUES, ...PLAYER_ROLE_VALUES] as const;
 
 /**
  * Super roles: bypass mọi role check khi đã authed.
@@ -137,7 +133,4 @@ export interface PlayerAccountEntity extends AccountBase {
 }
 
 /** Union type chính – dùng ở repository, mapper, use case. */
-export type AccountEntity =
-  | CompanyAccountEntity
-  | AgentAccountEntity
-  | PlayerAccountEntity;
+export type AccountEntity = CompanyAccountEntity | AgentAccountEntity | PlayerAccountEntity;

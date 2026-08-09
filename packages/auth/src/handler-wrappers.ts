@@ -15,23 +15,24 @@
  * );
  */
 
-import middy from "@middy/core";
 import {
-  playerAuth,
-  agentAuth,
-  companyAuth,
-  type UserAuthOptions,
-  type CompanyAuthOptions,
-  type TenantUserEvent,
-  type CompanyUserEvent,
-} from "./authorization-middleware";
-import {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
   type ApiGatewayZodSchemas,
+  httpErrorHandlerUseCaseFormat,
+  validatorZodMiddleware,
 } from "@megawin/app-core/lambda/middleware";
+import middy from "@middy/core";
 
-export type { TenantUserEvent, CompanyUserEvent };
+import {
+  agentAuth,
+  type CompanyAuthOptions,
+  type CompanyUserEvent,
+  companyAuth,
+  playerAuth,
+  type TenantUserEvent,
+  type UserAuthOptions,
+} from "./authorization-middleware";
+
+export type { CompanyUserEvent, TenantUserEvent };
 
 // ============ Type-level helpers ============
 
@@ -51,21 +52,23 @@ type TenantEvent<TSchemas> = TenantUserEvent &
 type CompanyEvent<TSchemas> = CompanyUserEvent &
   (TSchemas extends undefined ? unknown : { schema: InferSchema<TSchemas> });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type MiddyMiddlewareObject = {
-  before: (request: any) => Promise<void | unknown>;
+  // biome-ignore lint/suspicious/noExplicitAny: middy middleware `before` nhận request thô, chưa narrow theo event type cụ thể.
+  before: (request: any) => Promise<unknown>;
 };
 
 // ============ Internal builder ============
 
 function buildHandler(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: signature generic dùng chung cho player/agent/company — event type thật do TSchemas ở hàm public quyết định.
   fn: (event: any) => Promise<unknown>,
   authMiddleware: MiddyMiddlewareObject,
   schemas?: ApiGatewayZodSchemas,
 ) {
   const wrapped = middy(fn).use(authMiddleware);
-  if (schemas) wrapped.use(validatorZodMiddleware(schemas));
+  if (schemas) {
+    wrapped.use(validatorZodMiddleware(schemas));
+  }
   wrapped.use(httpErrorHandlerUseCaseFormat());
   return wrapped;
 }
@@ -103,10 +106,10 @@ export function withCompanyAuth<TSchemas extends ApiGatewayZodSchemas | undefine
 // ============ Generic middleware wrapper ============
 
 export function withMiddleware(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: wrapper generic — caller tự chịu trách nhiệm type event theo middleware truyền vào.
   fn: (event: any) => Promise<unknown>,
   authMiddleware: MiddyMiddlewareObject,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: schemas shape phụ thuộc middleware, không siết được type cụ thể ở layer generic này.
   options?: { schemas?: any },
 ) {
   return buildHandler(fn, authMiddleware, options?.schemas);

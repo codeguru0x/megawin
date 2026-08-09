@@ -21,16 +21,16 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import { DrawNo } from "../entities/types";
 import { Lotto535OpsAlertType } from "../entities/ops-alert";
 import type {
-  JackpotConfig,
   FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  SplitRatios,
+  JackpotConfig,
   Lotto535OpsConfig,
+  PlayRules,
+  PrizeAmounts,
+  SplitRatios,
 } from "../entities/types";
+import { DrawNo } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Jackpot Accumulation
@@ -252,20 +252,12 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
   }
 
   // ── Pass 2: redistribute unclaimed + tính bonus per winner ──
-  const unclaimedTotal = tierAllocations
-    .filter((t) => !t.hasWinners)
-    .reduce((s, t) => s + t.initialAmount, 0);
+  const unclaimedTotal = tierAllocations.filter((t) => !t.hasWinners).reduce((s, t) => s + t.initialAmount, 0);
 
   const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
 
   const highestTierWithWinners = (
-    [
-      PrizeTier.Tier1,
-      PrizeTier.Tier2,
-      PrizeTier.Tier3,
-      PrizeTier.Tier4,
-      PrizeTier.Tier5,
-    ] as PrizeTier[]
+    [PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3, PrizeTier.Tier4, PrizeTier.Tier5] as PrizeTier[]
   ).find((tier) => tiersWithWinners.some((t) => t.tier === tier))!;
 
   let totalRemainder = 0;

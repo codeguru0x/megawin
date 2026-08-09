@@ -1,39 +1,38 @@
 import {
-  AggregateOptions,
-  AnyBulkWriteOperation,
-  BulkWriteOptions,
-  BulkWriteResult,
-  ClientSession,
-  Collection,
-  CollectionOptions,
-  CountOptions,
-  Db,
-  DeleteOptions,
-  DistinctOptions,
-  Document,
-  Filter,
-  FindOneAndUpdateOptions,
-  FindOptions,
-  InsertManyResult,
-  InsertOneOptions,
-  MongoClient,
+  type AggregateOptions,
+  type AnyBulkWriteOperation,
+  type BulkWriteOptions,
+  type BulkWriteResult,
+  type ClientSession,
+  type Collection,
+  type CollectionOptions,
+  type CountOptions,
+  type Db,
+  type DeleteOptions,
+  type DistinctOptions,
+  type Document,
+  type Filter,
+  type FindOneAndUpdateOptions,
+  type FindOptions,
+  type InsertManyResult,
+  type InsertOneOptions,
+  type MongoClient,
   ObjectId,
-  OptionalId,
-  ReplaceOptions,
-  Sort,
-  TransactionOptions,
-  UpdateFilter,
-  UpdateOptions,
-  UpdateResult,
-  WithoutId,
+  type OptionalId,
+  type ReplaceOptions,
+  type Sort,
+  type TransactionOptions,
+  type UpdateFilter,
+  type UpdateOptions,
+  type UpdateResult,
+  type WithoutId,
 } from "mongodb";
 
+import type { BaseEntity } from "./base-entity";
 import { getMongoClient, getMongoDb } from "./client";
-import { DefaultMongoMapper, MongoMapper } from "./mapper";
-
 import { Constants } from "./constants";
-import { BaseEntity } from "./base-entity";
 import type { CursorPage } from "./cursor-page";
+import { DefaultMongoMapper, type MongoMapper } from "./mapper";
 
 export abstract class MongoRepository<
   TEntity extends BaseEntity,
@@ -212,10 +211,7 @@ export abstract class MongoRepository<
    * @param options - Options query
    * @returns - One document found as document
    */
-  public async findOneAsDocument(
-    filter: Filter<Document>,
-    options?: FindOptions,
-  ): Promise<Document | null> {
+  public async findOneAsDocument(filter: Filter<Document>, options?: FindOptions): Promise<Document | null> {
     await this.initBeforeUse();
 
     const [doc] = await this._collection.find(filter, options).limit(1).toArray();
@@ -240,10 +236,7 @@ export abstract class MongoRepository<
    * @param options - Options query
    * @returns - Many documents found as documents
    */
-  public async findManyAsDocuments(
-    filter: Filter<Document>,
-    options?: FindOptions,
-  ): Promise<Document[]> {
+  public async findManyAsDocuments(filter: Filter<Document>, options?: FindOptions): Promise<Document[]> {
     await this.initBeforeUse();
 
     // Nếu không có limit thì mặc định lấy tối đa 500 bản ghi
@@ -280,17 +273,11 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async paging(
-    filter: Filter<Document>,
-    page: number,
-    size: number,
-    options?: FindOptions,
-  ): Promise<TEntity[]> {
+  public async paging(filter: Filter<Document>, page: number, size: number, options?: FindOptions): Promise<TEntity[]> {
     page = page <= 0 ? Constants.Default.Paging.Page : page;
 
     // Lấy tối đa số page size đã fix cứng
-    size =
-      size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
+    size = size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
 
     const skip = size * (page - 1);
 
@@ -622,11 +609,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async distinct(
-    key: string,
-    filter: Filter<Document> = {},
-    options: DistinctOptions = {},
-  ): Promise<any[]> {
+  public async distinct(key: string, filter: Filter<Document> = {}, options: DistinctOptions = {}): Promise<any[]> {
     await this.initBeforeUse();
 
     return await this._collection.distinct(key, filter, options);

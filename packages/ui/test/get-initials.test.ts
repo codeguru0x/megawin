@@ -5,7 +5,8 @@
  * Kiểm tra `getInitials` — logic thuần lấy chữ cái đầu mỗi từ, viết hoa.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import { getInitials } from "../src/lib/get-initials";
 
 describe("getInitials", () => {

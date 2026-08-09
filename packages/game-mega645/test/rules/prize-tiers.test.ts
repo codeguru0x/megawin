@@ -6,9 +6,10 @@
  * Trọng tâm: mỗi line trúng hạng CAO NHẤT theo matchCount, đúng biên (boundary).
  */
 
-import { describe, it, expect } from "vitest";
-import { determineTier, getPrizeTierRule, DEFAULT_PRIZE_TIER_RULES } from "../../src/rules/prize-tiers";
+import { describe, expect, it } from "vitest";
+
 import { PrizeTier } from "../../src/entities/enums";
+import { DEFAULT_PRIZE_TIER_RULES, determineTier, getPrizeTierRule } from "../../src/rules/prize-tiers";
 
 describe("determineTier", () => {
   it("Đúng logic — trùng 6/6 số → Jackpot", () => {

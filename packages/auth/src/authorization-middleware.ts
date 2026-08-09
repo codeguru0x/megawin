@@ -14,23 +14,24 @@
  * Sau khi verify → gán event.user (AuthContext).
  */
 
-import type { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda/trigger/api-gateway-proxy";
-import { appErrorToStatusCode } from "@megawin/shared/errors";
+import type { CompanyRole as CompanyRoleType } from "@megawin/identity/entities";
+import { AccountType, AgentRole, CompanyRole, PlayerRole } from "@megawin/identity/entities";
 import type { ApiErrorResponse } from "@megawin/shared/api-types";
+import { appErrorToStatusCode } from "@megawin/shared/errors";
+import type { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda/trigger/api-gateway-proxy";
+
 import {
-  getAuthContextFromApiGatewayEvent,
-  checkAuthorization,
-  type AuthRequirements,
-  type AuthContextAdapterOptions,
   type ApiGatewayEventWithAuthorizer,
   type AuthContext,
-  type TenantAuthContext,
+  type AuthContextAdapterOptions,
+  type AuthRequirements,
   type CompanyAuthContext,
+  checkAuthorization,
+  getAuthContextFromApiGatewayEvent,
+  type TenantAuthContext,
 } from "./authorization-api-gateway";
-import { AccountType, CompanyRole, AgentRole, PlayerRole } from "@megawin/identity/entities";
-import type { CompanyRole as CompanyRoleType } from "@megawin/identity/entities";
 
-export type { AuthContext, TenantAuthContext, CompanyAuthContext };
+export type { AuthContext, CompanyAuthContext, TenantAuthContext };
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -150,9 +151,6 @@ export function companyAuth(options?: CompanyAuthOptions) {
 // ============ Generic auth ============
 
 /** @deprecated Ưu tiên dùng playerAuth(), agentAuth(), companyAuth() */
-export function authorizationMiddleware(
-  requirements: AuthRequirements,
-  adapterOptions?: AuthContextAdapterOptions,
-) {
+export function authorizationMiddleware(requirements: AuthRequirements, adapterOptions?: AuthContextAdapterOptions) {
   return buildAuthMiddleware(requirements, undefined, adapterOptions);
 }

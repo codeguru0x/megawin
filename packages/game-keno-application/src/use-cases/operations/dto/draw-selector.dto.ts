@@ -5,7 +5,7 @@
  * Keno có ~120 kỳ/ngày (8 phút/kỳ) — group theo trạng thái để tránh quá tải.
  */
 
-import type { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
+import type { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 
 export interface DrawSelectorItem {
   /** Mã định danh kỳ (format YYYY-MM-DD.NNN). */

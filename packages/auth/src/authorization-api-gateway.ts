@@ -7,9 +7,9 @@
  * Gọi middleware = bắt buộc authed. Không gọi = public.
  */
 
+import type { AccountRole, AccountStatus } from "@megawin/identity/entities";
+import { AccountStatus as AccountStatusEnum, AccountType, ClaimKey, SUPER_ROLES } from "@megawin/identity/entities";
 import { APP_ERROR_CODES, type AppError } from "@megawin/shared/errors";
-import { AccountType, AccountStatus as AccountStatusEnum, SUPER_ROLES, ClaimKey } from "@megawin/identity/entities";
-import type { AccountStatus, AccountRole } from "@megawin/identity/entities";
 
 // ============ Auth context (sau Authorizer) ============
 
@@ -83,8 +83,7 @@ const DEFAULT_ADAPTER_OPTIONS = {
 } as const;
 
 function parseRoles(value: unknown): string[] {
-  if (Array.isArray(value))
-    return value.filter((v): v is string => typeof v === "string");
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string");
   if (typeof value === "string")
     return value
       .split(",")
@@ -95,23 +94,15 @@ function parseRoles(value: unknown): string[] {
 
 export function getAuthContextFromApiGatewayEvent(
   event: ApiGatewayEventWithAuthorizer,
-  options: AuthContextAdapterOptions = {}
+  options: AuthContextAdapterOptions = {},
 ): AuthContext | null {
   const opts = { ...DEFAULT_ADAPTER_OPTIONS, ...options };
   const authorizer = event.requestContext?.authorizer;
   if (!authorizer) return null;
 
-  const jwt = authorizer.jwt as
-    | { claims?: Record<string, unknown> }
-    | undefined;
-  const claims = (jwt?.claims ?? authorizer.claims ?? authorizer) as Record<
-    string,
-    unknown
-  >;
-  const sub =
-    (claims[ClaimKey.Sub] as string) ??
-    (authorizer.sub as string) ??
-    (authorizer.principalId as string);
+  const jwt = authorizer.jwt as { claims?: Record<string, unknown> } | undefined;
+  const claims = (jwt?.claims ?? authorizer.claims ?? authorizer) as Record<string, unknown>;
+  const sub = (claims[ClaimKey.Sub] as string) ?? (authorizer.sub as string) ?? (authorizer.principalId as string);
   if (!sub || typeof sub !== "string") return null;
 
   const username = claims[opts.usernameClaim] as string | undefined;
@@ -121,11 +112,8 @@ export function getAuthContextFromApiGatewayEvent(
 
   const tenantId = (claims[opts.tenantIdClaim] as string) ?? undefined;
   const roles = parseRoles(claims[opts.rolesClaim]);
-  const accountType =
-    (claims[opts.accountTypeClaim] as AccountType) ?? "player";
-  const accountStatus =
-    (claims[opts.accountStatusClaim] as AccountStatus) ??
-    AccountStatusEnum.Active;
+  const accountType = (claims[opts.accountTypeClaim] as AccountType) ?? "player";
+  const accountStatus = (claims[opts.accountStatusClaim] as AccountStatus) ?? AccountStatusEnum.Active;
 
   const base = {
     sub,
@@ -156,7 +144,7 @@ const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 export function checkAuthorization(
   authContext: AuthContext | null,
   requirements: AuthRequirements,
-  httpMethod?: string
+  httpMethod?: string,
 ): void | AppError {
   if (!authContext) {
     return {
@@ -175,10 +163,7 @@ export function checkAuthorization(
   const enforceStatus = requirements.enforceStatusByMethod !== false;
   if (enforceStatus && httpMethod) {
     const isReadOnly = READ_ONLY_METHODS.has(httpMethod.toUpperCase());
-    if (
-      !isReadOnly &&
-      authContext.accountStatus === AccountStatusEnum.ReadOnly
-    ) {
+    if (!isReadOnly && authContext.accountStatus === AccountStatusEnum.ReadOnly) {
       return {
         code: APP_ERROR_CODES.ACCOUNT_READ_ONLY,
         message: "Account is read-only, mutation operations are not allowed",
@@ -189,9 +174,7 @@ export function checkAuthorization(
   const { accountType, roles: allowedRoles } = requirements;
 
   if (requirements.requiredClaims) {
-    const missing = requirements.requiredClaims.filter(
-      (key) => !authContext[key]
-    );
+    const missing = requirements.requiredClaims.filter((key) => !authContext[key]);
     if (missing.length > 0) {
       return {
         code: APP_ERROR_CODES.FORBIDDEN,
@@ -213,13 +196,9 @@ export function checkAuthorization(
   }
 
   if (allowedRoles != null && allowedRoles.length > 0) {
-    const hasSuperRole = SUPER_ROLES.some((r: string) =>
-      authContext.roles.includes(r)
-    );
+    const hasSuperRole = SUPER_ROLES.some((r: string) => authContext.roles.includes(r));
     if (!hasSuperRole) {
-      const hasRole = allowedRoles.some((r: string) =>
-        authContext.roles.includes(r)
-      );
+      const hasRole = allowedRoles.some((r: string) => authContext.roles.includes(r));
       if (!hasRole) {
         return {
           code: APP_ERROR_CODES.FORBIDDEN,

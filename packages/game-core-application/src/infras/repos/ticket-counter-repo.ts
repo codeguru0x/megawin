@@ -13,9 +13,10 @@
  *   const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
  */
 
+import type { BaseEntity } from "@megawin/data/mongo";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import { todayVN } from "@megawin/shared/utils";
-import type { BaseEntity } from "@megawin/data/mongo";
+
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 export interface TicketSeqResult {
@@ -47,13 +48,11 @@ export class TicketCounterRepository extends GameCoreBaseRepo<BaseEntity> {
         $inc: { seq: 1 },
         $set: { updatedAt: new Date() },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     if (!result) {
-      throw new Error(
-        `Failed to allocate ticket seq for account ${accountId} date ${date}`
-      );
+      throw new Error(`Failed to allocate ticket seq for account ${accountId} date ${date}`);
     }
 
     return {

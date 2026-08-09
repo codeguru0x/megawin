@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 import { GameConfigScope } from "@megawin/game-core/entities";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
 
 describe("GameConfigRepository – Bingo18 Global Config", () => {
@@ -23,45 +24,31 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.rates).toBeDefined();
-    expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_BINGO18_CONFIG.rates.defaultCommissionRate
-    );
+    expect(config!.rates.defaultCommissionRate).toBe(DEFAULT_BINGO18_CONFIG.rates.defaultCommissionRate);
   });
 
   it("global config có đầy đủ singleNumPrizes", async () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.singleNumPrizes).toBeDefined();
-    expect(config!.singleNumPrizes.match1).toBe(
-      DEFAULT_BINGO18_CONFIG.singleNumPrizes.match1
-    );
-    expect(config!.singleNumPrizes.match2).toBe(
-      DEFAULT_BINGO18_CONFIG.singleNumPrizes.match2
-    );
-    expect(config!.singleNumPrizes.match3).toBe(
-      DEFAULT_BINGO18_CONFIG.singleNumPrizes.match3
-    );
+    expect(config!.singleNumPrizes.match1).toBe(DEFAULT_BINGO18_CONFIG.singleNumPrizes.match1);
+    expect(config!.singleNumPrizes.match2).toBe(DEFAULT_BINGO18_CONFIG.singleNumPrizes.match2);
+    expect(config!.singleNumPrizes.match3).toBe(DEFAULT_BINGO18_CONFIG.singleNumPrizes.match3);
   });
 
   it("global config có đầy đủ doubleMatchPrizes", async () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.doubleMatchPrizes).toBeDefined();
-    expect(config!.doubleMatchPrizes.win).toBe(
-      DEFAULT_BINGO18_CONFIG.doubleMatchPrizes.win
-    );
+    expect(config!.doubleMatchPrizes.win).toBe(DEFAULT_BINGO18_CONFIG.doubleMatchPrizes.win);
   });
 
   it("global config có đầy đủ tripleMatchPrizes", async () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.tripleMatchPrizes).toBeDefined();
-    expect(config!.tripleMatchPrizes.specific).toBe(
-      DEFAULT_BINGO18_CONFIG.tripleMatchPrizes.specific
-    );
-    expect(config!.tripleMatchPrizes.any).toBe(
-      DEFAULT_BINGO18_CONFIG.tripleMatchPrizes.any
-    );
+    expect(config!.tripleMatchPrizes.specific).toBe(DEFAULT_BINGO18_CONFIG.tripleMatchPrizes.specific);
+    expect(config!.tripleMatchPrizes.any).toBe(DEFAULT_BINGO18_CONFIG.tripleMatchPrizes.any);
   });
 
   it("global config có đầy đủ sumTotalPrizes", async () => {
@@ -69,9 +56,7 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
 
     expect(config!.sumTotalPrizes).toBeDefined();
     for (let sum = 3; sum <= 18; sum++) {
-      expect(config!.sumTotalPrizes[sum]).toBe(
-        DEFAULT_BINGO18_CONFIG.sumTotalPrizes[sum]
-      );
+      expect(config!.sumTotalPrizes[sum]).toBe(DEFAULT_BINGO18_CONFIG.sumTotalPrizes[sum]);
     }
   });
 
@@ -79,15 +64,9 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.bigSmallDrawPrizes).toBeDefined();
-    expect(config!.bigSmallDrawPrizes.big).toBe(
-      DEFAULT_BINGO18_CONFIG.bigSmallDrawPrizes.big
-    );
-    expect(config!.bigSmallDrawPrizes.draw).toBe(
-      DEFAULT_BINGO18_CONFIG.bigSmallDrawPrizes.draw
-    );
-    expect(config!.bigSmallDrawPrizes.small).toBe(
-      DEFAULT_BINGO18_CONFIG.bigSmallDrawPrizes.small
-    );
+    expect(config!.bigSmallDrawPrizes.big).toBe(DEFAULT_BINGO18_CONFIG.bigSmallDrawPrizes.big);
+    expect(config!.bigSmallDrawPrizes.draw).toBe(DEFAULT_BINGO18_CONFIG.bigSmallDrawPrizes.draw);
+    expect(config!.bigSmallDrawPrizes.small).toBe(DEFAULT_BINGO18_CONFIG.bigSmallDrawPrizes.small);
   });
 
   it("global config có đầy đủ play rules", async () => {
@@ -95,24 +74,12 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
 
     expect(config!.play).toBeDefined();
     expect(config!.play.unitPrice).toBe(DEFAULT_BINGO18_CONFIG.play.unitPrice);
-    expect(config!.play.maxBasicBoardsPerTicket).toBe(
-      DEFAULT_BINGO18_CONFIG.play.maxBasicBoardsPerTicket
-    );
-    expect(config!.play.maxDrawCount).toBe(
-      DEFAULT_BINGO18_CONFIG.play.maxDrawCount
-    );
-    expect(config!.play.salesCloseBeforeSeconds).toBe(
-      DEFAULT_BINGO18_CONFIG.play.salesCloseBeforeSeconds
-    );
-    expect(config!.play.drawIntervalMinutes).toBe(
-      DEFAULT_BINGO18_CONFIG.play.drawIntervalMinutes
-    );
-    expect(config!.play.firstDrawTime).toBe(
-      DEFAULT_BINGO18_CONFIG.play.firstDrawTime
-    );
-    expect(config!.play.lastDrawTime).toBe(
-      DEFAULT_BINGO18_CONFIG.play.lastDrawTime
-    );
+    expect(config!.play.maxBasicBoardsPerTicket).toBe(DEFAULT_BINGO18_CONFIG.play.maxBasicBoardsPerTicket);
+    expect(config!.play.maxDrawCount).toBe(DEFAULT_BINGO18_CONFIG.play.maxDrawCount);
+    expect(config!.play.salesCloseBeforeSeconds).toBe(DEFAULT_BINGO18_CONFIG.play.salesCloseBeforeSeconds);
+    expect(config!.play.drawIntervalMinutes).toBe(DEFAULT_BINGO18_CONFIG.play.drawIntervalMinutes);
+    expect(config!.play.firstDrawTime).toBe(DEFAULT_BINGO18_CONFIG.play.firstDrawTime);
+    expect(config!.play.lastDrawTime).toBe(DEFAULT_BINGO18_CONFIG.play.lastDrawTime);
     expect(config!.play.timezone).toBe(DEFAULT_BINGO18_CONFIG.play.timezone);
   });
 
@@ -175,8 +142,6 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
     expect(updated).not.toBeNull();
     expect(updated!.sumTotalPrizes[3]).toBe(1_500_000);
     expect(updated!.sumTotalPrizes[18]).toBe(1_500_000);
-    expect(updated!.sumTotalPrizes[10]).toBe(
-      DEFAULT_BINGO18_CONFIG.sumTotalPrizes[10]
-    );
+    expect(updated!.sumTotalPrizes[10]).toBe(DEFAULT_BINGO18_CONFIG.sumTotalPrizes[10]);
   });
 });

@@ -13,10 +13,10 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type { TokenManager } from "./token-manager";
-import type { AuthTokens, AuthResult } from "./types";
-import { ENDPOINTS } from "../endpoints";
+import type { AuthResult, AuthTokens } from "./types";
 
 /**
  * Auth API interface.

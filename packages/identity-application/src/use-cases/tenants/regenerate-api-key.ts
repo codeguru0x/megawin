@@ -1,14 +1,12 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { tenantCallbackConfigCache } from "@megawin/tenant-gateway/caches";
+
 import { TenantRepository } from "../../infras/repos/tenant-repo";
 import { generateApiKey } from "../../shared/generate-api-key";
 import type { RegenerateApiKeyInput, RegenerateApiKeyOutput } from "./dto/tenant.dto";
 
-export class RegenerateApiKeyUseCase extends NextApiUseCase<
-  RegenerateApiKeyInput,
-  RegenerateApiKeyOutput
-> {
+export class RegenerateApiKeyUseCase extends NextApiUseCase<RegenerateApiKeyInput, RegenerateApiKeyOutput> {
   protected async execute(input: RegenerateApiKeyInput): Promise<RegenerateApiKeyOutput> {
     const repo = new TenantRepository();
     const newApiKey = generateApiKey();

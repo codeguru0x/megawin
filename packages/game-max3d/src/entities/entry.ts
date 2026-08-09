@@ -7,11 +7,12 @@
  * Primary operational unit cho settle, payout, void.
  */
 
-import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
-import type { PlayMode, PlayType, BasicPrizeTier, PlusPrizeTier } from "./enums";
-import type { Triplet, ISODateString } from "./types";
+
 import type { Max3dDrawResult } from "./draw-result";
+import type { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "./enums";
+import type { ISODateString, Triplet } from "./types";
 
 // ─────────────────────────────────────────────
 // Entry Board Snapshot

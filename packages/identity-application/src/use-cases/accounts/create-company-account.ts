@@ -5,26 +5,16 @@
  * Execute: tạo user Cognito + gán groups theo roles.
  */
 
+import { adminCreateAccount, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import { AccountStatus, AccountType, ClaimKey } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  adminCreateAccount,
-  COGNITO_WORKFORCE_POOL_ID,
-} from "@megawin/app-core/aws/cognito";
-import { AccountType, AccountStatus } from "@megawin/identity/entities";
-
-import type {
-  CreateCompanyAccountInput,
-  CreateCompanyAccountOutput,
-} from "./dto/create-company-account.dto";
-import { ClaimKey } from "@megawin/identity/entities";
 import { generateULID } from "@megawin/shared/utils";
-import { AccountRepository } from "../../infras/repos/account-repo";
 
-export class CreateCompanyAccountUseCase extends NextApiUseCase<
-  CreateCompanyAccountInput,
-  CreateCompanyAccountOutput
-> {
+import { AccountRepository } from "../../infras/repos/account-repo";
+import type { CreateCompanyAccountInput, CreateCompanyAccountOutput } from "./dto/create-company-account.dto";
+
+export class CreateCompanyAccountUseCase extends NextApiUseCase<CreateCompanyAccountInput, CreateCompanyAccountOutput> {
   /*  protected validate(input: CreateCompanyAccountInput): void | AppError {
     if (input.roles.length === 0) {
       return {
@@ -45,9 +35,7 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
 
   private readonly accountRepo = new AccountRepository();
 
-  protected async execute(
-    input: CreateCompanyAccountInput
-  ): Promise<CreateCompanyAccountOutput> {
+  protected async execute(input: CreateCompanyAccountInput): Promise<CreateCompanyAccountOutput> {
     const accountId = generateULID();
     const accountStatus = AccountStatus.Active;
     const accountType = AccountType.Company;
@@ -88,9 +76,7 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
     }
 
     const cognitoUsername = result.User.Username ?? input.username;
-    const cognitoSub =
-      result.User.Attributes?.find((attr) => attr.Name === ClaimKey.Sub)
-        ?.Value ?? cognitoUsername;
+    const cognitoSub = result.User.Attributes?.find((attr) => attr.Name === ClaimKey.Sub)?.Value ?? cognitoUsername;
 
     const account = await this.accountRepo.findOrCreateCompanyAccount(
       username,
@@ -101,7 +87,7 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
       accountId,
       COGNITO_WORKFORCE_POOL_ID!,
       cognitoSub,
-      cognitoUsername
+      cognitoUsername,
     );
 
     if (!account) {

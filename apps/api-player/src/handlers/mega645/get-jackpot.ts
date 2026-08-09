@@ -4,7 +4,6 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-
 import { GetJackpotPlayerUseCase } from "@megawin/game-mega645-application/use-cases/player";
 
 const useCase = new GetJackpotPlayerUseCase();

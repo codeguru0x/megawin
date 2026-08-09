@@ -142,11 +142,7 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
  * List alert 1 kỳ (grouped theo type) — chỉ fetch khi panel mở (`enabled`).
  * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
  */
-export function useAlerts(
-  drawId: string | undefined,
-  status: string | undefined,
-  enabled: boolean,
-) {
+export function useAlerts(drawId: string | undefined, status: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: mega645Keys.opsAlerts(drawId ?? "", status),
     queryFn: () =>
@@ -224,11 +220,7 @@ const LIVE_FEED_FALLBACK_MS = 10_000;
  * @param isSettled - Kỳ đã settle → dừng poll, `staleTime` Infinity.
  * @param pollSeconds - Nhịp chung từ snapshot (giây); `undefined` → fallback 10s.
  */
-export function useOpsLiveEntries(
-  drawId: string | undefined,
-  isSettled: boolean,
-  pollSeconds: number | undefined,
-) {
+export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean, pollSeconds: number | undefined) {
   const pollMs = pollSeconds ? pollSeconds * 1000 : LIVE_FEED_FALLBACK_MS;
   return useQuery({
     queryKey: mega645Keys.opsLiveEntries(drawId ?? ""),
@@ -286,14 +278,10 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Winning Entries Dialog để xem lại phiếu cược gốc (board, kết quả, giải trúng).
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  */
-export function useWinningEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: mega645Keys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/mega645/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/mega645/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 
@@ -334,9 +322,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: mega645Keys.all });
       toast.success(successMessage);
@@ -415,13 +401,7 @@ export function useReopenForCascade() {
  */
 export function useResettlePreflight() {
   return useMutation({
-    mutationFn: ({
-      drawId,
-      proposedWinningNumbers,
-    }: {
-      drawId: string;
-      proposedWinningNumbers: string[];
-    }) =>
+    mutationFn: ({ drawId, proposedWinningNumbers }: { drawId: string; proposedWinningNumbers: string[] }) =>
       apiClient.post<ResettlePreflightOutput>(`/mega645/draws/${drawId}/resettle-preflight`, {
         proposedWinningNumbers,
       }),
@@ -429,11 +409,7 @@ export function useResettlePreflight() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/mega645/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/mega645/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {

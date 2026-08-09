@@ -24,10 +24,7 @@
 import type { Max3dproDrawResult, Max3dproPrizeConfig } from "@megawin/game-max3dpro/entities";
 
 /** Re-export với tên chuẩn hoá PascalCase cho settle layer. */
-export type {
-  Max3dproDrawResult as Max3dProDrawResult,
-  Max3dproPrizeConfig as Max3dProPrizeConfig,
-};
+export type { Max3dproDrawResult as Max3dProDrawResult, Max3dproPrizeConfig as Max3dProPrizeConfig };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettleFinancials – output CalculateFinancials, nested vào SettleContext

@@ -18,10 +18,7 @@ export const DISPATCH_ORDER_STATUS_LABELS: Record<DispatchOrderStatus, string> =
  * - `Dispatched` → `default` (primary — OK).
  * - `Cancelled` → `outline` (flat, không nổi bật).
  */
-export const DISPATCH_ORDER_STATUS_VARIANT: Record<
-  DispatchOrderStatus,
-  "default" | "secondary" | "outline"
-> = {
+export const DISPATCH_ORDER_STATUS_VARIANT: Record<DispatchOrderStatus, "default" | "secondary" | "outline"> = {
   [DispatchOrderStatus.Pending]: "secondary",
   [DispatchOrderStatus.Dispatched]: "default",
   [DispatchOrderStatus.Cancelled]: "outline",

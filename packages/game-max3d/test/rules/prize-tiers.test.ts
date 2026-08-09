@@ -7,15 +7,12 @@
  * Max 3D — khác các game khác chỉ lấy hạng cao nhất).
  */
 
-import { describe, it, expect } from "vitest";
-import {
-  flattenDrawResult,
-  findAllTiersInResult,
-  matchBasicStraight,
-} from "../../src/rules/prize-tiers";
-import { BasicPrizeTier } from "../../src/entities/enums";
+import { describe, expect, it } from "vitest";
+
 import type { Max3dDrawResult } from "../../src/entities/draw-result";
+import { BasicPrizeTier } from "../../src/entities/enums";
 import type { BasicPrizeAmounts } from "../../src/entities/types";
+import { findAllTiersInResult, flattenDrawResult, matchBasicStraight } from "../../src/rules/prize-tiers";
 
 const drawResult: Max3dDrawResult = {
   special: ["096", "389"],
@@ -39,10 +36,7 @@ describe("findAllTiersInResult", () => {
   });
 
   it("Đúng logic — triplet xuất hiện ở NHIỀU hạng (096: cả ĐB và Nhất) → trả TẤT CẢ tier khớp", () => {
-    expect(findAllTiersInResult("096", byTier)).toEqual([
-      BasicPrizeTier.Special,
-      BasicPrizeTier.First,
-    ]);
+    expect(findAllTiersInResult("096", byTier)).toEqual([BasicPrizeTier.Special, BasicPrizeTier.First]);
   });
 
   it("Logic ngược — triplet không khớp bất kỳ hạng nào → mảng rỗng", () => {

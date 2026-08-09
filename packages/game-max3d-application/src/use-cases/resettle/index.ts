@@ -5,8 +5,7 @@
  *   PrepareResettle → EnqueueReversals → (nested Settle SFN)
  */
 
-export { PrepareResettleUseCase } from "./prepare-resettle";
-export type { PrepareResettleInput, PrepareResettleOutput } from "./prepare-resettle";
-
-export { EnqueueReversalsUseCase } from "./enqueue-reversals";
 export type { EnqueueReversalsInput, EnqueueReversalsOutput } from "./enqueue-reversals";
+export { EnqueueReversalsUseCase } from "./enqueue-reversals";
+export type { PrepareResettleInput, PrepareResettleOutput } from "./prepare-resettle";
+export { PrepareResettleUseCase } from "./prepare-resettle";

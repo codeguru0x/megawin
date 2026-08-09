@@ -1,13 +1,13 @@
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  OpsStatsConfig,
-  Lotto535OpsAlertType,
-} from "@megawin/game-lotto535/entities";
-import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type {
+  FinancialRates,
+  GlobalConfigEntity,
+  JackpotConfig,
+  Lotto535OpsAlertType,
+  OpsStatsConfig,
+  PlayRules,
+  PrizeAmounts,
+} from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
 // GetGameConfig

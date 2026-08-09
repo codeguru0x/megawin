@@ -1,6 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { tenantCallbackConfigCache } from "@megawin/tenant-gateway/caches";
+
 import { TenantRepository } from "../../infras/repos/tenant-repo";
 import type { UpdateTenantInput, UpdateTenantOutput } from "./dto/tenant.dto";
 

@@ -1,8 +1,9 @@
+import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
-import { DrawRepository } from "../../infras/repos/draw-repo";
 import { displayVNTime, sortBy } from "@megawin/shared/utils";
-import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
+
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selector.dto";
 
 /**
  * Dropdown chọn kỳ quay cho Bingo 18 Operations Dashboard.
@@ -40,10 +41,7 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       (d) => d.drawId,
     );
 
-    const toItem = (
-      draw: (typeof unfinishedDraws)[0],
-      group: DrawSelectorGroup,
-    ): DrawSelectorItem => ({
+    const toItem = (draw: (typeof unfinishedDraws)[0], group: DrawSelectorGroup): DrawSelectorItem => ({
       drawId: draw.drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,

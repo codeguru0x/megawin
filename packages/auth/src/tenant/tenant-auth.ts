@@ -4,10 +4,8 @@
  */
 
 import { TenantRepository } from "@megawin/identity-application/repos";
-import {
-  tenantApiKeyAuthMiddleware,
-  type TenantApiKeyAuthOptions,
-} from "../tenant-api-key-auth";
+
+import { type TenantApiKeyAuthOptions, tenantApiKeyAuthMiddleware } from "../tenant-api-key-auth";
 
 const TENANT_AUTH_PROJECTION = {
   tenantId: 1,
@@ -22,9 +20,7 @@ async function lookupTenantByApiKey(apiKey: string) {
   return tenantRepo.getTenantByApiKey(apiKey, TENANT_AUTH_PROJECTION);
 }
 
-export function tenantAuth(
-  overrides?: Partial<Omit<TenantApiKeyAuthOptions, "getTenantByApiKey">>,
-) {
+export function tenantAuth(overrides?: Partial<Omit<TenantApiKeyAuthOptions, "getTenantByApiKey">>) {
   return tenantApiKeyAuthMiddleware({
     getTenantByApiKey: lookupTenantByApiKey,
     ...overrides,

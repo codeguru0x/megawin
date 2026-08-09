@@ -1,15 +1,16 @@
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type {
-  JackpotConfig,
   FinancialRates,
-  PrizeAmounts,
-  PlayRules,
+  GlobalConfigEntity,
+  JackpotConfig,
   Lotto535OpsConfig,
+  PlayRules,
+  PrizeAmounts,
 } from "@megawin/game-lotto535/entities";
-import { BaseRepo } from "./base-repo";
+import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+
 import { GameConfigMapper } from "../mappers/global-config-mapper";
-import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
+import { BaseRepo } from "./base-repo";
 
 export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {

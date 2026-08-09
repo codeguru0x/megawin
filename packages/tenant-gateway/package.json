@@ -17,12 +17,7 @@
     "docs:lint": "redocly lint openapi.yaml",
     "docs:build": "rm -rf docs && redocly build-docs openapi.yaml -o docs/index.html"
   },
-  "keywords": [
-    "megawin",
-    "tenant",
-    "gateway",
-    "outbound"
-  ],
+  "keywords": ["megawin", "tenant", "gateway", "outbound"],
   "author": "",
   "license": "ISC",
   "exports": {
@@ -67,9 +62,9 @@
     "@megawin/vitest-config": "workspace:*",
     "@redocly/cli": "^2.26.0",
     "@types/node": "^25.9.4",
-    "next": "^16.2.12",
+    "next": "^16.3.0",
     "typescript": "^6.0.3",
-    "vite": "^8.1.4",
+    "vite": "^8.2.1",
     "vitest": "^4.1.10"
   }
 }

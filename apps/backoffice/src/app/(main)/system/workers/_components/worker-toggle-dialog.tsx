@@ -83,10 +83,7 @@ export function WorkerToggleDialog({ row, onClose, mutation }: WorkerToggleDialo
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
-                  mutate(
-                    { lockKey: shown.lockKey, isEnabled: nextEnabled },
-                    { onSuccess: () => onClose() },
-                  );
+                  mutate({ lockKey: shown.lockKey, isEnabled: nextEnabled }, { onSuccess: () => onClose() });
                 }}
                 disabled={isPending}
               >

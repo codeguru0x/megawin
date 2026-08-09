@@ -1,7 +1,6 @@
-import type { DrawStatus } from "@megawin/game-core/entities";
-import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
-import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawEntity, Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import type { WireType } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────

@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest";
-import {
-  matchSingleNum,
-  matchDoubleMatch,
-  matchTripleMatch,
-  matchSumTotal,
-  matchBigSmallDraw,
-  computeDrawStats,
-} from "@megawin/game-bingo18/helpers/match-result";
 import { Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities/enums";
+import {
+  computeDrawStats,
+  matchBigSmallDraw,
+  matchDoubleMatch,
+  matchSingleNum,
+  matchSumTotal,
+  matchTripleMatch,
+} from "@megawin/game-bingo18/helpers/match-result";
+import { describe, expect, it } from "vitest";
 
 // ─── Helpers ────────────────────────────────────────
 
@@ -389,12 +389,8 @@ describe("betCount multiplier – winAmount nhân theo số lần cược", () =
     const betCount = 10;
     expect(matchSingleNum(6, drawResult([1, 2, 3])).winAmount * betCount).toBe(0);
     expect(matchDoubleMatch(1, drawResult([2, 3, 4])).winAmount * betCount).toBe(0);
-    expect(
-      matchTripleMatch(Bingo18TripleKind.Specific, 1, drawResult([2, 2, 2])).winAmount * betCount,
-    ).toBe(0);
+    expect(matchTripleMatch(Bingo18TripleKind.Specific, 1, drawResult([2, 2, 2])).winAmount * betCount).toBe(0);
     expect(matchSumTotal(5, drawResult([3, 3, 3])).winAmount * betCount).toBe(0);
-    expect(
-      matchBigSmallDraw(Bingo18BigSmallBet.Big, drawResult([1, 1, 1])).winAmount * betCount,
-    ).toBe(0);
+    expect(matchBigSmallDraw(Bingo18BigSmallBet.Big, drawResult([1, 1, 1])).winAmount * betCount).toBe(0);
   });
 });

@@ -4,12 +4,11 @@
  * Chỉ trả khi entry đã settled.
  */
 
+import { withPlayerAuth } from "@megawin/auth";
+import { GetEntryLinesPlayerUseCase } from "@megawin/game-lotto535-application/use-cases/player";
 import { z } from "zod";
 
-import { withPlayerAuth } from "@megawin/auth";
-
-import { GetEntryLinesPlayerUseCase } from "@megawin/game-lotto535-application/use-cases/player";
-import { objectIdSchema, lineCursorQuerySchema } from "#lib/schemas";
+import { lineCursorQuerySchema, objectIdSchema } from "#lib/schemas";
 
 const pathSchema = z.object({
   entryId: objectIdSchema,
@@ -26,5 +25,5 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, entryId, size, cursor });
   },
-  { schemas: { path: pathSchema, query: lineCursorQuerySchema } }
+  { schemas: { path: pathSchema, query: lineCursorQuerySchema } },
 );

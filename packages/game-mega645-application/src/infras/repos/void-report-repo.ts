@@ -9,6 +9,7 @@
 
 import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-mega645/entities";
 import { MEGA645_VOID_DRAW_REPORTS } from "@megawin/game-mega645/entities";
+
 import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 
@@ -53,9 +54,6 @@ export class VoidReportRepository extends BaseRepo<VoidDrawReportEntity, VoidDra
   }
 
   async findByDateRange(from: string, to: string): Promise<VoidDrawReportEntity[]> {
-    return await this.findMany(
-      { financialDate: { $gte: from, $lte: to } },
-      { sort: { financialDate: -1 } },
-    );
+    return await this.findMany({ financialDate: { $gte: from, $lte: to } }, { sort: { financialDate: -1 } });
   }
 }

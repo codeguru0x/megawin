@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 
-import {
-  displayVNDateTime,
-  formatNumber,
-  formatVNDCompact,
-  toTenantUsername,
-} from "@megawin/shared/utils";
+import { displayVNDateTime, formatNumber, formatVNDCompact, toTenantUsername } from "@megawin/shared/utils";
 import { ChevronDown, Crown, Loader2, RefreshCcw, Sparkles, Trophy, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -57,9 +52,7 @@ export function JackpotCyclesSection() {
         </div>
         <div>
           <h2 className="text-sm font-semibold text-foreground">Lịch sử vòng tích lũy</h2>
-          <p className="text-xs text-muted-foreground">
-            Danh sách các vòng tích luỹ jackpot gần nhất
-          </p>
+          <p className="text-xs text-muted-foreground">Danh sách các vòng tích luỹ jackpot gần nhất</p>
         </div>
       </div>
 
@@ -93,8 +86,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
       <div
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
-          isWinner &&
-            "border-orange-200 bg-orange-50/30 dark:border-orange-800/50 dark:bg-orange-950/10",
+          isWinner && "border-orange-200 bg-orange-50/30 dark:border-orange-800/50 dark:bg-orange-950/10",
           !isWinner && "bg-card",
         )}
       >
@@ -107,9 +99,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
-                isWinner
-                  ? "bg-linear-to-br from-orange-400 to-red-500 shadow-md shadow-orange-500/20"
-                  : "bg-muted",
+                isWinner ? "bg-linear-to-br from-orange-400 to-red-500 shadow-md shadow-orange-500/20" : "bg-muted",
               )}
             >
               {isWinner ? (
@@ -147,9 +137,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                   JP2: {formatVNDCompact(jp2)}
                 </span>
               </div>
-              <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">
-                Tổng: {formatNumber(jp1 + jp2)}
-              </p>
+              <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">Tổng: {formatNumber(jp1 + jp2)}</p>
             </div>
 
             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
@@ -164,20 +152,12 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
               <StatMini label="Kỳ kết thúc" value={cycle.endDrawId || "—"} />
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <StatMini
-                label="Jackpot 1 - Khởi điểm"
-                value={formatNumber(cycle.jackpot1SeedAmount)}
-              />
+              <StatMini label="Jackpot 1 - Khởi điểm" value={formatNumber(cycle.jackpot1SeedAmount)} />
               <StatMini label="Jackpot 1 - Kết thúc" value={formatNumber(jp1)} highlight="red" />
-              <StatMini
-                label="Jackpot 2 - Khởi điểm"
-                value={formatNumber(cycle.jackpot2SeedAmount)}
-              />
+              <StatMini label="Jackpot 2 - Khởi điểm" value={formatNumber(cycle.jackpot2SeedAmount)} />
               <StatMini label="Jackpot 2 - Kết thúc" value={formatNumber(jp2)} highlight="blue" />
             </div>
-            {isWinner && cycle.winners && cycle.winners.length > 0 && (
-              <WinnerList winners={cycle.winners} />
-            )}
+            {isWinner && cycle.winners && cycle.winners.length > 0 && <WinnerList winners={cycle.winners} />}
           </div>
         </CollapsibleContent>
       </div>
@@ -185,15 +165,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
   );
 }
 
-function StatMini({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  highlight?: "red" | "blue";
-}) {
+function StatMini({ label, value, highlight }: { label: string; value: string; highlight?: "red" | "blue" }) {
   return (
     <div className="rounded-lg bg-muted/40 px-3 py-2.5">
       <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
@@ -243,9 +215,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Người trúng Jackpot
-      </p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Người trúng Jackpot</p>
       <div className="space-y-2">
         {winners.map((w, idx) => {
           const jpBadge = JP_TYPE_BADGE[w.jackpotType];
@@ -263,12 +233,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold">{toTenantUsername(w.username ?? "")}</p>
                   {jpBadge && (
-                    <span
-                      className={cn(
-                        "rounded px-1.5 py-0.5 text-xs font-semibold",
-                        jpBadge.className,
-                      )}
-                    >
+                    <span className={cn("rounded px-1.5 py-0.5 text-xs font-semibold", jpBadge.className)}>
                       {jpBadge.label}
                     </span>
                   )}

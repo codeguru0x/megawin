@@ -34,8 +34,7 @@
  * prepareSettleUseCase.run(input);
  */
 
-import { AppException } from "@megawin/shared/errors";
-import { isAppError } from "@megawin/shared/errors";
+import { AppException, isAppError } from "@megawin/shared/errors";
 
 export abstract class InternalUseCase<I = void, O = void> {
   protected abstract execute(input: I): Promise<O>;

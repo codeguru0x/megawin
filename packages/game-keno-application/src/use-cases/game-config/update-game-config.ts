@@ -1,15 +1,12 @@
+import type { OpsConfig } from "@megawin/game-keno/entities";
+import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
-import type { OpsConfig } from "@megawin/game-keno/entities";
+
+import { globalConfigCache } from "../../caches/global-config.cache";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
-import { globalConfigCache } from "../../caches/global-config.cache";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-  UpdateOpsInput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game Keno toàn cục (upsert).
@@ -24,19 +21,14 @@ import type {
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
  */
-export class UpdateGameConfigUseCase extends NextApiUseCase<
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput
-> {
+export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     const existing = await this.repo.getGlobalConfig();
 
     const merged = {
-      rates: input.rates
-        ? { ...(existing?.rates ?? DEFAULT_KENO_CONFIG.rates), ...input.rates }
-        : undefined,
+      rates: input.rates ? { ...(existing?.rates ?? DEFAULT_KENO_CONFIG.rates), ...input.rates } : undefined,
       basicPrizes: input.basicPrizes ? input.basicPrizes : undefined,
       bigSmallPrizes: input.bigSmallPrizes
         ? {
@@ -56,9 +48,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
             ...input.payoutCaps,
           }
         : undefined,
-      play: input.play
-        ? { ...(existing?.play ?? DEFAULT_KENO_CONFIG.play), ...input.play }
-        : undefined,
+      play: input.play ? { ...(existing?.play ?? DEFAULT_KENO_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
     };
 

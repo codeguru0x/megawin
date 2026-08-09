@@ -1,10 +1,8 @@
-import { describe, it, expect } from "vitest";
 import { PlayType } from "@megawin/game-power655/entities";
-import {
-  Power655StatsAccumulator,
-  type PrizeContext,
-} from "../../src/use-cases/operations/stats-accumulator";
+import { describe, expect, it } from "vitest";
+
 import type { EntryBoardForStats, EntryForStats } from "../../src/infras/repos/types";
+import { Power655StatsAccumulator, type PrizeContext } from "../../src/use-cases/operations/stats-accumulator";
 
 const DRAW_ID = "2026-08-05.001";
 const UNIT_PRICE = 10_000;
@@ -29,8 +27,7 @@ function board(overrides: Partial<EntryBoardForStats> = {}): EntryBoardForStats 
 
 function entry(overrides: Partial<EntryForStats> = {}): EntryForStats {
   const boards = overrides.boards ?? [board()];
-  const betUnitCount =
-    overrides.betUnitCount ?? boards.reduce((sum, b) => sum + b.expandedLines * b.betCount, 0);
+  const betUnitCount = overrides.betUnitCount ?? boards.reduce((sum, b) => sum + b.expandedLines * b.betCount, 0);
   return {
     id: "64b000000000000000000001",
     drawId: DRAW_ID,

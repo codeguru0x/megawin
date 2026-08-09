@@ -1,7 +1,7 @@
-import { Long } from "mongodb";
+import type { FeedSyncCursorEntity, GameProduct } from "@megawin/game-core/entities";
 import { GameCoreCollections } from "@megawin/game-core/entities";
-import type { GameProduct } from "@megawin/game-core/entities";
-import type { FeedSyncCursorEntity } from "@megawin/game-core/entities";
+import { Long } from "mongodb";
+
 import { FeedSyncCursorMapper } from "../mappers/feed-sync-cursor-mapper";
 import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
 import type { AcquireLockResult } from "./types";
@@ -20,10 +20,7 @@ const DEFAULT_LOCK_TTL_MS = 3 * 60 * 1000;
  *   acquireLock → loop batches → saveAndExtendLock (mỗi batch) → releaseLock
  *   Nếu crash → lock auto-expire sau TTL (3 phút) → Lambda tiếp theo acquire lại.
  */
-export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<
-  FeedSyncCursorEntity,
-  FeedSyncCursorMapper
-> {
+export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<FeedSyncCursorEntity, FeedSyncCursorMapper> {
   constructor() {
     super({
       collName: GameCoreCollections.FeedSyncCursor,
@@ -40,10 +37,7 @@ export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<
    *
    * Trả acquired=false nếu ai đó đang giữ lock chưa hết hạn.
    */
-  async acquireLock(
-    gameProduct: GameProduct,
-    lockTtlMs: number = DEFAULT_LOCK_TTL_MS,
-  ): Promise<AcquireLockResult> {
+  async acquireLock(gameProduct: GameProduct, lockTtlMs: number = DEFAULT_LOCK_TTL_MS): Promise<AcquireLockResult> {
     const now = new Date();
     const lockedUntil = new Date(now.getTime() + lockTtlMs);
 

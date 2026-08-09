@@ -93,10 +93,7 @@ export function getRequiredMainCount(playType: PlayType): number {
   return PLAY_TYPE_CONFIGS[playType].mainCount;
 }
 
-export function validateMainNumbers(
-  mainNumbers: string[],
-  playType: PlayType,
-): { valid: boolean; error?: string } {
+export function validateMainNumbers(mainNumbers: string[], playType: PlayType): { valid: boolean; error?: string } {
   const config = PLAY_TYPE_CONFIGS[playType];
   if (!config) return { valid: false, error: `PlayType không hợp lệ: ${playType}` };
 

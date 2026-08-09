@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { ListTenantReportsInput, ListTenantReportsOutput } from "./types";
 
@@ -7,10 +8,7 @@ import type { ListTenantReportsInput, ListTenantReportsOutput } from "./types";
  *
  * Trả TenantAggregateSummary[] sort theo doanh thu desc.
  */
-export class ListTenantReportsUseCase extends NextApiUseCase<
-  ListTenantReportsInput,
-  ListTenantReportsOutput
-> {
+export class ListTenantReportsUseCase extends NextApiUseCase<ListTenantReportsInput, ListTenantReportsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListTenantReportsInput): Promise<ListTenantReportsOutput> {

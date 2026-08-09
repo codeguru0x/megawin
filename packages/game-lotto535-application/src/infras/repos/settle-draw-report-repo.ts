@@ -15,6 +15,7 @@
 
 import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-lotto535/entities";
 import { LOTTO535_SETTLE_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+
 import { SettleDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { DrawSummaryResult } from "./types";

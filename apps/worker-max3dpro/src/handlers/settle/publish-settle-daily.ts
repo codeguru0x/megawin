@@ -9,8 +9,8 @@
  * @output PublishSettleDailyResult
  */
 
-import { PublishSettleDailyUseCase } from "@megawin/game-max3dpro-application/use-cases/settle";
 import type { SettleContext } from "@megawin/game-max3dpro-application/use-cases/settle";
+import { PublishSettleDailyUseCase } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new PublishSettleDailyUseCase();
 

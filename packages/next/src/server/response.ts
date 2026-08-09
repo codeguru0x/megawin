@@ -6,22 +6,18 @@
  */
 
 import { NextResponse } from "next/server";
-import {
-  type AppError,
-  type AppResult,
-  AppException,
-  isAppError,
-  APP_ERROR_CODES,
-  appErrorToStatusCode,
-} from "@megawin/shared/errors";
 
-import type {
-  ApiErrorDetail,
-  ApiErrorResponse,
-  ApiResponseMeta,
-  ApiSuccessResponse,
-} from "../types";
+import {
+  APP_ERROR_CODES,
+  type AppError,
+  AppException,
+  type AppResult,
+  appErrorToStatusCode,
+  isAppError,
+} from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
+
+import type { ApiErrorDetail, ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "../types";
 
 // ============ Success ============
 
@@ -160,10 +156,7 @@ function formatZodIssues(error: import("zod").ZodError): Array<{ field: string; 
   }));
 }
 
-export function validationError(
-  message: string,
-  details?: unknown,
-): NextResponse<ApiErrorResponse> {
+export function validationError(message: string, details?: unknown): NextResponse<ApiErrorResponse> {
   let formattedDetails = details;
   // Nếu details là ZodError → format thành mảng { field, message } có full path
   if (details && typeof details === "object" && "issues" in details) {

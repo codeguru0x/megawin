@@ -8,9 +8,9 @@
  * specialCover) + biên trên/dưới.
  */
 
-import { describe, it, expect } from "vitest";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { inferPlayType } from "@megawin/game-lotto535/rules";
+import { describe, expect, it } from "vitest";
 
 describe("inferPlayType — khớp playType", () => {
   it("4 chính + 1 ĐB → MainCover4", () => {

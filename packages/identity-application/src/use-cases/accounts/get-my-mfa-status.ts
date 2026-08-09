@@ -1,10 +1,8 @@
+import { adminGetUserMfaStatus, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import { MfaStatus } from "@megawin/identity/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  adminGetUserMfaStatus,
-  COGNITO_WORKFORCE_POOL_ID,
-} from "@megawin/app-core/aws/cognito";
-import { MfaStatus } from "@megawin/identity/entities";
+
 import { AccountRepository } from "../../infras/repos/account-repo";
 
 export interface GetMyMfaStatusInput {
@@ -17,13 +15,8 @@ export interface GetMyMfaStatusOutput {
   preferredMethod: string | null;
 }
 
-export class GetMyMfaStatusUseCase extends NextApiUseCase<
-  GetMyMfaStatusInput,
-  GetMyMfaStatusOutput
-> {
-  protected async execute(
-    input: GetMyMfaStatusInput
-  ): Promise<GetMyMfaStatusOutput> {
+export class GetMyMfaStatusUseCase extends NextApiUseCase<GetMyMfaStatusInput, GetMyMfaStatusOutput> {
+  protected async execute(input: GetMyMfaStatusInput): Promise<GetMyMfaStatusOutput> {
     if (!COGNITO_WORKFORCE_POOL_ID) {
       throw AppException.internal("Cognito pool configuration is missing");
     }

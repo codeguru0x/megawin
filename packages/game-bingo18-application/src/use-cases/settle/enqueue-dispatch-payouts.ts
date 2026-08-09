@@ -29,6 +29,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { buildResettleBatchKey } from "@megawin/game-core/utils";
 import { buildPayoutOrder } from "@megawin/tenant-dispatch/builders";
 import { EnqueueDispatchOrdersUseCase } from "@megawin/tenant-dispatch/use-cases/enqueue";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { ResettleContext } from "./types";
 
@@ -55,9 +56,7 @@ export class EnqueueDispatchPayoutsUseCase extends InternalUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 
-  protected async execute(
-    input: EnqueueDispatchPayoutsInput,
-  ): Promise<EnqueueDispatchPayoutsOutput> {
+  protected async execute(input: EnqueueDispatchPayoutsInput): Promise<EnqueueDispatchPayoutsOutput> {
     const { drawId, resettleContext } = input;
 
     // Resettle path dùng batchKey riêng để separate metrics + audit so với

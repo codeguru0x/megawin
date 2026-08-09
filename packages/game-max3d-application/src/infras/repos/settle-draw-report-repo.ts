@@ -17,8 +17,9 @@
 
 import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-max3d/entities";
 import { MAX3D_SETTLE_DRAW_REPORTS } from "@megawin/game-max3d/entities";
-import { BaseRepo } from "./base-repo";
+
 import { SettleDrawReportMapper } from "../mappers";
+import { BaseRepo } from "./base-repo";
 import type { DrawSummaryResult } from "./types";
 
 /**
@@ -26,10 +27,7 @@ import type { DrawSummaryResult } from "./types";
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<
-  SettleDrawReportEntity,
-  SettleDrawReportMapper
-> {
+export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
   constructor() {
     super({ collName: MAX3D_SETTLE_DRAW_REPORTS, dataMapper: new SettleDrawReportMapper() });
   }

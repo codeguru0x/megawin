@@ -11,17 +11,13 @@
  */
 
 import type { RedisClientType } from "redis";
+
 import type { CacheStore } from "../../types";
 
 declare global {
   // Cache store singleton cho Next.js dev HMR — tránh tạo lại mỗi lần reload.
-  // eslint-disable-next-line no-var
   var __megawinDefaultCacheStore: CacheStore | undefined;
 
   // Redis clients cache (theo env key) cho Next.js dev HMR — tránh connect lại.
-  // eslint-disable-next-line no-var
   var __nextJsRedisClients: Map<string, RedisClientType> | undefined;
 }
-
-// Export rỗng để file được coi là module — điều kiện để `declare global` hợp lệ.
-export {};

@@ -1,5 +1,5 @@
-import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import { Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -47,10 +47,7 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: positiveInt,
     maxBetCount: positiveInt,
-    maxBoardsPerTicket: positiveInt.max(
-      LOTTO535_MAX_BOARDS,
-      `Số board tối đa không được vượt ${LOTTO535_MAX_BOARDS}.`,
-    ),
+    maxBoardsPerTicket: positiveInt.max(LOTTO535_MAX_BOARDS, `Số board tối đa không được vượt ${LOTTO535_MAX_BOARDS}.`),
     maxDrawCount: positiveInt,
     salesCloseBeforeMinutes: positiveInt,
     drawsPerDay: positiveInt,

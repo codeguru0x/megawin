@@ -11,7 +11,7 @@
  * Use-case + repo giữ nguyên `AuditLogCursor` object.
  */
 
-import { encodeCursor, decodeCursor, isObjectId } from "@megawin/data/mongo";
+import { decodeCursor, encodeCursor, isObjectId } from "@megawin/data/mongo";
 
 import type { AuditLogCursor } from "../infras/repos";
 

@@ -7,10 +7,11 @@
  * - Progress bar (current / threshold)
  */
 
+import { AppException } from "@megawin/app-core/use-cases";
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
-import { AppException } from "@megawin/app-core/use-cases";
 
 export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();

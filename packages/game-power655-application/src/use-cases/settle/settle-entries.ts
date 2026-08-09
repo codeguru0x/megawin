@@ -32,8 +32,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
-import { PrizeTier } from "@megawin/game-power655/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
   EntryPayout,
   EntryPayoutTier,
@@ -41,9 +40,10 @@ import type {
   PrizeAmounts,
   TicketLineDoc,
 } from "@megawin/game-power655/entities";
-import { expandAllBoards } from "@megawin/game-power655/helpers";
-import { matchLines, type DrawResultForMatch } from "@megawin/game-power655/helpers";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import { PrizeTier } from "@megawin/game-power655/entities";
+import { type DrawResultForMatch, expandAllBoards, matchLines } from "@megawin/game-power655/helpers";
+import { generateId } from "@megawin/shared/utils";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
@@ -66,10 +66,7 @@ export interface SettleEntriesBatchResult {
  * betCount: mỗi board có betCount multiplier → winAmount = unitAmount × betCount.
  * JP1/JP2: winAmount = 0 tại đây, PatchJackpotPrize tính sau khi biết pool + winners.
  */
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
@@ -165,9 +162,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               // JP1/JP2: winAmount = 0 tại đây. PatchJackpotPrize chia pool cho winners.
               // Giải cố định: winAmount = unitAmount × betCount (theo luật Vietlott).
               winAmount:
-                highestTier === PrizeTier.Jackpot1 || highestTier === PrizeTier.Jackpot2
-                  ? 0
-                  : unitAmount * betCount,
+                highestTier === PrizeTier.Jackpot1 || highestTier === PrizeTier.Jackpot2 ? 0 : unitAmount * betCount,
             },
             createdAt: now,
           };

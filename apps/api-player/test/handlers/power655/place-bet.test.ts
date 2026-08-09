@@ -10,9 +10,10 @@
  * - Max 5 boards (A-E)
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockEvent, parseBody } from "#test/helpers/mock-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
+
+import { createMockEvent, parseBody } from "#test/helpers/mock-event";
 
 const mockRun = vi.fn();
 

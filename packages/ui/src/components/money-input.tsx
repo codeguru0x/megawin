@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { NumericFormat, type NumberFormatValues, type NumericFormatProps } from "react-number-format";
+
+import { type NumberFormatValues, NumericFormat, type NumericFormatProps } from "react-number-format";
+
 import { cn } from "../lib/cn";
 
 export interface MoneyInputProps
@@ -19,7 +21,19 @@ const INPUT_CLASSES = [
 ] as const;
 
 const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
-  ({ className, value, defaultValue, onValueChange, decimalScale = 0, thousandSeparator = true, allowNegative = false, ...props }, ref) => {
+  (
+    {
+      className,
+      value,
+      defaultValue,
+      onValueChange,
+      decimalScale = 0,
+      thousandSeparator = true,
+      allowNegative = false,
+      ...props
+    },
+    ref,
+  ) => {
     function handleValueChange(values: NumberFormatValues) {
       onValueChange?.(values.floatValue);
     }

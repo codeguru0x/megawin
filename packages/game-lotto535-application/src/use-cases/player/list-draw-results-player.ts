@@ -8,12 +8,13 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import type { DrawEntity } from "@megawin/game-lotto535/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";;
 import type {
+  PlayerDrawResultSummary,
   PlayerListDrawResultsInput,
   PlayerListDrawResultsOutput,
-  PlayerDrawResultSummary,
 } from "./dto/player.dto";
 
 export class ListDrawResultsPlayerUseCase extends ApiGatewayUseCase<

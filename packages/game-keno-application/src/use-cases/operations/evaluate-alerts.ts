@@ -10,6 +10,15 @@
  * mỗi tick). Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
+import type {
+  KenoCappablePlayType,
+  KenoDrawBettingStatsEntity,
+  KenoDrawComboStatsEntity,
+  KenoOpsAlertDoc,
+  KenoSideBetPlayType,
+  OpsAlertsConfig,
+  PayoutCaps,
+} from "@megawin/game-keno/entities";
 import {
   KenoBigSmallBet,
   KenoEvenOddBet,
@@ -20,15 +29,6 @@ import {
 } from "@megawin/game-keno/entities";
 import { capExposureByPlayType } from "@megawin/game-keno/rules";
 import { sumBy } from "@megawin/shared/utils/array";
-import type {
-  KenoCappablePlayType,
-  KenoDrawBettingStatsEntity,
-  KenoDrawComboStatsEntity,
-  KenoOpsAlertDoc,
-  KenoSideBetPlayType,
-  OpsAlertsConfig,
-  PayoutCaps,
-} from "@megawin/game-keno/entities";
 
 /** Snapshot stats + combo cần cho evaluate. */
 export interface EvaluateAlertsInput {
@@ -73,9 +73,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
   // ── large_bet: gộp 1 alert/draw kèm top entry lớn (chốt p0-06) ──
   // Đếm gộp theo largeBetCount; payload đính top potential entries để staff drill-down.
   if (alerts.enabled[KenoOpsAlertType.LargeBet] && stats.totals.largeBetCount > 0) {
-    const topLarge = stats.topPotential
-      .filter((p) => p.amount >= alerts.largeBetAmount)
-      .slice(0, 10);
+    const topLarge = stats.topPotential.filter((p) => p.amount >= alerts.largeBetAmount).slice(0, 10);
     push(
       KenoOpsAlertType.LargeBet,
       // Nhiều cược lớn → critical, ít → warning.
@@ -119,12 +117,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
   if (alerts.enabled[KenoOpsAlertType.CapSetsNear]) {
     const { pick8, pick9, pick10 } = stats.exposure.capSets;
     const warn = alerts.comboSetsWarn;
-    const check = (
-      pick: KenoCappablePlayType,
-      sets: number,
-      warnAt: number,
-      capAt: number,
-    ): void => {
+    const check = (pick: KenoCappablePlayType, sets: number, warnAt: number, capAt: number): void => {
       if (sets >= warnAt) {
         push(
           KenoOpsAlertType.CapSetsNear,
@@ -150,9 +143,7 @@ export function evaluateAlerts(input: EvaluateAlertsInput): NewAlert[] {
         push(
           KenoOpsAlertType.ComboConcentration,
           // Rất đông người dồn 1 bộ → critical.
-          players >= alerts.comboAccountsWarn * 2
-            ? OpsAlertSeverity.Critical
-            : OpsAlertSeverity.Warning,
+          players >= alerts.comboAccountsWarn * 2 ? OpsAlertSeverity.Critical : OpsAlertSeverity.Warning,
           `${KenoOpsAlertType.ComboConcentration}:${combo.comboKey}`,
           {
             comboKey: combo.comboKey,

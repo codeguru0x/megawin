@@ -1,11 +1,12 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { AppException } from "@megawin/shared/errors";
 import {
   adminChangeUserPassword,
-  COGNITO_WORKFORCE_POOL_ID,
   COGNITO_WORKFORCE_CLIENT_ID,
+  COGNITO_WORKFORCE_POOL_ID,
 } from "@megawin/app-core/aws/cognito";
 import type { AuditActor } from "@megawin/audit/logger";
+import { NextApiUseCase } from "@megawin/next/server";
+import { AppException } from "@megawin/shared/errors";
+
 import { auditChangeOwnPassword } from "../../services/audit-log";
 
 export interface ChangeMyPasswordInput {
@@ -20,10 +21,7 @@ export interface ChangeMyPasswordOutput {
   success: boolean;
 }
 
-export class ChangeMyPasswordUseCase extends NextApiUseCase<
-  ChangeMyPasswordInput,
-  ChangeMyPasswordOutput
-> {
+export class ChangeMyPasswordUseCase extends NextApiUseCase<ChangeMyPasswordInput, ChangeMyPasswordOutput> {
   protected async execute(input: ChangeMyPasswordInput): Promise<ChangeMyPasswordOutput> {
     if (!COGNITO_WORKFORCE_POOL_ID || !COGNITO_WORKFORCE_CLIENT_ID) {
       throw AppException.internal("Cognito pool configuration is missing");
@@ -41,10 +39,7 @@ export class ChangeMyPasswordUseCase extends NextApiUseCase<
       const errName = error instanceof Error ? error.constructor.name : "UnknownError";
       const errMessage = error instanceof Error ? error.message : "Unknown error";
 
-      if (
-        errName === "NotAuthorizedException" ||
-        errMessage.includes("Incorrect username or password")
-      ) {
+      if (errName === "NotAuthorizedException" || errMessage.includes("Incorrect username or password")) {
         throw AppException.badRequest("Mật khẩu hiện tại không đúng");
       }
 

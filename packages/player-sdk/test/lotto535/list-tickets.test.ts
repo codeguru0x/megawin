@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { PlayerClient } from "../../src";
-import { createTestClient, mockFetch, BASE_URL, TOKENS } from "../helpers";
+import { BASE_URL, createTestClient, mockFetch, TOKENS } from "../helpers";
 
 const TICKET = {
   ticketId: "TKT-L10",

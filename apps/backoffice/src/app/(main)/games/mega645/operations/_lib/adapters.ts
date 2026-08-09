@@ -17,9 +17,9 @@ import type {
   PlayType,
   TopAccountStat,
 } from "@megawin/game-mega645/entities";
-import type { Mega645TopCombo } from "@megawin/game-mega645-application/use-cases/operations";
 import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 import { PLAY_TYPE_CONFIGS } from "@megawin/game-mega645/rules";
+import type { Mega645TopCombo } from "@megawin/game-mega645-application/use-cases/operations";
 
 import type {
   ExposureView,
@@ -169,10 +169,7 @@ export function toTenantRows(stats: Stats): TenantRow[] {
  * jackpot đọc snapshot pool lúc build response — xem JSDoc {@link Mega645SnapshotExposure}).
  * KHÁC Power 6/55: `jackpotExposure` là 1 số duy nhất (không JP1/JP2).
  */
-export function toExposureView(exposure: {
-  fixedWorstCase: number;
-  jackpotExposure: number;
-}): ExposureView {
+export function toExposureView(exposure: { fixedWorstCase: number; jackpotExposure: number }): ExposureView {
   return {
     fixedWorstCase: exposure.fixedWorstCase,
     jackpotExposure: exposure.jackpotExposure,

@@ -50,13 +50,7 @@ export function getProOddsTable(): ProTierOdds[] {
   const waysThird = RESULT_THIRD * RESULT_THIRD;
 
   const waysBothInAny = RESULT_TOTAL * RESULT_TOTAL;
-  const waysFourth =
-    waysBothInAny -
-    waysSpecial -
-    waysSpecialSub -
-    waysFirst -
-    waysSecond -
-    waysThird;
+  const waysFourth = waysBothInAny - waysSpecial - waysSpecialSub - waysFirst - waysSecond - waysThird;
 
   const nonResult = TOTAL_TRIPLETS - RESULT_TOTAL;
   const waysOneSpecialOnly = 2 * RESULT_SPECIAL * nonResult;
@@ -155,10 +149,7 @@ export interface ProfitSummary {
   grossMarginPercent: number;
 }
 
-export function analyzeProProfitability(
-  prizes: PrizeAmounts,
-  unitPrice: number
-): ProfitSummary {
+export function analyzeProProfitability(prizes: PrizeAmounts, unitPrice: number): ProfitSummary {
   const oddsTable = getProOddsTable();
 
   const tiers: TierProfitAnalysis[] = oddsTable.map((odds) => {
@@ -172,8 +163,7 @@ export function analyzeProProfitability(
       currentPrize,
       expectedPayout,
       payoutRatio: unitPrice > 0 ? expectedPayout / unitPrice : 0,
-      breakEvenPrize:
-        odds.probability > 0 ? unitPrice / odds.probability : Infinity,
+      breakEvenPrize: odds.probability > 0 ? unitPrice / odds.probability : Infinity,
     };
   });
 
@@ -188,7 +178,6 @@ export function analyzeProProfitability(
     totalExpectedPayout,
     totalPayoutRatio,
     grossMarginPerLine,
-    grossMarginPercent:
-      unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0,
+    grossMarginPercent: unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0,
   };
 }

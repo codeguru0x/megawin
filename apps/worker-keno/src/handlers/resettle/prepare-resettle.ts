@@ -8,10 +8,7 @@
  * @output PrepareResettleOutput
  */
 
-import {
-  PrepareResettleUseCase,
-  type PrepareResettleInput,
-} from "@megawin/game-keno-application/use-cases/resettle";
+import { type PrepareResettleInput, PrepareResettleUseCase } from "@megawin/game-keno-application/use-cases/resettle";
 
 const useCase = new PrepareResettleUseCase();
 

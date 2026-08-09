@@ -46,8 +46,7 @@ export const JackpotCycleClosedReasons = {
 } as const;
 
 /** Union type của các lý do đóng cycle. */
-export type JackpotCycleClosedReason =
-  (typeof JackpotCycleClosedReasons)[keyof typeof JackpotCycleClosedReasons];
+export type JackpotCycleClosedReason = (typeof JackpotCycleClosedReasons)[keyof typeof JackpotCycleClosedReasons];
 
 /** Trạng thái chu kỳ jackpot. */
 export const JackpotCycleStatus = {

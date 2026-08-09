@@ -4,10 +4,9 @@
  * Auth: API Key (server-to-server).
  */
 
-import { z } from "zod";
-
-import { withTenantAuth } from "@megawin/auth/tenant";
 import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
+import { withTenantAuth } from "@megawin/auth/tenant";
+import { z } from "zod";
 
 // ============ Zod schema ============
 

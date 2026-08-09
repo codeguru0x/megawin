@@ -1,6 +1,6 @@
-import { defineConfig } from "vitest/config";
-import { loadEnv } from "vite";
 import { integrationConfig } from "@megawin/vitest-config/dist";
+import { loadEnv } from "vite";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig(({ mode }) => ({
   ...integrationConfig,

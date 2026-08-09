@@ -12,12 +12,7 @@
     "test:watch": "vitest --watch",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "megawin",
-    "cache",
-    "redis",
-    "lru"
-  ],
+  "keywords": ["megawin", "cache", "redis", "lru"],
   "author": "",
   "license": "ISC",
   "exports": {

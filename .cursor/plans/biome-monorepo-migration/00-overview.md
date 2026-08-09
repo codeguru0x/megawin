@@ -17,16 +17,16 @@ Chuẩn hoá toàn bộ monorepo về **Biome 2.5.7** (bản mới nhất, 04/08
 
 | Plan | Phase | Status | Ghi chú |
 |---|---|---|---|
-| p0-01-root-biome-config | P0 | ⏳ pending | Nền tảng, chặn mọi plan sau |
-| p0-02-archetype-overrides | P0 | ⏳ pending | Cần p0-01 |
-| p0-03-frontend-configs | P0 | ⏳ pending | Cần p0-01 |
-| p0-04-scripts-turbo-prettier | P0 | ⏳ pending | Cần p0-01 |
-| p0-05-retire-eslint | P0 | ⏳ pending | Cần p0-03 (packages/ui phải rời ESLint trước) |
-| p0-06-full-repo-pass | P0 | ⏳ pending | Cần p0-01→p0-05 |
-| p1-01-typeaware-and-tsconfig | P1 | ⏳ pending | Sau khi P0 sạch warning |
-| p1-02-ci-and-git-hooks | P1 | ⏳ pending | Sau p1-01 |
-| p1-03-cursor-rules-ai-sync | P1 | ⏳ pending | Đồng bộ `.cursor/rules/` với chuẩn Biome để AI sinh code đúng convention. Cần p0-06 (rule set chốt) |
-| p2-01-test-data-safety-guard | P2 | ⏳ pending | GritQL cấm lệnh xoá/sửa DB không-scope trong test; cần p0-01 + p1-02 (CI). Tách từ plan test-setup |
+| p0-01-root-biome-config | P0 | ✅ done | Nền tảng, chặn mọi plan sau |
+| p0-02-archetype-overrides | P0 | ✅ done | Cần p0-01 |
+| p0-03-frontend-configs | P0 | ✅ done | Cần p0-01 |
+| p0-04-scripts-turbo-prettier | P0 | ✅ done | Cần p0-01 |
+| p0-05-retire-eslint | P0 | ✅ done | Cần p0-03 (packages/ui phải rời ESLint trước) |
+| p0-06-full-repo-pass | P0 | ✅ done (xem lưu ý) | Cần p0-01→p0-05. **Lưu ý**: chưa commit theo yêu cầu user — 1985 file đang nằm trong working tree, chưa tách lớp format/autofix thành commit riêng, `.git-blame-ignore-revs` chưa tạo (phụ thuộc SHA commit). Còn 107 error backlog (chi tiết trong file plan) |
+| p1-01-typeaware-and-tsconfig | P1 | ✅ done | Bật type-aware domain (project+types) + 6 rule (noFloatingPromises/noMisusedPromises/useAwaitThenable/useExhaustiveSwitchCases/noImportCycles/noUnnecessaryConditions) + 4 tsconfig flag. check-types xanh, negative test pass. Chi tiết trong file plan |
+| p1-02-ci-and-git-hooks | P1 | ✅ Phần 1 done / Phần 2-3 HOÃN | **Phần 1 (husky + lint-staged pre-commit) XONG** — 3 negative test pass. **Phần 2 (GitHub Actions CI) + Phần 3 (branch protection) HOÃN** theo yêu cầu user: GitHub Actions repo chưa setup/chưa chạy |
+| p1-03-cursor-rules-ai-sync | P1 | ✅ done | Tạo `.cursor/rules/biome-lint-conventions.mdc` (alwaysApply, 6 mục a–f + bảng type-aware/tsconfig). Fix mention Prettier stale ở `entity-typesafe-mongodb.mdc`. 0 mention `tooling/eslint-config` còn lại |
+| p2-01-test-data-safety-guard | P2 | ✅ done (CI wire HOÃN) | GritQL plugin `no-unscoped-db-mutation.grit` (10 pattern) wire qua `plugins[].includes` scope test. Ma trận 14 probe pass (9 positive bắt, 5 negative/source không bắt), 0 false-positive toàn repo. Wire vào `biome ci` hoãn cùng p1-02 Phần 2 nhưng đã active qua `pnpm lint` + pre-commit |
 
 ## 2. Thứ tự phụ thuộc
 

@@ -8,14 +8,6 @@
  * critical; enabled=false → im. Kèm case "logic ngược" bẫy copy từ Power 6/55.
  */
 
-import { describe, it, expect } from "vitest";
-import {
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  Lotto535NumberKind,
-  Lotto535OpsAlertType,
-  Lotto535StatsPlayKey,
-} from "@megawin/game-lotto535/entities";
 import type {
   Lotto535DrawBettingStatsEntity,
   Lotto535DrawComboStatsEntity,
@@ -23,15 +15,22 @@ import type {
   Lotto535OpsAlertsConfig,
   Lotto535PlayTypeStat,
 } from "@megawin/game-lotto535/entities";
-import { PlayType } from "@megawin/game-lotto535/entities";
+import {
+  Lotto535NumberKind,
+  Lotto535OpsAlertType,
+  Lotto535StatsPlayKey,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  PlayType,
+} from "@megawin/game-lotto535/entities";
+import { describe, expect, it } from "vitest";
+
 import { evaluateAlerts } from "../../src/use-cases/operations/evaluate-alerts";
 
 const DRAW_ID = "2000-01-01.001";
 const UNIT_PRICE = 10_000;
 
-function baseAlertsConfig(
-  overrides: Partial<Lotto535OpsAlertsConfig> = {},
-): Lotto535OpsAlertsConfig {
+function baseAlertsConfig(overrides: Partial<Lotto535OpsAlertsConfig> = {}): Lotto535OpsAlertsConfig {
   return {
     largeBetAmount: 30_000_000,
     fixedExposureWarnAmount: 500_000_000,
@@ -58,9 +57,7 @@ function emptyPlayTypeStats(): Lotto535DrawBettingStatsEntity["byPlayType"] {
   ) as Lotto535DrawBettingStatsEntity["byPlayType"];
 }
 
-function baseStats(
-  overrides: Partial<Lotto535DrawBettingStatsEntity> = {},
-): Lotto535DrawBettingStatsEntity {
+function baseStats(overrides: Partial<Lotto535DrawBettingStatsEntity> = {}): Lotto535DrawBettingStatsEntity {
   return {
     id: "64b000000000000000000000",
     drawId: DRAW_ID,
@@ -77,9 +74,7 @@ function baseStats(
   } as Lotto535DrawBettingStatsEntity;
 }
 
-function baseCombo(
-  overrides: Partial<Lotto535DrawComboStatsEntity> = {},
-): Lotto535DrawComboStatsEntity {
+function baseCombo(overrides: Partial<Lotto535DrawComboStatsEntity> = {}): Lotto535DrawComboStatsEntity {
   return {
     id: "64c000000000000000000000",
     drawId: DRAW_ID,
@@ -173,18 +168,14 @@ describe("evaluateAlerts — large_bet", () => {
     const alerts = baseAlertsConfig({
       enabled: { ...baseAlertsConfig().enabled, [Lotto535OpsAlertType.LargeBet]: false },
     });
-    expect(
-      run({ stats, alerts }).filter((a) => a.type === Lotto535OpsAlertType.LargeBet),
-    ).toHaveLength(0);
+    expect(run({ stats, alerts }).filter((a) => a.type === Lotto535OpsAlertType.LargeBet)).toHaveLength(0);
   });
 });
 
 describe("evaluateAlerts — exposure_threshold (so VND tuyệt đối)", () => {
   it("fixedWorstCase < ngưỡng → im", () => {
     const stats = baseStats({ exposure: { fixedWorstCase: 499_999_999 } });
-    expect(
-      run({ stats }).filter((a) => a.type === Lotto535OpsAlertType.ExposureThreshold),
-    ).toHaveLength(0);
+    expect(run({ stats }).filter((a) => a.type === Lotto535OpsAlertType.ExposureThreshold)).toHaveLength(0);
   });
 
   it("fixedWorstCase = ngưỡng → warning", () => {
@@ -204,24 +195,18 @@ describe("evaluateAlerts — exposure_threshold (so VND tuyệt đối)", () => 
     const alerts = baseAlertsConfig({
       enabled: { ...baseAlertsConfig().enabled, [Lotto535OpsAlertType.ExposureThreshold]: false },
     });
-    expect(
-      run({ stats, alerts }).filter((a) => a.type === Lotto535OpsAlertType.ExposureThreshold),
-    ).toHaveLength(0);
+    expect(run({ stats, alerts }).filter((a) => a.type === Lotto535OpsAlertType.ExposureThreshold)).toHaveLength(0);
   });
 });
 
 describe("evaluateAlerts — combo_concentration", () => {
   it("không combo → im", () => {
-    expect(
-      run({ combos: [] }).filter((a) => a.type === Lotto535OpsAlertType.ComboConcentration),
-    ).toHaveLength(0);
+    expect(run({ combos: [] }).filter((a) => a.type === Lotto535OpsAlertType.ComboConcentration)).toHaveLength(0);
   });
 
   it("accountCount = ngưỡng → warning, dedupeKey = combo:${comboKey}, payload có specialNumbers", () => {
     const combo = baseCombo({ accountCount: 5 });
-    const a = run({ combos: [combo] }).find(
-      (x) => x.type === Lotto535OpsAlertType.ComboConcentration,
-    )!;
+    const a = run({ combos: [combo] }).find((x) => x.type === Lotto535OpsAlertType.ComboConcentration)!;
     expect(a.severity).toBe(OpsAlertSeverity.Warning);
     expect(a.dedupeKey).toBe(`combo:${combo.comboKey}`);
     expect(a.payload.specialNumbers).toEqual(["07"]);
@@ -229,9 +214,7 @@ describe("evaluateAlerts — combo_concentration", () => {
 
   it("accountCount >= 2× ngưỡng → critical", () => {
     const combo = baseCombo({ accountCount: 10 });
-    const a = run({ combos: [combo] }).find(
-      (x) => x.type === Lotto535OpsAlertType.ComboConcentration,
-    )!;
+    const a = run({ combos: [combo] }).find((x) => x.type === Lotto535OpsAlertType.ComboConcentration)!;
     expect(a.severity).toBe(OpsAlertSeverity.Critical);
   });
 
@@ -241,9 +224,7 @@ describe("evaluateAlerts — combo_concentration", () => {
       enabled: { ...baseAlertsConfig().enabled, [Lotto535OpsAlertType.ComboConcentration]: false },
     });
     expect(
-      run({ combos: [combo], alerts }).filter(
-        (a) => a.type === Lotto535OpsAlertType.ComboConcentration,
-      ),
+      run({ combos: [combo], alerts }).filter((a) => a.type === Lotto535OpsAlertType.ComboConcentration),
     ).toHaveLength(0);
   });
 });
@@ -255,9 +236,7 @@ describe("evaluateAlerts — cover_high_stake (đánh giá TỪ byPlayType, giá
       sets: 60,
       boards: 10,
     });
-    expect(
-      run({ stats }).filter((a) => a.type === Lotto535OpsAlertType.CoverHighStake),
-    ).toHaveLength(0);
+    expect(run({ stats }).filter((a) => a.type === Lotto535OpsAlertType.CoverHighStake)).toHaveLength(0);
   });
 
   it("mainCover13 (C(13,5)=1287 → 12,87tr >= 10tr, KHÔNG có mainCover15) → warning", () => {
@@ -288,9 +267,7 @@ describe("evaluateAlerts — cover_high_stake (đánh giá TỪ byPlayType, giá
       sets: 0,
       boards: 0,
     });
-    expect(
-      run({ stats }).filter((a) => a.type === Lotto535OpsAlertType.CoverHighStake),
-    ).toHaveLength(0);
+    expect(run({ stats }).filter((a) => a.type === Lotto535OpsAlertType.CoverHighStake)).toHaveLength(0);
   });
 
   it("enabled=false → im dù mainCover15 boards>0", () => {
@@ -302,9 +279,7 @@ describe("evaluateAlerts — cover_high_stake (đánh giá TỪ byPlayType, giá
     const alerts = baseAlertsConfig({
       enabled: { ...baseAlertsConfig().enabled, [Lotto535OpsAlertType.CoverHighStake]: false },
     });
-    expect(
-      run({ stats, alerts }).filter((a) => a.type === Lotto535OpsAlertType.CoverHighStake),
-    ).toHaveLength(0);
+    expect(run({ stats, alerts }).filter((a) => a.type === Lotto535OpsAlertType.CoverHighStake)).toHaveLength(0);
   });
 });
 
@@ -312,36 +287,22 @@ describe("evaluateAlerts — special_skew (đánh giá TỪ number stats kind=sp
   it("Σamount < specialSkewMinAmount → im (chống nhiễu kỳ vắng) dù 1 số chiếm 100%", () => {
     const specials = [specialNum("07", 40_000_000)]; // < 50tr min
     expect(
-      run({ specialNumberStats: specials }).filter(
-        (a) => a.type === Lotto535OpsAlertType.SpecialSkew,
-      ),
+      run({ specialNumberStats: specials }).filter((a) => a.type === Lotto535OpsAlertType.SpecialSkew),
     ).toHaveLength(0);
   });
 
   it("Σamount đủ, ratio < 0.35 → im (phân bố đều)", () => {
     // 3 số 20tr mỗi số = 60tr; ratio mỗi số ≈ 0,333 < 0,35.
-    const specials = [
-      specialNum("01", 20_000_000),
-      specialNum("02", 20_000_000),
-      specialNum("03", 20_000_000),
-    ];
+    const specials = [specialNum("01", 20_000_000), specialNum("02", 20_000_000), specialNum("03", 20_000_000)];
     expect(
-      run({ specialNumberStats: specials }).filter(
-        (a) => a.type === Lotto535OpsAlertType.SpecialSkew,
-      ),
+      run({ specialNumberStats: specials }).filter((a) => a.type === Lotto535OpsAlertType.SpecialSkew),
     ).toHaveLength(0);
   });
 
   it("ratio = 0.35..<0.70 → warning, dedupeKey = special_skew:${number}", () => {
     // Số 07 = 35tr / tổng 100tr = 0,35 (chạm ngưỡng).
-    const specials = [
-      specialNum("07", 35_000_000),
-      specialNum("01", 33_000_000),
-      specialNum("02", 32_000_000),
-    ];
-    const a = run({ specialNumberStats: specials }).find(
-      (x) => x.type === Lotto535OpsAlertType.SpecialSkew,
-    )!;
+    const specials = [specialNum("07", 35_000_000), specialNum("01", 33_000_000), specialNum("02", 32_000_000)];
+    const a = run({ specialNumberStats: specials }).find((x) => x.type === Lotto535OpsAlertType.SpecialSkew)!;
     expect(a).toBeDefined();
     expect(a.severity).toBe(OpsAlertSeverity.Warning);
     expect(a.dedupeKey).toBe("special_skew:07");
@@ -350,9 +311,7 @@ describe("evaluateAlerts — special_skew (đánh giá TỪ number stats kind=sp
   it("ratio >= 2× (0.70) → critical", () => {
     // Số 07 = 80tr / tổng 100tr = 0,80 >= 0,70.
     const specials = [specialNum("07", 80_000_000), specialNum("01", 20_000_000)];
-    const a = run({ specialNumberStats: specials }).find(
-      (x) => x.type === Lotto535OpsAlertType.SpecialSkew,
-    )!;
+    const a = run({ specialNumberStats: specials }).find((x) => x.type === Lotto535OpsAlertType.SpecialSkew)!;
     expect(a.severity).toBe(OpsAlertSeverity.Critical);
   });
 
@@ -362,9 +321,7 @@ describe("evaluateAlerts — special_skew (đánh giá TỪ number stats kind=sp
       enabled: { ...baseAlertsConfig().enabled, [Lotto535OpsAlertType.SpecialSkew]: false },
     });
     expect(
-      run({ specialNumberStats: specials, alerts }).filter(
-        (a) => a.type === Lotto535OpsAlertType.SpecialSkew,
-      ),
+      run({ specialNumberStats: specials, alerts }).filter((a) => a.type === Lotto535OpsAlertType.SpecialSkew),
     ).toHaveLength(0);
   });
 });

@@ -30,9 +30,10 @@
  *   → Truyền vào use case này → bulk upsert (overwrite)
  */
 
-import type { GameProduct } from "@megawin/game-core/entities";
-import { PlayerSettleGameDailyRepository, type PlayerDailyAggregateResult } from "../infras/repos";
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { GameProduct } from "@megawin/game-core/entities";
+
+import { type PlayerDailyAggregateResult, PlayerSettleGameDailyRepository } from "../infras/repos";
 
 /** Interface per-game repo phải implement để aggregate player stats. */
 export interface PlayerDailyPublisher {

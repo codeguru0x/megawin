@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { docPath } from "../../src/mongo/dot-path";
 import type { Long } from "mongodb";
+import { describe, expect, it } from "vitest";
+
+import { docPath } from "../../src/mongo/dot-path";
 
 interface EntryPayout {
   winAmount: number;

@@ -4,26 +4,16 @@ import { useEffect, useState } from "react";
 
 import { calcRelativeTime } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
-import {
-  WORKER_RUN_STATE_LABELS,
-  WORKER_RUN_STATE_VARIANT,
-} from "@megawin/worker-core/shared/labels";
+import { WORKER_RUN_STATE_LABELS, WORKER_RUN_STATE_VARIANT } from "@megawin/worker-core/shared/labels";
 import type { WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
 import { WorkerRunState } from "@megawin/worker-core/use-cases/admin/types";
+import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 import { AlertTriangle, Inbox, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -66,9 +56,7 @@ function WorkerLastSuccessCell({ lastSuccessAt }: { lastSuccessAt: string | null
       <TooltipTrigger asChild>
         <span className="text-sm tabular-nums">{label}</span>
       </TooltipTrigger>
-      <TooltipContent className="font-mono tabular-nums">
-        {displayVNDateTime(lastSuccessAt)}
-      </TooltipContent>
+      <TooltipContent className="font-mono tabular-nums">{displayVNDateTime(lastSuccessAt)}</TooltipContent>
     </Tooltip>
   );
 }
@@ -128,11 +116,8 @@ export function WorkersTable({
         <TableBody>
           {sorted.map((row) => {
             const hasStalled = row.stalledItems.length > 0;
-            const maxFailCount = hasStalled
-              ? Math.max(...row.stalledItems.map((i) => i.failCount))
-              : 0;
-            const stalledVariant =
-              maxFailCount >= STALLED_ALERT_THRESHOLD ? "destructive" : "secondary";
+            const maxFailCount = hasStalled ? Math.max(...row.stalledItems.map((i) => i.failCount)) : 0;
+            const stalledVariant = maxFailCount >= STALLED_ALERT_THRESHOLD ? "destructive" : "secondary";
 
             return (
               <TableRow key={row.lockKey}>
@@ -177,16 +162,11 @@ export function WorkersTable({
                   {row.lastError ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span
-                          className="block truncate text-sm text-destructive"
-                          title={row.lastError}
-                        >
+                        <span className="block truncate text-sm text-destructive" title={row.lastError}>
                           {row.lastError}
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-sm break-words">
-                        {row.lastError}
-                      </TooltipContent>
+                      <TooltipContent className="max-w-sm break-words">{row.lastError}</TooltipContent>
                     </Tooltip>
                   ) : (
                     <span className="text-sm text-muted-foreground">—</span>

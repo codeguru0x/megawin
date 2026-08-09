@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { Power655DrawComboAccountEntity } from "@megawin/game-power655/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `power655_draw_combo_accounts` → entity (ObjectId → id hex).

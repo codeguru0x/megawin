@@ -9,10 +9,11 @@
  * Query trực tiếp {game}_ticket_entries collection tương ứng với gameProduct.
  */
 
-import { ObjectId } from "mongodb";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { ObjectId } from "mongodb";
+
 import { GameCoreBaseRepo } from "./game-core-base-repo";
-import type { PlayerSettledEntryRow, PlayerDrawBreakdownRow } from "./types";
+import type { PlayerDrawBreakdownRow, PlayerSettledEntryRow } from "./types";
 
 /** Map gameProduct → tên collection ticket_entries tương ứng. */
 const ENTRY_COLLECTIONS: Record<GameProduct, string> = {
@@ -99,8 +100,7 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
       const entrySummary = doc.entrySummary as Record<string, unknown> | undefined;
 
       // lineCount: dùng lineCount nếu có (games có lines), ngược lại dùng selectionCount (keno, bingo18)
-      const lineCount =
-        (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined) ?? 0;
+      const lineCount = (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined) ?? 0;
 
       // boardCount = số boards trong entrySummary
       const boards = entrySummary?.boards as unknown[] | undefined;
@@ -203,11 +203,7 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
           },
           totalCommission: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", "settled"] },
-                { $ifNull: ["$tenant.commissionAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", "settled"] }, { $ifNull: ["$tenant.commissionAmount", 0] }, 0],
             },
           },
         },

@@ -60,9 +60,51 @@ Scope: `**/*.test.ts`, `**/*.test.tsx`, `**/test/**/*.ts`, `**/test/**/*.tsx`.
 
 ## Acceptance criteria
 
-- Plugin bắt đúng anti-pattern trong `*.test.ts`, KHÔNG bắt ở source layer.
-- Wire vào CI (`biome ci`) theo `p1-02-ci-and-git-hooks`.
-- Ghi kết quả verify + bất kỳ hạn chế GritQL nào phát hiện vào file này.
+- [x] Plugin bắt đúng anti-pattern trong `*.test.ts`, KHÔNG bắt ở source layer. **Đã verify** (ma trận dưới).
+- [~] Wire vào CI (`biome ci`) theo `p1-02-ci-and-git-hooks` — **HOÃN** cùng Phần 2 p1-02 (GitHub Actions chưa setup). Nhưng plugin ĐÃ active qua `pnpm lint`/`biome check` + pre-commit hook nên vẫn chặn thực tế lúc dev/commit.
+- [x] Ghi kết quả verify + hạn chế GritQL vào file này (dưới đây).
+
+## Kết quả thực thi (08/08/2026)
+
+**File tạo:** `tooling/biome-plugins/no-unscoped-db-mutation.grit` (10 pattern, top-level `or`, directive `engine biome(1.0)` + `language js(typescript, jsx)`).
+
+**Wire vào `biome.json`:** field `plugins` dạng object với `includes` scope glob test:
+
+```json
+"plugins": [
+  {
+    "path": "./tooling/biome-plugins/no-unscoped-db-mutation.grit",
+    "includes": ["**/*.test.ts", "**/*.test.tsx", "**/test/**/*.ts", "**/test/**/*.tsx"]
+  }
+]
+```
+
+Dùng `plugins[].includes` (Biome 2.4+, [PR #6117](https://github.com/biomejs/biome/pull/6117)) thay vì `overrides[].plugins` — gọn hơn, một chỗ khai báo scope. Path relative CWD (root khi chạy `biome check .`).
+
+**Ma trận test (probe scratch, đã cleanup sau verify):**
+
+| Probe | Đặt tại | Kỳ vọng | Kết quả |
+|---|---|---|---|
+| `coll.deleteMany()` | `packages/shared/test/*.test.ts` | error | ✅ bắt |
+| `coll.deleteMany({})` | test | error | ✅ bắt |
+| `coll.deleteOne({})` | test | error | ✅ bắt |
+| `coll.updateMany({}, {...})` | test | error | ✅ bắt |
+| `coll.updateOne({}, {...})` | test | error | ✅ bắt |
+| `coll.findOneAndDelete({})` | test | error | ✅ bắt |
+| `coll.findOneAndUpdate({}, {...})` | test | error | ✅ bắt |
+| `db.dropDatabase()` | test | error | ✅ bắt |
+| `db.dropCollection("foo")` | test | error | ✅ bắt |
+| `coll.drop()` | test | error | ✅ bắt |
+| `coll.deleteMany({ drawId: TEST_ID })` | test | 0 lỗi | ✅ không bắt |
+| `coll.deleteMany({ _id: { $in: seededIds } })` | test | 0 lỗi | ✅ không bắt |
+| `coll.updateMany({ tenantId }, {...})` | test | 0 lỗi | ✅ không bắt |
+| `coll.deleteMany({})` + `coll.drop()` | `packages/shared/src/**` (source) | 0 lỗi | ✅ không bắt (ngoài glob) |
+
+**Quét toàn repo:** `biome check .` → **0 hit** `test-data-safety` trên file test thật hiện có (không false-positive). Plugin load & fire xác nhận qua probe. `await` wrapper không cản match (GritQL match subtree call-expression). Total errors toàn repo giữ nguyên backlog p0-06 (plugin không thêm lỗi mới ở code hiện hữu).
+
+**Hạn chế GritQL phát hiện:**
+- Pattern `$coll.drop()` match MỌI `.drop()` (kể cả `.drop()` không phải Mongo). Chấp nhận vì đã scope test-only + lớp db-guard runtime bù. Rất hiếm trong file test.
+- Chỉ bắt **empty-object literal `{}`** hoặc **thiếu đối số**. Filter build động thành rỗng lúc runtime (VD `deleteMany(buildFilter())` → `{}`) GritQL KHÔNG thấy — đúng như thiết kế, lớp 3 **db-guard runtime** chịu trách nhiệm case này. Không hạ chuẩn db-guard để bù.
 
 ## Phương án review sau thực thi
 

@@ -12,8 +12,8 @@
  * Draw days khác Mega 6/45 (T4, T6, CN).
  */
 
-import { DrawNo } from "../entities/types";
 import type { ISODateString } from "../entities/types";
+import { DrawNo } from "../entities/types";
 
 /**
  * Sinh draw ID từ ngày quay và số thứ tự kỳ.
@@ -26,10 +26,7 @@ import type { ISODateString } from "../entities/types";
  * generateDrawId("2026-03-10")       // → "2026-03-10.001"
  * generateDrawId("2026-03-10", 1)    // → "2026-03-10.001"
  */
-export function generateDrawId(
-  drawDate: ISODateString,
-  drawNo: DrawNo = DrawNo.Single
-): string {
+export function generateDrawId(drawDate: ISODateString, drawNo: DrawNo = DrawNo.Single): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
@@ -46,9 +43,7 @@ export function generateDrawId(
  * parseDrawId("2026-03-10.001") // → { drawDate: "2026-03-10", drawNo: 1 }
  * parseDrawId("invalid")        // → null
  */
-export function parseDrawId(
-  drawId: string
-): { drawDate: ISODateString; drawNo: DrawNo } | null {
+export function parseDrawId(drawId: string): { drawDate: ISODateString; drawNo: DrawNo } | null {
   const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
   return {
@@ -81,7 +76,7 @@ export function parseDrawId(
 export function generateDrawIdSequence(
   startDrawDate: string,
   drawCount: number,
-  drawDaysOfWeek: number[] = [2, 4, 6]
+  drawDaysOfWeek: number[] = [2, 4, 6],
 ): string[] {
   const ids: string[] = [];
   const currentDate = new Date(startDrawDate + "T00:00:00");
@@ -117,10 +112,7 @@ export function generateDrawIdSequence(
  * // Hôm nay thứ 7 (Sat), ngày quay tiếp theo là thứ 3 tuần sau (Tue)
  * getNextDrawDate(new Date("2026-03-14")) // → Date("2026-03-17") (Tue)
  */
-export function getNextDrawDate(
-  fromDate: Date,
-  drawDaysOfWeek: number[] = [2, 4, 6]
-): Date {
+export function getNextDrawDate(fromDate: Date, drawDaysOfWeek: number[] = [2, 4, 6]): Date {
   const d = new Date(fromDate);
   d.setDate(d.getDate() + 1);
   while (!drawDaysOfWeek.includes(d.getDay())) {

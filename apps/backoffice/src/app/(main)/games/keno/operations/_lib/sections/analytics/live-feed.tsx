@@ -9,11 +9,7 @@
  * nhóm. Màn hẹp → stack dọc (analysis §4.8).
  */
 
-import {
-  KENO_BIG_SMALL_BET_LABELS,
-  KENO_EVEN_ODD_BET_LABELS,
-  KENO_PLAY_TYPE_LABELS,
-} from "@megawin/game-keno/labels";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS, KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
 import { Activity, Dices, Grid3x3, Radio } from "lucide-react";
 
@@ -67,8 +63,7 @@ function isSideBetEntry(e: LiveFeedEntry): boolean {
 /** 1 dòng entry trong feed — dùng chung cho cả 2 nhóm (Pick / Side bet). */
 function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFirst: boolean }) {
   const color = PLAY_TYPE_COLORS[entry.playType];
-  const label =
-    KENO_PLAY_TYPE_LABELS[entry.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ?? entry.playType;
+  const label = KENO_PLAY_TYPE_LABELS[entry.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ?? entry.playType;
   const isSideBet = isSideBetEntry(entry);
   const isLargeBet = entry.amount >= LARGE_BET_THRESHOLD;
 
@@ -86,14 +81,8 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
       <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
         {/* Row 1: play type */}
         <div className="flex items-center gap-1.5 min-w-0">
-          <div
-            className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")}
-          />
-          <span
-            className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}
-          >
-            {label}
-          </span>
+          <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
+          <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>{label}</span>
           {isLargeBet && (
             <span className="inline-flex h-4 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400 shrink-0">
               Cược lớn
@@ -111,15 +100,10 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
           )}
         </div>
         <div className="flex items-start justify-end">
-          <span className="text-xs font-semibold tabular-nums text-foreground">
-            {formatNumber(entry.amount)}
-          </span>
+          <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
         </div>
         {/* Row 3: username · tenant (left) | time (right) */}
-        <PlayerName
-          username={entry.username || entry.tenant}
-          className="text-xs text-muted-foreground min-w-0"
-        />
+        <PlayerName username={entry.username || entry.tenant} className="text-xs text-muted-foreground min-w-0" />
         <div className="flex items-start justify-end">
           <span className="text-xs font-mono tabular-nums text-muted-foreground">
             {displayVNTimeWithSeconds(entry.time)}
@@ -172,9 +156,7 @@ function FeedGroup({
     <div className="space-y-1 min-w-0">
       <div className="flex items-center gap-1.5 py-1">
         <Icon className={cn("size-3.5 shrink-0", accent)} />
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {title}
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</span>
         <span className="ml-auto rounded-full bg-muted px-1.5 text-[11px] font-medium tabular-nums text-muted-foreground">
           {entries.length}
         </span>
@@ -237,13 +219,7 @@ export function LiveFeed({
           // Mỗi nhóm cuộn độc lập → thấy cả 2 cùng lúc, không cuộn qua nhóm này mới tới nhóm kia.
           // Màn hẹp (feed container < 32rem) → stack dọc, Pick trên (analysis §4.8).
           <div className="grid gap-4 @[32rem]/feed:grid-cols-[1.7fr_1fr] items-start">
-            <FeedGroup
-              title="Pick cơ bản"
-              icon={Grid3x3}
-              accent="text-orange-500"
-              entries={pickEntries}
-              isFirstGroup
-            />
+            <FeedGroup title="Pick cơ bản" icon={Grid3x3} accent="text-orange-500" entries={pickEntries} isFirstGroup />
             <FeedGroup
               title="Side bet"
               icon={Dices}

@@ -15,8 +15,9 @@
  * - Chơi nhiều kỳ liên tiếp (multi-draw, lazy enrollment)
  */
 
-import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────

@@ -4,12 +4,12 @@ Power 6/55 Background Worker — xử lý kỳ quay Power 6/55: settle, payout, 
 
 ## Loại app
 
-| Thuộc tính | Giá trị |
-|------------|---------|
-| **Loại** | Background Worker (AWS Step Functions + Lambda) |
-| **Runtime** | Node.js 24, AWS Lambda |
-| **Framework** | Serverless Framework v4 |
-| **Build** | esbuild |
+| Thuộc tính    | Giá trị                                         |
+| ------------- | ----------------------------------------------- |
+| **Loại**      | Background Worker (AWS Step Functions + Lambda) |
+| **Runtime**   | Node.js 24, AWS Lambda                          |
+| **Framework** | Serverless Framework v4                         |
+| **Build**     | esbuild                                         |
 
 ## Đối tượng sử dụng
 
@@ -27,16 +27,16 @@ Xử lý kết quả kỳ quay — tính toán thắng/thua, báo cáo tài chí
 prepare-settle → settle-entries → calculate-financials → apply-split-bonuses → sync-ticket-summaries → build-report → finalize-settle → dispatch-payouts
 ```
 
-| Step | Handler | Mô tả |
-|------|---------|-------|
-| 1 | `settle/prepare-settle` | Chuẩn bị dữ liệu settle cho kỳ quay |
-| 2 | `settle/settle-entries` | Duyệt từng entry, xác định thắng/thua theo bảng giải |
-| 3 | `settle/calculate-financials` | Tính toán tài chính (revenue, payout, jackpot, profit) |
-| 4 | `settle/apply-split-bonuses` | Áp dụng bonus split jackpot (nếu có) |
-| 5 | `settle/sync-ticket-summaries` | Đồng bộ tổng kết ticket từ entries |
-| 6 | `settle/build-report` | Tạo báo cáo kỳ quay |
-| 7 | `settle/finalize-settle` | Finalize kết quả settle |
-| 8 | `settle/dispatch-payouts` | Chi trả giải thưởng cho players |
+| Step | Handler                        | Mô tả                                                  |
+| ---- | ------------------------------ | ------------------------------------------------------ |
+| 1    | `settle/prepare-settle`        | Chuẩn bị dữ liệu settle cho kỳ quay                    |
+| 2    | `settle/settle-entries`        | Duyệt từng entry, xác định thắng/thua theo bảng giải   |
+| 3    | `settle/calculate-financials`  | Tính toán tài chính (revenue, payout, jackpot, profit) |
+| 4    | `settle/apply-split-bonuses`   | Áp dụng bonus split jackpot (nếu có)                   |
+| 5    | `settle/sync-ticket-summaries` | Đồng bộ tổng kết ticket từ entries                     |
+| 6    | `settle/build-report`          | Tạo báo cáo kỳ quay                                    |
+| 7    | `settle/finalize-settle`       | Finalize kết quả settle                                |
+| 8    | `settle/dispatch-payouts`      | Chi trả giải thưởng cho players                        |
 
 ### Void Pipeline
 
@@ -46,36 +46,36 @@ Hủy kỳ quay — hoàn tiền cho players.
 prepare-void → void-entries → sync-ticket-summaries → dispatch-refunds → finalize-void
 ```
 
-| Step | Handler | Mô tả |
-|------|---------|-------|
-| 1 | `void/prepare-void` | Chuẩn bị dữ liệu void |
-| 2 | `void/void-entries` | Đánh dấu entries bị void |
-| 3 | `settle/sync-ticket-summaries` | Đồng bộ tổng kết ticket (shared) |
-| 4 | `void/dispatch-refunds` | Hoàn tiền cho players |
-| 5 | `void/finalize-void` | Finalize void |
+| Step | Handler                        | Mô tả                            |
+| ---- | ------------------------------ | -------------------------------- |
+| 1    | `void/prepare-void`            | Chuẩn bị dữ liệu void            |
+| 2    | `void/void-entries`            | Đánh dấu entries bị void         |
+| 3    | `settle/sync-ticket-summaries` | Đồng bộ tổng kết ticket (shared) |
+| 4    | `void/dispatch-refunds`        | Hoàn tiền cho players            |
+| 5    | `void/finalize-void`           | Finalize void                    |
 
 ### Feed Sync
 
 Đồng bộ entry feed cho tenants — chạy theo schedule.
 
-| Handler | Trigger | Mô tả |
-|---------|---------|-------|
-| `feed/feed-scheduler` | EventBridge schedule | Scheduler trigger feed sync |
-| `feed/sync-entry-feed` | Step Function | Đồng bộ entries mới vào feed |
-| `feed/save-cursor` | Step Function | Lưu cursor position cho lần sync tiếp theo |
+| Handler                | Trigger              | Mô tả                                      |
+| ---------------------- | -------------------- | ------------------------------------------ |
+| `feed/feed-scheduler`  | EventBridge schedule | Scheduler trigger feed sync                |
+| `feed/sync-entry-feed` | Step Function        | Đồng bộ entries mới vào feed               |
+| `feed/save-cursor`     | Step Function        | Lưu cursor position cho lần sync tiếp theo |
 
 ## Packages phụ thuộc
 
-| Package | Vai trò |
-|---------|---------|
-| `@megawin/game-power655` | Domain logic game Power 6/55 |
-| `@megawin/game-power655-application` | Use cases Power 6/55 — settle, void, feed |
-| `@megawin/game-core` | Shared game domain (Draw, Entry, Board) |
-| `@megawin/game-core-application` | Shared use cases — feed, reports |
-| `@megawin/data` | Data access layer (DynamoDB, repositories) |
-| `@megawin/tenant-gateway` | Multi-tenant data routing |
-| `@megawin/app-core` | Lambda middleware, logging |
-| `@megawin/shared` | Shared types |
+| Package                              | Vai trò                                    |
+| ------------------------------------ | ------------------------------------------ |
+| `@megawin/game-power655`             | Domain logic game Power 6/55               |
+| `@megawin/game-power655-application` | Use cases Power 6/55 — settle, void, feed  |
+| `@megawin/game-core`                 | Shared game domain (Draw, Entry, Board)    |
+| `@megawin/game-core-application`     | Shared use cases — feed, reports           |
+| `@megawin/data`                      | Data access layer (DynamoDB, repositories) |
+| `@megawin/tenant-gateway`            | Multi-tenant data routing                  |
+| `@megawin/app-core`                  | Lambda middleware, logging                 |
+| `@megawin/shared`                    | Shared types                               |
 
 ## Scripts
 

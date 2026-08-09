@@ -1,23 +1,17 @@
-import { describe, it, expect } from "vitest";
-import {
-  OpsAlertSeverity,
-  OpsAlertStatus,
-  PlayType,
-  Power655OpsAlertType,
-} from "@megawin/game-power655/entities";
 import type {
   Power655DrawBettingStatsEntity,
   Power655DrawComboStatsEntity,
   Power655OpsAlertsConfig,
 } from "@megawin/game-power655/entities";
+import { OpsAlertSeverity, OpsAlertStatus, PlayType, Power655OpsAlertType } from "@megawin/game-power655/entities";
+import { describe, expect, it } from "vitest";
+
 import { evaluateAlerts } from "../../src/use-cases/operations/evaluate-alerts";
 
 const DRAW_ID = "2026-08-05.001";
 const UNIT_PRICE = 10_000;
 
-function baseAlertsConfig(
-  overrides: Partial<Power655OpsAlertsConfig> = {},
-): Power655OpsAlertsConfig {
+function baseAlertsConfig(overrides: Partial<Power655OpsAlertsConfig> = {}): Power655OpsAlertsConfig {
   return {
     largeBetAmount: 30_000_000,
     fixedExposureWarnAmount: 2_000_000_000,
@@ -41,9 +35,7 @@ function emptyPlayTypeStats(): Power655DrawBettingStatsEntity["byPlayType"] {
   ) as Power655DrawBettingStatsEntity["byPlayType"];
 }
 
-function baseStats(
-  overrides: Partial<Power655DrawBettingStatsEntity> = {},
-): Power655DrawBettingStatsEntity {
+function baseStats(overrides: Partial<Power655DrawBettingStatsEntity> = {}): Power655DrawBettingStatsEntity {
   return {
     id: "64b000000000000000000000",
     drawId: DRAW_ID,
@@ -60,9 +52,7 @@ function baseStats(
   } as Power655DrawBettingStatsEntity;
 }
 
-function baseCombo(
-  overrides: Partial<Power655DrawComboStatsEntity> = {},
-): Power655DrawComboStatsEntity {
+function baseCombo(overrides: Partial<Power655DrawComboStatsEntity> = {}): Power655DrawComboStatsEntity {
   return {
     id: "64c000000000000000000000",
     drawId: DRAW_ID,
@@ -147,9 +137,7 @@ describe("evaluateAlerts — Power 6/55 (4 rule: large_bet, exposure_threshold, 
         alerts: baseAlertsConfig(),
         unitPrice: UNIT_PRICE,
       });
-      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ExposureThreshold)).toHaveLength(
-        0,
-      );
+      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ExposureThreshold)).toHaveLength(0);
     });
 
     it("fixedWorstCase = ngưỡng → warning", () => {
@@ -189,9 +177,7 @@ describe("evaluateAlerts — Power 6/55 (4 rule: large_bet, exposure_threshold, 
         }),
         unitPrice: UNIT_PRICE,
       });
-      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ExposureThreshold)).toHaveLength(
-        0,
-      );
+      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ExposureThreshold)).toHaveLength(0);
     });
   });
 
@@ -204,9 +190,7 @@ describe("evaluateAlerts — Power 6/55 (4 rule: large_bet, exposure_threshold, 
         alerts: baseAlertsConfig(),
         unitPrice: UNIT_PRICE,
       });
-      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ComboConcentration)).toHaveLength(
-        0,
-      );
+      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ComboConcentration)).toHaveLength(0);
     });
 
     it("accountCount = comboAccountsWarn → warning, dedupeKey = combo:${comboKey}", () => {
@@ -250,9 +234,7 @@ describe("evaluateAlerts — Power 6/55 (4 rule: large_bet, exposure_threshold, 
         }),
         unitPrice: UNIT_PRICE,
       });
-      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ComboConcentration)).toHaveLength(
-        0,
-      );
+      expect(alerts.filter((a) => a.type === Power655OpsAlertType.ComboConcentration)).toHaveLength(0);
     });
   });
 

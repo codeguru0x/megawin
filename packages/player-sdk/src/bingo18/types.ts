@@ -6,7 +6,7 @@
  * @module
  */
 
-import type { Bingo18PlayType, Bingo18TripleKind, Bingo18BigSmallBet } from "./enums";
+import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./enums";
 
 // ─────────────────────────────────────────────
 // Input Types

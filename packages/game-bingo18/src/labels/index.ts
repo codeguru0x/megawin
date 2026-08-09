@@ -7,7 +7,7 @@
  * Import: `import { BINGO18_PLAY_TYPE_LABELS, ... } from "@megawin/game-bingo18/labels"`
  */
 
-import { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "../entities/enums";
+import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Play Type Labels

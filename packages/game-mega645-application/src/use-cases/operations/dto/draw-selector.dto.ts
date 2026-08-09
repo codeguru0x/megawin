@@ -5,7 +5,7 @@
  * Mega 6/45 chỉ quay 1 kỳ/ngày (drawNo = 1 cố định).
  */
 
-import type { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
+import type { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 
 export interface DrawSelectorItem {
   drawId: string;

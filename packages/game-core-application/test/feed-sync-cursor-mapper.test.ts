@@ -5,8 +5,9 @@
  * `_id` (ObjectId) → `id` (hex), `lastVersion` (Long) → string.
  */
 
-import { describe, it, expect } from "vitest";
-import { ObjectId, Long } from "mongodb";
+import { Long, ObjectId } from "mongodb";
+import { describe, expect, it } from "vitest";
+
 import { FeedSyncCursorMapper } from "../src/infras/mappers/feed-sync-cursor-mapper";
 
 describe("FeedSyncCursorMapper", () => {

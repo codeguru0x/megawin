@@ -18,12 +18,10 @@
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
  */
 
-import type {
-  SystemSettleGameDaily,
-  SystemSettleGameDailyEntity,
-} from "@megawin/game-core/entities";
-import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
 import { ReportRepo } from "@megawin/data/mongo";
+import type { SystemSettleGameDaily, SystemSettleGameDailyEntity } from "@megawin/game-core/entities";
+import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
+
 import { SystemSettleGameDailyMapper } from "../mappers";
 import type { DailyOverviewRow, DashboardGameDailyData, GameSummaryRow } from "./types";
 
@@ -51,9 +49,7 @@ export class SystemSettleGameDailyRepository extends ReportRepo<
    * Filter: { financialDate, gameProduct }.
    * IDEMPOTENT: chạy lại an toàn.
    */
-  async upsertGameDaily(
-    report: Omit<SystemSettleGameDaily, "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertGameDaily(report: Omit<SystemSettleGameDaily, "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {

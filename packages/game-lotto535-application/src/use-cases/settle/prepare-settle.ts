@@ -31,10 +31,11 @@ import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawNo } from "@megawin/game-lotto535/entities";
 import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { SettleContext, ResettleContext } from "./types";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type { ResettleContext, SettleContext } from "./types";
 
 export interface PrepareSettleInput {
   drawId: string;
@@ -61,9 +62,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     // Draw phải đã được API chuyển sang "settling" trước khi start step function.
     // Nếu crash giữa chừng, draw vẫn ở "settling" nên retry safe.
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     // ── 3. Validate draw đã có kết quả quay ──
@@ -82,9 +81,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     //   ném lỗi (KHÔNG tự createCycle: sẽ dùng seed mặc định sai sau split).
     const [globalConfig, settleCycle] = await Promise.all([
       this.getGlobalConfig.run(),
-      resettleContext
-        ? this.cycleRepo.getCycleByNo(resettleContext.cycleNo)
-        : this.cycleRepo.getActiveCycle(),
+      resettleContext ? this.cycleRepo.getCycleByNo(resettleContext.cycleNo) : this.cycleRepo.getActiveCycle(),
     ]);
 
     if (!globalConfig) {
@@ -114,8 +111,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
 
     // ── 6. Xác định isSplitCycle ──
     // Split phụ thuộc opening — resettle PHẢI tính lại từ opening mới.
-    const isSplitCycle =
-      draw.drawNo === DrawNo.Evening && jackpotOpeningAmount >= settleCycle.config.splitThreshold;
+    const isSplitCycle = draw.drawNo === DrawNo.Evening && jackpotOpeningAmount >= settleCycle.config.splitThreshold;
 
     // ── 7. Build bảng giải thưởng (tier → amount VND) ──
     const prizeMap = buildPrizeAmountMap(globalConfig.defaultPrizes);

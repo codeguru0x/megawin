@@ -15,8 +15,9 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { tenantConfigCache } from "../../caches/tenant-config.cache";
 import type { TenantConfigEntity } from "@megawin/game-max3d/entities";
+
+import { tenantConfigCache } from "../../caches/tenant-config.cache";
 
 export interface GetTenantConfigInternalInput {
   tenantId: string;

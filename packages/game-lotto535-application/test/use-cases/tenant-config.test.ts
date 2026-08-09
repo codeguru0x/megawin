@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import { TenantConfigRepository } from "../../src/infras/repos/tenant-config-repo";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { TenantConfigRepository } from "../../src/infras/repos/tenant-config-repo";
 import { seedTenantConfig } from "./helpers/seed-tenant-config";
 
 describe("TenantConfigRepository – Lotto 5/35 Tenant Config", () => {
@@ -25,9 +26,7 @@ describe("TenantConfigRepository – Lotto 5/35 Tenant Config", () => {
   it("tenant config có commissionRate đúng với default", async () => {
     const config = await repo.getTenantConfig(TENANT_A);
 
-    expect(config!.commissionRate).toBe(
-      DEFAULT_LOTTO535_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.commissionRate).toBe(DEFAULT_LOTTO535_CONFIG.rates.defaultCommissionRate);
   });
 
   it("tenant config có commissionRate custom", async () => {

@@ -14,17 +14,11 @@
  * const { data } = useQuery({ queryKey: ["users"], queryFn: () => api.get<User[]>("/users") });
  */
 
-import {
-  createHttpClient,
-  type HttpClient,
-  type HttpClientConfig,
-  type RequestOptions,
-} from "@megawin/http-client";
+import { createHttpClient, type HttpClient, type HttpClientConfig, type RequestOptions } from "@megawin/http-client";
 
 // ============ Config ============
 
-export interface ApiClientConfig
-  extends Omit<HttpClientConfig, "baseUrl"> {
+export interface ApiClientConfig extends Omit<HttpClientConfig, "baseUrl"> {
   baseUrl?: string;
 }
 

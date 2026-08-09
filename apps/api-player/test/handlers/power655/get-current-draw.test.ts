@@ -6,7 +6,8 @@
  * (unlike Lotto 5/35 which has a single jackpotCurrentAmount).
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { createMockEvent, parseBody } from "#test/helpers/mock-event";
 
 vi.mock("@megawin/game-power655-application/use-cases/player", () => ({

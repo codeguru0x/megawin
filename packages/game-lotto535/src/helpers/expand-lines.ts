@@ -10,8 +10,8 @@
  */
 
 import { PlayType } from "../entities/enums";
-import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue } from "../entities/types";
 import type { Board } from "../entities/ticket";
+import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Core: generate combinations
@@ -126,9 +126,7 @@ export function expandBoardToLines(playType: PlayType, selection: BoardSelection
  * @param boards - Danh sách boards từ ticket
  * @returns Danh sách lines kèm metadata
  */
-export function expandAllBoards(
-  boards: Board[],
-): Array<LineValue & { boardNo: string; lineIndex: number }> {
+export function expandAllBoards(boards: Board[]): Array<LineValue & { boardNo: string; lineIndex: number }> {
   const result: Array<LineValue & { boardNo: string; lineIndex: number }> = [];
 
   let globalIndex = 0;

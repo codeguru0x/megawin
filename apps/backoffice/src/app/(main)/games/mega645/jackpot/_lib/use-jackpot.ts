@@ -42,8 +42,7 @@ export function useJackpotCurrent() {
 export function useJackpotCycleOptions() {
   return useQuery({
     queryKey: mega645Keys.jackpotCycleOptions,
-    queryFn: () =>
-      apiClient.get<ListAllJackpotCycleOptionsOutput>("/mega645/jackpot/cycle-options"),
+    queryFn: () => apiClient.get<ListAllJackpotCycleOptionsOutput>("/mega645/jackpot/cycle-options"),
     // Cycles không thay đổi thường xuyên — stale sau 60s
     staleTime: 60_000,
   });
@@ -80,10 +79,7 @@ export interface JackpotCyclesParams {
 export function useJackpotCycles(params: JackpotCyclesParams) {
   const size = params.size ?? Pagination.Default.Size;
   return useQuery({
-    queryKey: mega645Keys.jackpotCycles({ page: params.page, size } as unknown as Record<
-      string,
-      unknown
-    >),
+    queryKey: mega645Keys.jackpotCycles({ page: params.page, size } as unknown as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<ListJackpotCyclesOutput>("/mega645/jackpot/cycles", {
         params: { page: params.page, size },
@@ -96,14 +92,10 @@ export function useJackpotCycles(params: JackpotCyclesParams) {
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  * `onNotFound` được gọi để component có thể đóng dialog.
  */
-export function useJackpotEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useJackpotEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: mega645Keys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/mega645/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/mega645/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 

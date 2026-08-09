@@ -20,28 +20,22 @@
  *   7. Create entries cho tất cả draws (all-or-nothing)
  */
 
-import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
-import type {
-  Board,
-  TicketDoc,
-  TicketEntryDoc,
-  EntrySummary,
-} from "@megawin/game-power655/entities";
-import { PlayType } from "@megawin/game-power655/entities";
+import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
+import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { DebitPlayerService } from "@megawin/game-core-application/services";
+import type { Board, EntrySummary, PlayType, TicketDoc, TicketEntryDoc } from "@megawin/game-power655/entities";
 import { getLineCount } from "@megawin/game-power655/rules/play-types";
+import { AppException } from "@megawin/shared/errors";
+import { Currency } from "@megawin/shared/types";
+import { getFinancialDate, nowVN } from "@megawin/shared/utils";
+import { ObjectId } from "mongodb";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
-import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { DebitPlayerService } from "@megawin/game-core-application/services";
-import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
-import { Currency } from "@megawin/shared/types";
-import { getFinancialDate, nowVN } from "@megawin/shared/utils";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
-import { ObjectId } from "mongodb";
 
 /**
  * Tạo vé cược Power 6/55.
@@ -57,15 +51,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
   /** @inheritdoc */
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      ipAddress,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -129,9 +115,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
       }
       if (draw.status !== DrawStatus.SalesOpen) {
-        throw AppException.badRequest(
-          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
-        );
+        throw AppException.badRequest(`Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`);
       }
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);

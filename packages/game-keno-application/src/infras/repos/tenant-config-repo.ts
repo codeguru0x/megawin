@@ -1,9 +1,9 @@
-import { KenoCollections } from "@megawin/game-keno/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type { TenantConfigDoc } from "@megawin/game-keno/entities";
-import { BaseRepo } from "./base-repo";
+import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-keno/entities";
+import { KenoCollections } from "@megawin/game-keno/entities";
+
 import { TenantConfigMapper } from "../mappers/game-config-mapper";
-import type { TenantConfigEntity } from "@megawin/game-keno/entities";
+import { BaseRepo } from "./base-repo";
 
 export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {

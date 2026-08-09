@@ -9,16 +9,15 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
-
-import { PlaceBetUseCase } from "@megawin/game-power655-application/use-cases/place-bet";
-
 import { TicketChannel } from "@megawin/game-core/entities";
-import z from "zod";
-import { power655MainNumberSchema, power655DrawIdSchema } from "@megawin/game-power655/schemas";
 import { PlayType } from "@megawin/game-power655/entities";
 import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
+import { power655DrawIdSchema, power655MainNumberSchema } from "@megawin/game-power655/schemas";
+import { PlaceBetUseCase } from "@megawin/game-power655-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import z from "zod";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
@@ -169,13 +168,9 @@ export const power655PlaceBetBodySchema = z.object({
     .refine((ids) => isUnique(ids), {
       message: "Các drawId không được trùng lặp.",
     }),
-  boards: z
-    .array(power655BoardSchema)
-    .min(1)
-    .max(POWER655_MAX_BOARDS)
-    .refine(boardsSequentialRefine(), {
-      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
-    }),
+  boards: z.array(power655BoardSchema).min(1).max(POWER655_MAX_BOARDS).refine(boardsSequentialRefine(), {
+    message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
+  }),
 });
 
 export type Power655Board = z.infer<typeof power655BoardSchema>;

@@ -6,23 +6,18 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils";
+import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils";
+
 import { TicketRepository } from "../../infras/repos/ticket-repo";
+import type { PlayerListTicketsInput, PlayerListTicketsOutput } from "./dto/player.dto";
 import { mapPlayerTicket } from "./mappers/ticket";
-import type {
-  PlayerListTicketsInput,
-  PlayerListTicketsOutput,
-} from "./dto/player.dto";
 
 /**
  * Lấy lịch sử tất cả vé của player Keno.
  * Trả về cả 4 trạng thái: paid, completed, refunded, void.
  * Hỗ trợ lọc theo ngày (from/to) và cursor-based pagination.
  */
-export class ListTicketsPlayerUseCase extends ApiGatewayUseCase<
-  PlayerListTicketsInput,
-  PlayerListTicketsOutput
-> {
+export class ListTicketsPlayerUseCase extends ApiGatewayUseCase<PlayerListTicketsInput, PlayerListTicketsOutput> {
   private readonly ticketRepo = new TicketRepository();
 
   protected async execute(input: PlayerListTicketsInput): Promise<PlayerListTicketsOutput> {

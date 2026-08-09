@@ -1,12 +1,9 @@
-import { z } from "zod";
 import { OpsAlertStatus, PlayType } from "@megawin/game-lotto535/entities";
 import { validateSelection } from "@megawin/game-lotto535/rules";
+import { z } from "zod";
 
 /** Tuple giá trị status alert từ const-as-const (§5.3) — KHÔNG string literal trần. */
-const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [
-  OpsAlertStatus,
-  ...OpsAlertStatus[],
-];
+const OPS_ALERT_STATUS_VALUES = Object.values(OpsAlertStatus) as [OpsAlertStatus, ...OpsAlertStatus[]];
 
 /** Tuple mọi playType hợp lệ — derive từ `PlayType` (§5.3). */
 const LOTTO535_PLAY_TYPE_VALUES = Object.values(PlayType) as [PlayType, ...PlayType[]];

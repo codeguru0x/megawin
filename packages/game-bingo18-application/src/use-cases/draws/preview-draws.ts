@@ -1,8 +1,9 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
+
 import { calcDrawSlots } from "../../helpers/calc-draw-slots";
+import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
 export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, PreviewDrawsOutput> {
@@ -31,10 +32,7 @@ export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, Previ
     const countersMap = new Map<string, number>();
 
     for (const date of uniqueDates) {
-      const counter = await this.counterRepo.findOne(
-        { drawDate: date },
-        { sort: { drawDate: -1 } },
-      );
+      const counter = await this.counterRepo.findOne({ drawDate: date }, { sort: { drawDate: -1 } });
       countersMap.set(date, counter?.lastDrawNo ?? 0);
     }
 

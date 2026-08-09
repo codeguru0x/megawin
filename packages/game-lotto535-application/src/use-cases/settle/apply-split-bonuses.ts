@@ -54,6 +54,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
@@ -63,10 +64,7 @@ export interface ApplySplitBonusesResult {
   entriesPatched: number;
 }
 
-export class ApplySplitBonusesUseCase extends InternalUseCase<
-  SettleContext,
-  ApplySplitBonusesResult
-> {
+export class ApplySplitBonusesUseCase extends InternalUseCase<SettleContext, ApplySplitBonusesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
@@ -96,21 +94,13 @@ export class ApplySplitBonusesUseCase extends InternalUseCase<
       for (const line of tierLines) {
         const entryIdStr = line.entryId?.toString() ?? "";
         if (!entryIdStr) continue;
-        betUnitsByEntry.set(
-          entryIdStr,
-          (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount,
-        );
+        betUnitsByEntry.set(entryIdStr, (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount);
       }
 
       // applySplitBonusForTier: thêm tier { isSplitBonus: true } vào payout.tiers
       // và $inc winAmount + payoutAmount. Idempotent: chỉ patch entry chưa có tier này.
       // bonusPerWinner = bonusPerUnit (vì calculateSplitDistribution nhận tierBetUnitCounts)
-      const patched = await this.entryRepo.applySplitBonusForTier(
-        drawId,
-        tier,
-        detail.bonusPerWinner,
-        betUnitsByEntry,
-      );
+      const patched = await this.entryRepo.applySplitBonusForTier(drawId, tier, detail.bonusPerWinner, betUnitsByEntry);
       entriesPatched += patched;
     }
 

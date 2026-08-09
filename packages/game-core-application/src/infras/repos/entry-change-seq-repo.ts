@@ -1,10 +1,8 @@
-import { Long } from "mongodb";
-import {
-  GameCoreCollections,
-  ENTRY_CHANGE_SEQ_KEY,
-} from "@megawin/game-core/entities";
-import type { SeqAllocation } from "@megawin/game-core/entities";
 import type { BaseEntity } from "@megawin/data/mongo";
+import type { SeqAllocation } from "@megawin/game-core/entities";
+import { ENTRY_CHANGE_SEQ_KEY, GameCoreCollections } from "@megawin/game-core/entities";
+import { Long } from "mongodb";
+
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 /**
@@ -50,7 +48,7 @@ export class EntryChangeSeqRepository extends GameCoreBaseRepo<BaseEntity> {
         $inc: { seq: Long.fromNumber(count) },
         $set: { updatedAt: new Date() },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     if (!result) {
@@ -58,8 +56,7 @@ export class EntryChangeSeqRepository extends GameCoreBaseRepo<BaseEntity> {
     }
 
     const rawSeq = (result as any).seq;
-    const endSeq =
-      rawSeq instanceof Long ? rawSeq : Long.fromNumber(Number(rawSeq));
+    const endSeq = rawSeq instanceof Long ? rawSeq : Long.fromNumber(Number(rawSeq));
     const startSeq = Long.fromBigInt(endSeq.toBigInt() - BigInt(count - 1));
 
     return { startSeq, endSeq };

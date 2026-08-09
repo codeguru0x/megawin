@@ -52,17 +52,7 @@ interface KenoBoardBase {
  */
 export interface KenoPickBoardInput extends KenoBoardBase {
   /** Kiểu chọn số. Số lượng phần tử trong `numbers` phải đúng với con số sau `"pick"`. */
-  playType:
-    | "pick1"
-    | "pick2"
-    | "pick3"
-    | "pick4"
-    | "pick5"
-    | "pick6"
-    | "pick7"
-    | "pick8"
-    | "pick9"
-    | "pick10";
+  playType: "pick1" | "pick2" | "pick3" | "pick4" | "pick5" | "pick6" | "pick7" | "pick8" | "pick9" | "pick10";
   /**
    * Danh sách số Keno đã chọn (string zero-padded `"01"`–`"80"`).
    *

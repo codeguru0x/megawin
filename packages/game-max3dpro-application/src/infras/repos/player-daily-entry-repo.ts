@@ -8,10 +8,11 @@
  * PublishPlayerDailyUseCase mà không cần wrap hay adapter.
  */
 
-import { Max3dproCollections, type TicketEntryEntity } from "@megawin/game-max3dpro/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { PlayerDailyAggregateResult } from "@megawin/game-core-application/repos";
 import type { PlayerDailyPublisher } from "@megawin/game-core-application/use-cases";
+import { Max3dproCollections, type TicketEntryEntity } from "@megawin/game-max3dpro/entities";
+
 import { EntryMapper } from "../mappers/entry-mapper";
 import { BaseRepo } from "./base-repo";
 
@@ -94,29 +95,17 @@ export class PlayerDailyEntryRepository
           },
           totalWin: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Settled] },
-                { $ifNull: ["$payout.winAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Settled] }, { $ifNull: ["$payout.winAmount", 0] }, 0],
             },
           },
           totalPayout: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Settled] },
-                { $ifNull: ["$payout.payoutAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Settled] }, { $ifNull: ["$payout.payoutAmount", 0] }, 0],
             },
           },
           totalCommission: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Settled] },
-                { $ifNull: ["$tenant.commissionAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Settled] }, { $ifNull: ["$tenant.commissionAmount", 0] }, 0],
             },
           },
         },

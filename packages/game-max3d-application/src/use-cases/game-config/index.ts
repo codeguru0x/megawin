@@ -1,6 +1,4 @@
-export { GetGlobalConfigUseCase as GetGlobalConfigApiUseCase } from "./get-global-config";
-export { GetGlobalConfigInternalUseCase as GetGlobalConfigUseCase } from "./get-global-config-internal";
-export { UpdateGameConfigUseCase } from "./update-game-config";
+export type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
 
 export type {
   GetGameConfigOutput,
@@ -8,5 +6,6 @@ export type {
   UpdateGameConfigOutput,
   UpdateOpsInput,
 } from "./dto/game-config.dto";
-
-export type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
+export { GetGlobalConfigUseCase as GetGlobalConfigApiUseCase } from "./get-global-config";
+export { GetGlobalConfigInternalUseCase as GetGlobalConfigUseCase } from "./get-global-config-internal";
+export { UpdateGameConfigUseCase } from "./update-game-config";

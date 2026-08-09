@@ -9,11 +9,12 @@
  * Max 3D Pro không có Jackpot → không cần đọc jackpot cycle.
  */
 
+import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-max3dpro/entities";
-import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
+import type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 
 export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();

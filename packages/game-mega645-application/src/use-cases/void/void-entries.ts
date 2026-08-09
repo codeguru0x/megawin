@@ -9,8 +9,9 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { EntryVoidInfo } from "@megawin/game-mega645/entities";
 import { generateId } from "@megawin/shared/utils";
-import { type EntryVoidInfo } from "@megawin/game-mega645/entities";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 

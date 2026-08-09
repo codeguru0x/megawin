@@ -8,12 +8,12 @@
 export { default as getRedisClient } from "./client";
 export { RedisRepository } from "./repository";
 export type {
+  ExpireMode,
   RedisClient,
   RedisCommandOptions,
   RedisMultiCommand,
-  ExpireMode,
   SortedSetMember,
   ZAddOptions,
-  ZRangeOptions,
   ZRangeByScoreOptions,
+  ZRangeOptions,
 } from "./types";

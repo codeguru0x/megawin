@@ -1,7 +1,6 @@
-export { PlaceBetUseCase } from "./place-bet";
-
 export type {
-  PlaceBetInput,
   PlaceBetBoardInput,
+  PlaceBetInput,
   PlaceBetOutput,
 } from "./dto/place-bet.dto";
+export { PlaceBetUseCase } from "./place-bet";

@@ -35,20 +35,21 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { generateId } from "@megawin/shared/utils";
+import { EntryOutcome } from "@megawin/game-core/entities";
+import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-keno/entities";
 import {
+  CAPPABLE_PICK_COUNTS,
+  KENO_BASIC_PLAY_TYPE_SET,
   type KenoBigSmallBet,
   type KenoEvenOddBet,
   KenoPlayType,
-  CAPPABLE_PICK_COUNTS,
-  KENO_BASIC_PLAY_TYPE_SET,
 } from "@megawin/game-keno/entities";
-import type { EntryPayout, EntryResult, EntryBoardPayout } from "@megawin/game-keno/entities";
 import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
-import { EntryOutcome } from "@megawin/game-core/entities";
+import { generateId } from "@megawin/shared/utils";
+import { sumBy } from "@megawin/shared/utils/array";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
-import { sumBy } from "@megawin/shared/utils/array";
 
 /** Số entries xử lý mỗi lần query DB. */
 const BATCH_SIZE = 500;
@@ -65,10 +66,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleContext,
-  SettleEntriesBatchResult
-> {
+export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
@@ -138,19 +136,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             });
 
             // Chỉ basic boards mới có cappable prize (pick8/9/10).
-            if (
-              CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) &&
-              matchResult.matchCount === matchResult.pickCount
-            ) {
+            if (CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) && matchResult.matchCount === matchResult.pickCount) {
               hasCappablePrize = true;
             }
           } else if (board.playType === KenoPlayType.BigSmall) {
             // ── Side bet Lớn/Nhỏ ──
-            const matchResult = matchBigSmallBet(
-              board.bet as KenoBigSmallBet,
-              result,
-              config.bigSmallPrizes,
-            );
+            const matchResult = matchBigSmallBet(board.bet as KenoBigSmallBet, result, config.bigSmallPrizes);
 
             boardPayouts.push({
               boardNo: board.boardNo,
@@ -166,11 +157,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             });
           } else if (board.playType === KenoPlayType.EvenOdd) {
             // ── Side bet Chẵn/Lẻ ──
-            const matchResult = matchEvenOddBet(
-              board.bet as KenoEvenOddBet,
-              result,
-              config.evenOddPrizes,
-            );
+            const matchResult = matchEvenOddBet(board.bet as KenoEvenOddBet, result, config.evenOddPrizes);
             boardPayouts.push({
               boardNo: board.boardNo,
               playType: board.playType,

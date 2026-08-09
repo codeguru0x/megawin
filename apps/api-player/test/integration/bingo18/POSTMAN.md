@@ -187,13 +187,13 @@ POST http://localhost:4010/games/bingo18/bets
 
 ### Tất cả loại chơi (đều dùng trong boards[])
 
-| playType       | Loại    | Mô tả                                       | Fields cần thiết                                    |
-| -------------- | ------- | ------------------------------------------- | --------------------------------------------------- |
-| `singleNum`    | Cơ bản  | Đoán 1 số (1-6), thắng theo số lần xuất hiện | `number` (1-6)                                     |
-| `doubleMatch`  | Cơ bản  | 2 trong 3 xúc xắc trùng số đã chọn          | `number` (1-6)                                      |
-| `tripleMatch`  | Cơ bản  | Cả 3 xúc xắc trùng nhau                    | `tripleKind` + `number` (nếu specific)              |
-| `sumTotal`     | Bổ sung | Đoán tổng 3 xúc xắc bằng đúng 1 giá trị    | `sum` (3-18)                                        |
-| `bigSmallDraw` | Bổ sung | Đoán Tài/Xỉu/Hòa theo tổng                  | `bet` (`"big"` / `"draw"` / `"small"`)              |
+| playType       | Loại    | Mô tả                                        | Fields cần thiết                       |
+| -------------- | ------- | -------------------------------------------- | -------------------------------------- |
+| `singleNum`    | Cơ bản  | Đoán 1 số (1-6), thắng theo số lần xuất hiện | `number` (1-6)                         |
+| `doubleMatch`  | Cơ bản  | 2 trong 3 xúc xắc trùng số đã chọn           | `number` (1-6)                         |
+| `tripleMatch`  | Cơ bản  | Cả 3 xúc xắc trùng nhau                      | `tripleKind` + `number` (nếu specific) |
+| `sumTotal`     | Bổ sung | Đoán tổng 3 xúc xắc bằng đúng 1 giá trị      | `sum` (3-18)                           |
+| `bigSmallDraw` | Bổ sung | Đoán Tài/Xỉu/Hòa theo tổng                   | `bet` (`"big"` / `"draw"` / `"small"`) |
 
 ### TripleMatch tripleKind
 
@@ -292,9 +292,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "sumTotal", "sum": 10, "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "sumTotal", "sum": 10, "betCount": 1 }]
 }
 ```
 
@@ -303,9 +301,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "sumTotal", "sum": 10, "betCount": 10 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "sumTotal", "sum": 10, "betCount": 10 }]
 }
 ```
 
@@ -314,9 +310,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "bigSmallDraw", "bet": "big", "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "bigSmallDraw", "bet": "big", "betCount": 1 }]
 }
 ```
 
@@ -325,9 +319,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "bigSmallDraw", "bet": "small", "betCount": 2 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "bigSmallDraw", "bet": "small", "betCount": 2 }]
 }
 ```
 
@@ -336,9 +328,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "bigSmallDraw", "bet": "draw", "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "bigSmallDraw", "bet": "draw", "betCount": 1 }]
 }
 ```
 
@@ -607,9 +597,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "sumTotal", "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "sumTotal", "betCount": 1 }]
 }
 ```
 
@@ -618,9 +606,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "sumTotal", "sum": 19, "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "sumTotal", "sum": 19, "betCount": 1 }]
 }
 ```
 
@@ -629,9 +615,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "sumTotal", "sum": 2, "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "sumTotal", "sum": 2, "betCount": 1 }]
 }
 ```
 
@@ -640,9 +624,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "bigSmallDraw", "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "bigSmallDraw", "betCount": 1 }]
 }
 ```
 
@@ -651,9 +633,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "bigSmallDraw", "bet": "invalidBet", "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "bigSmallDraw", "bet": "invalidBet", "betCount": 1 }]
 }
 ```
 
@@ -700,9 +680,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "G", "playType": "singleNum", "number": 3, "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "G", "playType": "singleNum", "number": 3, "betCount": 1 }]
 }
 ```
 
@@ -711,9 +689,7 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "playType": "singleNum", "number": 3, "betCount": 1 }
-  ]
+  "boards": [{ "playType": "singleNum", "number": 3, "betCount": 1 }]
 }
 ```
 
@@ -770,16 +746,29 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": [
-    "2026-02-28.001", "2026-02-28.002", "2026-02-28.003", "2026-02-28.004",
-    "2026-02-28.005", "2026-02-28.006", "2026-02-28.007", "2026-02-28.008",
-    "2026-02-28.009", "2026-02-28.010", "2026-02-28.011", "2026-02-28.012",
-    "2026-02-28.013", "2026-02-28.014", "2026-02-28.015", "2026-02-28.016",
-    "2026-02-28.017", "2026-02-28.018", "2026-02-28.019", "2026-02-28.020",
+    "2026-02-28.001",
+    "2026-02-28.002",
+    "2026-02-28.003",
+    "2026-02-28.004",
+    "2026-02-28.005",
+    "2026-02-28.006",
+    "2026-02-28.007",
+    "2026-02-28.008",
+    "2026-02-28.009",
+    "2026-02-28.010",
+    "2026-02-28.011",
+    "2026-02-28.012",
+    "2026-02-28.013",
+    "2026-02-28.014",
+    "2026-02-28.015",
+    "2026-02-28.016",
+    "2026-02-28.017",
+    "2026-02-28.018",
+    "2026-02-28.019",
+    "2026-02-28.020",
     "2026-02-28.021"
   ],
-  "boards": [
-    { "boardNo": "A", "playType": "singleNum", "number": 3, "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "singleNum", "number": 3, "betCount": 1 }]
 }
 ```
 
@@ -805,12 +794,8 @@ POST http://localhost:4010/games/bingo18/bets
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [
-    { "boardNo": "A", "playType": "singleNum", "number": 3, "betCount": 1 }
-  ],
-  "sideBets": [
-    { "playType": "sumTotal", "sum": 10, "betCount": 1 }
-  ]
+  "boards": [{ "boardNo": "A", "playType": "singleNum", "number": 3, "betCount": 1 }],
+  "sideBets": [{ "playType": "sumTotal", "sum": 10, "betCount": 1 }]
 }
 ```
 

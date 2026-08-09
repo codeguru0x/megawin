@@ -9,8 +9,9 @@
 
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
-import type { ISODateString, DrawNo } from "./types";
+
 import type { Max3dDrawResult } from "./draw-result";
+import type { DrawNo, ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces

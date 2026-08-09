@@ -9,7 +9,7 @@ import type {
   TenantBettingStat,
 } from "@megawin/game-keno/entities";
 import { createEmptyByPlayType, createEmptyPlayTypeStat } from "@megawin/game-keno/rules";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Doc `keno_draw_betting_stats` → entity, NORMALIZE shape phía đọc.
@@ -107,9 +107,7 @@ function normalizeByPlayType(raw: Partial<KenoByPlayType> | undefined): KenoByPl
 }
 
 /** `numberFreq` là `Record` — reader đã tolerant `?? 0`, chỉ cần đảm bảo object tồn tại. */
-function normalizeNumberFreq(
-  raw: Record<string, Partial<KenoNumberStat>> | undefined,
-): Record<string, KenoNumberStat> {
+function normalizeNumberFreq(raw: Record<string, Partial<KenoNumberStat>> | undefined): Record<string, KenoNumberStat> {
   if (!raw) {
     return {};
   }

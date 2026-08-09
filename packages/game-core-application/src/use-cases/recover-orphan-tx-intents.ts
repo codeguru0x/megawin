@@ -54,12 +54,13 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
-import { tenantGateway } from "@megawin/tenant-gateway";
-import type { TransactionStatusResponse } from "@megawin/tenant-gateway";
 import type { TxIntentEntity } from "@megawin/game-core/entities";
 import { TransactionAction, TransactionReason } from "@megawin/shared/types";
 import { generateId, logError } from "@megawin/shared/utils";
+import type { TransactionStatusResponse } from "@megawin/tenant-gateway";
+import { tenantGateway } from "@megawin/tenant-gateway";
+
+import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -113,10 +114,7 @@ export interface RecoverOrphanTxIntentsResult {
  * await useCase.run();
  * ```
  */
-export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<
-  void,
-  RecoverOrphanTxIntentsResult
-> {
+export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<void, RecoverOrphanTxIntentsResult> {
   private readonly txIntentRepo = new TxIntentRepository();
   private readonly ticketExistsFn: TicketExistsFn;
 
@@ -187,10 +185,7 @@ export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<
    * Step 2: Confirm debit via checkTransactionStatus (read-only).
    * Step 3: Check ticket exists → markCompleted hoặc rollback credit.
    */
-  private async recoverOne(
-    intent: TxIntentEntity,
-    result: RecoverOrphanTxIntentsResult,
-  ): Promise<void> {
+  private async recoverOne(intent: TxIntentEntity, result: RecoverOrphanTxIntentsResult): Promise<void> {
     // ── Step 1: Đánh dấu đã thử recovery ──
     await this.txIntentRepo.incrementRecoveryAttempt(intent.tx);
 
@@ -220,10 +215,7 @@ export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<
         tx: intent.tx,
         tenantId: intent.tenantId,
       });
-      await this.txIntentRepo.incrementRecoveryAttempt(
-        intent.tx,
-        `checkTransactionStatus error: ${errMsg}`,
-      );
+      await this.txIntentRepo.incrementRecoveryAttempt(intent.tx, `checkTransactionStatus error: ${errMsg}`);
       result.failed++;
       return;
     }
@@ -251,9 +243,7 @@ export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<
       // Case A: Ticket saved nhưng WAL chưa completed → self-heal.
       await this.txIntentRepo.markCompleted(intent.tx);
       result.completed++;
-      console.log(
-        `[recover-tx-intents] Ticket exists → markCompleted tx=${intent.tx} game=${intent.gameId}`,
-      );
+      console.log(`[recover-tx-intents] Ticket exists → markCompleted tx=${intent.tx} game=${intent.gameId}`);
     } else {
       // Case B: Debit OK nhưng ticket không tồn tại → rollback credit.
       await this.rollbackCredit(intent, result);
@@ -268,18 +258,12 @@ export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<
    *
    * Nếu credit OK → markRolledBack. Nếu credit fail → increment attempt, retry sau.
    */
-  private async rollbackCredit(
-    intent: TxIntentEntity,
-    result: RecoverOrphanTxIntentsResult,
-  ): Promise<void> {
+  private async rollbackCredit(intent: TxIntentEntity, result: RecoverOrphanTxIntentsResult): Promise<void> {
     const gateway = await tenantGateway.getClient(intent.tenantId);
 
     if (!gateway) {
       // Edge case: gateway biến mất giữa chừng → escalate, không rollback mù.
-      await this.txIntentRepo.incrementRecoveryAttempt(
-        intent.tx,
-        "Gateway unavailable during rollback",
-      );
+      await this.txIntentRepo.incrementRecoveryAttempt(intent.tx, "Gateway unavailable during rollback");
       result.failed++;
       return;
     }

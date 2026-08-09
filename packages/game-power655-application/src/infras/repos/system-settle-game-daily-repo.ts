@@ -10,10 +10,11 @@
  */
 
 import {
-  SystemSettleGameDailyRepository,
   type SettleGameDailyAggregateResult,
+  SystemSettleGameDailyRepository,
 } from "@megawin/game-core-application/repos";
 import { POWER655_SETTLE_DRAW_REPORTS } from "@megawin/game-power655/entities";
+
 import { BaseRepo } from "./base-repo";
 
 export class SystemSettleGameDailyRepo extends SystemSettleGameDailyRepository {
@@ -44,16 +45,31 @@ export class SystemSettleGameDailyRepo extends SystemSettleGameDailyRepository {
 
     if (result.length === 0) {
       return {
-        drawCount: 0, entryCount: 0, playerCount: 0, tenantCount: 0,
-        totalStake: 0, totalWin: 0, totalPayout: 0, ggr: 0, totalCommission: 0, netProfit: 0,
+        drawCount: 0,
+        entryCount: 0,
+        playerCount: 0,
+        tenantCount: 0,
+        totalStake: 0,
+        totalWin: 0,
+        totalPayout: 0,
+        ggr: 0,
+        totalCommission: 0,
+        netProfit: 0,
       };
     }
 
     const r = result[0] as any;
     return {
-      drawCount: r.drawCount, entryCount: r.entryCount, playerCount: r.playerCount,
-      tenantCount: r.tenantCount, totalStake: r.totalStake, totalWin: r.totalWin, totalPayout: r.totalPayout,
-      ggr: r.ggr, totalCommission: r.totalCommission, netProfit: r.netProfit,
+      drawCount: r.drawCount,
+      entryCount: r.entryCount,
+      playerCount: r.playerCount,
+      tenantCount: r.tenantCount,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      ggr: r.ggr,
+      totalCommission: r.totalCommission,
+      netProfit: r.netProfit,
     };
   }
 }

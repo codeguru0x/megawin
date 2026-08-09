@@ -64,13 +64,57 @@ pnpm exec biome check . --reporter=summary
 
 Ghi kết quả vào chính file này thành bảng backlog (cập nhật khi thực thi):
 
-| Rule | Số lượng | Xử lý | Ghi chú |
-|---|---|---|---|
-| `suspicious/noExplicitAny` | ~? (dự kiến < 571 sau khi trừ `infras/**` và test) | Backlog dài hạn | Đưa `any` ở `use-cases/**` về type thật, ưu tiên code tính tiền |
-| `style/noNonNullAssertion` | ? | Backlog | Ưu tiên file settle/payout |
-| `style/noProcessEnv` | ~8 | Sửa ngay được | Dồn về `env.ts` / inject qua config |
-| `correctness/noUnusedVariables` | ? | Sửa ngay | |
-| `style/useFilenamingConvention` | dự kiến ~0 | | Repo đã 100% kebab-case |
+**Đã thực thi 08/08/2026** — sau commit 1 (format-only, 1113 file) + commit 2 (safe autofix, +1726 file, không dùng `--unsafe`). Kết quả `biome check . --reporter=summary`: **107 error, 2552 warning, 5008 info**.
+
+| Rule | Số lượng | Mức | Xử lý | Ghi chú |
+|---|---|---|---|---|
+| `nursery/useSortedClasses` | 4822 | info | Đã fix qua commit 2 (safe) — số còn lại là info không cần fix | Chủ yếu backoffice, đúng dự đoán rủi ro #3 |
+| `complexity/useLiteralKeys` | 102 | info | Backlog nhẹ | |
+| `complexity/noUselessConstructor` | 48 | info | Backlog nhẹ | |
+| `style/useTemplate` | 22 | info | Backlog nhẹ | |
+| `correctness/useParseIntRadix` | 9 | info | Backlog nhẹ | |
+| `style/useNodejsImportProtocol` | 4 | info | Backlog nhẹ | |
+| `style/noNonNullAssertion` | 539 | warning | Backlog dài hạn | Ưu tiên file settle/payout trước |
+| `style/useBlockStatements` | 1485 | warning | Backlog — cần review tay (đổi cấu trúc block) | Không auto-fix an toàn |
+| `suspicious/noArrayIndexKey` | 194 | warning | Backlog | Chủ yếu backoffice list render |
+| `suspicious/noExplicitAny` | 179 | warning | Backlog dài hạn (giảm từ 505 khảo sát 07/08 nhờ override `infras/**` off) | Đưa `any` ở `use-cases/**` về type thật, ưu tiên code tính tiền |
+| `suspicious/noGlobalIsNan` | 68 | warning | Sửa ngay được (đổi `isNaN`→`Number.isNaN`) | Backlog ngắn hạn |
+| `style/noProcessEnv` | 29 | warning | Sửa ngay được | Dồn về `env.ts`/config tập trung; bao gồm `tooling/vitest-config/src/setup-db-guard.ts` (2) |
+| `correctness/noUnusedVariables` | 16 | warning | Sửa ngay | |
+| `correctness/noUnusedFunctionParameters` | 10 | warning | Sửa ngay | |
+| `suspicious/noConfusingVoidType` | 25 | warning | Backlog | `undefined as void` pattern — cần đổi type |
+| `suspicious/noTemplateCurlyInString` | 3 | warning | Sửa ngay | Có thể là bug thật (thiếu template literal) |
+| `suspicious/noDocumentCookie` | 2 | warning | Backlog nhẹ | |
+| `complexity/noBannedTypes` | 1 | warning | Sửa ngay | |
+| `correctness/noUnusedPrivateClassMembers` | 1 | warning | Sửa ngay | |
+| `correctness/noUnusedImports` | 76 | **error** | **Commit 3 (unsafe) — ĐÃ HUỶ, xem lý do dưới** | |
+| `complexity/useOptionalChain` | 14 | **error** | **Commit 3 (unsafe) — ĐÃ HUỶ, xem lý do dưới** | |
+| `suspicious/noEmptyBlockStatements` | 10 | **error** | Backlog — cần review tay (10 file, xem danh sách dưới) | Không auto-fix |
+| `style/noParameterAssign` | 4 | **error** | Backlog — `packages/cache/src/redis/client.ts:55`, `packages/data/src/mongo/repository.ts:277,280,285` | Cần review tay (đổi sang local variable) |
+| `correctness/useExhaustiveDependencies` | 1 | **error** | Backlog — 1 file, xem `apps/backoffice/.../number-heatmap.tsx` | |
+| `style/noDefaultExport` | 1 | **error** | Backlog — `packages/cache/src/redis/client.ts` (đúng "1 source thật" đã ghi ở overview §4) | Cần đánh giá đổi sang named export hoặc thêm override riêng cho file này |
+| `performance/noDelete` | 1 | **error** | Backlog — `packages/player-sdk/scripts/prepack.mjs:17` (Unsafe fix) | Build script `.mjs`, chưa nằm trong override "config files" |
+| `style/useFilenamingConvention` | 0 | | Đúng dự đoán — repo 100% kebab-case | |
+
+**Quyết định Commit 3 (unsafe fix): HUỶ, đưa vào backlog.** `noUnusedImports` + `useOptionalChain` được Biome
+2.5.7 đánh dấu **"Unsafe fix"** (khác giả định ban đầu của plan là "safe") — cộng lại ảnh hưởng **86 file**,
+vượt xa ngưỡng "~30 file" mà plan quy định để huỷ bước này. Theo đúng plan: *"Nếu diff quá lớn, bỏ hẳn bước
+này, đưa vào backlog."* → 90 diagnostic error (`noUnusedImports` + `useOptionalChain`) ở lại backlog, xử lý
+dần theo từng PR nhỏ có review tay, KHÔNG chạy `--unsafe` đại trà.
+
+**10 file `noEmptyBlockStatements` cần review tay:**
+```
+packages/cache/src/redis/client.ts
+packages/cache/src/stores/noop-store.ts
+packages/cache/test/cached-fetcher.test.ts
+packages/data/src/mongo/repository.ts
+packages/game-lotto535-application/test/use-cases/patch-jackpot-prize.test.ts
+packages/player-sdk/scripts/prepack.mjs
+packages/shared/src/mappers/mapper.ts
+packages/tenant-gateway/src/transaction/transaction-api.ts
+packages/worker-core/src/use-cases/lock/tick-loop-worker.ts
+apps/backoffice/src/app/(main)/games/lotto535/operations/_lib/sections/analytics/number-heatmap.tsx (có kèm biome-ignore useExhaustiveDependencies)
+```
 
 Nguyên tắc: **không hạ rule xuống `off` để làm sạch output**. Nếu một rule tạo quá nhiều warning nhưng có giá trị → giữ `warn` và ghi vào backlog; chỉ `off` khi rule mâu thuẫn với convention đã chốt (như `noBarrelFile`).
 
@@ -90,6 +134,28 @@ Nguyên tắc: **không hạ rule xuống `off` để làm sạch output**. Nế
 - `git log --oneline -3` cho thấy 2-3 commit tách biệt rõ mục đích (format / autofix / unsafe).
 - `.git-blame-ignore-revs` tồn tại và chứa SHA commit format.
 - Bảng backlog ở trên đã được điền số thật.
+
+### Trạng thái thực tế sau khi thực thi (08/08/2026)
+
+| Tiêu chí | Trạng thái | Ghi chú |
+|---|---|---|
+| `biome check .` → 0 error | ❌ **Không đạt** | Còn 107 error, toàn bộ đã phân loại vào backlog (bảng trên) với lý do rõ ràng — chủ yếu do commit 3 (unsafe) bị huỷ theo đúng điều khoản "diff quá lớn" của chính plan này |
+| `pnpm check-types` xanh | ⚠️ Xanh trừ 1 lỗi tiền tồn | `apps/api-tenant/test/list-players.test.ts` — xác nhận KHÔNG do format/autofix gây ra (file không nằm trong diff commit 1/2), tồn tại từ trước migration |
+| `pnpm test` xanh | ⚠️ Xanh trừ lỗi tiền tồn | (a) nhiều package thiếu `MONGODB_URI` local trong `.env.test.local` → db-guard chặn hợp lệ; (b) `apps/api-player` có 3 assertion fail thật (đã verify diff format/autofix không đụng logic); (c) `player-sdk` 3 test fail đã biết trước theo `player-sdk-jsdoc.mdc`. Không có failure MỚI do format/autofix |
+| 2-3 commit tách biệt | ❌ **Không thực hiện** | Theo quyết định của user: KHÔNG tự tạo git commit trong phiên này. Toàn bộ thay đổi (format-only + safe autofix) đang nằm chung, CHƯA commit, trong working tree. User tự chia commit khi review |
+| `.git-blame-ignore-revs` | ❌ **Chưa tạo** | Phụ thuộc SHA của commit format-only — chỉ tạo được sau khi user tự commit. Xem hướng dẫn ở cuối file |
+| Bảng backlog điền số thật | ✅ Đã điền | Xem bảng trên |
+
+**Việc còn lại để user tự hoàn tất (không do agent thực hiện):**
+1. Review `git diff` hiện tại (1985 file, gộp cả format-only + safe autofix chưa tách lớp).
+2. Tự quyết định chia thành 1 hoặc nhiều commit (khuyến nghị theo đúng 2 lớp format/autofix nếu muốn giữ đúng tinh thần plan).
+3. Sau khi có SHA commit format-only, tạo `.git-blame-ignore-revs`:
+   ```
+   # chore(format): biome format toàn repo
+   <sha-commit-format>
+   ```
+   rồi bật `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+4. Xử lý dần backlog 107 error + ~2552 warning theo bảng trên (không có deadline cứng, ưu tiên các mục "Sửa ngay được").
 
 ## Phương án review sau thực thi
 

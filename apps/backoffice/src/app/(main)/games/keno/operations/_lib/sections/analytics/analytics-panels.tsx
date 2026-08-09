@@ -24,14 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils";
 
 import { KENO_PICK_STYLES, KENO_SIDE_BET_STYLES } from "../../ops-constants";
-import type {
-  PlayTypeRow,
-  SideBetPair,
-  TenantRow,
-  TopAccountRow,
-  TopComboRow,
-  TopPotentialRow,
-} from "../../types";
+import type { PlayTypeRow, SideBetPair, TenantRow, TopAccountRow, TopComboRow, TopPotentialRow } from "../../types";
 import { NumberBadge } from "./number-heatmap";
 
 // ─── Shared Mini Donut ─────────────────────────────────────────────────────────
@@ -63,22 +56,9 @@ function MiniDonut({
   const fontSize = label.length >= 4 ? baseFontSize - 1.5 : baseFontSize;
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className={cn("shrink-0", className)}
-    >
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className={cn("shrink-0", className)}>
       <title>{label}</title>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={stroke}
-        className="text-muted/60"
-      />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-muted/60" />
       <circle
         cx={cx}
         cy={cy}
@@ -204,12 +184,7 @@ function SideBetPairCard({
       {/* 2 hướng: nhãn + tiền + % — hàng trên; split bar — hàng dưới */}
       <div className="flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <p
-            className={cn(
-              "text-xs font-medium truncate",
-              skewed && leftHeavier && "font-bold text-foreground",
-            )}
-          >
+          <p className={cn("text-xs font-medium truncate", skewed && leftHeavier && "font-bold text-foreground")}>
             {pair.left.label}
           </p>
           <p className="text-sm font-bold tabular-nums text-foreground leading-tight">
@@ -217,12 +192,7 @@ function SideBetPairCard({
           </p>
         </div>
         <div className="min-w-0 text-right">
-          <p
-            className={cn(
-              "text-xs font-medium truncate",
-              skewed && !leftHeavier && "font-bold text-foreground",
-            )}
-          >
+          <p className={cn("text-xs font-medium truncate", skewed && !leftHeavier && "font-bold text-foreground")}>
             {pair.right.label}
           </p>
           <p className="text-sm font-bold tabular-nums text-foreground leading-tight">
@@ -259,9 +229,7 @@ export function PlayTypeCard({
 }) {
   // Luôn hiển thị đủ 10 pick theo thứ tự 1→10 (fill zero nếu chưa có data).
   // Thứ tự + key lấy từ core (KENO_BASIC_PLAY_TYPES); label placeholder từ core labels.
-  const pickMap = new Map(
-    playTypes.filter((r) => r.playType.startsWith("pick")).map((r) => [r.playType, r]),
-  );
+  const pickMap = new Map(playTypes.filter((r) => r.playType.startsWith("pick")).map((r) => [r.playType, r]));
   const picks = KENO_BASIC_PLAY_TYPES.map(
     (pt) =>
       pickMap.get(pt) ?? {
@@ -290,9 +258,7 @@ export function PlayTypeCard({
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                Pick 1–10 · Lớn/Nhỏ · Chẵn/Lẻ
-              </CardDescription>
+              <CardDescription className="text-xs mt-0.5">Pick 1–10 · Lớn/Nhỏ · Chẵn/Lẻ</CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
@@ -399,9 +365,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top người chơi</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Theo tổng tiền cược trong kỳ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Theo tổng tiền cược trong kỳ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -427,9 +391,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   <p className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                     {formatNumber(a.amount)}
                   </p>
-                  <p className="text-[11px] tabular-nums text-muted-foreground/60">
-                    {formatNumber(a.entries)} vé
-                  </p>
+                  <p className="text-[11px] tabular-nums text-muted-foreground/60">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -451,9 +413,7 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Entry rủi ro chi trả cao nhất nếu trúng
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Entry rủi ro chi trả cao nhất nếu trúng</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -477,8 +437,7 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     className="text-sm"
                   />
                   <p className="text-[11px] text-muted-foreground/70 tabular-nums mt-0.5">
-                    Cược{" "}
-                    <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
+                    Cược <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
                 {/* Rủi ro chi trả — số chính, đỏ đậm, có nền để nổi bật */}
@@ -516,9 +475,7 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Bộ số phổ biến nhất</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Bộ pick 8/9/10 được nhiều người dồn
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Bộ pick 8/9/10 được nhiều người dồn</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -532,9 +489,7 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                 key={c.rank}
                 className="flex items-start gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
               >
-                <span className="text-sm leading-none shrink-0 pt-0.5">
-                  {medals[c.rank - 1] ?? `#${c.rank}`}
-                </span>
+                <span className="text-sm leading-none shrink-0 pt-0.5">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 flex-wrap">
                     {c.numbers.map((n) => (
@@ -546,12 +501,8 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-semibold tabular-nums text-foreground">
-                    {formatNumber(c.sets)} bộ
-                  </p>
-                  <p className="text-xs tabular-nums text-muted-foreground">
-                    {formatNumber(c.entryCount)} người
-                  </p>
+                  <p className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(c.sets)} bộ</p>
+                  <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(c.entryCount)} người</p>
                 </div>
               </div>
             ))}
@@ -603,9 +554,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Phân tích theo đại lý</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Doanh thu · Hoa hồng · Người chơi
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Doanh thu · Hoa hồng · Người chơi</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -627,15 +576,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
 }
 
 /** 1 card đại lý giàu thông tin — dùng khi ít đại lý (≤3). */
-function TenantDetailCard({
-  tenant,
-  rank,
-  maxRevenue,
-}: {
-  tenant: TenantRow;
-  rank: number;
-  maxRevenue: number;
-}) {
+function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; rank: number; maxRevenue: number }) {
   return (
     <div className="rounded-xl border bg-muted/10 p-3.5">
       {/* Header: rank + tên + % share */}
@@ -734,21 +675,15 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
               style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
             />
             <div className="relative flex items-center gap-2 min-w-0">
-              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">
-                {i + 1}
-              </span>
+              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">{i + 1}</span>
               <span className="text-sm font-medium truncate">{t.tenantId}</span>
               <span className="text-xs text-muted-foreground/50 shrink-0">{t.pct.toFixed(0)}%</span>
             </div>
-            <span className="relative text-right tabular-nums text-sm">
-              {formatNumber(t.entries)}
-            </span>
+            <span className="relative text-right tabular-nums text-sm">{formatNumber(t.entries)}</span>
             <span className="relative text-right tabular-nums text-sm text-muted-foreground">
               {t.players === null ? "—" : formatNumber(t.players)}
             </span>
-            <span className="relative text-right tabular-nums text-sm font-medium">
-              {formatNumber(t.revenue)}
-            </span>
+            <span className="relative text-right tabular-nums text-sm font-medium">{formatNumber(t.revenue)}</span>
           </div>
         ))}
       </div>

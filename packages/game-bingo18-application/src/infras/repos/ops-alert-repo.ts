@@ -12,18 +12,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import {
-  Bingo18Collections,
-  OpsAlertSeverity,
-  OpsAlertStatus,
-} from "@megawin/game-bingo18/entities";
-import type { Bingo18OpsAlertDoc, Bingo18OpsAlertEntity } from "@megawin/game-bingo18/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-bingo18/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  Bingo18OpsAlertDoc,
+  Bingo18OpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-bingo18/entities";
+import { Bingo18Collections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<Bingo18OpsAlertDoc>();
 
@@ -90,10 +90,7 @@ export class OpsAlertRepository extends BaseRepo<Bingo18OpsAlertEntity, OpsAlert
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByDrawAndStatus(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<Bingo18OpsAlertEntity[]> {
+  async listByDrawAndStatus(drawId: string, status?: OpsAlertStatusType): Promise<Bingo18OpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) filter.status = status;
     return await this.findMany(filter, { sort: { createdAt: -1 } });

@@ -8,19 +8,11 @@
  * là PROXY (UI ghi "ước tính").
  */
 
-import type { Max3dDrawBettingStatsEntity, Max3dPlayTypeStat } from "@megawin/game-max3d/entities";
 import type { TopAccountStat } from "@megawin/game-core/types";
+import type { Max3dDrawBettingStatsEntity, Max3dPlayTypeStat } from "@megawin/game-max3d/entities";
 import type { Max3dExposureResult } from "@megawin/game-max3d/rules";
 
-import type {
-  OpsKpi,
-  PairRow,
-  PlayTypeRow,
-  TenantRow,
-  TopAccountRow,
-  TopPotentialRow,
-  TopTripletRow,
-} from "./types";
+import type { OpsKpi, PairRow, PlayTypeRow, TenantRow, TopAccountRow, TopPotentialRow, TopTripletRow } from "./types";
 
 type Stats = Max3dDrawBettingStatsEntity;
 
@@ -32,8 +24,7 @@ export function toKpi(stats: Stats): OpsKpi {
   return {
     totalRevenue: stats.totals.revenue,
     totalEntries: stats.totals.entries,
-    totalBetUnits:
-      bp.basicStraight.units + bp.basicCombo3.units + bp.basicCombo6.units + bp.plus.units,
+    totalBetUnits: bp.basicStraight.units + bp.basicCombo3.units + bp.basicCombo6.units + bp.plus.units,
     uniquePlayers: null,
     totalCommission: stats.totals.commission,
   };

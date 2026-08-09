@@ -7,4 +7,3 @@ export class DrawMapper extends MongoMapper<DrawDoc, DrawEntity> {
     return { id: _id.toHexString(), ...rest } as DrawEntity;
   }
 }
-

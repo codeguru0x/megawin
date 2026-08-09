@@ -34,12 +34,13 @@
  * | Ledger entry T null | — | LEDGER_MISSING |
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
-import { InternalUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
 import { DrawNo } from "@megawin/game-lotto535/entities";
-import { ResettleScenario } from "@megawin/game-lotto535/rules";
 import type { ResettleScenario as ResettleScenarioType } from "@megawin/game-lotto535/rules";
+import { ResettleScenario } from "@megawin/game-lotto535/rules";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
@@ -78,9 +79,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: DetectResettleBoundariesInput,
-  ): Promise<DetectResettleBoundariesOutput> {
+  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     const { drawId, proposedWinningMain, proposedWinningSpecial } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
@@ -89,9 +88,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     }
 
     if (!draw.settledAt) {
-      throw AppException.businessRuleViolation(
-        `Kỳ quay ${drawId} chưa từng settle — không cần resettle.`,
-      );
+      throw AppException.businessRuleViolation(`Kỳ quay ${drawId} chưa từng settle — không cần resettle.`);
     }
 
     const ledgerEntry = await this.cycleEntryRepo.findByDraw(drawId);
@@ -135,8 +132,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     const hadOldJpWinner = ledgerEntry.hasJpWinner;
     const hadOldSplit = ledgerEntry.didSplit;
 
-    const newWouldSplit =
-      draw.drawNo === DrawNo.Evening && ledgerEntry.opening >= splitThreshold && !hasNewJpWinner;
+    const newWouldSplit = draw.drawNo === DrawNo.Evening && ledgerEntry.opening >= splitThreshold && !hasNewJpWinner;
 
     const jpOrSplitAffected = hasNewJpWinner || hadOldJpWinner || newWouldSplit || hadOldSplit;
 
@@ -216,9 +212,7 @@ export class DetectResettleBoundariesUseCase extends NextApiUseCase<
 > {
   private readonly internal = new DetectResettleBoundariesInternalUseCase();
 
-  protected async execute(
-    input: DetectResettleBoundariesInput,
-  ): Promise<DetectResettleBoundariesOutput> {
+  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     return this.internal.run(input);
   }
 }

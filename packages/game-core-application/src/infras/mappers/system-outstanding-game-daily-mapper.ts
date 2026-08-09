@@ -8,10 +8,7 @@ import type { Document } from "mongodb";
  * Chuyển đổi `_id` (ObjectId) → `id` (hex string).
  * Tất cả field khác giữ nguyên kiểu — Date vẫn là Date, GameProduct vẫn là string.
  */
-export class SystemOutstandingGameDailyMapper extends MongoMapper<
-  Document,
-  SystemOutstandingGameDailyEntity
-> {
+export class SystemOutstandingGameDailyMapper extends MongoMapper<Document, SystemOutstandingGameDailyEntity> {
   protected mapProps(doc: Document): SystemOutstandingGameDailyEntity {
     const { _id, ...rest } = doc as any;
 

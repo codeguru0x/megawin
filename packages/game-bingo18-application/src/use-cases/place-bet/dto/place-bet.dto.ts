@@ -1,8 +1,4 @@
-import type {
-  Bingo18PlayType,
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-} from "@megawin/game-bingo18/entities";
+import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
 import type { TicketChannel } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────

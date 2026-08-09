@@ -10,6 +10,7 @@
 
 import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-mega645/entities";
 import { MEGA645_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-mega645/entities";
+
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";
@@ -34,9 +35,7 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
    * Luôn set snapshotAt = now để reset TTL timer.
    * Idempotent: retry ghi đè, không duplicate.
    */
-  async upsertDrawReport(
-    report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">,
-  ): Promise<void> {
+  async upsertDrawReport(report: Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">): Promise<void> {
     const now = new Date();
     await this.findOneAndUpdate(
       {
@@ -136,7 +135,8 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
     };
   }
 
-  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+  /** Lấy tất cả outstanding draw reports hiện tại, sort theo drawId ascending — dùng cho UI dashboard. */
+  async findAllSorted(): Promise<OutstandingDrawReportEntity[]> {
     return await this.findMany({}, { sort: { drawId: 1 } });
   }
 }

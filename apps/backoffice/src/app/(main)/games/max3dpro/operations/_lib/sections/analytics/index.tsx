@@ -19,14 +19,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayMode } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_PLAY_MODE_LABELS } from "@megawin/game-max3dpro/labels";
 
-import {
-  toPairRows,
-  toPlayTypeRows,
-  toTenantRows,
-  toTopAccounts,
-  toTopPotential,
-  toTopTriplets,
-} from "../../adapters";
+import { toPairRows, toPlayTypeRows, toTenantRows, toTopAccounts, toTopPotential, toTopTriplets } from "../../adapters";
 import type { LiveFeedEntry } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsLiveEntries, useOpsSnapshot } from "../../use-operations";
@@ -107,19 +100,11 @@ export function AnalyticsSection({ active }: { active: boolean }) {
       </div>
 
       {/* 3. Cụm rủi ro người chơi */}
-      <RiskCluster
-        drawId={effectiveDrawId}
-        topAccounts={view.topAccounts}
-        topPotential={view.topPotential}
-      />
+      <RiskCluster drawId={effectiveDrawId} topAccounts={view.topAccounts} topPotential={view.topPotential} />
 
       {/* 4. [Live feed (rộng) | Đại lý (hẹp)] */}
       <div className="grid items-start gap-4 @[64rem]/main:[grid-template-columns:1fr_24rem]">
-        <LiveFeed
-          entries={liveFeed}
-          isSettled={isSettled}
-          largeBetThreshold={view.thresholds.largeBetAmount}
-        />
+        <LiveFeed entries={liveFeed} isSettled={isSettled} largeBetThreshold={view.thresholds.largeBetAmount} />
         <TenantPanel tenants={view.tenants} />
       </div>
     </section>

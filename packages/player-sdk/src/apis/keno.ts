@@ -6,23 +6,23 @@
  * @module
  */
 
+import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
-  KenoTicketPurchaseInput,
-  KenoPlaceBetResponse,
-  KenoCurrentDrawResponse,
-  KenoListTicketsParams,
-  KenoListAllTicketsParams,
-  KenoListTicketsResponse,
-  KenoTicketEntriesResponse,
-  KenoGameConfigResponse,
-  KenoListDrawResultsParams,
-  KenoListDrawResultsResponse,
-  KenoDrawResultDetail,
   KenoComboPopularityParams,
   KenoComboPopularityResponse,
+  KenoCurrentDrawResponse,
+  KenoDrawResultDetail,
+  KenoGameConfigResponse,
+  KenoListAllTicketsParams,
+  KenoListDrawResultsParams,
+  KenoListDrawResultsResponse,
+  KenoListTicketsParams,
+  KenoListTicketsResponse,
+  KenoPlaceBetResponse,
+  KenoTicketEntriesResponse,
+  KenoTicketPurchaseInput,
 } from "../keno";
-import { ENDPOINTS } from "../endpoints";
 
 // ─────────────────────────────────────────────
 // API Interface
@@ -399,9 +399,7 @@ export function createKenoApi(http: HttpClient): KenoApi {
       return http.get<KenoTicketEntriesResponse>(ENDPOINTS.keno.getTicketEntries(ticketId));
     },
 
-    async listDrawResults(
-      params?: KenoListDrawResultsParams,
-    ): Promise<KenoListDrawResultsResponse> {
+    async listDrawResults(params?: KenoListDrawResultsParams): Promise<KenoListDrawResultsResponse> {
       return http.get<KenoListDrawResultsResponse>(ENDPOINTS.keno.listDrawResults, {
         params: params as Record<string, string | number | undefined>,
       });
@@ -411,14 +409,11 @@ export function createKenoApi(http: HttpClient): KenoApi {
       return http.get<KenoDrawResultDetail>(ENDPOINTS.keno.getDrawResult(drawId));
     },
 
-    async getComboPopularity(
-      params: KenoComboPopularityParams,
-    ): Promise<KenoComboPopularityResponse> {
+    async getComboPopularity(params: KenoComboPopularityParams): Promise<KenoComboPopularityResponse> {
       // numbers gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
-      return http.get<KenoComboPopularityResponse>(
-        ENDPOINTS.keno.getComboPopularity(params.drawId),
-        { params: { numbers: params.numbers.join(",") } },
-      );
+      return http.get<KenoComboPopularityResponse>(ENDPOINTS.keno.getComboPopularity(params.drawId), {
+        params: { numbers: params.numbers.join(",") },
+      });
     },
   };
 }

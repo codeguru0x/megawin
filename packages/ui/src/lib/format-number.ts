@@ -21,10 +21,7 @@ export interface FormatCompactNumberOptions {
  * formatCompactNumber(1550, { decimals: 1 }) // "1.6K"
  * formatCompactNumber(1000, { trailingZeros: false }) // "1K"
  */
-export function formatCompactNumber(
-  value: number,
-  options?: FormatCompactNumberOptions,
-): string {
+export function formatCompactNumber(value: number, options?: FormatCompactNumberOptions): string {
   const { decimals = 2, trailingZeros = true } = options ?? {};
 
   const absValue = Math.abs(value);
@@ -33,14 +30,10 @@ export function formatCompactNumber(
   for (const { threshold, suffix } of COMPACT_TIERS) {
     if (absValue >= threshold) {
       const scaled = absValue / threshold;
-      const formatted = trailingZeros
-        ? scaled.toFixed(decimals)
-        : parseFloat(scaled.toFixed(decimals)).toString();
+      const formatted = trailingZeros ? scaled.toFixed(decimals) : parseFloat(scaled.toFixed(decimals)).toString();
       return `${sign}${formatted}${suffix}`;
     }
   }
 
-  return trailingZeros
-    ? `${sign}${absValue.toFixed(decimals)}`
-    : `${sign}${absValue}`;
+  return trailingZeros ? `${sign}${absValue.toFixed(decimals)}` : `${sign}${absValue}`;
 }

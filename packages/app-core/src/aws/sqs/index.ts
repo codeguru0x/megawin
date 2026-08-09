@@ -17,4 +17,3 @@ export function createSqsClient(): SqsClient {
  * Chỉ được khởi tạo khi module SQS được import.
  */
 export const sqsClient = createSqsClient();
-

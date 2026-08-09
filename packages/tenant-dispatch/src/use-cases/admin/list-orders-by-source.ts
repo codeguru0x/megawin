@@ -1,7 +1,8 @@
 import { NextApiUseCase } from "@megawin/next/server";
-import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
+
 import type { TenantDispatchOrderEntity } from "../../entities/dispatch-order";
 import type { DispatchOrderStatus, DispatchSourceKind } from "../../entities/enums";
+import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 
 export interface ListOrdersBySourceInput {
   gameId: string;
@@ -21,10 +22,7 @@ export interface ListOrdersBySourceOutput {
  *
  * VD: "Entry X của Keno đã có dispatch orders nào?" → gameId=keno, sourceKind=payout, sourceId=entryX.
  */
-export class ListOrdersBySourceUseCase extends NextApiUseCase<
-  ListOrdersBySourceInput,
-  ListOrdersBySourceOutput
-> {
+export class ListOrdersBySourceUseCase extends NextApiUseCase<ListOrdersBySourceInput, ListOrdersBySourceOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: ListOrdersBySourceInput): Promise<ListOrdersBySourceOutput> {

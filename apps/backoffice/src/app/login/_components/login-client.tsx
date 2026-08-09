@@ -64,7 +64,7 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
   // Tự động redirect khi countdown về 0
   useEffect(() => {
     if (countdown === 0 && !isLoading) {
-      handleSignIn();
+      void handleSignIn();
     }
   }, [countdown, isLoading, handleSignIn]);
 

@@ -28,6 +28,7 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { VoidContext } from "./types";
 
@@ -53,9 +54,7 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
     // Status flow: open/selling/closed → voiding (API) → void (FinalizeVoid)
     // Nếu draw ở status khác (vd: "settled", "open") → reject, không void.
     if (draw.status !== DrawStatus.Voiding) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}" – expected "voiding".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}" – expected "voiding".`);
     }
 
     return {

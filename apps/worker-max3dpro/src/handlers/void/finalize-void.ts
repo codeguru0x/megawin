@@ -7,10 +7,7 @@
  * IDEMPOTENT: aggregate + overwrite.
  */
 
-import {
-  FinalizeVoidUseCase,
-  type VoidContext,
-} from "@megawin/game-max3dpro-application/use-cases/void";
+import { FinalizeVoidUseCase, type VoidContext } from "@megawin/game-max3dpro-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 

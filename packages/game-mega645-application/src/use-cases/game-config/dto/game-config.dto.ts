@@ -1,13 +1,13 @@
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  OpsStatsConfig,
-  Mega645OpsAlertType,
-} from "@megawin/game-mega645/entities";
-import type { GlobalConfigEntity } from "@megawin/game-mega645/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type {
+  FinancialRates,
+  GlobalConfigEntity,
+  JackpotConfig,
+  Mega645OpsAlertType,
+  OpsStatsConfig,
+  PlayRules,
+  PrizeAmounts,
+} from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
 // GetGameConfig

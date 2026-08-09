@@ -1,5 +1,6 @@
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { NextApiUseCase } from "@megawin/next/server";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+
 import { PlayerEntryRepository } from "../../infras/repos/player-entry-repo";
 import type { GetPlayerEntryDetailInput, GetPlayerEntryDetailOutput } from "./types";
 
@@ -13,10 +14,7 @@ import type { GetPlayerEntryDetailInput, GetPlayerEntryDetailOutput } from "./ty
  * Return raw doc (unknown) vì mỗi game có TicketEntryEntity riêng.
  * Frontend consumer cast sang đúng game-specific type.
  */
-export class GetPlayerEntryDetailUseCase extends NextApiUseCase<
-  GetPlayerEntryDetailInput,
-  GetPlayerEntryDetailOutput
-> {
+export class GetPlayerEntryDetailUseCase extends NextApiUseCase<GetPlayerEntryDetailInput, GetPlayerEntryDetailOutput> {
   private readonly repo = new PlayerEntryRepository();
 
   protected async execute(input: GetPlayerEntryDetailInput): Promise<GetPlayerEntryDetailOutput> {

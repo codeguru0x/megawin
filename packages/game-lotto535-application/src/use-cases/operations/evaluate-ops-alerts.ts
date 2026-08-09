@@ -28,20 +28,18 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import { TickLoopWorker, LockTakenOverError } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
+import type { Lotto535DrawBettingStatsEntity, Lotto535OpsAlertsConfig } from "@megawin/game-lotto535/entities";
 import { Lotto535NumberKind, Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
-import type {
-  Lotto535DrawBettingStatsEntity,
-  Lotto535OpsAlertsConfig,
-} from "@megawin/game-lotto535/entities";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -69,7 +67,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
+  protected override readonly description =
     "Lotto 5/35 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/cover/special) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -89,7 +87,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "lotto535:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.alertCtx = {
       // Cùng lý do merge-default ở sync worker — doc GlobalConfig cũ (trước p0-01) có thể
@@ -98,8 +96,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
       unitPrice: config.play.unitPrice,
     };
 
-    this.tickMs =
-      (config.ops?.stats.tickSeconds ?? DEFAULT_LOTTO535_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
+    this.tickMs = (config.ops?.stats.tickSeconds ?? DEFAULT_LOTTO535_CONFIG.ops.stats.tickSeconds) * 1000; // dùng CHUNG nhịp với sync (analysis §5.1/§5.2)
     this.counters = { evaluated: 0, alertsUpserted: 0 }; // reset — container reuse
 
     // Đọc cursor cũ từ lock doc — rỗng/không parse được → epoch (quét từ đầu).
@@ -159,9 +156,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
 
     // ≤12 doc/kỳ (không gian ĐB cố định) — an toàn đọc trọn, không cần trần riêng.
     const specialNumberStats = this.alertCtx.alerts.enabled[Lotto535OpsAlertType.SpecialSkew]
-      ? (await this.numberStatsRepo.findByDrawId(stats.drawId)).filter(
-          (n) => n.kind === Lotto535NumberKind.Special,
-        )
+      ? (await this.numberStatsRepo.findByDrawId(stats.drawId)).filter((n) => n.kind === Lotto535NumberKind.Special)
       : [];
 
     const newAlerts = evaluateAlerts({

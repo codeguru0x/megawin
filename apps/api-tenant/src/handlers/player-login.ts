@@ -7,11 +7,9 @@
  * chỉ login player cho chính mình.
  */
 
-import { z } from "zod";
-
 import { withTenantAuth } from "@megawin/auth/tenant";
-
 import { PlayerLoginUseCase } from "@megawin/identity-application/use-cases/players";
+import { z } from "zod";
 
 // ============ Zod schema ============
 
@@ -36,5 +34,5 @@ export const handler = withTenantAuth(
 
     return useCase.run({ playerExternalId, tenantId });
   },
-  { schemas: { body: bodySchema } }
+  { schemas: { body: bodySchema } },
 );

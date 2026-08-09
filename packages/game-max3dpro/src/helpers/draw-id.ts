@@ -8,16 +8,11 @@
 import type { ISODateString } from "../entities/types";
 import { DrawNo } from "../entities/types";
 
-export function generateDrawId(
-  drawDate: ISODateString,
-  drawNo: number = DrawNo.Default
-): string {
+export function generateDrawId(drawDate: ISODateString, drawNo: number = DrawNo.Default): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
-export function parseDrawId(
-  drawId: string
-): { drawDate: ISODateString; drawNo: number } | null {
+export function parseDrawId(drawId: string): { drawDate: ISODateString; drawNo: number } | null {
   const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
 
@@ -34,7 +29,7 @@ export function parseDrawId(
 export function generateDrawIdSequence(
   startDrawId: string,
   drawCount: number,
-  drawDaysOfWeek: number[] = [2, 4, 6]
+  drawDaysOfWeek: number[] = [2, 4, 6],
 ): string[] {
   const parsed = parseDrawId(startDrawId);
   if (!parsed) {

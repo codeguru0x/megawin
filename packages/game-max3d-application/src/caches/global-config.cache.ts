@@ -9,9 +9,10 @@
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";
-import { AppException } from "@megawin/shared/errors";
-import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
+import { AppException } from "@megawin/shared/errors";
+
+import { GameConfigRepository } from "../infras/repos/game-config-repo";
 import { MAX3D_CACHE_KEYS } from "./keys";
 
 let repo: GameConfigRepository | null = null;

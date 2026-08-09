@@ -11,11 +11,12 @@
  * - Caller có thể override `tx` khi re-use từ entity field (vd `entry.payoutTx` đã sinh sẵn lúc settle).
  */
 
-import { generateId } from "@megawin/shared/utils";
-import { TransactionAction, TransactionReason, Currency } from "@megawin/shared/types";
 import type { Currency as CurrencyType } from "@megawin/shared/types";
-import { DispatchSourceKind, DispatchOrderStatus } from "../entities/enums";
+import { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
+import { generateId } from "@megawin/shared/utils";
+
 import type { TenantDispatchOrderDoc, TenantDispatchOrderInput } from "../entities/dispatch-order";
+import { DispatchOrderStatus, DispatchSourceKind } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Common input

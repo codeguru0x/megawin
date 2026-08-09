@@ -10,8 +10,8 @@
  * DrawId là stable + unique, dùng làm join key giữa draws ↔ entries.
  */
 
-import { DrawNo } from "../entities/types";
 import type { ISODateString } from "../entities/types";
+import { DrawNo } from "../entities/types";
 
 /**
  * Tạo drawId từ ngày + số thứ tự kỳ quay.
@@ -26,10 +26,7 @@ import type { ISODateString } from "../entities/types";
  * generateDrawId("2026-02-22", 2) // → "2026-02-22.002"
  * ```
  */
-export function generateDrawId(
-  drawDate: ISODateString,
-  drawNo: DrawNo
-): string {
+export function generateDrawId(drawDate: ISODateString, drawNo: DrawNo): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
@@ -39,9 +36,7 @@ export function generateDrawId(
  * @param drawId - Format "YYYY-MM-DD.NNN"
  * @returns { drawDate, drawNo } hoặc null nếu format sai
  */
-export function parseDrawId(
-  drawId: string
-): { drawDate: ISODateString; drawNo: DrawNo } | null {
+export function parseDrawId(drawId: string): { drawDate: ISODateString; drawNo: DrawNo } | null {
   const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
 
@@ -68,18 +63,14 @@ export function parseDrawId(
  * // → ["2026-02-22.001", "2026-02-22.002", "2026-02-23.001"]
  * ```
  */
-export function generateDrawIdSequence(
-  startDrawId: string,
-  drawCount: number,
-  drawsPerDay: number = 2
-): string[] {
+export function generateDrawIdSequence(startDrawId: string, drawCount: number, drawsPerDay = 2): string[] {
   const parsed = parseDrawId(startDrawId);
   if (!parsed) {
     throw new Error(`Invalid startDrawId: ${startDrawId}`);
   }
 
   const ids: string[] = [];
-  let currentDate = new Date(parsed.drawDate + "T00:00:00");
+  const currentDate = new Date(parsed.drawDate + "T00:00:00");
   let currentDrawNo = parsed.drawNo as number;
 
   for (let i = 0; i < drawCount; i++) {

@@ -1,5 +1,5 @@
-import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
 import { Mega645OpsAlertType } from "@megawin/game-mega645/entities";
+import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -34,10 +34,7 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: positiveInt,
     maxBetCount: positiveInt,
-    maxBoardsPerTicket: positiveInt.max(
-      MEGA645_MAX_BOARDS,
-      `Số board tối đa không được vượt ${MEGA645_MAX_BOARDS}.`,
-    ),
+    maxBoardsPerTicket: positiveInt.max(MEGA645_MAX_BOARDS, `Số board tối đa không được vượt ${MEGA645_MAX_BOARDS}.`),
     maxDrawCount: positiveInt,
     salesCloseBeforeMinutes: positiveInt,
     drawsPerWeek: positiveInt,

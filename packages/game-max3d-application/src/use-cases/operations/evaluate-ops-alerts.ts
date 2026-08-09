@@ -36,17 +36,17 @@
  * khó là syndicate đáng kể).
  */
 
-import { TickLoopWorker } from "@megawin/worker-core/workers";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { logError } from "@megawin/shared/utils";
-import { DEFAULT_MAX3D_CONFIG, computeMax3dExposure } from "@megawin/game-max3d/rules";
-import type { Max3dTopPair, OpsAlertsConfig } from "@megawin/game-max3d/entities";
-import type { Max3dDrawBettingStatsEntity } from "@megawin/game-max3d/entities";
+import type { Max3dDrawBettingStatsEntity, Max3dTopPair, OpsAlertsConfig } from "@megawin/game-max3d/entities";
 import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { computeMax3dExposure, DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
+import { logError } from "@megawin/shared/utils";
+import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
+import { TickLoopWorker } from "@megawin/worker-core/workers";
+
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { evaluateMax3dAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -74,7 +74,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
+  protected override readonly description =
     "Max 3D — đánh giá cảnh báo vận hành (ngưỡng exposure/pair liability/combo) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -93,7 +93,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "max3d:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     // Doc cũ (trước khi thêm section ops) chưa có field → fallback default để worker
     // không crash trước lần staff save config đầu tiên.
@@ -156,10 +156,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
 
   /** Đánh giá 1 doc đã đọc sẵn (KHÔNG đọc lại — `findChangedSince` đã trả full entity). */
   private async evaluateDoc(stats: Max3dDrawBettingStatsEntity): Promise<void> {
-    const topPairEntities = await this.pairStatsRepo.getTopPairs(
-      stats.drawId,
-      this.alertCtx.topCombosK,
-    );
+    const topPairEntities = await this.pairStatsRepo.getTopPairs(stats.drawId, this.alertCtx.topCombosK);
     const topPairs: Max3dTopPair[] = topPairEntities.map((p) => ({
       pairKey: p.pairKey,
       triplet1: p.triplet1,

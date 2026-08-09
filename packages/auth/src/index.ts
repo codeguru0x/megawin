@@ -10,51 +10,48 @@
  * import { withTenantAuth } from "@megawin/auth/tenant";
  */
 
+/** Re-export from app-core for consumer convenience */
+export {
+  type ApiGatewayZodSchemas,
+  httpErrorHandlerUseCaseFormat,
+  type SchemaOf,
+  validatorZodMiddleware,
+} from "@megawin/app-core/lambda/middleware";
+
 /** Authorization core */
 export {
-  getAuthContextFromApiGatewayEvent,
-  checkAuthorization,
-  type AuthContext,
-  type TenantAuthContext,
-  type CompanyAuthContext,
-  type AuthRequirements,
-  type AuthContextAdapterOptions,
   type ApiGatewayEventWithAuthorizer,
+  type AuthContext,
+  type AuthContextAdapterOptions,
+  type AuthRequirements,
+  type CompanyAuthContext,
+  checkAuthorization,
+  getAuthContextFromApiGatewayEvent,
+  type TenantAuthContext,
 } from "./authorization-api-gateway";
-
 /** Authorization middleware — account type specific */
 export {
-  playerAuth,
   agentAuth,
-  companyAuth,
   authorizationMiddleware,
-  type UserAuthOptions,
   type CompanyAuthOptions,
-  type TenantUserEvent,
   type CompanyUserEvent,
+  companyAuth,
+  playerAuth,
+  type TenantUserEvent,
+  type UserAuthOptions,
 } from "./authorization-middleware";
-
 /** Handler wrappers — all-in-one (auth + validator + error handler) */
 export {
-  withPlayerAuth,
+  type InferSchema,
   withAgentAuth,
   withCompanyAuth,
   withMiddleware,
-  type InferSchema,
+  withPlayerAuth,
 } from "./handler-wrappers";
-
-/** Re-export from app-core for consumer convenience */
-export {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-  type ApiGatewayZodSchemas,
-  type SchemaOf,
-} from "@megawin/app-core/lambda/middleware";
-
 /** Tenant API Key auth (server-to-server) — generic middleware */
 export {
-  tenantApiKeyAuthMiddleware,
+  type ApiGatewayEventWithTenant,
   type TenantApiKeyAuthOptions,
   type TenantContext,
-  type ApiGatewayEventWithTenant,
+  tenantApiKeyAuthMiddleware,
 } from "./tenant-api-key-auth";

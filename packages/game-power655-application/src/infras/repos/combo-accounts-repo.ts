@@ -17,23 +17,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Power655Collections } from "@megawin/game-power655/entities";
-import type {
-  Power655DrawComboAccountDoc,
-  Power655DrawComboAccountEntity,
-} from "@megawin/game-power655/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Power655DrawComboAccountDoc, Power655DrawComboAccountEntity } from "@megawin/game-power655/entities";
+import { Power655Collections } from "@megawin/game-power655/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { ComboAccountMapper } from "../mappers/combo-account-mapper";
+import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Power655DrawComboAccountDoc>();
 
-export class ComboAccountsRepository extends BaseRepo<
-  Power655DrawComboAccountEntity,
-  ComboAccountMapper
-> {
+export class ComboAccountsRepository extends BaseRepo<Power655DrawComboAccountEntity, ComboAccountMapper> {
   constructor() {
     super({
       collName: Power655Collections.DrawComboAccounts,
@@ -51,11 +46,7 @@ export class ComboAccountsRepository extends BaseRepo<
    * @param comboKey - Khoá combo.
    * @param limit - Trần số account trả về.
    */
-  async listByCombo(
-    drawId: string,
-    comboKey: string,
-    limit: number,
-  ): Promise<Power655DrawComboAccountEntity[]> {
+  async listByCombo(drawId: string, comboKey: string, limit: number): Promise<Power655DrawComboAccountEntity[]> {
     return await this.findMany({ drawId, comboKey }, { sort: { amount: -1 }, limit });
   }
 

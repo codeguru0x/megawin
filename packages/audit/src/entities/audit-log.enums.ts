@@ -215,9 +215,7 @@ export type SelfActivityAction = (typeof SELF_ACTIVITY_ACTIONS)[number];
  * `Set` để lookup O(1) — dùng ở API whitelist / guard.
  * Khai `Set<AuditAction>` (không hẹp) để nhận input `AuditAction` bất kỳ khi check.
  */
-export const SELF_ACTIVITY_ACTION_SET: ReadonlySet<AuditAction> = new Set<AuditAction>(
-  SELF_ACTIVITY_ACTIONS,
-);
+export const SELF_ACTIVITY_ACTION_SET: ReadonlySet<AuditAction> = new Set<AuditAction>(SELF_ACTIVITY_ACTIONS);
 
 /**
  * Whitelist action được match ở **chiều target** trên trang "Nhật ký của tôi" —

@@ -5,14 +5,7 @@ import { useMemo, useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -140,17 +133,12 @@ export function TenantCombobox({
                       >
                         <span className="flex items-center gap-2 truncate font-mono text-xs">
                           <Check
-                            className={cn(
-                              "size-3.5 shrink-0",
-                              value === opt.value ? "opacity-100" : "opacity-0",
-                            )}
+                            className={cn("size-3.5 shrink-0", value === opt.value ? "opacity-100" : "opacity-0")}
                           />
                           {opt.value}
                         </span>
                         {opt.count !== undefined && (
-                          <span className="text-xs tabular-nums text-muted-foreground">
-                            {opt.count}
-                          </span>
+                          <span className="text-xs tabular-nums text-muted-foreground">{opt.count}</span>
                         )}
                       </CommandItem>
                     ))}

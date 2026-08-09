@@ -42,8 +42,7 @@ export function useJackpotCurrent() {
 export function useJackpotCycleOptions() {
   return useQuery({
     queryKey: power655Keys.jackpotCycleOptions,
-    queryFn: () =>
-      apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
+    queryFn: () => apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
   });
 }
 
@@ -90,16 +89,10 @@ export function useJackpotCycles(params: JackpotCyclesParams) {
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  * `onNotFound` được gọi để component có thể đóng dialog.
  */
-export function useJackpotEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useJackpotEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: power655Keys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient
-        .get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`)
-        .then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 

@@ -24,7 +24,7 @@
  * Jackpot chỉ tích luỹ (roll-over) hoặc trao cho winner.
  */
 
-import type { PrizeAmounts, JackpotWinnerInfo } from "@megawin/game-mega645/entities";
+import type { JackpotWinnerInfo, PrizeAmounts } from "@megawin/game-mega645/entities";
 import type { ResettleScenario } from "@megawin/game-mega645/rules";
 
 // ─────────────────────────────────────────────────────────────────────────────

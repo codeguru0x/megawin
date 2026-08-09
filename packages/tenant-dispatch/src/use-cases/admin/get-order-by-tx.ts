@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 
-import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { TenantDispatchOrderEntity } from "../../entities/dispatch-order";
+import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 
 export interface GetOrderByTxInput {
   tx: string;
@@ -15,10 +15,7 @@ export type GetOrderByTxOutput = TenantDispatchOrderEntity | null;
  * Dùng cho drawer chi tiết. Trả về `null` khi không tìm thấy — FE
  * xử lý empty state. Không throw lỗi cho "not found".
  */
-export class GetOrderByTxUseCase extends NextApiUseCase<
-  GetOrderByTxInput,
-  GetOrderByTxOutput
-> {
+export class GetOrderByTxUseCase extends NextApiUseCase<GetOrderByTxInput, GetOrderByTxOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: GetOrderByTxInput): Promise<GetOrderByTxOutput> {

@@ -15,28 +15,29 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
+import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
+import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
 import {
+  type EntryPayout,
+  type EntryResult,
+  type EntryVoidInfo,
   Mega645Collections,
   PrizeTier,
-  type EntryPayout,
-  type EntryVoidInfo,
-  type EntryResult,
 } from "@megawin/game-mega645/entities";
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import { ObjectId, Long } from "mongodb";
-import { BaseRepo } from "./base-repo";
-import { EntryMapper } from "../mappers/entry-mapper";
-import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
-import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
+import { type Long, ObjectId } from "mongodb";
+
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
+import { EntryMapper } from "../mappers/entry-mapper";
+import { BaseRepo } from "./base-repo";
 import type {
-  PlayerBreakdownRow,
-  OutstandingDrawMetrics,
-  OutstandingDrawCounts,
-  WinningEntryForDispatch,
-  VoidedEntryForDispatch,
   EntryForStats,
+  OutstandingDrawCounts,
+  OutstandingDrawMetrics,
   OwnedBoard,
+  PlayerBreakdownRow,
+  VoidedEntryForDispatch,
+  WinningEntryForDispatch,
 } from "./types";
 
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
@@ -87,11 +88,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.findMany({ ticketId }, { sort: { drawId: 1 } });
   }
 
-  async getEntriesByDrawId(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -112,11 +109,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * @param afterId - ObjectId hex watermark, `undefined` = đọc từ đầu.
    * @param limit - Trần số entry đọc 1 lần gọi (`READ_BATCH`).
    */
-  async getEntriesForStatsAfter(
-    drawId: string,
-    afterId: string | undefined,
-    limit: number,
-  ): Promise<EntryForStats[]> {
+  async getEntriesForStatsAfter(drawId: string, afterId: string | undefined, limit: number): Promise<EntryForStats[]> {
     const filter: Record<string, unknown> = { drawId, status: { $ne: EntryStatus.Void } };
     if (afterId) {
       filter._id = { $gt: new ObjectId(afterId) };
@@ -168,11 +161,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     }
     return boards;
   }
-  async getScheduledEntriesBatch(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
+  async getScheduledEntriesBatch(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -180,10 +169,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /** Lấy entries scheduled cho settle batch — query đơn giản hơn paging. */
   async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
-      { drawId, status: EntryStatus.Scheduled },
-      { sort: { createdAt: 1 }, limit },
-    );
+    return await this.findMany({ drawId, status: EntryStatus.Scheduled }, { sort: { createdAt: 1 }, limit });
   }
 
   async countEntriesByDrawId(drawId: string): Promise<number> {
@@ -665,20 +651,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           },
           totalVoidedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.originalAmount", 0] }, 0],
             },
           },
           totalRefundedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.refundAmount", 0] }, 0],
             },
           },
           voidedDrawIds: {
@@ -731,20 +709,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           },
           totalVoidedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.originalAmount", 0] }, 0],
             },
           },
           totalRefundedAmount: {
             $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, { $ifNull: ["$voidInfo.refundAmount", 0] }, 0],
             },
           },
           voidedDrawIds: {
@@ -813,9 +783,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Dùng bởi BuildSettleReportUseCase để tính playerCount per tenant.
    * 2-level group: { tenantId, accountId } → { tenantId } → playerCount.
    */
-  async aggregatePlayerCountByTenant(
-    drawId: string,
-  ): Promise<Array<{ tenantId: string; playerCount: number }>> {
+  async aggregatePlayerCountByTenant(drawId: string): Promise<Array<{ tenantId: string; playerCount: number }>> {
     const result = await this.aggregate([
       {
         $match: {
@@ -979,9 +947,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Mega645 có lineCount (expanded lines từ bao).
    */
-  async aggregateOutstandingMetricsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1017,9 +983,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(
-    activeDrawIds: string[],
-  ): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1072,11 +1036,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Chỉ trả về entries đã settle với winAmount > 0.
    * cursorId: entryId của record cuối trang trước (ObjectId gt).
    */
-  async getWinningEntries(
-    drawId: string,
-    limit: number,
-    cursorId?: string,
-  ): Promise<TicketEntryEntity[]> {
+  async getWinningEntries(drawId: string, limit: number, cursorId?: string): Promise<TicketEntryEntity[]> {
     const filter: Record<string, unknown> = {
       drawId,
       status: EntryStatus.Settled,
@@ -1254,10 +1214,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * BẮT BUỘC cả drawId lẫn tenantId — KHÔNG query cross-draw.
    * Index: { drawId: 1, tenantId: 1, accountId: 1 }
    */
-  async aggregatePlayersByDrawAndTenant(
-    drawId: string,
-    tenantId: string,
-  ): Promise<PlayerBreakdownRow[]> {
+  async aggregatePlayersByDrawAndTenant(drawId: string, tenantId: string): Promise<PlayerBreakdownRow[]> {
     const result = await this.aggregate([
       { $match: { drawId, tenantId, status: EntryStatus.Settled } },
       {
@@ -1289,11 +1246,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    *
    * Index: { drawId: 1, tenantId: 1, accountId: 1 }
    */
-  async findByDrawTenantPlayer(
-    drawId: string,
-    tenantId: string,
-    accountId: string,
-  ): Promise<TicketEntryEntity[]> {
+  async findByDrawTenantPlayer(drawId: string, tenantId: string, accountId: string): Promise<TicketEntryEntity[]> {
     return this.findMany({ drawId, tenantId, accountId });
   }
 
@@ -1325,11 +1278,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * @param statuses - Các status entry cần quét (vd. [Settled, Scheduled])
    * @returns true nếu tồn tại ít nhất 1 board trúng Jackpot theo kết quả đề xuất
    */
-  async existsJpWinnerForDraw(
-    drawId: string,
-    proposedWinningNumbers: string[],
-    statuses: string[],
-  ): Promise<boolean> {
+  async existsJpWinnerForDraw(drawId: string, proposedWinningNumbers: string[], statuses: string[]): Promise<boolean> {
     // JP: tồn tại 1 board chứa đủ cả 6 số winning (→ 6/6 match).
     // count limit:1 dừng ngay khi gặp winner đầu tiên.
     return this.exists({

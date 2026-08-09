@@ -122,11 +122,7 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
  * KHÔNG timer riêng: badge count đọc từ snapshot; panel này chỉ tải chi tiết on-demand.
  * Trả CẢ item `ack` — UI v6: render dưới disclosure per-group (guideline §4).
  */
-export function useAlerts(
-  drawId: string | undefined,
-  status: string | undefined,
-  enabled: boolean,
-) {
+export function useAlerts(drawId: string | undefined, status: string | undefined, enabled: boolean) {
   return useQuery({
     queryKey: bingo18Keys.opsAlerts(drawId ?? "", status),
     queryFn: () =>
@@ -223,14 +219,10 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Chi tiết đầy đủ 1 entry theo entryId — dùng cho dialog xem chi tiết từ Winning Entries Dialog.
  * Tự động toast lỗi + gọi `onNotFound` khi entry không tồn tại hoặc lỗi tải.
  */
-export function useWinningEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: bingo18Keys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/bingo18/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/bingo18/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 
@@ -271,9 +263,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: bingo18Keys.all });
       toast.success(successMessage);
@@ -322,11 +312,7 @@ export function useTriggerResettle() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/bingo18/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/bingo18/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {

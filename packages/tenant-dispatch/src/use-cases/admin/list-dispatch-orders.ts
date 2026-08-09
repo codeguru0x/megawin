@@ -1,10 +1,10 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
-import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
+import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
-import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { TenantDispatchOrderEntity } from "../../entities/dispatch-order";
 import type { DispatchOrderStatus, DispatchSourceKind } from "../../entities/enums";
+import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { DispatchRetryMode } from "../../infras/repos/types";
 
 /** Date-only format `YYYY-MM-DD`. */
@@ -60,10 +60,7 @@ export interface ListDispatchOrdersOutput {
  *
  * KHÔNG gọi MongoDB trực tiếp — mọi query xuyên qua `DispatchOrderRepository`.
  */
-export class ListDispatchOrdersUseCase extends NextApiUseCase<
-  ListDispatchOrdersInput,
-  ListDispatchOrdersOutput
-> {
+export class ListDispatchOrdersUseCase extends NextApiUseCase<ListDispatchOrdersInput, ListDispatchOrdersOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: ListDispatchOrdersInput): Promise<ListDispatchOrdersOutput> {

@@ -5,10 +5,11 @@
  * Chỉ cho phép khi draw ở trạng thái scheduled hoặc salesOpen.
  */
 
+import type { AuditActor } from "@megawin/audit/logger";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus } from "@megawin/game-core/entities";
-import type { AuditActor } from "@megawin/audit/logger";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditUpdateSchedule } from "../../services/audit-log";
 
@@ -29,10 +30,7 @@ export interface UpdateScheduleOutput {
 
 const EDITABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesOpen]);
 
-export class UpdateScheduleUseCase extends NextApiUseCase<
-  UpdateScheduleInput,
-  UpdateScheduleOutput
-> {
+export class UpdateScheduleUseCase extends NextApiUseCase<UpdateScheduleInput, UpdateScheduleOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: UpdateScheduleInput): Promise<UpdateScheduleOutput> {
@@ -66,9 +64,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
     }
 
     if (closeAt >= drawTime) {
-      throw AppException.badRequest(
-        `Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`,
-      );
+      throw AppException.badRequest(`Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`);
     }
 
     const updated = await this.drawRepo.updateSchedule(input.drawId, {

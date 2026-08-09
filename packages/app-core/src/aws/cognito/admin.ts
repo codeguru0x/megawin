@@ -1,17 +1,18 @@
 import {
-  AdminCreateUserCommand,
-  AdminCreateUserCommandInput,
   AdminAddUserToGroupCommand,
+  AdminCreateUserCommand,
+  type AdminCreateUserCommandInput,
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminGetUserCommand,
   AdminInitiateAuthCommand,
   AdminRespondToAuthChallengeCommand,
   AdminSetUserMFAPreferenceCommand,
-  AdminSetUserMFAPreferenceCommandInput,
+  type AdminSetUserMFAPreferenceCommandInput,
   AdminSetUserPasswordCommand,
   AdminUpdateUserAttributesCommand,
   AssociateSoftwareTokenCommand,
+  type AttributeType,
   GetUserPoolMfaConfigCommand,
   InitiateAuthCommand,
   ListUsersCommand,
@@ -20,7 +21,6 @@ import {
   type SetUserPoolMfaConfigCommandInput,
   type UserType,
   VerifySoftwareTokenCommand,
-  AttributeType,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 import { cognitoClient } from "./client";
@@ -227,9 +227,7 @@ export interface AdminGetUserParams {
   username: string;
 }
 
-export async function adminGetUser(
-  params: AdminGetUserParams,
-): Promise<{ sub: string; attributes: AttributeType[] }> {
+export async function adminGetUser(params: AdminGetUserParams): Promise<{ sub: string; attributes: AttributeType[] }> {
   const result = await cognitoClient.send(
     new AdminGetUserCommand({
       UserPoolId: params.userPoolId,
@@ -259,9 +257,7 @@ export interface AdminGetUserMfaStatusResult {
  * Lấy trạng thái MFA hiện tại của user.
  * Trả về preferred MFA setting và danh sách MFA đã cấu hình.
  */
-export async function adminGetUserMfaStatus(
-  params: AdminGetUserMfaStatusParams,
-): Promise<AdminGetUserMfaStatusResult> {
+export async function adminGetUserMfaStatus(params: AdminGetUserMfaStatusParams): Promise<AdminGetUserMfaStatusResult> {
   const { userPoolId, username } = params;
 
   const result = await cognitoClient.send(
@@ -432,9 +428,7 @@ export interface AdminInitiateAuthResult {
  * Khởi tạo auth flow ADMIN_NO_SRP_AUTH cho user.
  * Dùng khi hệ thống tự authenticate user (server-side) mà không cần SRP.
  */
-export async function adminInitiateAuth(
-  params: AdminInitiateAuthParams,
-): Promise<AdminInitiateAuthResult> {
+export async function adminInitiateAuth(params: AdminInitiateAuthParams): Promise<AdminInitiateAuthResult> {
   const { userPoolId, clientId, username, password } = params;
 
   const result = await cognitoClient.send(
@@ -565,9 +559,7 @@ export interface AdminChangeUserPasswordParams {
  * Đổi mật khẩu user: verify mật khẩu cũ qua AdminInitiateAuth,
  * nếu đúng thì set mật khẩu mới (permanent) qua AdminSetUserPassword.
  */
-export async function adminChangeUserPassword(
-  params: AdminChangeUserPasswordParams,
-): Promise<void> {
+export async function adminChangeUserPassword(params: AdminChangeUserPasswordParams): Promise<void> {
   const { userPoolId, clientId, username, currentPassword, newPassword } = params;
 
   await adminInitiateAuth({
@@ -642,9 +634,7 @@ export interface InitiateRefreshTokenResult {
  * Dùng REFRESH_TOKEN_AUTH flow (InitiateAuth – không phải Admin*).
  * Flow này chỉ cần ClientId + RefreshToken, không cần UserPoolId hay password.
  */
-export async function initiateRefreshToken(
-  params: InitiateRefreshTokenParams,
-): Promise<InitiateRefreshTokenResult> {
+export async function initiateRefreshToken(params: InitiateRefreshTokenParams): Promise<InitiateRefreshTokenResult> {
   const { clientId, refreshToken } = params;
 
   const result = await cognitoClient.send(

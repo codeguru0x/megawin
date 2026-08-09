@@ -30,11 +30,12 @@
  * bằng tổng giá trị giải ĐB + phụ ĐB cho hạng ĐB/phụ ĐB.
  */
 
-import { PrizeTier, BasicTier, BASIC_TIER_PRIORITY } from "../entities/enums";
 import { sumBy } from "@megawin/shared/utils";
-import type { Triplet, PrizeAmounts } from "../entities/types";
+
 import type { Max3dproDrawResult } from "../entities/draw-result";
 import type { EntryPayoutTier } from "../entities/entry";
+import { BASIC_TIER_PRIORITY, BasicTier, PrizeTier } from "../entities/enums";
+import type { PrizeAmounts, Triplet } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Flattened Draw Result
@@ -84,10 +85,7 @@ export function flattenDrawResult(result: Max3dproDrawResult): FlattenedDrawResu
  * Duyệt theo thứ tự ưu tiên ĐB > Nhất > Nhì > Ba, trả ngay khi khớp.
  * Nếu triplet không khớp bất kỳ hạng nào → null.
  */
-export function findTierInResult(
-  triplet: Triplet,
-  byTier: Map<BasicTier, Triplet[]>,
-): BasicTier | null {
+export function findTierInResult(triplet: Triplet, byTier: Map<BasicTier, Triplet[]>): BasicTier | null {
   for (const tier of BASIC_TIER_PRIORITY) {
     if (byTier.get(tier)!.includes(triplet)) {
       return tier;

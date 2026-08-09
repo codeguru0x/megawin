@@ -9,12 +9,13 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type {
+  JackpotHistoryItem,
   ListJackpotHistoryByCycleInput,
   ListJackpotHistoryByCycleOutput,
-  JackpotHistoryItem,
 } from "./dto/jackpot.dto";
 
 /**
@@ -29,9 +30,7 @@ export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
   private readonly cycleRepo = new JackpotCycleRepository();
 
   /** @inheritdoc */
-  protected async execute(
-    input: ListJackpotHistoryByCycleInput,
-  ): Promise<ListJackpotHistoryByCycleOutput> {
+  protected async execute(input: ListJackpotHistoryByCycleInput): Promise<ListJackpotHistoryByCycleOutput> {
     const page = input.page ?? 1;
     const size = input.size ?? 20;
 
@@ -56,12 +55,10 @@ export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
 
       // hasJackpot1Winner: closing JP1 thấp hơn expected (opening + contribution)
       // → cycle reset, winner đã nhận pool.
-      const hasJackpot1Winner =
-        d.jackpot != null && d.financial != null && jp1Closing < jp1Opening + jp1Contrib;
+      const hasJackpot1Winner = d.jackpot != null && d.financial != null && jp1Closing < jp1Opening + jp1Contrib;
 
       // hasJackpot2Winner: closing JP2 thấp hơn expected → JP2 winner đã nhận pool.
-      const hasJackpot2Winner =
-        d.jackpot != null && d.financial != null && jp2Closing < jp2Opening + jp2Contrib;
+      const hasJackpot2Winner = d.jackpot != null && d.financial != null && jp2Closing < jp2Opening + jp2Contrib;
 
       return {
         drawId: d.drawId,

@@ -17,10 +17,7 @@ export const WORKER_RUN_STATE_LABELS: Record<WorkerRunState, string> = {
  * Badge variant (shadcn) cho từng `WorkerRunState` — chỉ dùng variant CÓ SẴN của
  * `Badge`, không thêm variant mới.
  */
-export const WORKER_RUN_STATE_VARIANT: Record<
-  WorkerRunState,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
+export const WORKER_RUN_STATE_VARIANT: Record<WorkerRunState, "default" | "secondary" | "destructive" | "outline"> = {
   [WorkerRunState.Idle]: "secondary",
   [WorkerRunState.Running]: "default",
   [WorkerRunState.Crashed]: "destructive",

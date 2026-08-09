@@ -1,17 +1,18 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { AppException } from "@megawin/shared/errors";
-import { Pagination } from "@megawin/shared/constants/pagination";
-import { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-max3dpro/entities";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+import { NextApiUseCase } from "@megawin/next/server";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { AppException } from "@megawin/shared/errors";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
   GetWinningEntriesInput,
   GetWinningEntriesOutput,
-  WinningEntryItem,
   WinningEntriesSummary,
-  WinningEntryTierDetail,
   WinningEntryBoard,
+  WinningEntryItem,
+  WinningEntryTierDetail,
 } from "./dto/winning-entries.dto";
 
 /** Label tiếng Việt cho 8 hạng giải Max 3D Pro. */
@@ -35,10 +36,7 @@ const TIER_LABELS: Record<string, string> = {
  * - isDuplicate: 2 bộ ba trong 1 cặp giống nhau → giải thưởng × 2.
  * - multiDigit board có frontDigits + backDigits.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput
-> {
+export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
@@ -71,9 +69,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
         // Max 3D Pro: isDuplicate khi tất cả P(n,2) ordered pairs từ 1 bộ ba giống nhau
         // Với multiNumber: chỉ có thể duplicate khi đúng 2 bộ ba trong board và giống nhau
         const isDuplicate =
-          b.playMode === "multiNumber" && b.triplets.length === 2
-            ? b.triplets[0] === b.triplets[1]
-            : undefined;
+          b.playMode === "multiNumber" && b.triplets.length === 2 ? b.triplets[0] === b.triplets[1] : undefined;
 
         return {
           boardNo: b.boardNo,
@@ -93,14 +89,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       // flatten + dedup để highlight bộ ba trúng trên board.
       const r = e.result;
       const winningTriplets: string[] = r
-        ? [
-            ...new Set([
-              ...(r.special ?? []),
-              ...(r.first ?? []),
-              ...(r.second ?? []),
-              ...(r.third ?? []),
-            ]),
-          ]
+        ? [...new Set([...(r.special ?? []), ...(r.first ?? []), ...(r.second ?? []), ...(r.third ?? [])])]
         : [];
 
       return {

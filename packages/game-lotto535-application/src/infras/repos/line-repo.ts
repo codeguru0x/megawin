@@ -13,9 +13,10 @@
  * PatchJackpotPrize (step 4a) qua patchJackpotLineWinAmount().
  */
 
-import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import { chunk } from "@megawin/shared/utils";
+
 import { BaseRepo } from "./base-repo";
 
 export class LineRepository extends BaseRepo<any> {
@@ -95,10 +96,7 @@ export class LineRepository extends BaseRepo<any> {
    * Chỉ lấy entryId, betCount để build map betUnits per entry per tier.
    * Được gọi bởi ApplySplitBonuses (step 4b).
    */
-  async getWinningLinesForTier(
-    drawId: string,
-    tier: string,
-  ): Promise<Array<{ entryId: unknown; betCount: number }>> {
+  async getWinningLinesForTier(drawId: string, tier: string): Promise<Array<{ entryId: unknown; betCount: number }>> {
     return this.findManyAsDocuments(
       {
         drawId,
@@ -114,9 +112,7 @@ export class LineRepository extends BaseRepo<any> {
    * Chỉ lấy _id, entryId, betCount để tính tổng bet units.
    * Được gọi bởi PatchJackpotPrize (step 4a).
    */
-  async getJackpotLinesForDraw(
-    drawId: string,
-  ): Promise<Array<{ _id: unknown; entryId: unknown; betCount: number }>> {
+  async getJackpotLinesForDraw(drawId: string): Promise<Array<{ _id: unknown; entryId: unknown; betCount: number }>> {
     return this.findManyAsDocuments(
       {
         drawId,

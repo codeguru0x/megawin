@@ -10,10 +10,7 @@
  * @output VoidEntriesBatchResult
  */
 
-import {
-  VoidEntriesBatchUseCase,
-  type VoidContext,
-} from "@megawin/game-mega645-application/use-cases/void";
+import { type VoidContext, VoidEntriesBatchUseCase } from "@megawin/game-mega645-application/use-cases/void";
 
 const useCase = new VoidEntriesBatchUseCase();
 

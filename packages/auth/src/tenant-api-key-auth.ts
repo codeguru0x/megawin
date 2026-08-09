@@ -56,8 +56,7 @@ function extractApiKey(event: {
   queryStringParameters?: Record<string, string | undefined> | null;
 }): string | undefined {
   const headers = event.headers ?? {};
-  const fromHeader =
-    headers["x-api-key"] ?? headers["X-Api-Key"] ?? undefined;
+  const fromHeader = headers["x-api-key"] ?? headers["X-Api-Key"] ?? undefined;
   if (fromHeader) return fromHeader;
 
   const qs = event.queryStringParameters ?? {};
@@ -93,20 +92,12 @@ export function tenantApiKeyAuthMiddleware(options: TenantApiKeyAuthOptions) {
       const tenant = await getTenantByApiKey(apiKey);
 
       if (!tenant) {
-        request.earlyResponse = errorResponse(
-          401,
-          "UNAUTHORIZED",
-          "Invalid API key",
-        );
+        request.earlyResponse = errorResponse(401, "UNAUTHORIZED", "Invalid API key");
         return;
       }
 
       if (!allowedStatuses.includes(tenant.status)) {
-        request.earlyResponse = errorResponse(
-          403,
-          "TENANT_DISABLED",
-          `Tenant "${tenant.tenantId}" is not active`,
-        );
+        request.earlyResponse = errorResponse(403, "TENANT_DISABLED", `Tenant "${tenant.tenantId}" is not active`);
         return;
       }
 

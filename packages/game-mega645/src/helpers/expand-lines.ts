@@ -10,14 +10,9 @@
  *   - bao N (7-18): C(N, 6) lines (mọi tổ hợp 6 số từ N số đã chọn)
  */
 
-import { PlayType } from "../entities/enums";
-import {
-  ALL_NUMBERS,
-  MEGA645_NUMBER_COUNT,
-  type BoardSelection,
-  type LineValue,
-} from "../entities/types";
 import type { EntryBoardSnapshot } from "../entities/entry";
+import { PlayType } from "../entities/enums";
+import { ALL_NUMBERS, type BoardSelection, type LineValue, MEGA645_NUMBER_COUNT } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Core: generate combinations

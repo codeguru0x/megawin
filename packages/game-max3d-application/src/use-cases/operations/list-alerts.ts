@@ -1,6 +1,7 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { OpsAlertSeverity } from "@megawin/game-max3d/entities";
 import type { Max3dOpsAlertEntity, Max3dOpsAlertType } from "@megawin/game-max3d/entities";
+import { OpsAlertSeverity } from "@megawin/game-max3d/entities";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";
 
@@ -56,8 +57,6 @@ export class ListAlertsUseCase extends NextApiUseCase<ListAlertsInput, ListAlert
       }
     }
 
-    return [...byType.values()].sort(
-      (a, b) => SEVERITY_RANK[b.severity]! - SEVERITY_RANK[a.severity]!,
-    );
+    return [...byType.values()].sort((a, b) => SEVERITY_RANK[b.severity]! - SEVERITY_RANK[a.severity]!);
   }
 }

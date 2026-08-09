@@ -1,5 +1,6 @@
-import { TxIntentPhase } from "@megawin/game-core/entities";
 import type { TxIntentEntity } from "@megawin/game-core/entities";
+import { TxIntentPhase } from "@megawin/game-core/entities";
+
 import { TxIntentMapper } from "../mappers/tx-intent-mapper";
 import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
 
@@ -141,7 +142,7 @@ export class TxIntentRepository extends MegawinTenantCoreBaseRepo<TxIntentEntity
    *
    * Trả về tối đa `limit` intents, sắp xếp theo createdAt cũ nhất trước.
    */
-  async findOrphans(limit: number = 50): Promise<TxIntentEntity[]> {
+  async findOrphans(limit = 50): Promise<TxIntentEntity[]> {
     const cutoff = new Date(Date.now() - ORPHAN_THRESHOLD_MS);
 
     return await this.findMany(
@@ -160,7 +161,7 @@ export class TxIntentRepository extends MegawinTenantCoreBaseRepo<TxIntentEntity
   /**
    * Tìm orphan intents đã vượt ngưỡng recovery → cần MANUAL_REVIEW.
    */
-  async findExhaustedOrphans(limit: number = 50): Promise<TxIntentEntity[]> {
+  async findExhaustedOrphans(limit = 50): Promise<TxIntentEntity[]> {
     return await this.findMany(
       {
         phase: TxIntentPhase.DebitPending,

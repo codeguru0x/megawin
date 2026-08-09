@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { KenoDrawAccountStatsEntity } from "@megawin/game-keno/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * Map doc `keno_draw_account_stats` → entity (ObjectId → id hex).

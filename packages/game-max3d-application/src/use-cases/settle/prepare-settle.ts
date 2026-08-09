@@ -22,6 +22,7 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { ResettleContext, SettleContext } from "./types";
@@ -55,9 +56,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     if (!draw.result) {

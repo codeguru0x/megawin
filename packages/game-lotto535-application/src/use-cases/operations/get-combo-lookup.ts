@@ -12,14 +12,15 @@
  * `boardPrice`, đọc combo doc, breakdown account).
  */
 
+import type { PlayType } from "@megawin/game-lotto535/entities";
+import { buildComboKey, calculateLineCount } from "@megawin/game-lotto535/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { buildComboKey, calculateLineCount } from "@megawin/game-lotto535/rules";
-import type { PlayType } from "@megawin/game-lotto535/entities";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+
 import { ComboAccountsRepository } from "../../infras/repos/combo-accounts-repo";
+import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
 
 /**
@@ -29,10 +30,7 @@ import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
  */
 const ACCOUNTS_LIMIT = 200;
 
-export class GetComboLookupUseCase extends NextApiUseCase<
-  GetComboLookupInput,
-  GetComboLookupOutput
-> {
+export class GetComboLookupUseCase extends NextApiUseCase<GetComboLookupInput, GetComboLookupOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly comboRepo = new ComboStatsRepository();
@@ -42,16 +40,12 @@ export class GetComboLookupUseCase extends NextApiUseCase<
     const { drawId, mainNumbers, specialNumbers } = input;
     const pt = input.playType as PlayType;
 
-    const [draw, config] = await Promise.all([
-      this.drawRepo.getDrawById(drawId),
-      this.getGlobalConfig.run(),
-    ]);
+    const [draw, config] = await Promise.all([this.drawRepo.getDrawById(drawId), this.getGlobalConfig.run()]);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${drawId} không tồn tại.`);
     }
 
-    const boardPrice =
-      calculateLineCount(pt, { mainNumbers, specialNumbers }) * config.play.unitPrice;
+    const boardPrice = calculateLineCount(pt, { mainNumbers, specialNumbers }) * config.play.unitPrice;
     const comboKey = buildComboKey(pt, mainNumbers, specialNumbers);
     const doc = await this.comboRepo.findByComboKey(drawId, comboKey);
 

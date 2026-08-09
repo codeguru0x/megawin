@@ -7,6 +7,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { buildResettleBatchKey } from "@megawin/game-core/utils";
 import { buildReversalOrder } from "@megawin/tenant-dispatch/builders";
 import { EnqueueDispatchOrdersUseCase } from "@megawin/tenant-dispatch/use-cases/enqueue";
+
 import { EntryResettleRepository } from "../../infras/repos/entry-resettle-repo";
 
 const BATCH_SIZE = 500;
@@ -25,22 +26,14 @@ export interface EnqueueReversalsOutput {
   lockKey: string;
 }
 
-export class EnqueueReversalsUseCase extends InternalUseCase<
-  EnqueueReversalsInput,
-  EnqueueReversalsOutput
-> {
+export class EnqueueReversalsUseCase extends InternalUseCase<EnqueueReversalsInput, EnqueueReversalsOutput> {
   private readonly entryResettleRepo = new EntryResettleRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 
   protected async execute(input: EnqueueReversalsInput): Promise<EnqueueReversalsOutput> {
     const { drawId, resettleId, lockOwnerToken, lockKey } = input;
 
-    const reversalBatchKey = buildResettleBatchKey(
-      GameProduct.Lotto535,
-      drawId,
-      resettleId,
-      "reversal",
-    );
+    const reversalBatchKey = buildResettleBatchKey(GameProduct.Lotto535, drawId, resettleId, "reversal");
 
     let cursor: string | undefined;
     let enqueuedTotal = 0;

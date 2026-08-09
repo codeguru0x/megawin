@@ -14,8 +14,9 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { globalConfigCache } from "../../caches/global-config.cache";
 import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
+
+import { globalConfigCache } from "../../caches/global-config.cache";
 
 export class GetGlobalConfigInternalUseCase extends InternalUseCase<void, GlobalConfigEntity> {
   protected async execute(): Promise<GlobalConfigEntity> {

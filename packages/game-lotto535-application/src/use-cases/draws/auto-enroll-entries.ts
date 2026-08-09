@@ -23,10 +23,7 @@ export interface AutoEnrollOutput {
   done: boolean;
 }
 
-export class AutoEnrollEntriesUseCase extends InternalUseCase<
-  AutoEnrollInput,
-  AutoEnrollOutput
-> {
+export class AutoEnrollEntriesUseCase extends InternalUseCase<AutoEnrollInput, AutoEnrollOutput> {
   protected async execute(input: AutoEnrollInput): Promise<AutoEnrollOutput> {
     return {
       drawId: input.drawId,

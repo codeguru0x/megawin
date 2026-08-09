@@ -46,16 +46,13 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
 
   // Slice `exposure` + `thresholds.fixedExposureWarnAmount` → ExposureCard (query dedupe
   // với slice trên, không request thêm).
-  const { data: exposure } = useOpsSnapshot<ExposureViewWithThreshold | null>(
-    effectiveDrawId,
-    isSettled,
-    (s) =>
-      s.exposure
-        ? {
-            view: toExposureView(s.exposure),
-            warnAmount: s.thresholds.fixedExposureWarnAmount,
-          }
-        : null,
+  const { data: exposure } = useOpsSnapshot<ExposureViewWithThreshold | null>(effectiveDrawId, isSettled, (s) =>
+    s.exposure
+      ? {
+          view: toExposureView(s.exposure),
+          warnAmount: s.thresholds.fixedExposureWarnAmount,
+        }
+      : null,
   );
 
   if (!effectiveDrawId) return null;
@@ -76,11 +73,7 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
     <div className="space-y-3">
       <KpiStrip kpi={kpi} />
       {exposure && (
-        <ExposureCard
-          exposure={exposure.view}
-          warnAmount={exposure.warnAmount}
-          onOpenAnalysis={onOpenAnalysis}
-        />
+        <ExposureCard exposure={exposure.view} warnAmount={exposure.warnAmount} onOpenAnalysis={onOpenAnalysis} />
       )}
     </div>
   );

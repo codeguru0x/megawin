@@ -20,9 +20,10 @@
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PrizeAmounts } from "@megawin/game-power655/entities";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { ResettleContext, SettleContext } from "./types";
 
 export interface PrepareSettleInput {
@@ -61,9 +62,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw AppException.businessRuleViolation(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
-      );
+      throw AppException.businessRuleViolation(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     if (!draw.result) {
@@ -76,9 +75,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       //   dùng getActiveCycle vì cycle của T có thể đã đóng (JP1 winner) và chưa
       //   có cycle mới (chưa có kỳ sau T).
       // Settle lần đầu: kỳ T nằm trong cycle đang active → getActiveCycle đúng.
-      resettleContext
-        ? this.cycleRepo.getCycleByNo(resettleContext.cycleNo)
-        : this.cycleRepo.getActiveCycle(),
+      resettleContext ? this.cycleRepo.getCycleByNo(resettleContext.cycleNo) : this.cycleRepo.getActiveCycle(),
     ]);
 
     if (!globalConfig) {
@@ -108,7 +105,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       jp1CurrentAmount = resettleContext.openingJp1;
       jp2CurrentAmount = resettleContext.openingJp2;
       cycleDrawCountBefore = resettleContext.cycleDrawCountBefore;
-    } 
+    }
 
     const fixedPrizeAmounts: PrizeAmounts = {
       tier1: globalConfig.defaultPrizes.tier1,

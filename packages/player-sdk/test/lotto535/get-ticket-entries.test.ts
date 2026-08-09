@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { PlayerClient } from "../../src";
-import { createTestClient, mockFetch, mockFetchError, BASE_URL, TOKENS } from "../helpers";
+import { BASE_URL, createTestClient, mockFetch, mockFetchError, TOKENS } from "../helpers";
 
 const TICKET_WITH_ENTRIES = {
   ticket: {
@@ -35,9 +36,7 @@ const TICKET_WITH_ENTRIES = {
       },
       payout: {
         winAmount: 100000,
-        tiers: [
-          { tier: "jackpot", label: "Jackpot", hitCount: 1, amount: 100000, isJackpot: true },
-        ],
+        tiers: [{ tier: "jackpot", label: "Jackpot", hitCount: 1, amount: 100000, isJackpot: true }],
       },
     },
     {
@@ -94,9 +93,7 @@ describe("lotto535.getTicketEntries", () => {
   it("should throw ApiClientError on NOT_FOUND", async () => {
     vi.stubGlobal("fetch", mockFetchError("NOT_FOUND", "Ticket not found", 404));
 
-    await expect(client.lotto535.getTicketEntries("nonexistent")).rejects.toThrow(
-      "Ticket not found",
-    );
+    await expect(client.lotto535.getTicketEntries("nonexistent")).rejects.toThrow("Ticket not found");
   });
 
   it("should include Bearer token in request", async () => {

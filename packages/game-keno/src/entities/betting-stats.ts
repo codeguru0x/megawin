@@ -12,21 +12,23 @@
  */
 
 import type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 } from "@megawin/game-core/types";
+
 import type { KenoPlayType } from "./enums";
+
 export type {
+  DeltaAccumulatedDoc,
   DrawBettingStatsBase,
   DrawBettingTotals,
-  DeltaAccumulatedDoc,
+  OpsStatsConfig,
   TenantBettingStat,
   TopAccountStat,
-  OpsStatsConfig,
 };
 
 /** Thống kê tiền/bộ cược của 1 kiểu chơi (basic pickN hoặc 1 hướng side bet). */
@@ -163,8 +165,7 @@ export interface KenoTopPotential {
  * `$set lastEntryId` trong 1 lệnh → nguyên tử, idempotent (xem {@link DeltaAccumulatedDoc}).
  * `lastEntryId` siết về `string` (base khai `unknown` cho tương thích 3 game chưa migrate).
  */
-export interface KenoDrawBettingStatsDoc
-  extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
+export interface KenoDrawBettingStatsDoc extends Omit<DrawBettingStatsBase, "lastEntryId">, DeltaAccumulatedDoc {
   /** MongoDB ObjectId. */
   _id: unknown;
 

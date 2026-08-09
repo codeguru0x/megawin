@@ -1,7 +1,8 @@
+import { DrawStatus } from "@megawin/game-core/entities";
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus } from "@megawin/game-core/entities";
 import { nowVN } from "@megawin/shared/utils";
+
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditOpenSales } from "../../services/audit-log";
 import type { DrawTransitionInput, DrawTransitionOutput } from "./dto/draw.dto";
@@ -23,16 +24,10 @@ export class OpenSalesUseCase extends NextApiUseCase<DrawTransitionInput, DrawTr
       );
     }
 
-    const updated = await this.drawRepo.openSales(
-      input.drawId,
-      draw.status,
-      draw.sales.openAt ? undefined : nowVN(),
-    );
+    const updated = await this.drawRepo.openSales(input.drawId, draw.status, draw.sales.openAt ? undefined : nowVN());
 
     if (!updated) {
-      throw AppException.internal(
-        `Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`,
-      );
+      throw AppException.internal(`Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`);
     }
 
     // Audit staff mở bán — fire-and-forget, chỉ khi có actor (route BO truyền).

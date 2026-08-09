@@ -38,8 +38,7 @@ export const ENDPOINTS = {
     getEntryLines: (entryId: string) => `/games/lotto535/entries/${entryId}/lines` as const,
     listDrawResults: "/games/lotto535/draw-results",
     getDrawResult: (drawId: string) => `/games/lotto535/draw-results/${drawId}` as const,
-    getComboPopularity: (drawId: string) =>
-      `/games/lotto535/draws/${drawId}/combo-popularity` as const,
+    getComboPopularity: (drawId: string) => `/games/lotto535/draws/${drawId}/combo-popularity` as const,
   },
 
   mega645: {
@@ -53,8 +52,7 @@ export const ENDPOINTS = {
     getEntryLines: (entryId: string) => `/games/mega645/entries/${entryId}/lines` as const,
     listDrawResults: "/games/mega645/draw-results",
     getDrawResult: (drawId: string) => `/games/mega645/draw-results/${drawId}` as const,
-    getComboPopularity: (drawId: string) =>
-      `/games/mega645/draws/${drawId}/combo-popularity` as const,
+    getComboPopularity: (drawId: string) => `/games/mega645/draws/${drawId}/combo-popularity` as const,
   },
 
   power655: {

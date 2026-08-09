@@ -1,12 +1,13 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { OpsAlertStatus } from "@megawin/game-bingo18/entities";
 import type { TopAccountStat } from "@megawin/game-bingo18/entities";
+import { OpsAlertStatus } from "@megawin/game-bingo18/entities";
 import { computeBingo18Exposure, DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.dto";
 
 /**
@@ -26,10 +27,7 @@ import type { GetOpsSnapshotInput, GetOpsSnapshotOutput } from "./dto/snapshot.d
  *
  * `updatedAt` của stats dùng làm ETag ở route → 304 khi chưa đổi (0 re-render FE).
  */
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -85,12 +83,14 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
       drawStatus: draw?.status ?? null,
       stats,
       exposure,
-      topAccounts: topAccounts.map((a): TopAccountStat => ({
-        accountId: a.accountId,
-        username: a.username,
-        amount: a.amount,
-        entries: a.entries,
-      })),
+      topAccounts: topAccounts.map(
+        (a): TopAccountStat => ({
+          accountId: a.accountId,
+          username: a.username,
+          amount: a.amount,
+          entries: a.entries,
+        }),
+      ),
       uniquePlayers,
       alertCounts: { new: newCount, critical: criticalCount },
       // Ngưỡng từ config → FE tô màu đúng cấu hình thực, không hardcode default.

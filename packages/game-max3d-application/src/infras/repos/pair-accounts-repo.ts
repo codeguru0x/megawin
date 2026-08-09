@@ -18,23 +18,18 @@
  * RULE: use case KHÔNG biết cấu trúc Mongo — mọi update đi qua method typed ở đây.
  */
 
-import { Max3dCollections } from "@megawin/game-max3d/entities";
-import type {
-  Max3dDrawPairAccountDoc,
-  Max3dDrawPairAccountEntity,
-} from "@megawin/game-max3d/entities";
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
+import type { Max3dDrawPairAccountDoc, Max3dDrawPairAccountEntity } from "@megawin/game-max3d/entities";
+import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+
 import { PairAccountMapper } from "../mappers/pair-account-mapper";
+import { BaseRepo } from "./base-repo";
 import type { PairStatsDelta } from "./types";
 
 const f = docPath<Max3dDrawPairAccountDoc>();
 
-export class PairAccountsRepository extends BaseRepo<
-  Max3dDrawPairAccountEntity,
-  PairAccountMapper
-> {
+export class PairAccountsRepository extends BaseRepo<Max3dDrawPairAccountEntity, PairAccountMapper> {
   constructor() {
     super({
       collName: Max3dCollections.PairAccounts,

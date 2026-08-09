@@ -8,8 +8,8 @@
  * @output EnqueueDispatchRefundsOutput
  */
 
-import { EnqueueDispatchRefundsUseCase } from "@megawin/game-mega645-application/use-cases/void";
 import type { VoidContext } from "@megawin/game-mega645-application/use-cases/void";
+import { EnqueueDispatchRefundsUseCase } from "@megawin/game-mega645-application/use-cases/void";
 
 const useCase = new EnqueueDispatchRefundsUseCase();
 

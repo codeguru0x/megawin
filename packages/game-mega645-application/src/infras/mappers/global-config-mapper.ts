@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { GlobalConfigDoc, GlobalConfigEntity } from "@megawin/game-mega645/entities";
-import { Document } from "mongodb";
+import type { Document } from "mongodb";
 
 /**
  * `GlobalConfigDoc` → entity. Map thẳng `_id` → `id`, giữ nguyên các field còn lại.

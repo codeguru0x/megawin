@@ -1,7 +1,8 @@
 import { NextApiUseCase } from "@megawin/next/server";
+import { AppException } from "@megawin/shared/errors";
+
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { GetEntryByIdInput, GetEntryByIdOutput } from "./types";
-import { AppException } from "@megawin/shared/errors";
 
 export class GetEntryByIdUseCase extends NextApiUseCase<GetEntryByIdInput, GetEntryByIdOutput> {
   private readonly entryRepo = new EntryRepository();

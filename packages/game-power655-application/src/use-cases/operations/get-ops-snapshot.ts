@@ -35,14 +35,15 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
-import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
-import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
-import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
+import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
+import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
+import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type {
   GetOpsSnapshotInput,
   GetOpsSnapshotOutput,
@@ -50,10 +51,7 @@ import type {
   Power655TopCombo,
 } from "./dto/ops.dto";
 
-export class GetOpsSnapshotUseCase extends NextApiUseCase<
-  GetOpsSnapshotInput,
-  GetOpsSnapshotOutput
-> {
+export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
@@ -103,14 +101,16 @@ export class GetOpsSnapshotUseCase extends NextApiUseCase<
       drawStatus: draw?.status ?? null,
       stats,
       numberStats,
-      topCombos: topCombos.map((c): Power655TopCombo => ({
-        comboKey: c.comboKey,
-        playType: c.playType,
-        mainNumbers: c.mainNumbers,
-        sets: c.sets,
-        accounts: c.accountCount,
-        amount: c.amount,
-      })),
+      topCombos: topCombos.map(
+        (c): Power655TopCombo => ({
+          comboKey: c.comboKey,
+          playType: c.playType,
+          mainNumbers: c.mainNumbers,
+          sets: c.sets,
+          accounts: c.accountCount,
+          amount: c.amount,
+        }),
+      ),
       topAccounts: topAccounts.map((a) => ({
         accountId: a.accountId,
         username: a.username,

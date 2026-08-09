@@ -5,7 +5,7 @@
  * (không kéo theo mapper / mongo client).
  */
 
-import type { TxLogStatus, TxLogEventType } from "../../../entities/enums";
+import type { TxLogEventType, TxLogStatus } from "../../../entities/enums";
 import type { TxLogDoc, TxLogEntity } from "../../../entities/tx-log";
 
 /**

@@ -13,21 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useTenantOptions } from "@/hooks/use-tenant-options";
 
 import { useSearchPlayerAccounts } from "../../_shared/queries";
@@ -39,16 +26,15 @@ export function PlayersContent() {
   // tenant + search mutually exclusive
   // after + before mutually exclusive (cursor navigation)
   // Khi đổi tenant → clear after/before
-  const [{ tenant: activeTenantId, search: activeSearch, after, before }, setUrlState] =
-    useQueryStates(
-      {
-        tenant: parseAsString.withDefault(""),
-        search: parseAsString.withDefault(""),
-        after: parseAsString.withDefault(""),
-        before: parseAsString.withDefault(""),
-      },
-      { history: "push", shallow: false },
-    );
+  const [{ tenant: activeTenantId, search: activeSearch, after, before }, setUrlState] = useQueryStates(
+    {
+      tenant: parseAsString.withDefault(""),
+      search: parseAsString.withDefault(""),
+      after: parseAsString.withDefault(""),
+      before: parseAsString.withDefault(""),
+    },
+    { history: "push", shallow: false },
+  );
 
   const { data, isLoading: isLoadingOptions } = useTenantOptions();
   const tenants = data?.tenants ?? [];
@@ -97,10 +83,7 @@ export function PlayersContent() {
     setInputValue("");
     setIsSearchOpen(false);
     // Clear search + cursor → useEffect auto-select tenant đầu tiên
-    void setUrlState(
-      { search: null, tenant: null, after: null, before: null },
-      { history: "replace" },
-    );
+    void setUrlState({ search: null, tenant: null, after: null, before: null }, { history: "replace" });
   };
 
   const handleTenantChange = (v: string) => {
@@ -129,9 +112,7 @@ export function PlayersContent() {
         <>
           <div className="flex items-center gap-1 rounded-md bg-muted px-2 py-1">
             <Search className="size-3 text-muted-foreground" />
-            <span className="max-w-35 truncate font-mono text-xs text-foreground">
-              {activeSearch}
-            </span>
+            <span className="max-w-35 truncate font-mono text-xs text-foreground">{activeSearch}</span>
           </div>
           <Button
             variant="ghost"
@@ -201,9 +182,7 @@ export function PlayersContent() {
           </SelectItem>
         ))}
         {tenants.length === 0 && !isLoadingOptions && (
-          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-            Chưa có đối tác nào.
-          </div>
+          <div className="px-2 py-4 text-center text-sm text-muted-foreground">Chưa có đối tác nào.</div>
         )}
       </SelectContent>
     </Select>
@@ -238,13 +217,7 @@ const STATUS_VARIANT: Record<string, "default" | "outline" | "secondary" | "dest
   suspended: "destructive",
 };
 
-function SearchResultCard({
-  keyword,
-  toolbarControls,
-}: {
-  keyword: string;
-  toolbarControls: React.ReactNode;
-}) {
+function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolbarControls: React.ReactNode }) {
   const router = useRouter();
   const { data, isLoading, error } = useSearchPlayerAccounts(keyword);
 
@@ -307,9 +280,7 @@ function SearchResultCard({
                         <span className="font-mono text-sm">{account.username}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm text-muted-foreground">
-                          {account.tenantId}
-                        </span>
+                        <span className="font-mono text-sm text-muted-foreground">{account.tenantId}</span>
                       </TableCell>
                       <TableCell className="text-sm">{account.displayName}</TableCell>
                       <TableCell>

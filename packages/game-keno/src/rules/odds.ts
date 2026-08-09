@@ -150,11 +150,11 @@
  */
 
 import {
-  KENO_NUMBER_MAX,
-  KENO_DRAW_COUNT,
-  KENO_PICK_MIN,
-  KENO_PICK_MAX,
   KENO_BIG_SMALL_BOUNDARY,
+  KENO_DRAW_COUNT,
+  KENO_NUMBER_MAX,
+  KENO_PICK_MAX,
+  KENO_PICK_MIN,
 } from "../entities/types";
 import { getPlayTypeFromPickCount } from "./play-types";
 
@@ -317,7 +317,7 @@ export function getBigSmallOdds(): {
   small1112: SideBetOdds;
   small13Plus: SideBetOdds;
 } {
-  const ways13Plus = (function () {
+  const ways13Plus = (() => {
     let total = 0n;
     for (let x = 13; x <= 20; x++) total += sideBetWays(x);
     return total;
@@ -359,7 +359,7 @@ export function getEvenOddOdds(): {
   odd1314: SideBetOdds;
   odd15Plus: SideBetOdds;
 } {
-  const ways15Plus = (function () {
+  const ways15Plus = (() => {
     let total = 0n;
     for (let x = 15; x <= 20; x++) total += sideBetWays(x);
     return total;

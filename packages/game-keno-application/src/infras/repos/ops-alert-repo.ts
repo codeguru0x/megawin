@@ -11,14 +11,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import { KenoCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-keno/entities";
-import type { KenoOpsAlertDoc, KenoOpsAlertEntity } from "@megawin/game-keno/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-keno/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  KenoOpsAlertDoc,
+  KenoOpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-keno/entities";
+import { KenoCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<KenoOpsAlertDoc>();
 
@@ -85,10 +89,7 @@ export class OpsAlertRepository extends BaseRepo<KenoOpsAlertEntity, OpsAlertMap
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByDrawAndStatus(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<KenoOpsAlertEntity[]> {
+  async listByDrawAndStatus(drawId: string, status?: OpsAlertStatusType): Promise<KenoOpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) filter.status = status;
     return await this.findMany(filter, { sort: { createdAt: -1 } });

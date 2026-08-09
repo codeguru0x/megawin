@@ -4,14 +4,10 @@
  * Endpoint này KHÔNG yêu cầu Cognito JWT auth — chỉ cần refreshToken hợp lệ.
  */
 
+import { httpErrorHandlerUseCaseFormat, validatorZodMiddleware } from "@megawin/app-core/lambda/middleware";
+import { PlayerRefreshTokenUseCase } from "@megawin/identity-application/use-cases/players";
 import middy from "@middy/core";
 import { z } from "zod";
-import {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-} from "@megawin/app-core/lambda/middleware";
-
-import { PlayerRefreshTokenUseCase } from "@megawin/identity-application/use-cases/players";
 
 const bodySchema = z.object({
   refreshToken: z.string().min(1, "refreshToken is required"),

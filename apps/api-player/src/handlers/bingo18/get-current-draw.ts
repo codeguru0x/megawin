@@ -4,7 +4,6 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-
 import { GetCurrentDrawPlayerUseCase } from "@megawin/game-bingo18-application/use-cases/player";
 
 const useCase = new GetCurrentDrawPlayerUseCase();

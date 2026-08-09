@@ -9,10 +9,11 @@
  * - Non-existent tenant returns null
  */
 
-import { describe, it, expect, beforeAll } from "vitest";
-import { TenantConfigRepository } from "../../src/infras/repos/tenant-config-repo";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
+import { beforeAll, describe, expect, it } from "vitest";
+
+import { TenantConfigRepository } from "../../src/infras/repos/tenant-config-repo";
 import { seedTenantConfig } from "./helpers/seed-tenant-config";
 
 describe("TenantConfigRepository – Power 6/55 Tenant Config", () => {
@@ -38,9 +39,7 @@ describe("TenantConfigRepository – Power 6/55 Tenant Config", () => {
   it("tenant config có commissionRate đúng với default", async () => {
     const config = await repo.getTenantConfig(TENANT_A);
 
-    expect(config!.commissionRate).toBe(
-      DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(config!.commissionRate).toBe(DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate);
   });
 
   /** Validates custom commissionRate override is persisted. */

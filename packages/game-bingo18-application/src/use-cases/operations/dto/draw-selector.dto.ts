@@ -5,7 +5,7 @@
  * Bingo 18 có ~160 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải.
  */
 
-import type { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
+import type { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 
 export interface DrawSelectorItem {
   /** Mã định danh kỳ (format YYYY-MM-DD.NNN). */

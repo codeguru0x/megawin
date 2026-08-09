@@ -81,9 +81,7 @@ export function ExposureCard({
             </div>
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
-              <p className="text-xs text-muted-foreground">
-                Chính xác trên 216 kết quả có thể xảy ra
-              </p>
+              <p className="text-xs text-muted-foreground">Chính xác trên 216 kết quả có thể xảy ra</p>
             </div>
           </div>
 
@@ -91,22 +89,18 @@ export function ExposureCard({
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Worst-case</p>
-              <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">
-                {formatNumber(worst)}
-              </p>
+              <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">{formatNumber(worst)}</p>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex flex-col items-center gap-0.5 cursor-help">
                   <DiceBadges numbers={exposure.worstCase.numbers} />
-                  <span className="text-[10px] text-muted-foreground tabular-nums">
-                    Tổng {exposure.worstCase.sum}
-                  </span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">Tổng {exposure.worstCase.sum}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-72 text-xs">
-                Kết quả xấu nhất cho nhà cái: nếu 3 xúc xắc ra đúng bộ này, kỳ phải trả nhiều tiền
-                nhất. Tính chính xác từ toàn bộ cược hiện tại — không phải ước lượng.
+                Kết quả xấu nhất cho nhà cái: nếu 3 xúc xắc ra đúng bộ này, kỳ phải trả nhiều tiền nhất. Tính chính xác
+                từ toàn bộ cược hiện tại — không phải ước lượng.
               </TooltipContent>
             </Tooltip>
           </div>
@@ -118,11 +112,7 @@ export function ExposureCard({
               {formatNumber(expected)}
               <span className="mx-1 text-muted-foreground">·</span>
               <span
-                className={cn(
-                  margin < 0
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-emerald-600 dark:text-emerald-400",
-                )}
+                className={cn(margin < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}
               >
                 {margin >= 0 ? "+" : ""}
                 {formatNumber(margin)}
@@ -135,8 +125,7 @@ export function ExposureCard({
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
             <span>
-              Worst-case / Doanh thu:{" "}
-              <span className="font-semibold text-foreground">{Math.round(pct)}%</span>
+              Worst-case / Doanh thu: <span className="font-semibold text-foreground">{Math.round(pct)}%</span>
               {underFloor && (
                 <span className="ml-1.5 text-muted-foreground/70">
                   (dưới sàn {formatNumber(warnMinAmount)} — chưa xét cảnh báo)
@@ -146,10 +135,7 @@ export function ExposureCard({
             <span>Ngưỡng cảnh báo {warnRevenuePct}%</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className={cn("h-full rounded-full transition-all", gaugeColor)}
-              style={{ width: `${gaugeWidth}%` }}
-            />
+            <div className={cn("h-full rounded-full transition-all", gaugeColor)} style={{ width: `${gaugeWidth}%` }} />
           </div>
         </div>
 
@@ -171,9 +157,7 @@ export function ExposureCard({
                   className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/10 px-2.5 py-1.5"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-muted-foreground/60 tabular-nums">
-                      #{i + 1}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground/60 tabular-nums">#{i + 1}</span>
                     <DiceBadges numbers={o.numbers} />
                   </span>
                   <span className="text-xs font-semibold tabular-nums text-red-600/90 dark:text-red-400">

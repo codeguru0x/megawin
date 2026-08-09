@@ -15,14 +15,18 @@
  * `status` dùng member `OpsAlertStatus.*`, KHÔNG literal "new".
  */
 
-import { Lotto535Collections, OpsAlertStatus } from "@megawin/game-lotto535/entities";
-import type { Lotto535OpsAlertDoc, Lotto535OpsAlertEntity } from "@megawin/game-lotto535/entities";
-import type { OpsAlertStatus as OpsAlertStatusType } from "@megawin/game-lotto535/entities";
 import { docPath } from "@megawin/data/mongo";
-import { ObjectId } from "mongodb";
+import type {
+  Lotto535OpsAlertDoc,
+  Lotto535OpsAlertEntity,
+  OpsAlertStatus as OpsAlertStatusType,
+} from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, OpsAlertStatus } from "@megawin/game-lotto535/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { BaseRepo } from "./base-repo";
+import { ObjectId } from "mongodb";
+
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
+import { BaseRepo } from "./base-repo";
 
 const f = docPath<Lotto535OpsAlertDoc>();
 
@@ -98,10 +102,7 @@ export class OpsAlertRepository extends BaseRepo<Lotto535OpsAlertEntity, OpsAler
   }
 
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
-  async listByFilter(
-    drawId: string,
-    status?: OpsAlertStatusType,
-  ): Promise<Lotto535OpsAlertEntity[]> {
+  async listByFilter(drawId: string, status?: OpsAlertStatusType): Promise<Lotto535OpsAlertEntity[]> {
     const filter: Document = { drawId };
     if (status) {
       filter.status = status;

@@ -7,10 +7,11 @@
  * Dùng $inc + upsert để đảm bảo race-safe.
  */
 
-import { KenoCollections } from "@megawin/game-keno/entities";
-import { BaseRepo } from "./base-repo";
-import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
 import type { DrawCounterEntity } from "@megawin/game-keno/entities";
+import { KenoCollections } from "@megawin/game-keno/entities";
+
+import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
+import { BaseRepo } from "./base-repo";
 
 export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCounterMapper> {
   constructor() {

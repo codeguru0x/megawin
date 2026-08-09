@@ -1,10 +1,10 @@
 import type { Document } from "mongodb";
 import { ReadPreference } from "mongodb";
 
-import { MongoRepository } from "./repository";
-import { MongoMapper } from "./mapper";
+import type { BaseEntity } from "./base-entity";
 import { Constants } from "./constants";
-import { BaseEntity } from "./base-entity";
+import type { MongoMapper } from "./mapper";
+import { MongoRepository } from "./repository";
 
 /**
  * ReadPreference route mọi query sang Atlas **Analytics Node**.
