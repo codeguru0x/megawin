@@ -162,7 +162,7 @@ export interface PlayerSdkConfig {
    * }
    * ```
    */
-  onError?: (error: ApiClientError) => void;
+  onError?: (error: ApiClientError) => void | Promise<void>;
 }
 
 // ============ Client Interface ============

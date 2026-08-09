@@ -14,7 +14,7 @@ export class GetOutstandingReportsUseCase extends NextApiUseCase<void, GetOutsta
   private readonly repo = new OutstandingReportRepository();
 
   protected async execute(_input: void): Promise<GetOutstandingReportsOutput> {
-    const data = await this.repo.findAll();
+    const data = await this.repo.findAllSorted();
     return { data };
   }
 }

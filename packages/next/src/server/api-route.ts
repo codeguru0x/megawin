@@ -167,6 +167,7 @@ export class ApiRouteBuilder<
                 "Use createApiRouteBuilder() to bind getSession once.",
             );
           }
+          // biome-ignore lint/nursery/useAwaitThenable: GetSessionFn luôn trả Promise<RouteSession | null>; Biome chưa resolve được return type qua generic type alias (limitation type inference đã ghi ở p1-01).
           session = await cfg.getSession(req);
 
           if (!session) {

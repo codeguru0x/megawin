@@ -91,7 +91,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description = "Mega 6/45 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
+  protected override readonly description = "Mega 6/45 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -113,7 +113,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
     return "mega645:stats-sync";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.prize = this.buildPrizeContext(config);
     // R7 (p0-02 plan): doc GlobalConfig cũ (trước p0-01) KHÔNG có field `ops` — mapper

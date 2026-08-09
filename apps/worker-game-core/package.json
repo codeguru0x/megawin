@@ -35,11 +35,11 @@
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
-    "next": "^16.2.12",
+    "next": "^16.3.0",
     "serverless-offline": "^14.7.3",
-    "tsx": "^4.22.4",
+    "tsx": "^4.23.11",
     "typescript": "^6.0.3",
-    "vite": "^8.1.4",
+    "vite": "^8.2.1",
     "vitest": "^4.1.10"
   }
 }

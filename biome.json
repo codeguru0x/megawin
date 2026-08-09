@@ -1,5 +1,11 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+  "plugins": [
+    {
+      "path": "./tooling/biome-plugins/no-unscoped-db-mutation.grit",
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/test/**/*.ts", "**/test/**/*.tsx"]
+    }
+  ],
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -69,7 +75,9 @@
   "linter": {
     "enabled": true,
     "domains": {
-      "test": "recommended"
+      "test": "recommended",
+      "project": "recommended",
+      "types": "recommended"
     },
     "rules": {
       "recommended": true,
@@ -96,7 +104,9 @@
         "noEmptyBlockStatements": "error",
         "noDoubleEquals": "error",
         "noConsole": "off",
-        "noUnknownAtRules": "off"
+        "noUnknownAtRules": "off",
+        "noImportCycles": "error",
+        "noUnnecessaryConditions": "warn"
       },
       "correctness": {
         "noUnusedImports": "error",
@@ -114,6 +124,10 @@
         "noImportantStyles": "off"
       },
       "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error",
+        "useAwaitThenable": "error",
+        "useExhaustiveSwitchCases": "error",
         "useSortedClasses": {
           "level": "on",
           "options": {

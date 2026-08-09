@@ -66,7 +66,8 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description = "Power 6/55 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/bao) cho kỳ đang mở";
+  protected override readonly description =
+    "Power 6/55 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/bao) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly statsRepo = new BettingStatsRepository();
@@ -84,7 +85,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "power655:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.alertCtx = {
       // Cùng lý do merge-default ở sync worker — doc GlobalConfig cũ (trước p0-01) có thể

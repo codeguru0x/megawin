@@ -2,6 +2,11 @@
 
 > Thuộc: `.cursor/plans/biome-monorepo-migration/` — xem [00-overview.md](00-overview.md). Cần [p1-01](p1-01-typeaware-and-tsconfig.plan.md).
 
+> **⚠️ TRẠNG THÁI THỰC THI (08/08/2026):** **Phần 1 (git hook) ĐÃ LÀM XONG.** **Phần 2 (GitHub Actions
+> CI workflow) TẠM HOÃN** theo yêu cầu — CI trên GitHub hiện **chưa được setup và chưa chạy**, tạo
+> `.github/workflows/ci.yml` lúc này sẽ là workflow chết không có runner. Nội dung Phần 2/3 giữ nguyên làm
+> blueprint; kích hoạt khi GitHub Actions của repo sẵn sàng. **Phần 2 cũng là điều kiện của [p2-01](p2-01-test-data-safety-guard.plan.md)** (wire GritQL vào `biome ci`) — nhưng GritQL vẫn enforce được qua `pnpm lint`/`biome check` + pre-commit hook nên p2-01 không bị chặn hoàn toàn.
+
 ## Vấn đề: lint hiện tại là advisory 100%
 
 Khảo sát cho thấy:
@@ -49,6 +54,9 @@ pnpm exec lint-staged
 `.husky/pre-push` với `pnpm check-types` — chậm nhưng chỉ chạy khi push. Chỉ thêm nếu team thực sự muốn; CI đã bao phủ.
 
 ## Phần 2 — CI workflow
+
+> **TẠM HOÃN (08/08/2026):** không tạo `.github/workflows/ci.yml` trong đợt này vì CI GitHub chưa setup.
+> Blueprint dưới đây giữ nguyên để kích hoạt sau. Khi bật: nhớ giải quyết ràng buộc test infra ở mục ⚠️.
 
 Tạo `.github/workflows/ci.yml`:
 
@@ -130,10 +138,18 @@ Sau khi CI xanh ổn định vài ngày, bật branch protection cho `main`: req
 
 ## Acceptance criteria
 
-- Commit thử một file vi phạm format → pre-commit hook tự fix hoặc chặn.
-- Mở PR có lỗi lint → CI đỏ với message rõ ràng từ `biome ci`.
-- `apps/backoffice/package.json` không còn khối `lint-staged` (đã dồn về root).
-- Thời gian job `quality` < 3 phút (chủ yếu là install).
+**Phần 1 — git hook (ĐÃ ĐẠT 08/08/2026):**
+
+- [x] Commit thử một file vi phạm format → pre-commit hook tự fix. **Đã verify (a):** `const   x=1` → `const x = 1;`, re-stage tự động.
+- [x] File lỗi không auto-fix (enum) → hook CHẶN. **Đã verify (b):** `biome check` fail → lint-staged "Failed to run tasks" + "Reverting to original state" → exit != 0, commit không tạo.
+- [x] File `.md` → qua Prettier, không qua Biome. **Đã verify (c):** `#   Title` → `# Title` qua `prettier --write`, không có dòng `biome check` cho `.md`.
+- [x] `apps/backoffice/package.json` không còn khối `lint-staged` (đã dồn về root).
+
+**Phần 2/3 — CI + branch protection (HOÃN):**
+
+- [ ] ~~Mở PR có lỗi lint → CI đỏ~~ — hoãn tới khi GitHub Actions setup.
+- [ ] ~~Thời gian job `quality` < 3 phút~~ — hoãn.
+- [ ] ~~Branch protection require `quality`~~ — hoãn.
 
 ## Phương án review sau thực thi
 

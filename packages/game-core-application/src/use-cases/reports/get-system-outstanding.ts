@@ -13,7 +13,7 @@ export class GetSystemOutstandingUseCase extends NextApiUseCase<void, GetSystemO
   private readonly repo = new SystemOutstandingReportRepository();
 
   protected async execute(_input: void): Promise<GetSystemOutstandingOutput> {
-    const data = await this.repo.findAll();
+    const data = await this.repo.findAllSorted();
     return { data };
   }
 }

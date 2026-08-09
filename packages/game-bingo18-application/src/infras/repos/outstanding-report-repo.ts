@@ -138,8 +138,8 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
     };
   }
 
-  /** Lấy tất cả outstanding draw reports hiện tại — dùng cho UI dashboard. */
-  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+  /** Lấy tất cả outstanding draw reports hiện tại, sort theo financialDate ascending — dùng cho UI dashboard. */
+  async findAllSorted(): Promise<OutstandingDrawReportEntity[]> {
     return await this.findMany({}, { sort: { financialDate: 1 } });
   }
 }

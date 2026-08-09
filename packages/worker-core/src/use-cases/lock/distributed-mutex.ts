@@ -136,7 +136,11 @@ export interface ReleaseBusinessLockOptions {
  * 1 instance cho nhiều operation, hoặc tạo mới mỗi lần dùng (cost negligible).
  */
 export class DistributedMutex {
-  constructor(private readonly lockRepo: WorkerLockRepository = new WorkerLockRepository()) {}
+  private readonly lockRepo: WorkerLockRepository;
+
+  constructor(lockRepo: WorkerLockRepository = new WorkerLockRepository()) {
+    this.lockRepo = lockRepo;
+  }
 
   /**
    * Acquire lock ở BO API. Throw {@link AppException} với `heldErrorCode` +

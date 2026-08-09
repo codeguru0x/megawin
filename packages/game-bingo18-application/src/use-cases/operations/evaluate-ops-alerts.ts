@@ -71,7 +71,8 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description = "Bingo 18 — đánh giá cảnh báo vận hành (ngưỡng exposure/skew/bucket) cho kỳ đang mở";
+  protected override readonly description =
+    "Bingo 18 — đánh giá cảnh báo vận hành (ngưỡng exposure/skew/bucket) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly statsRepo = new BettingStatsRepository();
@@ -88,7 +89,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "bingo18:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     // Doc cũ (trước khi thêm section ops) chưa có field → fallback default.
     const ops = config.ops ?? DEFAULT_BINGO18_CONFIG.ops;

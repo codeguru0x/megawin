@@ -71,7 +71,7 @@ export class SystemOutstandingReportRepository extends ReportRepo<
    * Trả về tất cả docs trong system_outstanding_game_daily (chưa TTL expire).
    * Sort theo gameProduct ascending.
    */
-  async findAll(): Promise<SystemOutstandingGameDailyEntity[]> {
+  async findAllSorted(): Promise<SystemOutstandingGameDailyEntity[]> {
     return this.findMany(
       {},
       {

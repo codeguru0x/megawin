@@ -5,15 +5,19 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "erasableSyntaxOnly": true,
     "lib": ["es2024"],
     "types": ["node"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2024"
+    "target": "ES2024",
+    "verbatimModuleSyntax": true
   }
 }

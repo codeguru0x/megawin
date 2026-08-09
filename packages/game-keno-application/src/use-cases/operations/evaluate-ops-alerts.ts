@@ -65,7 +65,8 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description = "Keno — đánh giá cảnh báo vận hành (ngưỡng exposure/cap/combo) cho kỳ đang mở";
+  protected override readonly description =
+    "Keno — đánh giá cảnh báo vận hành (ngưỡng exposure/cap/combo) cho kỳ đang mở";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly statsRepo = new BettingStatsRepository();
@@ -83,7 +84,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "keno:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.alertCtx = {
       alerts: config.ops.alerts,

@@ -71,7 +71,7 @@ interface AlertContext {
 
 export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAlertsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout ops-alerts trong stats.yml
-  protected readonly description =
+  protected override readonly description =
     "Max 3D Pro — đánh giá cảnh báo vận hành (cược lớn/exposure/pair liability/tập trung cặp)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -90,7 +90,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
     return "max3dpro:ops-alerts";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     // Doc cũ chưa có section ops → fallback default để worker không crash (plan p0-03 §3).
     const ops = config.ops ?? DEFAULT_MAX3D_PRO_CONFIG.ops;

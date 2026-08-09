@@ -87,7 +87,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description = "Keno — đồng bộ thống kê cược theo delta (tick ~20s, mọi kỳ đang mở)";
+  protected override readonly description = "Keno — đồng bộ thống kê cược theo delta (tick ~20s, mọi kỳ đang mở)";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -108,7 +108,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
     return "keno:stats-sync";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     this.prize = this.buildPrizeContext(config);
     this.statsConfig = config.ops.stats;

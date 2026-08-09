@@ -141,7 +141,7 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
    *
    * Sort: financialDate ASC để kỳ cũ nhất (sắp đến hạn) lên đầu.
    */
-  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+  async findAllSorted(): Promise<OutstandingDrawReportEntity[]> {
     return this.findMany(
       {},
       {

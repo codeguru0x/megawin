@@ -1,0 +1,121 @@
+---
+description: Chuẩn lint/format Biome cho toàn monorepo — config, lệnh, suppression, convention AI phải tuân theo
+alwaysApply: true
+---
+
+# Biome Lint & Format Conventions
+
+Toàn monorepo lint + format bằng **Biome** (một binary, thay ESLint + Prettier cho code). Rule này là lớp
+chặn **TĨNH** — AI phải sinh code đúng convention NGAY TỪ ĐẦU, không viết sai rồi để Biome sửa sau (tốn
+context, tạo diff bẩn). Phối hợp với `code-quality-standards.mdc` (nguồn chân lý về style) và
+`entity-typesafe-mongodb.mdc`.
+
+---
+
+## a. Kiến trúc config — MỘT file duy nhất
+
+- Toàn repo dùng **một** `/biome.json` ở root. **CẤM TUYỆT ĐỐI** tạo `biome.json` per-package, hay
+  `.eslintrc*`/`eslint.config.*`/`.prettierrc*` mới. ESLint đã retire (p0-05); không hồi sinh dưới mọi hình thức.
+- App/package MỚI **KHÔNG cần thêm gì** để được lint — root config + domain auto-detect tự phủ. Không tạo
+  script `lint` riêng trong package, không thêm devDependency `@biomejs/biome` per-package (đã là root dep).
+- Khác biệt theo loại package (library named-export, infra `any`, test…) xử lý bằng `overrides[].includes`
+  trong root `biome.json` — sửa ở đó, **kèm comment giải trình VÌ SAO**. Không hạ rule để "cho qua".
+
+## b. Lệnh chuẩn — AI phải dùng đúng, không bịa lệnh khác
+
+| Việc | Lệnh |
+|---|---|
+| Lint + format check toàn repo | `pnpm lint` (= `biome check .`) |
+| Auto-fix an toàn | `pnpm lint:fix` (= `biome check --write .`) |
+| Format | `pnpm format` (= `biome format --write .`) |
+| Format check (dry-run) | `pnpm format:check` (= `biome format .`) |
+| Docs (md/yml/yaml) | `pnpm format:docs` (Prettier — Biome CHƯA hỗ trợ Markdown/YAML) |
+| CI | `pnpm ci` (= `biome ci .` — KHÔNG BAO GIỜ ghi file) |
+
+Sửa scope hẹp: `biome check <paths>` / `biome check --write <paths>`. **KHÔNG** dùng `turbo run lint` —
+Biome quét cả monorepo trong vài giây, wrap qua Turbo chỉ thêm overhead (quyết định p0-04).
+
+## c. Phân giới tool
+
+- **Biome** xử lý: `.ts` `.tsx` `.js` `.mjs` `.json` `.jsonc` `.css`.
+- **Prettier** xử lý CHỈ: `.md` `.yml` `.yaml` (Biome chưa hỗ trợ).
+- **KHÔNG** chạy Prettier lên file TS/JS (đã chặn bằng `.prettierignore`); AI cũng không được gợi ý điều đó.
+- Biome tự bỏ qua file lạ (không phải type ở trên) — không cần cấu hình thêm.
+
+## d. Chính sách suppression — phần quan trọng nhất
+
+- `biome-ignore` chỉ dùng dạng ĐẦY ĐỦ: `// biome-ignore lint/<group>/<rule>: <lý do cụ thể>`. Biome 2.x
+  **bắt buộc** phần lý do; lý do phải nói VÌ SAO chỗ này là ngoại lệ hợp lệ (VD giới hạn type-inference của
+  Biome). **CẤM** viết "fix later", "tạm thời", hay lý do rỗng nghĩa.
+- Đặt comment **ngay trên dòng vi phạm** (hoặc trong định nghĩa type ngay trước field lỗi), KHÔNG đặt lệch
+  trên cả block/declaration — đặt sai chỗ Biome bỏ qua, suppression vô tác dụng.
+- **CẤM** `biome-ignore-all` (file-level) trừ file generated (codegen, `.d.ts` sinh tự động).
+- **CẤM** hạ level rule trong `biome.json` để làm sạch output. Rule chỉ đổi level qua review có giải trình
+  (nguyên tắc p0-06). Warning nhiều → ghi backlog, KHÔNG tắt rule.
+- **CẤM** `biome-ignore` cho `noFloatingPromises`/`noMisusedPromises` trong code tài chính (`settle`, `payout`,
+  `financial`, `wallet`, `commission`). Vi phạm ở đó phải fix THẬT bằng `await`/`void` tường minh có chủ đích
+  (nguyên tắc p1-01). Promise bị nuốt trong đường tiền = mất tiền âm thầm.
+- **GritQL guard test-data-safety:** file test (`**/*.test.ts`, `**/test/**`) bị plugin
+  `tooling/biome-plugins/no-unscoped-db-mutation.grit` chặn `deleteMany({})/()`, `deleteOne({})`,
+  `updateMany/updateOne({}, …)`, `findOneAndDelete/Update({}, …)`, `drop()/dropDatabase()/dropCollection()`.
+  Trong test chỉ mutate record do CHÍNH test seed (filter có scope id/field) — xem `test-data-safety.mdc`.
+  **CẤM** `biome-ignore` các diagnostic này; sửa filter cho đúng scope.
+
+```typescript
+/** ĐÚNG — lý do cụ thể, đặt đúng dòng */
+// biome-ignore lint/nursery/useAwaitThenable: GetSessionFn luôn trả Promise; Biome chưa resolve return type qua generic alias.
+session = await cfg.getSession(req);
+
+/** SAI — lý do rỗng nghĩa / đặt sai chỗ / trong code tài chính */
+// biome-ignore lint/nursery/noFloatingPromises: fix later
+settleDraw(drawId); // ← đường tiền, CẤM ignore, phải `await`
+```
+
+## e. Convention Biome enforce — viết đúng từ đầu
+
+| Convention | Rule Biome | Nguồn |
+|---|---|---|
+| Luôn `{}` cho if/else/for/while | `style/useBlockStatements` | §6 code-quality |
+| `const object as const`, KHÔNG `enum` | `style/noEnum` + `style/useAsConstAssertion` | §5.3 code-quality |
+| `import type` / `export type` tách bạch | `style/useImportType` / `style/useExportType` | p0-01 + `verbatimModuleSyntax` |
+| File mới đặt tên kebab-case | `style/useFilenamingConvention` | 100% repo |
+| Named export cho library (`packages/*/src`, `tooling/*/src`) | `style/noDefaultExport` (override) | p0-02 |
+| `===`, KHÔNG `==` | `suspicious/noDoubleEquals` | p0-01 |
+| Không `delete obj.x` trong hot path | `performance/noDelete` | p0-01 |
+| Import gộp đầu file, tự sort theo groups | assist `organizeImports` | §7 code-quality |
+| Barrel `export * from` HỢP LỆ (rule tắt có chủ đích) | `noBarrelFile`/`noReExportAll` OFF | mongodb.mdc §6 |
+| `console.*` hợp lệ ở backend (CloudWatch) | `suspicious/noConsole` OFF | p0-01 |
+| `any` chỉ được phép ở `*-application/src/infras/**` và test | override p0-02 | mongodb.mdc §5 |
+
+### Type-aware + tsconfig (bật ở p1-01 — enforce toàn repo)
+
+| Convention | Cơ chế |
+|---|---|
+| Mọi Promise phải `await` hoặc `void` tường minh | `nursery/noFloatingPromises` (error) |
+| Không dùng Promise sai chỗ (if/&&/callback đồng bộ) | `nursery/noMisusedPromises` (error) |
+| Chỉ `await` giá trị thực sự thenable | `nursery/useAwaitThenable` (error) |
+| `switch` trên union phải exhaustive | `nursery/useExhaustiveSwitchCases` (error) |
+| Không import vòng (circular) | `suspicious/noImportCycles` (error) |
+| Method override base class phải ghi `override` | tsconfig `noImplicitOverride` |
+| KHÔNG parameter property (`constructor(private x)`) — khai báo field + gán trong body | tsconfig `erasableSyntaxOnly` |
+| `import type` bắt buộc cho type-only import | tsconfig `verbatimModuleSyntax` |
+| Không fallthrough `case` thiếu `break`/`return` | tsconfig `noFallthroughCasesInSwitch` |
+
+```typescript
+/** SAI — parameter property (erasableSyntaxOnly cấm) */
+constructor(private readonly repo: Repo = new Repo()) {}
+
+/** ĐÚNG — khai báo field + gán trong body */
+private readonly repo: Repo;
+constructor(repo: Repo = new Repo()) {
+  this.repo = repo;
+}
+```
+
+## f. Checklist AI trước khi kết thúc task có sửa code
+
+1. Chạy `biome check <paths-đã-sửa>` (hoặc `pnpm lint` nếu sửa rộng) — **fix hết error**.
+2. Warning MỚI phát sinh → nêu rõ trong summary, KHÔNG tự ignore/tắt rule.
+3. Nếu sửa file `.md`/`.yml` → chạy `pnpm format:docs` (Prettier), không phải Biome.
+4. KHÔNG thêm `biome-ignore` để dập lỗi trừ khi thật sự là ngoại lệ hợp lệ theo mục (d).
+5. KHÔNG tạo `biome.json`/`.eslintrc`/`.prettierrc` mới, KHÔNG hạ rule trong `biome.json`.

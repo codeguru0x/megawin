@@ -119,12 +119,14 @@ export interface SyncEntryFeedResult {
 export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<SyncEntryFeedInput, SyncEntryFeedResult> {
   private readonly feedRepo = new EntryFeedRepository();
   private readonly cursorRepo = new FeedSyncCursorRepository();
+  protected readonly gameProduct: GameProduct;
 
   /**
    * @param gameProduct GameProduct enum value cho game này.
    */
-  constructor(protected readonly gameProduct: GameProduct) {
+  constructor(gameProduct: GameProduct) {
     super();
+    this.gameProduct = gameProduct;
   }
 
   /**

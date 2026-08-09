@@ -10,7 +10,7 @@ export abstract class MongoMapper<TDoc extends Document, TModel extends BaseEnti
    * Map properties from document to entity
    * @param doc
    */
-  protected abstract mapProps(doc: TDoc): TModel;
+  protected abstract override mapProps(doc: TDoc): TModel;
 }
 
 /**

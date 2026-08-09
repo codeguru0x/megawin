@@ -98,10 +98,13 @@ export class DrawStatsAccumulator {
   private worstCaseTotal = 0;
   private readonly capSets = { pick8: 0, pick9: 0, pick10: 0 };
 
-  constructor(
-    readonly drawId: string,
-    private readonly prize: PrizeContext,
-  ) {}
+  readonly drawId: string;
+  private readonly prize: PrizeContext;
+
+  constructor(drawId: string, prize: PrizeContext) {
+    this.drawId = drawId;
+    this.prize = prize;
+  }
 
   /**
    * Cộng 1 entry vào delta.

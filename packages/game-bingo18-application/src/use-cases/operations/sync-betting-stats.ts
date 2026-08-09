@@ -86,7 +86,7 @@ const TERMINAL_STATUSES = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
 
 export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingStatsResult> {
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
-  protected readonly description = "Bingo 18 — đồng bộ thống kê cược";
+  protected override readonly description = "Bingo 18 — đồng bộ thống kê cược";
 
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly drawRepo = new DrawRepository();
@@ -105,7 +105,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
     return "bingo18:stats-sync";
   }
 
-  protected async beforeLoop(): Promise<void> {
+  protected override async beforeLoop(): Promise<void> {
     const config = await this.getGlobalConfig.run();
     // Doc cũ (trước khi thêm section ops) chưa có field → fallback default để worker
     // không crash trước lần staff save config đầu tiên.

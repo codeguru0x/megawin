@@ -129,7 +129,7 @@ như cũ — qua re-export nên không cần đổi gì. Repo dùng `DrawVietlot
 
 Khi gọi `findOneAndUpdate`, `updateOne`, `findOne`, `findMany`, v.v., **mọi object** trong MongoDB query (filter, update, options) đều phải format **mỗi field một dòng**.
 
-Prettier không hỗ trợ tự động enforce rule này (chỉ wrap khi vượt `printWidth`). Khi viết/sửa repo, format tay theo quy tắc; Prettier sẽ giữ nguyên format nhiều dòng.
+Biome không tự enforce rule này (chỉ wrap khi vượt `lineWidth`). Khi viết/sửa repo, format tay theo quy tắc; Biome sẽ giữ nguyên format nhiều dòng.
 
 **ĐÚNG:**
 

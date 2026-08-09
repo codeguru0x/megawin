@@ -143,7 +143,8 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
    *
    * Dùng cho Outstanding Reports UI page. Sort theo drawId.
    */
-  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+  /** Lấy tất cả outstanding draw reports hiện tại, sort theo drawId ascending — dùng cho UI dashboard. */
+  async findAllSorted(): Promise<OutstandingDrawReportEntity[]> {
     return await this.findMany({}, { sort: { drawId: 1 } });
   }
 }
