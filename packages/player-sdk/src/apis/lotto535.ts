@@ -401,10 +401,15 @@ export interface Lotto535Api {
    * Jackpot thật nếu bộ đó trúng) và `splitEligibleDraw` (mô tả — không phải con số dự
    * tính — cơ chế chia Jackpot khi không ai trúng, xem JSDoc {@link Lotto535ComboPopularityResponse}).
    *
+   * **Tính tiền jackpot TẠM TÍNH:** `Math.floor(currentAmount / jackpotUnits) * betCount` —
+   * kết hợp {@link Lotto535Api.getJackpot} để lấy `currentAmount`. Đây là con số TẠM TÍNH
+   * tại thời điểm tra, pool còn thay đổi đến giờ đóng bán — KHÔNG dùng để cam kết với
+   * player, chỉ hiển thị dạng ước tính.
+   *
    * **Endpoint:** `GET /games/lotto535/draws/{drawId}/combo-popularity`
    *
    * @param params - `drawId` + bộ số (`numbers` 4-15 số chính, `specials` 1-12 số ĐB)
-   * @returns Độ đông (`sets`), giá board, và (nếu bộ chuẩn) mẫu số chia Jackpot + cờ split
+   * @returns Độ đông (`sets`), và (nếu bộ chuẩn) mẫu số chia Jackpot + cờ split
    *
    * @throws {@link ApiClientError} code `VALIDATION_ERROR` — số lượng không khớp playType nào
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -421,7 +426,10 @@ export interface Lotto535Api {
    * if (res.found) {
    *   console.log(`${res.sets} bộ đang cược combo này`);
    *   if (res.jackpotUnits) {
-   *     console.log(`Nếu trúng JP, chia cho ${res.jackpotUnits} đơn vị`);
+   *     const { currentAmount } = await client.lotto535.getJackpot();
+   *     const betCount = 1; // số lần cược của board này
+   *     const soTienTamTinh = Math.floor(currentAmount / res.jackpotUnits) * betCount;
+   *     console.log(`Tạm tính nếu trúng Jackpot ngay bây giờ: ${soTienTamTinh} VND`);
    *   }
    * } else {
    *   // Bạn chưa cược bộ này, hoặc bộ chưa ai chơi — không phân biệt.
@@ -434,7 +442,7 @@ export interface Lotto535Api {
    *   numbers: ["01", "05", "10", "15", "20", "25", "30", "33", "35"],
    *   specials: ["07"],
    * });
-   * console.log(cover.boardPrice); // 1.260.000 (C(9,5) × 10.000)
+   * console.log(cover.sets); // độ đông riêng bộ bao này
    * ```
    */
   getComboPopularity(params: Lotto535ComboPopularityParams): Promise<Lotto535ComboPopularityResponse>;

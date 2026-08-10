@@ -1027,10 +1027,19 @@ export interface Lotto535ComboPopularityParams {
  * `sets` chỉ phản ánh độ đông của riêng bộ đó, KHÔNG liên quan tới chia Jackpot.
  *
  * `jackpotUnits` — CHỈ có khi bạn tra ĐÚNG bộ CHUẨN (5 chính + 1 ĐB, playType `standard`)
- * — là mẫu số chia Jackpot THẬT nếu bộ đó trúng: phần thắng của board bạn =
- * `floor(jackpotPool / jackpotUnits) × betCount` (betCount của board bạn, không phải của
- * người khác). Giá trị này tại THỜI ĐIỂM TRA — bán tiếp có thể tăng, huỷ vé giảm trễ theo
- * dữ liệu worker.
+ * — là mẫu số chia Jackpot THẬT nếu bộ đó trúng. Giá trị này tại THỜI ĐIỂM TRA — bán tiếp
+ * có thể tăng, huỷ vé giảm trễ theo dữ liệu worker.
+ *
+ * **Công thức tính tiền jackpot TẠM TÍNH (dành cho tenant developer dựng UI):**
+ *
+ * ```
+ * soTienTamTinh = Math.floor(currentAmount / jackpotUnits) * betCount
+ * ```
+ *
+ * `currentAmount` lấy từ {@link Lotto535Api.getJackpot}, `betCount` là số lần cược của
+ * board đó (KHÔNG lấy từ response này — lấy từ thông tin board bạn đã đặt). Đây là **con
+ * số TẠM TÍNH tại thời điểm tra** — KHÔNG hiển thị như một cam kết/thông báo chính thức,
+ * chỉ nên gắn nhãn "ước tính nếu trúng ngay bây giờ".
  *
  * `splitEligibleDraw` — CHỈ mô tả CƠ CHẾ, KHÔNG có con số split dự tính: nếu Jackpot đạt
  * ngưỡng chia (mặc định 12 tỷ) VÀ không ai trúng Jackpot VÀ đây là kỳ 21h, thì TOÀN BỘ
@@ -1048,9 +1057,12 @@ export interface Lotto535ComboPopularityParams {
  *
  * if (res.found) {
  *   console.log(`${res.sets} bộ đang cược combo này`);
- *   console.log(`Giá 1 board: ${res.boardPrice?.toLocaleString()} VND`);
+ *
  *   if (res.jackpotUnits) {
- *     console.log(`Mẫu số chia Jackpot nếu trúng: ${res.jackpotUnits} đơn vị`);
+ *     const { currentAmount } = await client.lotto535.getJackpot();
+ *     const betCount = 1; // số lần cược của board này (từ dữ liệu vé bạn đã đặt)
+ *     const soTienTamTinh = Math.floor(currentAmount / res.jackpotUnits) * betCount;
+ *     console.log(`Nếu trúng Jackpot ngay bây giờ, tạm tính bạn nhận: ${soTienTamTinh} VND`);
  *   }
  *   if (res.splitEligibleDraw) {
  *     console.log("Kỳ này đủ điều kiện chia Jackpot nếu không ai trúng.");
@@ -1066,13 +1078,8 @@ export interface Lotto535ComboPopularityResponse {
   /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
   sets?: number;
   /**
-   * Giá 1 board (VND) theo config hiện tại = `expandedLines × unitPrice`. Chỉ có khi
-   * `found=true`. Lưu ý: entry cũ có thể snapshot `unitPrice` khác nếu config đã đổi.
-   */
-  boardPrice?: number;
-  /**
    * Mẫu số chia Jackpot (Σ đơn vị cược phủ bộ CHUẨN này) — CHỈ có khi tra ĐÚNG bộ chuẩn
-   * (5 chính + 1 ĐB). Công thức phần thắng: `floor(jackpotPool / jackpotUnits) × betCount`.
+   * (5 chính + 1 ĐB). Xem công thức tính tiền TẠM TÍNH ở JSDoc interface.
    */
   jackpotUnits?: number;
   /**

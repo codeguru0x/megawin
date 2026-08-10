@@ -185,6 +185,8 @@ export type {
 export { Mega645PlayType, Mega645PrizeTier } from "./mega645";
 export type {
   Power655BoardInput,
+  Power655ComboPopularityParams,
+  Power655ComboPopularityResponse,
   Power655CurrentDrawResponse,
   Power655DrawInfo,
   Power655DrawResultInfo,

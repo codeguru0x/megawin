@@ -471,3 +471,39 @@ export interface PlayerListDrawResultsOutput {
   /** Số lượng mỗi trang. */
   size: number;
 }
+
+// ─── Combo Popularity (Player) — minh bạch chia jackpot, p1-01 ───
+
+export interface PlayerComboPopularityInput {
+  /** ID tài khoản người chơi (ownership-gate). */
+  accountId: string;
+  /** ID kỳ quay (format `YYYY-MM-DD.NNN`). */
+  drawId: string;
+  /** Bộ số tra cứu ("01".."55"): 5 = bao5, 6 = standard, 7–15 = baoN, 18 = bao18. */
+  numbers: string[];
+}
+
+/**
+ * Độ đông bộ số player ĐÃ CƯỢC trong kỳ — minh bạch chia jackpot (p1-01).
+ *
+ * `found=false` đồng nhất cho cả "chưa cược bộ này" lẫn "bộ chưa ai chơi" (chống dò ẩn bộ
+ * số hệ thống). Chỉ khi `found=true` mới có `sets`. KHÔNG trả amount/accountId/username
+ * của người khác.
+ */
+export interface PlayerComboPopularityOutput {
+  /** True nếu bộ số thuộc entry của account VÀ combo doc tồn tại. */
+  found: boolean;
+  /**
+   * Số bộ cược cùng comboKey trong kỳ — TÍN HIỆU tham khảo. Jackpot Power 6/55 chia
+   * PER-DRAW theo betCount của TOÀN BỘ line trúng (kể cả line trong board Bao chứa bộ
+   * trúng) — `sets` cùng comboKey KHÔNG phải mẫu số chia trực tiếp.
+   */
+  sets?: number;
+  /**
+   * Tổng betUnits chia Jackpot 1 (6/6) nếu bộ 6 số này trúng — CHỈ có khi tra bộ 6 số
+   * standard. Phần của bạn khi trúng = `floor(pool / jackpotUnits) × betCount`. Con số TẠI
+   * THỜI ĐIỂM tra (bán vé tiếp → chỉ tăng, không giảm trừ khi void). KHÔNG áp dụng cho JP2
+   * (5/6 + bonus) — bonus chỉ biết sau giờ quay, không suy trước được.
+   */
+  jackpotUnits?: number;
+}

@@ -442,7 +442,9 @@ export interface PlayerComboPopularityInput {
  *
  * `sets` là tín hiệu THAM KHẢO (Jackpot chia theo TOÀN KỲ, không theo từng combo riêng lẻ).
  * `jackpotUnits` — CHỈ có khi tra bộ CHUẨN (5 chính + 1 ĐB) — là mẫu số CHIA thật khi bộ đó
- * trúng Jackpot: phần bạn nhận = `floor(pool / jackpotUnits) × betCount` của chính board bạn.
+ * trúng Jackpot. Công thức TẠM TÍNH số tiền nhận được: `floor(jackpotCurrentAmount /
+ * jackpotUnits) × betCount` (của chính board bạn) — con số TẠM TÍNH tại thời điểm tra, pool
+ * và `jackpotUnits` còn thay đổi đến giờ đóng bán, KHÔNG dùng để cam kết với player.
  * `splitEligibleDraw` mô tả cơ chế — KHÔNG có con số split dự tính trước giờ quay (cơ chế
  * riêng của Lotto 5/35, phụ thuộc kết quả quay).
  */
@@ -451,8 +453,6 @@ export interface PlayerComboPopularityOutput {
   found: boolean;
   /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
   sets?: number;
-  /** Giá 1 board (VND) theo config hiện tại = expandedLines × unitPrice. Chỉ khi `found=true`. */
-  boardPrice?: number;
   /**
    * Tổng đơn vị cược phủ bộ CHUẨN (5 chính + 1 ĐB) — mẫu số chia Jackpot khi bộ này trúng.
    * CHỈ có khi tra đúng bộ chuẩn (numbers.length===5 && specials.length===1). Giá trị tại

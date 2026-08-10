@@ -843,3 +843,88 @@ export interface Power655ListDrawResultsResponse {
   /** Số kỳ quay thực tế trả về. */
   size: number;
 }
+
+// ─── Combo Popularity — minh bạch chia jackpot ───
+
+/**
+ * Tham số tra độ đông 1 bộ số Power 6/55 mà bạn đã cược trong kỳ.
+ *
+ * @example
+ * ```ts
+ * const params: Power655ComboPopularityParams = {
+ *   drawId: "2026-03-08.001",
+ *   numbers: ["01", "05", "12", "23", "34", "45"], // standard (6 số)
+ * };
+ * ```
+ */
+export interface Power655ComboPopularityParams {
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. VD: `"2026-03-08.001"`. */
+  drawId: string;
+  /**
+   * Bộ số cần kiểm tra — distinct, dạng zero-padded string `"01".."55"`. Số lượng số
+   * quyết định loại chơi: 5 → bao5, 6 → standard, 7–15 → baoN, 18 → bao18 (16/17 không hợp lệ).
+   *
+   * @example `["01", "05", "12", "23", "34", "45"]` // standard (6 số)
+   */
+  numbers: string[];
+}
+
+/**
+ * Kết quả minh bạch combo — số bộ đang cùng cược bộ số này.
+ *
+ * **Ownership-gate:** `found` chỉ `true` khi chính bạn ĐÃ cược đúng bộ số này trong kỳ.
+ * Nếu bạn chưa cược (hoặc bộ chưa ai chơi), API trả `{ found: false }` — hai trường hợp cố
+ * ý KHÔNG phân biệt để bảo vệ dữ liệu cược của người khác. Đây KHÔNG phải lỗi.
+ *
+ * **`sets` vs `jackpotUnits`:**
+ * - `sets` = số bộ cược cùng bộ số — TÍN HIỆU tham khảo. Power 6/55 chia jackpot theo betCount
+ *   trên toàn bộ line trúng CỦA KỲ (không phải per-combo), nên `sets` KHÔNG phải mẫu số chia
+ *   trực tiếp (nhất là board Bao).
+ * - `jackpotUnits` (CHỈ có khi tra bộ **6 số standard**) = mẫu số chia **Jackpot 1** (6/6) khi
+ *   bộ này trúng. KHÔNG áp dụng cho Jackpot 2 (5/6 + bonus) — bonus number chỉ biết sau giờ
+ *   quay, không suy trước được.
+ *
+ * **Công thức tính tiền jackpot TẠM TÍNH (dành cho tenant developer dựng UI):**
+ *
+ * ```
+ * soTienTamTinh = Math.floor(jackpot1CurrentAmount / jackpotUnits) * betCount
+ * ```
+ *
+ * `jackpot1CurrentAmount` lấy từ {@link Power655Api.getJackpot}, `betCount` là số lần cược
+ * của board đó (KHÔNG lấy từ response này — lấy từ thông tin board bạn đã đặt). Đây là **con
+ * số TẠM TÍNH tại thời điểm tra** — pool còn tăng đến giờ đóng bán, `jackpotUnits` cũng chỉ
+ * tăng (bán vé tiếp tục) không giảm (trừ khi có vé bị void) — KHÔNG hiển thị con số này như
+ * một cam kết/thông báo chính thức, chỉ nên gắn nhãn "ước tính nếu trúng ngay bây giờ".
+ *
+ * @example
+ * ```ts
+ * const res = await client.power655.getComboPopularity({
+ *   drawId: "2026-03-08.001",
+ *   numbers: ["01", "05", "12", "23", "34", "45"],
+ * });
+ *
+ * if (res.found) {
+ *   console.log(`${res.sets} bộ đang cược cùng bộ số này`);
+ *
+ *   if (res.jackpotUnits) {
+ *     const { jackpot1CurrentAmount } = await client.power655.getJackpot();
+ *     const betCount = 2; // số lần cược của board này (từ dữ liệu vé bạn đã đặt)
+ *     const soTienTamTinh = Math.floor(jackpot1CurrentAmount / res.jackpotUnits) * betCount;
+ *     console.log(`Nếu trúng Jackpot 1 ngay bây giờ, tạm tính bạn nhận: ${soTienTamTinh} VND`);
+ *   }
+ * } else {
+ *   console.log("Bạn chưa cược bộ này (hoặc chưa ai chơi).");
+ * }
+ * ```
+ */
+export interface Power655ComboPopularityResponse {
+  /** `true` khi bạn đã cược đúng bộ số này VÀ combo có dữ liệu; ngược lại `false`. */
+  found: boolean;
+  /** Tổng số bộ mọi người cược bộ số này (Σ betCount). Chỉ có khi `found=true`. */
+  sets?: number;
+  /**
+   * Mẫu số chia Jackpot 1 (6/6) nếu bộ 6 số này trúng — CHỈ có khi tra bộ **6 số standard**.
+   * Xem công thức tính tiền TẠM TÍNH ở JSDoc interface. KHÔNG áp dụng cho Jackpot 2.
+   */
+  jackpotUnits?: number;
+}

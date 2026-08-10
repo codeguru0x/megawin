@@ -17,13 +17,7 @@
 
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type {
-  EntryPayout,
-  EntryResult,
-  EntryVoidInfo,
-  TicketEntryDoc,
-  TicketEntryEntity,
-} from "@megawin/game-power655/entities";
+import type { EntryPayout, EntryResult, EntryVoidInfo, TicketEntryEntity } from "@megawin/game-power655/entities";
 import { Power655Collections, PrizeTier } from "@megawin/game-power655/entities";
 import { type Long, ObjectId } from "mongodb";
 
@@ -34,6 +28,7 @@ import type {
   EntryForStats,
   OutstandingDrawCounts,
   OutstandingDrawMetrics,
+  OwnedBoard,
   PlayerBreakdownRow,
   VoidedEntryForDispatch,
   WinningEntryForDispatch,
@@ -106,6 +101,33 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /** Đếm entries chưa settled (status = "scheduled"). */
   async countScheduledEntries(drawId: string): Promise<number> {
     return await this.count({ drawId, status: EntryStatus.Scheduled });
+  }
+
+  /**
+   * Lấy tất cả boards của 1 account trong 1 kỳ — ownership-gate cho minh bạch combo (p1-01,
+   * {@link GetComboPopularityPlayerUseCase}). Loại `status: Void` — entry đã huỷ KHÔNG còn
+   * được coi là "đã cược" bộ số đó.
+   *
+   * Projection CHỈ 2 field lồng (`entrySummary.boards.playType` + `.mainNumbers`) — account
+   * thường chỉ vài chục board/kỳ, không cần phân trang. Chạy trên index `{drawId, accountId}`
+   * (p0-01) — equality prefix, IXSCAN.
+   */
+  async getBoardsByAccountDraw(accountId: string, drawId: string): Promise<OwnedBoard[]> {
+    const docs = await this.findManyAsDocuments(
+      { accountId, drawId, status: { $ne: EntryStatus.Void } },
+      {
+        projection: { _id: 0, "entrySummary.boards.playType": 1, "entrySummary.boards.mainNumbers": 1 },
+      },
+    );
+    const boards: OwnedBoard[] = [];
+    for (const d of docs as Array<{ entrySummary?: { boards?: OwnedBoard[] } }>) {
+      for (const b of d.entrySummary?.boards ?? []) {
+        if (b.mainNumbers) {
+          boards.push({ playType: b.playType, mainNumbers: b.mainNumbers });
+        }
+      }
+    }
+    return boards;
   }
 
   // ─── Operations Stats: insert-stream watermark reads ───

@@ -4,13 +4,15 @@
  * Minh bạch combo cappable (pick8/9/10) cho player — trả số người/số bộ cùng cược combo
  * mà CHÍNH player đã đặt trong kỳ (ownership-gate). Combo lạ luôn trả `{ found: false }`.
  *
- * `numbers` truyền qua query dạng CSV zero-padded: `?numbers=01,05,12,...` (8–10 số).
+ * `numbers` truyền qua query multi-value zero-padded: `?numbers=01,05,12,...` (hoặc repeated
+ * `?numbers=01&numbers=05`) — 8–10 số.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
 import { kenoNumberSchema } from "@megawin/game-keno/schemas";
 import { GetComboPopularityPlayerUseCase } from "@megawin/game-keno-application/use-cases/player";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
+import { multiValueQuery } from "@megawin/shared/validation";
 import { z } from "zod";
 
 const pathSchema = z.object({
@@ -18,17 +20,10 @@ const pathSchema = z.object({
 });
 
 const querySchema = z.object({
-  // CSV "01,05,12,..." → tách + validate mỗi phần tử là số Keno hợp lệ "01".."80".
-  // Ràng buộc 8–10 số + distinct do use-case đảm nhiệm (đồng nhất với staff lookup).
-  numbers: z
-    .string()
-    .transform((s) =>
-      s
-        .split(",")
-        .map((n) => n.trim())
-        .filter(Boolean),
-    )
-    .pipe(z.array(kenoNumberSchema).min(8).max(10)),
+  // Multi-value query "01,05,12,..." → mảng số Keno "01".."80" (8–10 số).
+  // AWS HTTP API (payload 2.0) nối repeated param bằng phẩy nên `?numbers=01&numbers=05`
+  // và `?numbers=01,05` cùng ra 1 chuỗi. Ràng buộc 8–10 số + distinct do use-case đảm nhiệm.
+  numbers: multiValueQuery(z.array(kenoNumberSchema).min(8).max(10)),
 });
 
 const useCase = new GetComboPopularityPlayerUseCase();

@@ -66,6 +66,7 @@ export const ENDPOINTS = {
     getEntryLines: (entryId: string) => `/games/power655/entries/${entryId}/lines` as const,
     listDrawResults: "/games/power655/draw-results",
     getDrawResult: (drawId: string) => `/games/power655/draw-results/${drawId}` as const,
+    getComboPopularity: (drawId: string) => `/games/power655/draws/${drawId}/combo-popularity` as const,
   },
 
   max3d: {

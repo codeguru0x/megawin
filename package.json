@@ -16,12 +16,8 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,mjs,ts,tsx,json,jsonc,css}": [
-      "biome check --write --no-errors-on-unmatched"
-    ],
-    "*.{md,yml,yaml}": [
-      "prettier --write"
-    ]
+    "*.{js,mjs,ts,tsx,json,jsonc,css}": ["biome check --write --no-errors-on-unmatched"],
+    "*.{md,yml,yaml}": ["prettier --write"]
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.7",

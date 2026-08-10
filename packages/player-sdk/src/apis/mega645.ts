@@ -277,11 +277,15 @@ export interface Mega645Api {
    *
    * **`sets` vs `jackpotUnits`:** `sets` là số bộ cùng cược — tín hiệu tham khảo (jackpot chia
    * theo betCount toàn line trúng của kỳ, không phải trực tiếp theo `sets`). `jackpotUnits`
-   * CHỈ có khi tra bộ **6 số standard** — là mẫu số chia jackpot: phần của bạn khi trúng =
-   * `floor(pool / jackpotUnits) × betCount`. Con số tại thời điểm tra (bán vé tiếp → chỉ tăng).
+   * CHỈ có khi tra bộ **6 số standard** — là mẫu số chia jackpot.
+   *
+   * **Tính tiền jackpot TẠM TÍNH:** `Math.floor(currentAmount / jackpotUnits) * betCount` —
+   * kết hợp {@link Mega645Api.getJackpot} để lấy `currentAmount`. Đây là con số TẠM TÍNH tại
+   * thời điểm tra, pool còn thay đổi đến giờ đóng bán — KHÔNG dùng để cam kết với player,
+   * chỉ hiển thị dạng ước tính.
    *
    * @param params - `drawId` + bộ số (5/6/7–15/18 số distinct `"01".."45"`)
-   * @returns Độ đông bộ số (`found`, `sets?`, `boardPrice?`, `jackpotUnits?`)
+   * @returns Độ đông bộ số (`found`, `sets?`, `jackpotUnits?`)
    *
    * @throws {@link ApiClientError} `UNAUTHORIZED` — token thiếu hoặc hết hạn
    *
@@ -293,9 +297,12 @@ export interface Mega645Api {
    * });
    *
    * if (res.found) {
-   *   console.log(`${res.sets} bộ đang cược · giá 1 board ${res.boardPrice} VND`);
+   *   console.log(`${res.sets} bộ đang cược cùng bộ số này`);
    *   if (res.jackpotUnits) {
-   *     console.log(`Mẫu số chia jackpot: ${res.jackpotUnits}`);
+   *     const { currentAmount } = await client.mega645.getJackpot();
+   *     const betCount = 2; // số lần cược của board này
+   *     const soTienTamTinh = Math.floor(currentAmount / res.jackpotUnits) * betCount;
+   *     console.log(`Tạm tính nếu trúng jackpot ngay bây giờ: ${soTienTamTinh} VND`);
    *   }
    * } else {
    *   // Bạn chưa cược bộ này, hoặc chưa ai chơi — không phân biệt.

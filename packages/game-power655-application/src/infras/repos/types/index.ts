@@ -12,6 +12,7 @@ export type {
 export type {
   OutstandingDrawCounts,
   OutstandingDrawMetrics,
+  OwnedBoard,
   PlayerBreakdownRow,
   ReversalCandidate,
   ReversalEntryForDispatch,

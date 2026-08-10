@@ -6,6 +6,8 @@
 import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
+  Power655ComboPopularityParams,
+  Power655ComboPopularityResponse,
   Power655CurrentDrawResponse,
   Power655DrawInfo,
   Power655DrawResultInfo,
@@ -265,6 +267,53 @@ export interface Power655Api {
    * ```
    */
   getDrawResult(drawId: string): Promise<Power655DrawResultInfo>;
+
+  /**
+   * Tra độ đông 1 bộ số bạn đã cược trong kỳ — minh bạch chia jackpot.
+   *
+   * **Endpoint:** `GET /games/power655/draws/{drawId}/combo-popularity`
+   *
+   * **Ownership-gate:** chỉ trả `found: true` khi bạn ĐÃ cược đúng bộ số này trong kỳ. Nếu
+   * bạn chưa cược (hoặc bộ chưa ai chơi), API trả `{ found: false }` — hai trường hợp cố ý
+   * KHÔNG phân biệt để bảo vệ dữ liệu cược của người khác. `found: false` KHÔNG phải lỗi.
+   *
+   * **`sets` vs `jackpotUnits`:** `sets` là số bộ cùng cược — tín hiệu tham khảo (jackpot chia
+   * theo betCount toàn line trúng của kỳ, không phải trực tiếp theo `sets`). `jackpotUnits`
+   * CHỈ có khi tra bộ **6 số standard** — là mẫu số chia **Jackpot 1** (6/6). KHÔNG áp dụng
+   * cho Jackpot 2 (5/6 + bonus).
+   *
+   * **Tính tiền jackpot TẠM TÍNH:** `Math.floor(jackpot1CurrentAmount / jackpotUnits) *
+   * betCount` — kết hợp {@link Power655Api.getJackpot} để lấy `jackpot1CurrentAmount`.
+   * Đây là con số TẠM TÍNH tại thời điểm tra, pool còn thay đổi đến giờ đóng bán — KHÔNG
+   * dùng để cam kết với player, chỉ hiển thị dạng ước tính.
+   *
+   * @param params - `drawId` + bộ số (5/6/7–15/18 số distinct `"01".."55"`)
+   * @returns Độ đông bộ số (`found`, `sets?`, `jackpotUnits?`)
+   *
+   * @throws {@link ApiClientError} `UNAUTHORIZED` — token thiếu hoặc hết hạn
+   *
+   * @example
+   * ```ts
+   * const res = await client.power655.getComboPopularity({
+   *   drawId: "2026-03-08.001",
+   *   numbers: ["01", "05", "12", "23", "34", "45"], // standard 6 số
+   * });
+   *
+   * if (res.found) {
+   *   console.log(`${res.sets} bộ đang cược cùng bộ số này`);
+   *   if (res.jackpotUnits) {
+   *     const { jackpot1CurrentAmount } = await client.power655.getJackpot();
+   *     const betCount = 2; // số lần cược của board này
+   *     const soTienTamTinh = Math.floor(jackpot1CurrentAmount / res.jackpotUnits) * betCount;
+   *     console.log(`Tạm tính nếu trúng Jackpot 1 ngay bây giờ: ${soTienTamTinh} VND`);
+   *   }
+   * } else {
+   *   // Bạn chưa cược bộ này, hoặc chưa ai chơi — không phân biệt.
+   *   console.log("Không có dữ liệu cho bộ số này.");
+   * }
+   * ```
+   */
+  getComboPopularity(params: Power655ComboPopularityParams): Promise<Power655ComboPopularityResponse>;
 }
 
 /** @internal */
@@ -307,6 +356,12 @@ export function createPower655Api(http: HttpClient): Power655Api {
     },
     async getDrawResult(drawId) {
       return http.get<Power655DrawResultInfo>(ENDPOINTS.power655.getDrawResult(drawId));
+    },
+    async getComboPopularity(params) {
+      // numbers gửi dạng CSV zero-padded "01,05,..." — handler tự split + validate.
+      return http.get<Power655ComboPopularityResponse>(ENDPOINTS.power655.getComboPopularity(params.drawId), {
+        params: { numbers: params.numbers.join(",") },
+      });
     },
   };
 }

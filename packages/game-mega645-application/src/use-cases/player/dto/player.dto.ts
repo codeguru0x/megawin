@@ -427,8 +427,8 @@ export interface PlayerComboPopularityInput {
  * Độ đông bộ số player ĐÃ CƯỢC trong kỳ — minh bạch chia jackpot (p1-01).
  *
  * `found=false` đồng nhất cho cả "chưa cược bộ này" lẫn "bộ chưa ai chơi" (chống dò ẩn bộ
- * số hệ thống). Chỉ khi `found=true` mới có `sets`/`boardPrice`. KHÔNG trả
- * amount/accountId/username của người khác.
+ * số hệ thống). Chỉ khi `found=true` mới có `sets`. KHÔNG trả amount/accountId/username
+ * của người khác.
  */
 export interface PlayerComboPopularityOutput {
   /** True nếu bộ số thuộc entry của account VÀ combo doc tồn tại. */
@@ -438,8 +438,6 @@ export interface PlayerComboPopularityOutput {
    * betCount toàn line trúng, `sets` không phải mẫu số chia trực tiếp cho board Bao).
    */
   sets?: number;
-  /** Giá 1 board bộ số này theo config hiện tại (VND) = `unitPrice × expandedLines`. */
-  boardPrice?: number;
   /**
    * Tổng betUnits chia jackpot nếu bộ 6 số này trúng — CHỈ có khi tra bộ 6 số standard.
    * Phần của bạn khi trúng = `floor(pool / jackpotUnits) × betCount`. Con số TẠI THỜI ĐIỂM

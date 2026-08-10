@@ -117,3 +117,17 @@ Unit tests viết mới (`test/use-cases/get-combo-popularity.test.ts`, mongodb-
 ## Định nghĩa Done
 
 Player xem được độ đông bộ số **đã cược** (+ `jackpotUnits` nếu standard), combo lạ luôn `{found:false}` đồng nhất, SDK JSDoc + CHANGELOG đầy đủ (TypeDoc sạch), không rò dữ liệu, unit test 7 case pass. Cập nhật `00-overview.md`.
+
+## Cập nhật sau review (09/08)
+
+**Bỏ `boardPrice` khỏi response** — quyết định đảo ngược thiết kế §"Sở hữu → đọc combo doc..." ở trên. Lý do: player chỉ quan tâm "trúng thì được bao nhiêu tiền", `boardPrice` (giá 1 board) không trả lời câu hỏi đó và gây hiểu nhầm là "giá trị liên quan đến chia thưởng". Response Power 6/55 giờ chỉ còn `{found, sets?, jackpotUnits?}`.
+
+Thay vào đó, JSDoc `Power655ComboPopularityResponse` + JSDoc method `getComboPopularity` hướng dẫn tenant developer công thức tính tiền jackpot **tạm tính**:
+
+```
+soTienTamTinh = Math.floor(jackpot1CurrentAmount / jackpotUnits) × betCount
+```
+
+(`jackpot1CurrentAmount` lấy từ `client.power655.getJackpot()`, `betCount` từ dữ liệu vé player đã đặt — không phải field trong response này). Ghi rõ đây là con số TẠM TÍNH tại thời điểm tra, không dùng để cam kết với player.
+
+Đã sửa: use-case (bỏ `getGlobalConfig`/`getLineCount` không còn cần), DTO, SDK types + apis, test (case 1 và 4 bỏ assertion `boardPrice`), CHANGELOG (thêm mục `Changed` + `Migration` — entry `[1.0.19]` chưa release nên sửa thẳng `Added` cũ, không tạo entry `Removed` riêng).

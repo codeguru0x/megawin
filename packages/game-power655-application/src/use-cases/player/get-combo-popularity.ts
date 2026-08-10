@@ -1,9 +1,9 @@
 /**
- * Use Case: Get Combo Popularity for Player (Mega 6/45) — minh bạch chia jackpot (p1-01).
+ * Use Case: Get Combo Popularity for Player (Power 6/55) — minh bạch chia jackpot (p1-01).
  *
  * Cho player tự kiểm tra "bộ số tôi đã cược đang có bao nhiêu bộ cùng chơi" — CHỈ bộ số
- * mà account THỰC SỰ có entry trong kỳ (ownership-gate nghiêm ngặt). Khi jackpot bị chia
- * theo betCount toàn line trúng (`patch-jackpot-prize.ts` SAU fix Q3:
+ * mà account THỰC SỰ có entry trong kỳ (ownership-gate nghiêm ngặt). JP1/JP2 chia PER-DRAW
+ * theo betCount trên toàn bộ line trúng (`patch-jackpot-prize.ts`:
  * `jackpotPerUnit = floor(pool / totalBetUnits)`), player có con số kiểm chứng được.
  *
  * ## Ownership-gate (chống dò ẩn bộ số hệ thống)
@@ -14,13 +14,14 @@
  *
  * ## `sets` vs `jackpotUnits` — công thức tính tiền jackpot TẠM TÍNH cho tenant developer
  *
- * - `sets` = số bộ cược cùng comboKey — TÍN HIỆU tham khảo (không phải mẫu số chia).
- * - `jackpotUnits` (CHỈ khi tra bộ 6 số standard) = `totalBetUnits` mẫu số chia jackpot,
- *   gom từ 3 nguồn phủ bộ S (standard exact + bao5 6 tập con + bao7–18 superset) qua
- *   {@link ComboStatsRepository.sumJackpotUnitsForStandardSet}.
- * - Công thức TẠM TÍNH số tiền player nhận được nếu bộ 6 số này trúng jackpot:
- *   `soTienTamTinh = Math.floor(jackpotCurrentAmount / jackpotUnits) × betCount` (lấy
- *   `jackpotCurrentAmount` từ endpoint `getJackpot`, `betCount` = số lần cược của player
+ * - `sets` = số bộ cược cùng comboKey — TÍN HIỆU tham khảo (KHÔNG phải mẫu số chia, khác
+ *   Keno: Power 6/55 chia jackpot per-draw across mọi line trúng, không per-combo).
+ * - `jackpotUnits` (CHỈ khi tra bộ 6 số standard, CHỈ áp dụng JP1) = `totalBetUnits` mẫu số
+ *   chia jackpot, gom từ 3 nguồn phủ bộ S (standard exact + bao5 6 tập con + bao7–18
+ *   superset) qua {@link ComboStatsRepository.sumJackpotUnitsForStandardSet}.
+ * - Công thức TẠM TÍNH số tiền player nhận được nếu bộ 6 số này trúng Jackpot 1:
+ *   `soTienTamTinh = Math.floor(jackpot1CurrentAmount / jackpotUnits) × betCount` (lấy
+ *   `jackpot1CurrentAmount` từ endpoint `getJackpot`, `betCount` = số lần cược của player
  *   cho board này). ĐÂY LÀ CON SỐ TẠM TÍNH TẠI THỜI ĐIỂM TRA — pool còn tăng đến giờ đóng
  *   bán, `jackpotUnits` cũng chỉ tăng (bán vé tiếp) không giảm (trừ khi có vé bị void) —
  *   KHÔNG dùng con số này để cam kết/thông báo chính thức với player, chỉ hiển thị dạng
@@ -30,8 +31,8 @@
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
-import { PlayType, VALID_NUMBER_SET } from "@megawin/game-mega645/entities";
-import { buildComboKey } from "@megawin/game-mega645/rules";
+import { PlayType, VALID_MAIN_NUMBER_SET } from "@megawin/game-power655/entities";
+import { buildComboKey } from "@megawin/game-power655/rules";
 
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -41,8 +42,8 @@ import type { PlayerComboPopularityInput, PlayerComboPopularityOutput } from "./
 const NOT_FOUND: PlayerComboPopularityOutput = { found: false };
 
 /**
- * Số lượng số đã chọn → PlayType hợp lệ (analysis §3.10(7)):
- * 5 → bao5, 6 → standard, 7–15 → baoN, 18 → bao18. 16/17 số không map (null).
+ * Số lượng số đã chọn → PlayType hợp lệ:
+ * 5 → bao5, 6 → standard, 7–15 → baoN, 18 → bao18. 16/17 số không map (undefined).
  */
 const COUNT_TO_PLAY_TYPE: Record<number, PlayType> = {
   5: PlayType.Bao5,
@@ -78,9 +79,10 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
     if (new Set(numbers).size !== numbers.length) {
       throw AppException.badRequest("Các số không được trùng nhau.");
     }
+    
     for (const n of numbers) {
-      if (!VALID_NUMBER_SET.has(n)) {
-        throw AppException.badRequest(`Số không hợp lệ: ${n}. Chỉ nhận "01".."45".`);
+      if (!VALID_MAIN_NUMBER_SET.has(n)) {
+        throw AppException.badRequest(`Số không hợp lệ: ${n}. Chỉ nhận "01".."55".`);
       }
     }
 
@@ -89,7 +91,7 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
     // ── Ownership gate: combo phải nằm trong entry của chính account ──
     // Đọc boards account sở hữu trong kỳ (vài doc) → build tập comboKey của họ.
     const owned = await this.entryRepo.getBoardsByAccountDraw(accountId, drawId);
-    const ownedKeys = new Set(owned.map((b) => buildComboKey(b.playType, b.numbers)));
+    const ownedKeys = new Set(owned.map((b) => buildComboKey(b.playType, b.mainNumbers)));
 
     // Combo không thuộc account → trả rỗng ĐỒNG NHẤT (chống dò ẩn — không phân biệt case).
     if (!ownedKeys.has(comboKey)) {
@@ -108,7 +110,7 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
       sets: doc.sets,
     };
 
-    // jackpotUnits CHỈ suy được cho bộ 6 số standard (mẫu số chia jackpot khi S trúng).
+    // jackpotUnits CHỈ suy được cho bộ 6 số standard (mẫu số chia JP1 khi S trúng).
     // Board Bao (5, 7–18 số) không suy trước được mẫu số (phụ thuộc 6 số quay ra).
     if (playType === PlayType.Standard) {
       result.jackpotUnits = await this.comboRepo.sumJackpotUnitsForStandardSet(drawId, numbers);
