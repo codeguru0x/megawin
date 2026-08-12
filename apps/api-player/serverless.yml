@@ -110,6 +110,7 @@ build:
 
 functions:
   - ${file(src/functions/auth-endpoint.yml)}
+  - ${file(src/functions/game-endpoint.yml)}
   - ${file(src/functions/lotto535-endpoint.yml)}
   - ${file(src/functions/keno-endpoint.yml)}
   - ${file(src/functions/power655-endpoint.yml)}

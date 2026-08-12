@@ -23,21 +23,21 @@ const PRIZE_FIELDS = [
   {
     key: "tier1" as const,
     label: "Giải Nhất",
-    desc: "6 số chính",
+    desc: "5 số chính",
     badge: "1st",
     color: "bg-orange-500 text-white",
   },
   {
     key: "tier2" as const,
     label: "Giải Nhì",
-    desc: "5 số chính",
+    desc: "4 số chính",
     badge: "2nd",
     color: "bg-slate-400 text-white",
   },
   {
     key: "tier3" as const,
     label: "Giải Ba",
-    desc: "4 số chính",
+    desc: "3 số chính",
     badge: "3rd",
     color: "bg-amber-700 text-white",
   },
@@ -115,7 +115,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     </div>
                     <div className="flex items-center gap-4 text-xs shrink-0">
                       <div className="text-right">
-                        <span className="text-muted-foreground">Kỳ vọng trả / line</span>
+                        <span className="text-muted-foreground">Kỳ vọng trả / line (chỉ giải cố định)</span>
                         <div className="font-semibold tabular-nums">
                           {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
                         </div>
@@ -165,7 +165,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     />
                     <HeaderTooltip
                       label="Hoà vốn"
-                      tip="Giá trị giải tối đa để không lỗ. Công thức: Giá 1 line ÷ Xác suất."
+                      tip="Giá trị giải tối đa để tier này không lỗ về kỳ vọng (chỉ xét riêng tier, chưa gồm các giải khác). Công thức: Giá 1 line ÷ Xác suất."
                       className="justify-end"
                     />
                   </div>
@@ -265,7 +265,10 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               <div className="border-t p-6 lg:border-l lg:border-t-0 overflow-x-auto">
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold text-foreground">Xác suất &amp; tỷ lệ trả thưởng</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Toàn bộ hạng giải bao gồm Jackpot Độc Đắc.</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Toàn bộ hạng giải bao gồm Jackpot (tính theo giá trị khởi điểm). Khác với cột trái chỉ tính giải cố
+                    định.
+                  </p>
                 </div>
 
                 <div className="rounded-lg border overflow-hidden">

@@ -11,10 +11,18 @@
  * `{ found: false }`. Kẻ dò không phân biệt được "combo có người chơi nhưng tôi chưa
  * cược" với "combo chưa ai chơi". KHÔNG dùng 403/404 (tự tiết lộ combo tồn tại).
  *
- * ## `jackpotUnits` — CHỈ khi tra bộ CHUẨN (5 chính + 1 ĐB)
+ * ## `jackpotUnits` — CHỈ khi tra bộ CHUẨN (5 chính + 1 ĐB), công thức tiền TẠM TÍNH
  *
  * Đây là mẫu số CHIA Jackpot thật khi bộ đó trúng — chứng minh toán ở JSDoc
  * {@link ComboStatsRepository.sumJackpotUnitsForStandardSet}.
+ *
+ * Công thức TẠM TÍNH số tiền player nhận được nếu bộ này trúng Jackpot:
+ * `soTienTamTinh = Math.floor(jackpotCurrentAmount / jackpotUnits) × betCount` (lấy
+ * `jackpotCurrentAmount` từ endpoint jackpot hiện hành, `betCount` = số lần cược của
+ * player cho board này). ĐÂY LÀ CON SỐ TẠM TÍNH TẠI THỜI ĐIỂM TRA — pool còn tăng đến
+ * giờ đóng bán, `jackpotUnits` cũng chỉ tăng (bán vé tiếp) không giảm (trừ khi có vé bị
+ * void) — KHÔNG dùng con số này để cam kết/thông báo chính thức với player, chỉ hiển thị
+ * dạng "ước tính nếu trúng ngay bây giờ".
  *
  * ## `splitEligibleDraw` — chỉ mô tả cơ chế, KHÔNG số dự tính
  *
@@ -26,13 +34,7 @@
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { PlayType } from "@megawin/game-lotto535/entities";
-import {
-  buildComboKey,
-  calculateLineCount,
-  inferPlayType,
-  isSplitCycleDraw,
-  validateSelection,
-} from "@megawin/game-lotto535/rules";
+import { buildComboKey, inferPlayType, isSplitEligibleDraw, validateSelection } from "@megawin/game-lotto535/rules";
 
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -89,12 +91,9 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
       return NOT_FOUND;
     }
 
-    const boardPrice = calculateLineCount(playType, selection) * config.play.unitPrice;
-
     const output: PlayerComboPopularityOutput = {
       found: true,
       sets: doc.sets,
-      boardPrice,
     };
 
     // jackpotUnits + splitEligibleDraw CHỈ có ý nghĩa khi tra bộ CHUẨN (5 chính + 1 ĐB) —
@@ -108,11 +107,12 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
       output.jackpotUnits = jackpotUnits;
 
       if (draw) {
-        // Chưa biết ai trúng JP tại thời điểm player tra (draw chưa settle) — hasJackpotWinner
-        // = false để trả lời đúng câu hỏi "kỳ này CÓ ĐỦ ĐIỀU KIỆN chia NẾU không ai trúng".
+        // Chưa biết ai trúng JP tại thời điểm player tra (draw chưa settle) — dùng
+        // isSplitEligibleDraw (ngưỡng + kỳ 21h, KHÔNG xét winner) để trả lời đúng câu
+        // hỏi "kỳ này CÓ ĐỦ ĐIỀU KIỆN chia NẾU không ai trúng".
         const jackpotAmount = activeCycle?.currentAmount ?? config.jackpot.seedAmount;
         const splitThreshold = activeCycle?.config.splitThreshold ?? config.jackpot.splitThreshold;
-        output.splitEligibleDraw = isSplitCycleDraw(jackpotAmount, splitThreshold, false, draw.drawNo);
+        output.splitEligibleDraw = isSplitEligibleDraw(jackpotAmount, splitThreshold, draw.drawNo);
       }
     }
 

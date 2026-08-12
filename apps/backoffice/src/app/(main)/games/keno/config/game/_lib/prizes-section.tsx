@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import type { BasicPrizes } from "@megawin/game-keno/entities";
-import { analyzeProfitabilityForPick, getBasicOddsTable, TOTAL_OUTCOMES } from "@megawin/game-keno/rules";
+import { analyzeProfitabilityForPick, TOTAL_OUTCOMES } from "@megawin/game-keno/rules";
 import { formatNumber } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { ChevronDown, ChevronUp, Info, Save, TrendingDown, TrendingUp } from "lucide-react";
@@ -295,7 +295,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               <p className="text-xs text-muted-foreground mt-0.5">
                 Cấu hình giá trị cho từng bậc (1-10 số) theo số trùng
                 {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
-                {" · "}Không gian mẫu: <strong>≈ 3.54 × 10¹⁵ (3,535,316,142,212,174,320)</strong>
+                {" · "}Không gian mẫu: <strong>≈ 3.54 × 10¹⁸ (3,535,316,142,212,174,320)</strong>
               </p>
             </div>
             <div className="text-right text-xs shrink-0">

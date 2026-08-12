@@ -3,15 +3,17 @@
  *
  * Minh bạch chia jackpot cho player — trả số bộ cùng cược bộ số mà CHÍNH player đã đặt
  * trong kỳ (ownership-gate). Combo lạ luôn trả `{ found: false }`. Bộ 6 số standard kèm
- * `jackpotUnits` (mẫu số chia jackpot). Board Bao chỉ trả `sets` + `boardPrice`.
+ * `jackpotUnits` (mẫu số chia jackpot). Board Bao chỉ trả `sets`.
  *
- * `numbers` truyền qua query dạng CSV zero-padded: `?numbers=01,05,12,...` (5–18 số).
+ * `numbers` truyền qua query multi-value zero-padded: `?numbers=01,05,12,...` (hoặc repeated
+ * `?numbers=01&numbers=05`) — 5–18 số.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
 import { mega645NumberSchema } from "@megawin/game-mega645/schemas";
 import { GetComboPopularityPlayerUseCase } from "@megawin/game-mega645-application/use-cases/player";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
+import { multiValueQuery } from "@megawin/shared/validation";
 import { z } from "zod";
 
 const pathSchema = z.object({
@@ -19,17 +21,11 @@ const pathSchema = z.object({
 });
 
 const querySchema = z.object({
-  // CSV "01,05,12,..." → tách + validate mỗi phần tử là số Mega 6/45 hợp lệ "01".."45".
-  // Ràng buộc playType hợp lệ (5/6/7–15/18) + distinct do use-case đảm nhiệm.
-  numbers: z
-    .string()
-    .transform((s) =>
-      s
-        .split(",")
-        .map((n) => n.trim())
-        .filter(Boolean),
-    )
-    .pipe(z.array(mega645NumberSchema).min(5).max(18)),
+  // Multi-value query "01,05,12,..." → mảng số Mega 6/45 "01".."45" (5–18 số).
+  // AWS HTTP API (payload 2.0) nối repeated param bằng phẩy nên `?numbers=01&numbers=05`
+  // và `?numbers=01,05` cùng ra 1 chuỗi. Ràng buộc playType (5/6/7–15/18) + distinct do
+  // use-case đảm nhiệm.
+  numbers: multiValueQuery(z.array(mega645NumberSchema).min(5).max(18)),
 });
 
 const useCase = new GetComboPopularityPlayerUseCase();

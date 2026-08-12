@@ -283,7 +283,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     />
                     <HeaderTooltip
                       label="Tỷ lệ TT"
-                      tip="Tỷ lệ trả thưởng kế hoạch. Tổng 55% doanh thu."
+                      tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Với Jackpot dùng giá trị khởi điểm hiện tại."
                       className="justify-end"
                     />
                   </div>
@@ -297,6 +297,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         : config.jackpot.jackpot2.seedAmount
                       : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
                     const expectedPayout = row.probability * defaultPrize;
+                    // Tính real-time từ prize/seed hiện tại — không dùng plannedPayoutRate tĩnh trong odds.ts.
+                    const payoutRate = unitPrice > 0 ? (expectedPayout / unitPrice) * 100 : 0;
 
                     return (
                       <div
@@ -339,7 +341,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         <span className="text-right tabular-nums font-medium">{fmt(Math.round(expectedPayout))}</span>
 
                         <span className="text-right tabular-nums font-semibold text-muted-foreground">
-                          {row.plannedPayoutRate.toFixed(2)}%
+                          {payoutRate.toFixed(2)}%
                         </span>
                       </div>
                     );
@@ -366,7 +368,19 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                       )}
                     </span>
                     <span className="text-right tabular-nums text-muted-foreground">
-                      {oddsTable.reduce((sum, row) => sum + row.plannedPayoutRate, 0).toFixed(2)}%
+                      {oddsTable
+                        .reduce((sum, row) => {
+                          const isJP = row.tier === "jackpot1" || row.tier === "jackpot2";
+                          const prize = isJP
+                            ? row.tier === "jackpot1"
+                              ? config.jackpot.jackpot1.seedAmount
+                              : config.jackpot.jackpot2.seedAmount
+                            : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                          const ep = row.probability * prize;
+                          return sum + (unitPrice > 0 ? (ep / unitPrice) * 100 : 0);
+                        }, 0)
+                        .toFixed(2)}
+                      %
                     </span>
                   </div>
                 </div>

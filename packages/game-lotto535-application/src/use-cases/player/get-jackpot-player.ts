@@ -1,24 +1,28 @@
 /**
  * Use Case: Get Jackpot for Player (Lotto 5/35)
  *
- * Trả thông tin jackpot đơn giản cho player — loại bỏ chi tiết vận hành.
+ * `GetJackpotPlayerInternalUseCase` là điểm truy cập DUY NHẤT cho dữ liệu jackpot hiển thị
+ * của Lotto 5/35. Trả raw output (`PlayerGetJackpotOutput`), throw {@link AppException}
+ * `NOT_FOUND` khi chưa có active cycle — KHÔNG đóng gói HTTP.
  *
- * Dùng trực tiếp từ active JackpotCycleDoc:
- *   - seedAmount, config.splitThreshold → đã snapshot tại thời điểm tạo cycle
- *   - currentAmount, peakAmount, totalContribution, drawCount → cập nhật mỗi kỳ settle
- * Không cần gọi GlobalConfig.
+ * Hai caller:
+ *   - `GetJackpotPlayerUseCase` (ApiGateway, cùng file) → `GET /games/lotto535/jackpot`, chỉ delegate.
+ *   - `ListJackpotsUseCase` (api-player, cross-game) → `GET /games/jackpots`, gọi song song
+ *     3 game bằng `tryLoad` + `Promise.all`.
+ *
+ * Đọc qua `activeJackpotCycleCache` (TTL 60s) — read path hiển thị, KHÔNG phải đường tiền.
+ * Settle/void/resettle vẫn đọc thẳng repo.
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { ApiGatewayUseCase, AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { hasReachedSplitThreshold } from "@megawin/game-lotto535/rules";
 
-import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { activeJackpotCycleCache } from "../../caches/active-jackpot-cycle.cache";
 import type { PlayerGetJackpotOutput } from "./dto/player.dto";
 
-export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJackpotOutput> {
-  private readonly cycleRepo = new JackpotCycleRepository();
-
+export class GetJackpotPlayerInternalUseCase extends InternalUseCase<void, PlayerGetJackpotOutput> {
   protected async execute(): Promise<PlayerGetJackpotOutput> {
-    const activeCycle = await this.cycleRepo.getActiveCycle();
+    const activeCycle = await activeJackpotCycleCache.fetch();
 
     if (!activeCycle) {
       throw AppException.notFound("Không tìm thấy jackpot hiện tại.");
@@ -39,7 +43,23 @@ export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJa
       progress: {
         splitThreshold,
         percentage,
+        reachedSplitThreshold: hasReachedSplitThreshold(currentAmount, splitThreshold),
       },
     };
+  }
+}
+
+/**
+ * Endpoint: `GET /games/lotto535/jackpot`.
+ *
+ * Chỉ đóng gói HTTP envelope — toàn bộ logic nằm ở {@link GetJackpotPlayerInternalUseCase}
+ * (dùng chung với endpoint gộp cross-game `GET /games/jackpots`). Sửa logic jackpot thì
+ * sửa ở internal use-case, KHÔNG sửa ở đây.
+ */
+export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJackpotOutput> {
+  private readonly internal = new GetJackpotPlayerInternalUseCase();
+
+  protected async execute(): Promise<PlayerGetJackpotOutput> {
+    return await this.internal.run();
   }
 }

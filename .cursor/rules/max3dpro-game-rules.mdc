@@ -103,7 +103,7 @@ Giải phụ ĐB: first === special[1] && second === special[0]  → 400 triệu
 ```
 
 So sánh với Max 3D Plus:
-- Max 3D Plus: chỉ cần cả 2 bộ đều nằm trong nhóm special (4 ways) → 1 tỷ
+- Max 3D Plus: chỉ cần cả 2 bộ khớp 2 entry ĐB riêng biệt, không xét thứ tự (2 ways) → 1 tỷ
 - Max 3D Pro: phân biệt **thứ tự ordered pair** → ĐB (1 way, 2 tỷ) hoặc phụ ĐB (1 way, 400 triệu)
 
 **Logic matching** (`matchPair()`):
@@ -219,20 +219,36 @@ Revenue = 100% doanh thu tiền cược
 
 ## 7. Xác suất & Không gian mẫu
 
-Không gian mẫu: 1.000 × 1.000 = **1.000.000** (ordered pairs)
+Không gian mẫu: 1.000 × 1.000 = **1.000.000** cặp có thứ tự, cho phép `first = second`.
 
-| Giải | Ways | Xác suất | 1 trong N |
+Giải cặp (Nhất → Tư) dùng **bipartite matching** — 2 bộ phải khớp 2 entry RIÊNG BIỆT, nên
+ways = `k × (k − 1)`, **KHÔNG phải `k²`**. Giải Năm/Sáu (nhóm đơn) đếm **số lần trúng** theo
+từng bộ số, bộ còn lại tự do trong đủ 1.000 giá trị (không loại 20 kết quả — theo luật gộp
+giải, cả 2 bộ đều khớp thì trúng 2 lần và lĩnh cả hai).
+
+Bảng dưới là **effective ways** — đã quy đổi ×2 giải thưởng của cặp trùng (Nhất→Sáu) thành
+ways tương đương, dùng trực tiếp để tính chi phí kỳ vọng.
+
+| Giải | Effective ways | Xác suất | 1 trong N |
 |------|------|----------|-----------|
-| Đặc Biệt | 1 (ordered exact) | 1/1.000.000 | 1.000.000 |
-| Phụ Đặc Biệt | 1 (reverse ordered) | 1/1.000.000 | 1.000.000 |
-| Nhất | 4² = 16 | 16/1.000.000 | 62.500 |
-| Nhì | 6² = 36 | 36/1.000.000 | 27.778 |
-| Ba | 8² = 64 | 64/1.000.000 | 15.625 |
-| Tư | 20² - 1 - 1 - 16 - 36 - 64 = 282 | 282/1.000.000 | 3.546 |
-| Năm | 2 × 2 × 980 = 3.920 | 3.920/1.000.000 | 255 |
-| Sáu | 2 × 18 × 980 = 35.280 | 35.280/1.000.000 | 28,3 |
+| Đặc Biệt | 1 (khớp đúng thứ tự) | 1/1.000.000 | 1.000.000 |
+| Phụ Đặc Biệt | 1 (khớp ngược thứ tự) | 1/1.000.000 | 1.000.000 |
+| Nhất | 4 × 3 = 12 | 12/1.000.000 | 83.333 |
+| Nhì | 6 × 5 = 30 | 30/1.000.000 | 33.333 |
+| Ba | 8 × 7 = 56 | 56/1.000.000 | 17.857 |
+| Tư | 20 × 19 = 380 | 380/1.000.000 | 2.632 |
+| Năm | 2 × 2 × 1.000 = 4.000 | 4.000/1.000.000 | 250 |
+| Sáu | 2 × 18 × 1.000 = 36.000 | 36.000/1.000.000 | 27,8 |
 
-**So với Max 3D Plus**: Giải ĐB chỉ có **1 way** (ordered exact) thay vì 4 ways. Giải phụ ĐB thêm 1 way cho thứ tự ngược. Tổng 2 ways ĐB so với 4 ways ở Max 3D Plus, nhưng trả cao hơn nhiều (2 tỷ + 400 triệu).
+Đã kiểm chứng bằng enumeration đủ 1.000.000 cặp qua chính logic `matchPair()`.
+
+**RTP theo giá trị giải mặc định** (giá 10.000đ/cặp): CP kỳ vọng ≈ 5.504đ → RTP **55,04%**,
+biên gộp **44,96%**. Riêng giải ĐB đã chiếm 20% (2 tỷ × 1/1.000.000) — 1 cặp trúng ĐB "ăn"
+200.000 cặp bán ra, đây là lý do alert liability cặp là rủi ro số 1.
+
+**So với Max 3D Plus**: Giải ĐB chỉ có **1 way** (khớp đúng thứ tự) thay vì 2 ways như Max 3D+,
+nhưng thêm giải phụ ĐB 1 way cho thứ tự ngược. Tổng 2 ways ĐB/phụ ĐB, trả cao hơn nhiều
+(2 tỷ + 400 triệu so với 1 tỷ).
 
 ---
 

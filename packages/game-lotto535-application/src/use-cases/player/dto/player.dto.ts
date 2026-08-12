@@ -64,6 +64,12 @@ export interface PlayerGetJackpotOutput {
     splitThreshold: number;
     /** Phần trăm tiến trình (0-100) = (currentAmount / threshold) × 100. */
     percentage: number;
+    /**
+     * Jackpot đã chạm ngưỡng chia chưa (`currentAmount >= splitThreshold`).
+     * CHỈ phản ánh vế "đủ tiền" — chưa xét kỳ 21h hay có winner. Kỳ CHIA thực tế
+     * còn cần `drawNo = 2` (kỳ 21h) và không ai trúng Jackpot.
+     */
+    reachedSplitThreshold: boolean;
   };
 }
 
@@ -442,7 +448,9 @@ export interface PlayerComboPopularityInput {
  *
  * `sets` là tín hiệu THAM KHẢO (Jackpot chia theo TOÀN KỲ, không theo từng combo riêng lẻ).
  * `jackpotUnits` — CHỈ có khi tra bộ CHUẨN (5 chính + 1 ĐB) — là mẫu số CHIA thật khi bộ đó
- * trúng Jackpot: phần bạn nhận = `floor(pool / jackpotUnits) × betCount` của chính board bạn.
+ * trúng Jackpot. Công thức TẠM TÍNH số tiền nhận được: `floor(jackpotCurrentAmount /
+ * jackpotUnits) × betCount` (của chính board bạn) — con số TẠM TÍNH tại thời điểm tra, pool
+ * và `jackpotUnits` còn thay đổi đến giờ đóng bán, KHÔNG dùng để cam kết với player.
  * `splitEligibleDraw` mô tả cơ chế — KHÔNG có con số split dự tính trước giờ quay (cơ chế
  * riêng của Lotto 5/35, phụ thuộc kết quả quay).
  */
@@ -451,8 +459,6 @@ export interface PlayerComboPopularityOutput {
   found: boolean;
   /** Tổng số bộ mọi người cược combo này (Σ betCount). Chỉ có khi `found=true`. */
   sets?: number;
-  /** Giá 1 board (VND) theo config hiện tại = expandedLines × unitPrice. Chỉ khi `found=true`. */
-  boardPrice?: number;
   /**
    * Tổng đơn vị cược phủ bộ CHUẨN (5 chính + 1 ĐB) — mẫu số chia Jackpot khi bộ này trúng.
    * CHỈ có khi tra đúng bộ chuẩn (numbers.length===5 && specials.length===1). Giá trị tại
@@ -461,7 +467,7 @@ export interface PlayerComboPopularityOutput {
   jackpotUnits?: number;
   /**
    * Kỳ này có đủ điều kiện chia Jackpot (split cycle) nếu không ai trúng — copy nguyên
-   * điều kiện từ `isSplitCycleDraw` (JP ≥ ngưỡng, kỳ 21h). KHÔNG có con số dự tính: pool
+   * điều kiện từ `isSplitEligibleDraw` (JP ≥ ngưỡng, kỳ 21h). KHÔNG có con số dự tính: pool
    * chia tier1-5 theo đơn vị dự thưởng trúng từng tier — chỉ biết SAU khi quay; tiền chia
    * làm tròn xuống 5.000đ (trừ tier cao nhất nhận phần dư).
    */

@@ -95,22 +95,22 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
   {
     id: "doubleMatch",
     label: "Hai số trùng",
-    description: "2 trong 3 xúc xắc cùng giá trị · 1 mức thưởng",
+    description: "Số đã chọn xuất hiện ≥ 2 trong 3 xúc xắc · 1 mức thưởng",
     icon: <Dice2 className="size-3.5 text-white" />,
     badgeColor: "bg-purple-500",
     isSingleBet: true,
-    entries: [{ key: "win", label: "Trùng ≥2/3", desc: "ít nhất 2 số trùng số chọn" }],
+    entries: [{ key: "win", label: "Trùng ≥2/3", desc: "số đã chọn xuất hiện 2 hoặc 3 lần" }],
   },
   {
     id: "tripleMatch",
     label: "Ba số trùng",
-    description: "Cả 3 xúc xắc cùng giá trị · 2 mức thưởng",
+    description: "Cả 3 xúc xắc cùng giá trị — 2 cửa cược độc lập (Cụ thể / Bất kỳ)",
     icon: <Dice3 className="size-3.5 text-white" />,
     badgeColor: "bg-red-500",
     isSingleBet: false,
     entries: [
-      { key: "specific", label: "Cụ thể", desc: "3 số đều trùng 1 số cụ thể" },
-      { key: "any", label: "Bất kỳ", desc: "3 số giống nhau bất kỳ" },
+      { key: "specific", label: "Cụ thể", desc: "3 số đều trùng số đã chọn (1/216 = 0,46%)" },
+      { key: "any", label: "Bất kỳ", desc: "3 số giống nhau, bất kể số nào (6/216 = 2,78%)" },
     ],
   },
   {
@@ -132,14 +132,14 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
   {
     id: "bigSmallDraw",
     label: "Lớn / Hoà / Nhỏ",
-    description: "Tổng Lớn (≥12), Nhỏ (≤9), Hoà (10–11) · 3 mức thưởng",
+    description: "3 cửa cược độc lập — Lớn (≥12), Hoà (10–11), Nhỏ (≤9) · phủ kín 100% kết quả",
     icon: <Dice5 className="size-3.5 text-white" />,
     badgeColor: "bg-amber-500",
     isSingleBet: false,
     entries: [
-      { key: "big", label: "Lớn", desc: "tổng ≥ 12 (trừ bộ ba trùng)" },
-      { key: "small", label: "Nhỏ", desc: "tổng ≤ 9 (trừ bộ ba trùng)" },
-      { key: "draw", label: "Hoà", desc: "tổng 10 hoặc 11" },
+      { key: "big", label: "Lớn", desc: "tổng ≥ 12 (81/216 = 37,5%)" },
+      { key: "small", label: "Nhỏ", desc: "tổng ≤ 9 (81/216 = 37,5%)" },
+      { key: "draw", label: "Hoà", desc: "tổng 10 hoặc 11 (54/216 = 25%)" },
     ],
   },
 ];

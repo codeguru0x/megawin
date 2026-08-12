@@ -104,6 +104,7 @@ const kenoResult = await client.keno.placeBet({ ... });
 | `@megawin/player-sdk/max3d`    | Max 3D enums + types     |
 | `@megawin/player-sdk/max3dpro` | Max 3D Pro enums + types |
 | `@megawin/player-sdk/bingo18`  | Bingo 18 enums + types   |
+| `@megawin/player-sdk/game`     | Jackpot gộp cross-game   |
 
 ## Khởi tạo client
 
@@ -297,10 +298,11 @@ for (const ticket of pending.tickets) {
 ```typescript
 import type { Power655TicketPurchaseInput } from "@megawin/player-sdk/power655";
 
-// Lấy kỳ quay + Jackpot
+// Lấy kỳ quay + Jackpot (Power 6/55 có 2 mức: JP1 và JP2)
 const draw = await client.power655.getCurrentDraw();
 const jackpot = await client.power655.getJackpot();
-console.log(jackpot.currentAmount); // 45000000000
+console.log(jackpot.jackpot1CurrentAmount); // 45000000000 — JP1 (trùng 6/6)
+console.log(jackpot.jackpot2CurrentAmount); // 4500000000  — JP2 (trùng 5/6 + bonus)
 
 // Đặt cược — số dạng string zero-padded: "01"-"55"
 const result = await client.power655.placeBet({
@@ -363,6 +365,33 @@ const result = await client.bingo18.placeBet({
 });
 console.log(result.ticketId); // "TKT-..."
 console.log(result.totalAmount); // 20000
+```
+
+### `client.game` — Thao tác gộp cross-game
+
+#### `client.game.jackpots.list()` — Jackpot tất cả game
+
+Lấy jackpot hiện tại của tất cả game có jackpot (Lotto 5/35, Mega 6/45, Power 6/55) trong 1 request. Chỉ trả game đang có active cycle.
+
+Dữ liệu trả về ĐẦY ĐỦ như gọi `getJackpot()` của từng game — chỉ khác cách xếp: field chung (`cycleNo`, `drawCount`, `startDrawId`) nằm ở tầng ngoài, jackpot chính đổi tên thành `primaryAmount`, phần còn lại nằm trong `details`. Không cần gọi thêm API riêng để lấy chi tiết.
+
+```typescript
+const { jackpots } = await client.game.jackpots.list();
+
+for (const jp of jackpots) {
+  console.log(`${jp.displayName}: ${jp.primaryAmount.toLocaleString()} VND`);
+
+  // Narrow theo game để đọc field đặc thù
+  if (jp.gameProduct === "power655") {
+    console.log(`  JP2: ${jp.details.jackpot2CurrentAmount.toLocaleString()} VND`);
+  } else if (jp.gameProduct === "lotto535") {
+    const { percentage, reachedSplitThreshold } = jp.details.progress;
+    console.log(
+      `  Tiến trình chia: ${percentage}%`,
+      reachedSplitThreshold ? "(đã chạm ngưỡng)" : "",
+    );
+  }
+}
 ```
 
 ### `client.player` — Thông tin Player

@@ -12,8 +12,8 @@ Biến trang Vận hành Power 6/55 từ "~7 timer on-demand aggregation" thành
 |---|---|---|---|---|---|
 | p0-01-foundation-entities-config-indexes | P0 | ✅ done | ☐ chưa review | — | Entities 5 collection + `Power655OpsAlertType` + `GlobalConfigDoc.ops` + defaults + `POWER655_INDEXES` (thêm mới, xoá 3 index chết `drawDate`) |
 | p0-02-stats-worker | P0 | ✅ done | ☐ chưa review | 01 | Repos + mappers + accumulator + `SyncBettingStatsUseCase` + `EvaluateOpsAlertsUseCase` + handlers + `stats.yml` + serverless wiring. Test: 79 passed (7 files) — accumulator, evaluate-alerts, mapper, integration idempotency (R1/R5) |
-| p0-03-operations-api-ui | P0 | ⏳ pending | ☐ chưa review | 01, 02 | Snapshot/alerts/combo-lookup API + get-config merge default + tab config "Vận hành" + UI 1 nhịp chung + dead-code cleanup |
-| p1-01-combo-transparency | P1 | ⏳ pending | ☐ chưa review | 02, 03 | Minh bạch chia jackpot cho player (analysis §3.10): endpoint `combo-popularity` ownership-gated + player-sdk `getComboPopularity` + `jackpotUnits` cho bộ 6 số standard |
+| p0-03-operations-api-ui | P0 | ✅ done | ☐ chưa review | 01, 02 | Snapshot/alerts/combo-lookup API + get-config merge default + tab config "Vận hành" + UI 1 nhịp chung + dead-code cleanup — đã xác nhận code thật khớp plan (09/08) |
+| p1-01-combo-transparency | P1 | ✅ done | ☐ chưa review | 02, 03 | Minh bạch chia jackpot cho player (analysis §3.10): endpoint `combo-popularity` ownership-gated + player-sdk `getComboPopularity` + `jackpotUnits` cho bộ 6 số standard. Unit test 7 case đã viết (`get-combo-popularity.test.ts`) — check-types + lint pass; chưa chạy được integration thật trong sandbox (test-guard chặn MONGODB_URI dev-cluster, cần `ALLOW_DB_TESTS=true` cục bộ) |
 
 Status: ⏳ pending · 🔨 in-progress · ✅ done · ⏸️ blocked.
 Review: ☐ chưa review · 🔍 đang review · ☑ đã review — cột dành cho **agent review ĐỘC LẬP** (khác agent implement): chỉ tick ☑ sau khi chạy đủ 5 bước "Bước Review BẮT BUỘC" bên dưới và ghi bằng chứng vào cột Ghi chú. Agent implement KHÔNG tự tick cột này.

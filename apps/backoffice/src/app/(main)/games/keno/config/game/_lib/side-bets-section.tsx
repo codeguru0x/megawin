@@ -8,6 +8,7 @@ import {
   analyzeEvenOddProfitability,
   getBigSmallOdds,
   getEvenOddOdds,
+  type SideBetProfitAnalysis,
   TOTAL_OUTCOMES,
 } from "@megawin/game-keno/rules";
 import { formatNumber } from "@megawin/shared/utils";
@@ -66,6 +67,94 @@ const EO_FIELDS = [
   { key: "odd15Plus" as const, label: "Lẻ (≥15 số lẻ)" },
 ] as const;
 
+/**
+ * Một CỬA CƯỢC (thứ người chơi thực sự đặt) có thể thắng ở NHIỀU mức kết quả.
+ * Ví dụ: đặt "Lớn" thắng cả khi bigCount ≥ 13 (giải cao) và khi 11-12 (giải thấp).
+ *
+ * Vì vậy tỷ lệ trả thưởng THẬT của 1 cửa = TỔNG tỷ lệ các mức nó thắng.
+ * Nhóm dưới đây khớp 1:1 với các nhánh `matchBigSmallBet` / `matchEvenOddBet`.
+ */
+interface BetGroupDef {
+  /** Tên cửa cược hiển thị cho staff (đúng như player thấy khi đặt cược). */
+  label: string;
+  /** Các mức kết quả (key giải thưởng) mà cửa này được trả thưởng. */
+  keys: readonly string[];
+}
+
+/** Cửa cược Lớn/Nhỏ — "Hoà" là cửa riêng, KHÔNG trả cho cửa Lớn hay Nhỏ. */
+const BS_BETS: readonly BetGroupDef[] = [
+  { label: "Lớn", keys: ["big13Plus", "big1112"] },
+  { label: "Hoà L/N", keys: ["draw"] },
+  { label: "Nhỏ", keys: ["small13Plus", "small1112"] },
+];
+
+/** Cửa cược Chẵn/Lẻ — 5 cửa độc lập (Chẵn, Chẵn 11-12, Hoà, Lẻ 11-12, Lẻ). */
+const EO_BETS: readonly BetGroupDef[] = [
+  { label: "Chẵn", keys: ["even15Plus", "even1314"] },
+  { label: "Chẵn 11-12", keys: ["even1112"] },
+  { label: "Hoà C/L", keys: ["draw"] },
+  { label: "Lẻ 11-12", keys: ["odd1112"] },
+  { label: "Lẻ", keys: ["odd1314", "odd15Plus"] },
+];
+
+/** Tỷ lệ trả thưởng tổng hợp của 1 cửa cược. */
+interface BetSummary {
+  label: string;
+  /** RTP thật của cửa = Σ(xác suất × giải) các mức cửa này thắng, ÷ giá 1 line. */
+  payoutRatio: number;
+  /** Biên lợi nhuận kỳ vọng của cửa (%) = (1 − payoutRatio) × 100. */
+  marginPercent: number;
+}
+
+/**
+ * Gộp tỷ lệ trả thưởng của các mức kết quả về từng CỬA CƯỢC người chơi đặt.
+ *
+ * `tiers` đến từ `analyzeBigSmallProfitability` / `analyzeEvenOddProfitability`
+ * và có thứ tự trùng khớp với `fields` — map theo index để lấy ratio từng mức.
+ */
+function buildBetSummaries(
+  bets: readonly BetGroupDef[],
+  fields: readonly { key: string }[],
+  tiers: SideBetProfitAnalysis[],
+): BetSummary[] {
+  const ratioByKey = new Map<string, number>();
+  for (const [i, f] of fields.entries()) {
+    ratioByKey.set(f.key, tiers[i]?.payoutRatio ?? 0);
+  }
+
+  return bets.map((bet) => {
+    let payoutRatio = 0;
+    for (const key of bet.keys) {
+      payoutRatio += ratioByKey.get(key) ?? 0;
+    }
+    return { label: bet.label, payoutRatio, marginPercent: (1 - payoutRatio) * 100 };
+  });
+}
+
+/** Dải hiển thị RTP theo từng cửa cược — con số staff cần nhìn để quyết định giá giải. */
+function BetRtpStrip({ summaries }: { summaries: BetSummary[] }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-muted/30 px-2 py-1.5 text-xs">
+      <HeaderTooltip
+        label="Tỷ lệ TT theo cửa cược"
+        tip="Người chơi đặt theo CỬA (Lớn / Nhỏ / Hoà / Chẵn / Lẻ…), không đặt theo từng mức kết quả. Một cửa thắng ở nhiều mức nên RTP thật = TỔNG tỷ lệ các mức đó. Đây là con số quyết định lãi/lỗ, > 100% = LỖ."
+        className="font-medium text-muted-foreground"
+      />
+      {summaries.map((b) => (
+        <span
+          key={b.label}
+          className={cn(
+            "tabular-nums font-semibold",
+            b.payoutRatio > 1 ? "text-red-600" : b.payoutRatio > 0.8 ? "text-amber-600" : "text-emerald-600",
+          )}
+        >
+          {b.label}: {(b.payoutRatio * 100).toFixed(1)}%
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function BigSmallGroup({
   prizes,
   unitPrice,
@@ -79,8 +168,14 @@ function BigSmallGroup({
   const bsOdds = useMemo(() => getBigSmallOdds(), []);
   const analysis = useMemo(() => analyzeBigSmallProfitability(prizes, unitPrice), [prizes, unitPrice]);
 
-  const worstMargin = Math.min(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100));
-  const allSafe = analysis.tiers.every((t) => t.payoutRatio <= 1);
+  // Biên phải tính theo CỬA CƯỢC, không theo từng dòng kết quả: đặt "Lớn" được trả
+  // ở cả mức ≥13 và 11-12 → nhìn riêng từng dòng sẽ đánh giá THẤP hơn rủi ro thật.
+  const betSummaries = useMemo(() => buildBetSummaries(BS_BETS, BS_FIELDS, analysis.tiers), [analysis.tiers]);
+  const overBetCount = betSummaries.filter((b) => b.payoutRatio > 1).length;
+
+  const worstMargin = Math.min(...betSummaries.map((b) => b.marginPercent));
+  const bestMargin = Math.max(...betSummaries.map((b) => b.marginPercent));
+  const allSafe = overBetCount === 0;
 
   const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
@@ -113,7 +208,7 @@ function BigSmallGroup({
               ) : (
                 <TrendingDown className="mr-0.5 inline size-3" />
               )}
-              Biên thấp nhất: {worstMargin.toFixed(1)}%
+              Biên thấp nhất theo cửa: {worstMargin.toFixed(1)}%
             </span>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -125,6 +220,7 @@ function BigSmallGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
+          <BetRtpStrip summaries={betSummaries} />
           <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {" "}
             <span>Kết quả</span>
@@ -141,10 +237,14 @@ function BigSmallGroup({
             />
             <HeaderTooltip
               label="Tỷ lệ TT"
-              tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
+              tip="Tỷ lệ trả thưởng CỦA RIÊNG MỨC NÀY = CP kỳ vọng ÷ Giá 1 line. Cửa cược (Lớn/Nhỏ) thắng ở nhiều mức nên phải xem dải 'Tỷ lệ TT theo cửa cược' phía trên để biết rủi ro thật."
               className="justify-end"
             />
-            <HeaderTooltip label="Hoà vốn" tip="Giá trị giải thưởng tối đa để không lỗ." className="justify-end" />
+            <HeaderTooltip
+              label="Hoà vốn"
+              tip="Giá trị giải thưởng tối đa để RIÊNG mức này không lỗ. Cửa thắng nhiều mức thì phải hạ thấp hơn con số này."
+              className="justify-end"
+            />
           </div>
           {BS_FIELDS.map((f, i) => {
             const odds = bsOdds[f.key];
@@ -201,10 +301,7 @@ function BigSmallGroup({
           })}
           <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
             <span className="text-xs font-medium text-muted-foreground">
-              Tổng Lớn/Nhỏ ·{" "}
-              {analysis.tiers.filter((t) => t.payoutRatio > 1).length > 0
-                ? `${analysis.tiers.filter((t) => t.payoutRatio > 1).length} mức vượt hoà vốn`
-                : "Tất cả an toàn"}
+              Tổng Lớn/Nhỏ · {overBetCount > 0 ? `${overBetCount} cửa cược vượt hoà vốn` : "Tất cả cửa cược an toàn"}
             </span>
             <span className={cn("text-xs font-bold tabular-nums", marginColor)}>
               {allSafe ? (
@@ -212,8 +309,8 @@ function BigSmallGroup({
               ) : (
                 <TrendingDown className="mr-1 inline size-3" />
               )}
-              Biên: {worstMargin.toFixed(1)}%{" ~ "}
-              {Math.max(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)).toFixed(1)}%
+              Biên theo cửa: {worstMargin.toFixed(1)}%{" ~ "}
+              {bestMargin.toFixed(1)}%
             </span>
           </div>
         </div>
@@ -235,8 +332,14 @@ function EvenOddGroup({
   const eoOdds = useMemo(() => getEvenOddOdds(), []);
   const analysis = useMemo(() => analyzeEvenOddProfitability(prizes, unitPrice), [prizes, unitPrice]);
 
-  const worstMargin = Math.min(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100));
-  const allSafe = analysis.tiers.every((t) => t.payoutRatio <= 1);
+  // Cửa "Chẵn" thắng ở cả mức ≥15 và 13-14; cửa "Lẻ" đối xứng. Đánh giá theo cửa
+  // mới ra rủi ro thật — xem từng dòng riêng sẽ báo an toàn ảo.
+  const betSummaries = useMemo(() => buildBetSummaries(EO_BETS, EO_FIELDS, analysis.tiers), [analysis.tiers]);
+  const overBetCount = betSummaries.filter((b) => b.payoutRatio > 1).length;
+
+  const worstMargin = Math.min(...betSummaries.map((b) => b.marginPercent));
+  const bestMargin = Math.max(...betSummaries.map((b) => b.marginPercent));
+  const allSafe = overBetCount === 0;
 
   const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
@@ -269,7 +372,7 @@ function EvenOddGroup({
               ) : (
                 <TrendingDown className="mr-0.5 inline size-3" />
               )}
-              Biên thấp nhất: {worstMargin.toFixed(1)}%
+              Biên thấp nhất theo cửa: {worstMargin.toFixed(1)}%
             </span>
             {open ? (
               <ChevronUp className="size-4 text-muted-foreground" />
@@ -281,6 +384,7 @@ function EvenOddGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
+          <BetRtpStrip summaries={betSummaries} />
           <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {" "}
             <span>Kết quả</span>
@@ -297,10 +401,14 @@ function EvenOddGroup({
             />
             <HeaderTooltip
               label="Tỷ lệ TT"
-              tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
+              tip="Tỷ lệ trả thưởng CỦA RIÊNG MỨC NÀY = CP kỳ vọng ÷ Giá 1 line. Cửa Chẵn/Lẻ thắng ở nhiều mức nên phải xem dải 'Tỷ lệ TT theo cửa cược' phía trên để biết rủi ro thật."
               className="justify-end"
             />
-            <HeaderTooltip label="Hoà vốn" tip="Giá trị giải thưởng tối đa để không lỗ." className="justify-end" />
+            <HeaderTooltip
+              label="Hoà vốn"
+              tip="Giá trị giải thưởng tối đa để RIÊNG mức này không lỗ. Cửa thắng nhiều mức thì phải hạ thấp hơn con số này."
+              className="justify-end"
+            />
           </div>
           {EO_FIELDS.map((f, i) => {
             const odds = eoOdds[f.key];
@@ -357,10 +465,7 @@ function EvenOddGroup({
           })}
           <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
             <span className="text-xs font-medium text-muted-foreground">
-              Tổng Chẵn/Lẻ ·{" "}
-              {analysis.tiers.filter((t) => t.payoutRatio > 1).length > 0
-                ? `${analysis.tiers.filter((t) => t.payoutRatio > 1).length} mức vượt hoà vốn`
-                : "Tất cả an toàn"}
+              Tổng Chẵn/Lẻ · {overBetCount > 0 ? `${overBetCount} cửa cược vượt hoà vốn` : "Tất cả cửa cược an toàn"}
             </span>
             <span className={cn("text-xs font-bold tabular-nums", marginColor)}>
               {allSafe ? (
@@ -368,8 +473,8 @@ function EvenOddGroup({
               ) : (
                 <TrendingDown className="mr-1 inline size-3" />
               )}
-              Biên: {worstMargin.toFixed(1)}%{" ~ "}
-              {Math.max(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)).toFixed(1)}%
+              Biên theo cửa: {worstMargin.toFixed(1)}%{" ~ "}
+              {bestMargin.toFixed(1)}%
             </span>
           </div>
         </div>

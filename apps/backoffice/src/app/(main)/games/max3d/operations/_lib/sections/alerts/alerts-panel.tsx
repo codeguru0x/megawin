@@ -108,7 +108,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
     case Max3dOpsAlertType.ExposureThreshold: {
       const worst = toNum(payload.worstCaseTotal);
       return {
-        summary: `Worst-case tổng ${formatNumber(worst)} VND vượt ngưỡng ${formatNumber(toNum(payload.threshold))} VND (basic chính xác + cặp ĐB + đuôi plus ước tính).`,
+        summary: `Worst-case tổng ${formatNumber(worst)} VND vượt ngưỡng ${formatNumber(toNum(payload.threshold))} VND (basic chính xác + cặp ĐB + giải nhỏ Năm/Sáu ước tính).`,
         chips: [
           { label: "Worst-case tổng", value: `${formatNumber(worst)} VND`, danger: true },
           { label: "Basic (exact)", value: `${formatNumber(toNum(payload.basicWorstCase))} VND` },
@@ -118,7 +118,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
             danger: true,
           },
           {
-            label: "Đuôi plus (ước tính)",
+            label: "Giải Năm/Sáu (ước tính)",
             value: `${formatNumber(toNum(payload.plusTailProxy))} VND`,
           },
           { label: "Doanh thu kỳ", value: `${formatNumber(toNum(payload.revenue))} VND` },
@@ -129,7 +129,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
       const liability = toNum(payload.liability);
       const units = toNum(payload.units);
       return {
-        summary: `Cặp ${String(payload.triplet1)}–${String(payload.triplet2)} tích luỹ liability ĐB ${formatNumber(liability)} VND (${formatNumber(units)} bộ × 1 tỷ — KHÔNG có cap).`,
+        summary: `Cặp ${String(payload.triplet1)}–${String(payload.triplet2)} tích luỹ liability ĐB ${formatNumber(liability)} VND (${formatNumber(units)} bộ × giải ĐB Max 3D+ — KHÔNG có cap).`,
         chips: [
           { label: "Cặp", value: `${String(payload.triplet1)} – ${String(payload.triplet2)}` },
           { label: "Liability ĐB", value: `${formatNumber(liability)} VND`, danger: true },
@@ -195,7 +195,7 @@ function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<
             {e.potentialWin > 0 && (
               <span
                 className="text-[11px] tabular-nums text-red-500/80 shrink-0"
-                title="Rủi ro chi trả nếu trúng (ước tính — Σ max/board)"
+                title="Ước tính chi trả nếu trúng ĐB — Σ giải ĐB mỗi board, chưa cộng các giải nhỏ trúng kèm"
               >
                 ⚠ {formatNumber(e.potentialWin)}
               </span>

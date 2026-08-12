@@ -97,6 +97,13 @@ export abstract class ApiGatewayUseCase<I, O> {
 
   protected abstract execute(input: I): Promise<O>;
 
+  /**
+   * Chạy use-case trả thẳng ApiGatewayResponse (HTTP envelope) — dùng cho handler HTTP.
+   *
+   * Cần output RAW (compose từ use-case khác) thì KHÔNG dùng method này: tách logic ra
+   * `InternalUseCase` rồi cho ApiGateway use-case delegate — xem `GetJackpotPlayerUseCase`
+   * / `GetJackpotPlayerInternalUseCase` của các game jackpot.
+   */
   async run(input: I): Promise<ApiGatewayResponse> {
     try {
       const validationError = this.validate(input);

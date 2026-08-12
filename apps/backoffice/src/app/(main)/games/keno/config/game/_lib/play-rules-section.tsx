@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
+import { computeDrawsPerDay, HHMM_PATTERN } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -16,8 +17,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import type { KenoGameConfig } from "./use-game-config";
 
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-
 const playFormSchema = z
   .object({
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
@@ -31,8 +30,8 @@ const playFormSchema = z
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
     drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
-    firstDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-    lastDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    firstDrawTime: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
+    lastDrawTime: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
   })
   .refine((data) => data.maxBetCount >= data.minBetCount, {
     message: "Số lần tối đa phải ≥ số lần tối thiểu",
@@ -96,6 +95,12 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     });
   }
 
+  const drawsPerDay = computeDrawsPerDay(
+    form.watch("firstDrawTime"),
+    form.watch("lastDrawTime"),
+    form.watch("drawIntervalMinutes") || 0,
+  );
+
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
@@ -119,7 +124,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
                           label="Giá mỗi lượt chơi"
-                          tip="Giá 1 cách chơi × 1 lần tham gia dự thưởng (1 betCount × 1 board). Tiền thưởng trả theo bội số giá này."
+                          tip="Giá cho 1 panel × 1 lượt tham gia dự thưởng. Tổng tiền vé = giá này × số panel × số lượt × số kỳ. Tiền thưởng trả theo bội số giá này."
                         />
                       </FormLabel>
                       <FormControl>
@@ -151,7 +156,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip={`Số panel (A, B, C) tối đa trên 1 vé. Mỗi panel chơi 1 cách độc lập — pick1–10, lớn/nhỏ, chẵn/lẻ. Không được cấu hình vượt quá ${KENO_MAX_BOARDS} (hard cap toàn hệ thống).`}
+                            tip={`Số panel (A, B, C, …) tối đa trên 1 vé — tối đa hiện cấu hình là ${form.watch("maxBasicBoardsPerTicket") || 0} panel. Mỗi panel chơi 1 cách độc lập: chọn 1–10 số, hoặc Lớn/Nhỏ, hoặc Chẵn/Lẻ. Không được cấu hình vượt ${KENO_MAX_BOARDS} (trần cứng toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -177,7 +182,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Kỳ liên tiếp tối đa"
-                            tip="Mua 1 vé đăng ký tham gia tối đa bao nhiêu kỳ Keno liên tiếp. Keno cho phép tối đa 20 kỳ."
+                            tip="Mua 1 vé đăng ký tham gia tối đa bao nhiêu kỳ Keno liên tiếp. Vietlott quy định tối đa 20 kỳ; hệ thống không ép buộc giá trị này."
                           />
                         </FormLabel>
                         <FormControl>
@@ -203,7 +208,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Đóng bán trước"
-                            tip="Ngừng nhận vé trước giờ quay số bao nhiêu giây. Keno dùng đơn vị giây vì kỳ quay ngắn (8 phút/kỳ)."
+                            tip={`Ngừng nhận vé trước giờ quay số bao nhiêu giây. Keno dùng đơn vị giây vì kỳ quay rất ngắn (hiện ${form.watch("drawIntervalMinutes") || 0} phút/kỳ).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -258,7 +263,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số lượt tối đa"
-                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với betCount=10 nhận 10× giải thưởng."
+                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với 10 lượt nhận 10× giải thưởng."
                           />
                         </FormLabel>
                         <FormControl>
@@ -284,7 +289,14 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Keno quay liên tục trong ngày — ~120 kỳ/ngày theo khoảng cách cố định.
+                    Keno quay liên tục trong ngày theo khoảng cách cố định
+                    {drawsPerDay !== null ? (
+                      <>
+                        {" — với cấu hình hiện tại: "}
+                        <strong>{drawsPerDay} kỳ/ngày</strong>
+                      </>
+                    ) : null}
+                    .
                   </p>
                 </div>
 

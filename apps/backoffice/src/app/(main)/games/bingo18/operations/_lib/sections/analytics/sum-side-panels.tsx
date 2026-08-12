@@ -7,7 +7,7 @@
  * bucket 3/18 nhân ×120 → viền đỏ nhạt; vượt `bucketConcentrationAmount` → amber + badge.
  * SideBetCard: split bar 3 đoạn theo amount; hướng ≥ `sidebetSkewPct` → amber + badge
  * "lệch X%". Ngưỡng từ `snapshot.thresholds` — KHÔNG hardcode (fallback loading ở caller).
- * Chú thích xác suất nền KHÔNG đối xứng (Nhỏ 49,07% · Hòa 25% · Lớn 25,93%).
+ * Chú thích xác suất nền đối xứng (Nhỏ 37,50% · Hòa 25,00% · Lớn 37,50%).
  */
 
 import { memo } from "react";
@@ -140,9 +140,9 @@ export function SideBetCard({
   skewPct: number;
 }) {
   const dirs = [
-    { key: "small", label: split.small.label, amount: split.small.amount, base: "49,07%" },
+    { key: "small", label: split.small.label, amount: split.small.amount, base: "37,50%" },
     { key: "draw", label: split.draw.label, amount: split.draw.amount, base: "25,00%" },
-    { key: "big", label: split.big.label, amount: split.big.amount, base: "25,93%" },
+    { key: "big", label: split.big.label, amount: split.big.amount, base: "37,50%" },
   ] as const;
 
   const pctOf = (amount: number) => (split.total > 0 ? (amount / split.total) * 100 : 0);

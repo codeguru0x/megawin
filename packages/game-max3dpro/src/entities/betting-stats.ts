@@ -12,7 +12,7 @@
  *   `max3dpro_draw_pair_stats` (`Max3dproDrawPairStatsDoc`) để không phình theo không gian
  *   10⁶ cặp và không drift; tầng đọc derive `topPairs` từ đó (p0-01 §1).
  * - `tripletStakes` đơn giản (units/amount/boards per triplet distinct) — histogram +
- *   cơ sở proxy đuôi giải đơn Năm/Sáu (tier duy nhất tính theo triplet đơn).
+ *   cơ sở proxy giải nhỏ nhóm đơn Năm/Sáu (tier duy nhất tính theo triplet đơn).
  * - KHÔNG lưu `exposure` trong doc (hàm thuần tầng đọc — bài học Keno Risk #4).
  * - KHÔNG lưu `topAccounts` trong doc — dời sang `max3dpro_draw_account_stats` (p0-01 §1).
  */
@@ -53,7 +53,7 @@ export interface Max3dproByPlayType {
   multiDigit: Max3dproPlayTypeStat;
 }
 
-/** Stake tích luỹ trên 1 triplet distinct xuất hiện trong board (histogram + đuôi Năm/Sáu). */
+/** Stake tích luỹ trên 1 triplet distinct xuất hiện trong board (histogram + giải nhỏ Năm/Sáu). */
 export interface Max3dproTripletStake {
   /** Σ betCount các board chứa triplet này. */
   units: number;
@@ -88,9 +88,10 @@ export interface Max3dproTopPair {
 }
 
 /**
- * 1 vé nguy hiểm nhất theo potentialWin — PROXY thiên cao (chốt §7 Q5):
+ * 1 vé nguy hiểm nhất theo potentialWin — ƯỚC TÍNH để XẾP HẠNG (chốt §7 Q5):
  * `(special + specialSub) × betCount` mỗi board (multiNumber chứa mọi ordered pair
- * của tập chọn → gần như luôn có cả 2 chiều của cặp ĐB).
+ * của tập chọn → gần như luôn có cả 2 chiều của cặp ĐB). Chưa cộng các giải nhỏ trúng
+ * kèm (Tư/Năm) nên KHÔNG phải trần tuyệt đối.
  */
 export interface Max3dproTopPotential {
   /** ID entry (hex string). */
@@ -101,7 +102,7 @@ export interface Max3dproTopPotential {
   username: string;
   /** Tổng tiền cược của entry (VND). */
   amount: number;
-  /** Worst-case entry này trả (VND) — proxy, ghi rõ "ước tính" trên UI. */
+  /** Ước tính entry này trả nếu trúng ĐB (VND) — Σ (ĐB + phụ ĐB)/board, UI ghi "ước tính". */
   potentialWin: number;
 }
 
@@ -123,7 +124,7 @@ export interface Max3dproDrawBettingStatsDoc extends DrawBettingStatsBase {
   /** Stake per-triplet SPARSE — key "000".."999" chỉ chứa triplet có cược. */
   tripletStakes: Record<string, Max3dproTripletStake>;
 
-  /** Top entry nguy hiểm nhất theo potentialWin (proxy), sort desc — cắt `topPotentialK`. */
+  /** Top entry nguy hiểm nhất theo potentialWin (ước tính), sort desc — cắt `topPotentialK`. */
   topPotential: Max3dproTopPotential[];
 }
 

@@ -16,8 +16,9 @@ describe("FeedSyncCursorMapper", () => {
     const doc = {
       _id: oid,
       lastVersion: Long.fromString("42"),
-      gameId: "keno",
+      gameProduct: "keno",
       updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+      lockedUntil: null,
     };
 
     const entity = new FeedSyncCursorMapper().mapOne(doc);
@@ -27,5 +28,7 @@ describe("FeedSyncCursorMapper", () => {
     expect(entity!.lastVersion).toBe("42");
     expect(entity!.gameProduct).toBe("keno");
     expect(entity!.updatedAt).toBeInstanceOf(Date);
+    // Field không nằm trong danh sách chuyển đổi phải giữ nguyên giá trị (null vẫn null).
+    expect(entity!.lockedUntil).toBeNull();
   });
 });

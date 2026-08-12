@@ -1,7 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KenoOpsAlertType, OpsAlertSeverity } from "@megawin/game-keno/entities";
+import { KenoOpsAlertType, OpsAlertSeverity, type PayoutCaps } from "@megawin/game-keno/entities";
+import { formatNumber } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { BellOff, Coins, HelpCircle, Layers, type LucideIcon, Save, ShieldAlert, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -56,49 +59,57 @@ interface AlertMeta {
 /**
  * Danh sách alert bật/tắt ở P0 (bỏ `RevenueAnomaly`/`SettleStuck` để dành).
  * Thứ tự = mức nghiêm trọng giảm dần để người vận hành quét từ trên xuống.
+ *
+ * Nhận `caps` để mô tả ngưỡng bằng SỐ THẬT đang cấu hình (tab Giới hạn chi trả),
+ * tránh ghi cứng "50/12/5 bộ" hay "10 tỷ" — staff đổi cap mà tooltip vẫn đúng.
  */
-const ALERT_META: AlertMeta[] = [
-  {
-    type: KenoOpsAlertType.ExposureThreshold,
-    label: "Rủi ro chi trả",
-    icon: ShieldAlert,
-    severity: OpsAlertSeverity.Critical,
-    summary: "Worst-case payout chạm % cap kỳ (theo 'Exposure cảnh báo').",
-    tip: "Ý nghĩa: khi tổng worst-case payout của kỳ chạm % cap (maxPerDraw) → bắn alert. · Ngưỡng liên quan: 'Exposure cảnh báo (%)' ở trên. · Tác động khi TẮT: không còn cảnh báo rủi ro trả thưởng vượt cap — chỉ tắt khi thật sự chấp nhận theo dõi thủ công.",
-  },
-  {
-    type: KenoOpsAlertType.CapSetsNear,
-    label: "Gần chạm cap",
-    icon: Layers,
-    severity: OpsAlertSeverity.Critical,
-    summary: "Số bộ pick8/9/10 gần ngưỡng chuyển sang chia đều 10 tỷ.",
-    tip: "Ý nghĩa: số bộ cappable (pick8/9/10) trong kỳ ≥ ngưỡng cảnh báo → bắn alert trước khi chạm cap thật (50/12/5 bộ). · Ngưỡng liên quan: nhóm 'Số bộ gần cap' ở trên. · Tác động khi TẮT: không được báo trước khi kỳ sắp chuyển sang chia đều 10 tỷ.",
-  },
-  {
-    type: KenoOpsAlertType.LargeBet,
-    label: "Cược lớn",
-    icon: Coins,
-    severity: OpsAlertSeverity.Warning,
-    summary: "Entry có tổng tiền ≥ ngưỡng 'Ngưỡng cược lớn'.",
-    tip: "Ý nghĩa: entry có tổng tiền cược ≥ giá trị 'Ngưỡng cược lớn' → đánh dấu và bắn alert. · Ngưỡng liên quan: 'Ngưỡng cược lớn (VND)' ở trên. · Tác động khi TẮT: không còn nổi bật các vé giá trị lớn — mất tín hiệu sớm về dòng tiền bất thường.",
-  },
-  {
-    type: KenoOpsAlertType.SidebetSkew,
-    label: "Lệch side bet",
-    icon: ShieldAlert,
-    severity: OpsAlertSeverity.Warning,
-    summary: "Một hướng cược bổ sung chiếm ≥ % tổng cặp (theo 'Lệch side bet').",
-    tip: "Ý nghĩa: khi 1 hướng cược bổ sung (lớn/nhỏ, chẵn/lẻ) chiếm ≥ % tổng tiền của cặp → bắn alert. · Ngưỡng liên quan: 'Lệch side bet (%)' ở trên. · Tác động khi TẮT: không phát hiện dòng tiền dồn lệch 1 hướng side bet.",
-  },
-  {
-    type: KenoOpsAlertType.ComboConcentration,
-    label: "Dồn bộ số",
-    icon: Users,
-    severity: OpsAlertSeverity.Warning,
-    summary: "Nhiều account cùng cược 1 bộ số cappable (nghi syndicate).",
-    tip: "Ý nghĩa: số account distinct cùng cược 1 bộ số cappable ≥ ngưỡng → bắn alert (nghi mua chung/syndicate). · Ngưỡng liên quan: 'Số người dồn 1 bộ số' ở trên. · Tác động khi TẮT: không phát hiện hành vi gom bộ số phối hợp.",
-  },
-];
+function buildAlertMeta(caps: PayoutCaps): AlertMeta[] {
+  const capTotal = caps.pick8MaxPerDraw + caps.pick9MaxPerDraw + caps.pick10MaxPerDraw;
+  const setsText = `${formatNumber(caps.pick8MaxSetsForFixed)}/${formatNumber(caps.pick9MaxSetsForFixed)}/${formatNumber(caps.pick10MaxSetsForFixed)} bộ`;
+
+  return [
+    {
+      type: KenoOpsAlertType.ExposureThreshold,
+      label: "Rủi ro chi trả",
+      icon: ShieldAlert,
+      severity: OpsAlertSeverity.Critical,
+      summary: "Tiền có thể phải trả của kỳ chạm % giới hạn chi trả (theo 'Exposure cảnh báo').",
+      tip: `Ý nghĩa: tổng tiền phải trả trong tình huống xấu nhất của kỳ chạm % giới hạn chi trả → bắn alert. Mẫu số = tổng giới hạn chi trả 3 bậc cao (pick8 + pick9 + pick10) = ${formatNumber(capTotal)} VND. · Ngưỡng liên quan: 'Exposure cảnh báo (%)' ở trên. · Tác động khi TẮT: không còn cảnh báo khi tiền phải trả tiến gần giới hạn — chỉ tắt khi chấp nhận theo dõi thủ công.`,
+    },
+    {
+      type: KenoOpsAlertType.CapSetsNear,
+      label: "Gần chạm cap",
+      icon: Layers,
+      severity: OpsAlertSeverity.Critical,
+      summary: "Số bộ pick8/9/10 gần ngưỡng chuyển sang chia đều quỹ giới hạn.",
+      tip: `Ý nghĩa: số bộ cappable (pick8/9/10) trong kỳ ≥ ngưỡng cảnh báo → bắn alert TRƯỚC khi chạm giới hạn thật (${setsText}). Vượt giới hạn thì bậc đó không trả giải cố định nữa mà chia đều quỹ giới hạn của bậc. · Ngưỡng liên quan: nhóm 'Số bộ gần cap' ở trên. · Tác động khi TẮT: không được báo trước khi kỳ sắp chuyển sang chia đều.`,
+    },
+    {
+      type: KenoOpsAlertType.LargeBet,
+      label: "Cược lớn",
+      icon: Coins,
+      severity: OpsAlertSeverity.Warning,
+      summary: "Entry có tổng tiền ≥ ngưỡng 'Ngưỡng cược lớn'.",
+      tip: "Ý nghĩa: entry có tổng tiền cược ≥ giá trị 'Ngưỡng cược lớn' → đánh dấu và bắn alert. · Ngưỡng liên quan: 'Ngưỡng cược lớn (VND)' ở trên. · Tác động khi TẮT: không còn nổi bật các vé giá trị lớn — mất tín hiệu sớm về dòng tiền bất thường.",
+    },
+    {
+      type: KenoOpsAlertType.SidebetSkew,
+      label: "Lệch side bet",
+      icon: ShieldAlert,
+      severity: OpsAlertSeverity.Warning,
+      summary: "Một hướng cược bổ sung chiếm ≥ % tổng tiền của cặp (theo 'Lệch side bet').",
+      tip: "Ý nghĩa: khi 1 hướng cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ) chiếm ≥ % tổng tiền của cặp → bắn alert. · Ngưỡng liên quan: 'Lệch side bet (%)' ở trên. · Tác động khi TẮT: không phát hiện dòng tiền dồn lệch 1 hướng side bet.",
+    },
+    {
+      type: KenoOpsAlertType.ComboConcentration,
+      label: "Dồn bộ số",
+      icon: Users,
+      severity: OpsAlertSeverity.Warning,
+      summary: "Nhiều account cùng cược 1 bộ số cappable (nghi syndicate).",
+      tip: "Ý nghĩa: số account khác nhau cùng cược 1 bộ số cappable ≥ ngưỡng → bắn alert (nghi mua chung/syndicate). · Ngưỡng liên quan: 'Số người dồn 1 bộ số' ở trên. · Tác động khi TẮT: không phát hiện hành vi gom bộ số phối hợp.",
+    },
+  ];
+}
 
 // Range PHẢI khớp Zod server (`api/keno/config/_lib/schema.ts` §ops).
 const opsFormSchema = z.object({
@@ -252,6 +263,10 @@ function AlertToggleRow({
 
 export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   const { alerts, stats } = config.ops;
+  const caps = config.payoutCaps;
+
+  // Tooltip alert phải phản ánh cap ĐANG cấu hình, không phải số ghi cứng lúc viết UI.
+  const alertMeta = useMemo(() => buildAlertMeta(caps), [caps]);
 
   const form = useForm<OpsFormValues>({
     resolver: zodResolver(opsFormSchema) as never,
@@ -297,7 +312,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   }
 
   const enabled = form.watch("enabled");
-  const enabledCount = ALERT_META.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
+  const enabledCount = alertMeta.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -320,7 +335,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                   name="largeBetAmount"
                   label="Ngưỡng cược lớn"
                   suffix="VND"
-                  tip="Ý nghĩa: entry có tổng tiền ≥ giá trị này bị đánh dấu 'cược lớn' và tính vào alert large_bet. · Hợp lệ: số nguyên > 0. · Mặc định: 5.000.000. · Tác động: hạ ngưỡng → nhiều entry bị coi là lớn hơn; hiệu lực trong ~1 chu kỳ worker."
+                  tip="Ý nghĩa: entry có tổng tiền ≥ giá trị này bị đánh dấu 'cược lớn' và tính vào alert 'Cược lớn'. · Hợp lệ: số nguyên > 0. · Mặc định: 5.000.000. · Tác động: hạ ngưỡng → nhiều entry bị coi là lớn hơn; hiệu lực trong ~1 chu kỳ worker."
                 />
 
                 <div className="grid grid-cols-2 gap-3">
@@ -329,14 +344,14 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                     name="exposureWarnPct"
                     label="Exposure cảnh báo"
                     suffix="%"
-                    tip="Ý nghĩa: khi tổng worst-case payout chạm % này của cap kỳ (maxPerDraw) → alert exposure_threshold. · Hợp lệ: số nguyên 0–100. · Mặc định: 60. · Tác động: giảm → cảnh báo sớm hơn khi rủi ro trả thưởng tăng."
+                    tip={`Ý nghĩa: khi tổng tiền phải trả trong tình huống xấu nhất của kỳ chạm % này của giới hạn chi trả → bắn alert 'Rủi ro chi trả'. Mẫu số = tổng giới hạn chi trả 3 bậc cao (pick8 + pick9 + pick10) = ${formatNumber(caps.pick8MaxPerDraw + caps.pick9MaxPerDraw + caps.pick10MaxPerDraw)} VND, cấu hình ở tab Giới hạn chi trả. · Hợp lệ: số nguyên 0–100. · Mặc định: 60. · Tác động: giảm → cảnh báo sớm hơn khi rủi ro trả thưởng tăng.`}
                   />
                   <IntField
                     form={form}
                     name="sidebetSkewPct"
                     label="Lệch side bet"
                     suffix="%"
-                    tip="Ý nghĩa: khi 1 hướng cược bổ sung (lớn/nhỏ, chẵn/lẻ) chiếm ≥ % này tổng tiền cặp → alert sidebet_skew. · Hợp lệ: số nguyên 0–100. · Mặc định: 70. · Tác động: giảm → nhạy hơn với dòng tiền dồn 1 hướng."
+                    tip="Ý nghĩa: khi 1 hướng cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ) chiếm ≥ % này tổng tiền của cặp → bắn alert 'Lệch side bet'. · Hợp lệ: số nguyên 0–100. · Mặc định: 70. · Tác động: giảm → nhạy hơn với dòng tiền dồn 1 hướng."
                   />
                 </div>
 
@@ -349,19 +364,19 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                       form={form}
                       name="comboSetsWarnPick8"
                       label="Pick 8"
-                      tip="Ý nghĩa: số bộ pick8 trong kỳ ≥ giá trị này → alert cap_sets_near. Cap thật 50 bộ (vượt → chia đều 10 tỷ). · Hợp lệ: số nguyên > 0. · Mặc định: 40. · Tác động: đặt gần cap để biết sớm khi sắp chuyển chia đều."
+                      tip={`Ý nghĩa: số bộ pick8 trong kỳ ≥ giá trị này → bắn alert 'Gần chạm cap'. Giới hạn thật đang cấu hình: ${formatNumber(caps.pick8MaxSetsForFixed)} bộ (vượt → chia đều ${formatNumber(caps.pick8MaxPerDraw)} VND). · Hợp lệ: số nguyên > 0. · Mặc định: 40. · Tác động: đặt gần giới hạn để biết sớm khi sắp chuyển chia đều.`}
                     />
                     <IntField
                       form={form}
                       name="comboSetsWarnPick9"
                       label="Pick 9"
-                      tip="Ý nghĩa: số bộ pick9 ≥ giá trị này → alert cap_sets_near. Cap thật 12 bộ. · Hợp lệ: số nguyên > 0. · Mặc định: 10. · Tác động: cảnh báo trước khi chạm cap 12."
+                      tip={`Ý nghĩa: số bộ pick9 ≥ giá trị này → bắn alert 'Gần chạm cap'. Giới hạn thật đang cấu hình: ${formatNumber(caps.pick9MaxSetsForFixed)} bộ (vượt → chia đều ${formatNumber(caps.pick9MaxPerDraw)} VND). · Hợp lệ: số nguyên > 0. · Mặc định: 10. · Tác động: cảnh báo trước khi chạm giới hạn.`}
                     />
                     <IntField
                       form={form}
                       name="comboSetsWarnPick10"
                       label="Pick 10"
-                      tip="Ý nghĩa: số bộ pick10 ≥ giá trị này → alert cap_sets_near. Cap thật 5 bộ. · Hợp lệ: số nguyên > 0. · Mặc định: 4. · Tác động: cảnh báo trước khi chạm cap 5."
+                      tip={`Ý nghĩa: số bộ pick10 ≥ giá trị này → bắn alert 'Gần chạm cap'. Giới hạn thật đang cấu hình: ${formatNumber(caps.pick10MaxSetsForFixed)} bộ (vượt → chia đều ${formatNumber(caps.pick10MaxPerDraw)} VND). · Hợp lệ: số nguyên > 0. · Mặc định: 4. · Tác động: cảnh báo trước khi chạm giới hạn.`}
                     />
                   </div>
                 </div>
@@ -371,7 +386,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                   name="comboAccountsWarn"
                   label="Số người dồn 1 bộ số"
                   suffix="người"
-                  tip="Ý nghĩa: số account distinct cùng cược 1 bộ số cappable ≥ giá trị này → alert combo_concentration (nghi syndicate). · Hợp lệ: số nguyên > 0. · Mặc định: 5. · Tác động: giảm → nhạy hơn với hành vi mua chung."
+                  tip="Ý nghĩa: số account khác nhau cùng cược 1 bộ số cappable ≥ giá trị này → bắn alert 'Dồn bộ số' (nghi mua chung/syndicate). · Hợp lệ: số nguyên > 0. · Mặc định: 5. · Tác động: giảm → nhạy hơn với hành vi mua chung."
                 />
 
                 <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
@@ -390,7 +405,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                       </Tooltip>
                     </p>
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                      {enabledCount}/{ALERT_META.length} đang bật
+                      {enabledCount}/{alertMeta.length} đang bật
                     </span>
                   </div>
 
@@ -402,7 +417,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                   ) : null}
 
                   <div className="space-y-2">
-                    {ALERT_META.map((meta) => (
+                    {alertMeta.map((meta) => (
                       <AlertToggleRow
                         key={meta.type}
                         meta={meta}

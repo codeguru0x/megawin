@@ -123,3 +123,7 @@ Unit tests viết mới (`test/use-cases/get-combo-popularity.test.ts` — stagi
 ## Định nghĩa Done
 
 Player xem được độ đông bộ số **đã cược** (+ `jackpotUnits` nếu standard, khớp công thức chia SAU fix Q3), combo lạ luôn `{found:false}` đồng nhất, SDK JSDoc + CHANGELOG đầy đủ (TypeDoc sạch), không rò dữ liệu, unit test 8 case pass. Cập nhật `00-overview.md`.
+
+## Cập nhật sau review (09/08)
+
+**Bỏ `boardPrice` khỏi response** (đảo ngược thiết kế ở trên) — player chỉ cần biết "trúng thì được bao nhiêu", `boardPrice` không trả lời câu đó. Response giờ chỉ còn `{found, sets?, jackpotUnits?}`. JSDoc hướng dẫn công thức tạm tính: `Math.floor(currentAmount / jackpotUnits) × betCount` (lấy `currentAmount` từ `client.mega645.getJackpot()`). Đồng bộ cùng quyết định với Power 6/55 và Lotto 5/35 — xem chi tiết ở `power655-ops-risk-control/p1-01-combo-transparency.plan.md` §"Cập nhật sau review".

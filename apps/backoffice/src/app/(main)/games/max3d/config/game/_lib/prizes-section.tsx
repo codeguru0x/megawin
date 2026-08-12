@@ -170,7 +170,7 @@ const PLUS_FIELDS = [
     key: "plusSpecial" as const,
     tier: "special" as const,
     label: "Giải Đặc Biệt",
-    desc: "2 bộ đều trùng 2 bộ ĐB",
+    desc: "2 bộ khớp đủ 2 bộ ĐB",
     badge: "ĐB",
     color: "bg-red-600 text-white",
   },
@@ -178,7 +178,7 @@ const PLUS_FIELDS = [
     key: "plusFirst" as const,
     tier: "first" as const,
     label: "Giải Nhất",
-    desc: "2 bộ đều trùng trong 4 bộ Nhất",
+    desc: "2 bộ khớp 2 bộ Nhất riêng biệt",
     badge: "1st",
     color: "bg-amber-500 text-white",
   },
@@ -186,7 +186,7 @@ const PLUS_FIELDS = [
     key: "plusSecond" as const,
     tier: "second" as const,
     label: "Giải Nhì",
-    desc: "2 bộ đều trùng trong 6 bộ Nhì",
+    desc: "2 bộ khớp 2 bộ Nhì riêng biệt",
     badge: "2nd",
     color: "bg-slate-400 text-white",
   },
@@ -194,7 +194,7 @@ const PLUS_FIELDS = [
     key: "plusThird" as const,
     tier: "third" as const,
     label: "Giải Ba",
-    desc: "2 bộ đều trùng trong 8 bộ Ba",
+    desc: "2 bộ khớp 2 bộ Ba riêng biệt",
     badge: "3rd",
     color: "bg-amber-700 text-white",
   },
@@ -202,7 +202,7 @@ const PLUS_FIELDS = [
     key: "plusFourth" as const,
     tier: "fourth" as const,
     label: "Giải Tư",
-    desc: "2 bộ trùng bất kỳ (cross-tier)",
+    desc: "2 bộ khớp 2 kết quả bất kỳ trong 20 bộ",
     badge: "4th",
     color: "bg-slate-500 text-white",
   },
@@ -210,7 +210,7 @@ const PLUS_FIELDS = [
     key: "plusFifth" as const,
     tier: "fifth" as const,
     label: "Giải Năm",
-    desc: "1 bộ trùng bộ ĐB",
+    desc: "mỗi bộ khớp 1 bộ ĐB (xét riêng từng bộ)",
     badge: "5th",
     color: "bg-slate-600 text-white",
   },
@@ -218,7 +218,7 @@ const PLUS_FIELDS = [
     key: "plusSixth" as const,
     tier: "sixth" as const,
     label: "Giải Sáu",
-    desc: "1 bộ trùng bộ Nhất/Nhì/Ba",
+    desc: "mỗi bộ khớp 1 bộ Nhất/Nhì/Ba (xét riêng)",
     badge: "6th",
     color: "bg-emerald-600 text-white",
   },
@@ -247,56 +247,77 @@ interface ProfitBarProps {
   modeLabel: string;
   /** Số lines per board. Combo3 = 3, Combo6 = 6, còn lại = 1. */
   lineCount?: number;
+  /**
+   * Ghi chú nghiệp vụ hiện dưới dòng thông tin giá — dùng cho ngoại lệ số hoán vị, gộp giải.
+   * Truyền `string[]` khi có nhiều ý tách biệt (mỗi ý 1 bullet) để tránh dồn thành
+   * 1 câu dài khó đọc; truyền `string` khi chỉ có 1 ý ngắn.
+   */
+  note?: string | string[];
 }
 
-function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 1 }: ProfitBarProps) {
+function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 1, note }: ProfitBarProps) {
   const boardCost = unitPrice * lineCount;
   const isCombo = lineCount > 1;
 
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
-          {" · "}
-          {isCombo ? (
-            <>
-              Giá 1 board: <strong>{fmt(boardCost)} VND</strong>
-              <span className="text-muted-foreground/70">
-                {" "}
-                ({lineCount} lines × {fmt(unitPrice)})
-              </span>
-            </>
-          ) : (
-            <>
-              Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
-            </>
-          )}
-        </p>
-      </div>
-      <div className="flex items-center gap-4 text-xs shrink-0">
-        <div className="text-right">
-          <span className="text-muted-foreground">CP kỳ vọng{isCombo ? " / board" : " / line"}</span>
-          <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
-        </div>
-        <div className="text-right">
-          <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-          <div
-            className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
-          >
-            {analysis.grossMarginPercent >= 0 ? (
-              <TrendingUp className="mr-1 inline size-3.5" />
+    <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
+            {" · "}
+            {isCombo ? (
+              <>
+                Giá 1 board: <strong>{fmt(boardCost)} VND</strong>
+                <span className="text-muted-foreground/70">
+                  {" "}
+                  ({lineCount} lines × {fmt(unitPrice)})
+                </span>
+              </>
             ) : (
-              <TrendingDown className="mr-1 inline size-3.5" />
+              <>
+                Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
+              </>
             )}
-            {analysis.grossMarginPercent.toFixed(2)}%
-            <span className="ml-1 font-normal text-muted-foreground">
-              ({fmt(Math.round(analysis.grossMarginPerLine))} VND{isCombo ? "/board" : "/line"})
-            </span>
+          </p>
+        </div>
+        <div className="flex items-center gap-4 text-xs shrink-0">
+          <div className="text-right">
+            <span className="text-muted-foreground">CP kỳ vọng{isCombo ? " / board" : " / line"}</span>
+            <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
+            <div
+              className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
+            >
+              {analysis.grossMarginPercent >= 0 ? (
+                <TrendingUp className="mr-1 inline size-3.5" />
+              ) : (
+                <TrendingDown className="mr-1 inline size-3.5" />
+              )}
+              {analysis.grossMarginPercent.toFixed(2)}%
+              <span className="ml-1 font-normal text-muted-foreground">
+                ({fmt(Math.round(analysis.grossMarginPerLine))} VND{isCombo ? "/board" : "/line"})
+              </span>
+            </div>
           </div>
         </div>
       </div>
+      {note ? (
+        <div className="text-xs text-muted-foreground/80 mt-2 leading-snug">
+          {Array.isArray(note) ? (
+            <ul className="list-disc space-y-0.5 pl-4">
+              {note.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>{note}</p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -305,7 +326,15 @@ const TABLE_GRID = "grid grid-cols-[auto_1fr_176px_120px_140px_100px_140px] item
 const TABLE_HEADER_CLS = `${TABLE_GRID} bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-240`;
 const TABLE_ROW_CLS = `${TABLE_GRID} px-6 py-3 transition-colors hover:bg-muted/20 min-w-240`;
 
-function TableHeader() {
+interface TableHeaderProps {
+  /** Số line/board. Combo3 = 3, Combo6 = 6, còn lại = 1 — quyết định mẫu số của Tỷ lệ TT. */
+  lineCount?: number;
+}
+
+function TableHeader({ lineCount = 1 }: TableHeaderProps) {
+  const isCombo = lineCount > 1;
+  const costLabel = isCombo ? "Giá 1 board" : "Giá 1 line";
+
   return (
     <div className={TABLE_HEADER_CLS}>
       <span className="w-9" />
@@ -313,22 +342,26 @@ function TableHeader() {
       <span className="text-right">Giá trị thưởng</span>
       <HeaderTooltip
         label="Xác suất"
-        tip="Xác suất trúng giải cho 1 line. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 line trúng."
+        tip={
+          isCombo
+            ? `Xác suất trúng hạng này của CẢ BOARD (${lineCount} hoán vị). Vì mỗi hoán vị được so khớp độc lập nên board trúng nhiều lần thì lĩnh nhiều lần — con số này là số lần trúng kỳ vọng, không phải xác suất "ít nhất 1 lần". '1 : N' nghĩa là cứ N board bán ra thì kỳ vọng 1 lần trúng hạng này.`
+            : "Xác suất trúng hạng này cho 1 line. Các hạng KHÔNG loại trừ nhau — 20 bộ kết quả quay độc lập nên 1 bộ số có thể trúng nhiều hạng và lĩnh tổng. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 line trúng hạng này."
+        }
         className="justify-end"
       />
       <HeaderTooltip
         label="CP kỳ vọng"
-        tip="Chi phí trả thưởng kỳ vọng cho mỗi line = Xác suất × Giá trị giải."
+        tip={`Chi phí trả thưởng kỳ vọng của RIÊNG hạng này = Xác suất × Giá trị giải${isCombo ? ", tính cho cả board" : ""}. Tổng CP kỳ vọng của board xem ở thanh trên cùng.`}
         className="justify-end"
       />
       <HeaderTooltip
         label="Tỷ lệ TT"
-        tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá line × 100%. Trên 100% = LỖ."
+        tip={`Tỷ lệ trả thưởng của RIÊNG hạng này = CP kỳ vọng ÷ ${costLabel} × 100%. Tổng các hạng mới là tỷ lệ trả thưởng thật của board — 1 hạng dưới 100% không có nghĩa board an toàn.`}
         className="justify-end"
       />
       <HeaderTooltip
         label="Hoà vốn"
-        tip="Giá trị giải thưởng tối đa để không lỗ = Giá line ÷ Xác suất."
+        tip={`Giá trị giải tối đa để RIÊNG hạng này không lỗ = ${costLabel} ÷ Xác suất. Do các hạng cộng dồn, phải đặt giải THẤP HƠN con số này để tổng board vẫn có lãi.`}
         className="justify-end"
       />
     </div>
@@ -342,10 +375,14 @@ interface OddsRowProps {
   formField: any;
   isLast: boolean;
   totalOutcomes: number;
+  /** Số line/board. Combo3 = 3, Combo6 = 6, còn lại = 1 — quyết định cách diễn giải tooltip xác suất. */
+  lineCount?: number;
 }
 
-function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: OddsRowProps) {
+function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lineCount = 1 }: OddsRowProps) {
   const isOverBreakEven = profit && profit.currentPrize > profit.breakEvenPrize;
+  const isCombo = lineCount > 1;
+  const unitLabel = isCombo ? "board" : "line";
   return (
     <FormField
       key={formField.key}
@@ -378,9 +415,10 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
               <TooltipContent side="top" className="max-w-72 text-xs">
                 {odds && (
                   <>
-                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)}
+                    {isCombo ? "Số lần trúng kỳ vọng" : "Số cách trúng"}:{" "}
+                    {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)} {unitLabel}
                     <br />
-                    Xác suất: {(odds.probability * 100).toFixed(6)}%
+                    {isCombo ? "Số lần trúng / board" : "Xác suất"}: {(odds.probability * 100).toFixed(6)}%
                   </>
                 )}
               </TooltipContent>
@@ -409,9 +447,9 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-80 text-xs">
                 {isOverBreakEven
-                  ? `Giải thưởng (${fmt(profit!.currentPrize)}) vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))}) → LỖ`
+                  ? `Giải thưởng (${fmt(profit!.currentPrize)}) vượt mức hoà vốn của RIÊNG hạng này (${fmt(Math.round(profit!.breakEvenPrize))}) → chỉ hạng này đã lỗ`
                   : profit
-                    ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND mà vẫn hoà vốn`
+                    ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND để RIÊNG hạng này hoà vốn. Các hạng cộng dồn nên phải đặt thấp hơn mức này.`
                     : "–"}
               </TooltipContent>
             </Tooltip>
@@ -635,6 +673,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     unitPrice={unitPrice}
                     totalOutcomes={BASIC_TOTAL_OUTCOMES}
                     modeLabel="Max 3D Cơ Bản — Straight"
+                    note="Người chơi chọn 1 bộ ba số, so khớp đúng thứ tự với cả 4 hạng. 20 bộ kết quả quay độc lập nên 1 bộ số có thể xuất hiện ở nhiều hạng — khi đó lĩnh TỔNG các hạng trúng, vì vậy tỷ lệ trả thưởng của board là tổng 4 hàng dưới."
                   />
                 </div>
                 <div className="border-t overflow-x-auto">
@@ -662,10 +701,11 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     totalOutcomes={BASIC_TOTAL_OUTCOMES}
                     modeLabel="Tổ Hợp 3 (Combo3) — 3 hoán vị"
                     lineCount={3}
+                    note="Bảng giả định bộ số dạng aab (2 chữ số giống) → đúng 3 hoán vị, mỗi hoán vị là 1 line dự thưởng độc lập. Bộ 3 chữ số giống nhau (aaa) chỉ sinh 1 hoán vị: cả giá board lẫn xác suất/CP kỳ vọng đều chỉ bằng 1/3 bảng này, nhưng giải thưởng vẫn là giá trị Combo3 nên tỷ lệ trả thưởng KHÔNG đổi."
                   />
                 </div>
                 <div className="border-t overflow-x-auto">
-                  <TableHeader />
+                  <TableHeader lineCount={3} />
                   {COMBO3_FIELDS.map((p, idx) => (
                     <OddsRow
                       key={p.key}
@@ -675,6 +715,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                       formField={{ key: p.key, control: form.control, name: p.key }}
                       isLast={idx === COMBO3_FIELDS.length - 1}
                       totalOutcomes={BASIC_TOTAL_OUTCOMES}
+                      lineCount={3}
                     />
                   ))}
                 </div>
@@ -686,10 +727,11 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     totalOutcomes={BASIC_TOTAL_OUTCOMES}
                     modeLabel="Tổ Hợp 6 (Combo6) — 6 hoán vị"
                     lineCount={6}
+                    note="Bắt buộc 3 chữ số khác nhau → luôn đúng 6 hoán vị, mỗi hoán vị là 1 line dự thưởng độc lập. Giá board = 6 × giá line, giải thưởng mỗi hoán vị = giá trị Combo6."
                   />
                 </div>
                 <div className="border-t overflow-x-auto">
-                  <TableHeader />
+                  <TableHeader lineCount={6} />
                   {COMBO6_FIELDS.map((p, idx) => (
                     <OddsRow
                       key={p.key}
@@ -699,6 +741,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                       formField={{ key: p.key, control: form.control, name: p.key }}
                       isLast={idx === COMBO6_FIELDS.length - 1}
                       totalOutcomes={BASIC_TOTAL_OUTCOMES}
+                      lineCount={6}
                     />
                   ))}
                 </div>
@@ -712,6 +755,11 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     unitPrice={unitPrice}
                     totalOutcomes={PLUS_TOTAL_OUTCOMES}
                     modeLabel="Max 3D+ — 2 bộ ba số"
+                    note={[
+                      "Người chơi chọn 1 cặp có thứ tự (bộ 1, bộ 2) → không gian mẫu 1.000.000 cặp.",
+                      "Giải cặp (ĐB → Tư) yêu cầu 2 bộ khớp 2 kết quả RIÊNG BIỆT; giải đơn (Năm, Sáu) xét từng bộ nên 1 cặp có thể trúng 2 lần.",
+                      "Cặp trùng (bộ 1 = bộ 2) được nhân ×2 giải từ Nhất → Sáu. Xác suất dưới đây là số lần trúng kỳ vọng đã quy đổi ×2, các hạng cộng dồn.",
+                    ]}
                   />
                 </div>
                 <div className="border-t overflow-x-auto">

@@ -5,18 +5,73 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ---
 
-## [1.1.0] - 2026-07-28
+## [1.0.20] - 2026-08-13
 
-### Added — `client.keno.getComboPopularity` (minh bạch combo cappable)
+### Added — `client.game.jackpots.list()`
 
-Thêm method `getComboPopularity(params)` cho Keno — player kiểm tra độ đông 1 bộ số cappable (pick8/9/10) họ đã cược: bao nhiêu bộ đang cùng chơi combo đó. Dùng để kiểm chứng cách chia giải cao nhất khi vượt cap (giải chia đều theo **số bộ trúng**, không theo số người).
+API GỘP cross-game: lấy jackpot hiện tại của TẤT CẢ game có jackpot (Lotto 5/35, Mega 6/45, Power 6/55) trong 1 request. Thay cho việc gọi lần lượt `client.lotto535.getJackpot()`, `client.mega645.getJackpot()`, `client.power655.getJackpot()`. Phù hợp widget "Jackpot đang tích luỹ" ở trang chủ.
 
-Types mới (subpath `@megawin/player-sdk/keno`):
+- `JackpotSummaryListResponse` — `{ jackpots: JackpotSummary[] }`. Chỉ trả game đang có active cycle; game chưa mở jackpot bị bỏ qua (không lỗi).
+- `JackpotSummary` — thiết kế hybrid: field CHUNG chuẩn hoá (`gameProduct`, `displayName`, `primaryAmount`, `cycleNo`, `drawCount`, `startDrawId`) đủ render danh sách nhanh + `details` discriminated theo `gameProduct` chứa phần đặc thù.
+- `JackpotDetails` — discriminated union: `Lotto535JackpotDetails | Mega645JackpotDetails | Power655JackpotDetails`. KHÔNG tự narrow được (không có discriminator riêng trong `details`) — narrow qua `JackpotSummary.gameProduct` ở tầng ngoài, TypeScript tự suy ra `details` đúng type con.
+- `JackpotGameProduct` — const object (3 game jackpot), dùng thay string trần khi so sánh.
+- `primaryAmount` — jackpot chính: lotto535/mega645 là `currentAmount`, power655 là `jackpot1CurrentAmount` (JP1). JP2 nằm trong `Power655JackpotDetails.jackpot2CurrentAmount`.
+- Field trong `details` đặt tên mirror đúng response getJackpot riêng từng game — không phát sinh tên khác.
 
-- `KenoComboPopularityParams` — `{ drawId, numbers }`. `numbers` là 8–10 số distinct zero-padded `"01".."80"`.
-- `KenoComboPopularityResponse` — `{ found, sets? }`. Chỉ trả `sets` (không trả `players`) vì công thức chia đều dùng tổng SỐ BỘ trúng làm mẫu số, không phải số người chơi — đây là dữ liệu tối giản đủ để player tự tính phần chia của mình.
+Import qua subpath `@megawin/player-sdk/game` hoặc từ root barrel.
 
-**Ownership-gate:** player CHỈ xem được combo mình đã thực sự cược. Combo chưa cược — hoặc combo chưa ai chơi — trả `{ found: false }` như nhau, cố ý KHÔNG phân biệt để không lộ bộ số cược của người khác. `found: false` không phải error.
+```ts
+const { jackpots } = await client.game.jackpots.list();
+
+for (const jp of jackpots) {
+  console.log(`${jp.displayName}: ${jp.primaryAmount.toLocaleString()} VND`);
+
+  if (jp.gameProduct === "power655") {
+    console.log(`  JP2: ${jp.details.jackpot2CurrentAmount.toLocaleString()} VND`);
+  } else if (jp.gameProduct === "lotto535") {
+    const { percentage, reachedSplitThreshold } = jp.details.progress;
+    console.log(
+      `  Tiến trình chia: ${percentage}%`,
+      reachedSplitThreshold ? "(đã chạm ngưỡng)" : "",
+    );
+  }
+}
+```
+
+### Changed — `Lotto535JackpotResponse.progress`
+
+Thêm `reachedSplitThreshold: boolean` vào `progress`. Phản ánh vế "đã đủ tiền chia" (`currentAmount >= splitThreshold`) — nhất quán giữa `client.lotto535.getJackpot()` và `client.game.jackpots.list()`. Kỳ CHIA thực tế vẫn cần thêm điều kiện kỳ 21h + không ai trúng Jackpot (thông tin đó lấy từ `getCurrentDraw`).
+
+### Removed — `Power655JackpotResponse.startedAt` (BREAKING)
+
+Xoá `startedAt` khỏi response `client.power655.getJackpot()`.
+
+Cần mốc thời gian bắt đầu cycle thì dùng `startDrawId` (format `YYYY-MM-DD.NNN` — đã chứa ngày kỳ quay đầu cycle).
+
+**Migration**
+
+```ts
+// Trước
+const jp = await client.power655.getJackpot();
+const started = new Date(jp.startedAt);
+
+// Sau — lấy ngày từ startDrawId
+const jp = await client.power655.getJackpot();
+const started = new Date(jp.startDrawId.split(".")[0]); // "2026-01-28"
+```
+
+---
+
+## [1.0.19] - 2026-08-10
+
+### Added — `client.keno.getComboPopularity`
+
+Kiểm tra độ đông 1 bộ số cappable (pick8/9/10) player đã cược — bao nhiêu bộ khác đang chơi cùng combo, để minh bạch cách chia giải khi vượt cap.
+
+- `KenoComboPopularityParams` — `{ drawId, numbers }`. `numbers`: 8–10 số distinct, zero-padded `"01"`–`"80"`.
+- `KenoComboPopularityResponse` — `{ found, sets? }`. `sets` là tổng số bộ đang cược cùng combo (Σ betCount) — tín hiệu độ đông tham khảo, KHÔNG phải mẫu số chia giải (mẫu số chia khi vượt cap là số bộ TRÚNG lúc settle).
+
+**Ownership-gate:** chỉ xem được combo mình đã cược. Combo chưa cược hoặc chưa ai chơi đều trả `{ found: false }`, không phân biệt.
 
 ```ts
 const res = await client.keno.getComboPopularity({
@@ -28,16 +83,14 @@ if (res.found) console.log(`${res.sets} bộ đang cược combo này`);
 
 ---
 
-### Added — `client.mega645.getComboPopularity` (minh bạch chia Jackpot)
+### Added — `client.mega645.getComboPopularity`
 
-Thêm method `getComboPopularity(params)` cho Mega 6/45 — player kiểm tra độ đông 1 bộ số họ đã cược VÀ, khi tra đúng bộ 6 số standard, xem mẫu số chia Jackpot thật nếu bộ đó trúng.
+Kiểm tra độ đông 1 bộ số player đã cược; nếu là bộ 6 số standard, trả thêm mẫu số chia Jackpot thật khi trúng.
 
-Types mới (subpath `@megawin/player-sdk/mega645`):
+- `Mega645ComboPopularityParams` — `{ drawId, numbers }`. `numbers`: 5–18 số distinct, zero-padded `"01"`–`"45"` (số lượng khớp playType: 5 = bao5, 6 = standard, 7–15 = baoN, 18 = bao18).
+- `Mega645ComboPopularityResponse` — `{ found, sets?, jackpotUnits? }`. `jackpotUnits` chỉ có ở bộ 6 số standard, dùng tính tiền jackpot **tạm tính**: `Math.floor(currentAmount / jackpotUnits) × betCount` (kết hợp `getJackpot()`).
 
-- `Mega645ComboPopularityParams` — `{ drawId, numbers }`. `numbers` 5–18 số distinct zero-padded `"01".."45"`; số lượng khớp playType (5 = bao5, 6 = standard, 7–15 = baoN, 18 = bao18).
-- `Mega645ComboPopularityResponse` — `{ found, sets?, boardPrice?, jackpotUnits? }`. `sets` là tín hiệu tham khảo — jackpot chia theo betCount toàn line trúng, không theo `sets`. `jackpotUnits` CHỈ có khi tra bộ 6 số standard: mẫu số chia jackpot, phần của bạn = `floor(pool / jackpotUnits) × betCount`.
-
-**Ownership-gate:** player CHỈ xem được bộ số mình đã thực sự cược. Bộ chưa cược — hoặc chưa ai chơi — trả `{ found: false }` như nhau, cố ý KHÔNG phân biệt để không lộ dữ liệu cược của người khác. `found: false` không phải error.
+**Ownership-gate:** giống Keno — chỉ xem bộ đã cược, `found: false` không phải error.
 
 ```ts
 const res = await client.mega645.getComboPopularity({
@@ -45,25 +98,45 @@ const res = await client.mega645.getComboPopularity({
   numbers: ["01", "05", "12", "23", "34", "45"], // standard 6 số
 });
 if (res.found && res.jackpotUnits) {
-  console.log(`Mẫu số chia jackpot: ${res.jackpotUnits}`);
+  const { currentAmount } = await client.mega645.getJackpot();
+  console.log(`Tạm tính nếu trúng ngay: ${Math.floor(currentAmount / res.jackpotUnits) * 1} VND`);
 }
 ```
 
 ---
 
-### Added — `client.lotto535.getComboPopularity` (minh bạch chia Jackpot + cơ chế split)
+### Added — `client.power655.getComboPopularity`
 
-Thêm method `getComboPopularity(params)` cho Lotto 5/35 — player kiểm tra độ đông 1 bộ số họ đã cược VÀ, khi tra đúng bộ CHUẨN (5 chính + 1 ĐB), xem mẫu số chia Jackpot thật nếu bộ đó trúng.
+Kiểm tra độ đông 1 bộ số player đã cược; nếu là bộ 6 số standard, trả thêm mẫu số chia Jackpot 1 thật khi trúng.
 
-Types mới (subpath `@megawin/player-sdk/lotto535`):
+- `Power655ComboPopularityParams` — `{ drawId, numbers }`. `numbers`: 5–18 số distinct, zero-padded `"01"`–`"55"` (số lượng khớp playType: 5 = bao5, 6 = standard, 7–15 = baoN, 18 = bao18).
+- `Power655ComboPopularityResponse` — `{ found, sets?, jackpotUnits? }`. `jackpotUnits` chỉ có ở bộ 6 số standard, là mẫu số chia **Jackpot 1** (6/6), dùng tính tiền jackpot **tạm tính**: `Math.floor(jackpot1CurrentAmount / jackpotUnits) × betCount` (kết hợp `getJackpot()`). Không áp dụng cho Jackpot 2 (5/6 + bonus).
 
-- `Lotto535ComboPopularityParams` — `{ drawId, numbers, specials }`. `numbers` 4–15 số chính distinct zero-padded `"01".."35"`, `specials` 1–12 số đặc biệt distinct `"01".."12"`. Tổ hợp phải khớp 1 trong 4 playType (standard/mainCover4/mainCover/specialCover).
-- `Lotto535ComboPopularityResponse` — `{ found, sets?, boardPrice?, jackpotUnits?, splitEligibleDraw? }`.
-  - `sets` — tín hiệu THAM KHẢO (Jackpot chia theo toàn kỳ, không theo riêng combo).
-  - `jackpotUnits` — CHỈ có khi tra bộ CHUẨN: mẫu số chia Jackpot thật, `phần thắng = floor(pool / jackpotUnits) × betCount`.
-  - `splitEligibleDraw` — CHỈ mô tả cơ chế split cycle (JP ≥ ngưỡng + kỳ 21h), KHÔNG có con số dự tính — pool chia theo đơn vị dự thưởng trúng từng tier, chỉ biết SAU khi có kết quả quay.
+**Ownership-gate:** giống Keno — chỉ xem bộ đã cược, `found: false` không phải error.
 
-**Ownership-gate** giống Keno: bộ chưa cược hoặc chưa ai chơi đều trả `{ found: false }`, không phân biệt.
+```ts
+const res = await client.power655.getComboPopularity({
+  drawId: "2026-03-08.001",
+  numbers: ["01", "05", "12", "23", "34", "45"], // standard 6 số
+});
+if (res.found && res.jackpotUnits) {
+  const { jackpot1CurrentAmount } = await client.power655.getJackpot();
+  console.log(
+    `Tạm tính nếu trúng Jackpot 1 ngay: ${Math.floor(jackpot1CurrentAmount / res.jackpotUnits) * 1} VND`,
+  );
+}
+```
+
+---
+
+### Added — `client.lotto535.getComboPopularity`
+
+Kiểm tra độ đông 1 bộ số player đã cược; nếu là bộ CHUẨN (5 chính + 1 ĐB), trả thêm mẫu số chia Jackpot thật khi trúng.
+
+- `Lotto535ComboPopularityParams` — `{ drawId, numbers, specials }`. `numbers`: 4–15 số chính distinct `"01"`–`"35"`; `specials`: 1–12 số đặc biệt distinct `"01"`–`"12"` (tổ hợp phải khớp 1 trong 4 playType).
+- `Lotto535ComboPopularityResponse` — `{ found, sets?, jackpotUnits?, splitEligibleDraw? }`. `jackpotUnits` chỉ có ở bộ CHUẨN, dùng tính tiền jackpot **tạm tính**: `Math.floor(currentAmount / jackpotUnits) × betCount` (kết hợp `getJackpot()`). `splitEligibleDraw` chỉ báo kỳ có split cycle (JP ≥ ngưỡng + kỳ 21h) — không có số dự tính, pool chỉ biết sau khi có kết quả.
+
+**Ownership-gate:** giống Keno — chỉ xem bộ đã cược, `found: false` không phải error.
 
 ```ts
 const res = await client.lotto535.getComboPopularity({
@@ -72,11 +145,16 @@ const res = await client.lotto535.getComboPopularity({
   specials: ["07"],
 });
 if (res.found && res.jackpotUnits) {
-  console.log(`Nếu trúng JP, chia cho ${res.jackpotUnits} đơn vị`);
+  const { currentAmount } = await client.lotto535.getJackpot();
+  console.log(
+    `Tạm tính nếu trúng Jackpot ngay: ${Math.floor(currentAmount / res.jackpotUnits) * 1} VND`,
+  );
 }
 ```
 
 ---
+
+## [1.0.18] - 2026-05-17
 
 ### Changed — `boardNo` hỗ trợ số board động (tất cả games)
 
@@ -584,7 +662,7 @@ entry.unitPrice; // mệnh giá (VND)
 entry.selectionCount; // số boards
 ```
 
-6. `KenoBoardInput.playType` bắt buộc cho pick boards:
+1. `KenoBoardInput.playType` bắt buộc cho pick boards:
 
 ```ts
 // Trước — API từ chối nhưng TypeScript không báo lỗi:
@@ -598,7 +676,7 @@ const board: KenoBoardInput = {
 };
 ```
 
-7. Max 3D / Max 3D Pro — `getTicketEntries()` nay trả `Max3dEntryResult[]` / `Max3dproEntryResult[]` thay vì inline type:
+1. Max 3D / Max 3D Pro — `getTicketEntries()` nay trả `Max3dEntryResult[]` / `Max3dproEntryResult[]` thay vì inline type:
 
 ```ts
 const { entries } = await client.max3d.getTicketEntries(ticketId);
@@ -862,18 +940,14 @@ const lastResult = results.items[0];
 - **BREAKING — Power 6/55**: `Power655EntryLinesResponse` viết lại cho khớp API:
   - Thêm `drawId: string`, `nextCursor: number | null`, `size: number`
   - `lines[]`: `Array<{ mainNumbers: number[] }>` → `Array<Power655LineInfo>` — `main: string[]` (zero-padded), thêm `boardNo`, `lineIndex`, `matchResult`
-
 - **BREAKING — Max 3D**: `Max3dEntryLinesResponse` viết lại tương tự:
   - Thêm `drawId`, `nextCursor`, `size`
   - `lines[]`: `Array<{ triplet: string }>` → `Array<Max3dLineInfo>` — `triplets: string[]`, thêm `boardNo`, `lineIndex`, `playMode`, `playType`, `matchResult`
-
 - **BREAKING — Max 3D Pro**: `Max3dproEntryLinesResponse` viết lại tương tự Max 3D:
   - `lines[]`: `Array<{ first: string; second: string }>` → `Array<Max3dproLineInfo>`
-
 - **BREAKING — Max 3D**: `Max3dTicketEntriesResponse.entries[].result` — sửa shape:
   - Cũ: `{ firstPrize: string; secondPrize: string; publishedAt: string }`
   - Mới: `{ special: string[]; first: string[]; second: string[]; third: string[]; publishedAt: string }` — 20 bộ ba chia 4 hạng giải
-
 - **BREAKING — Max 3D Pro**: `Max3dproTicketEntriesResponse.entries[].result` — sửa shape tương tự Max 3D.
 
 ### Removed

@@ -26,7 +26,8 @@
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
 import type { Power655DrawComboStatsDoc, Power655DrawComboStatsEntity } from "@megawin/game-power655/entities";
-import { Power655Collections } from "@megawin/game-power655/entities";
+import { PlayType, Power655Collections } from "@megawin/game-power655/entities";
+import { buildComboKey, getLineCount } from "@megawin/game-power655/rules";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
@@ -34,6 +35,20 @@ import { BaseRepo } from "./base-repo";
 import type { ComboStatsDelta } from "./types";
 
 const f = docPath<Power655DrawComboStatsDoc>();
+
+/** PlayType Bao tổ hợp C(N,6) (bao7..bao18) — phủ bộ 6 số S ⟺ `mainNumbers ⊇ S`. */
+const BAO_SUPERSET_PLAY_TYPES: PlayType[] = [
+  PlayType.Bao7,
+  PlayType.Bao8,
+  PlayType.Bao9,
+  PlayType.Bao10,
+  PlayType.Bao11,
+  PlayType.Bao12,
+  PlayType.Bao13,
+  PlayType.Bao14,
+  PlayType.Bao15,
+  PlayType.Bao18,
+];
 
 export class ComboStatsRepository extends BaseRepo<Power655DrawComboStatsEntity, ComboStatsMapper> {
   constructor() {
@@ -74,6 +89,57 @@ export class ComboStatsRepository extends BaseRepo<Power655DrawComboStatsEntity,
    */
   async findConcentrated(drawId: string, minAccounts: number, limit: number): Promise<Power655DrawComboStatsEntity[]> {
     return await this.findMany({ drawId, accountCount: { $gte: minAccounts } }, { sort: { accountCount: -1 }, limit });
+  }
+
+  /**
+   * Tổng betUnits chia jackpot khi bộ 6 số standard `S` trúng — con số minh bạch cho player
+   * (`GetComboPopularityPlayerUseCase`, p1-01). Bằng ĐÚNG mẫu số `totalBetUnits` của
+   * `patch-jackpot-prize.ts`: `jackpotPerUnit = floor(pool / totalBetUnits)`.
+   *
+   * Mỗi board phủ `S` đóng góp đúng 1 line == S khi trúng → `jackpotUnits(S) = Σ betCount`
+   * các board phủ S. 3 nguồn phủ S:
+   * - `standard`: đúng board `mainNumbers == S` — 1 exact lookup `comboKey = "standard:S"`.
+   * - `bao5`: có line == S ⟺ 5 số chọn ⊂ S (line = 5 số + phần tử còn lại của S, HT ghép lần
+   *   lượt 50 số còn lại) → 6 tập con size-5 của S (C(6,5) = 6). Gộp cùng query `$in` với
+   *   standard (7 key).
+   * - `bao7..bao18` (C(N,6)): có line == S ⟺ `mainNumbers ⊇ S` → 1 query `$all: S` trên index
+   *   `{drawId, playType, mainNumbers}` (p0-01), bound theo playType (KHÔNG quét combo standard).
+   *
+   * Mỗi doc: `betUnits = sets / expandedLines[playType]` (app-side, luôn nguyên vì `sets` =
+   * `Σ(expandedLines × betCount)` các board cùng key — `expandedLines` hằng theo playType).
+   *
+   * @param drawId - Kỳ cần tính.
+   * @param numbers6 - Bộ 6 số standard S ("01".."55"), thứ tự bất kỳ (buildComboKey tự sort).
+   * @returns Tổng betUnits (mẫu số chia jackpot). 0 nếu chưa ai cược bộ phủ S.
+   */
+  async sumJackpotUnitsForStandardSet(drawId: string, numbers6: string[]): Promise<number> {
+    const sorted = [...numbers6].sort();
+
+    // Nhánh standard + bao5: gom 7 comboKey exact (1 standard + 6 tập con size-5), 1 query $in.
+    const exactKeys = [buildComboKey(PlayType.Standard, sorted)];
+    for (let i = 0; i < sorted.length; i++) {
+      const subset = sorted.filter((_, idx) => idx !== i);
+      exactKeys.push(buildComboKey(PlayType.Bao5, subset));
+    }
+
+    const [exactDocs, supersetDocs] = await Promise.all([
+      this.findMany({ drawId, comboKey: { $in: exactKeys } }),
+      this.findMany({
+        drawId,
+        playType: { $in: BAO_SUPERSET_PLAY_TYPES },
+        mainNumbers: { $all: sorted },
+      }),
+    ]);
+
+    let units = 0;
+    for (const doc of [...exactDocs, ...supersetDocs]) {
+      const expanded = getLineCount(doc.playType as PlayType);
+      // Guard chia 0 (expanded luôn ≥ 1 theo bảng) — thương nguyên vì sets = Σ(expanded × betCount).
+      if (expanded > 0) {
+        units += doc.sets / expanded;
+      }
+    }
+    return units;
   }
 
   /**

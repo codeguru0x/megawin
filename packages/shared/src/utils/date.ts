@@ -258,6 +258,104 @@ export function endOfDayVN(date: Date): Date {
 }
 
 // ─────────────────────────────────────────────
+// Time-of-day "HH:mm" (không gắn ngày, không timezone)
+// ─────────────────────────────────────────────
+
+/**
+ * Regex chuẩn cho giờ trong ngày format `HH:mm` — 00:00 đến 23:59, zero-padded.
+ *
+ * Dùng chung cho Zod schema (`z.string().regex(HHMM_PATTERN, ...)`) ở cả route API
+ * lẫn form config backoffice, thay vì mỗi file tự khai `const timePattern = ...`.
+ *
+ * ⚠️ KHÔNG có flag `g` — regex `/g` mang state `lastIndex`, `.test()` gọi lần 2 sẽ
+ * trả sai. Giữ nguyên không thêm flag.
+ */
+export const HHMM_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/**
+ * Đổi giờ trong ngày `"HH:mm"` thành số phút kể từ 00:00.
+ *
+ * Trả `null` khi chuỗi không đúng format (VD người dùng đang gõ dở trên form) —
+ * caller phải xử lý nhánh `null` thay vì hiện `NaN` ra UI.
+ *
+ * @example
+ *   parseHHMMToMinutes("00:00") → 0
+ *   parseHHMMToMinutes("18:30") → 1110
+ *   parseHHMMToMinutes("24:00") → null (giờ không hợp lệ)
+ *   parseHHMMToMinutes("6:05")  → null (thiếu zero-padding)
+ */
+export function parseHHMMToMinutes(time: string): number | null {
+  if (!HHMM_PATTERN.test(time)) {
+    return null;
+  }
+  // Regex đã chốt đúng 2 nhóm số hợp lệ nên destructure luôn có giá trị.
+  const [hours, minutes] = time.split(":") as [string, string];
+  return Number(hours) * 60 + Number(minutes);
+}
+
+/**
+ * Số kỳ quay/ngày suy ra từ khung giờ + khoảng cách giữa 2 kỳ liên tiếp.
+ *
+ * Công thức: `floor((kỳ cuối − kỳ đầu) ÷ khoảng cách) + 1` — kỳ đầu tính là 1 kỳ.
+ * Dùng cho game quay nhanh (Keno, Bingo 18) để hiển thị số kỳ derive từ config
+ * thật, KHÔNG hardcode.
+ *
+ * Trả `null` khi input chưa hợp lệ (giờ sai format, interval ≤ 0, hoặc kỳ cuối
+ * sớm hơn kỳ đầu) để UI không hiện số rác trong lúc staff đang gõ.
+ *
+ * @example
+ *   computeDrawsPerDay("06:00", "21:55", 5) → 192
+ *   computeDrawsPerDay("06:00", "05:00", 5) → null (kỳ cuối < kỳ đầu)
+ */
+export function computeDrawsPerDay(
+  firstDrawTime: string,
+  lastDrawTime: string,
+  intervalMinutes: number,
+): number | null {
+  const first = parseHHMMToMinutes(firstDrawTime);
+  const last = parseHHMMToMinutes(lastDrawTime);
+
+  if (first === null || last === null || intervalMinutes <= 0 || last < first) {
+    return null;
+  }
+
+  return Math.floor((last - first) / intervalMinutes) + 1;
+}
+
+// ─────────────────────────────────────────────
+// Ngày `YYYY-MM-DD` (chuỗi thuần, không timezone)
+// ─────────────────────────────────────────────
+
+/**
+ * Regex chuẩn cho ngày format `YYYY-MM-DD`.
+ *
+ * ⚠️ KHÔNG có flag `g` — cùng lý do với {@link HHMM_PATTERN}.
+ */
+export const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Đổi `"YYYY-MM-DD"` thành `Date` ở 00:00 GIỜ MÁY (local), dùng cho calendar picker —
+ * KHÔNG dùng cho tính toán tài chính (dùng `toVNStartOfDay` khi cần mốc giờ VN).
+ *
+ * Trả `undefined` khi chuỗi sai format hoặc ngày không tồn tại (VD `"2026-02-31"`)
+ * để caller hiện trạng thái "chưa chọn ngày" thay vì `Invalid Date`.
+ *
+ * @example
+ *   parseYMDToLocalDate("2026-03-07")  → Date 2026-03-07 00:00 local
+ *   parseYMDToLocalDate("2026-3-7")    → undefined (thiếu zero-padding)
+ *   parseYMDToLocalDate("not-a-date")  → undefined
+ */
+export function parseYMDToLocalDate(dateStr: string): Date | undefined {
+  if (!YMD_PATTERN.test(dateStr)) {
+    return undefined;
+  }
+  // Regex đã chốt đúng 3 nhóm số nên destructure luôn có giá trị.
+  const [year, month, day] = dateStr.split("-") as [string, string, string];
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+// ─────────────────────────────────────────────
 // Time Rounding (floor / ceil theo interval)
 // ─────────────────────────────────────────────
 

@@ -854,8 +854,20 @@ export interface Mega645ComboPopularityParams {
  * - `sets` = số bộ cược cùng bộ số — TÍN HIỆU tham khảo. Jackpot Mega 6/45 chia theo betCount
  *   trên toàn bộ line trúng của kỳ, nên `sets` KHÔNG phải mẫu số chia trực tiếp (nhất là board Bao).
  * - `jackpotUnits` (CHỈ có khi tra bộ **6 số standard**) = mẫu số chia jackpot khi bộ này
- *   trúng. Phần của bạn = `floor(pool / jackpotUnits) × betCount`. Con số tại thời điểm tra —
- *   bán vé tiếp tục → chỉ tăng (không giảm trừ khi có vé bị void).
+ *   trúng. Con số tại thời điểm tra — bán vé tiếp tục → chỉ tăng (không giảm trừ khi có vé
+ *   bị void).
+ *
+ * **Công thức tính tiền jackpot TẠM TÍNH (dành cho tenant developer dựng UI):**
+ *
+ * ```
+ * soTienTamTinh = Math.floor(currentAmount / jackpotUnits) * betCount
+ * ```
+ *
+ * `currentAmount` lấy từ {@link Mega645Api.getJackpot}, `betCount` là số lần cược của board
+ * đó (KHÔNG lấy từ response này — lấy từ thông tin board bạn đã đặt). Đây là **con số TẠM
+ * TÍNH tại thời điểm tra** — pool còn tăng đến giờ đóng bán, `jackpotUnits` cũng chỉ tăng
+ * (bán vé tiếp tục) không giảm (trừ khi có vé bị void) — KHÔNG hiển thị con số này như một
+ * cam kết/thông báo chính thức, chỉ nên gắn nhãn "ước tính nếu trúng ngay bây giờ".
  *
  * @example
  * ```ts
@@ -865,9 +877,13 @@ export interface Mega645ComboPopularityParams {
  * });
  *
  * if (res.found) {
- *   console.log(`${res.sets} bộ đang cược · giá 1 board ${res.boardPrice} VND`);
+ *   console.log(`${res.sets} bộ đang cược cùng bộ số này`);
+ *
  *   if (res.jackpotUnits) {
- *     console.log(`Mẫu số chia jackpot hiện tại: ${res.jackpotUnits} units`);
+ *     const { currentAmount } = await client.mega645.getJackpot();
+ *     const betCount = 2; // số lần cược của board này (từ dữ liệu vé bạn đã đặt)
+ *     const soTienTamTinh = Math.floor(currentAmount / res.jackpotUnits) * betCount;
+ *     console.log(`Nếu trúng jackpot ngay bây giờ, tạm tính bạn nhận: ${soTienTamTinh} VND`);
  *   }
  * } else {
  *   console.log("Bạn chưa cược bộ này (hoặc chưa ai chơi).");
@@ -879,11 +895,9 @@ export interface Mega645ComboPopularityResponse {
   found: boolean;
   /** Tổng số bộ mọi người cược bộ số này (Σ betCount). Chỉ có khi `found=true`. */
   sets?: number;
-  /** Giá 1 board bộ số này theo config hiện tại (VND). Chỉ có khi `found=true`. */
-  boardPrice?: number;
   /**
    * Mẫu số chia jackpot nếu bộ 6 số này trúng — CHỈ có khi tra bộ **6 số standard**.
-   * Phần của bạn = `floor(pool / jackpotUnits) × betCount`.
+   * Xem công thức tính tiền TẠM TÍNH ở JSDoc interface.
    */
   jackpotUnits?: number;
 }

@@ -192,9 +192,13 @@ export function getUniquePermutations(triplet: Triplet): Triplet[] {
 
   for (let i = 0; i < 3; i++) {
     for (let j = 0; j < 3; j++) {
-      if (j === i) continue;
+      if (j === i) {
+        continue;
+      }
       for (let k = 0; k < 3; k++) {
-        if (k === i || k === j) continue;
+        if (k === i || k === j) {
+          continue;
+        }
         perms.add(`${digits[i]}${digits[j]}${digits[k]}`);
       }
     }
@@ -334,6 +338,11 @@ export interface PlusMatchResult {
  * │  Giải Sáu:   1 bộ khớp entry Nhất/Nhì/Ba bất kỳ       →         40,000 VND    │
  * └─────────────────────────────────────────────────────────────────────────────────┘
  *
+ * Năm và Sáu kiểm tra ĐỘC LẬP, KHÔNG lấy hạng cao nhất: 20 bộ ba quay độc lập nên
+ * 1 triplet có thể nằm ở cả pool ĐB lẫn pool Nhất/Nhì/Ba → theo luật gộp giải,
+ * player nhận CẢ Năm lẫn Sáu. Giải Sáu vẫn chỉ tính 1 lần/triplet dù khớp nhiều
+ * pool trong Nhất/Nhì/Ba (điều kiện là "Nhất, Nhì HOẶC Ba" — một giải duy nhất).
+ *
  * DUPLICATE (2 bộ ba giống nhau):
  *   Quy tắc: "Giá trị giải thưởng sẽ cao gấp hai lần giá trị nêu ở bảng trên"
  *   — chỉ áp dụng cho giải Nhất đến giải Sáu. Giải ĐB KHÔNG nhân ×2.
@@ -413,21 +422,28 @@ export function matchPlus(
   }
 
   // ── NHÓM ĐƠN: Giải Năm, Sáu (kiểm tra từng triplet riêng lẻ) ────
+  // Giải Năm: triplet khớp pool ĐB. Giải Sáu: triplet khớp pool Nhất/Nhì/Ba.
+  // Hai điều kiện kiểm tra ĐỘC LẬP, KHÔNG lấy hạng cao nhất: 20 bộ ba được quay
+  // độc lập nên 1 triplet có thể nằm ở cả pool ĐB lẫn pool Nhất/Nhì/Ba. Khi đó
+  // theo luật gộp giải Vietlott, player nhận CẢ Năm lẫn Sáu.
+  // Giải Sáu chỉ tính 1 lần cho mỗi triplet dù khớp nhiều pool trong Nhất/Nhì/Ba
+  // (điều kiện là "khớp Nhất, Nhì HOẶC Ba bất kỳ" — một giải duy nhất).
   // Với duplicate: chỉ có 1 unique triplet → kiểm tra 1 lần, ×2 đã tính vào multiplier.
-  // Với non-duplicate: kiểm tra 2 triplet độc lập, mỗi triplet có thể trúng Năm hoặc Sáu.
   const tripletsToCheck = isDuplicate ? [triplet1] : [triplet1, triplet2];
 
+  const specialPool = drawResultByTier.get(BasicPrizeTier.Special)!;
+  const firstPool = drawResultByTier.get(BasicPrizeTier.First)!;
+  const secondPool = drawResultByTier.get(BasicPrizeTier.Second)!;
+  const thirdPool = drawResultByTier.get(BasicPrizeTier.Third)!;
+
   for (const t of tripletsToCheck) {
-    const tier = findTierInResult(t, drawResultByTier);
-    if (!tier) {
-      continue;
+    // Giải Năm: triplet khớp entry ĐB
+    if (specialPool.includes(t)) {
+      wonTiers.push({ tier: PlusPrizeTier.Fifth, winAmount: prizes.fifth * multiplier });
     }
 
-    if (tier === BasicPrizeTier.Special) {
-      // Giải Năm: triplet khớp entry ĐB
-      wonTiers.push({ tier: PlusPrizeTier.Fifth, winAmount: prizes.fifth * multiplier });
-    } else {
-      // Giải Sáu: triplet khớp entry Nhất/Nhì/Ba
+    // Giải Sáu: triplet khớp entry Nhất/Nhì/Ba (OR — trúng 1 lần dù khớp nhiều pool)
+    if (firstPool.includes(t) || secondPool.includes(t) || thirdPool.includes(t)) {
       wonTiers.push({ tier: PlusPrizeTier.Sixth, winAmount: prizes.sixth * multiplier });
     }
   }
@@ -624,7 +640,9 @@ export function buildPayoutTiers(boardResults: BoardMatchResultWithBetCount[]): 
   for (const { playMode, betCount, lineResults } of boardResults) {
     for (const lineResult of lineResults) {
       for (const { tier, winAmount } of lineResult.tiers) {
-        if (winAmount <= 0) continue;
+        if (winAmount <= 0) {
+          continue;
+        }
 
         // betCount nhân bội winAmount per-unit → tổng thực tế player nhận.
         const scaled = winAmount * betCount;

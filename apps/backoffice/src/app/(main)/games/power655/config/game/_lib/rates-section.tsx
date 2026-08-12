@@ -159,7 +159,9 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                           </div>
                           <div>
                             <FormLabel className="text-sm font-semibold">Thu công ty</FormLabel>
-                            <p className="text-xs text-muted-foreground">Sau khi trừ hoa hồng và giải cố định</p>
+                            <p className="text-xs text-muted-foreground">
+                              % tổng doanh thu; thực thu bị giới hạn bởi phần còn lại sau hoa hồng và giải cố định
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-baseline gap-2">

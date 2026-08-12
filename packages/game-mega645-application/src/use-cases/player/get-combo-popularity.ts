@@ -12,23 +12,29 @@
  * DB: `{ found: false }`. Kẻ dò không phân biệt "combo có người chơi nhưng tôi chưa cược"
  * với "combo chưa ai chơi". KHÔNG dùng 403/404 (tự tiết lộ combo tồn tại).
  *
- * ## `sets` vs `jackpotUnits`
+ * ## `sets` vs `jackpotUnits` — công thức tính tiền jackpot TẠM TÍNH cho tenant developer
  *
  * - `sets` = số bộ cược cùng comboKey — TÍN HIỆU tham khảo (không phải mẫu số chia).
  * - `jackpotUnits` (CHỈ khi tra bộ 6 số standard) = `totalBetUnits` mẫu số chia jackpot,
  *   gom từ 3 nguồn phủ bộ S (standard exact + bao5 6 tập con + bao7–18 superset) qua
  *   {@link ComboStatsRepository.sumJackpotUnitsForStandardSet}.
+ * - Công thức TẠM TÍNH số tiền player nhận được nếu bộ 6 số này trúng jackpot:
+ *   `soTienTamTinh = Math.floor(jackpotCurrentAmount / jackpotUnits) × betCount` (lấy
+ *   `jackpotCurrentAmount` từ endpoint `getJackpot`, `betCount` = số lần cược của player
+ *   cho board này). ĐÂY LÀ CON SỐ TẠM TÍNH TẠI THỜI ĐIỂM TRA — pool còn tăng đến giờ đóng
+ *   bán, `jackpotUnits` cũng chỉ tăng (bán vé tiếp) không giảm (trừ khi có vé bị void) —
+ *   KHÔNG dùng con số này để cam kết/thông báo chính thức với player, chỉ hiển thị dạng
+ *   "ước tính nếu trúng ngay bây giờ".
  *
  * Realtime — worker combo-stats cập nhật liên tục, KHÔNG chốt salesClosed.
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { PlayType, VALID_NUMBER_SET } from "@megawin/game-mega645/entities";
-import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
+import { buildComboKey } from "@megawin/game-mega645/rules";
 
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { PlayerComboPopularityInput, PlayerComboPopularityOutput } from "./dto/player.dto";
 
 /** Response rỗng đồng nhất — dùng cho cả "chưa cược" lẫn "combo không tồn tại". */
@@ -57,7 +63,6 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
   PlayerComboPopularityInput,
   PlayerComboPopularityOutput
 > {
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly entryRepo = new EntryRepository();
   private readonly comboRepo = new ComboStatsRepository();
 
@@ -98,13 +103,9 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
       return NOT_FOUND;
     }
 
-    const config = await this.getGlobalConfig.run();
-    const boardPrice = calculateLineCount(playType) * config.play.unitPrice;
-
     const result: PlayerComboPopularityOutput = {
       found: true,
       sets: doc.sets,
-      boardPrice,
     };
 
     // jackpotUnits CHỈ suy được cho bộ 6 số standard (mẫu số chia jackpot khi S trúng).

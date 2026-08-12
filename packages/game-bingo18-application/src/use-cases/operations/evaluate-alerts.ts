@@ -105,8 +105,8 @@ export function evaluateBingo18Alerts(input: EvaluateAlertsInput): NewAlert[] {
   }
 
   // ── sidebet_skew: 1 hướng bigSmallDraw chiếm ≥ sidebetSkewPct tổng tiền 3 hướng ──
-  // LƯU Ý payload kèm xác suất nền KHÔNG đối xứng (small 49,07/draw 25/big 25,93%)
-  // để formatter hiển thị — skew về small ít bất thường hơn cùng % skew về big.
+  // Xác suất nền ĐỐI XỨNG: small (tổng 3-9) 81/216 = 37,5% · draw (10-11) 54/216 = 25%
+  // · big (12-18) 81/216 = 37,5%. Skew về small hay big đều bất thường như nhau ở cùng %.
   if (alerts.enabled[Bingo18OpsAlertType.SidebetSkew]) {
     const dirs = [
       { dir: "big", amount: stats.byPlayType.bigSmallDraw.big.amount },

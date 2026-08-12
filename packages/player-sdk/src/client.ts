@@ -15,6 +15,7 @@
 
 import type { ApiClientError } from "./api-types";
 import { type Bingo18Api, createBingo18Api } from "./apis/bingo18";
+import { createGameApi, type GameApi } from "./apis/game";
 import { createKenoApi, type KenoApi } from "./apis/keno";
 import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
 import { createMax3dApi, type Max3dApi } from "./apis/max3d";
@@ -223,6 +224,9 @@ export interface PlayerClient {
   /** Bingo 18 API */
   readonly bingo18: Bingo18Api;
 
+  /** Game API — thao tác gộp cross-game (jackpot tổng hợp, ...). */
+  readonly game: GameApi;
+
   /**
    * Player API — số dư, lịch sử cược, kết quả game.
    */
@@ -329,6 +333,7 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
   const max3d = createMax3dApi(authedClient);
   const max3dpro = createMax3dproApi(authedClient);
   const bingo18 = createBingo18Api(authedClient);
+  const game = createGameApi(authedClient);
   const player = createPlayerApi(authedClient);
 
   // ---- Set initial tokens if provided ----
@@ -347,6 +352,7 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
     max3d,
     max3dpro,
     bingo18,
+    game,
     player,
   };
 }

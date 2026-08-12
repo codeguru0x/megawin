@@ -129,3 +129,7 @@ Unit tests viết mới (`test/use-cases/get-combo-popularity.test.ts` — integ
 ## Định nghĩa Done
 
 Player xem được độ đông bộ số **đã cược** (+ `jackpotUnits` nếu bộ chuẩn 5+1, + mô tả cơ chế split), combo lạ luôn `{found:false}` đồng nhất, SDK JSDoc + CHANGELOG đầy đủ (TypeDoc sạch), không rò dữ liệu, 11 case test pass (staging-safe, không xoá data), cập nhật `00-overview.md`.
+
+## Cập nhật sau review (09/08)
+
+**Bỏ `boardPrice` khỏi response** (đảo ngược thiết kế ở trên) — player chỉ cần biết "trúng thì được bao nhiêu", `boardPrice` không trả lời câu đó. Response giờ chỉ còn `{found, sets?, jackpotUnits?, splitEligibleDraw?}`. JSDoc hướng dẫn công thức tạm tính: `Math.floor(currentAmount / jackpotUnits) × betCount` (lấy `currentAmount` từ `client.lotto535.getJackpot()`). Đồng bộ cùng quyết định với Power 6/55 và Mega 6/45 — xem chi tiết ở `power655-ops-risk-control/p1-01-combo-transparency.plan.md` §"Cập nhật sau review".

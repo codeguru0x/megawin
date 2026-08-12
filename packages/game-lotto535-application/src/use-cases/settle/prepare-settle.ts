@@ -29,8 +29,7 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { DrawNo } from "@megawin/game-lotto535/entities";
-import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
+import { buildPrizeAmountMap, isSplitEligibleDraw } from "@megawin/game-lotto535/rules";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -111,7 +110,8 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
 
     // ── 6. Xác định isSplitCycle ──
     // Split phụ thuộc opening — resettle PHẢI tính lại từ opening mới.
-    const isSplitCycle = draw.drawNo === DrawNo.Evening && jackpotOpeningAmount >= settleCycle.config.splitThreshold;
+    // Prepare CHƯA biết winner → chỉ xét ngưỡng + kỳ 21h (isSplitEligibleDraw).
+    const isSplitCycle = isSplitEligibleDraw(jackpotOpeningAmount, settleCycle.config.splitThreshold, draw.drawNo);
 
     // ── 7. Build bảng giải thưởng (tier → amount VND) ──
     const prizeMap = buildPrizeAmountMap(globalConfig.defaultPrizes);

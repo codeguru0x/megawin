@@ -6,60 +6,19 @@
  *   - NNN: số thứ tự kỳ quay trong ngày
  *
  * Bingo 18 quay mỗi 6 phút, từ 06:00 đến 21:53.
+ *
+ * Lịch kỳ quay do `calcDrawSlots` (`@megawin/game-bingo18-application/helpers`) sinh —
+ * file này CHỈ lo format drawId từ (drawDate, drawNo) đã biết.
  */
 
 import type { ISODateString } from "../entities/types";
 
+/**
+ * Ghép drawId từ ngày quay + số thứ tự kỳ trong ngày.
+ *
+ * @param drawDate - Ngày quay "YYYY-MM-DD"
+ * @param drawNo - Số thứ tự kỳ trong ngày (1-based, VD 42 → "042")
+ */
 export function generateBingo18DrawId(drawDate: ISODateString, drawNo: number): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
-}
-
-export function parseBingo18DrawId(drawId: string): { drawDate: ISODateString; drawNo: number } | null {
-  const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
-  if (!match) return null;
-
-  return {
-    drawDate: match[1]!,
-    drawNo: parseInt(match[2]!, 10),
-  };
-}
-
-/**
- * Tạo danh sách drawIds liên tiếp cho multi-draw.
- */
-export function generateBingo18DrawIdSequence(startDrawId: string, drawCount: number, drawsPerDay = 160): string[] {
-  const parsed = parseBingo18DrawId(startDrawId);
-  if (!parsed) {
-    throw new Error(`Invalid startDrawId: ${startDrawId}`);
-  }
-
-  const ids: string[] = [];
-  const currentDate = new Date(parsed.drawDate + "T00:00:00");
-  let currentDrawNo = parsed.drawNo;
-
-  for (let i = 0; i < drawCount; i++) {
-    const dateStr = currentDate.toISOString().split("T")[0]!;
-    ids.push(generateBingo18DrawId(dateStr, currentDrawNo));
-
-    currentDrawNo++;
-    if (currentDrawNo > drawsPerDay) {
-      currentDrawNo = 1;
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-  }
-
-  return ids;
-}
-
-/**
- * Tính drawNo từ thời gian trong ngày.
- */
-export function calculateDrawNo(time: string, firstDrawTime = "06:00", intervalMinutes = 6): number {
-  const [h, m] = time.split(":").map(Number);
-  const [fh, fm] = firstDrawTime.split(":").map(Number);
-
-  const minutesSinceFirst = (h! - fh!) * 60 + (m! - fm!);
-  if (minutesSinceFirst < 0) return 0;
-
-  return Math.floor(minutesSinceFirst / intervalMinutes) + 1;
 }

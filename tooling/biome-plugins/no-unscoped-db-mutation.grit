@@ -10,72 +10,42 @@ language js(typescript, jsx)
 or {
   // deleteMany không đối số → xoá TOÀN BỘ collection.
   `$coll.deleteMany()` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `deleteMany()` không filter xoá TOÀN BỘ collection (DB test = staging chung). Chỉ xoá record do chính test seed: `deleteMany({ _id: { $in: seededIds } })`."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `deleteMany()` không filter xoá TOÀN BỘ collection (DB test = staging chung). Chỉ xoá record do chính test seed: `deleteMany({ _id: { $in: seededIds } })`.")
   },
   // deleteMany({}) → filter rỗng = xoá tất cả.
   `$coll.deleteMany({})` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `deleteMany({})` filter rỗng xoá TOÀN BỘ collection. Phải scope theo id/field do chính test sinh ra."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `deleteMany({})` filter rỗng xoá TOÀN BỘ collection. Phải scope theo id/field do chính test sinh ra.")
   },
   // deleteOne({}) → xoá 1 record bất kỳ, không xác định.
   `$coll.deleteOne({})` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `deleteOne({})` filter rỗng xoá 1 record bất kỳ của staging. Scope filter theo id do test seed."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `deleteOne({})` filter rỗng xoá 1 record bất kỳ của staging. Scope filter theo id do test seed.")
   },
   // updateMany({}, ...) → ghi đè TOÀN BỘ collection.
   `$coll.updateMany({}, $rest)` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `updateMany({}, ...)` filter rỗng ghi đè TOÀN BỘ collection. Scope filter theo record do test sinh ra."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `updateMany({}, ...)` filter rỗng ghi đè TOÀN BỘ collection. Scope filter theo record do test sinh ra.")
   },
   // updateOne({}, ...) → ghi đè 1 record bất kỳ.
   `$coll.updateOne({}, $rest)` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `updateOne({}, ...)` filter rỗng ghi đè 1 record bất kỳ. Scope filter theo id do test seed."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `updateOne({}, ...)` filter rỗng ghi đè 1 record bất kỳ. Scope filter theo id do test seed.")
   },
   // findOneAndDelete({}) → xoá record bất kỳ.
   `$coll.findOneAndDelete({})` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `findOneAndDelete({})` filter rỗng xoá record bất kỳ. Scope filter theo id do test seed."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `findOneAndDelete({})` filter rỗng xoá record bất kỳ. Scope filter theo id do test seed.")
   },
   // findOneAndUpdate({}, ...) → sửa record bất kỳ.
   `$coll.findOneAndUpdate({}, $rest)` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `findOneAndUpdate({}, ...)` filter rỗng sửa record bất kỳ. Scope filter theo id do test seed."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `findOneAndUpdate({}, ...)` filter rỗng sửa record bất kỳ. Scope filter theo id do test seed.")
   },
   // dropDatabase() → xoá cả database staging.
   `$db.dropDatabase()` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `dropDatabase()` xoá CẢ database staging. Cấm tuyệt đối trong test."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `dropDatabase()` xoá CẢ database staging. Cấm tuyệt đối trong test.")
   },
   // dropCollection(...) → xoá cả collection.
   `$db.dropCollection($...)` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `dropCollection(...)` xoá cả collection staging. Cấm trong test — chỉ xoá record do test seed."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `dropCollection(...)` xoá cả collection staging. Cấm trong test — chỉ xoá record do test seed.")
   },
   // .drop() → xoá cả collection.
   `$coll.drop()` as $m where {
-    register_diagnostic(
-      span = $m,
-      message = "test-data-safety: `.drop()` xoá cả collection staging. Cấm trong test — chỉ xoá record do test seed."
-    )
+    register_diagnostic(span=$m, message="test-data-safety: `.drop()` xoá cả collection staging. Cấm trong test — chỉ xoá record do test seed.")
   }
 }

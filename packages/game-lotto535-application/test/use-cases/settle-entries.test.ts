@@ -7,6 +7,7 @@ import {
   calculateSplitDistribution,
   DEFAULT_LOTTO535_CONFIG,
   isSplitCycleDraw,
+  isSplitEligibleDraw,
 } from "@megawin/game-lotto535/rules/jackpot";
 import { calculateLineCount, combination } from "@megawin/game-lotto535/rules/play-types";
 import { buildPrizeAmountMap, determineTier } from "@megawin/game-lotto535/rules/prize-tiers";
@@ -391,6 +392,24 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
     });
     expect(result.jackpotContribution).toBe(0);
     expect(result.actualCompanyTake).toBe(0);
+  });
+});
+
+// ─────────────────────────────────────────────
+// isSplitEligibleDraw (ngưỡng + kỳ 21h, KHÔNG xét winner)
+// ─────────────────────────────────────────────
+
+describe("Lotto 5/35 – isSplitEligibleDraw", () => {
+  it("đủ điều kiện: JP >= threshold + drawNo=2 (bỏ qua winner)", () => {
+    expect(isSplitEligibleDraw(12_000_000_000, 12_000_000_000, 2)).toBe(true);
+  });
+
+  it("JP < threshold → false", () => {
+    expect(isSplitEligibleDraw(11_000_000_000, 12_000_000_000, 2)).toBe(false);
+  });
+
+  it("drawNo=1 (buổi sáng) → false", () => {
+    expect(isSplitEligibleDraw(15_000_000_000, 12_000_000_000, 1)).toBe(false);
   });
 });
 

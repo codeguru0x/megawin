@@ -89,3 +89,12 @@ power655-get-draw-result:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+power655-get-combo-popularity:
+  handler: src/handlers/power655/get-combo-popularity.handler
+  events:
+    - httpApi:
+        path: /games/power655/draws/{drawId}/combo-popularity
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { formatVNDate, formatVNTime } from "@megawin/shared/utils";
+import { formatVNDate, formatVNTime, parseYMDToLocalDate, YMD_PATTERN } from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
@@ -67,19 +67,12 @@ function buildIso(date: string, time: string): string {
 }
 
 function isRowComplete(row: DrawRow): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
-}
-
-function parseDateStr(dateStr: string): Date | undefined {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return undefined;
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(y!, m! - 1, d!);
-  return isNaN(dt.getTime()) ? undefined : dt;
+  return YMD_PATTERN.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
 }
 
 /** T2/T4/T6 — thứ trong tuần viết tắt theo lịch Max 3D. */
 function getWeekdayLabel(dateStr: string): string {
-  const dt = parseDateStr(dateStr);
+  const dt = parseYMDToLocalDate(dateStr);
   if (!dt) return "—";
   return format(dt, "EEE", { locale: vi }).replace(".", "");
 }
@@ -96,7 +89,7 @@ function DatePickerCell({
   hasError: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const selected = parseDateStr(value);
+  const selected = parseYMDToLocalDate(value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

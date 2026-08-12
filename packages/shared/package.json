@@ -60,6 +60,16 @@
       "types": "./src/types/index.ts",
       "import": "./src/types/index.ts",
       "default": "./dist/types/index.js"
+    },
+    "./validation": {
+      "types": "./src/validation/index.ts",
+      "import": "./src/validation/index.ts",
+      "default": "./dist/validation/index.js"
+    },
+    "./validation/*": {
+      "types": "./src/validation/*.ts",
+      "import": "./src/validation/*.ts",
+      "default": "./dist/validation/*.js"
     }
   },
   "devDependencies": {
@@ -73,6 +83,7 @@
     "@date-fns/tz": "^1.5.0",
     "date-fns": "^4.4.0",
     "ulid": "^3.0.2",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "zod": "^4.4.3"
   }
 }

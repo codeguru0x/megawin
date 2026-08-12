@@ -105,7 +105,7 @@ export interface TopPotentialRow {
   accountId: string;
   username: string;
   amount: number;
-  /** Worst-case entry này trả (VND) — PROXY Σ max/board (UI ghi "ước tính"). */
+  /** Ước tính entry này trả nếu trúng ĐB (VND) — Σ (ĐB + phụ ĐB)/board, chưa cộng các giải nhỏ trúng kèm. */
   potentialWin: number;
 }
 

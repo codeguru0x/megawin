@@ -17,10 +17,18 @@
  * (b) PAIR ĐB — chính xác có điều kiện: `liabilityĐB(pair) = units × plusPrizes.special`
  *     (unordered — 2 bộ khớp 2 slot ĐB bipartite; duplicate pair KHÔNG ×2 ĐB theo luật).
  *
- * (c) TỔNG — proxy RAW (thiên cao, ghi nhãn rõ): basic (a) + max pair liability (b)
- *     + đuôi giải ĐƠN plus (Năm/Sáu — điều kiện per-triplet, CÓ THỂ trả diện rộng
- *     đồng thời). KHÔNG cộng "mọi pair × special" (chỉ pair trùng bộ ĐB mới trả —
- *     cộng đồng loạt là vô nghĩa, cùng bài học per-number liability Keno §3.7).
+ * (c) TỔNG — proxy RAW (TÍNH DƯ, tức cao hơn thực tế; ghi nhãn rõ): basic (a) + max pair
+ *     liability (b) + giải nhỏ nhóm ĐƠN plus (Năm/Sáu — điều kiện per-triplet, CÓ THỂ
+ *     trả diện rộng đồng thời). KHÔNG cộng "mọi pair × special" (chỉ pair trùng bộ ĐB mới
+ *     trả — cộng đồng loạt là vô nghĩa, cùng bài học per-number liability Keno §3.7).
+ *
+ *     ⚠️ GIỚI HẠN ĐÃ BIẾT của phần giải nhỏ: proxy dùng `units × (fifth + sixth)`, tức
+ *     1 lần trúng / unit. Trần THẬT là `2 × (fifth + sixth)` / unit vì nhóm đơn
+ *     xét từng bộ trong cặp (mỗi bộ có thể khớp cả pool ĐB lẫn Nhất/Nhì/Ba → trúng
+ *     cả Năm lẫn Sáu). Giữ hệ số 1× có chủ đích: giả định "100% unit trúng" đã
+ *     thổi phồng gấp hàng chục lần thực tế (P(trúng) ≈ 4%), nên tổng vẫn cao hơn
+ *     thực tế rất xa. Đổi sang 2× sẽ nhân đôi giá trị alert → phải calibrate lại
+ *     `exposureWarnAmount` trước khi đổi, KHÔNG sửa lẻ công thức.
  *
  * Mọi hàm THUẦN + idempotent — áp ở TẦNG ĐỌC (snapshot response / eval alert),
  * KHÔNG lưu output vào doc (bucket RAW tuyến tính — bài học Keno Risk #4).
@@ -73,7 +81,7 @@ export interface Max3dExposureResult {
   basicWorstCase: Max3dBasicWorstCase;
   /** Top liability ĐB per-pair, sort desc — CHÍNH XÁC có điều kiện. */
   topPairLiabilities: Max3dPairLiability[];
-  /** Đuôi giải đơn plus Năm/Sáu (VND) — PROXY thiên cao (mọi unit trả đồng thời). */
+  /** Giải nhỏ nhóm đơn plus Năm/Sáu (VND) — PROXY TÍNH DƯ (giả định mọi unit trả đồng thời). */
   plusTailProxy: number;
   /** Tổng worst-case (VND) = basic + max pair liability + plusTailProxy. */
   worstCaseTotal: number;
@@ -136,8 +144,8 @@ export function computeBasicWorstCase(
 /**
  * Liability ĐB per-pair từ `topPairs`, sort desc.
  *
- * Cặp ngoài top-K có units nhỏ → liability nhỏ (chấp nhận sai số đuôi — UI ghi
- * "top K cặp"). Duplicate pair (t1===t2): ĐB KHÔNG ×2 theo luật (`matchPair`) —
+ * Cặp ngoài top-K có units nhỏ → liability nhỏ (chấp nhận sai số phần dưới bảng — UI
+ * ghi "top K cặp"). Duplicate pair (t1===t2): ĐB KHÔNG ×2 theo luật (`matchPair`) —
  * công thức units × special vẫn đúng vì units đã là số bộ cược cặp đó.
  */
 export function computePairLiabilities(topPairs: Max3dTopPair[], prizes: Max3dPrizeSet): Max3dPairLiability[] {
@@ -160,12 +168,12 @@ export function computePairLiabilities(topPairs: Max3dTopPair[], prizes: Max3dPr
 
 /**
  * Exposure tổng 1 kỳ: basic (chính xác) + max pair liability ĐB (chính xác có điều
- * kiện) + đuôi giải đơn plus Năm/Sáu (proxy thiên cao).
+ * kiện) + giải nhỏ nhóm đơn plus Năm/Sáu (proxy TÍNH DƯ).
  *
  * @param tripletStakes - `stats.tripletStakes` (sparse Record).
  * @param topPairs - Top-K cặp bộ ba plus, derive từ `max3d_draw_pair_stats` (p0-03) —
  *   KHÔNG còn đọc `stats.topPairs` (field đã xoá khỏi doc chính).
- * @param plusUnits - Tổng units plus (`stats.byPlayType.plus.units`) — đuôi giải đơn.
+ * @param plusUnits - Tổng units plus (`stats.byPlayType.plus.units`) — dùng cho giải nhỏ nhóm đơn.
  * @param prizes - Bảng giải từ GlobalConfig.
  */
 export function computeMax3dExposure(
@@ -178,8 +186,9 @@ export function computeMax3dExposure(
   const topPairLiabilities = computePairLiabilities(topPairs, prizes);
   const maxPairLiability = topPairLiabilities[0]?.liability ?? 0;
 
-  // Đuôi giải ĐƠN plus (Năm: 1 bộ khớp ĐB; Sáu: 1 bộ khớp Nhất/Nhì/Ba) — điều kiện
+  // Giải nhỏ nhóm ĐƠN plus (Năm: 1 bộ khớp ĐB; Sáu: 1 bộ khớp Nhất/Nhì/Ba) — điều kiện
   // per-triplet nên CÓ THỂ trả diện rộng đồng thời → proxy Σ units × (fifth + sixth).
+  // Hệ số 1× (không phải 2× dù mỗi cặp có 2 bộ) là chủ đích — xem §(c) JSDoc đầu file.
   // KHÔNG cộng giải CẶP (Nhất→Tư) đồng loạt: chỉ pair khớp pool mới trả — cộng mọi
   // pair là double-count vô nghĩa (bài học per-number liability Keno §3.7).
   const plusTailProxy = plusUnits * (prizes.plus.fifth + prizes.plus.sixth);
@@ -197,15 +206,29 @@ export function computeMax3dExposure(
 // ─────────────────────────────────────────────
 
 /**
- * Worst-case 1 board (per-unit, VND) — max prize theo mode/playType.
+ * Ước tính phải trả cho 1 board (per-unit, VND) — lấy hạng ĐB của mode/playType.
  *
- * PROXY thiên cao (KHÔNG exact như Bingo18 — outcome space quá lớn): basic lấy
- * prize ĐB của playType; plus lấy special (mỗi board plus chỉ 1 cặp → tối đa 1 lần ĐB).
+ * ⚠️ ƯỚC TÍNH, KHÔNG phải trần tuyệt đối. Chỉ đếm hạng ĐB, cố tình BỎ các giải nhỏ
+ * trúng kèm:
+ * - Basic: 1 bộ có thể nằm ở nhiều pool → trúng ĐB+Nhất+Nhì+Ba (defaults: 1,66tr thay
+ *   vì 1tr, tức trần thật cao hơn ~66%). Combo còn nhân số hoán vị.
+ * - Plus: cặp ăn ĐB thì đồng thời ăn Tư + Năm×2 (defaults: ~1,0013 tỷ so với 1 tỷ).
+ *
+ * Giữ 1 hạng ĐB có chủ đích: chỉ số này dùng để XẾP HẠNG entry nguy hiểm (top-K
+ * `topPotential`) và bất biến per-entry, không dùng làm hạn mức tài chính. Muốn đổi
+ * sang trần tuyệt đối phải đổi đồng bộ cả nhãn UI, KHÔNG sửa lẻ công thức.
+ *
  * Nhân betCount ở caller.
  */
 export function maxBoardUnitWin(playMode: PlayMode, playType: PlayType, prizes: Max3dPrizeSet): number {
-  if (playMode === PlayMode.Plus) return prizes.plus.special;
-  if (playType === PlayType.Combo3) return prizes.combo.combo3.special;
-  if (playType === PlayType.Combo6) return prizes.combo.combo6.special;
+  if (playMode === PlayMode.Plus) {
+    return prizes.plus.special;
+  }
+  if (playType === PlayType.Combo3) {
+    return prizes.combo.combo3.special;
+  }
+  if (playType === PlayType.Combo6) {
+    return prizes.combo.combo6.special;
+  }
   return prizes.basic.special;
 }

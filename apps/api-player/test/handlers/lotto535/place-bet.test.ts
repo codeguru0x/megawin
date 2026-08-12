@@ -22,12 +22,12 @@ vi.mock("@megawin/game-core/entities", () => ({
 }));
 
 vi.mock("@megawin/game-lotto535/entities", () => ({
+  // Mirror đúng PlayType thật — không có QuickPick (đã bỏ khỏi domain).
   PlayType: {
     Standard: "standard",
     MainCover: "mainCover",
     MainCover4: "mainCover4",
     SpecialCover: "specialCover",
-    QuickPick: "quickPick",
   },
 }));
 
@@ -91,8 +91,9 @@ describe("POST /player/lotto535/bets", () => {
     );
 
     const call = mockRun.mock.calls[0]![0];
-    expect(call.boards[0].selection.mainNumbers).toEqual([1, 5, 12, 23, 35]);
-    expect(call.boards[0].selection.specialNumbers).toEqual([3]);
+    // Số giữ nguyên string zero-padded — handler KHÔNG parseInt (toàn hệ thống dùng "01".."35").
+    expect(call.boards[0].selection.mainNumbers).toEqual(["01", "05", "12", "23", "35"]);
+    expect(call.boards[0].selection.specialNumbers).toEqual(["03"]);
   });
 
   it("should reject duplicate drawIds", async () => {

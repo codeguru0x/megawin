@@ -155,8 +155,9 @@ export class Max3dproDrawStatsAccumulator {
     let entrySets = 0;
     for (const board of entry.boards) {
       this.applyBoard(board, unitPrice, entry.accountId);
-      // PROXY thiên cao: (special + specialSub) × betCount mỗi board — multiNumber
-      // chứa mọi ordered pair của tập chọn → gần như luôn có cả 2 chiều cặp ĐB (§7 Q5).
+      // ƯỚC TÍNH XẾP HẠNG: (special + specialSub) × betCount mỗi board — multiNumber
+      // chứa mọi ordered pair nên gần như luôn có cả 2 chiều cặp ĐB (§7 Q5). Chưa gồm
+      // các giải nhỏ trúng kèm → KHÔNG phải trần tuyệt đối (xem JSDoc `maxProBoardUnitWin`).
       potentialWin += maxProBoardUnitWin(this.prize.prizes) * board.betCount;
       entrySets += board.betCount;
     }

@@ -4,8 +4,8 @@
  * Max 3D Pro – Exposure Card (tab Giám sát)
  *
  * Exposure Pro gồm 2 thành phần ghi nhãn trung thực —
- * - Cặp ĐB max (CHÍNH XÁC có điều kiện — đúng chiều ×2 tỷ + ngược chiều phụ ĐB ×400tr).
- * - Đuôi Năm/Sáu (ƯỚC TÍNH thiên cao).
+ * - Cặp ĐB max (CHÍNH XÁC có điều kiện — đúng chiều × giải ĐB + ngược chiều × phụ ĐB).
+ * - Giải nhỏ Năm/Sáu (ƯỚC TÍNH — tính dư, cao hơn thực tế).
  * Gauge so ngưỡng TUYỆT ĐỐI `exposureWarnAmount` từ `snapshot.thresholds`
  * (kỳ bán nhiều ngày — doanh thu không làm mẫu số).
  */
@@ -69,7 +69,7 @@ export function ExposureCard({
             </div>
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
-              <p className="text-xs text-muted-foreground">Cặp ĐB có điều kiện (2 chiều) · Đuôi Năm/Sáu ước tính</p>
+              <p className="text-xs text-muted-foreground">Cặp ĐB có điều kiện (2 chiều) · Giải nhỏ Năm/Sáu ước tính</p>
             </div>
           </div>
           <div className="text-right">
@@ -85,15 +85,15 @@ export function ExposureCard({
             value={maxPair?.liability ?? 0}
             tip={
               maxPair
-                ? `Cặp ${maxPair.first}→${maxPair.second}: ${formatNumber(maxPair.unitsForward)} bộ đúng chiều × 2 tỷ + ${formatNumber(maxPair.unitsReverse)} bộ chiều ngược × 400tr (phụ ĐB) = ${formatNumber(maxPair.liability)} VND nếu cặp này ra ĐB. Chính xác CÓ ĐIỀU KIỆN (chỉ trả khi đúng cặp ra).`
+                ? `Cặp ${maxPair.first}→${maxPair.second}: ${formatNumber(maxPair.unitsForward)} bộ đúng chiều (× giải ĐB) + ${formatNumber(maxPair.unitsReverse)} bộ chiều ngược (× phụ ĐB) = ${formatNumber(maxPair.liability)} VND nếu cặp này ra ĐB. Chính xác CÓ ĐIỀU KIỆN (chỉ trả khi đúng cặp ra).`
                 : "Chưa có cược nào."
             }
             danger
           />
           <ComponentStat
-            label="Đuôi Năm/Sáu (ước tính)"
+            label="Giải Năm/Sáu (ước tính)"
             value={exposure.tailProxy}
-            tip="Giải Năm/Sáu (điều kiện 1 bộ khớp pool) — ước lượng THIÊN CAO: giả định mọi đơn vị cùng trúng đuôi. Giải cặp Nhất→Tư KHÔNG cộng đồng loạt (chỉ cặp khớp pool mới trả)."
+            tip="Giải Năm/Sáu (chỉ cần 1 trong 2 bộ khớp nhóm kết quả) — con số này TÍNH DƯ, cao hơn thực tế rất nhiều vì giả định MỌI lượt cược đều trúng, trong khi xác suất trúng chỉ khoảng 4%. Mỗi lượt chỉ tính 1 giải (một cặp có 2 bộ nên trên lý thuyết có thể trúng gấp đôi), nhưng phần thiếu đó rất nhỏ so với mức đã tính dư. Giải cặp Nhất→Tư không cộng vào đây (chỉ cặp khớp đúng nhóm kết quả mới phải trả)."
           />
           <ComponentStat
             label="Doanh thu kỳ"

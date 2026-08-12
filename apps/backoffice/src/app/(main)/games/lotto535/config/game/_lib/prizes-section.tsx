@@ -58,7 +58,7 @@ const PRIZE_FIELDS = [
   {
     key: "consolation" as const,
     label: "Khuyến Khích",
-    desc: "chỉ số ĐB",
+    desc: "≤2 chính + ĐB",
     badge: "KK",
     color: "bg-emerald-600 text-white",
   },

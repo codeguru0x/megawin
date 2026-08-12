@@ -279,13 +279,13 @@ export interface BigSmallDrawMatchResult {
 /**
  * Match cách chơi "Lớn/Hòa/Nhỏ": so sánh tổng 3 số quay với ngưỡng đã định.
  *
- * Phân loại tổng (3-18):
- * - Nhỏ (`small`): tổng 3-9  (106/216 = 49,07%) → giải 15.000đ (×1.5)
- * - Hòa  (`draw`): tổng 10-11 (54/216 = 25,00%) → giải 20.000đ (×2)
- * - Lớn  (`big`):  tổng 12-18 (56/216 = 25,93%) → giải 15.000đ (×1.5)
+ * Phân loại tổng (3-18) — 216 tổ hợp xúc xắc, KHÔNG loại trừ bộ ba trùng:
+ * - Nhỏ (`small`): tổng 3-9   (81/216 = 37,50%) → giải mặc định 15.000đ (×1.5)
+ * - Hòa  (`draw`): tổng 10-11 (54/216 = 25,00%) → giải mặc định 20.000đ (×2)
+ * - Lớn  (`big`):  tổng 12-18 (81/216 = 37,50%) → giải mặc định 15.000đ (×1.5)
  *
- * LƯU Ý: big + small không có xác suất 50/50 — small chiếm 49,07% vì
- * không gian [3-9] có nhiều tổ hợp hơn [12-18] (106 vs 56 ways/216).
+ * Phân phối ĐỐI XỨNG: tổng 3 xúc xắc đối xứng quanh 10,5 nên dải [3-9] và
+ * [12-18] có đúng 81 tổ hợp mỗi bên. 3 cửa phủ kín 216 tổ hợp (81+54+81).
  *
  * @param bet - Loại cược: small | draw | big
  * @param result - Kết quả kỳ quay (chỉ dùng result.sum)

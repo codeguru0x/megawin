@@ -8,8 +8,10 @@
  *   Bingo 18 quay 3 số, mỗi số lấy ngẫu nhiên từ {1,2,3,4,5,6}.
  *   Tổng không gian mẫu: 6^3 = 216 trường hợp.
  *
- *   Giá vé: 10.000 VND / lần tham gia / cách chơi.
- *   Lịch quay: mỗi 6 phút, từ 06:00 đến 21:53.
+ *   Giá vé mặc định: 10.000 VND / lần tham gia / cách chơi (`play.unitPrice`).
+ *   Lịch quay mặc định: mỗi 6 phút, 06:00 – 21:53 → 159 kỳ/ngày. Cả 3 tham số
+ *   (`drawIntervalMinutes`, `firstDrawTime`, `lastDrawTime`) đều cấu hình được nên
+ *   số kỳ/ngày phải tính lại theo config, KHÔNG coi là hằng số.
  *
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * II. XÁC SUẤT – MỘT SỐ (singleNum)
@@ -54,6 +56,18 @@
  *   Sum=10: 27 ways                            P ≈ 12.50%
  *   Sum=11: 27 ways                            P ≈ 12.50%
  *   (đối xứng cho 12-18)
+ *
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * VI. XÁC SUẤT – LỚN / HOÀ / NHỎ (bigSmallDraw)
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
+ *   3 cửa cược ĐỘC LẬP, phủ kín 216 tổ hợp, KHÔNG loại trừ bộ ba trùng:
+ *     Nhỏ  (tổng 3-9)   = 1+3+6+10+15+21+25 = 81/216 = 37,50%
+ *     Hoà  (tổng 10-11) = 27+27             = 54/216 = 25,00%
+ *     Lớn  (tổng 12-18) = 25+21+15+10+6+3+1 = 81/216 = 37,50%
+ *
+ *   Phân phối ĐỐI XỨNG quanh 10,5 → Nhỏ và Lớn bằng nhau đúng 81 ways.
+ *   Kiểm tra: 81 + 54 + 81 = 216 ✓
  */
 
 import {

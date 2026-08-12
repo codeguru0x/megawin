@@ -6,5 +6,6 @@
  * KHÔNG tự tạo `createCachedFetcher` inline.
  */
 
+export { activeJackpotCycleCache } from "./active-jackpot-cycle.cache";
 export { globalConfigCache } from "./global-config.cache";
 export { tenantConfigCache } from "./tenant-config.cache";

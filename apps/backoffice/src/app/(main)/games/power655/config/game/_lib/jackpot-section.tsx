@@ -98,8 +98,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
             <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Jackpot kép (Dual Jackpot)</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Jackpot 1 (trùng 6/6 số chính, tối thiểu 30 tỷ) và Jackpot 2 (trùng 5/6 + số bonus, tối thiểu 3 tỷ). Cả
-                hai tích luỹ song song theo tỷ lệ đã cài đặt.
+                Jackpot 1 (trùng 6/6 số chính) và Jackpot 2 (trùng 5/6 + số bonus). Cả hai tích luỹ song song theo tỷ lệ
+                đã cài đặt. Vietlott quy định tối thiểu 30 tỷ (JP1) / 3 tỷ (JP2); hệ thống không ép buộc giá trị này.
               </p>
             </div>
 
@@ -117,7 +117,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           </Badge>
                           <LabelWithTooltip
                             label="Giá trị khởi điểm"
-                            tip="Số tiền khởi điểm của Jackpot 1 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Mặc định 30 tỷ VND."
+                            tip="Số tiền khởi điểm của Jackpot 1 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Vietlott quy định tối thiểu 30 tỷ VND; hệ thống không ép buộc giá trị này."
                           />
                         </FormLabel>
                         <FormControl>
@@ -150,7 +150,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           </Badge>
                           <LabelWithTooltip
                             label="Giá trị khởi điểm"
-                            tip="Số tiền khởi điểm của Jackpot 2 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Mặc định 3 tỷ VND."
+                            tip="Số tiền khởi điểm của Jackpot 2 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Vietlott quy định tối thiểu 3 tỷ VND; hệ thống không ép buộc giá trị này."
                           />
                         </FormLabel>
                         <FormControl>
@@ -303,10 +303,12 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
             <div className="flex items-start gap-2">
               <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
               <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) tối thiểu 30 tỷ, Jackpot 2 (trùng 5/6
-                + bonus) tối thiểu 3 tỷ. Tích luỹ mỗi kỳ theo tỷ lệ Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn
-                đến khi có người trúng — <strong>không có cơ chế chia giải (split)</strong>. Overflow Jackpot 1 chỉ kích
-                hoạt khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2 winner.
+                Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) và Jackpot 2 (trùng 5/6 + bonus).
+                Vietlott quy định tối thiểu 30 tỷ (JP1) / 3 tỷ (JP2); hệ thống không ép buộc giá trị này. Tích luỹ mỗi
+                kỳ theo tỷ lệ Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có người trúng —{" "}
+                <strong>không chia xuống hạng giải thấp hơn</strong>; nhiều người cùng trúng thì chia đều theo đơn vị dự
+                thưởng. Overflow Jackpot 1 chỉ kích hoạt khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và
+                có Jackpot 2 winner.
               </p>
             </div>
           </div>
