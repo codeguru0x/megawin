@@ -70,6 +70,27 @@ export const GameProduct = {
 export type GameProduct = (typeof GameProduct)[keyof typeof GameProduct];
 
 // ─────────────────────────────────────────────
+// Jackpot Game Product (subset của GameProduct)
+// ─────────────────────────────────────────────
+
+/**
+ * Subset {@link GameProduct} — chỉ các game CÓ jackpot cycle.
+ *
+ * Dùng làm discriminator cho API gộp jackpot (`GET /games/jackpots`) và widget
+ * cross-game. 3/7 game hiện có jackpot: Lotto 5/35, Mega 6/45, Power 6/55.
+ *
+ * **Sync:** `@megawin/player-sdk` định nghĩa `JackpotGameProduct` mirror const này
+ * (SDK không import game-core). Khi thêm/bớt game jackpot, sửa CẢ HAI chỗ.
+ */
+export const JackpotGameProduct = {
+  Lotto535: GameProduct.Lotto535,
+  Mega645: GameProduct.Mega645,
+  Power655: GameProduct.Power655,
+} as const;
+
+export type JackpotGameProduct = (typeof JackpotGameProduct)[keyof typeof JackpotGameProduct];
+
+// ─────────────────────────────────────────────
 // Ticket Status (dùng chung cho tất cả game)
 // ─────────────────────────────────────────────
 

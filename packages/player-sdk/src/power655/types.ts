@@ -736,8 +736,6 @@ export interface Power655JackpotResponse {
   drawCount: number;
   /** Số lần JP2 đã trúng và reset trong cycle hiện tại. 0 = JP2 chưa ai trúng từ đầu cycle. */
   jackpot2ResetCount: number;
-  /** Thời điểm bắt đầu cycle (ISO 8601). */
-  startedAt: string;
   /** ID kỳ quay đầu tiên của cycle. */
   startDrawId: string;
 }

@@ -120,12 +120,47 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
 // ─────────────────────────────────────────────
 
 /**
+ * Jackpot đã đạt ngưỡng chia (split threshold) chưa.
+ *
+ * CHỈ kiểm tra vế "đủ tiền" — KHÔNG phụ thuộc kỳ quay (drawNo) hay có winner hay không.
+ * Dùng cho UI/API muốn hiển thị "Jackpot đã chạm ngưỡng chia" mà không có ngữ cảnh draw.
+ * Điều kiện split ĐẦY ĐỦ (kèm drawNo + winner) xem {@link isSplitCycleDraw}.
+ *
+ * @param jackpotAmount  - Jackpot hiện tại (VND)
+ * @param splitThreshold - Ngưỡng chia (từ gameConfig, VND)
+ * @returns true nếu `jackpotAmount >= splitThreshold`
+ */
+export function hasReachedSplitThreshold(jackpotAmount: number, splitThreshold: number): boolean {
+  return jackpotAmount >= splitThreshold;
+}
+
+/**
+ * Kỳ quay CÓ ĐỦ điều kiện chia giải KHÔNG XÉT winner — "ý định chia".
+ *
+ * Điều kiện (CẢ HAI phải đúng):
+ * 1. Jackpot >= splitThreshold (xem {@link hasReachedSplitThreshold})
+ * 2. Đây là kỳ 21h (drawNo = 2, {@link DrawNo.Evening})
+ *
+ * Tách riêng với {@link isSplitCycleDraw} vì có những thời điểm CHƯA biết
+ * winner (prepare-settle, hiển thị "kỳ này sẽ chia" trên UI current draw) —
+ * khi đó chỉ cần vế ngưỡng + kỳ 21h. Kỳ chia THỰC TẾ còn phải không ai trúng
+ * Jackpot (xem {@link isSplitCycleDraw}).
+ *
+ * @param jackpotAmount  - Jackpot hiện tại (VND)
+ * @param splitThreshold - Ngưỡng chia (từ gameConfig, VND)
+ * @param drawNo         - Số thứ tự kỳ quay (1 = 13h, 2 = 21h)
+ * @returns true nếu Jackpot đủ ngưỡng và là kỳ 21h
+ */
+export function isSplitEligibleDraw(jackpotAmount: number, splitThreshold: number, drawNo: number): boolean {
+  return hasReachedSplitThreshold(jackpotAmount, splitThreshold) && drawNo === DrawNo.Evening;
+}
+
+/**
  * Kiểm tra kỳ quay có phải kỳ chia giải (split cycle) không.
  *
- * Điều kiện:
- * 1. Jackpot >= splitThreshold
+ * Điều kiện (TẤT CẢ phải đúng):
+ * 1. Jackpot >= splitThreshold + đúng kỳ 21h (xem {@link isSplitEligibleDraw})
  * 2. Không ai trúng Jackpot
- * 3. Đây là kỳ 21h (drawNo = 2) ngày hôm sau
  *
  * @param jackpotAmount   - Jackpot hiện tại
  * @param splitThreshold  - Ngưỡng chia (từ gameConfig)
@@ -139,7 +174,7 @@ export function isSplitCycleDraw(
   hasJackpotWinner: boolean,
   drawNo: number,
 ): boolean {
-  return jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === DrawNo.Evening;
+  return isSplitEligibleDraw(jackpotAmount, splitThreshold, drawNo) && !hasJackpotWinner;
 }
 
 /** Input cho tính chia giải. */

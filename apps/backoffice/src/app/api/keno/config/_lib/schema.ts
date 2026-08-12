@@ -1,11 +1,11 @@
 import { KenoOpsAlertType } from "@megawin/game-keno/entities";
 import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
+import { HHMM_PATTERN } from "@megawin/shared/utils";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
 const nonNegativeInt = z.number().int().nonnegative();
 const rate = z.number().min(0).max(1);
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // ─────── Rates ───────
 
@@ -73,8 +73,8 @@ const playSchema = z
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,
     drawIntervalMinutes: positiveInt,
-    firstDrawTime: z.string().regex(timePattern, "Giờ phải có format HH:mm"),
-    lastDrawTime: z.string().regex(timePattern, "Giờ phải có format HH:mm"),
+    firstDrawTime: z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm"),
+    lastDrawTime: z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm"),
     timezone: z.string().min(1),
   })
   .partial()

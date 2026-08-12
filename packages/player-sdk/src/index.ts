@@ -33,6 +33,7 @@ export {
   isApiSuccess,
 } from "./api-types";
 export type { Bingo18Api } from "./apis/bingo18";
+export type { GameApi, GameJackpotsApi } from "./apis/game";
 export type { KenoApi } from "./apis/keno";
 export type { Lotto535Api } from "./apis/lotto535";
 export type { Max3dApi } from "./apis/max3d";
@@ -76,6 +77,19 @@ export type {
 export { Bingo18BigSmallBet, Bingo18TripleKind } from "./bingo18";
 // ---- Client ----
 export { createPlayerClient, type PlayerClient, type PlayerSdkConfig } from "./client";
+// ---- Game aggregate types (cross-game) ----
+export type {
+  JackpotDetails,
+  JackpotSummary,
+  JackpotSummaryListResponse,
+  Lotto535JackpotDetails,
+  Lotto535JackpotSummary,
+  Mega645JackpotDetails,
+  Mega645JackpotSummary,
+  Power655JackpotDetails,
+  Power655JackpotSummary,
+} from "./game";
+export { JackpotGameProduct } from "./game";
 // ---- HTTP client types (cho advanced usage) ----
 export type { HttpClient, RequestOptions } from "./http-client";
 export type {

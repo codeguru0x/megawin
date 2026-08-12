@@ -8,7 +8,8 @@
     "src/power655/index.ts",
     "src/max3d/index.ts",
     "src/max3dpro/index.ts",
-    "src/bingo18/index.ts"
+    "src/bingo18/index.ts",
+    "src/game/index.ts"
   ],
   "out": "docs",
   "name": "@megawin/player-sdk",

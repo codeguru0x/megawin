@@ -34,7 +34,7 @@
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { PlayType } from "@megawin/game-lotto535/entities";
-import { buildComboKey, inferPlayType, isSplitCycleDraw, validateSelection } from "@megawin/game-lotto535/rules";
+import { buildComboKey, inferPlayType, isSplitEligibleDraw, validateSelection } from "@megawin/game-lotto535/rules";
 
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -107,11 +107,12 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
       output.jackpotUnits = jackpotUnits;
 
       if (draw) {
-        // Chưa biết ai trúng JP tại thời điểm player tra (draw chưa settle) — hasJackpotWinner
-        // = false để trả lời đúng câu hỏi "kỳ này CÓ ĐỦ ĐIỀU KIỆN chia NẾU không ai trúng".
+        // Chưa biết ai trúng JP tại thời điểm player tra (draw chưa settle) — dùng
+        // isSplitEligibleDraw (ngưỡng + kỳ 21h, KHÔNG xét winner) để trả lời đúng câu
+        // hỏi "kỳ này CÓ ĐỦ ĐIỀU KIỆN chia NẾU không ai trúng".
         const jackpotAmount = activeCycle?.currentAmount ?? config.jackpot.seedAmount;
         const splitThreshold = activeCycle?.config.splitThreshold ?? config.jackpot.splitThreshold;
-        output.splitEligibleDraw = isSplitCycleDraw(jackpotAmount, splitThreshold, false, draw.drawNo);
+        output.splitEligibleDraw = isSplitEligibleDraw(jackpotAmount, splitThreshold, draw.drawNo);
       }
     }
 

@@ -79,7 +79,7 @@ export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
     if (new Set(numbers).size !== numbers.length) {
       throw AppException.badRequest("Các số không được trùng nhau.");
     }
-    
+
     for (const n of numbers) {
       if (!VALID_MAIN_NUMBER_SET.has(n)) {
         throw AppException.badRequest(`Số không hợp lệ: ${n}. Chỉ nhận "01".."55".`);

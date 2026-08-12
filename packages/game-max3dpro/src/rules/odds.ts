@@ -1,10 +1,15 @@
 /**
  * Max 3D Pro – Odds & Profit Calculator
  *
- * Max 3D Pro: mỗi "line" = 1 cặp 2 bộ ba số. Giá 10,000 VND/line.
+ * Max 3D Pro: mỗi "line" = 1 cặp có thứ tự 2 bộ ba số (`{first, second}`).
+ * Giá vé mặc định 10.000 VND / cặp / lượt (`play.unitPrice` — cấu hình được).
  * Kết quả quay: 20 bộ ba số (2 ĐB + 4 Nhất + 6 Nhì + 8 Ba).
  *
- * Tổng không gian mẫu cho 1 cặp ordered: S = 1,000 × 1,000 = 1,000,000
+ * Không gian mẫu: S = 1.000 × 1.000 = 1.000.000 cặp có thứ tự, CHO PHÉP
+ * first = second (người chơi được chọn 2 bộ giống nhau).
+ *
+ * 8 hạng giải KHÔNG loại trừ nhau — người chơi lĩnh TỔNG mọi hạng đạt điều
+ * kiện, nên mỗi hạng có xác suất riêng và tổng xác suất > P(trúng ≥ 1 giải).
  */
 
 import { PrizeTier } from "../entities/enums";
@@ -16,6 +21,9 @@ const RESULT_FIRST = 4;
 const RESULT_SECOND = 6;
 const RESULT_THIRD = 8;
 const RESULT_TOTAL = 20;
+
+/** Số bộ kết quả thuộc Nhất/Nhì/Ba — pool của Giải Sáu. */
+const RESULT_NON_SPECIAL = RESULT_TOTAL - RESULT_SPECIAL;
 
 export const PRO_TOTAL_OUTCOMES = TOTAL_TRIPLETS * TOTAL_TRIPLETS;
 
@@ -29,32 +37,42 @@ export interface ProTierOdds {
 }
 
 /**
- * Bảng xác suất Max 3D Pro (ordered pairs).
+ * Bảng xác suất Max 3D Pro — khớp CHÍNH XÁC logic `matchPair()` trong `prize-tiers.ts`.
  *
- * ĐB:       first=special[0] AND second=special[1] → 1 way (ordered exact)
- * Phụ ĐB:   first=special[1] AND second=special[0] → 1 way (reversed)
- * Nhất:     cả 2 trong 4 bộ Nhất → 4×4 = 16 (trừ ĐB overlap = 0) → 4×3=12 ordered pairs (khác nhau) + 4 (giống) = 16
- * Nhì:      cả 2 trong 6 bộ Nhì → 6×6 = 36
- * Ba:       cả 2 trong 8 bộ Ba → 8×8 = 64
- * Tư:       cả 2 trong 20 bộ bất kỳ, trừ ĐB/phụĐB/Nhất/Nhì/Ba → 20×20 - 2 - 16 - 36 - 64 = 282
- * Năm:      chỉ 1 bộ trùng ĐB → 2 × (1000-20) × 2 = 3920 (first or second matches special)
- * Sáu:      chỉ 1 bộ trùng Nhất/Nhì/Ba → 2 × 18 × (1000-20) = 35280
+ * `ways` là **effective ways** (đã quy đổi ×2 giải thưởng của cặp trùng thành
+ * ways tương đương), nên `probability × prize` cho ra chi phí kỳ vọng ĐÚNG.
+ *
+ * Ba nhóm giải tính khác nhau:
+ * - **ĐB / phụ ĐB**: so khớp cặp có thứ tự với `(special[0], special[1])` →
+ *   đúng 1 way mỗi hạng. Cặp trùng chỉ xảy ra khi 2 bộ ĐB cùng giá trị và khi
+ *   đó nhận `special + specialSub` (không ×2), đã bao trong 1 way mỗi hạng.
+ * - **Nhóm cặp (Nhất → Tư)**: bipartite matching — 2 bộ phải khớp 2 entry
+ *   RIÊNG BIỆT → pool k entry cho `k × (k − 1)` ways. Cặp trùng bị loại khỏi
+ *   nhóm này (không khớp được 2 entry riêng biệt), nên KHÔNG dùng `k²`.
+ * - **Nhóm đơn (Năm, Sáu)**: đếm số LẦN trúng theo từng bộ số →
+ *   `2 vị trí × k entry × 1.000 bộ còn lại`. Bộ còn lại KHÔNG bị loại 20 kết
+ *   quả: theo luật gộp giải, cả 2 bộ đều khớp thì trúng 2 lần và được lĩnh cả
+ *   hai. Cặp trùng khớp 1 lần nhưng thưởng ×2 → tổng effective bằng nhau.
+ *
+ * Bảng đã được kiểm chứng bằng enumeration đủ 1.000.000 cặp.
  */
 export function getProOddsTable(): ProTierOdds[] {
   const S = PRO_TOTAL_OUTCOMES;
 
+  // ── ĐB / phụ ĐB: khớp cặp có thứ tự → 1 way mỗi hạng ──
   const waysSpecial = 1;
   const waysSpecialSub = 1;
-  const waysFirst = RESULT_FIRST * RESULT_FIRST;
-  const waysSecond = RESULT_SECOND * RESULT_SECOND;
-  const waysThird = RESULT_THIRD * RESULT_THIRD;
 
-  const waysBothInAny = RESULT_TOTAL * RESULT_TOTAL;
-  const waysFourth = waysBothInAny - waysSpecial - waysSpecialSub - waysFirst - waysSecond - waysThird;
+  // ── Nhóm CẶP: k × (k−1) — 2 entry RIÊNG BIỆT gán theo thứ tự (first, second) ──
+  const waysFirst = RESULT_FIRST * (RESULT_FIRST - 1);
+  const waysSecond = RESULT_SECOND * (RESULT_SECOND - 1);
+  const waysThird = RESULT_THIRD * (RESULT_THIRD - 1);
+  // Giải Tư: 2 entry riêng biệt trong TOÀN BỘ 20 kết quả (cho phép cross-tier).
+  const waysFourth = RESULT_TOTAL * (RESULT_TOTAL - 1);
 
-  const nonResult = TOTAL_TRIPLETS - RESULT_TOTAL;
-  const waysOneSpecialOnly = 2 * RESULT_SPECIAL * nonResult;
-  const waysOnlyNonSpecial = 2 * (RESULT_TOTAL - RESULT_SPECIAL) * nonResult;
+  // ── Nhóm ĐƠN: 2 vị trí × k entry × 1.000 bộ còn lại tự do ──
+  const waysFifth = 2 * RESULT_SPECIAL * TOTAL_TRIPLETS;
+  const waysSixth = 2 * RESULT_NON_SPECIAL * TOTAL_TRIPLETS;
 
   return [
     {
@@ -79,7 +97,7 @@ export function getProOddsTable(): ProTierOdds[] {
       ways: waysFirst,
       probability: waysFirst / S,
       oneInN: S / waysFirst,
-      formula: `${RESULT_FIRST}² = ${waysFirst}`,
+      formula: `${RESULT_FIRST} × ${RESULT_FIRST - 1} = ${waysFirst}`,
     },
     {
       tier: PrizeTier.Second,
@@ -87,7 +105,7 @@ export function getProOddsTable(): ProTierOdds[] {
       ways: waysSecond,
       probability: waysSecond / S,
       oneInN: S / waysSecond,
-      formula: `${RESULT_SECOND}² = ${waysSecond}`,
+      formula: `${RESULT_SECOND} × ${RESULT_SECOND - 1} = ${waysSecond}`,
     },
     {
       tier: PrizeTier.Third,
@@ -95,7 +113,7 @@ export function getProOddsTable(): ProTierOdds[] {
       ways: waysThird,
       probability: waysThird / S,
       oneInN: S / waysThird,
-      formula: `${RESULT_THIRD}² = ${waysThird}`,
+      formula: `${RESULT_THIRD} × ${RESULT_THIRD - 1} = ${waysThird}`,
     },
     {
       tier: PrizeTier.Fourth,
@@ -103,23 +121,23 @@ export function getProOddsTable(): ProTierOdds[] {
       ways: waysFourth,
       probability: waysFourth / S,
       oneInN: S / waysFourth,
-      formula: `${RESULT_TOTAL}² - ĐB - phụĐB - Nhất² - Nhì² - Ba² = ${waysFourth}`,
+      formula: `${RESULT_TOTAL} × ${RESULT_TOTAL - 1} = ${waysFourth}`,
     },
     {
       tier: PrizeTier.Fifth,
       label: "Giải Năm",
-      ways: waysOneSpecialOnly,
-      probability: waysOneSpecialOnly / S,
-      oneInN: S / waysOneSpecialOnly,
-      formula: `2 × ${RESULT_SPECIAL} × ${nonResult} = ${waysOneSpecialOnly}`,
+      ways: waysFifth,
+      probability: waysFifth / S,
+      oneInN: S / waysFifth,
+      formula: `2 × ${RESULT_SPECIAL} × ${TOTAL_TRIPLETS} = ${waysFifth}`,
     },
     {
       tier: PrizeTier.Sixth,
       label: "Giải Sáu",
-      ways: waysOnlyNonSpecial,
-      probability: waysOnlyNonSpecial / S,
-      oneInN: S / waysOnlyNonSpecial,
-      formula: `2 × ${RESULT_TOTAL - RESULT_SPECIAL} × ${nonResult} = ${waysOnlyNonSpecial}`,
+      ways: waysSixth,
+      probability: waysSixth / S,
+      oneInN: S / waysSixth,
+      formula: `2 × ${RESULT_NON_SPECIAL} × ${TOTAL_TRIPLETS} = ${waysSixth}`,
     },
   ];
 }

@@ -57,7 +57,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Cấu hình Jackpot</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Mega 6/45 theo luật Vietlott — Jackpot tích luỹ (roll-over), không có cơ chế chia
+                    Mega 6/45 theo luật Vietlott — Jackpot tích luỹ (roll-over); không chia xuống hạng giải thấp hơn
                   </p>
                 </div>
               </div>
@@ -98,9 +98,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
                 <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                  Giá trị khởi điểm là số tiền tối thiểu của quỹ Jackpot khi bắt đầu một chu kỳ mới (sau khi có người
-                  trúng Độc Đắc). Nếu không có người trúng, quỹ sẽ <strong>tích luỹ (roll-over)</strong> sang kỳ tiếp
-                  theo. Theo quy định Vietlott, Jackpot khởi điểm tối thiểu là <strong>12 tỷ VND</strong>.
+                  Giá trị khởi điểm là số tiền của quỹ Jackpot khi bắt đầu một chu kỳ mới (sau khi có người trúng Độc
+                  Đắc). Nếu không có người trúng, quỹ sẽ <strong>tích luỹ (roll-over)</strong> sang kỳ tiếp theo. Nhiều
+                  người cùng trúng thì chia đều theo đơn vị dự thưởng — không chia xuống hạng giải thấp hơn. Vietlott
+                  quy định 12 tỷ; hệ thống không ép buộc giá trị này.
                 </p>
               </div>
             </div>

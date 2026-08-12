@@ -78,9 +78,6 @@ export interface PlayerGetJackpotOutput {
    */
   jackpot2ResetCount: number;
 
-  /** Thời điểm bắt đầu cycle (ISO 8601). */
-  startedAt: string;
-
   /** ID kỳ quay đầu tiên của cycle. */
   startDrawId: string;
 }

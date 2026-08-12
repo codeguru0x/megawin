@@ -165,7 +165,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip={`Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 tập hợp 6 số chơi độc lập, được settle riêng. Không được cấu hình vượt quá ${POWER655_MAX_BOARDS} (hard cap toàn hệ thống).`}
+                            tip={`Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 lựa chọn độc lập (Standard 6 số hoặc Bao 5–18 số), được settle riêng. Không được cấu hình vượt quá ${POWER655_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -298,7 +298,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    1 kỳ quay mỗi ngày quay — Power 6/55 quay 3 lần/tuần (T3, T5, T7).
+                    1 kỳ quay mỗi ngày quay — {drawDays.length} lần/tuần
+                    {drawDays.length > 0 ? ` (${drawDays.map((d) => DAY_LABELS[d]).join(", ")})` : ""}.
                   </p>
                 </div>
 

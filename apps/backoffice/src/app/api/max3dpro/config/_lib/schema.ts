@@ -1,5 +1,6 @@
 import { Max3dproOpsAlertType } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
+import { HHMM_PATTERN } from "@megawin/shared/utils";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -30,8 +31,6 @@ const defaultPrizesSchema = z
   })
   .partial();
 
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-
 const playSchema = z
   .object({
     unitPrice: positiveInt,
@@ -41,10 +40,21 @@ const playSchema = z
     maxDrawCount: positiveInt,
     salesCloseBeforeMinutes: positiveInt,
     drawsPerDay: positiveInt,
-    drawTimes: z.array(z.string().regex(timePattern, "Giờ phải có format HH:mm")).min(1),
+    drawTimes: z.array(z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm")).min(1),
     drawDaysOfWeek: z.array(z.number().int().min(0).max(6)).min(1, "Phải chọn ít nhất 1 ngày quay.").max(7),
   })
-  .partial();
+  .partial()
+  // Partial update có thể gửi 1 trong 2 field → chỉ kiểm tra khi CẢ HAI cùng có mặt.
+  // Thiếu refine này thì API nhận maxBetCount < minBetCount, tạo khoảng hợp lệ rỗng.
+  .refine(
+    (data) => {
+      if (data.minBetCount !== undefined && data.maxBetCount !== undefined) {
+        return data.maxBetCount >= data.minBetCount;
+      }
+      return true;
+    },
+    { message: "maxBetCount phải ≥ minBetCount.", path: ["maxBetCount"] },
+  );
 
 // ─────── Operations & Risk Control (analysis max3dpro-ops §3.6) ───────
 

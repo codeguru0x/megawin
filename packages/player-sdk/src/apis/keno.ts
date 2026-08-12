@@ -244,7 +244,7 @@ export interface KenoApi {
    *
    * **Endpoint:** `GET /games/keno/tickets/{ticketId}/entries`
    *
-   * @param ticketId - ID vé Keno (MongoDB ObjectId string)
+   * @param ticketId - ID vé Keno (lấy từ `ticket.id` hoặc `placeBet` response)
    * @returns Thông tin vé kèm danh sách entries
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — vé không tồn tại hoặc không thuộc player

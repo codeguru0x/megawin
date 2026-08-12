@@ -202,7 +202,7 @@ export interface Bingo18TripleMatchPrizesConfig {
   any: number;
 }
 
-/** Key: tổng dưới dạng string (e.g. "3", "18") → tiền thưởng (VND). Dùng string vì MongoDB serialize key thành string. */
+/** Key: tổng dưới dạng string (e.g. "3", "18") → tiền thưởng (VND). Object key trong JSON luôn là string. */
 export type Bingo18SumTotalPrizesConfig = Record<string, number>;
 
 /**

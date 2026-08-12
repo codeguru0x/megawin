@@ -44,7 +44,7 @@ const STANDARD_FIELDS = [
     key: "special" as const,
     tier: "special" as const,
     label: "Giải Đặc Biệt",
-    desc: "2 bộ trùng đúng thứ tự 2 bộ ĐB",
+    desc: "2 bộ khớp 2 bộ ĐB, ĐÚNG thứ tự quay",
     badge: "ĐB",
     color: "bg-red-600 text-white",
   },
@@ -52,7 +52,7 @@ const STANDARD_FIELDS = [
     key: "specialSub" as const,
     tier: "specialSub" as const,
     label: "Giải phụ Đặc Biệt",
-    desc: "2 bộ trùng ngược thứ tự 2 bộ ĐB",
+    desc: "2 bộ khớp 2 bộ ĐB, NGƯỢC thứ tự quay",
     badge: "pĐB",
     color: "bg-red-500 text-white",
   },
@@ -60,7 +60,7 @@ const STANDARD_FIELDS = [
     key: "first" as const,
     tier: "first" as const,
     label: "Giải Nhất",
-    desc: "2 bộ đều trùng trong 4 bộ Nhất",
+    desc: "2 bộ khớp 2 bộ Nhất riêng biệt",
     badge: "1st",
     color: "bg-amber-500 text-white",
   },
@@ -68,7 +68,7 @@ const STANDARD_FIELDS = [
     key: "second" as const,
     tier: "second" as const,
     label: "Giải Nhì",
-    desc: "2 bộ đều trùng trong 6 bộ Nhì",
+    desc: "2 bộ khớp 2 bộ Nhì riêng biệt",
     badge: "2nd",
     color: "bg-slate-400 text-white",
   },
@@ -76,7 +76,7 @@ const STANDARD_FIELDS = [
     key: "third" as const,
     tier: "third" as const,
     label: "Giải Ba",
-    desc: "2 bộ đều trùng trong 8 bộ Ba",
+    desc: "2 bộ khớp 2 bộ Ba riêng biệt",
     badge: "3rd",
     color: "bg-amber-700 text-white",
   },
@@ -84,7 +84,7 @@ const STANDARD_FIELDS = [
     key: "fourth" as const,
     tier: "fourth" as const,
     label: "Giải Tư",
-    desc: "2 bộ trùng bất kỳ (cross-tier)",
+    desc: "2 bộ khớp 2 kết quả bất kỳ trong 20 bộ",
     badge: "4th",
     color: "bg-slate-500 text-white",
   },
@@ -92,7 +92,7 @@ const STANDARD_FIELDS = [
     key: "fifth" as const,
     tier: "fifth" as const,
     label: "Giải Năm",
-    desc: "1 bộ trùng bộ ĐB",
+    desc: "mỗi bộ khớp 1 bộ ĐB (xét riêng từng bộ)",
     badge: "5th",
     color: "bg-slate-600 text-white",
   },
@@ -100,7 +100,7 @@ const STANDARD_FIELDS = [
     key: "sixth" as const,
     tier: "sixth" as const,
     label: "Giải Sáu",
-    desc: "1 bộ trùng bộ Nhất/Nhì/Ba",
+    desc: "mỗi bộ khớp 1 bộ Nhất/Nhì/Ba (xét riêng)",
     badge: "6th",
     color: "bg-emerald-600 text-white",
   },
@@ -127,40 +127,61 @@ interface ProfitBarProps {
   unitPrice: number;
   totalOutcomes: number;
   modeLabel: string;
+  /**
+   * Ghi chú nghiệp vụ hiện dưới dòng thông tin giá — giải thích gộp giải, cặp trùng.
+   * Truyền `string[]` khi có nhiều ý tách biệt (mỗi ý 1 bullet) để tránh dồn thành
+   * 1 câu dài khó đọc; truyền `string` khi chỉ có 1 ý ngắn.
+   */
+  note?: string | string[];
 }
 
-function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel }: ProfitBarProps) {
+function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, note }: ProfitBarProps) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
-          {" · "}Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
-        </p>
-      </div>
-      <div className="flex items-center gap-4 text-xs shrink-0">
-        <div className="text-right">
-          <span className="text-muted-foreground">CP kỳ vọng / line</span>
-          <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
+    <div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
+            {" · "}Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
+          </p>
         </div>
-        <div className="text-right">
-          <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-          <div
-            className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
-          >
-            {analysis.grossMarginPercent >= 0 ? (
-              <TrendingUp className="mr-1 inline size-3.5" />
-            ) : (
-              <TrendingDown className="mr-1 inline size-3.5" />
-            )}
-            {analysis.grossMarginPercent.toFixed(2)}%
-            <span className="ml-1 font-normal text-muted-foreground">
-              ({fmt(Math.round(analysis.grossMarginPerLine))} VND/line)
-            </span>
+        <div className="flex items-center gap-4 text-xs shrink-0">
+          <div className="text-right">
+            <span className="text-muted-foreground">CP kỳ vọng / line</span>
+            <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
+          </div>
+          <div className="text-right">
+            <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
+            <div
+              className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
+            >
+              {analysis.grossMarginPercent >= 0 ? (
+                <TrendingUp className="mr-1 inline size-3.5" />
+              ) : (
+                <TrendingDown className="mr-1 inline size-3.5" />
+              )}
+              {analysis.grossMarginPercent.toFixed(2)}%
+              <span className="ml-1 font-normal text-muted-foreground">
+                ({fmt(Math.round(analysis.grossMarginPerLine))} VND/line)
+              </span>
+            </div>
           </div>
         </div>
       </div>
+      {note ? (
+        <div className="text-xs text-muted-foreground/80 mt-2 leading-snug">
+          {Array.isArray(note) ? (
+            <ul className="list-disc space-y-0.5 pl-4">
+              {note.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>{note}</p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -177,22 +198,22 @@ function TableHeader() {
       <span className="text-right">Giá trị thưởng</span>
       <HeaderTooltip
         label="Xác suất"
-        tip="Xác suất trúng giải cho 1 line. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 line trúng."
+        tip="Xác suất trúng RIÊNG hạng này cho 1 line. 8 hạng KHÔNG loại trừ nhau — 1 cặp có thể trúng nhiều hạng và lĩnh tổng, nên cột này cộng lại vượt xác suất 'trúng ít nhất 1 giải'. Giải Năm/Sáu xét từng bộ nên 1 cặp có thể trúng 2 lần; con số đã tính cả trường hợp đó. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 lần trúng hạng này."
         className="justify-end"
       />
       <HeaderTooltip
         label="CP kỳ vọng"
-        tip="Chi phí trả thưởng kỳ vọng cho mỗi line = Xác suất × Giá trị giải."
+        tip="Chi phí trả thưởng kỳ vọng của RIÊNG hạng này cho mỗi line = Xác suất × Giá trị giải. Tổng của cả 8 hạng xem ở thanh trên cùng."
         className="justify-end"
       />
       <HeaderTooltip
         label="Tỷ lệ TT"
-        tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá line × 100%. Trên 100% = LỖ."
+        tip="Tỷ lệ trả thưởng của RIÊNG hạng này = CP kỳ vọng ÷ Giá line × 100%. Phải xem TỔNG 8 hạng mới biết line có lãi hay không — 1 hạng dưới 100% không có nghĩa là an toàn."
         className="justify-end"
       />
       <HeaderTooltip
         label="Hoà vốn"
-        tip="Giá trị giải thưởng tối đa để không lỗ = Giá line ÷ Xác suất."
+        tip="Giá trị giải tối đa để RIÊNG hạng này không lỗ = Giá line ÷ Xác suất. Do 8 hạng cộng dồn, phải đặt giải THẤP HƠN con số này để tổng line vẫn có lãi."
         className="justify-end"
       />
     </div>
@@ -242,7 +263,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
               <TooltipContent side="top" className="max-w-72 text-xs">
                 {odds && (
                   <>
-                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)}
+                    Số lần trúng kỳ vọng: {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)} cặp
                     <br />
                     Xác suất: {(odds.probability * 100).toFixed(6)}%
                   </>
@@ -273,9 +294,9 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-80 text-xs">
                 {isOverBreakEven
-                  ? `Giải thưởng (${fmt(profit!.currentPrize)}) vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))}) → LỖ`
+                  ? `Giải thưởng (${fmt(profit!.currentPrize)}) vượt mức hoà vốn của RIÊNG hạng này (${fmt(Math.round(profit!.breakEvenPrize))}) → chỉ hạng này đã lỗ`
                   : profit
-                    ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND mà vẫn hoà vốn`
+                    ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND để RIÊNG hạng này hoà vốn. 8 hạng cộng dồn nên phải đặt thấp hơn mức này.`
                     : "–"}
               </TooltipContent>
             </Tooltip>
@@ -356,6 +377,11 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                 unitPrice={unitPrice}
                 totalOutcomes={PRO_TOTAL_OUTCOMES}
                 modeLabel="Max 3D Pro — 1 cặp 2 bộ ba số"
+                note={[
+                  "Người chơi chọn 1 cặp CÓ THỨ TỰ (bộ 1, bộ 2), được phép chọn 2 bộ giống nhau → không gian mẫu 1.000.000 cặp.",
+                  "8 hạng giải KHÔNG loại trừ nhau: giải ĐB/phụ ĐB so đúng/ngược thứ tự 2 bộ ĐB; giải Nhất→Tư yêu cầu 2 bộ khớp 2 kết quả RIÊNG BIỆT; giải Năm/Sáu xét từng bộ nên 1 cặp có thể trúng 2 lần.",
+                  "Cặp trùng (bộ 1 = bộ 2) được ×2 giải từ Nhất→Sáu; trúng cả ĐB và phụ ĐB thì lĩnh (ĐB + phụ ĐB).",
+                ]}
               />
             </div>
             <div className="border-t overflow-x-auto">

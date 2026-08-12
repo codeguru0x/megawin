@@ -15,4 +15,6 @@ export const MEGA645_CACHE_KEYS = {
   globalConfig: cacheKey(NS, "global-config", "v1"),
   /** Tenant config theo tenantId. */
   tenantConfig: cacheKey(NS, "tenant-config", "v1"),
+  /** Jackpot cycle đang active — CHỈ dùng cho read path hiển thị (xem `active-jackpot-cycle.cache.ts`). */
+  activeJackpotCycle: cacheKey(NS, "active-jackpot-cycle", "v1"),
 } as const;

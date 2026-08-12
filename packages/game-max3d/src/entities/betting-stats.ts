@@ -104,7 +104,8 @@ export interface Max3dTopPair {
 /**
  * 1 vé nguy hiểm nhất theo potentialWin — "ai cầm vé to nhất".
  *
- * `potentialWin` là PROXY Σ maxUnitWin per board (thiên cao — chốt §7 Q5; outcome
+ * `potentialWin` là ƯỚC TÍNH để XẾP HẠNG: Σ `maxBoardUnitWin` per board (chỉ hạng ĐB,
+ * chưa cộng các giải nhỏ trúng kèm) — KHÔNG phải trần tuyệt đối (chốt §7 Q5; outcome
  * space 1000²⁰ không enumerate được như Bingo18).
  */
 export interface Max3dTopPotential {
@@ -119,7 +120,7 @@ export interface Max3dTopPotential {
   username: string;
   /** Tổng tiền cược của entry (VND). */
   amount: number;
-  /** Worst-case entry này trả (VND) — proxy Σ max per board, ghi rõ "ước tính" trên UI. */
+  /** Ước tính entry này trả nếu trúng ĐB (VND) — Σ giải ĐB/board, UI ghi rõ "ước tính". */
   potentialWin: number;
 }
 
@@ -140,7 +141,7 @@ export interface Max3dDrawBettingStatsDoc extends DrawBettingStatsBase {
   /** Stake per-triplet SPARSE — key "000".."999" chỉ chứa triplet có cược. */
   tripletStakes: Record<string, Max3dTripletStake>;
 
-  /** Top entry nguy hiểm nhất theo potentialWin (proxy), sort desc — cắt `topPotentialK`. */
+  /** Top entry nguy hiểm nhất theo potentialWin (ước tính), sort desc — cắt `topPotentialK`. */
   topPotential: Max3dTopPotential[];
 }
 

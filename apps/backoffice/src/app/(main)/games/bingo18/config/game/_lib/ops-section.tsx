@@ -89,8 +89,8 @@ const ALERT_META: AlertMeta[] = [
     label: "Lệch Lớn/Hòa/Nhỏ",
     icon: Scale,
     severity: OpsAlertSeverity.Warning,
-    summary: "Một hướng Lớn/Hòa/Nhỏ chiếm ≥ % tổng tiền (xác suất nền 49/25/26%).",
-    tip: "Ý nghĩa: 1 hướng Lớn/Hòa/Nhỏ chiếm ≥ % này tổng tiền 3 hướng → bắn alert. Lưu ý xác suất nền KHÔNG đối xứng: Nhỏ 49,07% · Hòa 25% · Lớn 25,93%. · Ngưỡng liên quan: 'Lệch Lớn/Hòa/Nhỏ (%)' ở trên. · Tác động khi TẮT: không phát hiện dòng tiền dồn lệch 1 hướng.",
+    summary: "Một hướng Lớn/Hoà/Nhỏ chiếm ≥ % tổng tiền (xác suất nền 37,5/25/37,5%).",
+    tip: "Ý nghĩa: 1 hướng Lớn/Hoà/Nhỏ chiếm ≥ % này tổng tiền 3 hướng → bắn alert. Xác suất nền ĐỐI XỨNG: Nhỏ (tổng ≤9) 37,5% · Hoà (10–11) 25% · Lớn (tổng ≥12) 37,5%. · Ngưỡng liên quan: 'Lệch Lớn/Hoà/Nhỏ (%)' ở trên. · Tác động khi TẮT: không phát hiện dòng tiền dồn lệch 1 hướng.",
   },
 ];
 
@@ -332,7 +332,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                     name="sidebetSkewPct"
                     label="Lệch Lớn/Hòa/Nhỏ"
                     suffix="%"
-                    tip="Ý nghĩa: 1 hướng Lớn/Hòa/Nhỏ chiếm ≥ % này tổng tiền 3 hướng → alert sidebet_skew. Xác suất nền không đối xứng (Nhỏ 49,07% · Hòa 25% · Lớn 25,93%). · Hợp lệ: số nguyên 50–95. · Mặc định: 70. · Tác động: giảm → nhạy hơn với dòng tiền dồn 1 hướng."
+                    tip="Ý nghĩa: 1 hướng Lớn/Hoà/Nhỏ chiếm ≥ % này tổng tiền 3 hướng → bắn alert 'Lệch Lớn/Hoà/Nhỏ'. Xác suất nền đối xứng: Nhỏ 37,5% · Hoà 25% · Lớn 37,5%. · Hợp lệ: số nguyên 50–95. · Mặc định: 70. · Tác động: giảm → nhạy hơn với dòng tiền dồn 1 hướng."
                   />
                   <IntField
                     form={form}

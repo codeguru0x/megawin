@@ -5,7 +5,8 @@
  * `select` của `useOpsSnapshot` hoặc `useMemo`, dùng chung 1 nguồn.
  *
  * Honest-data: `uniquePlayers` từ `max3dpro_draw_account_stats` (đếm distinct, snapshot cấp);
- * `potentialWin` là PROXY (UI ghi "ước tính").
+ * `potentialWin` là ƯỚC TÍNH dùng để XẾP HẠNG (Σ ĐB + phụ ĐB mỗi board — chưa cộng các
+ * giải nhỏ trúng kèm, KHÔNG phải trần tuyệt đối). UI ghi rõ nhãn này.
  */
 
 import type {

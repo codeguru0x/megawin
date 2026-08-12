@@ -52,7 +52,8 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
             <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Tỷ lệ tài chính</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Keno không có Jackpot — công ty thu toàn bộ phần dư sau trả thưởng và hoa hồng
+                Keno không có Jackpot và không có tỷ lệ "thu công ty" cấu hình riêng — công ty nhận phần dư sau khi trừ
+                hoa hồng đại lý và toàn bộ tiền trả thưởng thực tế
               </p>
             </div>
 
@@ -73,10 +74,14 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                 {remainingRate > 0 && (
                   <span className="flex items-center gap-1.5">
                     <span className="inline-block size-2 rounded-full bg-emerald-500" />
-                    Lợi nhuận công ty (sau giải thưởng): {remainingRate}%
+                    Còn lại để trả thưởng + lợi nhuận: {remainingRate}%
                   </span>
                 )}
               </div>
+              <p className="text-xs text-muted-foreground">
+                Phần {remainingRate}% này <strong>chưa trừ giải thưởng</strong>. Lợi nhuận thực = {remainingRate}% −
+                tổng tiền trả thưởng thực tế của kỳ quay (xem tab Giải thưởng để biết tỷ lệ trả thưởng kỳ vọng).
+              </p>
             </div>
 
             <div className="border-t p-6">

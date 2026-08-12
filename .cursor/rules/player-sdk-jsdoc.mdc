@@ -9,6 +9,39 @@ alwaysApply: true
 `@megawin/player-sdk` xuất bản API docs cho tenant qua TypeDoc (`pnpm docs:build`).
 Mọi public export **bắt buộc** có JSDoc đầy đủ. Code được tag `@internal` sẽ bị loại khỏi output.
 
+## ⚠️ MANDATORY: Sửa DTO backend PHẢI đồng bộ tay sang SDK — KHÔNG có compiler bảo vệ
+
+`packages/player-sdk` **không import** bất kỳ package backend nào (`@megawin/game-*`,
+`@megawin/app-core`, …) — đây là ràng buộc kiến trúc bắt buộc (xem
+`app-use-case-layering.mdc` §5). Hệ quả: **không có compile-time check nào** giữa DTO
+response của handler (`apps/api-player`) và type tương ứng trong SDK. `tsc --noEmit` của
+`player-sdk` sẽ **PASS sạch** dù response thật đã đổi hoàn toàn khác với type SDK khai báo.
+
+Đã thử nghiệm thực tế (2026-08): thêm field vào `PlayerGetJackpotOutput` (DTO backend)
+mà không đụng gì tới SDK → `pnpm --filter @megawin/player-sdk check-types` vẫn xanh.
+Từng có ý định vá lỗ hổng này bằng type-level guard (`Exact<>`/`AssertTrue<>`) nhưng đã
+bị bỏ — guard đó chỉ bắt được lệch **giữa 2 type TRONG SDK** (vd type aggregate vs type
+API riêng cùng 1 game), KHÔNG bắt được lệch **SDK↔backend** vì 2 phía không compile cùng
+nhau. Chi phí (type gymnastics, dễ bị hiểu nhầm là "đã có compiler bảo vệ nên khỏi cần
+review kỹ") lớn hơn giá trị hẹp nó mang lại → đã xoá, quay về mirror tay có JSDoc nhắc rõ.
+
+**QUY TẮC BẮT BUỘC:** Bất kỳ PR nào sửa DTO trong
+`packages/game-*-application/src/use-cases/player/dto/player.dto.ts` (thêm/xoá/đổi tên/đổi
+kiểu field) **PHẢI** trong CÙNG PR:
+
+1. Cập nhật type tương ứng trong `packages/player-sdk/src/{game}/types.ts`.
+2. Nếu field đó cũng xuất hiện ở type aggregate cross-game (`packages/player-sdk/src/game/types.ts`,
+   vd `*JackpotDetails`) — cập nhật ở ĐÓ nữa. Không có gì tự động lan truyền.
+3. Ghi entry `packages/player-sdk/CHANGELOG.md` (breaking nếu xoá/đổi kiểu — xem mục
+   Changelog bên dưới).
+4. Chạy `pnpm --filter @megawin/player-sdk check-types` — **PASS không có nghĩa là đã
+   đồng bộ đúng**, chỉ có nghĩa là SDK tự nhất quán với chính nó. Phải đọc lại DTO bằng
+   mắt, đối chiếu field-by-field với type SDK.
+
+KHÔNG dựa vào bất kỳ cơ chế tự động nào để nhắc việc này — không có. Reviewer PR sửa DTO
+player-facing **PHẢI** tự kiểm tra `packages/player-sdk` có được cập nhật trong cùng PR
+hay không trước khi approve.
+
 ## Quy tắc JSDoc
 
 ### Public interface / type
@@ -37,6 +70,84 @@ Mọi public export **bắt buộc** có JSDoc đầy đủ. Code được tag `
 
 - JSDoc trên const object với bảng value/meaning.
 - Inline comment trên từng member giải thích semantic.
+
+## Cấm Tuyệt Đối Leak Backend Vào SDK
+
+`player-sdk` là artifact **public** (tenant cài qua npm/CDN, TypeDoc build ra docs công khai).
+Mọi thứ thuộc backend implementation — dù chỉ nằm trong comment, JSDoc, hay code nội bộ của
+factory (`create{Game}Api`) — **PHẢI coi là rò rỉ nếu nhắc tới**. Đây là lỗi đã xảy ra thật
+(2026-08): JSDoc của `JackpotGameProduct` từng nhắc `@megawin/game-core` và đường dẫn file
+`apps/api-player/src/use-cases/game/sdk-contract.ts`; `getTicketEntries` từng ghi
+`"MongoDB ObjectId string"`. Cả hai đã bị sửa — rule này để KHÔNG lặp lại.
+
+**Danh sách cấm nhắc tới trong bất kỳ comment nào của `packages/player-sdk/src/`** (JSDoc, `//`,
+tên biến, ví dụ code):
+
+| Loại leak | Ví dụ SAI đã xảy ra | Sửa thành |
+|---|---|---|
+| Tên database/datastore | `"MongoDB ObjectId string"`, `"Redis serialize..."` | `"ID vé (lấy từ `ticket.id` hoặc `placeBet` response)"` — mô tả nguồn lấy giá trị, không nói công nghệ lưu trữ |
+| Tên package nội bộ | `@megawin/game-core`, `@megawin/app-core`, `@megawin/data`, `@megawin/tenant-gateway` | Không nhắc — nếu cần giải thích nguồn gốc type, nói bằng ngôn ngữ business ("games có jackpot") |
+| Đường dẫn file/thư mục nội bộ | `apps/api-player/src/use-cases/...`, `packages/game-*-application/...` | Không nhắc path — SDK không biết và không cần biết monorepo layout |
+| Tên class/pattern kiến trúc backend | `UseCase`, `InternalUseCase`, `ApiGatewayUseCase`, `handler`, `repository`, `entity` | Nói theo góc nhìn HTTP: "server tự validate", "API trả lỗi ABC" |
+| Cơ chế đồng bộ type backend↔SDK | "type này mirror 1:1 với `X` ở backend", tên field backend dùng để generate | Nói: "SDK tự định nghĩa type độc lập, xem CHANGELOG khi có thay đổi" (nếu cần ghi chú cho dev SDK, đặt trong PR description/CHANGELOG, KHÔNG đặt trong JSDoc xuất ra TypeDoc) |
+| Runtime/infra cụ thể | Lambda, Zod, Middy, serverless, DynamoDB, Postgres | Không nhắc |
+
+**Nguyên tắc viết:** JSDoc/comment trong `player-sdk` chỉ được mô tả **hợp đồng HTTP** (path,
+method, request/response shape, error code) và **ý nghĩa business** của field. Không bao giờ mô
+tả **cách backend triển khai** hợp đồng đó.
+
+### `/** */` render ra TypeDoc, `//` thì KHÔNG — ghi chú cho maintainer PHẢI dùng `//`
+
+TypeDoc chỉ đọc JSDoc block (`/** ... */`) ngay trên declaration để sinh docs công khai.
+Comment `//` thường bị TypeDoc **bỏ qua hoàn toàn** — không xuất hiện trong HTML output.
+Đây là ranh giới quan trọng: bất kỳ nội dung nào chỉ có ý nghĩa với **người maintain SDK**
+(quy trình mirror tay, nhắc sửa file nào khác, tên rule nội bộ, lý do kỹ thuật của quyết
+định thiết kế) — **PHẢI viết bằng `//` phía trên declaration, KHÔNG được viết trong khối
+`/** */`**, dù nội dung đó không nhắc tên công nghệ backend nào trong bảng cấm ở trên.
+
+Lỗi thực tế đã xảy ra (2026-08): JSDoc của `Lotto535JackpotDetails`/`Mega645JackpotDetails`/
+`Power655JackpotDetails` từng ghi `⚠️ MIRROR TAY: ... xem player-sdk-jsdoc.mdc §"..."` bên
+trong khối `/** */` → build `typedoc` xong, tenant mở trang
+`docs/interfaces/game.Lotto535JackpotDetails.html` thấy nguyên văn dòng đó, dẫn tới 1 file
+rule nội bộ họ không có quyền truy cập và không hiểu gì. Đã verify bằng cách build
+`pnpm docs:build` và đọc thẳng HTML sinh ra — không được chỉ đọc source `.ts` rồi đoán.
+Đã sửa: tách maintainer note ra khỏi `/** */`, chuyển xuống dòng `//` ngay trên
+`export interface`.
+
+```typescript
+/** SAI — maintainer note nằm trong /** */, TypeDoc render thẳng ra docs công khai */
+/**
+ * Chi tiết jackpot đặc thù Lotto 5/35.
+ *
+ * ⚠️ MIRROR TAY: field ở đây PHẢI khớp với `Lotto535JackpotResponse`... xem
+ * `player-sdk-jsdoc.mdc` §"Quy trình sync SDK ↔ Handler".
+ */
+export interface Lotto535JackpotDetails { ... }
+
+/** ĐÚNG — JSDoc chỉ có nội dung dành cho tenant; ghi chú maintainer dùng // (không lên TypeDoc) */
+/**
+ * Chi tiết jackpot đặc thù Lotto 5/35.
+ */
+// ⚠️ MAINTAINER NOTE (không lên TypeDoc): field ở đây PHẢI khớp với
+// `Lotto535JackpotResponse`... xem `player-sdk-jsdoc.mdc` mục MANDATORY.
+export interface Lotto535JackpotDetails { ... }
+```
+
+**Quy tắc kiểm chứng bắt buộc:** không đoán bằng cách đọc `.ts` — phải build thật
+(`cd packages/player-sdk && npx typedoc`) rồi mở file HTML tương ứng trong `docs/` (hoặc
+grep từ khoá nghi ngờ vào `docs/`) để xác nhận nội dung không xuất hiện. Sau khi verify
+xong, không cần commit thư mục `docs/` (đã gitignore/build artifact).
+
+**Checklist trước khi merge bất kỳ PR sửa `packages/player-sdk/src/`:**
+
+```bash
+rg -n 'MongoDB|Mongo |Redis|DynamoDB|Postgres|Lambda|Zod|serverless|Middy|middy|@megawin/(game|app-core|shared|data|auth|tenant)|apps/api-|packages/game-.*-application|UseCase|repository|Repository' packages/player-sdk/src
+```
+
+Bất kỳ match nào xuất hiện trong JSDoc (`/** */`) của public export → **phải sửa trước khi merge**.
+Match trong `//` comment nội bộ của factory (`create{Game}Api`, đã tag `@internal`) chỉ mô tả
+**hành vi wire-protocol** (vd "server tự split CSV") thì chấp nhận được — nhưng ưu tiên tránh nếu
+có cách diễn đạt không cần nhắc "handler"/"server-side" luôn tốt hơn.
 
 ## DrawId Format Convention
 
@@ -175,16 +286,17 @@ packages/player-sdk/src/
 
 ### Quy trình sync SDK ↔ Handler
 
-Khi handler thay đổi:
+Khi handler thay đổi (xem mục MANDATORY ở đầu file cho quy tắc bắt buộc):
 
 1. **Đọc handler** `apps/api-player/src/handlers/{game}/{action}.ts` — kiểm tra Zod schema để biết input/output shape.
 2. **Đọc DTO** `packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts` — đây là source of truth cho response type.
 3. **Cập nhật** `packages/player-sdk/src/{game}/types.ts` — thêm/sửa type definitions.
 4. **Cập nhật** `packages/player-sdk/src/apis/{game}.ts` — chỉ import types từ `../{game}`, không định nghĩa type mới ở đây.
-5. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới.
-6. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có export mới (re-export từ `./{game}`, không phải `./apis/{game}`).
-7. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`.
-8. **Verify**: `pnpm --filter @megawin/player-sdk check-types`.
+5. **Nếu field đó cũng có mặt ở type aggregate cross-game** (`packages/player-sdk/src/game/types.ts`) — cập nhật ở đó nữa, không tự lan truyền.
+6. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới.
+7. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có export mới (re-export từ `./{game}`, không phải `./apis/{game}`).
+8. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`.
+9. **Verify**: `pnpm --filter @megawin/player-sdk check-types` — chỉ xác nhận SDK tự nhất quán, KHÔNG xác nhận đã đồng bộ đúng với backend.
 
 ### SDK Input phải mirror Zod handler schema
 

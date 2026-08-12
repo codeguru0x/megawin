@@ -5,8 +5,8 @@
  *
  * Power 6/55 differs from Lotto 5/35:
  * - Only mainNumbers (no specialNumbers)
- * - Numbers range "01"-"55"
- * - PlayTypes: Standard (6), Bao7-Bao15, Bao18, QuickPick
+ * - Numbers range "01"-"55", zero-padded string (KHÔNG parse sang number)
+ * - PlayTypes: Standard (6), Bao5 (5), Bao7-Bao15, Bao18
  * - Max 5 boards (A-E)
  */
 
@@ -28,8 +28,10 @@ vi.mock("@megawin/game-core/entities", () => ({
 }));
 
 vi.mock("@megawin/game-power655/entities", () => ({
+  // Mirror đúng PlayType thật: có Bao5 (handler dùng), KHÔNG có QuickPick (đã bỏ khỏi domain).
   PlayType: {
     Standard: "standard",
+    Bao5: "bao5",
     Bao7: "bao7",
     Bao8: "bao8",
     Bao9: "bao9",
@@ -40,7 +42,6 @@ vi.mock("@megawin/game-power655/entities", () => ({
     Bao14: "bao14",
     Bao15: "bao15",
     Bao18: "bao18",
-    QuickPick: "quickPick",
   },
 }));
 
@@ -76,7 +77,7 @@ describe("POST /player/power655/bets", () => {
     handler = mod.handler;
   });
 
-  /** Validates that mainNumbers are parsed to integers and passed to the use case. */
+  /** Validates that mainNumbers are passed through as zero-padded strings. */
   it("should call use case with parsed numbers and correct params", async () => {
     mockRun.mockResolvedValue({
       statusCode: 200,
@@ -103,7 +104,8 @@ describe("POST /player/power655/bets", () => {
     );
 
     const call = mockRun.mock.calls[0]![0];
-    expect(call.boards[0].selection.mainNumbers).toEqual([1, 5, 12, 23, 35, 55]);
+    // Số giữ nguyên string zero-padded — handler KHÔNG parseInt (toàn hệ thống dùng "01".."55").
+    expect(call.boards[0].selection.mainNumbers).toEqual(["01", "05", "12", "23", "35", "55"]);
   });
 
   /** Validates Bao7 requires exactly 7 numbers and they are parsed correctly. */
@@ -138,8 +140,11 @@ describe("POST /player/power655/bets", () => {
     expect(call.boards[0].selection.mainNumbers).toHaveLength(7);
   });
 
-  /** Validates QuickPick accepts empty mainNumbers. */
-  it("should accept quickPick with empty mainNumbers", async () => {
+  /**
+   * Validates Bao5 requires exactly 5 numbers (nhánh đặc biệt: ghép 50 số còn lại,
+   * không dùng tổ hợp C(N,6) như Bao7-18). `mainNumbers` min là 5 nên đây là biên dưới.
+   */
+  it("should accept bao5 with 5 mainNumbers", async () => {
     mockRun.mockResolvedValue({
       statusCode: 200,
       body: JSON.stringify({
@@ -154,8 +159,8 @@ describe("POST /player/power655/bets", () => {
         boards: [
           {
             boardNo: "A",
-            playType: "quickPick",
-            selection: { mainNumbers: [] },
+            playType: "bao5",
+            selection: { mainNumbers: ["01", "05", "12", "23", "35"] },
           },
         ],
       },
@@ -163,6 +168,28 @@ describe("POST /player/power655/bets", () => {
 
     const response = await handler(event as any, {} as any);
     expect(response).toHaveProperty("statusCode", 200);
+
+    const call = mockRun.mock.calls[0]![0];
+    expect(call.boards[0].selection.mainNumbers).toHaveLength(5);
+  });
+
+  /** Validates empty mainNumbers bị từ chối — min 5 số, không còn playType quickPick. */
+  it("should reject empty mainNumbers", async () => {
+    const event = createMockEvent({
+      body: {
+        drawIds: ["2026-02-28.001"],
+        boards: [
+          {
+            boardNo: "A",
+            playType: "standard",
+            selection: { mainNumbers: [] },
+          },
+        ],
+      },
+    });
+
+    const response = (await handler(event as any, {} as any)) as any;
+    expect(response.statusCode).toBe(400);
   });
 
   /** Validates duplicate drawIds are rejected. */

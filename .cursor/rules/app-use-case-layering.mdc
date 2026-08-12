@@ -1,0 +1,171 @@
+---
+description: Nơi đặt use-case/type/mapper trong apps/* — ngưỡng tách thư mục con và đường ranh giữa app và package
+globs: apps/**/*.ts,apps/**/*.tsx
+alwaysApply: false
+---
+
+# App Use-Case Layering — apps/\* vs packages/\*
+
+App (`apps/api-player`, `apps/api-tenant`, `apps/backoffice`, `apps/worker-*`) chỉ **compose** use-case
+của package và định hình **contract HTTP riêng của app đó**. Logic nghiệp vụ + I/O sống ở
+`packages/*-application`. Rule này chốt: khi nào tách thư mục con, và khi nào phải chuyển code xuống package.
+
+## 1. Cấu trúc chuẩn trong app
+
+```
+apps/<app>/src/
+├── handlers/<game>/<action>.ts     ← THIN: parse/validate + gọi use-case, không business logic
+├── lib/                            ← helper dùng chung trong app (vd schemas.ts)
+└── use-cases/<domain>/             ← use-case CROSS-package của riêng app này
+    ├── <action>.ts
+    └── <action>.types.ts
+```
+
+Nhóm theo **domain** (`use-cases/game/`, `use-cases/account/`), KHÔNG theo kỹ thuật
+(`use-cases/queries/`, `use-cases/aggregations/`).
+
+## 2. Ngưỡng tách thư mục con — đừng tách sớm
+
+| Quy mô nhóm | Cấu trúc |
+|---|---|
+| 1 use-case | Flat, type cạnh file: `<action>.ts` + `<action>.types.ts`. **KHÔNG** barrel (1 module thì barrel chỉ thêm gián tiếp) |
+| ≥2 use-case | Thêm `index.ts` barrel để handler import ngắn, không lệ thuộc tên file |
+| ≥3 file DTO | Mới tách `dto/` |
+| ≥3 mapper | Mới tách `mappers/` |
+
+Tên thư mục con **phải trùng** từ vựng của `packages/*-application` (`dto/`, `mappers/`, `helpers/`) —
+KHÔNG phát minh `types/`, `models/`, `services/` mới ở tầng app.
+
+**Tiền lệ:** `apps/backoffice/src/app/api/dashboard/jackpots/_lib/` gộp jackpot 7 game mà chỉ có 2 file
+(`get-dashboard-jackpots.ts` + `types.ts`). `packages/game-lotto535-application/src/use-cases/player/`
+mới có `dto/` + `mappers/` — vì nó có 11 use-case. Thư mục con sinh ra khi có áp lực thật.
+
+## 3. Ba dấu hiệu code đang ở SAI chỗ → chuyển xuống `packages/*-application`
+
+1. **Use-case trong app chạm DB/repo trực tiếp** (`new SomeRepo()`, import `@megawin/data`).
+   App chỉ được gọi use-case của package. Chạm DB = logic thuộc `*-application`.
+2. **Có business rule** (tính tiền, quyết định trạng thái, ngưỡng nghiệp vụ) chứ không chỉ gộp + map.
+   Rule thuộc `packages/game-*/rules` hoặc `*-application`.
+3. **Cần raw output từ nhiều package**: package phải expose `InternalUseCase` (trả raw, throw
+   `AppException`); app gọi nó và tự bọc `ApiGatewayUseCase`/`NextApiUseCase`. KHÔNG thêm method
+   "trả raw" vào `ApiGatewayUseCase` để lách, cũng KHÔNG gọi bản HTTP rồi bóc envelope.
+
+   **Bẫy `NextApiUseCase` (đã sập thật ở backoffice, 2026-08):** `NextApiUseCase.run()` **KHÔNG BAO
+   GIỜ reject** — nó tự bắt exception và trả `NextResponse` chứa `{ success: false, error }`. App
+   aggregate gọi nó rồi cast `(await r.json()).data` sẽ nhận `undefined` khi game lỗi → destructure
+   ở mapper ném `TypeError` → sập TOÀN BỘ endpoint gộp, trong khi `Promise.allSettled` bọc ngoài
+   thành dead code (không có gì reject để mà bắt). Sửa gốc: tách `InternalUseCase`, KHÔNG viết helper
+   `unwrap()` dịch envelope ngược lại thành exception (băng dán + tốn 1 vòng serialize/parse JSON
+   mỗi game mỗi request).
+
+```typescript
+/** ĐÚNG — app chỉ compose InternalUseCase của từng package, tự định shape response của mình */
+import { tryLoad } from "@megawin/shared/utils";
+
+import {
+  GetJackpotPlayerInternalUseCase as GetLotto535JackpotUseCase,
+} from "@megawin/game-lotto535-application/use-cases/player";
+
+const SCOPE = "ListJackpots";
+
+export class ListJackpotsUseCase extends ApiGatewayUseCase<void, JackpotSummaryListResponse> {
+  private readonly lotto535 = new GetLotto535JackpotUseCase();
+  private readonly mega645 = new GetMega645JackpotUseCase();
+
+  protected async execute(): Promise<JackpotSummaryListResponse> {
+    // tryLoad không bao giờ reject → dùng Promise.all, khỏi phải bóc PromiseSettledResult.
+    // NOT_FOUND (đang giữa 2 cycle) → undefined, im lặng. Lỗi KHÁC → log kèm source rồi
+    // vẫn undefined (nuốt im = DB chết vẫn trả 200 { jackpots: [] }, không ai biết).
+    const [lotto535, mega645] = await Promise.all([
+      tryLoad(() => this.lotto535.run().then(toLotto535Summary), { scope: SCOPE, source: "lotto535" }),
+      tryLoad(() => this.mega645.run().then(toMega645Summary), { scope: SCOPE, source: "mega645" }),
+    ]);
+
+    return { jackpots: [lotto535, mega645].filter((jp) => jp !== undefined) };
+  }
+}
+```
+
+```typescript
+/** SAI — app tự query DB, tự tính rule → logic này thuộc *-application */
+export class ListJackpotsUseCase extends ApiGatewayUseCase<void, Output> {
+  private readonly repo = new JackpotCycleRepo();           // ← chạm DB ở tầng app
+  protected async execute() {
+    const cycle = await this.repo.findActive();
+    const willSplit = cycle.currentAmount >= cycle.config.splitThreshold; // ← business rule
+  }
+}
+```
+
+## 4. KHÔNG tạo package chỉ vì app phình ra
+
+App có 10 cross-package use-case vẫn cứ để trong `apps/<app>/src/use-cases/<domain>/` — vì mọi thứ trong
+đó là **contract riêng của app** (shape response cho SDK tenant, cho UI backoffice…), không chia sẻ được.
+
+Chỉ tách package khi **≥2 app cần CÙNG một contract**. Thực tế `api-player` (contract public SDK) và
+`backoffice` (contract nội bộ, nhiều field ops) hầu như không bao giờ cần cùng shape — tách sớm sẽ tạo
+package có 1 consumer thật + 1 consumer phải bóp méo dữ liệu.
+
+Tuyệt đối KHÔNG tạo package "con" nằm dưới app (`apps/api-player/packages/*`) — sai `pnpm-workspace.yaml`
+và phá cách deploy per-app bằng `turbo --filter`.
+
+## 5. Hướng phụ thuộc — không được đảo
+
+- App → package: OK.
+- Package → app: **CẤM**.
+- **`packages/player-sdk` là artifact PUBLIC**: không app/package nào trong monorepo được import nó
+  (kể cả `devDependency` để check type, kể cả `paths` mapping trong `tsconfig.json`). SDK type đồng bộ
+  với backend bằng **mirror thủ công** + CHANGELOG, không bằng compile-time assertion. Vi phạm đã xảy ra
+  thật (2026-08) và đã bị revert.
+
+## 6. Endpoint AGGREGATE phải là SUPERSET — cưỡng chế bằng compiler, không bằng mắt
+
+Endpoint gộp nhiều game (`GET /games/jackpots`) phải trả **đủ** dữ liệu như endpoint riêng từng game
+(`GET /games/{game}/jackpot`). Nếu thiếu, client buộc gọi thêm API riêng → endpoint gộp mất lý do tồn tại.
+
+Phần đặc thù game trong response gộp (`details`) **KHÔNG được khai báo tay từng field**. Phải dẫn xuất
+bằng `Omit<>` trên chính DTO của game:
+
+```typescript
+/** ĐÚNG — details dẫn xuất từ DTO game; thêm field vào DTO là mapper KHÔNG COMPILE */
+type SharedSummaryKeys = "cycleNo" | "drawCount" | "startDrawId"; // đã có ở tầng chung
+export type Lotto535JackpotDetails = Omit<Lotto535JackpotOutput, SharedSummaryKeys | "currentAmount">;
+```
+
+```typescript
+/** SAI — khai báo tay: game thêm field, TS IM LẶNG, endpoint gộp âm thầm tụt hậu */
+export interface Lotto535JackpotDetails {
+  seedAmount: number;
+  peakAmount: number;
+  totalContribution: number;
+}
+```
+
+Khi mapper vỡ vì DTO game thêm field: **map field mới**, rồi đồng bộ SDK + CHANGELOG. TUYỆT ĐỐI KHÔNG
+"chữa" bằng cách nới type `details` (thêm `Partial`, `Omit` thêm key, hay quay về khai báo tay) — làm vậy
+là tháo đúng lớp bảo vệ vừa dựng.
+
+Nếu field bị coi là không cần cho client, xoá ở **CẢ HAI** endpoint (kèm CHANGELOG breaking), KHÔNG để
+một bên có một bên không. Tiền lệ: `Power655JackpotResponse.startedAt` đã bị xoá ở cả hai (2026-08).
+
+**Phía `player-sdk`** không dùng được `Omit` trực tiếp: TypeDoc khi đó chỉ render `Omit<...>`, mất bảng
+property mà tenant cần (đã đo, 2026-08). SDK giữ interface tường minh — KHÔNG có compile-time check nào
+giữa backend và SDK (2 package không compile cùng nhau, xem §5). Từng thử vá bằng type-level guard
+(`Exact`/`AssertTrue`) nhưng đã bỏ (2026-08): guard đó chỉ bắt lệch **giữa 2 type TRONG SDK** (vd
+`Lotto535JackpotDetails` vs `Lotto535JackpotResponse`, cùng nằm trong `player-sdk`), KHÔNG bắt được lệch
+**SDK↔backend** — đúng rủi ro lớn nhất — vì SDK không import backend. Chi phí (type gymnastics, ảo tưởng
+"đã có compiler bảo vệ") lớn hơn giá trị hẹp nó mang lại. Quy tắc hiện tại: mirror tay + JSDoc
+`⚠️ MIRROR TAY` ngay trên mỗi `*JackpotDetails` chỉ rõ field nào ánh xạ từ đâu, PR sửa DTO backend
+player-facing **PHẢI** cập nhật SDK trong cùng PR (bắt buộc, xem `player-sdk-jsdoc.mdc` mục MANDATORY).
+
+## Checklist trước khi thêm use-case vào app
+
+- [ ] Handler còn mỏng (chỉ validate + gọi use-case)?
+- [ ] Use-case KHÔNG chạm repo/DB, KHÔNG chứa business rule (§3)?
+- [ ] Logic cross-package lấy raw qua `InternalUseCase` của package, không lách `ApiGatewayUseCase`
+      và KHÔNG gọi `NextApiUseCase` rồi bóc envelope (nó không reject — xem bẫy ở §3.3)?
+- [ ] Aggregate nhiều nguồn dùng `tryLoad` + `Promise.all` (không `Promise.allSettled` thủ công),
+      lỗi bất thường được log kèm `source`?
+- [ ] Chưa đủ ngưỡng §2 thì để flat, KHÔNG tạo `dto/`, `mappers/`, `index.ts` rỗng nghĩa?
+- [ ] Không import `@megawin/player-sdk` (§5)?
+- [ ] Endpoint aggregate: `details` dẫn xuất bằng `Omit<>` từ DTO game, không khai báo tay (§6)?

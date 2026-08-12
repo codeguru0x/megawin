@@ -1,8 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Max3dproOpsAlertType, OpsAlertSeverity } from "@megawin/game-max3dpro/entities";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
+import { formatNumberVN } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { Coins, HelpCircle, Link2, type LucideIcon, Save, ShieldAlert, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -58,43 +61,51 @@ interface AlertMeta {
  * Danh sách alert bật/tắt ở P0 (bỏ `RevenueAnomaly`/`SettleStuck` để dành).
  * Thứ tự = mức nghiêm trọng giảm dần. NHÃN PHẢI KHỚP `MAX3DPRO_OPS_ALERT_TYPE_LABELS`
  * (operations/_lib/ops-constants.ts) — 2 trang cùng nhãn cho cùng alert type.
+ *
+ * Nhận giải ĐB / phụ ĐB + giá 1 lượt từ config đang lưu để mô tả đòn bẩy liability
+ * THẬT thay vì hardcode con số mặc định.
  */
-const ALERT_META: AlertMeta[] = [
-  {
-    type: Max3dproOpsAlertType.PairLiability,
-    label: "Liability cặp (2 chiều)",
-    icon: Link2,
-    severity: OpsAlertSeverity.Critical,
-    summary: "1 cặp (gộp 2 chiều) tích luỹ liability ĐB ×200.000 + phụ ĐB ×40.000 (KHÔNG cap) vượt ngưỡng.",
-    tip: "Ý nghĩa: liability nếu cặp ra ĐB = units đúng chiều × 2 tỷ + units chiều ngược × 400tr (phụ ĐB) ≥ ngưỡng → bắn alert riêng cho TỪNG cặp. Rủi ro số 1 của Pro: 1 unit 10.000đ đúng chiều = liability 2 tỷ; kỳ bán nhiều ngày nên phải biết TRƯỚC ngày quay. · Ngưỡng liên quan: 'Liability cặp (VND)' ở trên. · Tác động khi TẮT: mất cảnh báo rủi ro lớn nhất — KHÔNG nên tắt.",
-  },
-  {
-    type: Max3dproOpsAlertType.ExposureThreshold,
-    label: "Rủi ro chi trả",
-    icon: ShieldAlert,
-    severity: OpsAlertSeverity.Warning,
-    summary: "Worst-case tổng (basic exact + cặp ĐB + đuôi plus) vượt ngưỡng tuyệt đối.",
-    tip: "Ý nghĩa: worst-case tổng của kỳ ≥ ngưỡng 'Ngưỡng exposure (VND)' → bắn alert. Basic tính CHÍNH XÁC (greedy per-tier); phần plus là ước lượng thiên cao. Dùng ngưỡng tuyệt đối vì kỳ bán nhiều ngày, doanh thu không ổn định làm mẫu số. · Ngưỡng liên quan: 'Ngưỡng exposure (VND)'. · Tác động khi TẮT: không còn cảnh báo tổng mức phải trả.",
-  },
-  {
-    type: Max3dproOpsAlertType.LargeBet,
-    label: "Cược lớn",
-    icon: Coins,
-    severity: OpsAlertSeverity.Warning,
-    summary: "Entry có tổng tiền ≥ ngưỡng 'Ngưỡng cược lớn'.",
-    tip: "Ý nghĩa: entry có tổng tiền cược ≥ giá trị 'Ngưỡng cược lớn' → đánh dấu và bắn alert. Max 3D Pro kỳ 2-3 ngày, doanh thu/kỳ lớn hơn game nhanh → ngưỡng 5tr (cao hơn Keno/Bingo18). · Ngưỡng liên quan: 'Ngưỡng cược lớn (VND)'. · Tác động khi TẮT: mất tín hiệu sớm về dòng tiền bất thường.",
-  },
-  {
-    type: Max3dproOpsAlertType.ComboConcentration,
-    label: "Nhiều người cùng cặp",
-    icon: Users,
-    severity: OpsAlertSeverity.Warning,
-    summary: "1 cặp (cùng chiều) có ≥ N account khác nhau cùng cược (nghi syndicate).",
-    tip: "Ý nghĩa: 1 cặp có ≥ 'Ngưỡng account cùng cặp' account distinct cùng cược → bắn alert (dấu hiệu phối hợp đánh 1 cặp). · Ngưỡng liên quan: 'Account cùng cặp' ở trên. · Tác động khi TẮT: không phát hiện syndicate dồn cặp.",
-  },
-];
+function buildAlertMeta(specialPrize: number, specialSubPrize: number, unitPrice: number): AlertMeta[] {
+  const leverage = unitPrice > 0 ? Math.round(specialPrize / unitPrice) : 0;
+  const leverageLabel = leverage > 0 ? `×${formatNumberVN(leverage)}` : "rất lớn";
 
-// Range PHẢI khớp Zod server (`api/max3d/config/_lib/schema.ts` §ops).
+  return [
+    {
+      type: Max3dproOpsAlertType.PairLiability,
+      label: "Liability cặp (2 chiều)",
+      icon: Link2,
+      severity: OpsAlertSeverity.Critical,
+      summary: `1 cặp (gộp cả 2 chiều) tích luỹ liability giải ĐB — chiều đúng ${leverageLabel} tiền cược, chiều ngược ăn phụ ĐB — vượt ngưỡng. KHÔNG có mức trần.`,
+      tip: `Ý nghĩa: với 1 kết quả ĐB [bộ 1, bộ 2] có thể xảy ra, liability = (số lượt cược ĐÚNG chiều × ${formatNumberVN(specialPrize)}) + (số lượt cược NGƯỢC chiều × ${formatNumberVN(specialSubPrize)} — giải phụ ĐB); nếu cặp trùng (2 bộ giống nhau) thì mỗi lượt tính ${formatNumberVN(specialPrize + specialSubPrize)} theo luật lĩnh cả ĐB + phụ ĐB. Vượt ngưỡng → bắn cảnh báo riêng cho TỪNG cặp. Rủi ro số 1 của Pro: chỉ ${formatNumberVN(unitPrice)}đ đúng chiều đã tạo ${formatNumberVN(specialPrize)}đ nghĩa vụ, không có mức trần; kỳ bán nhiều ngày nên phải biết TRƯỚC ngày quay. · Ngưỡng liên quan: 'Liability cặp (VND)' ở trên. · Tác động khi TẮT: mất cảnh báo rủi ro lớn nhất — KHÔNG nên tắt.`,
+    },
+    {
+      type: Max3dproOpsAlertType.ExposureThreshold,
+      label: "Rủi ro chi trả",
+      icon: ShieldAlert,
+      severity: OpsAlertSeverity.Warning,
+      summary: "Worst-case tổng (cặp có liability ĐB lớn nhất + giải nhỏ Năm/Sáu) vượt ngưỡng tuyệt đối.",
+      tip: "Ý nghĩa: worst-case tổng của kỳ ≥ ngưỡng 'Ngưỡng exposure (VND)' → bắn cảnh báo; gấp đôi ngưỡng → mức Nghiêm trọng. Max 3D Pro KHÔNG có kiểu chơi 1 bộ ba số, nên worst-case chỉ gồm 2 phần: (1) cặp có liability ĐB lớn nhất — chính xác nếu cặp đó nằm trong danh sách 'Top cặp' đang lưu, và (2) giải nhỏ Năm/Sáu tính trên TOÀN BỘ số lượt cược của kỳ, phần này TÍNH DƯ vì giả định mọi lượt đều trúng. Dùng ngưỡng tuyệt đối vì kỳ bán nhiều ngày, doanh thu không ổn định để làm mẫu số %. · Ngưỡng liên quan: 'Ngưỡng exposure (VND)'. · Tác động khi TẮT: không còn cảnh báo tổng mức phải trả.",
+    },
+    {
+      type: Max3dproOpsAlertType.LargeBet,
+      label: "Cược lớn",
+      icon: Coins,
+      severity: OpsAlertSeverity.Warning,
+      summary: "Có entry với tổng tiền ≥ ngưỡng 'Ngưỡng cược lớn' (gộp 1 cảnh báo mỗi kỳ).",
+      tip: `Ý nghĩa: entry có tổng tiền cược ≥ giá trị 'Ngưỡng cược lớn' được đánh dấu; hệ thống gộp thành 1 cảnh báo mỗi kỳ và nâng lên mức Nghiêm trọng khi có nhiều entry vượt ngưỡng. Lưu ý Pro dễ đạt số tiền lớn một cách hợp lệ: 1 board chọn 20 bộ ba số đã sinh 380 cặp = ${formatNumberVN(380 * unitPrice)}đ cho 1 lượt. · Ngưỡng liên quan: 'Ngưỡng cược lớn (VND)'. · Tác động khi TẮT: mất tín hiệu sớm về dòng tiền bất thường.`,
+    },
+    {
+      type: Max3dproOpsAlertType.ComboConcentration,
+      label: "Nhiều người cùng cặp",
+      icon: Users,
+      severity: OpsAlertSeverity.Warning,
+      summary: "1 cặp (cùng chiều) có ≥ N account khác nhau cùng cược (nghi phối hợp).",
+      tip: "Ý nghĩa: 1 cặp CÙNG CHIỀU có số account khác nhau cùng cược ≥ 'Ngưỡng account cùng cặp' → bắn cảnh báo; gấp đôi ngưỡng → mức Nghiêm trọng. Chỉ quét trong danh sách 'Top cặp' đang lưu. · Ngưỡng liên quan: 'Account cùng cặp' ở trên. · Tác động khi TẮT: không phát hiện việc dồn cặp có tổ chức.",
+    },
+  ];
+}
+
+// Range PHẢI khớp Zod server (`api/max3dpro/config/_lib/schema.ts` §ops).
 const opsFormSchema = z.object({
   largeBetAmount: z.coerce.number().int().positive("Phải > 0"),
   exposureWarnAmount: z.coerce.number().int().positive("Phải > 0"),
@@ -246,6 +257,17 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   const ops = config.ops ?? DEFAULT_MAX3D_PRO_CONFIG.ops;
   const { alerts, stats } = ops;
 
+  // Mô tả alert phải phản ánh giải ĐB / phụ ĐB + giá vé ĐANG cấu hình, không hardcode.
+  const alertMeta = useMemo(
+    () =>
+      buildAlertMeta(
+        config.defaultPrizes.standard.special,
+        config.defaultPrizes.standard.specialSub,
+        config.play.unitPrice,
+      ),
+    [config.defaultPrizes.standard.special, config.defaultPrizes.standard.specialSub, config.play.unitPrice],
+  );
+
   const form = useForm<OpsFormValues>({
     resolver: zodResolver(opsFormSchema) as never,
     values: {
@@ -283,7 +305,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   }
 
   const enabled = form.watch("enabled");
-  const enabledCount = ALERT_META.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
+  const enabledCount = alertMeta.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -296,8 +318,8 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Ngưỡng cảnh báo rủi ro</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Ngưỡng TUYỆT ĐỐI VND (kỳ bán nhiều ngày — không dùng % doanh thu). Worker so mỗi chu kỳ; đổi có hiệu
-                    lực trong ~1 chu kỳ (không cần deploy).
+                    Ngưỡng TUYỆT ĐỐI theo VND (kỳ bán nhiều ngày nên không dùng % doanh thu làm mẫu số). Worker đối
+                    chiếu mỗi chu kỳ cập nhật; thay đổi có hiệu lực trong ~1 chu kỳ, không cần triển khai lại.
                   </p>
                 </div>
 
@@ -307,14 +329,14 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                     name="pairLiabilityWarnAmount"
                     label="Liability cặp"
                     suffix="VND"
-                    tip="Ý nghĩa: liability ĐB của 1 cặp (đúng chiều ×2 tỷ + chiều ngược phụ ĐB ×400tr) ≥ giá trị này → alert pair_liability (1 alert/cặp). RỦI RO SỐ 1: 1 unit 10.000đ đúng chiều = liability 2 tỷ, KHÔNG có cap. · Hợp lệ: số nguyên > 0. · Mặc định: 4.000.000.000 (≈ 2 unit đúng chiều). · Tác động: giảm → cảnh báo sớm hơn (thiên an toàn)."
+                    tip={`Ý nghĩa: liability giải ĐB của 1 cặp (số lượt đúng chiều × ${formatNumberVN(config.defaultPrizes.standard.special)} + số lượt ngược chiều × ${formatNumberVN(config.defaultPrizes.standard.specialSub)}) ≥ giá trị này → bắn cảnh báo 'Liability cặp (2 chiều)', 1 cảnh báo cho mỗi cặp. RỦI RO SỐ 1: chỉ ${formatNumberVN(config.play.unitPrice)}đ đúng chiều đã tạo ${formatNumberVN(config.defaultPrizes.standard.special)}đ nghĩa vụ và KHÔNG có mức trần. · Hợp lệ: số nguyên > 0. · Mặc định: ${formatNumberVN(DEFAULT_MAX3D_PRO_CONFIG.ops.alerts.pairLiabilityWarnAmount)}. · Tác động: giảm → cảnh báo sớm hơn (thiên an toàn).`}
                   />
                   <IntField
                     form={form}
                     name="exposureWarnAmount"
                     label="Ngưỡng exposure"
                     suffix="VND"
-                    tip="Ý nghĩa: worst-case tổng (cặp ĐB max + đuôi Năm/Sáu ước tính) ≥ giá trị này → alert exposure_threshold. · Hợp lệ: số nguyên > 0. · Mặc định: 5.000.000.000. · Tác động: giảm → nhạy hơn với tổng mức phải trả."
+                    tip={`Ý nghĩa: worst-case tổng của kỳ (cặp có liability ĐB lớn nhất + giải nhỏ Năm/Sáu tính trên toàn bộ số lượt cược — phần này tính dư) ≥ giá trị này → bắn cảnh báo 'Rủi ro chi trả'; gấp đôi ngưỡng → mức Nghiêm trọng. · Hợp lệ: số nguyên > 0. · Mặc định: ${formatNumberVN(DEFAULT_MAX3D_PRO_CONFIG.ops.alerts.exposureWarnAmount)}. · Tác động: giảm → nhạy hơn với tổng mức phải trả.`}
                   />
                 </div>
 
@@ -324,37 +346,37 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                     name="largeBetAmount"
                     label="Ngưỡng cược lớn"
                     suffix="VND"
-                    tip="Ý nghĩa: entry có tổng tiền ≥ giá trị này bị đánh dấu 'cược lớn' và tính vào alert large_bet. · Hợp lệ: số nguyên > 0. · Mặc định: 10.000.000 (multiNumber 20 bộ = 3,8tr/kỳ với betCount 1 — ngưỡng 5tr sẽ noise). · Tác động: hạ → nhiều entry bị coi là lớn hơn."
+                    tip={`Ý nghĩa: entry có tổng tiền ≥ giá trị này được đánh dấu 'cược lớn' và tính vào cảnh báo 'Cược lớn'. · Hợp lệ: số nguyên > 0. · Mặc định: ${formatNumberVN(DEFAULT_MAX3D_PRO_CONFIG.ops.alerts.largeBetAmount)} — cao hơn Max 3D vì 1 board Pro chọn 20 bộ số đã sinh 380 cặp = ${formatNumberVN(380 * config.play.unitPrice)}đ cho 1 lượt, đặt thấp sẽ báo nhiễu. · Tác động: hạ → nhiều entry bị coi là lớn hơn.`}
                   />
                   <IntField
                     form={form}
                     name="comboAccountsWarn"
                     label="Account cùng cặp"
-                    tip="Ý nghĩa: 1 cặp plus có ≥ số này account distinct cùng cược → alert combo_concentration (nghi syndicate). · Hợp lệ: số nguyên 2–50. · Mặc định: 5. · Tác động: giảm → nhạy hơn với dấu hiệu phối hợp."
+                    tip={`Ý nghĩa: 1 cặp cùng chiều có số account khác nhau cùng cược ≥ số này → bắn cảnh báo 'Nhiều người cùng cặp'; gấp đôi ngưỡng → mức Nghiêm trọng. · Hợp lệ: số nguyên 2–50. · Mặc định: ${DEFAULT_MAX3D_PRO_CONFIG.ops.alerts.comboAccountsWarn}. · Tác động: giảm → nhạy hơn với dấu hiệu phối hợp.`}
                   />
                 </div>
 
                 <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Bật / tắt loại alert
+                      Bật / tắt loại cảnh báo
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-80 text-xs">
-                          Chọn loại rủi ro worker sẽ giám sát và sinh alert mỗi chu kỳ. Tắt một loại nghĩa là ngưng theo
-                          dõi rủi ro đó — KHÔNG nên tắt 'Liability cặp cặp bộ ba' (rủi ro số 1 của game).
+                          Chọn loại rủi ro hệ thống sẽ giám sát và sinh cảnh báo mỗi chu kỳ. Tắt một loại nghĩa là ngưng
+                          theo dõi rủi ro đó — KHÔNG nên tắt 'Liability cặp (2 chiều)' (rủi ro số 1 của game).
                         </TooltipContent>
                       </Tooltip>
                     </p>
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                      {enabledCount}/{ALERT_META.length} đang bật
+                      {enabledCount}/{alertMeta.length} đang bật
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    {ALERT_META.map((meta) => (
+                    {alertMeta.map((meta) => (
                       <AlertToggleRow
                         key={meta.type}
                         meta={meta}
@@ -371,10 +393,10 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
               {/* Cột phải — Nhịp & Top-K */}
               <div className="border-t p-6 lg:border-l lg:border-t-0 space-y-5">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Nhịp worker & Top-K</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Nhịp cập nhật & số bản ghi Top</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Điều chỉnh tần suất cập nhật stats và số bản ghi top lưu mỗi kỳ. Ảnh hưởng chi phí worker và độ
-                    'tươi' của dashboard.
+                    Điều chỉnh tần suất cập nhật thống kê và số bản ghi top lưu mỗi kỳ. Ảnh hưởng chi phí xử lý và độ
+                    mới của trang vận hành.
                   </p>
                 </div>
 
@@ -383,27 +405,27 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                   name="tickSeconds"
                   label="Nhịp cập nhật"
                   suffix="giây"
-                  tip="Ý nghĩa: worker cập nhật stats mỗi bao nhiêu giây (loop trong 1 invocation). Dashboard poll theo nhịp này. · Hợp lệ: số nguyên 5–60. · Mặc định: 30 (3 kỳ/tuần, bán nhiều ngày — không cần nhịp 10s như game nhanh). · Tác động: giảm → dữ liệu tươi hơn, tốn tài nguyên hơn."
+                  tip={`Ý nghĩa: worker cập nhật số liệu thống kê mỗi bao nhiêu giây; trang vận hành làm mới theo nhịp này. · Hợp lệ: số nguyên 5–60. · Mặc định: ${DEFAULT_MAX3D_PRO_CONFIG.ops.stats.tickSeconds} (Max 3D Pro quay 3 kỳ/tuần, bán nhiều ngày nên không cần nhịp nhanh như game quay liên tục). · Tác động: giảm → dữ liệu tươi hơn, tốn tài nguyên hơn.`}
                 />
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <IntField
                     form={form}
                     name="topCombosK"
-                    label="Top cặp plus"
-                    tip="Ý nghĩa: số cặp (ordered) bị dồn nhiều nhất lưu mỗi kỳ (bảng 'Cặp bị dồn' + input pair_liability/combo_concentration). · Hợp lệ: số nguyên 20–200. · Mặc định: 100. · Tác động: tăng → theo dõi nhiều cặp hơn, doc to hơn."
+                    label="Top cặp"
+                    tip={`Ý nghĩa: số cặp (tính theo chiều, cặp ngược chiều là 1 khoá riêng) bị dồn tiền nhiều nhất được lưu mỗi kỳ — đây cũng là phạm vi quét của 2 cảnh báo 'Liability cặp (2 chiều)' và 'Nhiều người cùng cặp', cặp ngoài danh sách sẽ KHÔNG được xét. · Hợp lệ: số nguyên 20–200. · Mặc định: ${DEFAULT_MAX3D_PRO_CONFIG.ops.stats.topCombosK}. · Tác động: tăng → theo dõi nhiều cặp hơn, dữ liệu lưu lớn hơn.`}
                   />
                   <IntField
                     form={form}
                     name="topPotentialK"
                     label="Top tiềm năng"
-                    tip="Ý nghĩa: số entry có potential payout cao nhất lưu mỗi kỳ (ước tính thiên cao — Σ max/board). · Hợp lệ: số nguyên 20–100. · Mặc định: 50. · Tác động: tăng → theo dõi nhiều entry rủi ro hơn."
+                    tip={`Ý nghĩa: số entry có mức chi trả tiềm năng cao nhất được lưu mỗi kỳ (con số dùng để XẾP HẠNG: mỗi board tính theo giải ĐB + phụ ĐB vì board thường chứa cả 2 chiều của một cặp, chưa cộng các giải nhỏ trúng kèm). · Hợp lệ: số nguyên 20–100. · Mặc định: ${DEFAULT_MAX3D_PRO_CONFIG.ops.stats.topPotentialK}. · Tác động: tăng → theo dõi nhiều entry rủi ro hơn.`}
                   />
                   <IntField
                     form={form}
                     name="topAccountsK"
                     label="Top account"
-                    tip="Ý nghĩa: số account cược nhiều tiền nhất lưu mỗi kỳ. · Hợp lệ: số nguyên 20–100. · Mặc định: 50. · Tác động: tăng → thấy nhiều account lớn hơn."
+                    tip={`Ý nghĩa: số account cược nhiều tiền nhất được lưu mỗi kỳ. · Hợp lệ: số nguyên 20–100. · Mặc định: ${DEFAULT_MAX3D_PRO_CONFIG.ops.stats.topAccountsK}. · Tác động: tăng → thấy nhiều account lớn hơn.`}
                   />
                 </div>
               </div>

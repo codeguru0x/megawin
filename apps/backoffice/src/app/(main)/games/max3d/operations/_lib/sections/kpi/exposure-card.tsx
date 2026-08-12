@@ -5,8 +5,8 @@
  *
  * KHÁC Bingo18: exposure gồm 3 thành phần ghi nhãn trung thực —
  * - Basic (CHÍNH XÁC — greedy per-tier trên tripletStakes).
- * - Cặp ĐB max (CHÍNH XÁC có điều kiện — units × 1 tỷ của cặp nặng nhất).
- * - Đuôi plus Năm/Sáu (ƯỚC TÍNH thiên cao).
+ * - Cặp ĐB max (CHÍNH XÁC có điều kiện — units × giải ĐB Max 3D+ của cặp nặng nhất).
+ * - Giải nhỏ Năm/Sáu (ƯỚC TÍNH — tính dư, cao hơn thực tế).
  * Gauge so ngưỡng TUYỆT ĐỐI `exposureWarnAmount` từ `snapshot.thresholds`
  * (kỳ bán nhiều ngày — doanh thu không làm mẫu số).
  */
@@ -71,7 +71,7 @@ export function ExposureCard({
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
               <p className="text-xs text-muted-foreground">
-                Basic chính xác · Cặp ĐB có điều kiện · Đuôi plus ước tính
+                Basic chính xác · Cặp ĐB có điều kiện · Giải nhỏ Năm/Sáu ước tính
               </p>
             </div>
           </div>
@@ -94,15 +94,17 @@ export function ExposureCard({
             value={maxPair?.liability ?? 0}
             tip={
               maxPair
-                ? `Cặp ${maxPair.triplet1}–${maxPair.triplet2}: ${formatNumber(maxPair.units)} bộ × 1 tỷ = ${formatNumber(maxPair.liability)} VND nếu cặp này ra ĐB. Chính xác CÓ ĐIỀU KIỆN (chỉ trả khi đúng cặp ra).`
+                ? `Cặp ${maxPair.triplet1}–${maxPair.triplet2}: ${formatNumber(maxPair.units)} bộ × ${formatNumber(
+                    maxPair.units > 0 ? Math.round(maxPair.liability / maxPair.units) : 0,
+                  )} VND (giải ĐB Max 3D+ đang cấu hình) = ${formatNumber(maxPair.liability)} VND nếu cặp này ra ĐB. Chính xác CÓ ĐIỀU KIỆN (chỉ trả khi đúng cặp ra).`
                 : "Chưa có cược Max 3D+ nào."
             }
             danger
           />
           <ComponentStat
-            label="Đuôi plus (ước tính)"
+            label="Giải Năm/Sáu (ước tính)"
             value={exposure.plusTailProxy}
-            tip="Giải Năm/Sáu Max 3D+ (điều kiện 1 bộ khớp) — ước lượng THIÊN CAO: giả định mọi đơn vị plus cùng trúng đuôi. Giải cặp Nhất→Tư KHÔNG cộng đồng loạt (chỉ cặp khớp pool mới trả)."
+            tip="Giải Năm/Sáu Max 3D+ (chỉ cần 1 trong 2 bộ khớp) — con số này TÍNH DƯ, cao hơn thực tế rất nhiều vì giả định MỌI lượt cược đều trúng, trong khi xác suất trúng chỉ khoảng 4%. Mỗi lượt chỉ tính 1 giải (một cặp có 2 bộ nên trên lý thuyết có thể trúng gấp đôi), nhưng phần thiếu đó rất nhỏ so với mức đã tính dư. Giải cặp Nhất→Tư không cộng vào đây (chỉ cặp khớp đúng nhóm kết quả mới phải trả)."
           />
           <ComponentStat
             label="Doanh thu kỳ"

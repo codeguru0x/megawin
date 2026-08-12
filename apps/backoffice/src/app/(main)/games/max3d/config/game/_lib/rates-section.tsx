@@ -51,7 +51,9 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
             <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Tỷ lệ tài chính</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Max 3D không có Jackpot — công ty thu toàn bộ phần còn lại sau hoa hồng và giải thưởng cố định
+                Max 3D không có Jackpot — mọi giải đều cố định. Công thức:{" "}
+                <strong>Lợi nhuận = Doanh thu − Giải thưởng − Hoa hồng</strong>. Chỉ hoa hồng là tỷ lệ cấu hình được;
+                giải thưởng KHÔNG bị chặn theo % doanh thu nên lợi nhuận có thể âm nếu kỳ quay trúng nhiều.
               </p>
             </div>
 
@@ -73,7 +75,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block size-2 rounded-full bg-muted-foreground/30" />
-                  Giải thưởng + lợi nhuận: {Math.max(100 - commissionRate, 0)}%
+                  Còn lại để trả giải + lợi nhuận: {Math.max(100 - commissionRate, 0)}%
                 </span>
               </div>
             </div>
@@ -90,7 +92,9 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                       </div>
                       <div>
                         <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>
-                        <p className="text-xs text-muted-foreground">Thu trước từ tiền cược</p>
+                        <p className="text-xs text-muted-foreground">
+                          Tính trên doanh thu bán vé của đại lý, trừ trước khi tính lợi nhuận công ty
+                        </p>
                       </div>
                     </div>
 
@@ -114,7 +118,9 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                         <span className="text-lg font-semibold text-muted-foreground">%</span>
                       </div>
 
-                      <p className="text-xs tabular-nums text-muted-foreground">Tối đa 100%</p>
+                      <p className="text-xs tabular-nums text-muted-foreground">
+                        Mặc định áp cho tenant chưa có tỷ lệ riêng. Tối đa 100%.
+                      </p>
                     </div>
                     <FormMessage />
                   </FormItem>

@@ -809,6 +809,12 @@ export interface Lotto535JackpotResponse {
     splitThreshold: number;
     /** Phần trăm tiến trình (0–100) = currentAmount / splitThreshold × 100. */
     percentage: number;
+    /**
+     * Jackpot đã chạm ngưỡng chia chưa (`currentAmount >= splitThreshold`).
+     * CHỈ phản ánh vế "đủ tiền" — chưa xét kỳ 21h hay có winner. Kỳ CHIA thực tế
+     * còn cần kỳ 21h (`drawNo = 2`) và không ai trúng Jackpot.
+     */
+    reachedSplitThreshold: boolean;
   };
 }
 

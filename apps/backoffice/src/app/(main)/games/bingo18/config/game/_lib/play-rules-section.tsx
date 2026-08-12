@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
+import { computeDrawsPerDay, HHMM_PATTERN } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -16,23 +17,26 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import type { Bingo18GameConfig } from "./use-game-config";
 
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-const playFormSchema = z.object({
-  unitPrice: z.coerce.number().int().positive("Phải > 0"),
-  minBetCount: z.coerce.number().int().min(1, "Phải ≥ 1"),
-  maxBetCount: z.coerce.number().int().positive("Phải > 0"),
-  maxBasicBoardsPerTicket: z.coerce
-    .number()
-    .int()
-    .positive("Phải > 0")
-    .max(BINGO18_MAX_BOARDS, `Tối đa ${BINGO18_MAX_BOARDS}`),
-  maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-  salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
-  drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
-  firstDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-  lastDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-});
+const playFormSchema = z
+  .object({
+    unitPrice: z.coerce.number().int().positive("Phải > 0"),
+    minBetCount: z.coerce.number().int().min(1, "Phải ≥ 1"),
+    maxBetCount: z.coerce.number().int().positive("Phải > 0"),
+    maxBasicBoardsPerTicket: z.coerce
+      .number()
+      .int()
+      .positive("Phải > 0")
+      .max(BINGO18_MAX_BOARDS, `Tối đa ${BINGO18_MAX_BOARDS}`),
+    maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
+    salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
+    drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
+    firstDrawTime: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
+    lastDrawTime: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
+  })
+  .refine((data) => data.maxBetCount >= data.minBetCount, {
+    message: "Số lượt tối đa phải ≥ số lượt tối thiểu",
+    path: ["maxBetCount"],
+  });
 
 type PlayFormValues = z.infer<typeof playFormSchema>;
 
@@ -91,6 +95,12 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     });
   }
 
+  const drawsPerDay = computeDrawsPerDay(
+    form.watch("firstDrawTime"),
+    form.watch("lastDrawTime"),
+    form.watch("drawIntervalMinutes") || 0,
+  );
+
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
@@ -114,7 +124,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
                           label="Giá mỗi lượt chơi"
-                          tip="Giá 1 cách chơi × 1 lần tham gia dự thưởng (1 betCount × 1 board). Tiền thưởng trả theo bội số giá này."
+                          tip="Giá cho 1 panel × 1 lượt tham gia dự thưởng. Tổng tiền vé = giá này × số panel × số lượt × số kỳ. Tiền thưởng trả theo bội số giá này."
                         />
                       </FormLabel>
                       <FormControl>
@@ -146,7 +156,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip={`Số panel (A–F) tối đa trên 1 vé. Mỗi panel chơi 1 cách độc lập — một số, hai trùng, ba trùng, cộng tổng, lớn/hòa/nhỏ. Không được cấu hình vượt quá ${BINGO18_MAX_BOARDS} (hard cap toàn hệ thống).`}
+                            tip={`Số panel (A–F) tối đa trên 1 vé — tối đa hiện cấu hình là ${form.watch("maxBasicBoardsPerTicket") || 0} panel. Mỗi panel chơi 1 cách độc lập: Một số, Hai số trùng, Ba số trùng, Cộng tổng, hoặc Lớn/Hoà/Nhỏ. Không được cấu hình vượt ${BINGO18_MAX_BOARDS} (trần cứng toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -198,7 +208,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Đóng bán trước"
-                            tip="Ngừng nhận vé trước giờ quay số bao nhiêu giây. Bingo 18 dùng đơn vị giây vì kỳ quay rất ngắn (6 phút/kỳ)."
+                            tip={`Ngừng nhận vé trước giờ quay số bao nhiêu giây. Bingo 18 dùng đơn vị giây vì kỳ quay rất ngắn (hiện ${form.watch("drawIntervalMinutes") || 0} phút/kỳ).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -253,7 +263,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số lượt tối đa"
-                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với betCount=10 nhận 10× giá trị giải."
+                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với 10 lượt nhận 10× giá trị giải."
                           />
                         </FormLabel>
                         <FormControl>
@@ -279,7 +289,14 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Bingo 18 quay liên tục trong ngày — ~160 kỳ/ngày theo khoảng cách cố định.
+                    Bingo 18 quay liên tục trong ngày theo khoảng cách cố định
+                    {drawsPerDay !== null ? (
+                      <>
+                        {" — với cấu hình hiện tại: "}
+                        <strong>{drawsPerDay} kỳ/ngày</strong>
+                      </>
+                    ) : null}
+                    .
                   </p>
                 </div>
 

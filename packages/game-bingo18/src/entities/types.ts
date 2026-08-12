@@ -177,8 +177,8 @@ export interface OpsAlertsConfig {
   exposureWarnMinAmount: number;
   /**
    * % lệch tối đa 1 hướng bigSmallDraw (theo amount) để cảnh báo `sidebet_skew`.
-   * Đơn vị %: [50, 95]. Default 70. LƯU Ý xác suất nền KHÔNG đối xứng
-   * (small 49,07% / draw 25% / big 25,93%).
+   * Đơn vị %: [50, 95]. Default 70. Xác suất nền ĐỐI XỨNG
+   * (small 37,5% / draw 25% / big 37,5% — 81/54/81 trên 216 tổ hợp).
    */
   sidebetSkewPct: number;
   /**

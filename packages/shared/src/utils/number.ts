@@ -139,3 +139,18 @@ export function formatNumber(
   // Trim 0 dư ở cuối phần thập phân (nếu có)
   return formatted.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "");
 }
+
+/**
+ * Định dạng số nguyên theo quy ước Việt Nam — dấu chấm phân cách hàng nghìn,
+ * KHÔNG kèm ký hiệu tiền tệ. `1000000` → `"1.000.000"`.
+ *
+ * Dùng cho text/tooltip tiếng Việt trong backoffice (nơi số tiền đọc kèm chữ
+ * "VND"/"đ" nên không cần ký hiệu). Khác 2 hàm sẵn có:
+ * - `formatNumber` — grouping kiểu US (`1,000,000`).
+ * - `formatVND` — grouping US + hậu tố ` ₫`.
+ *
+ * Null-safe: `undefined`/`null` → `"0"`.
+ */
+export function formatNumberVN(value: number | undefined | null): string {
+  return (value ?? 0).toLocaleString("vi-VN");
+}

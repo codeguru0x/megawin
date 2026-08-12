@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
+import { HHMM_PATTERN } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -16,8 +17,6 @@ import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
-
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const DAY_LABELS: Record<number, string> = {
   0: "Chủ nhật",
@@ -41,7 +40,7 @@ const playFormSchema = z
       .max(MAX3DPRO_MAX_BOARDS, `Tối đa ${MAX3DPRO_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
-    drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    drawTime: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
     drawDaysOfWeek: z.array(z.number()).min(1, "Chọn ít nhất 1 ngày quay"),
   })
   .refine((data) => data.maxBetCount >= data.minBetCount, {
@@ -137,7 +136,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
                           label="Giá mỗi lượt chơi"
-                          tip="Giá 1 cặp (TripletPair) × 1 lần tham gia dự thưởng (betCount). Tổng tiền = số cặp × betCount × giá này. Theo luật Vietlott: giải thưởng = giá trị giải × betCount."
+                          tip="Giá 1 line (1 cặp 2 bộ ba số) cho 1 lượt dự thưởng. Tổng tiền = số cặp board sinh ra × số lượt × giá này. Giải thưởng cũng nhân theo số lượt."
                         />
                       </FormLabel>
                       <FormControl>
@@ -169,7 +168,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip={`Số board (A–D) tối đa trên 1 vé. Mỗi board là 1 bộ số chọn, hệ thống expand thành các cặp ordered pair. Không được cấu hình vượt quá ${MAX3DPRO_MAX_BOARDS} (hard cap toàn hệ thống).`}
+                            tip={`Số board tối đa trên 1 vé. Mỗi board là 1 lượt chọn số và tự sinh ra NHIỀU cặp dự thưởng: chọn n bộ ba số → n × (n−1) cặp có thứ tự (3 bộ → 6 cặp, 20 bộ → 380 cặp); chọn 3 chữ số đầu + 3 chữ số sau → (số hoán vị đầu × số hoán vị sau) cặp. Vì vậy 1 board có thể tốn hàng trăm lần giá 1 line. Không được cấu hình vượt quá ${MAX3DPRO_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -302,7 +301,13 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày quay — Max 3D Pro quay T3, T5, T7.
+                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày quay.{" "}
+                    {drawDays.length > 0
+                      ? `Đang chọn: ${drawDays
+                          .toSorted((a, b) => a - b)
+                          .map((d) => DAY_LABELS[d])
+                          .join(", ")} (${drawDays.length} kỳ/tuần).`
+                      : "Chưa chọn ngày quay nào."}
                   </p>
                 </div>
 

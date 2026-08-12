@@ -64,6 +64,12 @@ export interface PlayerGetJackpotOutput {
     splitThreshold: number;
     /** Phần trăm tiến trình (0-100) = (currentAmount / threshold) × 100. */
     percentage: number;
+    /**
+     * Jackpot đã chạm ngưỡng chia chưa (`currentAmount >= splitThreshold`).
+     * CHỈ phản ánh vế "đủ tiền" — chưa xét kỳ 21h hay có winner. Kỳ CHIA thực tế
+     * còn cần `drawNo = 2` (kỳ 21h) và không ai trúng Jackpot.
+     */
+    reachedSplitThreshold: boolean;
   };
 }
 
@@ -461,7 +467,7 @@ export interface PlayerComboPopularityOutput {
   jackpotUnits?: number;
   /**
    * Kỳ này có đủ điều kiện chia Jackpot (split cycle) nếu không ai trúng — copy nguyên
-   * điều kiện từ `isSplitCycleDraw` (JP ≥ ngưỡng, kỳ 21h). KHÔNG có con số dự tính: pool
+   * điều kiện từ `isSplitEligibleDraw` (JP ≥ ngưỡng, kỳ 21h). KHÔNG có con số dự tính: pool
    * chia tier1-5 theo đơn vị dự thưởng trúng từng tier — chỉ biết SAU khi quay; tiền chia
    * làm tròn xuống 5.000đ (trừ tier cao nhất nhận phần dư).
    */

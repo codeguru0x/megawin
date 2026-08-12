@@ -140,11 +140,16 @@ Người chơi chọn **2 bộ ba số** (có thể giống nhau). **Chỉ hỗ 
 │  Giải Nhì:   2 bộ khớp 2 entry Nhì riêng biệt                                │
 │  Giải Ba:    2 bộ khớp 2 entry Ba riêng biệt                                  │
 │  Giải Tư:    2 bộ khớp 2 entry BẤT KỲ riêng biệt trong 20 kết quả            │
-├─── NHÓM ĐƠN (kiểm tra từng bộ ba riêng lẻ) ────────────────────────────────┤
+├─── NHÓM ĐƠN (kiểm tra từng bộ ba riêng lẻ, 2 điều kiện ĐỘC LẬP) ───────────┤
 │  Giải Năm:   1 bộ khớp entry ĐB bất kỳ                                       │
-│  Giải Sáu:   1 bộ khớp entry Nhất/Nhì/Ba bất kỳ                              │
+│  Giải Sáu:   1 bộ khớp entry Nhất, Nhì HOẶC Ba bất kỳ                        │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
+
+Năm và Sáu **KHÔNG loại trừ nhau**: 20 bộ ba quay độc lập nên 1 triplet có thể nằm ở cả pool
+ĐB lẫn pool Nhất/Nhì/Ba → theo luật gộp giải, player nhận **CẢ Năm lẫn Sáu**. Ngược lại, Giải
+Sáu chỉ tính **1 lần cho mỗi triplet** dù triplet khớp nhiều pool trong Nhất/Nhì/Ba, vì điều
+kiện là "Nhất, Nhì HOẶC Ba" — một giải duy nhất.
 
 **Ví dụ gộp giải:** Player `"096"+"683"`, Special=["096","389"], First=["683",...]
 - Giải Tư: ✅ (cả 2 khớp 2 entry trong 20) → 1.000.000
@@ -202,7 +207,7 @@ Do 20 bộ ba số được quay **độc lập**, 1 triplet có thể xuất hi
 - `matchBasicCombo()`: mỗi hoán vị gọi `findAllTiersInResult`, **không** `break` sau khi khớp 1 tier
 - `matchBoard()` Straight: mỗi tier trúng tạo 1 `lineResult` riêng (pattern giống Plus mode)
 
-**Lưu ý quan trọng cho Plus**: 7 hạng giải KHÔNG loại trừ lẫn nhau. Giải cặp (ĐB→Tư) dùng bipartite matching — mỗi draw entry chỉ được khớp 1 lần. Giải đơn (Năm/Sáu) kiểm tra từng triplet riêng lẻ. Duplicate (2 bộ giống nhau): giải thưởng ×2 chỉ áp dụng từ Nhất đến Sáu, giải ĐB KHÔNG ×2. Giải đơn tính 1 lần.
+**Lưu ý quan trọng cho Plus**: 7 hạng giải KHÔNG loại trừ lẫn nhau. Giải cặp (ĐB→Tư) dùng bipartite matching — mỗi draw entry chỉ được khớp 1 lần. Giải đơn (Năm/Sáu) kiểm tra từng triplet riêng lẻ, và **2 điều kiện xét độc lập** — 1 triplet nằm ở cả pool ĐB lẫn Nhất/Nhì/Ba thì trúng cả Năm lẫn Sáu (KHÔNG lấy hạng cao nhất). Duplicate (2 bộ giống nhau): giải thưởng ×2 chỉ áp dụng từ Nhất đến Sáu, giải ĐB KHÔNG ×2. Giải đơn tính 1 lần.
 
 ---
 
@@ -247,17 +252,40 @@ Không gian mẫu: 1.000 bộ ba số
 
 ### 6.2 Max 3D+ (2 bộ ba số)
 
-Không gian mẫu: 1.000 × 1.000 = 1.000.000
+Không gian mẫu: 1.000 × 1.000 = 1.000.000 cặp **có thứ tự** (t1, t2), cho phép t1 = t2.
 
-| Giải | Ways | Xác suất | 1 trong N |
+Giải cặp (ĐB → Tư) dùng **bipartite matching** — 2 bộ phải khớp 2 entry RIÊNG BIỆT, nên
+ways = `k × (k − 1)`, **KHÔNG phải `k²`** (`k²` đếm nhầm cả cặp trùng vốn không khớp được
+2 entry riêng biệt). Giải Năm/Sáu (nhóm đơn) đếm **số lần trúng** theo từng bộ số, bộ còn
+lại tự do trong đủ 1.000 giá trị (không loại 20 kết quả, vì theo luật gộp giải cả 2 bộ đều
+khớp thì trúng 2 lần và lĩnh cả hai).
+
+Bảng dưới là **effective ways** — đã quy đổi ×2 giải thưởng của cặp trùng (Nhất→Sáu) thành
+ways tương đương, dùng trực tiếp để tính chi phí kỳ vọng.
+
+| Giải | Effective ways | Xác suất | 1 trong N |
 |------|------|----------|-----------|
-| Đặc Biệt | 2² = 4 | 4/1.000.000 | 250.000 |
-| Nhất | 4² = 16 | 16/1.000.000 | 62.500 |
-| Nhì | 6² = 36 | 36/1.000.000 | 27.778 |
-| Ba | 8² = 64 | 64/1.000.000 | 15.625 |
-| Tư | 20² - ĐB² - Nhất² - Nhì² - Ba² = 280 | 280/1.000.000 | 3.571 |
-| Năm | 2 × 2 × 980 = 3.920 | 3.920/1.000.000 | 255 |
-| Sáu | 2 × 18 × 980 = 35.280 | 35.280/1.000.000 | 28,3 |
+| Đặc Biệt | 2 × 1 = 2 (KHÔNG ×2 duplicate) | 2/1.000.000 | 500.000 |
+| Nhất | 4 × 3 = 12 | 12/1.000.000 | 83.333 |
+| Nhì | 6 × 5 = 30 | 30/1.000.000 | 33.333 |
+| Ba | 8 × 7 = 56 | 56/1.000.000 | 17.857 |
+| Tư | 20 × 19 = 380 | 380/1.000.000 | 2.632 |
+| Năm | 2 × 2 × 1.000 = 4.000 | 4.000/1.000.000 | 250 |
+| Sáu | 2 × 18 × 1.000 = 36.000 | 36.000/1.000.000 | 27,8 |
+
+Đã kiểm chứng bằng enumeration đủ 1.000.000 cặp qua chính logic `matchPlus()`.
+
+### 6.3 RTP theo giá trị giải mặc định (giá vé 10.000đ)
+
+| Cách chơi | Giá 1 board | CP kỳ vọng | RTP | Biên gộp |
+|-----------|-------------|------------|-----|----------|
+| Cơ bản (straight) | 10.000 | 5.460 | 54,60% | 45,40% |
+| Tổ hợp 3 (3 lines) | 30.000 | 5.460 | 18,20% | 81,80% |
+| Tổ hợp 6 (6 lines) | 60.000 | 5.460 | 9,10% | 90,90% |
+| Max 3D+ | 10.000 | 5.480 | 54,80% | 45,20% |
+
+Combo có RTP thấp vì giá board nhân theo số hoán vị nhưng giải combo đã hạ tương ứng —
+CP kỳ vọng/board không tăng theo số hoán vị.
 
 ---
 

@@ -11,6 +11,7 @@ export default defineConfig([
       max3d: "src/max3d/index.ts",
       max3dpro: "src/max3dpro/index.ts",
       bingo18: "src/bingo18/index.ts",
+      game: "src/game/index.ts",
     },
     format: ["cjs", "esm"],
     dts: true,

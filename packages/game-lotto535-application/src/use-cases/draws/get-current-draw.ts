@@ -9,6 +9,7 @@
  */
 
 import type { DrawEntity } from "@megawin/game-lotto535/entities";
+import { isSplitEligibleDraw } from "@megawin/game-lotto535/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
 
@@ -80,7 +81,7 @@ function mapDrawInfo(draw: DrawEntity, jackpotCurrentAmount: number, splitThresh
       closeAt: draw.sales.closeAt.toISOString(),
     },
     jackpotCurrentAmount,
-    splitCycleIntent: jackpotCurrentAmount >= splitThreshold && draw.drawNo === 2,
+    splitCycleIntent: isSplitEligibleDraw(jackpotCurrentAmount, splitThreshold, draw.drawNo),
     stats: draw.stats
       ? {
           ticketEntryCount: draw.stats.ticketEntryCount,

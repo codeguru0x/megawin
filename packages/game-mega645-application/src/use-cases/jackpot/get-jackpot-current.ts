@@ -1,17 +1,26 @@
 /**
  * Use Case: Get Jackpot Current (Mega 6/45)
  *
+ * `GetJackpotCurrentInternalUseCase` là điểm truy cập DUY NHẤT cho dữ liệu jackpot hiện tại
+ * ở backoffice. Trả raw output (`GetJackpotCurrentOutput`), throw {@link AppException}
+ * `NOT_FOUND` khi chưa có active cycle — KHÔNG đóng gói HTTP.
+ *
  * Mega 6/45 theo luật Vietlott: Jackpot chỉ roll-over vô hạn, không có trần.
  * Dùng milestone threshold giả định để hiển thị tiến trình có ý nghĩa cho staff.
+ *
+ * Hai caller:
+ *   - `GetJackpotCurrentUseCase` (NextApiUseCase, cùng file) → `GET /api/mega645/jackpot/current`,
+ *     chỉ delegate + đóng gói envelope.
+ *   - `GetDashboardJackpotsUseCase` (backoffice, cross-game) → `GET /api/dashboard/jackpots`,
+ *     gọi song song 3 game bằng `tryLoad`.
  *
  * CRASH-SAFE: chỉ đọc DB — idempotent, chạy lại nhiều lần an toàn.
  */
 
-import { JackpotCycleStatus } from "@megawin/game-mega645/entities";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { NextApiUseCase } from "@megawin/next/server";
 
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
 // ─────────────────────────────────────────────
@@ -61,18 +70,17 @@ export function calcMilestoneThreshold(
 // Use Case
 // ─────────────────────────────────────────────
 
-export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
+export class GetJackpotCurrentInternalUseCase extends InternalUseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(): Promise<GetJackpotCurrentOutput> {
-    const [activeCycle, globalConfig] = await Promise.all([
-      this.cycleRepo.getActiveCycle(),
-      this.getGlobalConfig.run(),
-    ]);
+    const activeCycle = await this.cycleRepo.getActiveCycle();
 
-    const seedAmount = activeCycle?.seedAmount ?? globalConfig.jackpot.seedAmount;
-    const currentAmount = activeCycle?.currentAmount ?? seedAmount;
+    if (!activeCycle) {
+      throw AppException.notFound("Không tìm thấy jackpot hiện tại. Hãy tạo kỳ mới đầu tiên.");
+    }
+
+    const { seedAmount, currentAmount } = activeCycle;
 
     // Tính ngưỡng milestone giả định từ seedAmount và currentAmount.
     const { milestoneThreshold, currentMultiple, nextMultiple } = calcMilestoneThreshold(seedAmount, currentAmount);
@@ -81,30 +89,18 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
     const percentage = milestoneThreshold > 0 ? Math.round((currentAmount / milestoneThreshold) * 1000) / 10 : 0;
 
     return {
-      cycle: activeCycle
-        ? {
-            cycleNo: activeCycle.cycleNo,
-            status: activeCycle.status,
-            seedAmount: activeCycle.seedAmount,
-            currentAmount: activeCycle.currentAmount,
-            peakAmount: activeCycle.peakAmount,
-            totalContribution: activeCycle.totalContribution,
-            drawCount: activeCycle.drawCount,
-            startDrawId: activeCycle.startDrawId,
-            startedAt: activeCycle.startedAt.toISOString(),
-            lastSettledDrawId: activeCycle.lastSettledDrawId,
-          }
-        : {
-            cycleNo: 0,
-            status: JackpotCycleStatus.Active,
-            seedAmount,
-            currentAmount: seedAmount,
-            peakAmount: seedAmount,
-            totalContribution: 0,
-            drawCount: 0,
-            startDrawId: "",
-            startedAt: new Date().toISOString(),
-          },
+      cycle: {
+        cycleNo: activeCycle.cycleNo,
+        status: activeCycle.status,
+        seedAmount,
+        currentAmount,
+        peakAmount: activeCycle.peakAmount,
+        totalContribution: activeCycle.totalContribution,
+        drawCount: activeCycle.drawCount,
+        startDrawId: activeCycle.startDrawId,
+        startedAt: activeCycle.startedAt.toISOString(),
+        lastSettledDrawId: activeCycle.lastSettledDrawId,
+      },
       progress: {
         current: currentAmount,
         milestoneThreshold,
@@ -114,5 +110,20 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
         nextMultiple,
       },
     };
+  }
+}
+
+/**
+ * Endpoint: `GET /api/mega645/jackpot/current`.
+ *
+ * Chỉ đóng gói HTTP envelope — toàn bộ logic nằm ở {@link GetJackpotCurrentInternalUseCase}
+ * (dùng chung với endpoint gộp cross-game `GET /api/dashboard/jackpots`). Sửa logic jackpot
+ * thì sửa ở internal use-case, KHÔNG sửa ở đây.
+ */
+export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
+  private readonly internal = new GetJackpotCurrentInternalUseCase();
+
+  protected async execute(): Promise<GetJackpotCurrentOutput> {
+    return await this.internal.run();
   }
 }

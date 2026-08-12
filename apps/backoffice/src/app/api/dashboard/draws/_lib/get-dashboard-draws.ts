@@ -8,6 +8,7 @@ import { DrawRepository as Max3dproDrawRepo } from "@megawin/game-max3dpro-appli
 import { DrawRepository as Mega645DrawRepo } from "@megawin/game-mega645-application/repos";
 import { DrawRepository as Power655DrawRepo } from "@megawin/game-power655-application/repos";
 import { NextApiUseCase } from "@megawin/next/server";
+import { tryLoad } from "@megawin/shared/utils";
 
 import type { DrawEventStatus, DrawTimelineEvent, GetDashboardDrawsOutput, HighFreqGameSummary } from "./types";
 
@@ -35,13 +36,16 @@ const HIGH_FREQ_SETTLED_LIMIT = 30;
 /** Giới hạn scheduled draws cho mỗi game (tránh quá nhiều dữ liệu). */
 const SCHEDULED_LIMIT = 5;
 
+/** Label dùng cho log khi 1 game lỗi bất thường. */
+const SCOPE = "GetDashboardDraws";
+
 /**
  * Lấy draw timeline cross-game cho dashboard.
  *
  * App-level use case — nằm trong backoffice vì orchestrate 7 game draw repos.
  * Không thể đặt ở game-core-application (vi phạm dependency direction).
  *
- * Gọi song song 7 game × 3 status groups qua Promise.allSettled:
+ * Gọi song song 7 game × 3 status groups qua `tryLoad` (không reject → `Promise.all`):
  *   - Active: đang mở bán / đóng bán / published / settling / voiding — `getUnfinishedDraws`,
  *     KHÔNG lookback theo ngày nên không bỏ sót kỳ kẹt cũ (root cause bug đã fix ở
  *     GetCurrentDraw/GetDrawSelector, áp dụng lại ở đây).
@@ -64,15 +68,25 @@ export class GetDashboardDrawsUseCase extends NextApiUseCase<void, GetDashboardD
   ];
 
   protected async execute(): Promise<GetDashboardDrawsOutput> {
-    // Gọi song song tất cả game × 3 nhóm status
-    const results = await Promise.allSettled(this.repos.map(({ game, repo }) => this.fetchGameDraws(game, repo)));
+    // Gọi song song tất cả game × 3 nhóm status.
+    //
+    // `tryLoad` không bao giờ reject nên dùng `Promise.all` thuần. Trước đây chỗ này dùng
+    // `allSettled` + `if (rejected) continue` — NUỐT IM LẶNG: 1 game lỗi DB thì dashboard
+    // vẫn trả 200 với timeline thiếu game đó và không ai biết. Nay lỗi bất thường được log
+    // error kèm `source` = gameProduct, vẫn degrade từng phần như cũ.
+    const results = await Promise.all(
+      this.repos.map(({ game, repo }) =>
+        tryLoad(() => this.fetchGameDraws(game, repo), { scope: SCOPE, source: game }),
+      ),
+    );
 
     const events: DrawTimelineEvent[] = [];
     const highFreqGames: HighFreqGameSummary[] = [];
 
-    for (const result of results) {
-      if (result.status === "rejected") continue;
-      const data = result.value;
+    for (const data of results) {
+      if (data === undefined) {
+        continue;
+      }
 
       if (data.type === "highFreq") {
         highFreqGames.push(data.summary);
@@ -85,7 +99,9 @@ export class GetDashboardDrawsUseCase extends NextApiUseCase<void, GetDashboardD
     const statusOrder: Record<DrawEventStatus, number> = { active: 0, settled: 1, scheduled: 2 };
     events.sort((a, b) => {
       const od = statusOrder[a.status] - statusOrder[b.status];
-      if (od !== 0) return od;
+      if (od !== 0) {
+        return od;
+      }
       // Settled: gần nhất trước (desc), còn lại: sớm nhất trước (asc)
       if (a.status === "settled") {
         return new Date(b.drawAt).getTime() - new Date(a.drawAt).getTime();

@@ -36,9 +36,8 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
-import { DrawNo } from "@megawin/game-lotto535/entities";
 import type { ResettleScenario as ResettleScenarioType } from "@megawin/game-lotto535/rules";
-import { ResettleScenario } from "@megawin/game-lotto535/rules";
+import { isSplitCycleDraw, ResettleScenario } from "@megawin/game-lotto535/rules";
 import { NextApiUseCase } from "@megawin/next/server";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -132,7 +131,7 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
     const hadOldJpWinner = ledgerEntry.hasJpWinner;
     const hadOldSplit = ledgerEntry.didSplit;
 
-    const newWouldSplit = draw.drawNo === DrawNo.Evening && ledgerEntry.opening >= splitThreshold && !hasNewJpWinner;
+    const newWouldSplit = isSplitCycleDraw(ledgerEntry.opening, splitThreshold, hasNewJpWinner, draw.drawNo);
 
     const jpOrSplitAffected = hasNewJpWinner || hadOldJpWinner || newWouldSplit || hadOldSplit;
 

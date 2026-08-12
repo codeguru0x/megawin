@@ -77,16 +77,16 @@ const ALERT_META: AlertMeta[] = [
     label: "Rủi ro chi trả giải cố định",
     icon: ShieldAlert,
     severity: OpsAlertSeverity.Critical,
-    summary: "Worst-case giải cố định chạm ngưỡng 'Exposure cảnh báo' (VND).",
-    tip: "Ý nghĩa: khi tổng worst-case payout giải cố định của kỳ (fixedWorstCase) ≥ ngưỡng → bắn alert. · Ngưỡng liên quan: 'Exposure cảnh báo (VND)' ở trên. · Nâng Critical khi ≥ 2× ngưỡng. · Tác động khi TẮT: không còn cảnh báo rủi ro trả thưởng giải cố định.",
+    summary: "Chi trả giải cố định xấu nhất chạm ngưỡng 'Exposure cảnh báo' (VND).",
+    tip: "Ý nghĩa: khi tổng tiền chi trả giải cố định trong kịch bản xấu nhất của kỳ ≥ ngưỡng → bắn alert. · Ngưỡng liên quan: 'Exposure cảnh báo (VND)' ở trên. · Nâng Critical khi ≥ 2× ngưỡng. · Tác động khi TẮT: không còn cảnh báo rủi ro trả thưởng giải cố định.",
   },
   {
     type: Mega645OpsAlertType.BaoHighStake,
     label: "Vé Bao mức cao",
     icon: Layers,
     severity: OpsAlertSeverity.Warning,
-    summary: "Board Bao có giá ≥ ngưỡng 'Giá board Bao cao' (VND).",
-    tip: "Ý nghĩa: playType nhóm Bao có board với giá chuẩn (BAO_COMBINATIONS × unitPrice) ≥ ngưỡng → bắn alert (rủi ro tập trung tiền lớn 1 vé). · Ngưỡng liên quan: 'Giá board Bao cao (VND)' ở trên. · Nâng Critical khi playType = Bao 18. · Tác động khi TẮT: không nổi bật vé Bao cao rủi ro cao.",
+    summary: "Board Bao 13/14/15/18 có giá ≥ ngưỡng 'Giá board Bao cao' (VND).",
+    tip: "Ý nghĩa: chỉ đánh giá Bao 13, 14, 15, 18 — board có giá chuẩn (số lines × giá 1 line) ≥ ngưỡng → bắn alert (rủi ro tập trung tiền lớn 1 vé). Không bao gồm Bao 5 và Bao 7–12. · Ngưỡng liên quan: 'Giá board Bao cao (VND)' ở trên. · Nâng Critical khi playType = Bao 18. · Tác động khi TẮT: không nổi bật vé Bao cao rủi ro cao.",
   },
   {
     type: Mega645OpsAlertType.LargeBet,
@@ -325,7 +325,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                   name="fixedExposureWarnAmount"
                   label="Exposure cảnh báo"
                   suffix="VND"
-                  tip="Ý nghĩa: khi tổng worst-case payout giải cố định (fixedWorstCase) ≥ giá trị này → alert exposure_threshold. VND TUYỆT ĐỐI (không phải %) vì Mega 6/45 không có maxPerDraw. · Hợp lệ: số nguyên > 0. · Mặc định: 500.000.000 (scale ¼ theo tier1 Mega 6/45). · Tác động: giảm → cảnh báo sớm hơn khi rủi ro trả thưởng tăng."
+                  tip="Ý nghĩa: khi tổng tiền chi trả giải cố định trong kịch bản xấu nhất ≥ giá trị này → cảnh báo rủi ro chi trả. Đơn vị VND tuyệt đối. · Hợp lệ: số nguyên > 0. · Mặc định: 500.000.000. · Tác động: giảm → cảnh báo sớm hơn khi rủi ro trả thưởng tăng."
                 />
 
                 <IntField

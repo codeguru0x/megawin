@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
+import { HHMM_PATTERN, parseHHMMToMinutes } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -16,13 +17,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import type { GameConfig } from "./use-game-config";
 
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-function timeToMinutes(t: string): number {
-  const [h, m] = t.split(":").map(Number);
-  return h! * 60 + m!;
-}
-
 const playFormSchema = z
   .object({
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
@@ -35,8 +29,8 @@ const playFormSchema = z
       .max(LOTTO535_MAX_BOARDS, `Tối đa ${LOTTO535_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
-    drawTime1: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-    drawTime2: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    drawTime1: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
+    drawTime2: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
   })
   .superRefine((data, ctx) => {
     if (data.maxBetCount < data.minBetCount) {
@@ -47,12 +41,14 @@ const playFormSchema = z
       });
     }
 
-    if (!timePattern.test(data.drawTime1) || !timePattern.test(data.drawTime2)) return;
+    // Giờ sai format đã có issue riêng từ `.regex()` — bỏ qua check khoảng cách kỳ.
+    const t1 = parseHHMMToMinutes(data.drawTime1);
+    const t2 = parseHHMMToMinutes(data.drawTime2);
+    if (t1 === null || t2 === null) {
+      return;
+    }
 
-    const t2 = timeToMinutes(data.drawTime2);
-    const gap = t2 - timeToMinutes(data.drawTime1);
-
-    if (gap < data.salesCloseBeforeMinutes) {
+    if (t2 - t1 < data.salesCloseBeforeMinutes) {
       ctx.addIssue({
         code: "custom",
         message: `Kỳ 2 phải sau Kỳ 1 ít nhất ${data.salesCloseBeforeMinutes} phút (= thời gian đóng bán trước giờ quay)`,

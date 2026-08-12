@@ -8,7 +8,7 @@
  * - TopTripletsCard: bộ ba bị dồn tiền (từ tripletStakes).
  * - PairTable: cặp Max 3D+ bị dồn + liability ĐB — PANEL RỦI RO SỐ 1, tô màu theo
  *   ngưỡng config thực (`overLiability`/`overAccounts` gắn sẵn từ adapter).
- * - RiskCluster: [Top người chơi | Top phải trả (ước tính)].
+ * - RiskCluster: [Top người chơi | Top phải trả (ước tính xếp hạng)].
  * - TenantPanel: doanh thu đại lý (card ≤3 / bảng >3).
  */
 
@@ -55,7 +55,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
                   className="text-[10px] tabular-nums text-muted-foreground"
                   title="Số phiếu xấp xỉ theo nhóm — cộng dồn không dedupe khi 1 phiếu có nhiều bộ số cùng nhóm."
                 >
-                  {formatNumber(r.units)} đơn vị · {formatNumber(r.entries)} phiếu
+                  {formatNumber(r.units)} lượt cược · {formatNumber(r.entries)} phiếu
                 </p>
                 <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
                   <div className={cn("h-full rounded-full", color.bar)} style={{ width: `${r.pct}%` }} />
@@ -126,7 +126,7 @@ export function PairTable({ rows }: { rows: PairRow[] }) {
           <div>
             <CardTitle className="text-sm font-semibold">Cặp Max 3D+ bị dồn</CardTitle>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Liability ĐB = số bộ × 1 tỷ — KHÔNG có cap, đỏ khi vượt ngưỡng config
+              Liability ĐB = số bộ × giải ĐB Max 3D+ — KHÔNG có cap, đỏ khi vượt ngưỡng config
             </p>
           </div>
         </div>
@@ -263,7 +263,8 @@ export function RiskCluster({
               <div>
                 <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Ước tính thiên cao (Σ max mỗi board) — không phải số chính xác
+                  Con số để XẾP HẠNG mức rủi ro (Σ giải ĐB mỗi board) — chưa cộng các giải nhỏ trúng kèm, không phải mức
+                  phải trả tối đa
                 </p>
               </div>
             </div>

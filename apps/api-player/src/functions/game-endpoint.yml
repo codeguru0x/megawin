@@ -1,0 +1,10 @@
+# Cross-game (gộp) – Player endpoints
+
+game-list-jackpots:
+  handler: src/handlers/game/list-jackpots.handler
+  events:
+    - httpApi:
+        path: /games/jackpots
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

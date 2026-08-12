@@ -15,6 +15,10 @@ export const ENDPOINTS = {
     balance: "/me/balance",
   },
 
+  game: {
+    listJackpots: "/games/jackpots",
+  },
+
   keno: {
     getGameConfig: "/games/keno/config",
     placeBet: "/games/keno/bets",

@@ -52,7 +52,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
                 </div>
                 <p className="mt-1 text-sm font-bold tabular-nums">{formatNumber(r.revenue)}</p>
                 <p className="text-[10px] tabular-nums text-muted-foreground">
-                  {formatNumber(r.units)} đơn vị · {formatNumber(r.entries)} phiếu
+                  {formatNumber(r.units)} lượt cược · {formatNumber(r.entries)} phiếu
                 </p>
                 <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
                   <div className={cn("h-full rounded-full", color.bar)} style={{ width: `${r.pct}%` }} />
@@ -119,7 +119,7 @@ export function PairTable({ rows }: { rows: PairRow[] }) {
           <div>
             <CardTitle className="text-sm font-semibold">Cặp cặp ordered bị dồn</CardTitle>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Liability = đúng chiều ×2 tỷ + chiều ngược ×400tr (phụ ĐB) — KHÔNG cap, đỏ khi vượt ngưỡng
+              Liability = đúng chiều × giải ĐB + chiều ngược × phụ ĐB — KHÔNG cap, đỏ khi vượt ngưỡng
             </p>
           </div>
         </div>
@@ -259,7 +259,8 @@ export function RiskCluster({
               <div>
                 <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Ước tính thiên cao (Σ max mỗi board) — không phải số chính xác
+                  Con số để XẾP HẠNG mức rủi ro (Σ ĐB + phụ ĐB mỗi board) — chưa cộng các giải nhỏ trúng kèm, không phải
+                  mức phải trả tối đa
                 </p>
               </div>
             </div>

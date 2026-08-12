@@ -13,7 +13,7 @@
  */
 
 import { DrawStatus } from "@megawin/game-core/entities";
-import { addDays, formatVN, formatVNDate, todayVN, toVNDate } from "@megawin/shared/utils";
+import { addDays, formatVN, formatVNDate, parseHHMMToMinutes, todayVN, toVNDate } from "@megawin/shared/utils";
 
 export interface DrawSlotConfig {
   firstDrawTime: string;
@@ -32,9 +32,12 @@ export interface DrawSlot {
   status: typeof DrawStatus.SalesOpen | typeof DrawStatus.Scheduled;
 }
 
+/**
+ * Đổi `"HH:mm"` thành phút trong ngày. Trả `0` khi format sai — config đã được Zod
+ * validate ở route nên nhánh này chỉ là fallback phòng data cũ.
+ */
 function parseHHmm(timeStr: string): number {
-  const [h, m] = timeStr.split(":").map(Number);
-  return h! * 60 + m!;
+  return parseHHMMToMinutes(timeStr) ?? 0;
 }
 
 function minutesToHHmm(minutes: number): string {

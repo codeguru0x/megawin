@@ -149,8 +149,8 @@ export class Max3dDrawStatsAccumulator {
     let potentialWin = 0;
     for (const board of entry.boards) {
       this.applyBoard(board, unitPrice, entry.accountId);
-      // PROXY thiên cao: Σ max per board (outcome space 1000²⁰ không enumerate; UI ghi
-      // rõ "ước tính").
+      // ƯỚC TÍNH XẾP HẠNG: Σ giải ĐB per board — chưa cộng các giải nhỏ trúng kèm nên
+      // KHÔNG phải trần tuyệt đối (xem JSDoc `maxBoardUnitWin`). Chỉ dùng sort top-K.
       potentialWin += maxBoardUnitWin(board.playMode, board.playType, this.prize.prizes) * board.betCount;
     }
 

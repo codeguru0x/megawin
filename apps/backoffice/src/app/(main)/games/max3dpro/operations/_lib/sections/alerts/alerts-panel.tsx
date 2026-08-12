@@ -108,11 +108,11 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
     case Max3dproOpsAlertType.ExposureThreshold: {
       const worst = toNum(payload.worstCaseTotal);
       return {
-        summary: `Worst-case tổng ${formatNumber(worst)} VND vượt ngưỡng ${formatNumber(toNum(payload.threshold))} VND (cặp ĐB có điều kiện + đuôi Năm/Sáu ước tính).`,
+        summary: `Worst-case tổng ${formatNumber(worst)} VND vượt ngưỡng ${formatNumber(toNum(payload.threshold))} VND (cặp ĐB có điều kiện + giải nhỏ Năm/Sáu ước tính).`,
         chips: [
           { label: "Worst-case tổng", value: `${formatNumber(worst)} VND`, danger: true },
           { label: "Cặp ĐB max", value: `${formatNumber(toNum(payload.maxPairLiability))} VND`, danger: true },
-          { label: "Đuôi Năm/Sáu (ước tính)", value: `${formatNumber(toNum(payload.tailProxy))} VND` },
+          { label: "Giải Năm/Sáu (ước tính)", value: `${formatNumber(toNum(payload.tailProxy))} VND` },
           { label: "Doanh thu kỳ", value: `${formatNumber(toNum(payload.revenue))} VND` },
         ],
       };
@@ -120,7 +120,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
     case Max3dproOpsAlertType.PairLiability: {
       const liability = toNum(payload.liability);
       return {
-        summary: `Cặp ${String(payload.first)}→${String(payload.second)} tích luỹ liability ĐB ${formatNumber(liability)} VND (đúng chiều ×2 tỷ + chiều ngược phụ ĐB ×400tr — KHÔNG có cap).`,
+        summary: `Cặp ${String(payload.first)}→${String(payload.second)} tích luỹ liability ĐB ${formatNumber(liability)} VND (đúng chiều × giải ĐB + chiều ngược × phụ ĐB — KHÔNG có cap).`,
         chips: [
           { label: "Cặp (có thứ tự)", value: `${String(payload.first)} → ${String(payload.second)}` },
           { label: "Liability ĐB", value: `${formatNumber(liability)} VND`, danger: true },
@@ -186,7 +186,7 @@ function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<
             {e.potentialWin > 0 && (
               <span
                 className="text-[11px] tabular-nums text-red-500/80 shrink-0"
-                title="Rủi ro chi trả nếu trúng (ước tính — Σ max/board)"
+                title="Ước tính chi trả nếu trúng ĐB — Σ (ĐB + phụ ĐB) mỗi board, chưa cộng các giải nhỏ trúng kèm"
               >
                 ⚠ {formatNumber(e.potentialWin)}
               </span>

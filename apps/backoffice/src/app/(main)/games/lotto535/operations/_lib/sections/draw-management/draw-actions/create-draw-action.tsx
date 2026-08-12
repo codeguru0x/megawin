@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { formatVNDate, formatVNTime } from "@megawin/shared/utils";
+import { formatVNDate, formatVNTime, parseYMDToLocalDate, YMD_PATTERN } from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
@@ -63,17 +63,7 @@ function buildIso(date: string, time: string): string {
 
 /** Kiểm tra row đã có đủ thông tin để submit. */
 function isRowComplete(row: DrawRow): boolean {
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(row.date) && (row.drawNo === 1 || row.drawNo === 2) && /^\d{2}:\d{2}$/.test(row.drawTime)
-  );
-}
-
-/** Parse "YYYY-MM-DD" sang Date object. */
-function parseDateStr(dateStr: string): Date | undefined {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return undefined;
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const dt = new Date(y!, m! - 1, d!);
-  return isNaN(dt.getTime()) ? undefined : dt;
+  return YMD_PATTERN.test(row.date) && (row.drawNo === 1 || row.drawNo === 2) && /^\d{2}:\d{2}$/.test(row.drawTime);
 }
 
 // ─── DatePicker (calendar popover) ───────────────────────────────────────────
@@ -88,7 +78,7 @@ function DatePickerCell({
   hasError: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const selected = parseDateStr(value);
+  const selected = parseYMDToLocalDate(value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

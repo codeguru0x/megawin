@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
+import { HHMM_PATTERN } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -16,8 +17,6 @@ import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
-
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const DAY_LABELS: Record<number, string> = {
   0: "Chủ nhật",
@@ -43,7 +42,7 @@ const playFormSchema = z
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
     drawsPerWeek: z.coerce.number().int().min(1).max(7),
     drawDaysOfWeek: z.array(z.number()).min(1, "Chọn ít nhất 1 ngày"),
-    drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    drawTime: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
   })
   .refine((data) => data.minBetCount <= data.maxBetCount, {
     message: "Số lần tối đa phải ≥ số lần tối thiểu",
@@ -96,6 +95,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     const current = form.getValues("drawDaysOfWeek");
     const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort();
     form.setValue("drawDaysOfWeek", next, { shouldDirty: true });
+    // drawsPerWeek luôn khớp số ngày quay đã chọn — tránh lệch 2 field độc lập.
+    form.setValue("drawsPerWeek", next.length, { shouldDirty: true });
   }
 
   function handleSubmit(values: PlayFormValues) {
@@ -107,7 +108,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
         maxBoardsPerTicket: values.maxBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeMinutes: values.salesCloseBeforeMinutes,
-        drawsPerWeek: values.drawsPerWeek,
+        // Derive từ số ngày đã chọn — nguồn chân lý duy nhất.
+        drawsPerWeek: values.drawDaysOfWeek.length,
         drawDaysOfWeek: values.drawDaysOfWeek,
         drawTime: values.drawTime,
       },
@@ -169,7 +171,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip={`Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 tập hợp 6 số chơi độc lập, được settle riêng. Không được cấu hình vượt quá ${MEGA645_MAX_BOARDS} (hard cap toàn hệ thống).`}
+                            tip={`Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 lựa chọn độc lập (Standard 6 số hoặc Bao 5–18 số), được settle riêng. Không được cấu hình vượt quá ${MEGA645_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>
@@ -302,14 +304,14 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {form.watch("drawsPerWeek")} kỳ quay mỗi tuần — Mega 6/45 quay T4, T6, CN.
+                    {drawDays.length} kỳ quay mỗi tuần — theo các ngày đã chọn bên dưới.
                   </p>
                 </div>
 
                 <div className="mb-5">
                   <p className="text-xs text-muted-foreground mb-1.5">Số kỳ quay / tuần</p>
                   <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
-                    {form.watch("drawsPerWeek")}
+                    {drawDays.length}
                   </div>
                 </div>
 

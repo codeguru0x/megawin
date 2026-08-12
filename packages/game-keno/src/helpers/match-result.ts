@@ -8,7 +8,7 @@
  * matchBasicBoard so sánh trực tiếp string.
  */
 
-import { KenoBigSmallBet, KenoEvenOddBet, type KenoPlayType } from "../entities/enums";
+import { KenoBigSmallBet, KenoEvenOddBet } from "../entities/enums";
 import { type BigSmallPrizes, type EvenOddPrizes, KENO_BIG_SMALL_BOUNDARY } from "../entities/types";
 import { lookupBasicPrize } from "../rules/prize-tables";
 
@@ -100,7 +100,7 @@ export function matchBasicBoard(
  * Kết quả khớp cho 1 side bet (Lớn/Nhỏ hoặc Chẵn/Lẻ).
  *
  * Trả về bởi `matchBigSmallBet()` / `matchEvenOddBet()`.
- * Settle layer dùng để điền `EntrySideBetPayout`.
+ * Settle layer dùng để điền payout của board side bet tương ứng.
  */
 export interface SideBetMatchResult {
   /**
@@ -119,7 +119,7 @@ export interface SideBetMatchResult {
   isWin: boolean;
   /**
    * Tiền thắng tính cho 1 đơn vị cược (VND).
-   * Settle layer nhân thêm `betCount` khi ghi vào `EntrySideBetPayout.winAmount`.
+   * Settle layer nhân thêm `betCount` khi ghi vào `EntryBoardPayout.winAmount`.
    */
   winAmount: number;
 }
@@ -128,7 +128,8 @@ export interface SideBetMatchResult {
  * So khớp cược Lớn/Nhỏ với kết quả kỳ quay.
  *
  * Logic phân loại outcome dựa trên `bigCount` và `smallCount`:
- * - Cược "big": trúng nếu bigCount ≥ 11, hoàn vốn nếu 11-12, thua nếu < 11
+ * - Cược "big": trúng giải cao nếu bigCount ≥ 13, trúng giải thấp nếu bigCount = 11-12,
+ *   thua nếu bigCount ≤ 10 (kể cả khi hoà 10-10 — hoà là cửa cược RIÊNG)
  * - Cược "bigSmallDraw": trúng khi bigCount = smallCount = 10
  * - Cược "small": đối xứng với "big"
  *

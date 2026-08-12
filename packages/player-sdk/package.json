@@ -1,6 +1,6 @@
 {
   "name": "@megawin/player-sdk",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -85,6 +85,16 @@
       "require": {
         "types": "./dist/bingo18.d.cts",
         "default": "./dist/bingo18.cjs"
+      }
+    },
+    "./game": {
+      "import": {
+        "types": "./dist/game.d.ts",
+        "default": "./dist/game.js"
+      },
+      "require": {
+        "types": "./dist/game.d.cts",
+        "default": "./dist/game.cjs"
       }
     },
     "./browser": "./dist/megawin-player-sdk-browser.global.js"
