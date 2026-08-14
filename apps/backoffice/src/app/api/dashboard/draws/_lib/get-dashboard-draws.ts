@@ -1,3 +1,4 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawRepository as Bingo18DrawRepo } from "@megawin/game-bingo18-application/repos";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
@@ -7,7 +8,6 @@ import { DrawRepository as Max3dDrawRepo } from "@megawin/game-max3d-application
 import { DrawRepository as Max3dproDrawRepo } from "@megawin/game-max3dpro-application/repos";
 import { DrawRepository as Mega645DrawRepo } from "@megawin/game-mega645-application/repos";
 import { DrawRepository as Power655DrawRepo } from "@megawin/game-power655-application/repos";
-import { NextApiUseCase } from "@megawin/next/server";
 import { tryLoad } from "@megawin/shared/utils";
 
 import type { DrawEventStatus, DrawTimelineEvent, GetDashboardDrawsOutput, HighFreqGameSummary } from "./types";
@@ -56,7 +56,7 @@ const SCOPE = "GetDashboardDraws";
  * Keno + Bingo18 → HighFreqGameSummary (aggregate count, không list từng kỳ).
  * 5 game còn lại → DrawTimelineEvent[] chi tiết.
  */
-export class GetDashboardDrawsUseCase extends NextApiUseCase<void, GetDashboardDrawsOutput> {
+export class GetDashboardDrawsUseCase extends UseCase<void, GetDashboardDrawsOutput> {
   private readonly repos = [
     { game: GameProduct.Mega645, repo: new Mega645DrawRepo() },
     { game: GameProduct.Power655, repo: new Power655DrawRepo() },

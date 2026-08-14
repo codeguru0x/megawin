@@ -261,7 +261,7 @@ method trong Repository class. Use case chỉ gọi repo method.
 
 ```typescript
 // ✅ ĐÚNG — use case gọi repo method, KHÔNG biết pipeline bên trong
-export class BuildSettleReportUseCase extends InternalUseCase<SettleContext, BuildSettleReportResult> {
+export class BuildSettleReportUseCase extends UseCase<SettleContext, BuildSettleReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly tenantReportRepo = new SettleTenantReportRepository();
 

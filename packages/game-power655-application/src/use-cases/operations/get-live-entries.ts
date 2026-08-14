@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -15,7 +15,7 @@ import type { GetLiveEntriesInput, GetLiveEntriesOutput, LiveEntryBoard, LiveEnt
  * Power 6/55: board có mainNumbers (01-55), không có specialNumbers trong selection.
  * Không validate status kỳ (cho phép load entries của mọi trạng thái).
  */
-export class GetLiveEntriesUseCase extends NextApiUseCase<GetLiveEntriesInput, GetLiveEntriesOutput> {
+export class GetLiveEntriesUseCase extends UseCase<GetLiveEntriesInput, GetLiveEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

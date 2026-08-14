@@ -14,7 +14,7 @@
  *   const config = await this.getTenantConfig.run({ tenantId });
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
 
 import { tenantConfigCache } from "../../caches/tenant-config.cache";
@@ -23,10 +23,7 @@ export interface GetTenantConfigInternalInput {
   tenantId: string;
 }
 
-export class GetTenantConfigInternalUseCase extends InternalUseCase<
-  GetTenantConfigInternalInput,
-  TenantConfigEntity | null
-> {
+export class GetTenantConfigInternalUseCase extends UseCase<GetTenantConfigInternalInput, TenantConfigEntity | null> {
   protected async execute(input: GetTenantConfigInternalInput): Promise<TenantConfigEntity | null> {
     return await tenantConfigCache.fetch(input.tenantId);
   }

@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { KenoOpsAlertEntity, KenoOpsAlertType } from "@megawin/game-keno/entities";
 import { OpsAlertSeverity } from "@megawin/game-keno/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";
@@ -19,7 +19,7 @@ const SEVERITY_RANK: Record<string, number> = {
  * `grouped=false` trả raw để staff drill-down điều tra. Gộp làm ở use-case, KHÔNG đổi
  * cách lưu (dedupe theo `dedupeKey` đã đảm bảo 1 doc/scope/kỳ).
  */
-export class ListAlertsUseCase extends NextApiUseCase<ListAlertsInput, ListAlertsOutput> {
+export class ListAlertsUseCase extends UseCase<ListAlertsInput, ListAlertsOutput> {
   private readonly alertRepo = new OpsAlertRepository();
 
   protected async execute(input: ListAlertsInput): Promise<ListAlertsOutput> {

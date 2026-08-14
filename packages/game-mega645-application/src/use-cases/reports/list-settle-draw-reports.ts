@@ -1,13 +1,10 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import type { ListSettleDrawReportsInput, ListSettleDrawReportsOutput } from "./types";
 
 /** Danh sách kỳ quay đã settle trong date range. Paginated. Index: { financialDate: 1 } */
-export class ListSettleDrawReportsUseCase extends NextApiUseCase<
-  ListSettleDrawReportsInput,
-  ListSettleDrawReportsOutput
-> {
+export class ListSettleDrawReportsUseCase extends UseCase<ListSettleDrawReportsInput, ListSettleDrawReportsOutput> {
   private readonly repo = new SettleDrawReportRepository();
   protected async execute(input: ListSettleDrawReportsInput): Promise<ListSettleDrawReportsOutput> {
     const { data, total } = await this.repo.findByDateRange(input.from, input.to, {

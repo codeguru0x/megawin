@@ -18,7 +18,7 @@
  * Pipeline position: cross-cutting write-side, invoke từ HTTP infrastructure.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import type { TxLogInput } from "../../../entities";
 import { TxLogRepository } from "../../../infras/repos";
@@ -33,7 +33,7 @@ export type LogTxBulkInput = Array<Omit<TxLogInput, "createdAt">>;
  * Empty input → no-op (skip hẳn DB call). Caller PHẢI invoke bằng
  * `void useCase.run(inputs)` để không block main flow.
  */
-export class LogTxBulkUseCase extends InternalUseCase<LogTxBulkInput, void> {
+export class LogTxBulkUseCase extends UseCase<LogTxBulkInput, void> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(inputs: LogTxBulkInput): Promise<void> {

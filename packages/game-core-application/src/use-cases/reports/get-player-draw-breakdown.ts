@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { PlayerEntryRepository } from "../../infras/repos/player-entry-repo";
 import type { GetPlayerDrawBreakdownInput, GetPlayerDrawBreakdownOutput } from "./types";
@@ -11,10 +11,7 @@ import type { GetPlayerDrawBreakdownInput, GetPlayerDrawBreakdownOutput } from "
  * Aggregate từ {game}_ticket_entries WHERE { accountId, financialDate, status ∈ [settled, void] }
  * GROUP BY drawId → SUM financial fields.
  */
-export class GetPlayerDrawBreakdownUseCase extends NextApiUseCase<
-  GetPlayerDrawBreakdownInput,
-  GetPlayerDrawBreakdownOutput
-> {
+export class GetPlayerDrawBreakdownUseCase extends UseCase<GetPlayerDrawBreakdownInput, GetPlayerDrawBreakdownOutput> {
   private readonly repo = new PlayerEntryRepository();
 
   protected async execute(input: GetPlayerDrawBreakdownInput): Promise<GetPlayerDrawBreakdownOutput> {

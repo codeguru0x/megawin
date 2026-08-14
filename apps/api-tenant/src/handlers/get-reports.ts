@@ -4,7 +4,6 @@
  * Auth: API Key (server-to-server).
  */
 
-import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 import { withTenantAuth } from "@megawin/auth/tenant";
 import { z } from "zod";
 
@@ -25,23 +24,20 @@ export const handler = withTenantAuth(
     const { from, to, gameId, groupBy } = event.schema.query;
 
     // TODO: Inject revenue report use case
-    return toApiGatewayResponse({
-      success: true,
-      data: {
-        tenantId,
-        from,
-        to,
-        gameId: gameId ?? "all",
-        groupBy: groupBy ?? "day",
-        items: [],
-        totals: {
-          totalBets: 0,
-          totalWins: 0,
-          grossRevenue: 0,
-          currency: "VND",
-        },
+    return {
+      tenantId,
+      from,
+      to,
+      gameId: gameId ?? "all",
+      groupBy: groupBy ?? "day",
+      items: [],
+      totals: {
+        totalBets: 0,
+        totalWins: 0,
+        grossRevenue: 0,
+        currency: "VND",
       },
-    });
+    };
   },
   { schemas: { query: querySchema } },
 );

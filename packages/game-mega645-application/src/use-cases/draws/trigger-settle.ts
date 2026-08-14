@@ -1,7 +1,7 @@
 import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 
@@ -30,7 +30,7 @@ import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
  * Nếu SF đã đang chạy (cùng deterministic name), AWS ném `ExecutionAlreadyExists`
  * → use case bắt lỗi đó và coi như thành công.
  */
-export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, TriggerSettleOutput> {
+export class TriggerSettleUseCase extends UseCase<TriggerSettleInput, TriggerSettleOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: TriggerSettleInput): Promise<TriggerSettleOutput> {

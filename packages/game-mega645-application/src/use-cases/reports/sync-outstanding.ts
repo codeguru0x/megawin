@@ -15,7 +15,7 @@
  * Mega 6/45 có lineCount — mỗi entry expand thành nhiều lines khi chơi bao.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { SyncSystemOutstandingUseCase } from "@megawin/game-core-application/use-cases";
@@ -48,7 +48,7 @@ export interface SyncOutstandingResult {
  * CRASH-SAFE: upsert overwrite toàn bộ — idempotent, chạy lại cho cùng kết quả.
  * Handler chỉ được gọi use case này, không được gọi repo trực tiếp.
  */
-export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandingResult> {
+export class SyncOutstandingUseCase extends UseCase<void, SyncOutstandingResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly outstandingRepo = new OutstandingReportRepository();

@@ -4,17 +4,17 @@
  * Xem trước danh sách draw slots sẽ được tạo khi gọi CreateDraws.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { calcMega645DrawSlots } from "../../helpers/calc-draw-slots";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
-export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, PreviewDrawsOutput> {
+export class PreviewDrawsUseCase extends UseCase<PreviewDrawsInput, PreviewDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: PreviewDrawsInput): Promise<PreviewDrawsOutput> {
     const { count } = input;

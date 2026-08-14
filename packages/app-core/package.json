@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest --watch",
@@ -70,7 +71,7 @@
     "@aws-sdk/client-sfn": "*",
     "@aws-sdk/client-sqs": "*",
     "@megawin/shared": "workspace:*",
-    "@middy/core": "^7.2.1",
+    "@middy/core": "^7.7.3",
     "zod": "^4.4.3"
   }
 }

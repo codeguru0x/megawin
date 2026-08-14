@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { PlayerEntryRepository } from "../../infras/repos/player-entry-repo";
 import type { GetPlayerEntriesInput, GetPlayerEntriesOutput } from "./types";
@@ -11,7 +11,7 @@ import type { GetPlayerEntriesInput, GetPlayerEntriesOutput } from "./types";
  * Query {game}_ticket_entries WHERE { accountId, financialDate, status ∈ [settled, void] }.
  * 1 player = 1 tenant duy nhất — không cần tenantId param.
  */
-export class GetPlayerEntriesUseCase extends NextApiUseCase<GetPlayerEntriesInput, GetPlayerEntriesOutput> {
+export class GetPlayerEntriesUseCase extends UseCase<GetPlayerEntriesInput, GetPlayerEntriesOutput> {
   private readonly repo = new PlayerEntryRepository();
 
   protected async execute(input: GetPlayerEntriesInput): Promise<GetPlayerEntriesOutput> {

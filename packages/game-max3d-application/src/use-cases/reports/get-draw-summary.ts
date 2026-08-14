@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import type { GetDrawSummaryInput, GetDrawSummaryOutput } from "./types";
@@ -8,7 +8,7 @@ import type { GetDrawSummaryInput, GetDrawSummaryOutput } from "./types";
  *
  * Max 3D KHÔNG CÓ jackpotContribution — DrawSummaryResult không có field đó.
  */
-export class GetDrawSummaryUseCase extends NextApiUseCase<GetDrawSummaryInput, GetDrawSummaryOutput> {
+export class GetDrawSummaryUseCase extends UseCase<GetDrawSummaryInput, GetDrawSummaryOutput> {
   private readonly repo = new SettleDrawReportRepository();
 
   protected async execute(input: GetDrawSummaryInput): Promise<GetDrawSummaryOutput> {

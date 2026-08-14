@@ -15,7 +15,7 @@
  * Realtime — worker combo-stats cập nhật liên tục, KHÔNG chốt salesClosed.
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { CAPPABLE_PICK_COUNTS } from "@megawin/game-keno/entities";
 import { buildComboKey } from "@megawin/game-keno/rules";
 
@@ -26,10 +26,7 @@ import type { PlayerComboPopularityInput, PlayerComboPopularityOutput } from "./
 /** Response rỗng đồng nhất — dùng cho cả "chưa cược" lẫn "combo không tồn tại". */
 const NOT_FOUND: PlayerComboPopularityOutput = { found: false };
 
-export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
-  PlayerComboPopularityInput,
-  PlayerComboPopularityOutput
-> {
+export class GetComboPopularityPlayerUseCase extends UseCase<PlayerComboPopularityInput, PlayerComboPopularityOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly comboRepo = new ComboStatsRepository();
 

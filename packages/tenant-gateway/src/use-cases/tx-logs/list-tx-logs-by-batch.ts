@@ -5,7 +5,7 @@
  * Dùng `listLogs(filter.batchId)` → tận dụng index `batchId`.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 
@@ -23,7 +23,7 @@ export interface ListTxLogsByBatchOutput {
   nextCursor: { createdAt: string; id: string } | null;
 }
 
-export class ListTxLogsByBatchUseCase extends NextApiUseCase<ListTxLogsByBatchInput, ListTxLogsByBatchOutput> {
+export class ListTxLogsByBatchUseCase extends UseCase<ListTxLogsByBatchInput, ListTxLogsByBatchOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: ListTxLogsByBatchInput): Promise<ListTxLogsByBatchOutput> {

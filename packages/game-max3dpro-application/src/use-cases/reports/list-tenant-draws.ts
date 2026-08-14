@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
@@ -6,7 +6,7 @@ import type { ListTenantDrawsInput, ListTenantDrawsOutput } from "./types";
 /**
  * List draws của 1 tenant trong date range — drill-down cấp 2 tab "Theo Đại Lý".
  */
-export class ListTenantDrawsUseCase extends NextApiUseCase<ListTenantDrawsInput, ListTenantDrawsOutput> {
+export class ListTenantDrawsUseCase extends UseCase<ListTenantDrawsInput, ListTenantDrawsOutput> {
   private readonly repo = new SettleTenantReportRepository();
 
   protected async execute(input: ListTenantDrawsInput): Promise<ListTenantDrawsOutput> {

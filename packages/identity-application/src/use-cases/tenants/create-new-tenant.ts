@@ -1,11 +1,11 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { TenantRepository } from "../../infras/repos/tenant-repo";
 import { generateApiKey } from "../../shared/generate-api-key";
 import type { CreateTenantInput, CreateTenantOutput } from "./dto/tenant.dto";
 
-export class CreateTenantUseCase extends NextApiUseCase<CreateTenantInput, CreateTenantOutput> {
+export class CreateTenantUseCase extends UseCase<CreateTenantInput, CreateTenantOutput> {
   protected async execute(input: CreateTenantInput): Promise<CreateTenantOutput> {
     const repo = new TenantRepository();
     const apiKey = generateApiKey();

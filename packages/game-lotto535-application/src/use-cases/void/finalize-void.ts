@@ -39,7 +39,7 @@
  *     các entries kỳ khác vẫn active
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -55,7 +55,7 @@ export interface FinalizeVoidResult {
   completedAt: string;
 }
 
-export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVoidResult> {
+export class FinalizeVoidUseCase extends UseCase<VoidContext, FinalizeVoidResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 

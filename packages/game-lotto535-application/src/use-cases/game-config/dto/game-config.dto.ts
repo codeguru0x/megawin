@@ -10,15 +10,6 @@ import type {
 } from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
-// GetGameConfig
-// ─────────────────────────────────────────────
-
-export interface GetGameConfigOutput {
-  /** Cấu hình toàn cục hiện tại (full entity từ DB). */
-  config: GlobalConfigEntity;
-}
-
-// ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 

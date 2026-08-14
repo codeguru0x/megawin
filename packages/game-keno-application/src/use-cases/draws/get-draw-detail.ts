@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { serializeDates } from "@megawin/shared/utils";
 
@@ -11,7 +11,7 @@ import type { GetDrawDetailInput, GetDrawDetailOutput } from "./dto/draw.dto";
  *
  * Keno không có jackpot — financial chỉ bao gồm revenue, prizes, commission.
  */
-export class GetDrawDetailUseCase extends NextApiUseCase<GetDrawDetailInput, GetDrawDetailOutput> {
+export class GetDrawDetailUseCase extends UseCase<GetDrawDetailInput, GetDrawDetailOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

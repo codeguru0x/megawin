@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Centralized tenant dispatch (outbox pattern) — queue payout/refund/reversal orders, worker dispatches to tenant APIs with retry + backoff.",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",

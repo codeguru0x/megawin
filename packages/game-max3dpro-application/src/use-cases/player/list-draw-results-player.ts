@@ -10,7 +10,7 @@
  * Endpoint: GET /games/max3dpro/draw-results?from=YYYY-MM-DD&size=N&cursor=drawId
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -24,10 +24,7 @@ import type {
  * Danh sách kết quả kỳ quay Max 3D Pro cho player.
  * Cursor = drawId cuối trang → trang sau dùng drawDate < cursor.
  */
-export class ListDrawResultsPlayerUseCase extends ApiGatewayUseCase<
-  PlayerListDrawResultsInput,
-  PlayerListDrawResultsOutput
-> {
+export class ListDrawResultsPlayerUseCase extends UseCase<PlayerListDrawResultsInput, PlayerListDrawResultsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: PlayerListDrawResultsInput): Promise<PlayerListDrawResultsOutput> {

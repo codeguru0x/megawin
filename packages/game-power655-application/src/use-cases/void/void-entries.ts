@@ -14,7 +14,7 @@
  *   - done = true khi getVoidableEntriesBatch trả về rỗng (không còn entries voidable)
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { EntryVoidInfo } from "@megawin/game-power655/entities";
 import { generateId } from "@megawin/shared/utils";
 
@@ -47,7 +47,7 @@ const MAX_EXECUTION_MS = 12 * 60 * 1000;
  * @param input.drawId - ID kỳ quay cần void
  * @returns done = true nếu đã void hết, false nếu cần gọi tiếp
  */
-export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEntriesBatchResult> {
+export class VoidEntriesBatchUseCase extends UseCase<VoidContext, VoidEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: VoidContext): Promise<VoidEntriesBatchResult> {

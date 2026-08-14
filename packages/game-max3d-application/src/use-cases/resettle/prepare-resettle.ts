@@ -35,7 +35,7 @@
  * CRASH-SAFE: SFN retry chạy lại toàn bộ, không corrupt data.
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { EntryReversal } from "@megawin/game-max3d/entities";
 import { generateId } from "@megawin/shared/utils";
@@ -84,7 +84,7 @@ export interface PrepareResettleOutput {
   lockKey: string;
 }
 
-export class PrepareResettleUseCase extends InternalUseCase<PrepareResettleInput, PrepareResettleOutput> {
+export class PrepareResettleUseCase extends UseCase<PrepareResettleInput, PrepareResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryResettleRepo = new EntryResettleRepository();
 

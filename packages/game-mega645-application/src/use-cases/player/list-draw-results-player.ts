@@ -10,7 +10,7 @@
  * Endpoint: GET /games/mega645/draw-results?from=YYYY-MM-DD&size=N&cursor=drawId
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawEntity } from "@megawin/game-mega645/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -20,10 +20,7 @@ import type {
   PlayerListDrawResultsOutput,
 } from "./dto/player.dto";
 
-export class ListDrawResultsPlayerUseCase extends ApiGatewayUseCase<
-  PlayerListDrawResultsInput,
-  PlayerListDrawResultsOutput
-> {
+export class ListDrawResultsPlayerUseCase extends UseCase<PlayerListDrawResultsInput, PlayerListDrawResultsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: PlayerListDrawResultsInput): Promise<PlayerListDrawResultsOutput> {

@@ -14,9 +14,6 @@ export {
   apiError,
   apiSuccess,
   appErrorToApiResponse,
-  appResultToApiResponse,
   catchToApiResponse,
   validationError,
 } from "./response";
-// Use case
-export { NextApiUseCase, toNextResponse } from "./use-case";

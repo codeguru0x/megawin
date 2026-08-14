@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { PlayerSettleGameDailyRepository } from "../../infras/repos/player-settle-game-daily-repo";
 import type { GetPlayerOverviewInput, GetPlayerOverviewOutput } from "./types";
@@ -10,7 +10,7 @@ import type { GetPlayerOverviewInput, GetPlayerOverviewOutput } from "./types";
  * Query player_settle_game_daily, group by gameProduct.
  * 1 DB call — aggregate pipeline.
  */
-export class GetPlayerOverviewUseCase extends NextApiUseCase<GetPlayerOverviewInput, GetPlayerOverviewOutput> {
+export class GetPlayerOverviewUseCase extends UseCase<GetPlayerOverviewInput, GetPlayerOverviewOutput> {
   private readonly repo = new PlayerSettleGameDailyRepository();
 
   protected async execute(input: GetPlayerOverviewInput): Promise<GetPlayerOverviewOutput> {

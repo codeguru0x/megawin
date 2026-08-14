@@ -5,11 +5,11 @@
  * `GET /games/{game}/jackpot`). Phục vụ widget "Jackpot đang tích luỹ" ở trang chủ tenant.
  *
  * Chỉ 3 game có jackpot cycle: lotto535, mega645, power655 — xem
- * {@link JackpotGameProduct}. Gọi 3 internal use-case SONG SONG qua `tryLoad` để 1 game
+ * {@link JackpotGameProduct}. Gọi 3 use-case SONG SONG qua `tryLoad` để 1 game
  * lỗi/thiếu cycle không làm hỏng cả response.
  *
  * Đặt ở tầng app (không thuộc package game nào) vì đây là aggregate CROSS-GAME — mỗi game
- * vẫn sở hữu logic jackpot của mình trong `GetJackpotPlayerInternalUseCase`; use-case này
+ * vẫn sở hữu logic jackpot của mình trong `GetJackpotPlayerUseCase`; use-case này
  * chỉ orchestrate + map sang shape chung.
  *
  * ⚠️ PHÂN LOẠI LỖI (quan trọng): `NOT_FOUND` = game đang GIỮA 2 cycle → bỏ qua im lặng,
@@ -25,19 +25,19 @@
  * TUYỆT ĐỐI KHÔNG "chữa" lỗi compile bằng cách nới type `details` — đó là mất dữ liệu.
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { JackpotGameProduct } from "@megawin/game-core/entities";
 import { GAME_LABELS } from "@megawin/game-core/labels";
 import {
-  GetJackpotPlayerInternalUseCase as GetLotto535JackpotUseCase,
+  GetJackpotPlayerUseCase as GetLotto535JackpotUseCase,
   type PlayerGetJackpotOutput as Lotto535JackpotOutput,
 } from "@megawin/game-lotto535-application/use-cases/player";
 import {
-  GetJackpotPlayerInternalUseCase as GetMega645JackpotUseCase,
+  GetJackpotPlayerUseCase as GetMega645JackpotUseCase,
   type PlayerGetJackpotOutput as Mega645JackpotOutput,
 } from "@megawin/game-mega645-application/use-cases/player";
 import {
-  GetJackpotPlayerInternalUseCase as GetPower655JackpotUseCase,
+  GetJackpotPlayerUseCase as GetPower655JackpotUseCase,
   type PlayerGetJackpotOutput as Power655JackpotOutput,
 } from "@megawin/game-power655-application/use-cases/player";
 import { tryLoad } from "@megawin/shared/utils";
@@ -106,7 +106,7 @@ function toPower655Summary(out: Power655JackpotOutput): JackpotSummary {
 /** Label dùng cho log — trace nhanh về endpoint này trên CloudWatch. */
 const SCOPE = "ListJackpots";
 
-export class ListJackpotsUseCase extends ApiGatewayUseCase<void, JackpotSummaryListResponse> {
+export class ListJackpotsUseCase extends UseCase<void, JackpotSummaryListResponse> {
   private readonly lotto535 = new GetLotto535JackpotUseCase();
   private readonly mega645 = new GetMega645JackpotUseCase();
   private readonly power655 = new GetPower655JackpotUseCase();

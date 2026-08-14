@@ -12,8 +12,8 @@
  *   - Kỳ đã void KHÔNG mở lại được.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -25,7 +25,7 @@ import type { DrawTransitionInput, DrawTransitionOutput } from "./dto/draw.dto";
  * Mở bán vé cho kỳ quay Power 6/55.
  * Cho phép chuyển từ scheduled hoặc salesClosed sang salesOpen.
  */
-export class OpenSalesUseCase extends NextApiUseCase<DrawTransitionInput, DrawTransitionOutput> {
+export class OpenSalesUseCase extends UseCase<DrawTransitionInput, DrawTransitionOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

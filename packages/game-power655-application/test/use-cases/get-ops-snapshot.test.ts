@@ -17,11 +17,8 @@
  * thật; cleanup toàn bộ ở `afterAll`.
  */
 
-import type { NextResponse } from "next/server";
-
 import { OpsAlertSeverity, OpsAlertStatus, PlayType, Power655OpsAlertType } from "@megawin/game-power655/entities";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
-import type { ApiErrorResponse, ApiSuccessResponse } from "@megawin/shared/api-types";
 import { ObjectId } from "mongodb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -42,18 +39,6 @@ import type {
 import type { GetOpsSnapshotOutput } from "../../src/use-cases/operations/dto/ops.dto";
 import { GetOpsSnapshotUseCase } from "../../src/use-cases/operations/get-ops-snapshot";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
-
-/**
- * `NextApiUseCase.run()` trả về `NextResponse` — PHẢI gọi `.json()` để lấy body. Helper
- * unwrap `data`, throw nếu response là error (giống `global-config.test.ts`).
- */
-async function unwrapSuccess<O>(response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>): Promise<O> {
-  const body = await response.json();
-  if (!body.success) {
-    throw new Error(`Use-case trả lỗi: ${body.error.code} — ${body.error.message}`);
-  }
-  return body.data;
-}
 
 // Kỳ zero-value (không seed stats) tách riêng kỳ full-shape để 2 test độc lập.
 const EMPTY_DRAW_ID = "9998-01-01.001";
@@ -96,9 +81,7 @@ afterAll(async () => {
 
 describe("GetOpsSnapshotUseCase — R1: kỳ CHƯA có stats doc (worker chưa chạy)", () => {
   it("trả zero-value shape đầy đủ, KHÔNG throw", async () => {
-    const snapshot = await unwrapSuccess<GetOpsSnapshotOutput>(
-      await new GetOpsSnapshotUseCase().run({ drawId: EMPTY_DRAW_ID }),
-    );
+    const snapshot = await new GetOpsSnapshotUseCase().run({ drawId: EMPTY_DRAW_ID });
 
     expect(snapshot.drawId).toBe(EMPTY_DRAW_ID);
     // Không có draw thật với drawId giả → status null (FE hiểu là chưa xác định).
@@ -221,9 +204,7 @@ describe("GetOpsSnapshotUseCase — shape đầy đủ khi đã có stats/number
   });
 
   it("stats doc có mặt → totals + exposure.fixedWorstCase đọc đúng", async () => {
-    const snapshot = await unwrapSuccess<GetOpsSnapshotOutput>(
-      await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID }),
-    );
+    const snapshot = await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID });
 
     expect(snapshot.stats).not.toBeNull();
     expect(snapshot.stats!.totals.revenue).toBe(30_000);
@@ -243,9 +224,7 @@ describe("GetOpsSnapshotUseCase — shape đầy đủ khi đã có stats/number
   });
 
   it("numberStats trả heatmap 6 số đã cược", async () => {
-    const snapshot = await unwrapSuccess<GetOpsSnapshotOutput>(
-      await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID }),
-    );
+    const snapshot = await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID });
 
     expect(snapshot.numberStats).toHaveLength(6);
     const numbers = snapshot.numberStats.map((n) => n.number).sort();
@@ -254,9 +233,7 @@ describe("GetOpsSnapshotUseCase — shape đầy đủ khi đã có stats/number
   });
 
   it("topAccounts sort tiền giảm dần + uniquePlayers = 3", async () => {
-    const snapshot = await unwrapSuccess<GetOpsSnapshotOutput>(
-      await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID }),
-    );
+    const snapshot = await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID });
 
     expect(snapshot.uniquePlayers).toBe(3);
     expect(snapshot.topAccounts).toHaveLength(3);
@@ -266,9 +243,7 @@ describe("GetOpsSnapshotUseCase — shape đầy đủ khi đã có stats/number
   });
 
   it("topCombos derive từ combo_stats với accountCount đã sync = 3", async () => {
-    const snapshot = await unwrapSuccess<GetOpsSnapshotOutput>(
-      await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID }),
-    );
+    const snapshot = await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID });
 
     expect(snapshot.topCombos).toHaveLength(1);
     const combo = snapshot.topCombos[0]!;
@@ -281,9 +256,7 @@ describe("GetOpsSnapshotUseCase — shape đầy đủ khi đã có stats/number
   });
 
   it("alertCounts phản ánh alert New của kỳ", async () => {
-    const snapshot = await unwrapSuccess<GetOpsSnapshotOutput>(
-      await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID }),
-    );
+    const snapshot = await new GetOpsSnapshotUseCase().run({ drawId: FULL_DRAW_ID });
 
     expect(snapshot.alertCounts[OpsAlertStatus.New]).toBe(1);
     expect(snapshot.alertCounts[OpsAlertStatus.Ack]).toBe(0);

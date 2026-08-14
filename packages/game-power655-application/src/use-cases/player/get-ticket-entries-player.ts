@@ -7,7 +7,7 @@
  * Entry result chứa bonusNumber thay vì winningSpecial (so với Lotto 5/35).
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -17,10 +17,7 @@ import type { PlayerEntryInfo, PlayerGetTicketEntriesInput, PlayerGetTicketEntri
 /**
  * Lấy entries Power 6/55. Player chỉ xem ticket của mình.
  */
-export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
-  PlayerGetTicketEntriesInput,
-  PlayerGetTicketEntriesOutput
-> {
+export class GetTicketEntriesPlayerUseCase extends UseCase<PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput> {
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
 

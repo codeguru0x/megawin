@@ -6,13 +6,13 @@
  * ack cùng lúc: người sau filter không khớp (đã đổi) → no-op êm (R8).
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AckAlertInput, AckAlertOutput } from "./dto/ops.dto";
 
-export class AckAlertUseCase extends NextApiUseCase<AckAlertInput, AckAlertOutput> {
+export class AckAlertUseCase extends UseCase<AckAlertInput, AckAlertOutput> {
   private readonly alertRepo = new OpsAlertRepository();
 
   protected async execute(input: AckAlertInput): Promise<AckAlertOutput> {

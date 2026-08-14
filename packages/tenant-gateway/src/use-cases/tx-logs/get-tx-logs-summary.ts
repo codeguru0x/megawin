@@ -9,7 +9,7 @@
  * 90 ngày retention.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
@@ -54,7 +54,7 @@ export interface GetTxLogsSummaryOutput {
   successRate: number | null;
 }
 
-export class GetTxLogsSummaryUseCase extends NextApiUseCase<GetTxLogsSummaryInput, GetTxLogsSummaryOutput> {
+export class GetTxLogsSummaryUseCase extends UseCase<GetTxLogsSummaryInput, GetTxLogsSummaryOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: GetTxLogsSummaryInput): Promise<GetTxLogsSummaryOutput> {

@@ -10,7 +10,7 @@
  * - Loại bỏ `id` và `tenantId` (internal fields, tenant không cần) trước khi trả về.
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { BetsFeedResponse, GameProduct } from "@megawin/game-core/entities";
 
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
@@ -22,7 +22,7 @@ export interface GetEntryFeedInput {
   gameProduct?: GameProduct;
 }
 
-export class GetEntryFeedUseCase extends ApiGatewayUseCase<GetEntryFeedInput, BetsFeedResponse> {
+export class GetEntryFeedUseCase extends UseCase<GetEntryFeedInput, BetsFeedResponse> {
   private readonly feedRepo = new EntryFeedRepository();
 
   protected async execute(input: GetEntryFeedInput): Promise<BetsFeedResponse> {

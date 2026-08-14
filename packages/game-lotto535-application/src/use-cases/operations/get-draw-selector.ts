@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-lotto535/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { displayVNTime, sortBy } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -27,7 +27,7 @@ import type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selecto
  * Sorted: active/future theo drawDate + drawNo ASC (cũ→mới, giống hàng đợi xử lý theo thời gian).
  * recent theo drawDate + drawNo DESC (mới→cũ) — kỳ vừa hoàn thành gần nhất lên đầu, dễ theo dõi.
  */
-export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelectorOutput> {
+export class GetDrawSelectorUseCase extends UseCase<void, GetDrawSelectorOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(_input: void): Promise<GetDrawSelectorOutput> {

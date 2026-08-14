@@ -30,7 +30,7 @@
  * Realtime — worker combo-stats cập nhật liên tục, KHÔNG chốt salesClosed.
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { PlayType, VALID_MAIN_NUMBER_SET } from "@megawin/game-power655/entities";
 import { buildComboKey } from "@megawin/game-power655/rules";
 
@@ -60,10 +60,7 @@ const COUNT_TO_PLAY_TYPE: Record<number, PlayType> = {
   18: PlayType.Bao18,
 };
 
-export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
-  PlayerComboPopularityInput,
-  PlayerComboPopularityOutput
-> {
+export class GetComboPopularityPlayerUseCase extends UseCase<PlayerComboPopularityInput, PlayerComboPopularityOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly comboRepo = new ComboStatsRepository();
 

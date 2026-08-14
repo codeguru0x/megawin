@@ -34,9 +34,9 @@
  */
 
 import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { buildResettleLockKey, toExecutionName } from "@megawin/game-core/utils";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { generateId, logError } from "@megawin/shared/utils";
 import { DistributedMutex } from "@megawin/worker-core/locks";
@@ -47,7 +47,7 @@ import type { TriggerResettleInput, TriggerResettleOutput } from "./dto/draw.dto
 
 const RESETTLE_LOCK_TTL_SECONDS = 300; // 5 phút — đủ cho 1 phiên resettle Bingo 18.
 
-export class TriggerResettleUseCase extends NextApiUseCase<TriggerResettleInput, TriggerResettleOutput> {
+export class TriggerResettleUseCase extends UseCase<TriggerResettleInput, TriggerResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly lockCoordinator = new DistributedMutex();
 

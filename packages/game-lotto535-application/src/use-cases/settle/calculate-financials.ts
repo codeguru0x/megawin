@@ -50,7 +50,7 @@
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { type DrawTierPrizeSummary, PrizeTier } from "@megawin/game-lotto535/entities";
 import {
   calculateDrawFinancials,
@@ -62,7 +62,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
 
-export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
+export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

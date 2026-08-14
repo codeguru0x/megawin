@@ -25,7 +25,7 @@
  *   - Crash sau draw upsert: cả 2 reports đã ghi. Daily stale → PublishSettleDaily re-aggregate.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { sumBy } from "@megawin/shared/utils";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -49,7 +49,7 @@ export interface BuildSettleReportResult {
  * Ghi tenant reports trước, draw report sau — đảm bảo draw = SUM(tenants).
  * Keno KHÔNG có Jackpot: KHÔNG có field jackpotContribution. companyTake = financials.companyTake.
  */
-export class BuildSettleReportUseCase extends InternalUseCase<SettleContext, BuildSettleReportResult> {
+export class BuildSettleReportUseCase extends UseCase<SettleContext, BuildSettleReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawReportRepo = new SettleDrawReportRepository();
   private readonly tenantReportRepo = new SettleTenantReportRepository();

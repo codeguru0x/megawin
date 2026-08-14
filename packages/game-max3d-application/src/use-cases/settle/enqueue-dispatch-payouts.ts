@@ -18,7 +18,7 @@
  *   `createdAt` sớm hơn → chạy trước Payout (Credit) cho cùng player.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import { buildResettleBatchKey } from "@megawin/game-core/utils";
 import { buildPayoutOrder } from "@megawin/tenant-dispatch/builders";
@@ -42,10 +42,7 @@ export interface EnqueueDispatchPayoutsOutput {
   done: boolean;
 }
 
-export class EnqueueDispatchPayoutsUseCase extends InternalUseCase<
-  EnqueueDispatchPayoutsInput,
-  EnqueueDispatchPayoutsOutput
-> {
+export class EnqueueDispatchPayoutsUseCase extends UseCase<EnqueueDispatchPayoutsInput, EnqueueDispatchPayoutsOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 

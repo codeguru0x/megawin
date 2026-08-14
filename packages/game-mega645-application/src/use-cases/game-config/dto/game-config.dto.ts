@@ -10,15 +10,6 @@ import type {
 } from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
-// GetGameConfig
-// ─────────────────────────────────────────────
-
-export interface GetGameConfigOutput {
-  /** Cấu hình toàn cục game Mega 6/45 (bao gồm jackpot, rates, prizes, play rules). */
-  config: GlobalConfigEntity;
-}
-
-// ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 

@@ -34,16 +34,15 @@
  * | Ledger entry T null | — | LEDGER_MISSING |
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
 import type { ResettleScenario as ResettleScenarioType } from "@megawin/game-lotto535/rules";
 import { isSplitCycleDraw, ResettleScenario } from "@megawin/game-lotto535/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 
 export interface DetectResettleBoundariesInput {
   drawId: string;
@@ -69,14 +68,14 @@ export interface DetectResettleBoundariesOutput {
   chainDrawIds?: string[];
 }
 
-export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
+export class DetectResettleBoundariesUseCase extends UseCase<
   DetectResettleBoundariesInput,
   DetectResettleBoundariesOutput
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
     const { drawId, proposedWinningMain, proposedWinningSpecial } = input;
@@ -202,17 +201,6 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
       hadOldSplit,
       chainLength: 0,
     };
-  }
-}
-
-export class DetectResettleBoundariesUseCase extends NextApiUseCase<
-  DetectResettleBoundariesInput,
-  DetectResettleBoundariesOutput
-> {
-  private readonly internal = new DetectResettleBoundariesInternalUseCase();
-
-  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
-    return this.internal.run(input);
   }
 }
 

@@ -55,7 +55,7 @@
  * Output: { drawId, jp1EntriesPatched, jp2EntriesPatched, winners }
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { JackpotWinnerInfo } from "@megawin/game-power655/entities";
 import { JackpotType, PrizeTier } from "@megawin/game-power655/entities";
 
@@ -81,7 +81,7 @@ export interface PatchJackpotPrizeResult {
  * Đúng luật Vietlott: "Giải Jackpot chia đều theo tỷ lệ giá trị tham gia dự thưởng"
  * → jackpotPerUnit × betCount (không phải chia đều per entry/line).
  */
-export class PatchJackpotPrizeUseCase extends InternalUseCase<SettleContextWithFinancials, PatchJackpotPrizeResult> {
+export class PatchJackpotPrizeUseCase extends UseCase<SettleContextWithFinancials, PatchJackpotPrizeResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
   private readonly drawRepo = new DrawRepository();

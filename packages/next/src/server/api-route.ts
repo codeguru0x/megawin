@@ -13,12 +13,12 @@
  * Không gọi .auth() → public route.
  *
  * @example
- * // POST – auth required + roles
+ * // POST – auth required + roles, raw output tự bọc { success: true, data } status 200
  * export const POST = withApi()
  *   .auth({ roles: ["Admin"] })
  *   .body(createAccountSchema)
  *   .handler(async ({ body, session }) => {
- *     return apiSuccess(result, { status: 201 });
+ *     return useCase.run(body);
  *   });
  *
  * // GET – auth required
@@ -26,13 +26,20 @@
  *   .auth()
  *   .query(listQuerySchema)
  *   .handler(async ({ query }) => {
- *     return apiSuccess(result);
+ *     return useCase.run(query);
  *   });
  *
  * // Public route – no auth
  * export const GET = withApi()
  *   .handler(async () => {
- *     return apiSuccess({ status: "ok" });
+ *     return { status: "ok" };
+ *   });
+ *
+ * // Cần status/headers riêng (khác 200) → trả tường minh apiSuccess(), builder pass-through
+ * // vì apiSuccess() trả về NextResponse (instanceof Response).
+ * export const POST = withApi()
+ *   .handler(async () => {
+ *     return apiSuccess(result, { status: 201 });
  *   });
  */
 
@@ -41,7 +48,7 @@ import type { NextRequest, NextResponse } from "next/server";
 import { APP_ERROR_CODES } from "@megawin/shared/errors";
 import type { z } from "zod";
 
-import { apiError, catchToApiResponse, validationError } from "./response";
+import { apiError, apiSuccess, catchToApiResponse, validationError } from "./response";
 
 // ============ Read-only HTTP methods ============
 
@@ -89,7 +96,7 @@ export interface RouteContext<
 export type NextRouteHandler = (
   req: NextRequest,
   ctx: { params: Promise<Record<string, string>> },
-) => Promise<NextResponse>;
+) => Promise<Response>;
 
 // ============ Parse Query Params ============
 
@@ -153,7 +160,9 @@ export class ApiRouteBuilder<
     });
   }
 
-  handler(fn: (ctx: RouteContext<TBody, TQuery, TParams, TRole>) => Promise<NextResponse>): NextRouteHandler {
+  handler<T>(
+    fn: (ctx: RouteContext<TBody, TQuery, TParams, TRole>) => Promise<NextResponse | Response | T>,
+  ): NextRouteHandler {
     const cfg = this.config;
 
     return async (req: NextRequest, routeCtx: { params: Promise<Record<string, string>> }) => {
@@ -197,7 +206,7 @@ export class ApiRouteBuilder<
           }
 
           if (cfg.authRequirements.roles?.length) {
-            const userRoles = session.user.roles ?? [];
+            const userRoles = session.user.roles;
             const hasSuperRole = cfg.superRoles?.some((r) => userRoles.includes(r));
             if (!hasSuperRole) {
               const hasRole = cfg.authRequirements.roles.some((r) => userRoles.includes(r));
@@ -252,8 +261,10 @@ export class ApiRouteBuilder<
           params = rawParams as unknown as TParams;
         }
 
-        // 5. Call handler
-        return await fn({ body, query, params, session, request: req });
+        // 5. Call handler — raw value tự bọc { success: true, data } status 200.
+        // Response/NextResponse (kể cả streaming, hoặc apiSuccess()/apiError() tường minh) đi thẳng.
+        const result = await fn({ body, query, params, session, request: req });
+        return result instanceof Response ? result : apiSuccess(result);
       } catch (err) {
         return catchToApiResponse(err);
       }
@@ -264,31 +275,40 @@ export class ApiRouteBuilder<
 // ============ Factory ============
 
 /**
- * Tạo ApiRouteBuilder đã bind sẵn getSession.
- * Generic TRole cho phép consumer truyền union type cụ thể (vd AccountRole).
+ * FACTORY generic (framework layer) — tạo route builder đã bind sẵn getSession cho 1 app cụ thể.
+ * Bản thân hàm này KHÔNG biết gì về app nào gọi nó (không import better-auth, không biết role union
+ * cụ thể) — mỗi app tự gọi 1 LẦN DUY NHẤT trong `src/lib/api.ts` của mình để "đóng gói" (bind)
+ * `getSession`/`superRoles` riêng, rồi export ra `withApi` ngắn gọn dùng khắp route của app đó.
+ *
+ * KHÔNG nhầm với `withApi` mà app export — đây là 2 vai trò khác nhau (factory vs instance đã bind),
+ * chỉ tình cờ đặt tên giống ở call-site vì đó là tên ergonomic cho consumer.
  *
  * @param defaults.getSession – resolve session từ request.
  * @param defaults.superRoles – roles bypass mọi role check (vd Admin).
  *
  * @example
- * // lib/api.ts
+ * // lib/api.ts — GỌI 1 LẦN, bind getSession/superRoles riêng của app này
  * import { createApiRouteBuilder } from "@megawin/next/server";
  * export const withApi = createApiRouteBuilder<AccountRole>({
  *   getSession,
  *   superRoles: [CompanyRole.Admin],
  * });
  *
- * // app/api/users/route.ts – chỉ Staff mới cần khai báo, Admin tự động pass
+ * // app/api/users/route.ts – DÙNG lại withApi đã bind ở trên, khắp mọi route.
+ * // Chỉ Staff mới cần khai báo, Admin tự động pass (superRoles).
+ * // Raw output tự bọc { success: true, data } status 200:
  * export const POST = withApi()
  *   .auth({ roles: [CompanyRole.Staff] })
  *   .body(schema)
- *   .handler(async ({ body }) => apiSuccess(result, { status: 201 }));
+ *   .handler(async ({ body }) => useCase.run(body));
  */
 export function createApiRouteBuilder<TRole extends string = string>(defaults: {
   getSession: GetSessionFn<TRole>;
   superRoles?: TRole[];
 }) {
-  return function withApi(): ApiRouteBuilder<undefined, undefined, Record<string, string>, TRole> {
+  // Đặt tên khác "withApi" có chủ đích — tránh literal string trùng với const app export (dễ nhầm
+  // khi grep/đọc file này). App gọi hàm này rồi TỰ đặt tên export là `withApi` ở lib/api.ts riêng.
+  return function boundApiRouteBuilder(): ApiRouteBuilder<undefined, undefined, Record<string, string>, TRole> {
     return new ApiRouteBuilder<undefined, undefined, Record<string, string>, TRole>({
       getSession: defaults.getSession,
       superRoles: defaults.superRoles,

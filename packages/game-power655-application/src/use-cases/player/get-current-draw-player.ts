@@ -7,7 +7,7 @@
  * - Kết quả kỳ gần nhất (gồm bonusNumber)
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-power655/entities";
@@ -22,7 +22,7 @@ const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [DrawStatus.SalesOpen, 
 /**
  * Lấy kỳ quay hiện tại cho player Power 6/55.
  */
-export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetCurrentDrawOutput> {
+export class GetCurrentDrawPlayerUseCase extends UseCase<void, PlayerGetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {

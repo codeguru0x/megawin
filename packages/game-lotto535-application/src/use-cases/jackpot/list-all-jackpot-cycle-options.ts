@@ -8,12 +8,12 @@
  * Active cycle luôn đứng đầu (cycleNo cao nhất).
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { JackpotCycleOption, ListAllJackpotCycleOptionsOutput } from "./dto/jackpot.dto";
 
-export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<
+export class ListAllJackpotCycleOptionsUseCase extends UseCase<
   Record<string, never>,
   ListAllJackpotCycleOptionsOutput
 > {

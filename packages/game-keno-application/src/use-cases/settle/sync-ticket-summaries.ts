@@ -17,7 +17,7 @@
  * Race-safe: conditional processedCount filter tránh ghi đè khi nhiều draw settle đồng thời.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
@@ -31,7 +31,7 @@ export interface SyncTicketSummariesResult {
   done: boolean;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<SettleContext, SyncTicketSummariesResult> {
+export class SyncTicketSummariesUseCase extends UseCase<SettleContext, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

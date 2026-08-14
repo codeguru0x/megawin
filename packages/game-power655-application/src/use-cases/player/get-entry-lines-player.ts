@@ -10,7 +10,7 @@
  *   - matchResult có bonusMatched thay vì specialMatched
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
 
@@ -22,7 +22,7 @@ import type { PlayerGetEntryLinesInput, PlayerGetEntryLinesOutput, PlayerLineInf
  * Lấy lines + match result cho 1 entry Power 6/55.
  * Lines chỉ có sau settle. matchResult chứa bonusMatched.
  */
-export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<PlayerGetEntryLinesInput, PlayerGetEntryLinesOutput> {
+export class GetEntryLinesPlayerUseCase extends UseCase<PlayerGetEntryLinesInput, PlayerGetEntryLinesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 

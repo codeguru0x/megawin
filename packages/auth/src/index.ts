@@ -40,13 +40,15 @@ export {
   type TenantUserEvent,
   type UserAuthOptions,
 } from "./authorization-middleware";
-/** Handler wrappers — all-in-one (auth + validator + error handler) */
+/** Handler wrappers — all-in-one (auth + validator + success envelope + error handler) */
 export {
+  buildHandler,
   type InferSchema,
+  type WithSchema,
   withAgentAuth,
   withCompanyAuth,
-  withMiddleware,
   withPlayerAuth,
+  withPublicHandler,
 } from "./handler-wrappers";
 /** Tenant API Key auth (server-to-server) — generic middleware */
 export {

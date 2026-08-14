@@ -6,7 +6,7 @@
  * không tải. Không tìm thấy → 404.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import type { AuditLogEntity } from "../entities";
@@ -44,7 +44,7 @@ export interface GetAuditLogInput {
  * user là actor (hoặc target nếu action nằm trong whitelist target); còn lại
  * throw 404 (không phân biệt "không tồn tại" vs "không phải của bạn").
  */
-export class GetAuditLogUseCase extends NextApiUseCase<GetAuditLogInput, AuditLogEntity> {
+export class GetAuditLogUseCase extends UseCase<GetAuditLogInput, AuditLogEntity> {
   private readonly repo = new AuditLogRepository();
 
   protected async execute(input: GetAuditLogInput): Promise<AuditLogEntity> {

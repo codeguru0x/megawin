@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import type { WorkerLockEntity } from "../../entities";
 import { WorkerLockKind } from "../../entities";
@@ -45,7 +45,7 @@ function calcSecondsSinceSuccess(lastSuccessAt: string | null, now: Date): numbe
  * giảm serialization qua RSC boundary (`vercel-react-best-practices` §3.4) và
  * tránh lộ `ownerToken` ra client.
  */
-export class ListWorkersHealthUseCase extends NextApiUseCase<void, ListWorkersHealthOutput> {
+export class ListWorkersHealthUseCase extends UseCase<void, ListWorkersHealthOutput> {
   private readonly repo = new WorkerLockRepository();
 
   protected async execute(): Promise<ListWorkersHealthOutput> {

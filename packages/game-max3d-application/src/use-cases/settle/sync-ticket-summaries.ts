@@ -17,7 +17,7 @@
  * Race-safe: conditional processedCount filter.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { ObjectId } from "mongodb";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -36,7 +36,7 @@ export interface DrawSyncInput {
   drawId: string;
 }
 
-export class SyncTicketSummariesUseCase extends InternalUseCase<DrawSyncInput, SyncTicketSummariesResult> {
+export class SyncTicketSummariesUseCase extends UseCase<DrawSyncInput, SyncTicketSummariesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 

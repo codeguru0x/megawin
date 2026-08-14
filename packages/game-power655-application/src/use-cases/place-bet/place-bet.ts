@@ -20,7 +20,7 @@
  *   7. Create entries cho tất cả draws (all-or-nothing)
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { DebitPlayerService } from "@megawin/game-core-application/services";
@@ -33,7 +33,7 @@ import { ObjectId } from "mongodb";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 
@@ -41,11 +41,11 @@ import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
  * Tạo vé cược Power 6/55.
  * Validate boards/draws, tính giá, tạo ticket + entries (all-or-nothing).
  */
-export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
+export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly placeBetStore = new PlaceBetStore();
   private readonly ticketCounter = new TicketCounterRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
   private readonly debitService = new DebitPlayerService();
 

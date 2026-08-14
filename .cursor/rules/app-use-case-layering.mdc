@@ -46,29 +46,41 @@ mới có `dto/` + `mappers/` — vì nó có 11 use-case. Thư mục con sinh r
    App chỉ được gọi use-case của package. Chạm DB = logic thuộc `*-application`.
 2. **Có business rule** (tính tiền, quyết định trạng thái, ngưỡng nghiệp vụ) chứ không chỉ gộp + map.
    Rule thuộc `packages/game-*/rules` hoặc `*-application`.
-3. **Cần raw output từ nhiều package**: package phải expose `InternalUseCase` (trả raw, throw
-   `AppException`); app gọi nó và tự bọc `ApiGatewayUseCase`/`NextApiUseCase`. KHÔNG thêm method
-   "trả raw" vào `ApiGatewayUseCase` để lách, cũng KHÔNG gọi bản HTTP rồi bóc envelope.
+3. **Cần raw output từ nhiều package**: package expose use-case bằng `UseCase`
+   (`@megawin/app-core/use-cases`) — `run()` trả raw output O, throw `AppException` khi lỗi. App
+   gọi `run()` trực tiếp; facade envelope (`apiSuccess`/`toApiGatewayResponse`) đính ở middleware biên
+   (`ApiRouteBuilder.handler()` cho Next.js, `withPlayerAuth`/`withPublicHandler`… cho Lambda), KHÔNG
+   đính trên use-case. KHÔNG còn tách 2 class song song (`InternalUseCase` + `NextApiUseCase`/
+   `ApiGatewayUseCase`) — 1 class `UseCase` duy nhất dùng cho mọi consumer (route Next.js, handler
+   Lambda, tool AI qua `safeRun()`). Xem chi tiết pattern + rationale ở
+   `.cursor/plans/redesign_use-case_facade_pattern_e86a32a4.plan.md`.
 
-   **Bẫy `NextApiUseCase` (đã sập thật ở backoffice, 2026-08):** `NextApiUseCase.run()` **KHÔNG BAO
-   GIỜ reject** — nó tự bắt exception và trả `NextResponse` chứa `{ success: false, error }`. App
-   aggregate gọi nó rồi cast `(await r.json()).data` sẽ nhận `undefined` khi game lỗi → destructure
-   ở mapper ném `TypeError` → sập TOÀN BỘ endpoint gộp, trong khi `Promise.allSettled` bọc ngoài
-   thành dead code (không có gì reject để mà bắt). Sửa gốc: tách `InternalUseCase`, KHÔNG viết helper
-   `unwrap()` dịch envelope ngược lại thành exception (băng dán + tốn 1 vòng serialize/parse JSON
-   mỗi game mỗi request).
+   **Bẫy lịch sử đã sập thật ở backoffice (2026-08, khi còn `NextApiUseCase`):** class cũ
+   `NextApiUseCase.run()` tự bắt exception và trả `NextResponse` chứa `{ success: false, error }` —
+   KHÔNG BAO GIỜ reject. App aggregate gọi nó rồi cast `(await r.json()).data` nhận `undefined` khi
+   game lỗi → destructure ở mapper ném `TypeError` → sập TOÀN BỘ endpoint gộp, trong khi
+   `Promise.allSettled` bọc ngoài thành dead code. Với `UseCase` mới, `run()` LUÔN throw
+   `AppException` khi lỗi (không tự nuốt thành response) — `tryLoad()` bọc ngoài hoạt động đúng như
+   thiết kế.
+
+   **Các base class cũ đã bị XOÁ khỏi codebase (14/08/2026), không phải chỉ `@deprecated`:**
+   `NextApiUseCase` + `toNextResponse` (xoá `packages/next/src/server/use-case.ts`), `ApiGatewayUseCase`
+   (xoá khỏi `api-gateway.ts`), `BaseUseCase` (xoá `base.ts`), alias `InternalUseCase`. 572 class đã
+   `extends UseCase`. Nếu thấy import các tên này ở đâu → code đó chưa merge từ nhánh cũ, sửa thành
+   `UseCase` chứ KHÔNG hồi sinh base class. `toApiGatewayResponse`/`apiSuccess` vẫn còn — nhưng chỉ là
+   **escape hatch** khi cần status/header đặc thù, không phải cách trả response mặc định.
 
 ```typescript
-/** ĐÚNG — app chỉ compose InternalUseCase của từng package, tự định shape response của mình */
+/** ĐÚNG — app chỉ compose UseCase.run() của từng package (throw AppException khi lỗi), tự định shape response */
 import { tryLoad } from "@megawin/shared/utils";
 
 import {
-  GetJackpotPlayerInternalUseCase as GetLotto535JackpotUseCase,
+  GetJackpotPlayerUseCase as GetLotto535JackpotUseCase,
 } from "@megawin/game-lotto535-application/use-cases/player";
 
 const SCOPE = "ListJackpots";
 
-export class ListJackpotsUseCase extends ApiGatewayUseCase<void, JackpotSummaryListResponse> {
+export class ListJackpotsUseCase extends UseCase<void, JackpotSummaryListResponse> {
   private readonly lotto535 = new GetLotto535JackpotUseCase();
   private readonly mega645 = new GetMega645JackpotUseCase();
 
@@ -88,7 +100,7 @@ export class ListJackpotsUseCase extends ApiGatewayUseCase<void, JackpotSummaryL
 
 ```typescript
 /** SAI — app tự query DB, tự tính rule → logic này thuộc *-application */
-export class ListJackpotsUseCase extends ApiGatewayUseCase<void, Output> {
+export class ListJackpotsUseCase extends UseCase<void, Output> {
   private readonly repo = new JackpotCycleRepo();           // ← chạm DB ở tầng app
   protected async execute() {
     const cycle = await this.repo.findActive();
@@ -162,8 +174,11 @@ player-facing **PHẢI** cập nhật SDK trong cùng PR (bắt buộc, xem `pla
 
 - [ ] Handler còn mỏng (chỉ validate + gọi use-case)?
 - [ ] Use-case KHÔNG chạm repo/DB, KHÔNG chứa business rule (§3)?
-- [ ] Logic cross-package lấy raw qua `InternalUseCase` của package, không lách `ApiGatewayUseCase`
-      và KHÔNG gọi `NextApiUseCase` rồi bóc envelope (nó không reject — xem bẫy ở §3.3)?
+- [ ] Use-case extends `UseCase` (`@megawin/app-core/use-cases`) — các base class cũ
+      (`InternalUseCase`/`NextApiUseCase`/`ApiGatewayUseCase`/`BaseUseCase`) đã bị XOÁ khỏi codebase,
+      import chúng sẽ không compile?
+- [ ] Logic cross-package lấy raw qua `run()` của package (throw `AppException` khi lỗi), route/
+      handler biên tự bọc envelope qua middleware (§3.3)?
 - [ ] Aggregate nhiều nguồn dùng `tryLoad` + `Promise.all` (không `Promise.allSettled` thủ công),
       lỗi bất thường được log kèm `source`?
 - [ ] Chưa đủ ngưỡng §2 thì để flat, KHÔNG tạo `dto/`, `mappers/`, `index.ts` rỗng nghĩa?

@@ -1,10 +1,10 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GetJackpotCurrentOutput as Lotto535JpOutput } from "@megawin/game-lotto535-application/use-cases/jackpot";
-import { GetJackpotCurrentInternalUseCase as Lotto535JpUseCase } from "@megawin/game-lotto535-application/use-cases/jackpot";
+import { GetJackpotCurrentUseCase as Lotto535JpUseCase } from "@megawin/game-lotto535-application/use-cases/jackpot";
 import type { GetJackpotCurrentOutput as Mega645JpOutput } from "@megawin/game-mega645-application/use-cases/jackpot";
-import { GetJackpotCurrentInternalUseCase as Mega645JpUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
+import { GetJackpotCurrentUseCase as Mega645JpUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
 import type { GetJackpotCurrentOutput as Power655JpOutput } from "@megawin/game-power655-application/use-cases/jackpot";
-import { GetJackpotCurrentInternalUseCase as Power655JpUseCase } from "@megawin/game-power655-application/use-cases/jackpot";
-import { NextApiUseCase } from "@megawin/next/server";
+import { GetJackpotCurrentUseCase as Power655JpUseCase } from "@megawin/game-power655-application/use-cases/jackpot";
 import { tryLoad } from "@megawin/shared/utils";
 
 import type {
@@ -22,17 +22,16 @@ const SCOPE = "GetDashboardJackpots";
  * App-level use case — nằm trong backoffice vì orchestrate 3 game packages.
  * Không thể đặt ở game-core-application (vi phạm dependency direction).
  *
- * Gọi thẳng `GetJackpotCurrentInternalUseCase` của từng game (KHÔNG dùng bản
- * `NextApiUseCase`): internal trả raw DTO và throw `AppException` — không phải bóc
- * envelope `NextResponse` rồi dịch ngược lỗi thành exception, và bỏ được vòng
- * serialize/parse JSON vô ích cho mỗi game mỗi request.
+ * Gọi `GetJackpotCurrentUseCase` của từng game — cùng class mà route riêng của game dùng. Nó trả
+ * raw DTO và throw `AppException`, nên dùng trực tiếp được từ đây không qua vòng serialize/parse
+ * JSON nào.
  *
  * Chạy song song 3 game qua `tryLoad` (không reject → dùng `Promise.all`):
  *   - Game chưa có active cycle → `NOT_FOUND` → trả `null`, KHÔNG log (đúng nghiệp vụ).
  *   - Lỗi bất thường (DB down, bug) → log error kèm `source`, vẫn trả `null` để 2 game
  *     còn lại hiển thị được.
  */
-export class GetDashboardJackpotsUseCase extends NextApiUseCase<void, GetDashboardJackpotsOutput> {
+export class GetDashboardJackpotsUseCase extends UseCase<void, GetDashboardJackpotsOutput> {
   private readonly mega645Uc = new Mega645JpUseCase();
   private readonly power655Uc = new Power655JpUseCase();
   private readonly lotto535Uc = new Lotto535JpUseCase();

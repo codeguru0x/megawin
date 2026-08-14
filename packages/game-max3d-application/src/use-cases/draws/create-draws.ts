@@ -12,21 +12,21 @@
  * Max 3D không có Jackpot tích lũy → không tạo jackpot cycle.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-max3d/entities";
 import { generateDrawId } from "@megawin/game-max3d/helpers";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { getFinancialDate, subtractMinutes } from "@megawin/shared/utils";
 
 import { calcMax3dDrawSlots } from "../../helpers/calc-draw-slots";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
-export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
+export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
     const { draws: inputDraws } = input;

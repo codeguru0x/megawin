@@ -27,7 +27,7 @@
  *     Retry: Phase 1 re-aggregate + upsert void (idempotent).
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { VoidPreviousSettleSnapshot } from "@megawin/game-keno/entities";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -50,7 +50,7 @@ export interface BuildVoidReportResult {
  *
  * CRASH-SAFE: tất cả steps idempotent — retry an toàn ở mọi điểm crash.
  */
-export class BuildVoidReportUseCase extends InternalUseCase<VoidContext, BuildVoidReportResult> {
+export class BuildVoidReportUseCase extends UseCase<VoidContext, BuildVoidReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawReportRepo = new SettleDrawReportRepository();
   private readonly tenantReportRepo = new SettleTenantReportRepository();

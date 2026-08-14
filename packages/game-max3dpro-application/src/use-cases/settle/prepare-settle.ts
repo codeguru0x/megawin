@@ -13,11 +13,11 @@
  *   - Accept draw ở status "settling" (đang settle dở)
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { ResettleContext, SettleContext } from "./types";
 
 export interface PrepareSettleInput {
@@ -34,9 +34,9 @@ export interface PrepareSettleInput {
   resettleContext?: ResettleContext;
 }
 
-export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
+export class PrepareSettleUseCase extends UseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId, resettleContext } = input;

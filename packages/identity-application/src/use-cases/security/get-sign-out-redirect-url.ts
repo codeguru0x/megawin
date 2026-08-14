@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 export interface GetSignOutRedirectUrlInput {
@@ -30,10 +30,7 @@ export interface GetSignOutRedirectUrlOutput {
  * - Revoke Cognito refresh token
  * - Notify các service liên quan
  */
-export class GetSignOutRedirectUrlUseCase extends NextApiUseCase<
-  GetSignOutRedirectUrlInput,
-  GetSignOutRedirectUrlOutput
-> {
+export class GetSignOutRedirectUrlUseCase extends UseCase<GetSignOutRedirectUrlInput, GetSignOutRedirectUrlOutput> {
   protected async execute(input: GetSignOutRedirectUrlInput): Promise<GetSignOutRedirectUrlOutput> {
     if (!input.cognitoDomain || !input.clientId || !input.logoutUri) {
       throw AppException.internal("Cognito sign-out configuration is missing");

@@ -10,7 +10,7 @@
  * Endpoint: GET /games/mega645/draw-results/:drawId
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-mega645/entities";
 import { AppException } from "@megawin/shared/errors";
@@ -22,7 +22,7 @@ export interface GetDrawResultPlayerInput {
   drawId: string;
 }
 
-export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
+export class GetDrawResultPlayerUseCase extends UseCase<GetDrawResultPlayerInput, PlayerDrawResultInfo> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: GetDrawResultPlayerInput): Promise<PlayerDrawResultInfo> {

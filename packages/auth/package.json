@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Authentication & authorization middleware for API Gateway Lambda",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
@@ -31,7 +32,7 @@
     "@megawin/identity": "workspace:*",
     "@megawin/identity-application": "workspace:*",
     "@megawin/shared": "workspace:*",
-    "@middy/core": "^7.2.1",
+    "@middy/core": "^7.7.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {

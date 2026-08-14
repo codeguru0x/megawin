@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { SystemSettleTenantDailyRepository } from "../../infras/repos/system-settle-tenant-daily-repo";
@@ -14,7 +14,7 @@ import type { GetTenantSummaryInput, GetTenantSummaryOutput } from "./types";
  *
  * Dùng cho tab "Theo đại lý" trang System Financial Reports.
  */
-export class GetTenantSummaryUseCase extends NextApiUseCase<GetTenantSummaryInput, GetTenantSummaryOutput> {
+export class GetTenantSummaryUseCase extends UseCase<GetTenantSummaryInput, GetTenantSummaryOutput> {
   private readonly repo = new SystemSettleTenantDailyRepository();
 
   protected async execute(input: GetTenantSummaryInput): Promise<GetTenantSummaryOutput> {

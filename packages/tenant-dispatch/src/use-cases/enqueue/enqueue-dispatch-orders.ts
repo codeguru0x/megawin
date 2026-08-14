@@ -1,4 +1,4 @@
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import type { TenantDispatchOrderInput } from "../../entities/dispatch-order";
 import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
@@ -79,7 +79,7 @@ function validateOrder(order: TenantDispatchOrderInput): string[] {
  * Caller: game use-cases (EnqueueDispatchPayoutsUseCase của Keno/Lotto535/...).
  * Worker: không gọi use case này, worker chỉ read + update.
  */
-export class EnqueueDispatchOrdersUseCase extends InternalUseCase<EnqueueDispatchOrdersInput, void> {
+export class EnqueueDispatchOrdersUseCase extends UseCase<EnqueueDispatchOrdersInput, void> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: EnqueueDispatchOrdersInput): Promise<void> {

@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";
 
@@ -47,7 +47,7 @@ const ALL_TIER_LABELS: Record<string, string> = {
  * - tier có thể là BasicPrizeTier (basic mode) hoặc PlusPrizeTier (plus mode).
  * - isDuplicate: plus mode có 2 bộ ba giống nhau → giải × 2.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
+export class GetWinningEntriesUseCase extends UseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

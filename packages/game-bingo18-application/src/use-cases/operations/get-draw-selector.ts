@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { displayVNTime, sortBy } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -20,7 +20,7 @@ import type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selecto
  *
  * DrawId format: "YYYY-MM-DD.NNN".
  */
-export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelectorOutput> {
+export class GetDrawSelectorUseCase extends UseCase<void, GetDrawSelectorOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<GetDrawSelectorOutput> {

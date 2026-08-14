@@ -3,8 +3,8 @@ import {
   COGNITO_WORKFORCE_CLIENT_ID,
   COGNITO_WORKFORCE_POOL_ID,
 } from "@megawin/app-core/aws/cognito";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { auditChangeOwnPassword } from "../../services/audit-log";
@@ -21,7 +21,7 @@ export interface ChangeMyPasswordOutput {
   success: boolean;
 }
 
-export class ChangeMyPasswordUseCase extends NextApiUseCase<ChangeMyPasswordInput, ChangeMyPasswordOutput> {
+export class ChangeMyPasswordUseCase extends UseCase<ChangeMyPasswordInput, ChangeMyPasswordOutput> {
   protected async execute(input: ChangeMyPasswordInput): Promise<ChangeMyPasswordOutput> {
     if (!COGNITO_WORKFORCE_POOL_ID || !COGNITO_WORKFORCE_CLIENT_ID) {
       throw AppException.internal("Cognito pool configuration is missing");

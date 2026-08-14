@@ -62,7 +62,7 @@ const QUERY_KEY = ["mega645", "game-config"] as const;
 export function useGameConfig() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () => apiClient.get<{ config: GameConfig }>("/mega645/config").then((r) => r.config),
+    queryFn: () => apiClient.get<GameConfig>("/mega645/config"),
   });
 }
 

@@ -1,7 +1,7 @@
 /**
  * Use Case: Get Jackpot Current (Lotto 5/35)
  *
- * `GetJackpotCurrentInternalUseCase` là điểm truy cập DUY NHẤT cho dữ liệu jackpot hiện tại
+ * `GetJackpotCurrentUseCase` là điểm truy cập DUY NHẤT cho dữ liệu jackpot hiện tại
  * ở backoffice. Trả raw output (`GetJackpotCurrentOutput`), throw {@link AppException}
  * `NOT_FOUND` khi chưa có active cycle — KHÔNG đóng gói HTTP.
  *
@@ -11,21 +11,19 @@
  * - Progress bar (current / threshold)
  *
  * Hai caller:
- *   - `GetJackpotCurrentUseCase` (NextApiUseCase, cùng file) → `GET /api/lotto535/jackpot/current`,
- *     chỉ delegate + đóng gói envelope.
+ *   - Route riêng của game → `GET /api/lotto535/jackpot/current`.
  *   - `GetDashboardJackpotsUseCase` (backoffice, cross-game) → `GET /api/dashboard/jackpots`,
  *     gọi song song 3 game bằng `tryLoad`.
  *
  * CRASH-SAFE: chỉ đọc DB — idempotent, chạy lại nhiều lần an toàn.
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
-import { NextApiUseCase } from "@megawin/next/server";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
-export class GetJackpotCurrentInternalUseCase extends InternalUseCase<void, GetJackpotCurrentOutput> {
+export class GetJackpotCurrentUseCase extends UseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
 
   protected async execute(): Promise<GetJackpotCurrentOutput> {
@@ -63,20 +61,5 @@ export class GetJackpotCurrentInternalUseCase extends InternalUseCase<void, GetJ
         remaining: Math.max(threshold - currentAmount, 0),
       },
     };
-  }
-}
-
-/**
- * Endpoint: `GET /api/lotto535/jackpot/current`.
- *
- * Chỉ đóng gói HTTP envelope — toàn bộ logic nằm ở {@link GetJackpotCurrentInternalUseCase}
- * (dùng chung với endpoint gộp cross-game `GET /api/dashboard/jackpots`). Sửa logic jackpot
- * thì sửa ở internal use-case, KHÔNG sửa ở đây.
- */
-export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
-  private readonly internal = new GetJackpotCurrentInternalUseCase();
-
-  protected async execute(): Promise<GetJackpotCurrentOutput> {
-    return await this.internal.run();
   }
 }

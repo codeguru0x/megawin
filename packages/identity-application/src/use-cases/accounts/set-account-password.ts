@@ -1,7 +1,7 @@
 import { adminSetUserPassword, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
 import { CompanyRole } from "@megawin/identity/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
@@ -24,7 +24,7 @@ export interface SetAccountPasswordOutput {
   username: string;
 }
 
-export class SetAccountPasswordUseCase extends NextApiUseCase<SetAccountPasswordInput, SetAccountPasswordOutput> {
+export class SetAccountPasswordUseCase extends UseCase<SetAccountPasswordInput, SetAccountPasswordOutput> {
   private readonly accountRepo = new AccountRepository();
 
   protected async execute(input: SetAccountPasswordInput): Promise<SetAccountPasswordOutput> {

@@ -46,7 +46,7 @@ import { TickLoopWorker } from "@megawin/worker-core/workers";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { evaluateMax3dAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -77,7 +77,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
   protected override readonly description =
     "Max 3D — đánh giá cảnh báo vận hành (ngưỡng exposure/pair liability/combo) cho kỳ đang mở";
 
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly statsRepo = new BettingStatsRepository();
   private readonly pairStatsRepo = new PairStatsRepository();
   private readonly alertRepo = new OpsAlertRepository();

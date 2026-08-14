@@ -16,7 +16,7 @@ export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(createDrawSchema)
   .handler(async ({ body }) => {
-    return createDrawUseCase.run(body, { successStatus: 201 });
+    return createDrawUseCase.run(body);
   });
 
 export const GET = withApi()

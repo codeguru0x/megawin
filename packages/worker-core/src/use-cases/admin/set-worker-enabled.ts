@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AUDIT_ACTIONS, AuditCategory, AuditTargetType } from "@megawin/audit/entities";
 import { type AuditActor, record } from "@megawin/audit/logger";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { WorkerLockRepository } from "../../infras/repos";
@@ -25,7 +25,7 @@ export interface SetWorkerEnabledOutput {
  * worker nào, lúc nào (nếu không, sau này không truy được vì sao stats ngừng
  * chạy). Fire-and-forget: audit fail không chặn mutation.
  */
-export class SetWorkerEnabledUseCase extends NextApiUseCase<SetWorkerEnabledInput, SetWorkerEnabledOutput> {
+export class SetWorkerEnabledUseCase extends UseCase<SetWorkerEnabledInput, SetWorkerEnabledOutput> {
   private readonly repo = new WorkerLockRepository();
 
   protected async execute(input: SetWorkerEnabledInput): Promise<SetWorkerEnabledOutput> {

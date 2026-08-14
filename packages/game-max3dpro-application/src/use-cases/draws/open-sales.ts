@@ -8,8 +8,8 @@
  *   - salesClosed → salesOpen  (mở lại khi admin đóng sớm)
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -17,7 +17,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditOpenSales } from "../../services/audit-log";
 import type { DrawTransitionInput, DrawTransitionOutput } from "./dto/draw.dto";
 
-export class OpenSalesUseCase extends NextApiUseCase<DrawTransitionInput, DrawTransitionOutput> {
+export class OpenSalesUseCase extends UseCase<DrawTransitionInput, DrawTransitionOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: DrawTransitionInput): Promise<DrawTransitionOutput> {

@@ -9,21 +9,21 @@
  *   4. Tạo draw với status SalesOpen (openNow=true) hoặc Scheduled (openNow=false)
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { generateKenoDrawId } from "@megawin/game-keno/helpers";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { getFinancialDate, todayVN } from "@megawin/shared/utils";
 
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { CreateDrawInput, CreateDrawOutput, CreateDrawOutputItem } from "./dto/draw.dto";
 
-export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDrawOutput> {
+export class CreateDrawUseCase extends UseCase<CreateDrawInput, CreateDrawOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly counterRepo = new DrawCounterRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: CreateDrawInput): Promise<CreateDrawOutput> {
     const { draws: slots } = input;

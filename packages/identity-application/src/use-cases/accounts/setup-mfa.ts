@@ -4,7 +4,7 @@ import {
   COGNITO_WORKFORCE_CLIENT_ID,
   COGNITO_WORKFORCE_POOL_ID,
 } from "@megawin/app-core/aws/cognito";
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 export interface SetupMfaInput {
@@ -19,7 +19,7 @@ export interface SetupMfaOutput {
   accessToken: string;
 }
 
-export class SetupMfaUseCase extends NextApiUseCase<SetupMfaInput, SetupMfaOutput> {
+export class SetupMfaUseCase extends UseCase<SetupMfaInput, SetupMfaOutput> {
   protected async execute(input: SetupMfaInput): Promise<SetupMfaOutput> {
     if (!COGNITO_WORKFORCE_POOL_ID || !COGNITO_WORKFORCE_CLIENT_ID) {
       throw AppException.internal("Cognito pool configuration is missing");

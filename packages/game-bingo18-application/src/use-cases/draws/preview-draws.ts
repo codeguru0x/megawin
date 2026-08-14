@@ -1,14 +1,14 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { calcDrawSlots } from "../../helpers/calc-draw-slots";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
-export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, PreviewDrawsOutput> {
+export class PreviewDrawsUseCase extends UseCase<PreviewDrawsInput, PreviewDrawsOutput> {
   private readonly counterRepo = new DrawCounterRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   /**
    * Preview danh sách kỳ quay tiếp theo.

@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";
 
@@ -30,7 +30,7 @@ const TIER_LABELS: Record<string, string> = {
  * Kèm summary tổng hợp (totalWinningEntries, totalWinningLines, totalWinAmount).
  * Dùng cho dialog báo cáo trúng thưởng trên trang operations backoffice.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
+export class GetWinningEntriesUseCase extends UseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

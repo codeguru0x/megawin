@@ -8,23 +8,23 @@
  *   - jackpot1CurrentAmount + jackpot2CurrentAmount: đọc từ active jackpot cycle
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawEntity } from "@megawin/game-power655/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 
 /**
  * Lấy kỳ quay hiện tại và danh sách kỳ active cho player/backoffice.
  * Bao gồm cả 2 giá trị Jackpot 1 + Jackpot 2 từ active cycle.
  */
-export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
+export class GetCurrentDrawUseCase extends UseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   /** @inheritdoc */
   protected async execute(): Promise<GetCurrentDrawOutput> {

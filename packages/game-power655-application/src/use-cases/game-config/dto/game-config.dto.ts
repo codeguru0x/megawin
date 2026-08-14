@@ -10,15 +10,6 @@ import type {
 } from "@megawin/game-power655/entities";
 
 // ─────────────────────────────────────────────
-// GetGameConfig
-// ─────────────────────────────────────────────
-
-export interface GetGameConfigOutput {
-  /** Toàn bộ cấu hình global của game Power 6/55. */
-  config: GlobalConfigEntity;
-}
-
-// ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 

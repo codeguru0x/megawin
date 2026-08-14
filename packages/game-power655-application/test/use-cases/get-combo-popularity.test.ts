@@ -6,9 +6,11 @@
  * tầng, đặc biệt công thức `jackpotUnits` (3 nhánh standard/bao5/bao7-18 — xem JSDoc
  * `ComboStatsRepository.sumJackpotUnitsForStandardSet`).
  *
- * `GetComboPopularityPlayerUseCase extends ApiGatewayUseCase` → `run()` trả
- * `ApiGatewayResponse { statusCode, body: string }` (KHÔNG phải `NextResponse`) — unwrap
- * bằng `JSON.parse(body)`, khác helper `unwrapSuccess` của các test `NextApiUseCase`.
+ * `GetComboPopularityPlayerUseCase extends UseCase` → `run()` trả **raw output**
+ * (`PlayerComboPopularityOutput`), KHÔNG phải HTTP response — success envelope
+ * (`{ success, data }` + `statusCode`) do middleware ở biên Lambda bọc, ngoài phạm vi test này.
+ * Test dùng `safeRun()` để assert cả 2 nhánh bằng cùng 1 shape `AppResult`: nhánh lỗi trả
+ * `{ success: false, error: { code } }` thay vì throw, nên case hợp lệ và case 400 viết đối xứng.
  *
  * ## Rủi ro test (R1/R2/R4 trong plan p1-01)
  *
@@ -26,6 +28,7 @@
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { PlayType } from "@megawin/game-power655/entities";
 import { buildComboKey, getLineCount } from "@megawin/game-power655/rules";
+import type { AppResult } from "@megawin/shared/errors";
 import { ObjectId } from "mongodb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -44,20 +47,19 @@ const entryRepo = new EntryRepository();
 const comboRepo = new ComboStatsRepository();
 const useCase = new GetComboPopularityPlayerUseCase();
 
-/** `ApiGatewayUseCase.run()` trả `{statusCode, body: string}` — parse JSON để lấy shape thật. */
-function unwrap(response: { statusCode: number; body: string }): {
-  statusCode: number;
+/**
+ * Chuẩn hoá `AppResult` của `safeRun()` về 1 shape phẳng cho tiện assert.
+ *
+ * Thay cho helper `unwrap(JSON.parse(body))` thời `ApiGatewayUseCase`: use-case giờ trả raw,
+ * không còn `statusCode`/`body` để parse. Nhánh lỗi lấy `error.code` (vd `BAD_REQUEST`) —
+ * chính là code mà middleware biên sẽ map sang HTTP 400.
+ */
+function unwrap(result: AppResult<PlayerComboPopularityOutput>): {
   success: boolean;
   data?: PlayerComboPopularityOutput;
   errorCode?: string;
 } {
-  const body = JSON.parse(response.body);
-  return {
-    statusCode: response.statusCode,
-    success: body.success,
-    data: body.success ? body.data : undefined,
-    errorCode: body.success ? undefined : body.error.code,
-  };
+  return result.success ? { success: true, data: result.data } : { success: false, errorCode: result.error.code };
 }
 
 /** Seed 1 entry board — mặc định `Scheduled` (chưa settle), KHÔNG void. */
@@ -164,9 +166,9 @@ describe("GetComboPopularityPlayerUseCase — case 1: bộ 6 số standard, jack
   });
 
   it("found=true, sets=2 (own combo), jackpotUnits=4 (2 standard + 1 bao5 + 1 bao7)", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: S }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: S }));
 
-    expect(res.statusCode).toBe(200);
+    expect(res.success).toBe(true);
     expect(res.data).toEqual({
       found: true,
       sets: 2,
@@ -190,16 +192,16 @@ describe("GetComboPopularityPlayerUseCase — case 2 vs 3: chống dò ẩn bộ
   });
 
   it("case 2: combo tồn tại (người khác chơi) nhưng account chưa cược → {found:false}", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: playedByOthersNumbers }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: playedByOthersNumbers }));
 
-    expect(res.statusCode).toBe(200);
+    expect(res.success).toBe(true);
     expect(res.data).toEqual({ found: false });
   });
 
   it("case 3: combo không tồn tại → {found:false} — BYTE-GIỐNG case 2 (không phân biệt)", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: neverPlayedNumbers }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: neverPlayedNumbers }));
 
-    expect(res.statusCode).toBe(200);
+    expect(res.success).toBe(true);
     expect(res.data).toEqual({ found: false });
   });
 });
@@ -214,9 +216,9 @@ describe("GetComboPopularityPlayerUseCase — case 4: board Bao9 — có sets, K
   });
 
   it("found=true, sets có giá trị, jackpotUnits undefined (board Bao không suy trước được mẫu số)", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: bao9Numbers }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: bao9Numbers }));
 
-    expect(res.statusCode).toBe(200);
+    expect(res.success).toBe(true);
     expect(res.data?.found).toBe(true);
     expect(res.data?.sets).toBe(84); // C(9,6) = 84 lines × betCount 1.
     expect(res.data?.jackpotUnits).toBeUndefined();
@@ -227,35 +229,35 @@ describe("GetComboPopularityPlayerUseCase — case 5: numbers không hợp lệ 
   const accountId = "acc-case5";
 
   it("4 số (thiếu, không khớp playType nào) → 400 BAD_REQUEST", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: ["01", "02", "03", "04"] }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: ["01", "02", "03", "04"] }));
 
-    expect(res.statusCode).toBe(400);
+    expect(res.success).toBe(false);
     expect(res.errorCode).toBe("BAD_REQUEST");
   });
 
   it("16 số (giữa bao15 và bao18, không khớp playType nào) → 400 BAD_REQUEST", async () => {
     const numbers = Array.from({ length: 16 }, (_, i) => String(i + 1).padStart(2, "0"));
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers }));
 
-    expect(res.statusCode).toBe(400);
+    expect(res.success).toBe(false);
     expect(res.errorCode).toBe("BAD_REQUEST");
   });
 
   it("6 số nhưng trùng nhau → 400 BAD_REQUEST", async () => {
     const res = unwrap(
-      await useCase.run({ accountId, drawId: DRAW_ID, numbers: ["01", "01", "03", "04", "05", "06"] }),
+      await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: ["01", "01", "03", "04", "05", "06"] }),
     );
 
-    expect(res.statusCode).toBe(400);
+    expect(res.success).toBe(false);
     expect(res.errorCode).toBe("BAD_REQUEST");
   });
 
   it('6 số nhưng có số ngoài "01".."55" → 400 BAD_REQUEST', async () => {
     const res = unwrap(
-      await useCase.run({ accountId, drawId: DRAW_ID, numbers: ["01", "02", "03", "04", "05", "56"] }),
+      await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: ["01", "02", "03", "04", "05", "56"] }),
     );
 
-    expect(res.statusCode).toBe(400);
+    expect(res.success).toBe(false);
     expect(res.errorCode).toBe("BAD_REQUEST");
   });
 });
@@ -276,9 +278,9 @@ describe("GetComboPopularityPlayerUseCase — case 6: entry đã Void KHÔNG cò
   });
 
   it("board Void → {found:false} dù combo doc tồn tại", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: voidedNumbers }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: voidedNumbers }));
 
-    expect(res.statusCode).toBe(200);
+    expect(res.success).toBe(true);
     expect(res.data).toEqual({ found: false });
   });
 });
@@ -293,9 +295,9 @@ describe("GetComboPopularityPlayerUseCase — case 7: sở hữu nhưng combo-st
   });
 
   it("sở hữu nhưng combo doc chưa có → {found:false}, KHÔNG throw", async () => {
-    const res = unwrap(await useCase.run({ accountId, drawId: DRAW_ID, numbers: lagNumbers }));
+    const res = unwrap(await useCase.safeRun({ accountId, drawId: DRAW_ID, numbers: lagNumbers }));
 
-    expect(res.statusCode).toBe(200);
+    expect(res.success).toBe(true);
     expect(res.data).toEqual({ found: false });
   });
 });

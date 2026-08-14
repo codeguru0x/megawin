@@ -6,21 +6,21 @@
  * Power 6/55 chỉ quay thứ 3, 5, 7, mỗi ngày 1 kỳ lúc 18:00.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { calcPower655DrawSlots } from "../../helpers/calc-draw-slots";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
 /**
  * Preview draw slots trước khi tạo.
  * Trả danh sách các kỳ sẽ được tạo, bao gồm drawDate, drawTime, closeAt.
  */
-export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, PreviewDrawsOutput> {
+export class PreviewDrawsUseCase extends UseCase<PreviewDrawsInput, PreviewDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   /** @inheritdoc */
   protected async execute(input: PreviewDrawsInput): Promise<PreviewDrawsOutput> {

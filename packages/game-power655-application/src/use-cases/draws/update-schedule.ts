@@ -9,9 +9,9 @@
  *   - Thời gian phải hợp lệ (ISO string, cùng ngày drawDate).
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -41,7 +41,7 @@ const EDITABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.Sale
  * Sửa lịch mở/đóng bán cho kỳ quay Power 6/55.
  * Chỉ cho phép khi draw ở trạng thái scheduled hoặc salesOpen.
  */
-export class UpdateScheduleUseCase extends NextApiUseCase<UpdateScheduleInput, UpdateScheduleOutput> {
+export class UpdateScheduleUseCase extends UseCase<UpdateScheduleInput, UpdateScheduleOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

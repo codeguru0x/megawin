@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { SystemSettleGameDailyRepository } from "../../infras/repos/system-settle-game-daily-repo";
 import type { GetGameSummaryInput, GetGameSummaryOutput } from "./types";
@@ -9,7 +9,7 @@ import type { GetGameSummaryInput, GetGameSummaryOutput } from "./types";
  * Kết quả dùng cho tab "Theo game" trang System Financial Reports.
  * Mỗi row = 1 game, đã tổng hợp toàn bộ draws trong range.
  */
-export class GetGameSummaryUseCase extends NextApiUseCase<GetGameSummaryInput, GetGameSummaryOutput> {
+export class GetGameSummaryUseCase extends UseCase<GetGameSummaryInput, GetGameSummaryOutput> {
   private readonly repo = new SystemSettleGameDailyRepository();
 
   protected async execute(input: GetGameSummaryInput): Promise<GetGameSummaryOutput> {

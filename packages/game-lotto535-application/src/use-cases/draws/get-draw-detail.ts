@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DEFAULT_PRIZE_TIER_RULES } from "@megawin/game-lotto535/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { serializeDates } from "@megawin/shared/utils";
 
@@ -14,7 +14,7 @@ import type { GetDrawDetailInput, GetDrawDetailOutput } from "./dto/draw.dto";
  * Trả thêm `prizeAmounts` từ game config (fallback về DEFAULT_PRIZE_TIER_RULES)
  * để UI hiển thị cột "Tiền/line" đúng ngay cả khi tier không có winner.
  */
-export class GetDrawDetailUseCase extends NextApiUseCase<GetDrawDetailInput, GetDrawDetailOutput> {
+export class GetDrawDetailUseCase extends UseCase<GetDrawDetailInput, GetDrawDetailOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly configRepo = new GameConfigRepository();
 

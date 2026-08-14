@@ -6,9 +6,9 @@
  * staff drill-down điều tra.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { Lotto535OpsAlertEntity, Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
 import { OpsAlertSeverity } from "@megawin/game-lotto535/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { ListAlertsInput, ListAlertsOutput, Lotto535AlertGroup } from "./dto/ops.dto";
@@ -20,7 +20,7 @@ const SEVERITY_RANK: Record<string, number> = {
   [OpsAlertSeverity.Critical]: 2,
 };
 
-export class ListAlertsUseCase extends NextApiUseCase<ListAlertsInput, ListAlertsOutput> {
+export class ListAlertsUseCase extends UseCase<ListAlertsInput, ListAlertsOutput> {
   private readonly alertRepo = new OpsAlertRepository();
 
   protected async execute(input: ListAlertsInput): Promise<ListAlertsOutput> {

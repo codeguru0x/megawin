@@ -9,7 +9,7 @@
  * IDEMPOTENT: chạy lại nhiều lần cho cùng kết quả.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import {
   SystemPublishSettleDailyUseCase as CorePublishSettleDailyUseCase,
@@ -30,7 +30,7 @@ export interface PublishSettleDailyInput {
  * Bọc CorePublishSettleDailyUseCase, tự inject per-game repos.
  * Handler chỉ cần gọi use case, không khởi tạo repo trực tiếp.
  */
-export class PublishSettleDailyUseCase extends InternalUseCase<PublishSettleDailyInput, PublishSettleDailyResult> {
+export class PublishSettleDailyUseCase extends UseCase<PublishSettleDailyInput, PublishSettleDailyResult> {
   private readonly gameDailyRepo = new SystemSettleGameDailyRepo();
   private readonly tenantDailyRepo = new SystemSettleTenantDailyRepo();
   private readonly coreUseCase = new CorePublishSettleDailyUseCase();

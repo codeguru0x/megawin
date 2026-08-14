@@ -38,7 +38,7 @@ import {
   COGNITO_PLAYER_POOL_CLIENT_ID,
   COGNITO_PLAYER_POOL_ID,
 } from "@megawin/app-core/aws/cognito";
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AccountStatus, AccountType, ClaimKey, PlayerRole } from "@megawin/identity/entities";
 import { AppException } from "@megawin/shared/errors";
 import { generateULID, toMegawinUsername } from "@megawin/shared/utils";
@@ -53,7 +53,7 @@ function derivePlayerPassword(cognitoUsername: string): string {
   return `Pw@68.${createHmac("sha256", PLAYER_PASSWORD_SECRET!).update(cognitoUsername).digest("base64url").slice(0, 28)}`;
 }
 
-export class PlayerLoginUseCase extends ApiGatewayUseCase<PlayerLoginInput, PlayerLoginOutput> {
+export class PlayerLoginUseCase extends UseCase<PlayerLoginInput, PlayerLoginOutput> {
   private readonly accountRepo = new AccountRepository();
 
   protected async execute(input: PlayerLoginInput): Promise<PlayerLoginOutput> {

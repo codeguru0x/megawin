@@ -8,7 +8,7 @@
  * Dùng cho bảng "Lịch sử Jackpot" khi user chọn 1 vòng cụ thể từ selector.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -22,7 +22,7 @@ import type {
  * Lấy lịch sử kỳ quay theo jackpot cycle đã chọn.
  * Hỗ trợ phân trang, mới nhất trên cùng.
  */
-export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
+export class ListJackpotHistoryByCycleUseCase extends UseCase<
   ListJackpotHistoryByCycleInput,
   ListJackpotHistoryByCycleOutput
 > {

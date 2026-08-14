@@ -53,7 +53,7 @@
  * Output: { drawId, entriesPatched }
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
@@ -64,7 +64,7 @@ export interface ApplySplitBonusesResult {
   entriesPatched: number;
 }
 
-export class ApplySplitBonusesUseCase extends InternalUseCase<SettleContext, ApplySplitBonusesResult> {
+export class ApplySplitBonusesUseCase extends UseCase<SettleContext, ApplySplitBonusesResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 

@@ -4,7 +4,6 @@
  * Auth: API Key (server-to-server).
  */
 
-import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 import { withTenantAuth } from "@megawin/auth/tenant";
 import { z } from "zod";
 
@@ -24,14 +23,11 @@ export const handler = withTenantAuth(
     const query = event.schema.query;
 
     // TODO: Inject list players use case
-    return toApiGatewayResponse({
-      success: true,
-      data: {
-        tenantId,
-        players: [],
-        filters: query,
-      },
-    });
+    return {
+      tenantId,
+      players: [],
+      filters: query,
+    };
   },
   { schemas: { query: querySchema } },
 );

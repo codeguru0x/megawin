@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
@@ -9,7 +9,7 @@ import type { AckAlertInput, AckAlertOutput } from "./dto/alerts.dto";
  *
  * `updateOne` `$set status:"ack", ackBy, ackAt`. Alert không tồn tại → notFound.
  */
-export class AckAlertUseCase extends NextApiUseCase<AckAlertInput, AckAlertOutput> {
+export class AckAlertUseCase extends UseCase<AckAlertInput, AckAlertOutput> {
   private readonly alertRepo = new OpsAlertRepository();
 
   protected async execute(input: AckAlertInput): Promise<AckAlertOutput> {

@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { tenantConfigCache } from "../../caches/tenant-config.cache";
@@ -17,7 +17,7 @@ import type { UpdateTenantConfigInput, UpdateTenantConfigOutput } from "./dto/te
  * - commissionRate lấy từ global config defaultCommissionRate
  * - isEnabled = true
  */
-export class UpdateTenantConfigUseCase extends NextApiUseCase<UpdateTenantConfigInput, UpdateTenantConfigOutput> {
+export class UpdateTenantConfigUseCase extends UseCase<UpdateTenantConfigInput, UpdateTenantConfigOutput> {
   private readonly repo = new TenantConfigRepository();
   private readonly globalRepo = new GameConfigRepository();
 

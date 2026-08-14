@@ -34,7 +34,7 @@
  * KHÔNG update ticket — SyncTicketSummaries step riêng sẽ recompute từ entries.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-keno/entities";
 import {
@@ -66,7 +66,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
+export class SettleEntriesBatchUseCase extends UseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {

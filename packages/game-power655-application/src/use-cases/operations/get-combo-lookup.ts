@@ -12,15 +12,15 @@
  * `boardPrice`, đọc combo doc, breakdown account).
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { PlayType } from "@megawin/game-power655/entities";
 import { buildComboKey, getLineCount } from "@megawin/game-power655/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { ComboAccountsRepository } from "../../infras/repos/combo-accounts-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
 
 /**
@@ -30,8 +30,8 @@ import type { GetComboLookupInput, GetComboLookupOutput } from "./dto/ops.dto";
  */
 const ACCOUNTS_LIMIT = 200;
 
-export class GetComboLookupUseCase extends NextApiUseCase<GetComboLookupInput, GetComboLookupOutput> {
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+export class GetComboLookupUseCase extends UseCase<GetComboLookupInput, GetComboLookupOutput> {
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly comboRepo = new ComboStatsRepository();
   private readonly comboAccountsRepo = new ComboAccountsRepository();

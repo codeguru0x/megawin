@@ -26,7 +26,7 @@
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawSettleSummary, DrawSettleSummaryTier } from "@megawin/game-power655/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-power655/rules";
@@ -39,7 +39,7 @@ import type { SettleContext, SettleFinancials } from "./types";
  * Tính tài chính tổng hợp Power 6/55 từ DB.
  * Hỗ trợ dual jackpot: JP1 (6/6) + JP2 (5/6 + bonus) + overflow mechanism.
  */
-export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
+export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

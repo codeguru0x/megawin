@@ -24,11 +24,11 @@
  * không validate lại để tránh duplicate.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawVietlottRef } from "@megawin/game-power655/entities";
 import { isSamePower655Result } from "@megawin/game-power655/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -38,7 +38,7 @@ import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
 const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settled]);
 
-export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
+export class PublishResultUseCase extends UseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

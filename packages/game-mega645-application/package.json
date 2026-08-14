@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Mega 6/45 application layer – repos, mappers, use cases",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",

@@ -1,19 +1,28 @@
 /**
- * API Use Case: Get Global Config (Max 3D Pro)
+ * Use Case: Get Global Config (Max 3D Pro)
  *
- * Thin adapter cho API route – delegate sang GetGlobalConfigInternalUseCase (InternalUseCase).
+ * Điểm truy cập duy nhất để lấy global config cho game Max 3D Pro.
+ * Tất cả use cases nên dùng use case này thay vì gọi repo trực tiếp.
+ *
+ * Cache concern (key, TTL, loader, invalidation) sống ở `caches/global-config.cache.ts`
+ * — use-case chỉ gọi `globalConfigCache.fetch()`. Invalidate khi admin cập nhật
+ * config qua `globalConfigCache.invalidate()` (xem update-game-config.ts).
+ *
+ * Route `GET /api/max3dpro/config` (backoffice) cũng dùng THẲNG use-case này — trả `GlobalConfigEntity` trần.
+ * KHÔNG bọc thêm `{ config }`: envelope đó từng tồn tại nhưng FE bóc ra ngay, chỉ là nesting vô ích.
+ *
+ * Cách dùng từ use case khác:
+ *   private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+ *   const config = await this.getGlobalConfig.run();
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
+import type { GlobalConfigEntity } from "@megawin/game-max3dpro/entities";
 
-import type { GetGameConfigOutput } from "./dto/game-config.dto";
-import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
+import { globalConfigCache } from "../../caches/global-config.cache";
 
-export class GetGlobalConfigUseCase extends NextApiUseCase<void, GetGameConfigOutput> {
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
-
-  protected async execute(): Promise<GetGameConfigOutput> {
-    const config = await this.getGlobalConfig.run();
-    return { config };
+export class GetGlobalConfigUseCase extends UseCase<void, GlobalConfigEntity> {
+  protected async execute(): Promise<GlobalConfigEntity> {
+    return await globalConfigCache.fetch();
   }
 }

@@ -47,7 +47,7 @@ import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { Lotto535StatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -92,7 +92,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
   protected override readonly description = "Lotto 5/35 — đồng bộ thống kê cược theo delta (tick, mọi kỳ đang mở)";
 
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly statsRepo = new BettingStatsRepository();

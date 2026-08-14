@@ -47,7 +47,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { PairAccountsRepository } from "../../infras/repos/pair-accounts-repo";
 import { PairStatsRepository } from "../../infras/repos/pair-stats-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { Max3dproDrawStatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -90,7 +90,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   protected override readonly description =
     "Max 3D Pro — đồng bộ thống kê cược theo delta (tick ~30s, mọi kỳ chưa final)";
 
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly statsRepo = new BettingStatsRepository();

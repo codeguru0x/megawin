@@ -7,12 +7,12 @@
  * Mega 6/45 không có split cycle — closeReason chỉ là "winner" | "manual_reset".
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { JackpotCycleOption, ListAllJackpotCycleOptionsOutput } from "./dto/jackpot.dto";
 
-export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<
+export class ListAllJackpotCycleOptionsUseCase extends UseCase<
   Record<string, never>,
   ListAllJackpotCycleOptionsOutput
 > {

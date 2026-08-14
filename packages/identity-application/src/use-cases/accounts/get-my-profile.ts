@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { MfaStatus } from "@megawin/identity/entities";
 import { MfaStatus as MfaStatusEnum } from "@megawin/identity/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
@@ -20,7 +20,7 @@ export interface GetMyProfileOutput {
   createdAt: string;
 }
 
-export class GetMyProfileUseCase extends NextApiUseCase<GetMyProfileInput, GetMyProfileOutput> {
+export class GetMyProfileUseCase extends UseCase<GetMyProfileInput, GetMyProfileOutput> {
   protected async execute(input: GetMyProfileInput): Promise<GetMyProfileOutput> {
     const repo = new AccountRepository();
     const accounts = await repo.findMany({ username: input.username });

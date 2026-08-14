@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";
 
@@ -17,7 +17,7 @@ import type {
  * Cursor-based pagination: sort by payout.winAmount desc.
  * boardDetails[] chứa cả cơ bản (matchCount/pickCount) và bổ sung (outcome/isWin).
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
+export class GetWinningEntriesUseCase extends UseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

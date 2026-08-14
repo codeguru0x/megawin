@@ -8,7 +8,7 @@
  * IDEMPOTENT: chỉ đọc, không ghi.
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -19,7 +19,7 @@ export interface PrepareVoidInput {
   drawId: string;
 }
 
-export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidContext> {
+export class PrepareVoidUseCase extends UseCase<PrepareVoidInput, VoidContext> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: PrepareVoidInput): Promise<VoidContext> {

@@ -7,7 +7,7 @@
  * - Kết quả kỳ gần nhất
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-lotto535/entities";
@@ -18,7 +18,7 @@ import type { PlayerDrawInfo, PlayerGetCurrentDrawOutput } from "./dto/player.dt
 
 const PLAYER_STATUSES: readonly UnfinishedDrawStatus[] = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
 
-export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetCurrentDrawOutput> {
+export class GetCurrentDrawPlayerUseCase extends UseCase<void, PlayerGetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {

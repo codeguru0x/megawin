@@ -60,7 +60,7 @@
  *   - Bulk update ghi lại cùng giá trị → no-op nếu đã capped
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { calculateCappedPrize } from "@megawin/game-keno/rules";
 import { sumBy } from "@megawin/shared/utils/array";
 
@@ -94,7 +94,7 @@ interface CappedTier {
   maxSetsForFixed: number;
 }
 
-export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, ApplyPayoutCapsResult> {
+export class ApplyPayoutCapsUseCase extends UseCase<SettleContext, ApplyPayoutCapsResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<ApplyPayoutCapsResult> {
