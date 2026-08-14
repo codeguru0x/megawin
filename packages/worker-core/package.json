@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Shared infrastructure cho workers — distributed lock, checkpoint, kill-switch dựa trên MongoDB. Subpath exports: ./workers (SingleRunWorker, TickLoopWorker) và ./locks (DistributedMutex).",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",

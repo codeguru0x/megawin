@@ -13,14 +13,6 @@ import type {
 } from "@megawin/game-keno/entities";
 
 // ─────────────────────────────────────────────
-// GetGameConfig
-// ─────────────────────────────────────────────
-
-export interface GetGameConfigOutput {
-  config: GlobalConfigEntity;
-}
-
-// ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 

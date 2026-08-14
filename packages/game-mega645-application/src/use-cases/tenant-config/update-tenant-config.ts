@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { tenantConfigCache } from "../../caches/tenant-config.cache";
@@ -7,7 +7,7 @@ import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import { auditUpdateTenantConfig } from "../../services/audit-log";
 import type { UpdateTenantConfigInput, UpdateTenantConfigOutput } from "./dto/tenant-config.dto";
 
-export class UpdateTenantConfigUseCase extends NextApiUseCase<UpdateTenantConfigInput, UpdateTenantConfigOutput> {
+export class UpdateTenantConfigUseCase extends UseCase<UpdateTenantConfigInput, UpdateTenantConfigOutput> {
   private readonly repo = new TenantConfigRepository();
   private readonly globalRepo = new GameConfigRepository();
 

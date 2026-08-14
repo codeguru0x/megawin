@@ -9,13 +9,10 @@
  * - Version auto-increments on each update
  */
 
-import type { NextResponse } from "next/server";
-
 import { systemActor } from "@megawin/audit/logger";
-import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
+import { GameConfigScope } from "@megawin/game-core/entities";
 import { Power655OpsAlertType } from "@megawin/game-power655/entities";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
-import type { ApiErrorResponse, ApiSuccessResponse } from "@megawin/shared/api-types";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { globalConfigCache } from "../../src/caches/global-config.cache";
@@ -23,19 +20,6 @@ import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { GetGlobalConfigUseCase } from "../../src/use-cases/game-config/get-global-config";
 import { UpdateGameConfigUseCase } from "../../src/use-cases/game-config/update-game-config";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";
-
-/**
- * `NextApiUseCase.run()` trả về `NextResponse` (Web `Response`) — PHẢI gọi `.json()`
- * để lấy body, KHÔNG được truy cập field trực tiếp trên kết quả `run()`. Helper này
- * unwrap `data`, throw nếu response là error (test success-path không cần tự check).
- */
-async function unwrapSuccess<O>(response: NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>): Promise<O> {
-  const body = await response.json();
-  if (!body.success) {
-    throw new Error(`Use-case trả lỗi: ${body.error.code} — ${body.error.message}`);
-  }
-  return body.data;
-}
 
 describe("GameConfigRepository – Power 6/55 Global Config", () => {
   const repo = new GameConfigRepository();
@@ -158,7 +142,7 @@ describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section",
     await repo.deleteMany({ scope: GameConfigScope.Global });
     await globalConfigCache.invalidate();
 
-    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+    const config = await new GetGlobalConfigUseCase().run();
 
     // Sentinel virtual entity — chưa persist.
     expect(config.id).toBe("");
@@ -180,7 +164,7 @@ describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section",
     const raw = await coll.findOne({ scope: GameConfigScope.Global });
     expect(raw?.ops).toBeUndefined();
 
-    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+    const config = await new GetGlobalConfigUseCase().run();
 
     expect(config.id).not.toBe(""); // Doc thật, có id.
     expect(config.ops).toEqual(DEFAULT_POWER655_CONFIG.ops);
@@ -218,7 +202,7 @@ describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section",
     );
     await globalConfigCache.invalidate();
 
-    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+    const config = await new GetGlobalConfigUseCase().run();
 
     // Field có sẵn giữ nguyên.
     expect(config.ops.alerts.largeBetAmount).toBe(99_000_000);
@@ -237,17 +221,15 @@ describe("GetGlobalConfigUseCase — merge default ops khi thiếu doc/section",
     await insertDefaultGlobalConfig();
     await globalConfigCache.invalidate();
 
-    await unwrapSuccess(
-      await new UpdateGameConfigUseCase().run({
-        ops: {
-          alerts: { largeBetAmount: 50_000_000 },
-          stats: { tickSeconds: 15 },
-        },
-        actor: systemActor(),
-      }),
-    );
+    await new UpdateGameConfigUseCase().run({
+      ops: {
+        alerts: { largeBetAmount: 50_000_000 },
+        stats: { tickSeconds: 15 },
+      },
+      actor: systemActor(),
+    });
 
-    const { config } = await unwrapSuccess(await new GetGlobalConfigUseCase().run());
+    const config = await new GetGlobalConfigUseCase().run();
 
     expect(config.ops.alerts.largeBetAmount).toBe(50_000_000);
     expect(config.ops.stats.tickSeconds).toBe(15);

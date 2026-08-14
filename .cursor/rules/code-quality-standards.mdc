@@ -30,7 +30,7 @@ IDE (VSCode, Cursor, WebStorm...) **chỉ hiển thị `/** */`** trên tooltip 
  * CRASH-SAFE: aggregate từ DB → idempotent, chạy lại nhiều lần an toàn.
  * Ghi financial + stats + settleSummary trong 1 DB call duy nhất.
  */
-export class CalculateFinancialsUseCase extends InternalUseCase<...> { ... }
+export class CalculateFinancialsUseCase extends UseCase<...> { ... }
 
 /**
  * Ghi financial + stats + settleSummary vào DrawDoc sau khi settle hoàn tất.
@@ -56,7 +56,7 @@ export interface DrawFinancial {
 /** SAI — IDE KHÔNG hiển thị khi hover */
 
 // Tính toán tài chính tổng hợp... (// không phải JSDoc)
-export class CalculateFinancialsUseCase extends InternalUseCase<...> { ... }
+export class CalculateFinancialsUseCase extends UseCase<...> { ... }
 
 /* Ghi financial vào DrawDoc */ // /* */ thường cũng không phải JSDoc
 async updateSettleResult(...): Promise<boolean>
@@ -423,7 +423,7 @@ chạy tới nhánh throw**, dead code. Đã xoá khỏi cả 7 game.
 ```typescript
 /** SAI — validate lại thứ Zod schema route đã validate chặt hơn */
 // _lib/schema.ts: payoutCapsSchema dùng positiveInt = z.number().int().positive() (>0)
-export class UpdateGameConfigUseCase extends NextApiUseCase<Input, Output> {
+export class UpdateGameConfigUseCase extends UseCase<Input, Output> {
   protected async execute(input: Input): Promise<Output> {
     this.validateInput(input); // ← không bao giờ throw vì Zod đã chặt hơn từ route
     // ...
@@ -441,7 +441,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<Input, Output> {
 
 ```typescript
 /** ĐÚNG — tin tưởng Zod ở route, use-case chỉ lo business logic (merge/upsert/audit) */
-export class UpdateGameConfigUseCase extends NextApiUseCase<Input, Output> {
+export class UpdateGameConfigUseCase extends UseCase<Input, Output> {
   protected async execute(input: Input): Promise<Output> {
     const existing = await this.repo.getGlobalConfig();
     const merged = { /* ... */ };

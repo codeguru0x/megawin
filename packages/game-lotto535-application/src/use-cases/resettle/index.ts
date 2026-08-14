@@ -1,6 +1,5 @@
 export {
   type DetectResettleBoundariesInput,
-  DetectResettleBoundariesInternalUseCase,
   type DetectResettleBoundariesOutput,
   DetectResettleBoundariesUseCase,
 } from "./detect-boundaries";

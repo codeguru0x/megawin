@@ -18,7 +18,7 @@
  *   - Trả về VoidContext { drawId, drawDate, drawNo } cho các step sau dùng
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -36,7 +36,7 @@ export interface PrepareVoidInput {
  * @returns VoidContext chứa drawId, drawDate, drawNo, financialDate → truyền qua Step Function state
  * @throws Error nếu draw không tồn tại hoặc status ≠ voiding
  */
-export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidContext> {
+export class PrepareVoidUseCase extends UseCase<PrepareVoidInput, VoidContext> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: PrepareVoidInput): Promise<VoidContext> {

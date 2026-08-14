@@ -1,8 +1,8 @@
 import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -39,7 +39,7 @@ export interface VoidDrawOutput extends DrawTransitionOutput {
  * Nếu SF đã đang chạy (cùng deterministic name), AWS ném `ExecutionAlreadyExists`
  * → use case bắt lỗi đó và coi như thành công.
  */
-export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutput> {
+export class VoidDrawUseCase extends UseCase<VoidDrawInput, VoidDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: VoidDrawInput): Promise<VoidDrawOutput> {

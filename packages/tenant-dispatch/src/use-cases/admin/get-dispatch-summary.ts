@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
@@ -29,7 +29,7 @@ export type GetDispatchSummaryOutput = DispatchSummary;
  * FE dùng cho KPI strip phía trên bảng. KHÔNG ảnh hưởng bởi list-level
  * `status`/`retryMode` filter — luôn phản ánh toàn range.
  */
-export class GetDispatchSummaryUseCase extends NextApiUseCase<GetDispatchSummaryInput, GetDispatchSummaryOutput> {
+export class GetDispatchSummaryUseCase extends UseCase<GetDispatchSummaryInput, GetDispatchSummaryOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: GetDispatchSummaryInput): Promise<GetDispatchSummaryOutput> {

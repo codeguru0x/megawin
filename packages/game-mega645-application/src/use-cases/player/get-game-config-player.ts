@@ -2,9 +2,9 @@
  * Use Case: Get Game Config for Player (Mega 6/45)
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlayerGetGameConfigOutput } from "./dto/player-game-config.dto";
 
@@ -12,8 +12,8 @@ export interface GetGameConfigPlayerInput {
   tenantId: string;
 }
 
-export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<GetGameConfigPlayerInput, PlayerGetGameConfigOutput> {
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+export class GetGameConfigPlayerUseCase extends UseCase<GetGameConfigPlayerInput, PlayerGetGameConfigOutput> {
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   protected async execute(input: GetGameConfigPlayerInput): Promise<PlayerGetGameConfigOutput> {

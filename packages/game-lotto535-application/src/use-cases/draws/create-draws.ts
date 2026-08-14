@@ -17,22 +17,22 @@
  * Jackpot snapshot chỉ ghi lên draw khi settle (finalize-settle).
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawDoc, DrawNo } from "@megawin/game-lotto535/entities";
 import { generateDrawId } from "@megawin/game-lotto535/helpers";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { getFinancialDate, subtractMinutes } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
-export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
+export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
     const { draws: slots } = input;

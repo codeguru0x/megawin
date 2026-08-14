@@ -1,32 +1,46 @@
 /**
  * Server-side response builders cho Next.js API routes.
  *
- * Tất cả responses đều theo chuẩn ApiResponse format.
- * HTTP status codes tuân thủ RFC 9110.
+ * Mọi response theo chuẩn `ApiResponse`: `{ success: true, data }` hoặc `{ success: false, error }`.
+ * HTTP status tuân thủ RFC 9110.
+ *
+ * ## Đường đi mặc định — route KHÔNG cần gọi hàm nào ở đây
+ *
+ * Sau redesign use-case pattern (14/08/2026), `ApiRouteBuilder.handler()` tự bọc envelope ở 2 phía:
+ * - success: raw value từ route → {@link apiSuccess} (status 200)
+ * - error:   exception thoát ra → {@link catchToApiResponse}
+ *
+ * Nên route chỉ viết `return useCase.run(query)` và `throw AppException` khi lỗi. Các hàm export
+ * ở file này là **escape hatch** cho trường hợp cần điều khiển response tay (header riêng như ETag,
+ * status không suy được từ error code) — dùng ít, có lý do rõ ràng.
  */
 
 import { NextResponse } from "next/server";
 
-import {
-  APP_ERROR_CODES,
-  type AppError,
-  AppException,
-  type AppResult,
-  appErrorToStatusCode,
-  isAppError,
-} from "@megawin/shared/errors";
+import { APP_ERROR_CODES, type AppError, AppException, appErrorToStatusCode, isAppError } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
+import { formatZodIssues, isZodErrorLike } from "@megawin/shared/validation";
 
 import type { ApiErrorDetail, ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "../types";
 
 // ============ Success ============
 
 /**
- * Trả success response chuẩn.
+ * Trả success response chuẩn `{ success: true, data }`.
+ *
+ * **Thường KHÔNG cần gọi tay** — `ApiRouteBuilder.handler()` tự bọc raw value trả về từ route
+ * bằng hàm này (status 200). Chỉ gọi tường minh khi cần `headers` hoặc `meta` riêng.
+ *
+ * `status` là escape hatch — mọi success trong hệ thống thống nhất **200** (quyết định 14/08/2026,
+ * đã bỏ toàn bộ 201; xem `redesign_use-case_facade_pattern` plan). Chỉ đổi khi có lý do
+ * protocol thật (vd 202 cho job async), KHÔNG dùng 201 lại cho endpoint tạo mới.
  *
  * @example
+ * // Cần header riêng (pattern đang dùng ở các route operations/snapshot):
+ * return apiSuccess(data, { headers: { ETag: etag } });
+ *
+ * // Kèm metadata phân trang:
  * return apiSuccess(users, { meta: { total: 100, page: 1, pageSize: 20 } });
- * return apiSuccess(user, { status: 201 });
  */
 export function apiSuccess<T>(
   data: T,
@@ -37,7 +51,10 @@ export function apiSuccess<T>(
   },
 ): NextResponse<ApiSuccessResponse<T>> {
   const body: ApiSuccessResponse<T> = { success: true, data };
-  if (options?.meta) body.meta = options.meta;
+
+  if (options?.meta) {
+    body.meta = options.meta;
+  }
 
   return NextResponse.json(body, {
     status: options?.status ?? 200,
@@ -48,11 +65,18 @@ export function apiSuccess<T>(
 // ============ Error ============
 
 /**
- * Trả error response chuẩn.
+ * Trả error response chuẩn `{ success: false, error }` với status tự chỉ định.
+ *
+ * **Ưu tiên `throw AppException` trong route/use-case** thay vì gọi hàm này — builder đã catch và
+ * map sang status đúng qua {@link catchToApiResponse}. Hàm này chỉ dùng ở tầng builder
+ * (`api-route.ts`: 401/403 auth) hoặc khi cần status không suy được từ error code.
+ *
+ * CẨN THẬN: `status` và `error.code` do caller tự khớp — không có gì đảm bảo chúng nhất quán
+ * (truyền `403` kèm code `NOT_FOUND` vẫn compile). Khi đã có `AppError`, dùng
+ * {@link appErrorToApiResponse} để status được suy tự động từ code.
  *
  * @example
- * return apiError(400, { code: "VALIDATION", message: "Invalid email" });
- * return apiError(404, { code: "NOT_FOUND", message: "User not found" });
+ * return apiError(403, { code: APP_ERROR_CODES.FORBIDDEN, message: "Không có quyền truy cập." });
  */
 export function apiError(
   status: number,
@@ -74,7 +98,11 @@ export function apiError(
 // ============ AppError → ApiResponse ============
 
 /**
- * Chuyển AppError từ shared error system sang NextResponse chuẩn.
+ * Chuyển `AppError` (shared error system) sang `NextResponse` — status suy TỰ ĐỘNG từ `error.code`
+ * qua `appErrorToStatusCode`, nên không bao giờ lệch giữa status và code như `apiError` thủ công.
+ *
+ * Đây là đường đi của mọi lỗi có kiểm soát: `throw AppException` trong use-case → builder catch →
+ * {@link catchToApiResponse} → hàm này.
  */
 export function appErrorToApiResponse(error: AppError): NextResponse<ApiErrorResponse> {
   const status = appErrorToStatusCode(error);
@@ -85,49 +113,27 @@ export function appErrorToApiResponse(error: AppError): NextResponse<ApiErrorRes
   });
 }
 
-// ============ AppResult → ApiResponse ============
-
-/**
- * Chuyển AppResult<T> thành NextResponse theo chuẩn ApiResponse.
- *
- * @example
- * const result = await useCase.run(input);
- * return appResultToApiResponse(result, { successStatus: 201 });
- */
-export function appResultToApiResponse<T>(
-  result: AppResult<T>,
-  options?: {
-    successStatus?: number;
-    headers?: Record<string, string>;
-    meta?: ApiResponseMeta;
-  },
-): NextResponse<ApiSuccessResponse<T> | ApiErrorResponse> {
-  if (result.success) {
-    return apiSuccess(result.data, {
-      status: options?.successStatus ?? 200,
-      headers: options?.headers,
-      meta: options?.meta,
-    });
-  }
-  return appErrorToApiResponse(result.error);
-}
-
 // ============ Catch-all Error Handler ============
 
 /**
- * Bắt mọi loại error và trả NextResponse chuẩn.
- * Dùng trong catch block của route handler.
+ * Bắt MỌI loại error và trả `NextResponse` chuẩn. Builder gọi hàm này trong catch block, nên route
+ * chỉ cần `throw AppException` là đủ.
  *
- * AppException / AppError → trả message gốc (đã kiểm soát nội dung).
- * Unexpected error (AWS SDK, DB, runtime…) → log chi tiết cho audit,
- * chỉ trả message chung "Internal server error" — không leak thông tin nhạy cảm.
+ * Thứ tự 2 nhánh đầu là CÓ CHỦ ĐÍCH và không thể đảo:
+ * `AppException` là `Error` thật, mà `isAppError` loại trừ `instanceof Error` — nên phải check
+ * `AppException` TRƯỚC (nhánh 2 sẽ không bao giờ nhận nó). Nhánh `isAppError` phục vụ trường hợp
+ * lỗi đã bị serialize/deserialize (qua boundary RSC, JSON) làm mất prototype `Error`.
+ *
+ * Lỗi có kiểm soát (`AppException`/`AppError`) → trả message gốc, status suy từ code.
+ * Lỗi bất ngờ (AWS SDK, driver DB, runtime…) → log đầy đủ cho audit, client chỉ nhận message
+ * chung 500 — KHÔNG leak stack/query/credential ra ngoài.
  */
 export function catchToApiResponse(err: unknown): NextResponse<ApiErrorResponse> {
   if (err instanceof AppException) {
     return appErrorToApiResponse(err.toError());
   }
   if (isAppError(err)) {
-    return appErrorToApiResponse(err as AppError);
+    return appErrorToApiResponse(err);
   }
 
   // Unexpected error — log đầy đủ cho audit, KHÔNG trả message gốc cho client.
@@ -142,29 +148,24 @@ export function catchToApiResponse(err: unknown): NextResponse<ApiErrorResponse>
 // ============ Validation Error Shortcut ============
 
 /**
- * Format ZodError issues thành mảng { field, message }.
- * path: (string | number)[] → "draws[0].drawTime"
- * path: []                  → field: "" (top-level error)
+ * Trả 400 VALIDATION. Nếu `details` là `ZodError` → tự format thành `{ errors: [{ field, message }] }`
+ * để FE render bullet list theo từng field; loại khác giữ nguyên nguyên trạng.
+ *
+ * `formatZodIssues` / `isZodErrorLike` dùng chung từ `@megawin/shared/validation` — cùng bản mà
+ * Lambda validator dùng, nên notation `field` (`draws[0].drawTime`) khớp tuyệt đối giữa hai
+ * interface. Shape `details.errors[]` là hợp đồng với FE (`client/format-error-toast.ts`) và tenant
+ * SDK: đổi ở đây là BREAKING cho cả hai.
+ *
+ * @example
+ * const result = schema.safeParse(body);
+ * if (!result.success) {
+ *   return validationError("Validation failed", result.error);
+ * }
  */
-function formatZodIssues(error: import("zod").ZodError): Array<{ field: string; message: string }> {
-  return error.issues.map((issue) => ({
-    field: issue.path.reduce<string>((acc, segment, i) => {
-      if (typeof segment === "number") return `${acc}[${segment}]`;
-      return i === 0 ? String(segment) : `${acc}.${String(segment)}`;
-    }, ""),
-    message: issue.message,
-  }));
-}
-
 export function validationError(message: string, details?: unknown): NextResponse<ApiErrorResponse> {
-  let formattedDetails = details;
-  // Nếu details là ZodError → format thành mảng { field, message } có full path
-  if (details && typeof details === "object" && "issues" in details) {
-    formattedDetails = { errors: formatZodIssues(details as import("zod").ZodError) };
-  }
   return apiError(400, {
     code: APP_ERROR_CODES.VALIDATION,
     message,
-    details: formattedDetails,
+    details: isZodErrorLike(details) ? { errors: formatZodIssues(details) } : details,
   });
 }

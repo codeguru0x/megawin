@@ -24,7 +24,10 @@
  * );
  */
 
-import { z } from "zod";
+import type { ApiErrorResponse } from "@megawin/shared/api-types";
+import { APP_ERROR_CODES } from "@megawin/shared/errors";
+import { formatZodIssues, isZodErrorLike } from "@megawin/shared/validation";
+import type { z } from "zod";
 
 // ============ Schema input (dùng khi khai báo) ============
 
@@ -62,32 +65,37 @@ export type SchemaOf<
 const VALIDATION_HEADERS = { "Content-Type": "application/json" };
 
 /**
- * Map ZodError issues → errors[] với full field path.
+ * Bọc lỗi validation vào envelope chuẩn `{ success: false, error: { code, message, details } }` —
+ * ĐÚNG shape mà `httpErrorHandlerUseCaseFormat` dùng cho mọi lỗi khác của cùng API.
  *
- * path: (string | number)[] → "boards[0].selection.specialNumbers"
- * path: []                  → field: "" (top-level / form error)
+ * ## Bug đã sửa (14/08/2026): trước đây body phẳng `{ code, message, errors }`
+ *
+ * Client bóc lỗi bằng `json.error.code` (xem `packages/player-sdk/src/http-client.ts` và
+ * `packages/http-client/src/http-client.ts`). Với body phẳng, `json.error` là `undefined` →
+ * tenant nhận `code: "UNKNOWN"`, message rơi về `response.statusText` ("Bad Request"), và
+ * **mất sạch `errors[]`** nên không biết field nào sai. Tức riêng lỗi validation — loại lỗi client
+ * cần chi tiết nhất — lại là loại duy nhất client không đọc được.
+ *
+ * `errors[]` giờ nằm trong `details` (giống Next.js `validationError`), là chỗ SDK expose qua
+ * `ApiClientError.details` và FE `formatErrorToast` đọc để render bullet list theo field.
+ *
+ * @param message - Message hiển thị. Tách khỏi `errors[]` để client có 1 dòng tóm tắt + chi tiết.
+ * @param errors - Danh sách field lỗi; bỏ trống cho lỗi không gắn field nào (vd JSON hỏng).
  */
-function formatIssuePath(path: (string | number | symbol)[]): string {
-  return path.reduce<string>((acc, segment, i) => {
-    if (typeof segment === "number") return `${acc}[${segment}]`;
-    return i === 0 ? String(segment) : `${acc}.${String(segment)}`;
-  }, "");
-}
-
-function buildValidationErrorResponse(error: z.ZodError) {
-  const errors = error.issues.map((issue) => ({
-    field: formatIssuePath(issue.path),
-    message: issue.message,
-  }));
+function buildValidationResponse(message: string, errors?: ReturnType<typeof formatZodIssues>) {
+  const body: ApiErrorResponse = {
+    success: false,
+    error: {
+      code: APP_ERROR_CODES.VALIDATION,
+      message,
+      ...(errors !== undefined && { details: { errors } }),
+    },
+  };
 
   return {
     statusCode: 400,
     headers: VALIDATION_HEADERS,
-    body: JSON.stringify({
-      code: "VALIDATION",
-      message: "Dữ liệu không hợp lệ.",
-      errors,
-    }),
+    body: JSON.stringify(body),
   };
 }
 
@@ -121,14 +129,7 @@ export function validatorZodMiddleware<TBody = unknown, TPath = unknown, TQuery 
             try {
               raw = JSON.parse(raw) as unknown;
             } catch {
-              request.earlyResponse = {
-                statusCode: 400,
-                headers: VALIDATION_HEADERS,
-                body: JSON.stringify({
-                  message: "Invalid JSON body",
-                  code: "VALIDATION",
-                }),
-              };
+              request.earlyResponse = buildValidationResponse("Invalid JSON body");
               return;
             }
           }
@@ -145,8 +146,11 @@ export function validatorZodMiddleware<TBody = unknown, TPath = unknown, TQuery 
 
         (event as Record<string, unknown>).schema = schema;
       } catch (err) {
-        if (err instanceof z.ZodError) {
-          request.earlyResponse = buildValidationErrorResponse(err);
+        // Nhận diện theo shape, KHÔNG `instanceof z.ZodError`: middleware này và app khai báo schema
+        // có thể resolve 2 instance zod khác nhau qua pnpm hoisting → `instanceof` fail âm thầm,
+        // ZodError lọt xuống `throw` và thành 500 INTERNAL thay vì 400 VALIDATION.
+        if (isZodErrorLike(err)) {
+          request.earlyResponse = buildValidationResponse("Dữ liệu không hợp lệ.", formatZodIssues(err));
           return;
         }
         throw err;

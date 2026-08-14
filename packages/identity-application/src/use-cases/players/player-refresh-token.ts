@@ -13,12 +13,12 @@
  */
 
 import { initiateRefreshToken } from "@megawin/app-core/aws/cognito";
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import type { PlayerRefreshTokenInput, PlayerRefreshTokenOutput } from "./dto/player-refresh-token.dto";
 
-export class PlayerRefreshTokenUseCase extends ApiGatewayUseCase<PlayerRefreshTokenInput, PlayerRefreshTokenOutput> {
+export class PlayerRefreshTokenUseCase extends UseCase<PlayerRefreshTokenInput, PlayerRefreshTokenOutput> {
   protected async execute(input: PlayerRefreshTokenInput): Promise<PlayerRefreshTokenOutput> {
     if (!input.COGNITO_PLAYER_POOL_CLIENT_ID) {
       throw AppException.internal("COGNITO_PLAYER_POOL_CLIENT_ID chưa được cấu hình");

@@ -12,7 +12,7 @@ export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(createAgentSchema)
   .handler(async ({ body }) => {
-    return createAgentAccountUseCase.run(body, { successStatus: 201 });
+    return createAgentAccountUseCase.run(body);
   });
 
 export const GET = withApi()

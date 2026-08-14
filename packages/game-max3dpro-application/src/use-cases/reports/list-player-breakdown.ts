@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { ListPlayerBreakdownInput, ListPlayerBreakdownOutput } from "./types";
@@ -6,7 +6,7 @@ import type { ListPlayerBreakdownInput, ListPlayerBreakdownOutput } from "./type
 /**
  * Aggregate player breakdown cho 1 draw × tenant — drill-down cấp 3.
  */
-export class ListPlayerBreakdownUseCase extends NextApiUseCase<ListPlayerBreakdownInput, ListPlayerBreakdownOutput> {
+export class ListPlayerBreakdownUseCase extends UseCase<ListPlayerBreakdownInput, ListPlayerBreakdownOutput> {
   private readonly repo = new EntryRepository();
 
   protected async execute(input: ListPlayerBreakdownInput): Promise<ListPlayerBreakdownOutput> {

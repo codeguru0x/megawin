@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { Lotto535OpsConfig } from "@megawin/game-lotto535/entities";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { globalConfigCache } from "../../caches/global-config.cache";
@@ -21,7 +21,7 @@ import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } fr
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
  */
-export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
+export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {

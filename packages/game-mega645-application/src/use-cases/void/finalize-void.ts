@@ -8,7 +8,7 @@
  * Crash recovery: kiểm tra status sau khi update trả false → nếu đã void thì bỏ qua.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -47,7 +47,7 @@ export interface FinalizeVoidResult {
  * IDEMPOTENT: voidComplete dùng filter status=voiding → nếu draw đã void, không update.
  * Crash recovery: kiểm tra status sau khi update trả false → nếu đã void thì bỏ qua.
  */
-export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVoidResult> {
+export class FinalizeVoidUseCase extends UseCase<VoidContext, FinalizeVoidResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 

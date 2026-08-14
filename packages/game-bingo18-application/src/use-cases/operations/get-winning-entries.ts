@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";
 
@@ -15,7 +15,7 @@ import type { GetWinningEntriesInput, GetWinningEntriesOutput, WinningBoardDetai
  *   - Bổ sung: sum/bet + outcome + isWin + winAmount, matchCount = null
  *   - KHÔNG có payout cap (giải cố định, đơn giản hơn Keno)
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
+export class GetWinningEntriesUseCase extends UseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

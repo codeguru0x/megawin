@@ -30,10 +30,6 @@ export interface Bingo18GameConfig {
   ops?: OpsConfig;
 }
 
-interface GetGameConfigOutput {
-  config: Bingo18GameConfig;
-}
-
 interface UpdateGameConfigOutput {
   config: Bingo18GameConfig;
   version: number;
@@ -42,7 +38,7 @@ interface UpdateGameConfigOutput {
 export function useBingo18GameConfig() {
   return useQuery({
     queryKey: bingo18Keys.config,
-    queryFn: () => apiClient.get<GetGameConfigOutput>("/bingo18/config").then((r) => r.config),
+    queryFn: () => apiClient.get<Bingo18GameConfig>("/bingo18/config"),
   });
 }
 

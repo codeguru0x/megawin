@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { SystemSettleGameDailyRepository } from "../../infras/repos/system-settle-game-daily-repo";
 import type { GetDashboardKpisInput, GetDashboardKpisOutput } from "./types";
@@ -13,7 +13,7 @@ import type { GetDashboardKpisInput, GetDashboardKpisOutput } from "./types";
  *
  * Index: { financialDate: 1, gameProduct: 1 }
  */
-export class GetDashboardKpisUseCase extends NextApiUseCase<GetDashboardKpisInput, GetDashboardKpisOutput> {
+export class GetDashboardKpisUseCase extends UseCase<GetDashboardKpisInput, GetDashboardKpisOutput> {
   private readonly repo = new SystemSettleGameDailyRepository();
 
   protected async execute(input: GetDashboardKpisInput): Promise<GetDashboardKpisOutput> {

@@ -14,17 +14,17 @@
  * Jackpot snapshot chỉ ghi lên draw khi settle (finalize-settle).
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawDoc, DrawNo } from "@megawin/game-power655/entities";
 import { JackpotCycleClosedReasons } from "@megawin/game-power655/entities";
 import { generateDrawId } from "@megawin/game-power655/helpers";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { getFinancialDate, subtractMinutes } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
 /**
@@ -35,10 +35,10 @@ import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from 
  *   - Recovery: cycle closed nhưng chưa có cycle mới (crash giữa settle)
  *     → tạo cycle mới với JP2 carry-over từ cycle closed gần nhất.
  */
-export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
+export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   /** @inheritdoc */
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {

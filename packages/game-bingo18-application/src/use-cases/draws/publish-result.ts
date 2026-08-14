@@ -30,9 +30,9 @@
  * schema `publishResultSchema` — use-case không validate lại để tránh duplicate.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { isSameBingo18Result } from "@megawin/game-bingo18/rules";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -42,7 +42,7 @@ import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
 const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settled]);
 
-export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
+export class PublishResultUseCase extends UseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: PublishResultInput): Promise<PublishResultOutput> {

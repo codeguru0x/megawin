@@ -40,10 +40,10 @@
  */
 
 import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { buildResettleLockKey, toExecutionName } from "@megawin/game-core/utils";
 import { ResettleScenario } from "@megawin/game-mega645/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { generateId, logError } from "@megawin/shared/utils";
 import { DistributedMutex } from "@megawin/worker-core/locks";
@@ -52,18 +52,18 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { auditResettle } from "../../services/audit-log";
-import { DetectResettleBoundariesInternalUseCase } from "../resettle/detect-boundaries";
+import { DetectResettleBoundariesUseCase } from "../resettle/detect-boundaries";
 import type { ResettleContext } from "../settle/types";
 import type { TriggerResettleInput, TriggerResettleOutput } from "./dto/draw.dto";
 
 const RESETTLE_LOCK_TTL_SECONDS = 600;
 
-export class TriggerResettleUseCase extends NextApiUseCase<TriggerResettleInput, TriggerResettleOutput> {
+export class TriggerResettleUseCase extends UseCase<TriggerResettleInput, TriggerResettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly lockCoordinator = new DistributedMutex();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
-  private readonly detectBoundaries = new DetectResettleBoundariesInternalUseCase();
+  private readonly detectBoundaries = new DetectResettleBoundariesUseCase();
 
   /** @inheritdoc */
   protected async execute(input: TriggerResettleInput): Promise<TriggerResettleOutput> {

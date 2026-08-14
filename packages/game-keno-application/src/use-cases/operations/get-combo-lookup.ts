@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { KenoPlayType } from "@megawin/game-keno/entities";
 import { buildComboKey } from "@megawin/game-keno/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { ComboAccountsRepository } from "../../infras/repos/combo-accounts-repo";
@@ -30,7 +30,7 @@ const ACCOUNTS_LIMIT = 200;
  * account từ `keno_draw_combo_accounts`. Trả tên + bộ + tiền để staff kiểm soát dồn cược
  * (syndicate) và giám sát giải cap. Chưa ai cược → `found: false`.
  */
-export class GetComboLookupUseCase extends NextApiUseCase<GetComboLookupInput, GetComboLookupOutput> {
+export class GetComboLookupUseCase extends UseCase<GetComboLookupInput, GetComboLookupOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly comboRepo = new ComboStatsRepository();
   private readonly comboAccountsRepo = new ComboAccountsRepository();

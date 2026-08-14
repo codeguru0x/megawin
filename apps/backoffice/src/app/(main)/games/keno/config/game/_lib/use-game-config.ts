@@ -1,10 +1,6 @@
 "use client";
 
-import type {
-  GetGameConfigOutput,
-  GlobalConfigEntity,
-  UpdateGameConfigOutput,
-} from "@megawin/game-keno-application/use-cases/game-config";
+import type { GlobalConfigEntity, UpdateGameConfigOutput } from "@megawin/game-keno-application/use-cases/game-config";
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,7 +12,7 @@ export type KenoGameConfig = GlobalConfigEntity;
 export function useKenoGameConfig() {
   return useQuery({
     queryKey: kenoKeys.config,
-    queryFn: () => apiClient.get<GetGameConfigOutput>("/keno/config").then((r) => r.config),
+    queryFn: () => apiClient.get<GlobalConfigEntity>("/keno/config"),
   });
 }
 

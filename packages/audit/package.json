@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Centralized audit log — entities, repo, logger",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
@@ -42,8 +43,8 @@
     }
   },
   "dependencies": {
+    "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
-    "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "mongodb": "^7.5.0"
   },

@@ -5,17 +5,14 @@
  * Chỉ cho phép player xem ticket của chính mình.
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import type { EntryBoardSnapshot, TicketEntryEntity } from "@megawin/game-bingo18/entities";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import type { PlayerEntryInfo, PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput } from "./dto/player.dto";
 
-export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
-  PlayerGetTicketEntriesInput,
-  PlayerGetTicketEntriesOutput
-> {
+export class GetTicketEntriesPlayerUseCase extends UseCase<PlayerGetTicketEntriesInput, PlayerGetTicketEntriesOutput> {
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
 

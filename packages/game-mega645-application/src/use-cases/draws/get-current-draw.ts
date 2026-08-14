@@ -10,19 +10,19 @@
  * Mega 6/45 theo luật Vietlott: không có split cycle.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawEntity } from "@megawin/game-mega645/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { sortBy } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 
-export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
+export class GetCurrentDrawUseCase extends UseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(): Promise<GetCurrentDrawOutput> {
     const [unfinishedDraws, lastSettled, activeCycle, globalConfig] = await Promise.all([

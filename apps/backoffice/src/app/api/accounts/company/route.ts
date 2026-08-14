@@ -20,7 +20,7 @@ export const POST = withApi()
       ...body,
       roles: body.roles as CompanyRole[],
     };
-    return createCompanyAccountUseCase.run(input, { successStatus: 201 });
+    return createCompanyAccountUseCase.run(input);
   });
 
 export const GET = withApi()

@@ -17,13 +17,13 @@
  *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "scheduled" nên safe
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PrizeAmounts } from "@megawin/game-power655/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { ResettleContext, SettleContext } from "./types";
 
 export interface PrepareSettleInput {
@@ -48,10 +48,10 @@ export interface PrepareSettleInput {
  *   - cycleDrawCountBefore đọc từ `resettleContext.cycleDrawCountBefore`
  *     (= ledger(T).seq - 1) để FinalizeSettle set drawCount đúng vị trí kỳ T.
  */
-export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
+export class PrepareSettleUseCase extends UseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId, resettleContext } = input;

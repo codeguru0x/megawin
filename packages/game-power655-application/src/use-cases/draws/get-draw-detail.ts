@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { serializeDates } from "@megawin/shared/utils";
 
@@ -9,7 +9,7 @@ import type { GetDrawDetailInput, GetDrawDetailOutput } from "./dto/draw.dto";
  * Chi tiết 1 kỳ quay Power 6/55 – bao gồm result, jackpot (JP1+JP2), financial, stats.
  * Dùng cho trang chi tiết kỳ quay trên backoffice.
  */
-export class GetDrawDetailUseCase extends NextApiUseCase<GetDrawDetailInput, GetDrawDetailOutput> {
+export class GetDrawDetailUseCase extends UseCase<GetDrawDetailInput, GetDrawDetailOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

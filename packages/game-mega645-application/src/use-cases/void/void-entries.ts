@@ -8,7 +8,7 @@
  * done = true khi không còn entries voidable.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { EntryVoidInfo } from "@megawin/game-mega645/entities";
 import { generateId } from "@megawin/shared/utils";
 
@@ -38,7 +38,7 @@ const BATCH_SIZE = 500;
  */
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
-export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEntriesBatchResult> {
+export class VoidEntriesBatchUseCase extends UseCase<VoidContext, VoidEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: VoidContext): Promise<VoidEntriesBatchResult> {

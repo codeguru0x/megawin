@@ -1,6 +1,6 @@
 import { adminCreateAccount, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AccountStatus, AccountType, AgentRole, ClaimKey } from "@megawin/identity/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { generateULID } from "@megawin/shared/utils";
 
@@ -19,7 +19,7 @@ export interface CreateAgentAccountOutput {
   roles: AgentRole[];
 }
 
-export class CreateAgentAccountUseCase extends NextApiUseCase<CreateAgentAccountInput, CreateAgentAccountOutput> {
+export class CreateAgentAccountUseCase extends UseCase<CreateAgentAccountInput, CreateAgentAccountOutput> {
   protected async execute(input: CreateAgentAccountInput): Promise<CreateAgentAccountOutput> {
     const accountRepo = new AccountRepository();
 

@@ -7,13 +7,13 @@
  * Response bao gồm `activeCycleNo` để UI pre-select vòng hiện tại.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { JackpotCycleOption, ListAllJackpotCycleOptionsOutput } from "./dto/jackpot.dto";
 
 /** Lấy danh sách cycle options cho selector "Lịch sử Jackpot" (tối đa 10 vòng). */
-export class ListAllJackpotCycleOptionsUseCase extends NextApiUseCase<void, ListAllJackpotCycleOptionsOutput> {
+export class ListAllJackpotCycleOptionsUseCase extends UseCase<void, ListAllJackpotCycleOptionsOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
 
   /** @inheritdoc */

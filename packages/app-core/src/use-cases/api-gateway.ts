@@ -1,32 +1,26 @@
 /**
- * Use case cho API Gateway.
+ * API Gateway response — type + converter tường minh cho Lambda proxy integration.
  *
- * ApiGatewayUseCase.run(dto) trả thẳng ApiGatewayResponse.
- * Handler chỉ cần: return useCase.run(dto)
+ * KHÔNG còn base class ở file này. `ApiGatewayUseCase` đã bị xoá sau Phase 4 (mọi use-case
+ * chuyển sang `UseCase` trả raw output, envelope do `successEnvelopeMiddleware` bọc ở biên —
+ * xem `.cursor/rules/app-use-case-layering.mdc` §3.3).
+ *
+ * Hai thứ còn lại đều CÓ consumer thật, không phải legacy:
+ *
+ * - `ApiGatewayResponse` — `successEnvelopeMiddleware` dùng làm type cho guard
+ *   `isApiGatewayResponse()`, để nhận biết handler đã tự trả response tường minh và KHÔNG
+ *   bọc envelope lần hai.
+ * - `toApiGatewayResponse()` — **escape hatch**: handler cần status/headers khác chuẩn
+ *   (vd `204 No Content`, `Location` header) thì tự build response và trả tường minh;
+ *   middleware thấy đúng shape sẽ cho đi thẳng.
  *
  * Response format thống nhất với Next.js API routes:
- * - Success: { success: true, data: T, meta?: ... }
- * - Error:   { success: false, error: { code, message, details? } }
+ * - Success: `{ success: true, data: T, meta?: ... }`
+ * - Error:   `{ success: false, error: { code, message, details? } }`
  */
 
 import type { ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "@megawin/shared/api-types";
-import {
-  APP_ERROR_CODES,
-  type AppError,
-  AppException,
-  type AppResult,
-  appErrorToStatusCode,
-  isAppError,
-} from "@megawin/shared/errors";
-
-// ============ Re-export cho backward compat ============
-
-/** @deprecated Dùng errorCodeToStatusCode từ @megawin/shared/errors */
-export {
-  appErrorToStatusCode,
-  errorCodeToStatusCode,
-  errorCodeToStatusCode as useCaseErrorToStatusCode,
-} from "@megawin/shared/errors";
+import { type AppResult, appErrorToStatusCode } from "@megawin/shared/errors";
 
 // ============ Types ============
 
@@ -39,7 +33,15 @@ export interface ApiGatewayResponse {
 
 // ============ Helpers ============
 
-/** Chuyển AppResult<O> thành ApiGatewayResponse (format thống nhất với Next.js). */
+/**
+ * Chuyển `AppResult<O>` thành `ApiGatewayResponse` (format thống nhất với Next.js).
+ *
+ * Chỉ dùng khi cần response TƯỜNG MINH khác chuẩn — đường thường là `return useCase.run(dto)`
+ * để middleware tự bọc `{ success: true, data }` status 200.
+ *
+ * @param options.successStatus - Status cho nhánh success (default 200). Nhánh error luôn map
+ *   từ `error.code` qua `appErrorToStatusCode`, KHÔNG nhận override.
+ */
 export function toApiGatewayResponse<O>(
   result: AppResult<O>,
   options?: {
@@ -53,7 +55,9 @@ export function toApiGatewayResponse<O>(
 
   if (result.success) {
     const body: ApiSuccessResponse<O> = { success: true, data: result.data };
-    if (options?.meta) body.meta = options.meta;
+    if (options?.meta) {
+      body.meta = options.meta;
+    }
     return {
       statusCode: options?.successStatus ?? 200,
       body: JSON.stringify(body),
@@ -73,68 +77,4 @@ export function toApiGatewayResponse<O>(
     },
   };
   return { statusCode, body: JSON.stringify(body), headers };
-}
-
-// ============ ApiGatewayUseCase ============
-
-/**
- * Use case cho API Gateway – run() trả thẳng ApiGatewayResponse.
- *
- * @example
- * class CreateUserUseCase extends ApiGatewayUseCase<CreateUserDto, UserOutput> {
- *   protected async execute(input: CreateUserDto) {
- *     throw AppException.conflict("Username taken");
- *   }
- * }
- *
- * // Handler:
- * return useCase.run(dto);
- */
-export abstract class ApiGatewayUseCase<I, O> {
-  protected validate(_input: I): void | AppError {
-    return undefined;
-  }
-
-  protected abstract execute(input: I): Promise<O>;
-
-  /**
-   * Chạy use-case trả thẳng ApiGatewayResponse (HTTP envelope) — dùng cho handler HTTP.
-   *
-   * Cần output RAW (compose từ use-case khác) thì KHÔNG dùng method này: tách logic ra
-   * `InternalUseCase` rồi cho ApiGateway use-case delegate — xem `GetJackpotPlayerUseCase`
-   * / `GetJackpotPlayerInternalUseCase` của các game jackpot.
-   */
-  async run(input: I): Promise<ApiGatewayResponse> {
-    try {
-      const validationError = this.validate(input);
-      if (validationError) {
-        return toApiGatewayResponse<O>({
-          success: false,
-          error: validationError,
-        });
-      }
-      const output = await this.execute(input);
-      return toApiGatewayResponse<O>({ success: true, data: output });
-    } catch (err) {
-      if (err instanceof AppException) {
-        return toApiGatewayResponse<O>({
-          success: false,
-          error: err.toError(),
-        });
-      }
-      if (isAppError(err)) {
-        return toApiGatewayResponse<O>({
-          success: false,
-          error: err as AppError,
-        });
-      }
-      return toApiGatewayResponse<O>({
-        success: false,
-        error: {
-          code: APP_ERROR_CODES.INTERNAL,
-          message: err instanceof Error ? err.message : "Unknown error",
-        },
-      });
-    }
-  }
 }

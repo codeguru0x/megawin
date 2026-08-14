@@ -4,9 +4,8 @@
  * Endpoint này KHÔNG yêu cầu Cognito JWT auth — chỉ cần refreshToken hợp lệ.
  */
 
-import { httpErrorHandlerUseCaseFormat, validatorZodMiddleware } from "@megawin/app-core/lambda/middleware";
+import { withPublicHandler } from "@megawin/auth";
 import { PlayerRefreshTokenUseCase } from "@megawin/identity-application/use-cases/players";
-import middy from "@middy/core";
 import { z } from "zod";
 
 const bodySchema = z.object({
@@ -15,12 +14,13 @@ const bodySchema = z.object({
 
 const useCase = new PlayerRefreshTokenUseCase();
 
-export const handler = middy(async (event: { schema: { body: z.infer<typeof bodySchema> } }) => {
-  const { refreshToken } = event.schema.body;
-  return useCase.run({
-    refreshToken,
-    COGNITO_PLAYER_POOL_CLIENT_ID: process.env.COGNITO_PLAYER_POOL_CLIENT_ID!,
-  });
-})
-  .use(validatorZodMiddleware({ body: bodySchema }))
-  .use(httpErrorHandlerUseCaseFormat());
+export const handler = withPublicHandler(
+  async (event) => {
+    const { refreshToken } = event.schema.body;
+    return useCase.run({
+      refreshToken,
+      COGNITO_PLAYER_POOL_CLIENT_ID: process.env.COGNITO_PLAYER_POOL_CLIENT_ID!,
+    });
+  },
+  { schemas: { body: bodySchema } },
+);

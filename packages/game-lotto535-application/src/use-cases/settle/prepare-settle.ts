@@ -27,13 +27,13 @@
  *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "scheduled" nên safe
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap, isSplitEligibleDraw } from "@megawin/game-lotto535/rules";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { ResettleContext, SettleContext } from "./types";
 
 export interface PrepareSettleInput {
@@ -42,10 +42,10 @@ export interface PrepareSettleInput {
   resettleContext?: ResettleContext;
 }
 
-export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
+export class PrepareSettleUseCase extends UseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
   protected async execute(input: PrepareSettleInput): Promise<SettleContext> {

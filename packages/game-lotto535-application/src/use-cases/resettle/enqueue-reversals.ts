@@ -2,7 +2,7 @@
  * Use Case: Enqueue Lotto 5/35 Reversal Orders (Step 2 Resettle SFN).
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import { buildResettleBatchKey } from "@megawin/game-core/utils";
 import { buildReversalOrder } from "@megawin/tenant-dispatch/builders";
@@ -26,7 +26,7 @@ export interface EnqueueReversalsOutput {
   lockKey: string;
 }
 
-export class EnqueueReversalsUseCase extends InternalUseCase<EnqueueReversalsInput, EnqueueReversalsOutput> {
+export class EnqueueReversalsUseCase extends UseCase<EnqueueReversalsInput, EnqueueReversalsOutput> {
   private readonly entryResettleRepo = new EntryResettleRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 

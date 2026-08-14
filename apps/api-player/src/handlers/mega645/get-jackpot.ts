@@ -9,5 +9,5 @@ import { GetJackpotPlayerUseCase } from "@megawin/game-mega645-application/use-c
 const useCase = new GetJackpotPlayerUseCase();
 
 export const handler = withPlayerAuth(async () => {
-  return useCase.run(undefined as void);
+  return useCase.run();
 });

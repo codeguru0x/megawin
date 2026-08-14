@@ -64,7 +64,7 @@ const QUERY_KEY = ["lotto535", "game-config"] as const;
 export function useGameConfig() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () => apiClient.get<{ config: GameConfig }>("/lotto535/config").then((r) => r.config),
+    queryFn: () => apiClient.get<GameConfig>("/lotto535/config"),
   });
 }
 

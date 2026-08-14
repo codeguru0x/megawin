@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -10,7 +10,7 @@ import type { GetEntryByIdInput, GetEntryByIdOutput } from "./types";
  * Dùng cho dialog chi tiết entry từ Winning Entries Dialog (operations),
  * hoặc bất kỳ nơi nào cần xem đầy đủ 1 entry cụ thể.
  */
-export class GetEntryByIdUseCase extends NextApiUseCase<GetEntryByIdInput, GetEntryByIdOutput> {
+export class GetEntryByIdUseCase extends UseCase<GetEntryByIdInput, GetEntryByIdOutput> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: GetEntryByIdInput): Promise<GetEntryByIdOutput> {

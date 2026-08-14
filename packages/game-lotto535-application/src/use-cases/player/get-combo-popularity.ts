@@ -32,7 +32,7 @@
  * Realtime — worker combo-stats cập nhật liên tục, KHÔNG chốt salesClosed.
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { buildComboKey, inferPlayType, isSplitEligibleDraw, validateSelection } from "@megawin/game-lotto535/rules";
 
@@ -40,21 +40,18 @@ import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { PlayerComboPopularityInput, PlayerComboPopularityOutput } from "./dto/player.dto";
 
 /** Response rỗng đồng nhất — dùng cho cả "chưa cược" lẫn "combo không tồn tại". */
 const NOT_FOUND: PlayerComboPopularityOutput = { found: false };
 
-export class GetComboPopularityPlayerUseCase extends ApiGatewayUseCase<
-  PlayerComboPopularityInput,
-  PlayerComboPopularityOutput
-> {
+export class GetComboPopularityPlayerUseCase extends UseCase<PlayerComboPopularityInput, PlayerComboPopularityOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly comboRepo = new ComboStatsRepository();
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: PlayerComboPopularityInput): Promise<PlayerComboPopularityOutput> {
     const { accountId, drawId, numbers, specials } = input;

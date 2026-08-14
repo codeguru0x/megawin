@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",

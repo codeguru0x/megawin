@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
@@ -60,7 +60,7 @@ export interface ListDispatchOrdersOutput {
  *
  * KHÔNG gọi MongoDB trực tiếp — mọi query xuyên qua `DispatchOrderRepository`.
  */
-export class ListDispatchOrdersUseCase extends NextApiUseCase<ListDispatchOrdersInput, ListDispatchOrdersOutput> {
+export class ListDispatchOrdersUseCase extends UseCase<ListDispatchOrdersInput, ListDispatchOrdersOutput> {
   private readonly repo = new DispatchOrderRepository();
 
   protected async execute(input: ListDispatchOrdersInput): Promise<ListDispatchOrdersOutput> {

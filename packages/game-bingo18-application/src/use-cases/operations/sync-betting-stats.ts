@@ -46,7 +46,7 @@ import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { Bingo18DrawStatsAccumulator, type PrizeContext } from "./stats-accumulator";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -88,7 +88,7 @@ export class SyncBettingStatsUseCase extends TickLoopWorker<void, SyncBettingSta
   protected readonly ttlSeconds = 120; // = Lambda timeout stats.yml
   protected override readonly description = "Bingo 18 — đồng bộ thống kê cược";
 
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly statsRepo = new BettingStatsRepository();

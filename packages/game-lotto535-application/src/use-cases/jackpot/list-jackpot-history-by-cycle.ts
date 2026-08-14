@@ -8,8 +8,8 @@
  * cycleNo = null → lấy draws thuộc cycle đang active.
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -19,7 +19,7 @@ import type {
   ListJackpotHistoryByCycleOutput,
 } from "./dto/jackpot.dto";
 
-export class ListJackpotHistoryByCycleUseCase extends NextApiUseCase<
+export class ListJackpotHistoryByCycleUseCase extends UseCase<
   ListJackpotHistoryByCycleInput,
   ListJackpotHistoryByCycleOutput
 > {

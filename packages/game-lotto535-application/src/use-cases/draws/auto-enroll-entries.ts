@@ -9,8 +9,7 @@
  * Lambda sẽ không làm gì — chỉ return success.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
-
+import { UseCase } from "@megawin/app-core/use-cases";
 export interface AutoEnrollInput {
   drawId: string;
 }
@@ -23,7 +22,7 @@ export interface AutoEnrollOutput {
   done: boolean;
 }
 
-export class AutoEnrollEntriesUseCase extends InternalUseCase<AutoEnrollInput, AutoEnrollOutput> {
+export class AutoEnrollEntriesUseCase extends UseCase<AutoEnrollInput, AutoEnrollOutput> {
   protected async execute(input: AutoEnrollInput): Promise<AutoEnrollOutput> {
     return {
       drawId: input.drawId,

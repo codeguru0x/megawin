@@ -34,8 +34,8 @@
  *      snapshot phải luôn trả được cho UI).
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import { Lotto535NumberKind } from "@megawin/game-lotto535/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
@@ -44,7 +44,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { NumberStatsRepository } from "../../infras/repos/number-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type {
   GetOpsSnapshotInput,
   GetOpsSnapshotOutput,
@@ -52,8 +52,8 @@ import type {
   Lotto535TopCombo,
 } from "./dto/ops.dto";
 
-export class GetOpsSnapshotUseCase extends NextApiUseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+export class GetOpsSnapshotUseCase extends UseCase<GetOpsSnapshotInput, GetOpsSnapshotOutput> {
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly drawRepo = new DrawRepository();
   private readonly statsRepo = new BettingStatsRepository();
   private readonly numberStatsRepo = new NumberStatsRepository();

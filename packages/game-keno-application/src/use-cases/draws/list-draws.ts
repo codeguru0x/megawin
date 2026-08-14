@@ -1,9 +1,9 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawSummary, ListDrawsInput, ListDrawsOutput } from "./dto/draw.dto";
 
-export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOutput> {
+export class ListDrawsUseCase extends UseCase<ListDrawsInput, ListDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: ListDrawsInput): Promise<ListDrawsOutput> {

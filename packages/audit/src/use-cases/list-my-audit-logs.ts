@@ -14,7 +14,7 @@
  * ở Zod schema tại route. Use-case chỉ map input → filter và gọi repo.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import type { AuditAction, AuditStatus } from "../entities";
 import { type AuditLogCursor, type AuditLogFilter, AuditLogRepository } from "../infras/repos";
@@ -55,7 +55,7 @@ export interface ListMyAuditLogsInput {
  * Map input hẹp → {@link AuditLogFilter} với `selfScope = accountId` và các chiều
  * nghiệp vụ luôn `undefined`. Encode `nextCursor` object → token opaque base64url.
  */
-export class ListMyAuditLogsUseCase extends NextApiUseCase<ListMyAuditLogsInput, AuditLogPage> {
+export class ListMyAuditLogsUseCase extends UseCase<ListMyAuditLogsInput, AuditLogPage> {
   private readonly repo = new AuditLogRepository();
 
   protected async execute(input: ListMyAuditLogsInput): Promise<AuditLogPage> {

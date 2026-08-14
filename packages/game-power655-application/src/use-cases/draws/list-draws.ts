@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawSummary, ListDrawsInput, ListDrawsOutput } from "./dto/draw.dto";
@@ -7,7 +7,7 @@ import type { DrawSummary, ListDrawsInput, ListDrawsOutput } from "./dto/draw.dt
  * Danh sách kỳ quay Power 6/55 cho backoffice.
  * Hỗ trợ filter theo status, date range, pagination.
  */
-export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOutput> {
+export class ListDrawsUseCase extends UseCase<ListDrawsInput, ListDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

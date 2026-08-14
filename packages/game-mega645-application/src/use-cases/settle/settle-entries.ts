@@ -28,7 +28,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
   EntryPayout,
@@ -58,7 +58,7 @@ export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
-export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
+export class SettleEntriesBatchUseCase extends UseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 

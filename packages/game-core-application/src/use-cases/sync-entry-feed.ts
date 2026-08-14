@@ -48,7 +48,7 @@
  * ```
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { longToString } from "@megawin/data/mongo";
 import type { EntryFeedDoc, GameProduct } from "@megawin/game-core/entities";
 
@@ -116,7 +116,7 @@ export interface SyncEntryFeedResult {
  * CRASH-SAFE: cursor save sau mỗi batch. Mất tối đa 500 entries khi crash.
  * IDEMPOTENT: upsert với version guard — re-run an toàn.
  */
-export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<SyncEntryFeedInput, SyncEntryFeedResult> {
+export abstract class BaseSyncEntryFeedUseCase extends UseCase<SyncEntryFeedInput, SyncEntryFeedResult> {
   private readonly feedRepo = new EntryFeedRepository();
   private readonly cursorRepo = new FeedSyncCursorRepository();
   protected readonly gameProduct: GameProduct;

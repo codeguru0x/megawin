@@ -34,7 +34,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
 
@@ -86,7 +86,7 @@ export interface FinalizeSettleResult {
  *   - skipCycleUpdate=true (Type B1/B2) → BỎ QUA updateJackpotCycle (DBA chốt cycle).
  *   - cascadeOpeningUpdate=true (cascade B2) → upsertEntry ghi đè openingJp ledger.
  */
-export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFinancials, FinalizeSettleResult> {
+export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();

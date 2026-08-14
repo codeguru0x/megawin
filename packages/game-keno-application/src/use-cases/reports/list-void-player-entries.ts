@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryVoidRepository } from "../../infras/repos/entry-void-repo";
 import type { ListVoidPlayerEntriesInput, ListVoidPlayerEntriesOutput } from "./types";
@@ -10,10 +10,7 @@ import type { ListVoidPlayerEntriesInput, ListVoidPlayerEntriesOutput } from "./
  * chi tiết boards. sort: createdAt DESC (mới nhất trước).
  * Index: { drawId: 1, tenantId: 1, accountId: 1 }
  */
-export class ListVoidPlayerEntriesUseCase extends NextApiUseCase<
-  ListVoidPlayerEntriesInput,
-  ListVoidPlayerEntriesOutput
-> {
+export class ListVoidPlayerEntriesUseCase extends UseCase<ListVoidPlayerEntriesInput, ListVoidPlayerEntriesOutput> {
   private readonly repo = new EntryVoidRepository();
 
   protected async execute(input: ListVoidPlayerEntriesInput): Promise<ListVoidPlayerEntriesOutput> {

@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryOutstandingRepository } from "../../infras/repos/entry-outstanding-repo";
 import type { ListOutstandingDrawTenantsInput, ListOutstandingDrawTenantsOutput } from "./types";
@@ -10,7 +10,7 @@ import type { ListOutstandingDrawTenantsInput, ListOutstandingDrawTenantsOutput 
  * Chỉ filter status = "scheduled" — bỏ qua entries đã settle/void.
  * Index: { drawId: 1, tenantId: 1, accountId: 1 }
  */
-export class ListOutstandingDrawTenantsUseCase extends NextApiUseCase<
+export class ListOutstandingDrawTenantsUseCase extends UseCase<
   ListOutstandingDrawTenantsInput,
   ListOutstandingDrawTenantsOutput
 > {

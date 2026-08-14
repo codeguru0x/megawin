@@ -40,7 +40,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import {
   JackpotCycleCloseReason,
@@ -88,7 +88,7 @@ export interface FinalizeSettleResult {
  * updateCycleStats dùng giá trị snapshot từ PrepareSettle (không cộng dồn từ activeCycle)
  * → idempotent.
  */
-export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFinancials, FinalizeSettleResult> {
+export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();

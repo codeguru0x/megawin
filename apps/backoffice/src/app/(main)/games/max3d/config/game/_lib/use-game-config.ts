@@ -26,7 +26,7 @@ const QUERY_KEY = ["max3d", "game-config"] as const;
 export function useGameConfig() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () => apiClient.get<{ config: GameConfig }>("/max3d/config").then((r) => r.config),
+    queryFn: () => apiClient.get<GameConfig>("/max3d/config"),
   });
 }
 

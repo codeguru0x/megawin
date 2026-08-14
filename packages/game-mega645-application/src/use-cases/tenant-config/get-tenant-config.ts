@@ -5,13 +5,13 @@
  * Không trực tiếp gọi repo.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import type { GetTenantConfigInput, GetTenantConfigOutput } from "./dto/tenant-config.dto";
 import { GetTenantConfigInternalUseCase } from "./get-tenant-config-internal";
 
-export class GetTenantConfigUseCase extends NextApiUseCase<GetTenantConfigInput, GetTenantConfigOutput> {
+export class GetTenantConfigUseCase extends UseCase<GetTenantConfigInput, GetTenantConfigOutput> {
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   protected async execute(input: GetTenantConfigInput): Promise<GetTenantConfigOutput> {

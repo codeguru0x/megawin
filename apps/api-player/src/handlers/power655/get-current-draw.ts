@@ -11,5 +11,5 @@ import { GetCurrentDrawPlayerUseCase } from "@megawin/game-power655-application/
 const useCase = new GetCurrentDrawPlayerUseCase();
 
 export const handler = withPlayerAuth(async () => {
-  return useCase.run(undefined as void);
+  return useCase.run();
 });

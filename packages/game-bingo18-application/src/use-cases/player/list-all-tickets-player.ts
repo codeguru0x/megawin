@@ -6,14 +6,14 @@
  * Cursor-based pagination dùng _id cho collection lớn.
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils";
 
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import type { PlayerListTicketsInput, PlayerListTicketsOutput } from "./dto/player.dto";
 import { mapPlayerTicket } from "./mappers/ticket";
 
-export class ListTicketsPlayerUseCase extends ApiGatewayUseCase<PlayerListTicketsInput, PlayerListTicketsOutput> {
+export class ListTicketsPlayerUseCase extends UseCase<PlayerListTicketsInput, PlayerListTicketsOutput> {
   private readonly ticketRepo = new TicketRepository();
 
   protected async execute(input: PlayerListTicketsInput): Promise<PlayerListTicketsOutput> {

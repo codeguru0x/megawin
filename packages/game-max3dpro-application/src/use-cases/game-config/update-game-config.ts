@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { OpsConfig } from "@megawin/game-max3dpro/entities";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { globalConfigCache } from "../../caches/global-config.cache";
@@ -21,7 +21,7 @@ import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } fr
  * Partial update: chỉ field nào gửi lên mới update.
  * Version tự động increment.
  */
-export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
+export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {

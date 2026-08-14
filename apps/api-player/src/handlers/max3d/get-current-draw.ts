@@ -9,5 +9,5 @@ import { GetCurrentDrawPlayerUseCase } from "@megawin/game-max3d-application/use
 const useCase = new GetCurrentDrawPlayerUseCase();
 
 export const handler = withPlayerAuth(async () => {
-  return useCase.run(undefined as void);
+  return useCase.run();
 });

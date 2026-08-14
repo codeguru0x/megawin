@@ -1,11 +1,9 @@
 export type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
 
 export type {
-  GetGameConfigOutput,
   UpdateGameConfigInput,
   UpdateGameConfigOutput,
   UpdateOpsInput,
 } from "./dto/game-config.dto";
-export { GetGlobalConfigUseCase as GetGlobalConfigApiUseCase } from "./get-global-config";
-export { GetGlobalConfigInternalUseCase as GetGlobalConfigUseCase } from "./get-global-config-internal";
+export { GetGlobalConfigUseCase } from "./get-global-config";
 export { UpdateGameConfigUseCase } from "./update-game-config";

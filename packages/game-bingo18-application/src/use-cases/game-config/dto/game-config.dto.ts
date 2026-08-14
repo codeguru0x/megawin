@@ -13,15 +13,6 @@ import type {
 import type { OpsStatsConfigBase } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
-// GetGameConfig
-// ─────────────────────────────────────────────
-
-export interface GetGameConfigOutput {
-  /** Cấu hình toàn cục game Bingo 18. */
-  config: GlobalConfigEntity;
-}
-
-// ─────────────────────────────────────────────
 // UpdateGameConfig
 // ─────────────────────────────────────────────
 

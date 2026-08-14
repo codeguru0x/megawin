@@ -5,7 +5,7 @@
  * `EnqueueDispatchPayoutsUseCase` nhưng cho voided entries.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import { buildRefundOrder } from "@megawin/tenant-dispatch/builders";
 import { EnqueueDispatchOrdersUseCase } from "@megawin/tenant-dispatch/use-cases/enqueue";
@@ -22,7 +22,7 @@ export interface EnqueueDispatchRefundsOutput {
   done: boolean;
 }
 
-export class EnqueueDispatchRefundsUseCase extends InternalUseCase<VoidContext, EnqueueDispatchRefundsOutput> {
+export class EnqueueDispatchRefundsUseCase extends UseCase<VoidContext, EnqueueDispatchRefundsOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly enqueueUseCase = new EnqueueDispatchOrdersUseCase();
 

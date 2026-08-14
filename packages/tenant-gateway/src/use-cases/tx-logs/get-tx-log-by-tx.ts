@@ -5,7 +5,7 @@
  * Trả 404 nếu không tồn tại (đã bị TTL purge hoặc chưa từng log).
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 
 import type { TxLogEntity } from "../../entities/tx-log";
@@ -19,7 +19,7 @@ export interface GetTxLogByTxOutput {
   data: TxLogEntity;
 }
 
-export class GetTxLogByTxUseCase extends NextApiUseCase<GetTxLogByTxInput, GetTxLogByTxOutput> {
+export class GetTxLogByTxUseCase extends UseCase<GetTxLogByTxInput, GetTxLogByTxOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: GetTxLogByTxInput): Promise<GetTxLogByTxOutput> {

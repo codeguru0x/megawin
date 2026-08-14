@@ -30,7 +30,7 @@
  *   → Truyền vào use case này → bulk upsert (overwrite)
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
 
 import { type PlayerDailyAggregateResult, PlayerSettleGameDailyRepository } from "../infras/repos";
@@ -74,10 +74,7 @@ export interface PublishPlayerDailyResult {
  * KHÔNG cần delete trước — aggregation luôn include settled + void,
  * player bị void toàn bộ vẫn xuất hiện (voidCount > 0), upsert ghi đè đúng.
  */
-export class SystemPublishPlayerDailyUseCase extends InternalUseCase<
-  PublishPlayerDailyInput,
-  PublishPlayerDailyResult
-> {
+export class SystemPublishPlayerDailyUseCase extends UseCase<PublishPlayerDailyInput, PublishPlayerDailyResult> {
   private readonly playerDailyRepo = new PlayerSettleGameDailyRepository();
 
   async execute(input: PublishPlayerDailyInput): Promise<PublishPlayerDailyResult> {

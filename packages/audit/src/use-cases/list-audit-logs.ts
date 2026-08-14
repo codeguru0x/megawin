@@ -16,7 +16,7 @@
  * repo — không parse, không validate, không throw.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import type {
   AuditAction,
@@ -80,7 +80,7 @@ export interface ListAuditLogsInput {
  * `nextCursor` object `{ ts, id }` → token opaque base64url ({@link AuditLogPage})
  * để FE coi cursor là chuỗi mờ, không parse/sửa được.
  */
-export class ListAuditLogsUseCase extends NextApiUseCase<ListAuditLogsInput, AuditLogPage> {
+export class ListAuditLogsUseCase extends UseCase<ListAuditLogsInput, AuditLogPage> {
   private readonly repo = new AuditLogRepository();
 
   protected async execute(input: ListAuditLogsInput): Promise<AuditLogPage> {

@@ -21,7 +21,7 @@
  * CRASH-SAFE: transitionStatus atomic, idempotent.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { AppException } from "@megawin/shared/errors";
 import { DistributedMutex } from "@megawin/worker-core/locks";
@@ -35,7 +35,7 @@ export interface FinalizeSettleResult {
   completedAt: string;
 }
 
-export class FinalizeSettleUseCase extends InternalUseCase<SettleContext, FinalizeSettleResult> {
+export class FinalizeSettleUseCase extends UseCase<SettleContext, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly lockCoordinator = new DistributedMutex();
 

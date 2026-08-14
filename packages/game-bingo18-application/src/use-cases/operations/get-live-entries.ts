@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -12,7 +12,7 @@ import type { GetLiveEntriesInput, GetLiveEntriesOutput, LiveEntryBoard } from "
  * Dùng cho panel realtime trên Operations Dashboard.
  * boards[] chứa cả cơ bản và bổ sung, phân biệt qua playType.
  */
-export class GetLiveEntriesUseCase extends NextApiUseCase<GetLiveEntriesInput, GetLiveEntriesOutput> {
+export class GetLiveEntriesUseCase extends UseCase<GetLiveEntriesInput, GetLiveEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

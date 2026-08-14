@@ -76,11 +76,10 @@
  * này vì opening kỳ sau = closing kỳ trước (theo thời gian, kể cả qua ranh giới cycle).
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
 import type { ResettleScenario as ResettleScenarioType } from "@megawin/game-mega645/rules";
 import { ResettleScenario } from "@megawin/game-mega645/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -127,17 +126,15 @@ export interface DetectResettleBoundariesOutput {
 }
 
 /**
- * Internal use case chứa toàn bộ logic phân tích scenario — trả về output
- * THUẦN (`DetectResettleBoundariesOutput`), KHÔNG bọc `NextResponse`.
+ * Phân tích scenario resettle của 1 kỳ quay — trả `DetectResettleBoundariesOutput` thuần.
  *
- * Dùng bởi:
- *   - `DetectResettleBoundariesUseCase` (NextApiUseCase) — wrapper cho BO API.
- *   - `TriggerResettleUseCase` — cần đọc trực tiếp `scenario` để build resettleContext.
+ * Hai caller:
+ *   - BO API `/resettle-preflight` — staff xem trước ảnh hưởng trước khi resettle.
+ *   - `TriggerResettleUseCase` — đọc `scenario` để build resettleContext.
  *
- * Tách internal/wrapper vì NextApiUseCase.run() trả `NextResponse` không dùng
- * được trong use-case backend khác.
+ * CRASH-SAFE: chỉ đọc DB — idempotent, chạy lại nhiều lần an toàn.
  */
-export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
+export class DetectResettleBoundariesUseCase extends UseCase<
   DetectResettleBoundariesInput,
   DetectResettleBoundariesOutput
 > {
@@ -268,21 +265,6 @@ export class DetectResettleBoundariesInternalUseCase extends InternalUseCase<
       EntryStatus.Settled,
       EntryStatus.Scheduled,
     ]);
-  }
-}
-
-/**
- * Wrapper cho BO API `/resettle-preflight` — bọc internal use case thành
- * `NextResponse` qua `NextApiUseCase`. Logic nằm hoàn toàn ở internal.
- */
-export class DetectResettleBoundariesUseCase extends NextApiUseCase<
-  DetectResettleBoundariesInput,
-  DetectResettleBoundariesOutput
-> {
-  private readonly internal = new DetectResettleBoundariesInternalUseCase();
-
-  protected async execute(input: DetectResettleBoundariesInput): Promise<DetectResettleBoundariesOutput> {
-    return this.internal.run(input);
   }
 }
 

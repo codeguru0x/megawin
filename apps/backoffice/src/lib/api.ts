@@ -1,8 +1,12 @@
 /**
- * API route builder đã bind sẵn getSession cho backoffice.
+ * `withApi` của backoffice — BOUND INSTANCE, tạo bằng cách gọi factory `createApiRouteBuilder()`
+ * (generic, sống ở `@megawin/next/server`) đúng 1 LẦN với `getSession`/`superRoles` riêng của app này.
  *
  * Sử dụng better-auth để resolve session từ request cookies.
  * Generic AccountRole đảm bảo type-safety cho .auth({ roles: [...] }).
+ *
+ * Mọi route handler (`app/api/.../route.ts`) của backoffice import và dùng lại đúng instance này —
+ * KHÔNG gọi lại `createApiRouteBuilder()` ở nơi khác trong app.
  */
 
 import type { NextRequest } from "next/server";

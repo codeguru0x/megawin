@@ -62,5 +62,8 @@
       "bold": false,
       "italic": false
     }
-  ]
+  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

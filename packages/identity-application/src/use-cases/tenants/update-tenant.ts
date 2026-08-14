@@ -1,11 +1,11 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { tenantCallbackConfigCache } from "@megawin/tenant-gateway/caches";
 
 import { TenantRepository } from "../../infras/repos/tenant-repo";
 import type { UpdateTenantInput, UpdateTenantOutput } from "./dto/tenant.dto";
 
-export class UpdateTenantUseCase extends NextApiUseCase<UpdateTenantInput, UpdateTenantOutput> {
+export class UpdateTenantUseCase extends UseCase<UpdateTenantInput, UpdateTenantOutput> {
   protected async execute(input: UpdateTenantInput): Promise<UpdateTenantOutput> {
     const repo = new TenantRepository();
 

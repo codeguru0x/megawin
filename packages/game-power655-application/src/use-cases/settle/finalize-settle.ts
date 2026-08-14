@@ -58,7 +58,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
 import { JackpotCycleClosedReasons, JackpotType } from "@megawin/game-power655/entities";
@@ -66,7 +66,7 @@ import { JackpotCycleClosedReasons, JackpotType } from "@megawin/game-power655/e
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
@@ -95,11 +95,11 @@ export interface FinalizeSettleResult {
  *   - createCycle guard getActiveCycle() → skip nếu đã tạo.
  *   - resetJp2InCycle guard jackpot2CurrentAmount ≠ seed → idempotent (no-op nếu đã reset).
  */
-export class FinalizeSettleUseCase extends InternalUseCase<SettleContextWithFinancials, FinalizeSettleResult> {
+export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, FinalizeSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
     const { drawId, jp1CurrentAmount, jp2CurrentAmount, financials, resettleContext } = input;

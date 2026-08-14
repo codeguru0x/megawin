@@ -39,7 +39,7 @@
  *   - done = true khi không còn entries voidable trong kỳ
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { EntryVoidInfo } from "@megawin/game-lotto535/entities";
 import { generateId } from "@megawin/shared/utils";
 
@@ -56,7 +56,7 @@ const BATCH_SIZE = 500;
 /** Giới hạn thời gian chạy trong 1 Lambda invocation (10 phút). */
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
-export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEntriesBatchResult> {
+export class VoidEntriesBatchUseCase extends UseCase<VoidContext, VoidEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: VoidContext): Promise<VoidEntriesBatchResult> {

@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { Mega645OpsConfig } from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { globalConfigCache } from "../../caches/global-config.cache";
@@ -8,7 +8,7 @@ import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
 import type { UpdateGameConfigInput, UpdateGameConfigOutput, UpdateOpsInput } from "./dto/game-config.dto";
 
-export class UpdateGameConfigUseCase extends NextApiUseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
+export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, UpdateGameConfigOutput> {
   private readonly repo = new GameConfigRepository();
 
   protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {

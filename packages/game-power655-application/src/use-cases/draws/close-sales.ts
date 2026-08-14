@@ -1,5 +1,5 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -10,7 +10,7 @@ import type { DrawTransitionInput, DrawTransitionOutput } from "./dto/draw.dto";
  * Đóng bán vé cho 1 kỳ quay Power 6/55.
  * Transition: salesOpen → salesClosed.
  */
-export class CloseSalesUseCase extends NextApiUseCase<DrawTransitionInput, DrawTransitionOutput> {
+export class CloseSalesUseCase extends UseCase<DrawTransitionInput, DrawTransitionOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */

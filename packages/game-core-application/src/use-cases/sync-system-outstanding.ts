@@ -11,7 +11,7 @@
  * TTL: snapshotAt reset mỗi lần sync → doc tự expire nếu job không chạy 15 phút.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
 
 import type { OutstandingPerGameAggregateResult, SystemOutstandingReportRepository } from "../infras/repos";
@@ -40,10 +40,7 @@ export interface SyncSystemOutstandingResult {
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — reset TTL timer.
  */
-export class SyncSystemOutstandingUseCase extends InternalUseCase<
-  SyncSystemOutstandingInput,
-  SyncSystemOutstandingResult
-> {
+export class SyncSystemOutstandingUseCase extends UseCase<SyncSystemOutstandingInput, SyncSystemOutstandingResult> {
   /**
    * Aggregate toàn bộ outstanding draw reports của 1 game → upsert system snapshot.
    *

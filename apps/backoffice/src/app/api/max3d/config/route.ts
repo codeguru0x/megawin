@@ -1,7 +1,4 @@
-import {
-  GetGlobalConfigApiUseCase,
-  UpdateGameConfigUseCase,
-} from "@megawin/game-max3d-application/use-cases/game-config";
+import { GetGlobalConfigUseCase, UpdateGameConfigUseCase } from "@megawin/game-max3d-application/use-cases/game-config";
 import { CompanyRole } from "@megawin/identity/entities";
 
 import { withApi } from "@/lib/api";
@@ -9,13 +6,13 @@ import { actorFromSession } from "@/lib/audit-actor";
 
 import { updateGameConfigSchema } from "./_lib/schema";
 
-const getGameConfigUseCase = new GetGlobalConfigApiUseCase();
+const getGlobalConfigUseCase = new GetGlobalConfigUseCase();
 const updateGameConfigUseCase = new UpdateGameConfigUseCase();
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
-    return getGameConfigUseCase.run();
+    return getGlobalConfigUseCase.run();
   });
 
 export const PUT = withApi()

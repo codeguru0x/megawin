@@ -22,7 +22,7 @@
  * KHÔNG update ticket trong step này — SyncTicketSummaries recompute từ entries.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-bingo18/entities";
 import {
   BINGO18_BASIC_PLAY_TYPE_SET,
@@ -66,7 +66,7 @@ export interface SettleEntriesBatchResult {
  * Time-limited: tự trả `done: false` khi gần hết MAX_EXECUTION_MS.
  * 1 DB read (getScheduledEntries) + 1 DB write (bulkSettleEntries) mỗi vòng lặp.
  */
-export class SettleEntriesBatchUseCase extends InternalUseCase<SettleContext, SettleEntriesBatchResult> {
+export class SettleEntriesBatchUseCase extends UseCase<SettleContext, SettleEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {

@@ -18,7 +18,7 @@
  *   - aggregate + voidComplete atomic: gọi lại cho kết quả giống nhau
  */
 
-import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawVoidSummary } from "@megawin/game-power655/entities";
 
@@ -45,7 +45,7 @@ export interface FinalizeVoidResult {
  * @param input.drawId - ID kỳ quay cần finalize
  * @returns Tổng kết void: số entries, số tiền, thời gian
  */
-export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVoidResult> {
+export class FinalizeVoidUseCase extends UseCase<VoidContext, FinalizeVoidResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 

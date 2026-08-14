@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";
 
@@ -30,7 +30,7 @@ const TIER_LABELS: Record<string, string> = {
  *
  * Power 6/55: 6 tiers (jackpot1, jackpot2, tier1-4), có bonus number trong result.
  */
-export class GetWinningEntriesUseCase extends NextApiUseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
+export class GetWinningEntriesUseCase extends UseCase<GetWinningEntriesInput, GetWinningEntriesOutput> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

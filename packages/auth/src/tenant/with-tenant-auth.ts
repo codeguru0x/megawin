@@ -1,6 +1,9 @@
 /**
  * withTenantAuth — wrap handler với Tenant API key auth.
  *
+ * Dùng chung `buildHandler()` + type `WithSchema` với các wrapper JWT (`withPlayerAuth`…) —
+ * chỉ khác auth middleware (API key thay vì Cognito JWT).
+ *
  * @example
  * import { withTenantAuth } from "@megawin/auth/tenant";
  *
@@ -10,19 +13,17 @@
  * }, { schemas: { query: querySchema } });
  */
 
-import { withMiddleware } from "../handler-wrappers";
-import type { ApiGatewayEventWithTenant, ApiGatewayZodSchemas, InferSchema } from "../index";
+import { buildHandler, type WithSchema } from "../handler-wrappers";
+import type { ApiGatewayEventWithTenant, ApiGatewayZodSchemas } from "../index";
 import { tenantAuth } from "./tenant-auth";
 
 export function withTenantAuth<TSchemas extends ApiGatewayZodSchemas | undefined = undefined>(
-  fn: (
-    event: ApiGatewayEventWithTenant & (TSchemas extends undefined ? unknown : { schema: InferSchema<TSchemas> }),
-  ) => Promise<unknown>,
+  fn: (event: WithSchema<ApiGatewayEventWithTenant, TSchemas>) => Promise<unknown>,
   options?: {
     schemas?: TSchemas;
     allowedStatuses?: string[];
   },
 ) {
   const middleware = tenantAuth(options?.allowedStatuses ? { allowedStatuses: options.allowedStatuses } : undefined);
-  return withMiddleware(fn, middleware, { schemas: options?.schemas });
+  return buildHandler(fn, options?.schemas, middleware);
 }

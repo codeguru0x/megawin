@@ -1,38 +1,21 @@
 /**
- * Use case: Tạo company account qua Next.js API route.
+ * Use case: Tạo company account.
  *
- * Input: username, password, roles (đã validate bằng Zod ở route wrapper).
+ * Input: username, password, roles (đã validate bằng Zod ở route wrapper — roles.min(1) +
+ * enum COMPANY_ROLE_VALUES, xem `apps/backoffice/src/app/api/accounts/company/_lib/schema.ts`).
  * Execute: tạo user Cognito + gán groups theo roles.
  */
 
 import { adminCreateAccount, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { AccountStatus, AccountType, ClaimKey } from "@megawin/identity/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { generateULID } from "@megawin/shared/utils";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type { CreateCompanyAccountInput, CreateCompanyAccountOutput } from "./dto/create-company-account.dto";
 
-export class CreateCompanyAccountUseCase extends NextApiUseCase<CreateCompanyAccountInput, CreateCompanyAccountOutput> {
-  /*  protected validate(input: CreateCompanyAccountInput): void | AppError {
-    if (input.roles.length === 0) {
-      return {
-        code: APP_ERROR_CODES.VALIDATION,
-        message: "Phải có ít nhất một quyền",
-      };
-    }
-
-    const invalid = input.roles.filter((r) => !COMPANY_ROLE_VALUES.includes(r));
-    if (invalid.length > 0) {
-      return {
-        code: APP_ERROR_CODES.VALIDATION,
-        message: `Invalid roles: ${invalid.join(", ")}`,
-        details: { allowedRoles: COMPANY_ROLE_VALUES, invalidRoles: invalid },
-      };
-    }
-  } */
-
+export class CreateCompanyAccountUseCase extends UseCase<CreateCompanyAccountInput, CreateCompanyAccountOutput> {
   private readonly accountRepo = new AccountRepository();
 
   protected async execute(input: CreateCompanyAccountInput): Promise<CreateCompanyAccountOutput> {

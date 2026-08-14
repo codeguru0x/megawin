@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { ListEntryBreakdownInput, ListEntryBreakdownOutput } from "./types";
@@ -9,7 +9,7 @@ import type { ListEntryBreakdownInput, ListEntryBreakdownOutput } from "./types"
  * Dùng cho Entry Breakdown table.
  * Index: { drawId: 1, tenantId: 1, accountId: 1 }
  */
-export class ListEntryBreakdownUseCase extends NextApiUseCase<ListEntryBreakdownInput, ListEntryBreakdownOutput> {
+export class ListEntryBreakdownUseCase extends UseCase<ListEntryBreakdownInput, ListEntryBreakdownOutput> {
   private readonly repo = new EntryRepository();
 
   protected async execute(input: ListEntryBreakdownInput): Promise<ListEntryBreakdownOutput> {

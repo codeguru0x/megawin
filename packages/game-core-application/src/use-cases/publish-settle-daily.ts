@@ -18,7 +18,7 @@
  *   - Crash giữa tenant upserts: partial update. Retry re-aggregate → idempotent.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
 
 import type {
@@ -66,10 +66,7 @@ export interface PublishSettleDailyResult {
  * IDEMPOTENT: chạy lại nhiều lần cho cùng kết quả.
  * KHÔNG dùng $inc — luôn overwrite toàn bộ.
  */
-export class SystemPublishSettleDailyUseCase extends InternalUseCase<
-  PublishSettleDailyInput,
-  PublishSettleDailyResult
-> {
+export class SystemPublishSettleDailyUseCase extends UseCase<PublishSettleDailyInput, PublishSettleDailyResult> {
   /**
    * Re-aggregate và publish daily reports lên system level.
    *

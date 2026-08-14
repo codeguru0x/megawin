@@ -8,9 +8,9 @@
  *   - openAt < closeAt < drawTime (bắt buộc).
  */
 
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -36,7 +36,7 @@ export interface UpdateScheduleOutput {
 
 const EDITABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesOpen]);
 
-export class UpdateScheduleUseCase extends NextApiUseCase<UpdateScheduleInput, UpdateScheduleOutput> {
+export class UpdateScheduleUseCase extends UseCase<UpdateScheduleInput, UpdateScheduleOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: UpdateScheduleInput): Promise<UpdateScheduleOutput> {

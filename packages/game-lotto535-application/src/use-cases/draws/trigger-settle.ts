@@ -1,8 +1,8 @@
 import { ExecutionAlreadyExists, startExecution } from "@megawin/app-core/aws/sf";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
 import { isSplitCycleDraw } from "@megawin/game-lotto535/rules";
-import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 
@@ -10,7 +10,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { auditSettle } from "../../services/audit-log";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
 /**
@@ -32,11 +32,11 @@ import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
  * Nếu SF đã đang chạy (cùng deterministic name), AWS ném `ExecutionAlreadyExists`
  * → use case bắt lỗi đó và coi như thành công.
  */
-export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, TriggerSettleOutput> {
+export class TriggerSettleUseCase extends UseCase<TriggerSettleInput, TriggerSettleOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: TriggerSettleInput): Promise<TriggerSettleOutput> {
     if (!input.SETTLE_SFN_ARN) {

@@ -10,10 +10,7 @@ export type {
   DetectResettleBoundariesInput,
   DetectResettleBoundariesOutput,
 } from "./detect-boundaries";
-export {
-  DetectResettleBoundariesInternalUseCase,
-  DetectResettleBoundariesUseCase,
-} from "./detect-boundaries";
+export { DetectResettleBoundariesUseCase } from "./detect-boundaries";
 export type { EnqueueReversalsInput, EnqueueReversalsOutput } from "./enqueue-reversals";
 export { EnqueueReversalsUseCase } from "./enqueue-reversals";
 export type { PrepareResettleInput, PrepareResettleOutput } from "./prepare-resettle";

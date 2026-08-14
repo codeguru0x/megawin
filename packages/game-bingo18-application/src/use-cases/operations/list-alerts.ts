@@ -1,6 +1,6 @@
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { Bingo18OpsAlertEntity, Bingo18OpsAlertType } from "@megawin/game-bingo18/entities";
 import { OpsAlertSeverity } from "@megawin/game-bingo18/entities";
-import { NextApiUseCase } from "@megawin/next/server";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";
@@ -19,7 +19,7 @@ const SEVERITY_RANK: Record<string, number> = {
  * Trả CẢ item `ack` (không lọc mặc định) — UI v6: item ack render dưới disclosure
  * per-group, KHÔNG ẩn (guideline §4, giữ audit trail).
  */
-export class ListAlertsUseCase extends NextApiUseCase<ListAlertsInput, ListAlertsOutput> {
+export class ListAlertsUseCase extends UseCase<ListAlertsInput, ListAlertsOutput> {
   private readonly alertRepo = new OpsAlertRepository();
 
   protected async execute(input: ListAlertsInput): Promise<ListAlertsOutput> {

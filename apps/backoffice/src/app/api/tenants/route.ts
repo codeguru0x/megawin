@@ -9,33 +9,31 @@ import { withApi } from "@/lib/api";
 
 import { createTenantSchema, updateTenantSchema } from "./_lib/schema";
 
+const createTenantUseCase = new CreateTenantUseCase();
+const listTenantsUseCase = new ListTenantsUseCase();
+const updateTenantUseCase = new UpdateTenantUseCase();
+
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Admin] })
   .body(createTenantSchema)
   .handler(async ({ body }) => {
-    const useCase = new CreateTenantUseCase();
-    return useCase.run(
-      {
-        tenantId: body.tenantId,
-        displayName: body.displayName,
-        description: body.description,
-        callbackBaseUrl: body.callbackBaseUrl,
-      },
-      { successStatus: 201 },
-    );
+    return createTenantUseCase.run({
+      tenantId: body.tenantId,
+      displayName: body.displayName,
+      description: body.description,
+      callbackBaseUrl: body.callbackBaseUrl,
+    });
   });
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Admin] })
   .handler(async () => {
-    const useCase = new ListTenantsUseCase();
-    return useCase.run();
+    return listTenantsUseCase.run();
   });
 
 export const PATCH = withApi()
   .auth({ roles: [CompanyRole.Admin] })
   .body(updateTenantSchema)
   .handler(async ({ body }) => {
-    const useCase = new UpdateTenantUseCase();
-    return useCase.run(body);
+    return updateTenantUseCase.run(body);
   });

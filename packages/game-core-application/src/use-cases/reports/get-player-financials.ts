@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { PlayerSettleGameDailyRepository } from "../../infras/repos/player-settle-game-daily-repo";
 import type { GetPlayerFinancialsInput, GetPlayerFinancialsOutput } from "./types";
@@ -11,7 +11,7 @@ import type { GetPlayerFinancialsInput, GetPlayerFinancialsOutput } from "./type
  * Hỗ trợ filter theo game product (optional).
  * Index: { accountId: 1, financialDate: -1 }
  */
-export class GetPlayerFinancialsUseCase extends NextApiUseCase<GetPlayerFinancialsInput, GetPlayerFinancialsOutput> {
+export class GetPlayerFinancialsUseCase extends UseCase<GetPlayerFinancialsInput, GetPlayerFinancialsOutput> {
   private readonly repo = new PlayerSettleGameDailyRepository();
 
   protected async execute(input: GetPlayerFinancialsInput): Promise<GetPlayerFinancialsOutput> {

@@ -8,5 +8,5 @@ const getJackpotCurrentUseCase = new GetJackpotCurrentUseCase();
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
-    return getJackpotCurrentUseCase.run(undefined);
+    return getJackpotCurrentUseCase.run();
   });

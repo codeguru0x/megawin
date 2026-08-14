@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Lotto 5/35 application layer – repos, mappers, use cases for backoffice",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",

@@ -18,7 +18,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawSettleSummary } from "@megawin/game-mega645/entities";
 import { MEGA645_PRIZE_TIER_VALUES, PrizeTier } from "@megawin/game-mega645/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-mega645/rules";
@@ -35,7 +35,7 @@ import type { SettleContext, SettleFinancials } from "./types";
  *
  * CRASH-SAFE: aggregate từ DB nên idempotent — chạy lại nhiều lần cho kết quả giống nhau.
  */
-export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
+export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

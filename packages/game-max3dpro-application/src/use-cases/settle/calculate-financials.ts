@@ -17,7 +17,7 @@
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { PRIZE_TIER_VALUES } from "@megawin/game-max3dpro/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-max3dpro/rules/financials";
 
@@ -26,7 +26,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { DrawSettleSummary } from "../../infras/repos/types/draw.types";
 import type { SettleContext, SettleFinancials } from "./types";
 
-export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
+export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Game core application layer – repos, mappers, use-cases for entry feed, change sequence & daily reports",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",

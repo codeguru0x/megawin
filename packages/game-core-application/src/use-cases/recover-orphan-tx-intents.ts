@@ -53,7 +53,7 @@
  * @see TxIntentDoc — WAL document structure
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { TxIntentEntity } from "@megawin/game-core/entities";
 import { TransactionAction, TransactionReason } from "@megawin/shared/types";
 import { generateId, logError } from "@megawin/shared/utils";
@@ -114,7 +114,7 @@ export interface RecoverOrphanTxIntentsResult {
  * await useCase.run();
  * ```
  */
-export class RecoverOrphanTxIntentsUseCase extends InternalUseCase<void, RecoverOrphanTxIntentsResult> {
+export class RecoverOrphanTxIntentsUseCase extends UseCase<void, RecoverOrphanTxIntentsResult> {
   private readonly txIntentRepo = new TxIntentRepository();
   private readonly ticketExistsFn: TicketExistsFn;
 

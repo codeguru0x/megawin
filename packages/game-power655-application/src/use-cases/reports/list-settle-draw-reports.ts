@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import type { ListSettleDrawReportsInput, ListSettleDrawReportsOutput } from "./types";
@@ -9,10 +9,7 @@ import type { ListSettleDrawReportsInput, ListSettleDrawReportsOutput } from "./
  * Dùng cho tab "Theo kỳ quay" cấp 1 trong Financial Reports page.
  * Index: { financialDate: 1 }
  */
-export class ListSettleDrawReportsUseCase extends NextApiUseCase<
-  ListSettleDrawReportsInput,
-  ListSettleDrawReportsOutput
-> {
+export class ListSettleDrawReportsUseCase extends UseCase<ListSettleDrawReportsInput, ListSettleDrawReportsOutput> {
   private readonly repo = new SettleDrawReportRepository();
 
   protected async execute(input: ListSettleDrawReportsInput): Promise<ListSettleDrawReportsOutput> {

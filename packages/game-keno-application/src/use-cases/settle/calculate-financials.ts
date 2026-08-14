@@ -12,7 +12,7 @@
  * IDEMPOTENT: Chạy lại cho kết quả giống nhau (tính từ DB).
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawFinancial, DrawPrizeSummary, DrawStats } from "@megawin/game-keno/entities";
 import { calculateKenoDrawFinancials, getPlayTypeFromPickCount } from "@megawin/game-keno/rules";
 
@@ -26,7 +26,7 @@ import type { SettleContext, SettleFinancials } from "./types";
  * CRASH-SAFE + IDEMPOTENT: aggregate từ DB → có thể chạy lại nhiều lần an toàn.
  * Ghi financial + stats + settleSummary vào DrawDoc trong 1 DB call duy nhất.
  */
-export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
+export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 

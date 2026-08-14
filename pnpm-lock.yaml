@@ -101,8 +101,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tenant-gateway
       '@middy/core':
-        specifier: ^7.2.1
-        version: 7.2.1
+        specifier: ^7.7.3
+        version: 7.7.3
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -150,8 +150,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared
       '@middy/core':
-        specifier: ^7.2.1
-        version: 7.2.1
+        specifier: ^7.7.3
+        version: 7.7.3
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -965,8 +965,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@middy/core':
-        specifier: ^7.2.1
-        version: 7.2.1
+        specifier: ^7.7.3
+        version: 7.7.3
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -989,12 +989,12 @@ importers:
 
   packages/audit:
     dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../app-core
       '@megawin/data':
         specifier: workspace:*
         version: link:../data
-      '@megawin/next':
-        specifier: workspace:*
-        version: link:../next
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1036,8 +1036,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@middy/core':
-        specifier: ^7.2.1
-        version: 7.2.1
+        specifier: ^7.7.3
+        version: 7.7.3
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -3597,17 +3597,17 @@ packages:
     peerDependencies:
       jsep: ^0.4.0||^1.0.0
 
-  '@middy/core@7.2.1':
-    resolution: {integrity: sha512-KFtxLUhHQcBezrusBt5F2VKYY/p3Po2rM2OByyeZsqpzSY9D8iapsmJGaiHFgXbfuEUS5B0BxTXixFcxjChLUg==}
+  '@middy/core@7.7.3':
+    resolution: {integrity: sha512-p/BgM230u87cVq1W4nMmADKZlR6GW4pOWK3rlTBJkLSfApZhqvLz5A+FI7mWJ7uN8Yr+5tSwM5LTwBXKi297hA==}
     engines: {node: '>=22'}
     peerDependencies:
-      '@aws/durable-execution-sdk-js': ^1.0.0
+      '@aws/durable-execution-sdk-js': ^2.0.0
     peerDependenciesMeta:
       '@aws/durable-execution-sdk-js':
         optional: true
 
-  '@middy/util@7.2.1':
-    resolution: {integrity: sha512-vwtRPxQ5stQFR8Ulfsuqt8GgPJX6iXrF/9SiOTsJzw2nliNu/aPcZ8DR6sPj+gFar/QdUJuym6iyjevfeMNiFA==}
+  '@middy/util@7.7.3':
+    resolution: {integrity: sha512-EINBXiWfzkk9yT1f9X3UA5/nhBhCbu5YyjM6UQ0Yx/rXHQ75ORennA/2LZKJatC34t6R9j6KsGDIlqh3E4f3cQ==}
     engines: {node: '>=22'}
 
   '@mongodb-js/saslprep@1.4.12':
@@ -10318,11 +10318,11 @@ snapshots:
     dependencies:
       jsep: 1.4.0
 
-  '@middy/core@7.2.1':
+  '@middy/core@7.7.3':
     dependencies:
-      '@middy/util': 7.2.1
+      '@middy/util': 7.7.3
 
-  '@middy/util@7.2.1': {}
+  '@middy/util@7.7.3': {}
 
   '@mongodb-js/saslprep@1.4.12':
     dependencies:

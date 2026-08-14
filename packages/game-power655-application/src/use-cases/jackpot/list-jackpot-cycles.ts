@@ -6,7 +6,7 @@
  * Hỗ trợ dual jackpot: JP1 + JP2.
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { JackpotCycleSummary, ListJackpotCyclesInput, ListJackpotCyclesOutput } from "./dto/jackpot.dto";
@@ -15,7 +15,7 @@ import type { JackpotCycleSummary, ListJackpotCyclesInput, ListJackpotCyclesOutp
  * Lấy danh sách các cycle jackpot đã đóng.
  * Mỗi cycle chứa thông tin dual JP (JP1 seedAmount/current, JP2 seedAmount/current).
  */
-export class ListJackpotCyclesUseCase extends NextApiUseCase<ListJackpotCyclesInput, ListJackpotCyclesOutput> {
+export class ListJackpotCyclesUseCase extends UseCase<ListJackpotCyclesInput, ListJackpotCyclesOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
 
   /** @inheritdoc */

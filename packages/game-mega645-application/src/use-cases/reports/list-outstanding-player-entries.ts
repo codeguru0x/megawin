@@ -1,4 +1,4 @@
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 
 import { EntryOutstandingRepository } from "../../infras/repos/entry-outstanding-repo";
 import type { ListOutstandingPlayerEntriesInput, ListOutstandingPlayerEntriesOutput } from "./types";
@@ -10,7 +10,7 @@ import type { ListOutstandingPlayerEntriesInput, ListOutstandingPlayerEntriesOut
  * chi tiết boards. sort: createdAt DESC (mới nhất trước).
  * Index: { drawId: 1, tenantId: 1, accountId: 1 }
  */
-export class ListOutstandingPlayerEntriesUseCase extends NextApiUseCase<
+export class ListOutstandingPlayerEntriesUseCase extends UseCase<
   ListOutstandingPlayerEntriesInput,
   ListOutstandingPlayerEntriesOutput
 > {

@@ -53,7 +53,7 @@
  * Output: { drawId, entriesPatched }
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { UseCase } from "@megawin/app-core/use-cases";
 import type { JackpotWinnerInfo } from "@megawin/game-mega645/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -71,7 +71,7 @@ export interface PatchJackpotPrizeResult {
 }
 
 /** Patch tiền Jackpot thực tế vào entries + lines sau khi biết pool cuối kỳ. */
-export class PatchJackpotPrizeUseCase extends InternalUseCase<SettleContextWithFinancials, PatchJackpotPrizeResult> {
+export class PatchJackpotPrizeUseCase extends UseCase<SettleContextWithFinancials, PatchJackpotPrizeResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
   private readonly drawRepo = new DrawRepository();

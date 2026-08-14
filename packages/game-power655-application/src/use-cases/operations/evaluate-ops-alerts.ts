@@ -38,7 +38,7 @@ import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { evaluateAlerts } from "./evaluate-alerts";
 
 /** Kết quả 1 lần chạy worker (thống kê để log/monitor). */
@@ -69,7 +69,7 @@ export class EvaluateOpsAlertsUseCase extends TickLoopWorker<void, EvaluateOpsAl
   protected override readonly description =
     "Power 6/55 — đánh giá cảnh báo vận hành (ngưỡng exposure/combo/bao) cho kỳ đang mở";
 
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly statsRepo = new BettingStatsRepository();
   private readonly comboRepo = new ComboStatsRepository();
   private readonly alertRepo = new OpsAlertRepository();

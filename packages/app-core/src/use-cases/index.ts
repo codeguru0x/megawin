@@ -21,28 +21,16 @@ export {
   toHttpErrorResponse,
 } from "@megawin/shared/errors";
 
-/** API Gateway */
-export {
-  type ApiGatewayResponse,
-  ApiGatewayUseCase,
-  toApiGatewayResponse,
-  useCaseErrorToStatusCode,
-} from "./api-gateway";
-/** Legacy aliases */
-export {
-  BaseUseCase,
-  isUseCaseError,
-  USE_CASE_ERROR_CODES,
-  type UseCaseError,
-  type UseCaseErrorCode,
-  UseCaseException,
-  type UseCaseResult,
-} from "./base";
-/** Internal Use Case – trả raw output, throw AppException */
-export { InternalUseCase } from "./internal-use-case";
+/**
+ * API Gateway — type + converter tường minh (escape hatch cho response khác chuẩn).
+ * Base class `ApiGatewayUseCase` đã XOÁ ở Phase 4 — dùng `UseCase`, envelope do middleware bọc.
+ */
+export { type ApiGatewayResponse, toApiGatewayResponse } from "./api-gateway";
 /** Kinesis */
 export { KinesisUseCase } from "./kinesis";
 /** SNS */
 export { SnsUseCase } from "./sns";
 /** SQS */
 export { SqsUseCase } from "./sqs";
+/** UseCase – canonical base class: run() raw output + safeRun() AppResult, KHÔNG có validate() */
+export { UseCase } from "./use-case";

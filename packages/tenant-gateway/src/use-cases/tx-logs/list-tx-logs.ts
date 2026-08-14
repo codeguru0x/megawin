@@ -8,7 +8,7 @@
  * - Cursor-based pagination (stable khi data insert liên tục).
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { UseCase } from "@megawin/app-core/use-cases";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
@@ -53,7 +53,7 @@ export interface ListTxLogsOutput {
   nextCursor: { createdAt: string; id: string } | null;
 }
 
-export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLogsOutput> {
+export class ListTxLogsUseCase extends UseCase<ListTxLogsInput, ListTxLogsOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: ListTxLogsInput): Promise<ListTxLogsOutput> {
