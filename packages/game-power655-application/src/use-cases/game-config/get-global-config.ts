@@ -1,25 +1,25 @@
 /**
- * API Use Case: Get Global Config (Power 6/55)
+ * Use Case: Get Global Config (Power 6/55) – Internal
  *
- * Thin adapter cho API route – delegate sang GetGlobalConfigInternalUseCase (InternalUseCase).
- * Không trực tiếp gọi repo. Config doc LUÔN tồn tại (đã seed) → không fallback khi thiếu doc.
+ * Điểm truy cập duy nhất để lấy global config cho game Power 6/55.
+ * Tất cả use cases nên dùng use case này thay vì gọi repo trực tiếp.
+ *
+ * Cache concern (key, TTL, loader, invalidation) sống ở `caches/global-config.cache.ts`
+ * — use-case chỉ gọi `globalConfigCache.fetch()`. Invalidate khi admin cập nhật
+ * config qua `globalConfigCache.invalidate()` (xem update-game-config.ts).
+ *
+ * Cách dùng từ use case khác:
+ *   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+ *   const config = await this.getGlobalConfig.run();
  */
 
-import { NextApiUseCase } from "@megawin/next/server";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
+import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
 
-import type { GetGameConfigOutput } from "./dto/game-config.dto";
-import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
+import { globalConfigCache } from "../../caches/global-config.cache";
 
-/**
- * API endpoint trả về global config Power 6/55 cho backoffice.
- * Delegate sang internal GetGlobalConfigInternalUseCase.
- */
-export class GetGlobalConfigUseCase extends NextApiUseCase<void, GetGameConfigOutput> {
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
-
-  /** @inheritdoc */
-  protected async execute(): Promise<GetGameConfigOutput> {
-    const config = await this.getGlobalConfig.run();
-    return { config };
+export class GetGlobalConfigInternalUseCase extends InternalUseCase<void, GlobalConfigEntity> {
+  protected async execute(): Promise<GlobalConfigEntity> {
+    return await globalConfigCache.fetch();
   }
 }
