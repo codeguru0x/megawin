@@ -193,7 +193,7 @@ AiPanelProvider (LUÔN mounted ở layout — giữ chat state ở p0-03)
     ├── docked/overlay: <aside>/<div fixed> — ẨN bằng Activity, KHÔNG unmount
     │   └── <Activity mode={open ? "visible" : "hidden"}>{panelBody}</Activity>
     └── drawer: vaul Drawer — DOM unmount theo vaul, nhưng panelBody state nằm ở
-        provider (p0-03: useChat trong provider) nên messages không mất
+        provider (p0-03: useEveAgent trong provider) nên messages không mất
 ```
 
 Checklist hành vi bắt buộc:
