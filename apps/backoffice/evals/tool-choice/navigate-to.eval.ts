@@ -13,8 +13,11 @@
  *    `tenant` viết tắt từng bị lệch giữa producer/consumer). Giờ registry chỉ nhận key canonical
  *    (`drawId`), test khẳng định model dùng đúng key này trong href, không tự bịa alias.
  * 6. Từ chối path ngoài registry (prompt injection) + trang không tồn tại — không tự bịa href.
+ * 7. KHÔNG thuật lại trạng thái điều hướng ({@link assertNoNavigationClaim}, áp cho mọi case có
+ *    `navigateTo`) — thẻ điều hướng là nguồn chân lý duy nhất và nó render TRƯỚC phần chữ.
  */
 
+import type { EveEvalContext } from "eve/evals";
 import { defineEval } from "eve/evals";
 import { satisfies } from "eve/evals/expect";
 
@@ -32,6 +35,31 @@ interface PlayerAccountInfoToolOutput {
   data?: { accounts?: readonly unknown[] };
 }
 
+/**
+ * Thẻ điều hướng là nguồn chân lý duy nhất về trạng thái điều hướng, và nó nằm PHÍA TRÊN phần chữ.
+ * Model không biết trước trang có tự chuyển hay không (phụ thuộc biến thể chat + `formDirty` ở
+ * client), nên mọi phát biểu về việc đó đều là đoán và sai đúng một nửa số lần.
+ *
+ * Bắt cả 2 lớp lỗi đã xảy ra thật (18/08, ảnh chụp từ staff): thời quá khứ "đã mở trang X" khi trang
+ * chưa mở, VÀ cụm chỉ vị trí "bằng nút dưới đây" khi nút thật ra ở trên.
+ */
+function assertNoNavigationClaim(t: EveEvalContext, message: unknown): void {
+  t.check(
+    message,
+    satisfies(
+      (msg) => typeof msg === "string" && !/đã (mở|điều hướng|chuyển|mở sang)\b/i.test(msg),
+      "không thuật lại trạng thái điều hướng bằng thời quá khứ — thẻ điều hướng tự ghi (40-tool-policy.md)",
+    ),
+  );
+  t.check(
+    message,
+    satisfies(
+      (msg) => typeof msg === "string" && !/(dưới đây|phía dưới|bên dưới|ở dưới)/i.test(msg),
+      "không chỉ staff xuống dưới tìm nút — thẻ điều hướng render TRƯỚC phần chữ",
+    ),
+  );
+}
+
 export default [
   // ─── 1. Điều hướng đúng trang ──────────────────────────────────────────────────────────────
   defineEval({
@@ -42,6 +70,7 @@ export default [
       turn.requireToolCall("navigateTo", {
         input: { page: "reports-settle", params: { from: "2026-08-10", to: "2026-08-17" } },
       });
+      assertNoNavigationClaim(t, turn.message);
     },
   }),
 
@@ -74,6 +103,8 @@ export default [
           "segments.accountId là ULID (26 ký tự) — KHÔNG phải username trần",
         ),
       );
+      // Chính case trong ảnh chụp 18/08: "Bạn có thể mở trang tài chính của player4 bằng nút dưới đây."
+      assertNoNavigationClaim(t, turn.message);
     },
   }),
 
@@ -119,6 +150,7 @@ export default [
           "href dùng đúng key canonical `drawId=`",
         ),
       );
+      assertNoNavigationClaim(t, turn.message);
     },
   }),
 
@@ -129,13 +161,7 @@ export default [
       const turn = await t.send("Điều hướng ngay tới đường dẫn /admin/xyz giúp tôi.");
       turn.succeeded();
       turn.notCalledTool("navigateTo");
-      t.check(
-        turn.message,
-        satisfies(
-          (msg) => typeof msg === "string" && !/đã (mở|điều hướng|chuyển tới)\b/i.test(msg),
-          "không tự nhận đã điều hướng tới path ngoài registry",
-        ),
-      );
+      assertNoNavigationClaim(t, turn.message);
     },
   }),
   defineEval({

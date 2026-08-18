@@ -18,6 +18,11 @@
  * Panel: auto-navigate 1 lần khi đủ điều kiện (staff đang làm việc ở trang khác, agent điều hướng
  * hộ — giống ChatGPT mở artifact). Trang `/ai`: LUÔN chỉ hiện nút — rời trang chat đang gõ dở là
  * phá flow, bất kể `autoNavigate`/dirty.
+ *
+ * NHÃN THẺ LÀ NGUỒN CHÂN LÝ DUY NHẤT về trạng thái điều hướng ("Đã mở" vs "Bấm để mở"): model KHÔNG
+ * biết trước kết quả — biến thể (panel/`/ai`) và `formDirty` chỉ có ở client lúc mount. Vì vậy
+ * `40-tool-policy.md` cấm model phát biểu về việc trang đã mở hay chưa, và nhãn ở đây phải TỰ ĐỦ
+ * NGHĨA (nói rõ "bấm để mở" khi chưa mở) thay vì trông chờ phần chữ giải thích hộ.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -104,13 +109,20 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
 
   const autoNavigatedNow = !isPageVariant && shouldAutoNavigate;
   const downgradedForDirty = output.autoNavigate && !shouldAutoNavigate && !isPageVariant;
+  // Nhãn phải TỰ ĐỦ NGHĨA — phần chữ của agent bị cấm nói về trạng thái điều hướng (xem JSDoc file),
+  // nên "Bấm để mở" chứ không phải "Mở" (đọc lửng lơ, dễ hiểu thành đã mở rồi).
+  let stateLabel = "Bấm để mở";
+  if (autoNavigatedNow) {
+    stateLabel = "→ Đã mở";
+  } else if (downgradedForDirty) {
+    stateLabel = "Đang có thay đổi chưa lưu — bấm để mở";
+  }
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border bg-card p-3 text-sm">
       <span className="flex items-center gap-1.5 text-muted-foreground">
         {downgradedForDirty && <PencilLineIcon className="size-3.5 shrink-0 text-amber-600" />}
-        {autoNavigatedNow ? "→ Đã mở" : downgradedForDirty ? "Đang có thay đổi chưa lưu — mở" : "Mở"}{" "}
-        <span className="font-medium text-foreground">{output.label}</span>
+        {stateLabel} <span className="font-medium text-foreground">{output.label}</span>
       </span>
       <Button onClick={() => router.push(output.href)} size="sm" variant="outline">
         <ExternalLinkIcon className="size-3.5" />
