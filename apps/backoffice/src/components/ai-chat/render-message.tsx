@@ -256,37 +256,63 @@ function toolApprovalPrompt(toolLabel: string): string {
   return `Cho phép agent thực hiện "${toolLabel}"? Xem tham số bên dưới trước khi quyết định.`;
 }
 
+/** `kind` của HITL request — lấy từ type của eve, KHÔNG khai báo lại literal ở đây. */
+type HitlKind = EveMessageInputRequest["kind"];
+
+/** Dựng prompt tiếng Việt cho một `kind`; `toolLabel` chỉ có nghĩa với `tool-approval`. */
+type HitlPromptBuilder = (inputRequest: EveMessageInputRequest, toolLabel: string) => string;
+
 /**
- * Prompt hiển thị cho staff, dịch tay theo `kind`.
+ * Bảng dịch prompt theo `kind`, kèm lá chắn compile.
  *
- * Switch KHÔNG có `default` là CỐ Ý: eve thêm `kind` mới ở bản sau thì compiler báo đỏ ngay tại đây,
- * buộc dịch trước khi ship. Chính lỗ hổng "kind mới rơi vào nhánh chung" là cách prompt tiếng Anh
- * của `session-limit` lọt ra UI lần đầu.
+ * `satisfies Record<HitlKind, …>` giữ đúng ý định cũ: eve thêm `kind` mới mà quên dịch thì THIẾU
+ * KEY ở đây là đỏ compile, buộc dịch trước khi ship (chính lỗ hổng "kind mới rơi vào nhánh chung"
+ * là cách prompt tiếng Anh của `session-limit` lọt ra UI lần đầu).
+ *
+ * Trước đây lá chắn này là `switch` KHÔNG `default` — cách đó phụ thuộc việc TS narrow được union
+ * `kind`, và union đó KHÔNG đáng tin: eve suy nó ra bằng `z.infer<typeof inputRequestKindSchema>`,
+ * trong khi `.d.ts` của eve `import * as z from "zod"` mà package **không khai báo zod** ở
+ * `dependencies` lẫn `peerDependencies`. Zod chỉ resolve được nhờ hoisting — tuỳ layout
+ * `node_modules` của từng máy. Nơi nào không resolve được thì `z` thành `any` (lỗi bị
+ * `skipLibCheck` che), `kind` thành `any`, không nhánh `case` nào chứng minh được exhaustive →
+ * `TS2366 Function lacks ending return statement`. Đã xảy ra thật: build Vercel đỏ trong khi
+ * `check-types` local xanh. Bảng tra + fallback giữ nguyên lá chắn nhưng hàm LUÔN có đường trả về.
+ *
+ * Annotation `Record<string, …>` là CỐ Ý (không phải thừa): nó cho phép index bằng `kind` kể cả khi
+ * type của eve suy rộng thành `string`, tránh lỗi implicit-any index ở đúng môi trường vừa nói.
  */
+const HITL_PROMPT_BUILDERS: Record<string, HitlPromptBuilder | undefined> = {
+  "tool-approval": (_inputRequest, toolLabel) => toolApprovalPrompt(toolLabel),
+  "session-limit": () => SESSION_LIMIT_PROMPT,
+  // `ask_question`: prompt do MODEL sinh, đã là tiếng Việt theo instructions — giữ nguyên văn,
+  // dịch lại sẽ làm sai ý model.
+  question: (inputRequest) => inputRequest.prompt,
+} satisfies Record<HitlKind, HitlPromptBuilder>;
+
+/**
+ * Bảng nhãn nút theo `kind` — cùng cơ chế lá chắn và cùng lý do bỏ `switch` như
+ * {@link HITL_PROMPT_BUILDERS}.
+ *
+ * `question: undefined` là khai báo có chủ đích, không phải thiếu sót: `ask_question` có `id`/`label`
+ * do model tự chọn tự do — đụng vào là dịch nhầm lựa chọn của model.
+ */
+const HITL_OPTION_LABELS: Record<string, Record<string, string> | undefined> = {
+  "tool-approval": TOOL_APPROVAL_OPTION_LABELS,
+  "session-limit": SESSION_LIMIT_OPTION_LABELS,
+  question: undefined,
+} satisfies Record<HitlKind, Record<string, string> | undefined>;
+
+/** Prompt hiển thị cho staff, dịch tay theo `kind`. */
 function resolveHitlPrompt(inputRequest: EveMessageInputRequest, toolLabel: string): string {
-  switch (inputRequest.kind) {
-    case "tool-approval":
-      return toolApprovalPrompt(toolLabel);
-    case "session-limit":
-      return SESSION_LIMIT_PROMPT;
-    // `ask_question`: prompt do MODEL sinh, đã là tiếng Việt theo instructions — giữ nguyên văn,
-    // dịch lại sẽ làm sai ý model.
-    case "question":
-      return inputRequest.prompt;
-  }
+  const build = HITL_PROMPT_BUILDERS[inputRequest.kind];
+  // `kind` ngoài bảng (eve thêm mới ở bản sau): trả prompt gốc của eve — tiếng Anh nhưng đúng nội
+  // dung, hơn là hiện hộp rỗng giữa lúc staff phải quyết định duyệt/dừng.
+  return build?.(inputRequest, toolLabel) ?? inputRequest.prompt;
 }
 
-/** Nhãn nút, dịch tay theo `kind`. Không `default` — cùng lý lẽ với {@link resolveHitlPrompt}. */
+/** Nhãn nút, dịch tay theo `kind`. */
 function resolveHitlOptionLabel(inputRequest: EveMessageInputRequest, option: { id: string; label: string }): string {
-  switch (inputRequest.kind) {
-    case "tool-approval":
-      return TOOL_APPROVAL_OPTION_LABELS[option.id] ?? option.label;
-    case "session-limit":
-      return SESSION_LIMIT_OPTION_LABELS[option.id] ?? option.label;
-    // `ask_question`: `id`/`label` do model tự chọn tự do — đụng vào là dịch nhầm lựa chọn của model.
-    case "question":
-      return option.label;
-  }
+  return HITL_OPTION_LABELS[inputRequest.kind]?.[option.id] ?? option.label;
 }
 
 /**
