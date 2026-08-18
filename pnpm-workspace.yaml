@@ -4,6 +4,19 @@ packages:
   - tooling/*
   - "!**/test/**"
 
+# `eve` ship `.d.ts` có `import * as z from "zod"` (mọi type suy ra bằng `z.infer`) nhưng KHÔNG khai
+# báo zod ở `dependencies` lẫn `peerDependencies`. Zod chỉ resolve được nhờ hoisting → tuỳ layout
+# `node_modules` từng máy. Nơi nào không resolve được thì `z` thành `any`, `skipLibCheck: true` che
+# lỗi, và MỌI type zod-derived của eve âm thầm thành `any`. Hậu quả đã xảy ra thật (18/08/2026):
+# `EveMessageInputRequest["kind"]` mất union → `switch` exhaustive trong
+# `apps/backoffice/src/components/ai-chat/render-message.tsx` báo TS2366 làm đỏ build Vercel trong
+# khi `check-types` local xanh. Khai báo zod thành dependency thật của eve để type resolve giống nhau
+# ở mọi môi trường. Version bám theo zod của monorepo (`^4.4.3`) — đổi zod thì đổi luôn ở đây.
+packageExtensions:
+  eve:
+    dependencies:
+      zod: ^4.4.3
+
 overrides:
   "@types/node": ^25.9.4
   "@types/react": ^19.2.15
