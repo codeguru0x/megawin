@@ -9,6 +9,9 @@
  *   command quá hạn qua AbortSignal) — cache chậm hơn DB thì vô nghĩa.
  * - `deleteByPrefix` delegate xuống repo (SCAN + DEL batch, KHÔNG dùng KEYS),
  *   giữ default timeout 5s vì là thao tác admin dài.
+ * - `Date` được encode/decode qua `json-date-codec.ts`: `CacheStore.get<T>()` hứa trả `T`, nên
+ *   không được để JSON round-trip âm thầm biến `Date` thành string (bug thật đã bắt 17/08 —
+ *   xem đầu file codec).
  *
  * Backend hiện tại là Redis; tương lai Memcached/DynamoDB DAX… chỉ cần viết
  * store mới implement `CacheStore` — consumer không đổi 1 dòng nào.
@@ -20,6 +23,7 @@ import { DEFAULT_REDIS_COMMAND_TIMEOUT_MS, DEFAULT_REDIS_ENV_KEY } from "../cons
 import { RedisRepository } from "../redis/repository";
 import type { RedisCommandOptions } from "../redis/types";
 import type { CacheStore } from "../types";
+import { decodeCacheValue, encodeCacheValue } from "./json-date-codec";
 
 export interface RedisCacheStoreOptions {
   /**
@@ -70,10 +74,16 @@ export class RedisCacheStore implements CacheStore {
    */
   async get<T>(key: string): Promise<T | undefined> {
     try {
-      const value = await this.repo.getJson<T>(key, this.hotPathOptions);
+      const value = await this.repo.getJson<unknown>(key, this.hotPathOptions);
       // getJson trả null cho cả miss lẫn cached-null — envelope { v } của
       // cached-fetcher nằm bên trong value nên null ở đây luôn là miss.
-      return value === null ? undefined : value;
+      if (value === null) {
+        return undefined;
+      }
+      // decodeCacheValue: dựng lại `Date` từ marker `{ "$date": ISO }` do `set` ghi. Không có bước
+      // này thì `CacheStore.get<T>` trả về shape SAI so với `T` đã khai (Date thành string) —
+      // xem `json-date-codec.ts` cho ca lỗi thật đã bắt được.
+      return decodeCacheValue(value) as T;
     } catch (err) {
       logWarn("RedisCacheStore", "get lỗi — degrade về cache miss", {
         key,
@@ -93,9 +103,12 @@ export class RedisCacheStore implements CacheStore {
    * @param ttlSec - TTL tính bằng giây; `<= 0` bỏ qua.
    */
   async set<T>(key: string, value: T, ttlSec: number): Promise<void> {
-    if (ttlSec <= 0) return;
+    if (ttlSec <= 0) {
+      return;
+    }
     try {
-      await this.repo.setJson(key, value, ttlSec, this.hotPathOptions);
+      // encodeCacheValue: `Date` → `{ "$date": ISO }` để `JSON.stringify` không làm mất kiểu.
+      await this.repo.setJson(key, encodeCacheValue(value), ttlSec, this.hotPathOptions);
     } catch (err) {
       logWarn("RedisCacheStore", "set lỗi — bỏ qua (fail-open)", {
         key,

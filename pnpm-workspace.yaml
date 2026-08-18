@@ -27,3 +27,4 @@ minimumReleaseAgeExclude:
   - better-auth@1.6.20
   - react-hook-form@7.80.0
   - postcss@8.5.23
+  - eve@0.38.3

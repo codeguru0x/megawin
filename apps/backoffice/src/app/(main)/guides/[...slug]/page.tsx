@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { findRunbookDoc, RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
 import type { Metadata } from "next";
 
 import {
@@ -20,15 +19,16 @@ import { DOC_CONTENT } from "../_lib/docs-content";
 import { extractToc, readingTimeMinutes } from "../_lib/markdown";
 import { MarkdownRenderer } from "../_lib/markdown-renderer";
 import { getAdjacentDocs } from "../_lib/navigation";
+import { findStaffGuideDoc, STAFF_GUIDE_MANIFEST } from "../_lib/staff-manifest";
 
 interface PageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-/** Prerender mọi doc staff trong manifest. */
+/** Prerender mọi doc staff-facing (chỉ topic resettle — xem `staff-manifest.ts`). */
 export function generateStaticParams() {
   const params: { slug: string[] }[] = [];
-  for (const game of RUNBOOK_MANIFEST) {
+  for (const game of STAFF_GUIDE_MANIFEST) {
     for (const topic of game.topics) {
       for (const doc of topic.docs) {
         params.push({ slug: [game.gameKey, topic.key, doc.slug] });
@@ -41,7 +41,7 @@ export function generateStaticParams() {
 function resolveDoc(slug: string[]) {
   if (slug.length !== 3) return null;
   const [gameKey, topicKey, docSlug] = slug as [string, string, string];
-  const found = findRunbookDoc(gameKey, topicKey, docSlug);
+  const found = findStaffGuideDoc(gameKey, topicKey, docSlug);
   if (!found) return null;
   const content = DOC_CONTENT[found.doc.file];
   if (content == null) return null;

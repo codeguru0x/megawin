@@ -94,7 +94,7 @@ export function DrawHistorySection() {
       onStatusChange={handleStatusChange}
       onPageNext={() => setPage(page + 1)}
       onPagePrev={() => page > 1 && setPage(page - 1)}
-      onRowClick={(draw) => router.push(`${OPS_BASE}?draw=${draw.drawId}`)}
+      onRowClick={(draw) => router.push(`${OPS_BASE}?drawId=${draw.drawId}`)}
       renderStatusBadge={(status) => <DrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
         // Max3D: 20 bộ ba số chia 4 hạng — hiển thị đặc trưng per tier

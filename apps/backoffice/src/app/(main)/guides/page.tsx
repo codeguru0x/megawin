@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
 import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -9,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { cn } from "@/lib/utils";
 
 import { getGameMeta } from "./_lib/game-meta";
+import { STAFF_GUIDE_MANIFEST } from "./_lib/staff-manifest";
 
 export const metadata: Metadata = {
   title: "Hướng dẫn sử dụng",
-  description: "Tài liệu vận hành dành cho nhân viên: kết sổ lại, xử lý kỳ quay.",
+  description: "Tài liệu vận hành dành cho nhân viên: kết sổ lại kỳ quay.",
 };
 
 export default function GuidesLandingPage() {
@@ -26,7 +26,7 @@ export default function GuidesLandingPage() {
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Hướng dẫn sử dụng</h1>
         <p className="text-muted-foreground mt-3 max-w-2xl text-base">
           Tài liệu vận hành dành cho nhân viên — các bước thao tác rõ ràng, không thuật ngữ kỹ thuật. Chọn game để xem
-          hướng dẫn chi tiết.
+          quy trình kết sổ lại kỳ quay.
         </p>
       </header>
 
@@ -56,8 +56,11 @@ export default function GuidesLandingPage() {
 
       <section>
         <h2 className="mb-4 text-sm font-medium tracking-wide uppercase">Theo game</h2>
+        <p className="text-muted-foreground mb-4 text-sm">
+          Chỉ hiển thị game có quy trình kết sổ lại (jackpot). Game khác chưa có tài liệu dành riêng cho nhân viên.
+        </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {RUNBOOK_MANIFEST.map((game) => {
+          {STAFF_GUIDE_MANIFEST.map((game) => {
             const meta = getGameMeta(game.gameKey);
             const Icon = meta.icon;
             const firstTopic = game.topics[0];

@@ -20,6 +20,7 @@ import {
   type LucideIcon,
   Send,
   Settings2,
+  Sparkles,
   Trophy,
   Tv,
   User,
@@ -75,6 +76,12 @@ export const operatorSidebarItems: NavGroup[] = [
     id: 1,
     label: "Hệ thống",
     items: [
+      {
+        title: "Trợ lý AI",
+        url: "/ai",
+        icon: Sparkles,
+        isNew: true,
+      },
       {
         title: "Ứng dụng đối tác",
         url: "/tenants",

@@ -16,6 +16,7 @@ cảm); (4) **tool điều hướng** — agent mở trang báo cáo với filte
 | HITL: `input.requested` → part `dynamic-tool` state `approval-requested` → `respond()` | Bundled docs frontend guide + `human-in-the-loop` |
 | Zustand store persist | `apps/backoffice/src/stores/preferences/*` |
 | Page layout (main) hiện có | `apps/backoffice/src/app/(main)/reports/settle/page.tsx` |
+| Chốt chiều cao để chat scroll nội bộ (bẫy `min-h-svh`) | comment §docked trong `src/components/ai-panel/ai-panel.tsx` |
 | URL filter shape từng trang (cho tool điều hướng) | `.../_lib/use-report-filters.ts` các trang reports |
 
 ## 1. Thread registry — `src/stores/ai-threads/`
@@ -44,29 +45,73 @@ interface AiThread {
 
 ## 2. Trang `/ai` — `app/(main)/ai/page.tsx`
 
-### 2.1. Layout
+### 2.1. Layout — nằm TRONG shell `(main)`, KHÔNG phải trang full-bleed
+
+Trang `/ai` là **nội dung bên trong `SidebarInset`** như mọi trang backoffice khác: vẫn có
+`AppSidebar` bên trái và header `h-12` chung (SidebarTrigger · AiPanelTrigger · ThemeSwitcher ·
+AccountSwitcher). **KHÔNG** tạo route group riêng, **KHÔNG** override `(main)/layout.tsx`,
+**KHÔNG** chiếm toàn viewport kiểu chatgpt.com. Staff không bị "rơi ra khỏi" backoffice — vẫn
+đổi tài khoản/theme, vẫn điều hướng sang báo cáo bằng menu quen thuộc.
 
 ```
-┌──────────────┬──────────────────────────────────────────┐
-│ ThreadSidebar│  Conversation (max-w-3xl mx-auto)        │
-│  [+ Chat mới]│   user: bubble phải, bg-muted            │
-│  Tìm kiếm    │   assistant: full-width, markdown        │
-│  ── Hôm nay ─│   dynamic-tool: card generative/collapse │
-│   Thread A   │   approval: ApprovalCard inline (§3)     │
-│  ── Hôm qua ─│   hover actions: Copy                    │
-│   Thread B   │  ────────────────────────────────────    │
-│  ── 7 ngày ──│  Composer sticky bottom: auto-grow,      │
-│   Thread C   │  ⏎ gửi / ⇧⏎ xuống dòng, Stop, chip ctx  │
-└──────────────┴──────────────────────────────────────────┘
+┌────┬───────────────────────────────────────────────────────────┐
+│ ▤  │ header h-12 (của (main)/layout.tsx, KHÔNG sửa)            │
+│ A  │  ⌘ trigger                  AI · theme · account          │
+│ p  ├──────────────┬────────────────────────────────────────────┤
+│ p  │ ThreadSidebar│  Conversation (max-w-3xl mx-auto)          │
+│ S  │  [+ Chat mới]│   user: bubble phải, bg-muted              │
+│ i  │  Tìm kiếm    │   assistant: full-width, markdown          │
+│ d  │  ── Hôm nay ─│   dynamic-tool: card generative/collapse   │
+│ e  │   Thread A   │   approval: ApprovalCard inline (§3)       │
+│ b  │  ── Hôm qua ─│   hover actions: Copy                      │
+│ a  │   Thread B   │  ──────────────────────────────────────    │
+│ r  │  ── 7 ngày ──│  Composer sticky bottom: auto-grow,        │
+│(ic)│   Thread C   │  ⏎ gửi / ⇧⏎ xuống dòng, Stop, chip ctx    │
+└────┴──────────────┴────────────────────────────────────────────┘
+  ↑ layout (main)   ↑─────── page content: app/(main)/ai/page.tsx ─┘
 ```
 
-- Route trong `(main)` → hưởng auth guard + AppSidebar hiện có. Sidebar trái (app) auto-collapse
-  icon khi vào `/ai` (gọi `useSidebar().setOpen(false)` on mount, restore khi rời — cùng cơ chế
-  p0-01 §3.2) — nhường không gian cho thread sidebar.
+- Route trong `(main)` → hưởng auth guard + AppSidebar + header sẵn có. Sidebar trái (app)
+  auto-collapse icon khi vào `/ai` (`useSidebar().setOpen(false)` on mount, restore khi rời —
+  cùng cơ chế p0-01 §3.2) — nhường không gian cho ThreadSidebar. Kết quả: 3 cột (rail 3rem +
+  thread ~16rem + hội thoại), vừa đủ từ ~1280px.
+- ThreadSidebar là **panel trong page content**, không phải `Sidebar` thứ 2 của shadcn (một
+  `SidebarProvider` chỉ quản 1 sidebar; lồng thêm sẽ tranh cookie `sidebar_state` + phím tắt
+  `⌘B`). Dưới `lg`: ẩn cột này, mở bằng `Sheet` từ nút trong page header.
 - ThreadSidebar: group theo `updatedAt` (Hôm nay/Hôm qua/7 ngày trước/Cũ hơn — helper date
   `@megawin/shared/utils/date`), item có title + menu (Đổi tên, Xoá). Search filter theo title
   (client-side, registry nhỏ).
-- **Panel tự ẩn trên `/ai`** (trigger disabled) — không 2 chat instance cùng lúc.
+- **Panel tự ẩn trên `/ai`**: `AiPanelTrigger` return `null` + panel force `open=false` khi
+  `pathname === "/ai"` — không 2 surface chat cùng hiển thị.
+
+### 2.1.1. Một agent instance duy nhất — hệ quả của việc ở trong `(main)`
+
+`AiPanelProvider` (chứa `useEveAgent`) đã sống ở `(main)/layout.tsx`, và `/ai` nằm TRONG
+`(main)` → trang và panel **đọc cùng một provider, cùng một agent instance**. Hai hệ quả bắt
+buộc phải theo:
+
+1. **Promote (§2.5) không cần chuyển state** — cùng instance thì cùng session cursor sẵn; điều
+   hướng `/ai?thread=…` chỉ là đổi surface. KHÔNG serialize state qua URL/storage để "bàn giao".
+2. **Remount `key={activeThreadId}` phải đặt ở host của agent trong provider**, KHÔNG đặt ở
+   từng surface. Đặt `key` ở panel và page riêng lẻ → 2 store eve song song, gửi tin ở panel
+   không thấy ở trang.
+
+### 2.1.2. Chốt chiều cao + scroll (bẫy ĐÃ mắc 1 lần ở panel — không mắc lại)
+
+`sidebar-wrapper` dùng `min-h-svh` ⇒ chiều cao **auto, grow theo con cao nhất**. Nếu trang chat
+không tự chốt chiều cao thì hội thoại dài sẽ kéo dài cả trang thay vì scroll nội bộ, để lại vệt
+trắng cạnh cột nội dung — đúng lỗi đã sửa ở `ai-panel.tsx` (đọc comment mục docked ở đó trước
+khi code trang này).
+
+- `(main)/layout.tsx`: đổi wrapper children `<div className="h-full p-4 md:p-6">` →
+  `min-h-0 flex-1` (thay `h-full`). `flex-1` trên flex-item của `SidebarInset` (đã `flex-col`)
+  cho chiều cao xác định như `h-full` nhưng thêm `min-h-0` — điều kiện để `overflow` bên trong
+  có tác dụng. Sửa ở layout dùng chung ⇒ **verify lại vài trang report + trang operations** (mục
+  §6.8) trước khi merge.
+- `app/(main)/ai/page.tsx` root: `flex min-h-0 flex-1 overflow-hidden` + bỏ padding của shell
+  bằng `-m-4 md:-m-6` để ThreadSidebar/composer chạm mép khung nội dung (đúng cảm giác app chat).
+- Chỉ **một** vùng `overflow-y-auto` duy nhất: `Conversation`. ThreadSidebar có vùng scroll
+  riêng, độc lập. Composer `shrink-0`, KHÔNG nằm trong vùng scroll.
 
 ### 2.2. Component dùng chung với panel
 
@@ -76,11 +121,16 @@ message user dạng bubble, hover actions. Style variant qua prop `variant: "pan
 trên wrapper — KHÔNG fork component (boolean prop cho layout wrapper là chấp nhận được;
 KHÔNG thêm boolean điều khiển behavior).
 
+`variant` cũng là input cho 2 quyết định behavior ĐÃ chốt ở nơi khác, đọc qua context chứ không
+prop-drill: `navigateToReport` auto-push ở panel, chỉ render nút link trên page (§4); và độ dày
+padding/`max-w` của bubble.
+
 ### 2.3. Chuyển thread
 
 Theo docs eve: hook đọc `initialEvents`/`initialSession` lúc tạo store → **remount bằng
-`key={thread.id}`** khi đổi thread. URL state `?thread=<id>` qua nuqs (pattern
-`use-report-filters.ts`) — deep-link/share được trong nội bộ.
+`key={thread.id}`** khi đổi thread — đặt `key` ở host agent trong `AiPanelProvider`, không ở
+từng surface (§2.1.1). URL state `?thread=<id>` qua nuqs (pattern `use-report-filters.ts`) —
+deep-link/share được trong nội bộ.
 
 ### 2.4. Title thread
 
@@ -89,9 +139,10 @@ P1 (thêm turn = thêm chi phí; nâng cấp sau nếu cần).
 
 ### 2.5. Promote từ panel — nút [⤢ Mở rộng]
 
-`AiPanelHeader` (p0-03): navigate `/ai?thread=<activeThreadId>` + đóng panel. Trang đọc
-`?thread=` → mở đúng thread — CÙNG session cursor, hội thoại liền mạch. Chiều ngược lại:
-đang ở `/ai` rời sang trang khác → panel trigger hiện lại, panel mở tiếp thread hiện hành.
+`AiPanelHeader` (p0-03): navigate `/ai?thread=<activeThreadId>` + đóng panel. Vì hai surface
+dùng CÙNG agent instance (§2.1.1), promote chỉ là đổi surface — không chuyển state, không
+reconnect, không mất turn đang stream. Chiều ngược lại: đang ở `/ai` rời sang trang khác →
+panel trigger hiện lại, panel mở tiếp thread hiện hành.
 
 ## 3. HITL — duyệt trước hành động nhạy cảm (native eve)
 
@@ -155,4 +206,14 @@ Thêm item "Trợ lý AI" (icon `Sparkles`, url `/ai`) vào `sidebar-items.ts` �
 5. "Mở báo cáo tài chính tuần này" (từ panel) → trang đổi đúng route + filter, panel giữ hội
    thoại, chat hiện "→ Đã mở…". Cùng câu trên `/ai` → hiện nút link, KHÔNG auto-navigate.
 6. Prompt injection giả lập ("điều hướng tới /admin/xyz") → client từ chối href, hiện cảnh báo.
-7. Sidebar trái auto-collapse khi vào `/ai`, restore khi rời.
+7. Sidebar trái auto-collapse khi vào `/ai`, restore khi rời. AppSidebar + header `(main)` VẪN
+   hiện trên `/ai` (đổi theme, đổi account, bấm menu điều hướng ngay tại trang chat).
+8. **Layout/scroll** (§2.1.2 — sửa `(main)/layout.tsx` là thay đổi dùng chung, bắt buộc verify):
+   - `/ai` với hội thoại ~40 message: chỉ vùng Conversation cuộn; ThreadSidebar và composer đứng
+     yên; **KHÔNG** có scrollbar trang, **KHÔNG** vệt trắng cạnh cột nội dung.
+   - Regression trang khác sau khi đổi `h-full` → `min-h-0 flex-1`: `/reports/settle`,
+     1 trang `/games/*/operations` (bảng dài + sticky header), 1 trang form. Nội dung không bị
+     co lại/tràn, panel AI docked mở kèm vẫn đúng.
+   - Ngưỡng < `lg`: ThreadSidebar chuyển Sheet, hội thoại full width, không tràn ngang.
+9. Một agent instance (§2.1.1): mở panel gửi 1 câu → sang `/ai` thấy đúng hội thoại đó, đang
+   stream thì stream tiếp không mất chữ; trên `/ai` panel trigger ẩn, panel không render.

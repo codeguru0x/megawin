@@ -5,7 +5,8 @@
     "**/.turbo": true,
     "**/dist": true,
     "**/.serverless": true,
-    "**/.pnpm-store": true
+    "**/.pnpm-store": true,
+    "**/.eve": true
   },
   "editor.formatOnSaveMode": "file",
   "files.autoSave": "afterDelay",

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { calcRelativeTime, formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { CalendarClock, CheckCircle2, Clock3, ExternalLink, Play, Zap } from "lucide-react";
 
-import type { DrawTimelineEvent, GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/_lib/types";
+import type { DrawTimelineEvent, GetDashboardDrawsOutput } from "@/server/use-cases/draws/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,7 +37,7 @@ function useRelativeTime(isoDate: string): string {
 
 /** Tạo URL đến trang vận hành của game với draw được chọn sẵn. */
 function opsUrl(gameProduct: string, drawId: string) {
-  return `/games/${gameProduct}/operations?draw=${encodeURIComponent(drawId)}`;
+  return `/games/${gameProduct}/operations?drawId=${encodeURIComponent(drawId)}`;
 }
 
 /**
@@ -179,7 +179,7 @@ export function DrawTimelineSkeleton() {
  * Design:
  * - Row trên (inline): High-freq games (Keno, Bingo18) → compact badges ngang
  * - 3 cột: Đang diễn ra | Vừa hoàn thành | Sắp diễn ra
- * - Mỗi row là link → /games/:game/operations?draw=:drawId
+ * - Mỗi row là link → /games/:game/operations?drawId=:drawId
  * - Mỗi cột scrollable độc lập (maxHeight 260px)
  *
  * Terminology theo nghiệp vụ:

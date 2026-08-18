@@ -1,8 +1,15 @@
 /**
  * Registry tài liệu vận hành bản STAFF — nguồn duy nhất backoffice trỏ tới.
  *
- * Chỉ index bản staff (`docs/resettle/{game}/*.md`). Bản developer trong
- * `docs/resettle/_developer/{game}/` là SSOT cho dev, KHÔNG xuất hiện ở đây.
+ * Index 2 loại doc staff: `docs/games/{game}/*.md` (topic `product` — cơ chế sản
+ * phẩm, KHÔNG số cấu hình, cũng là skill content của AI agent — p1-02) và
+ * `docs/resettle/{game}/*.md` (topic `resettle`, chỉ 3 game jackpot). Bản developer
+ * trong `docs/resettle/_developer/{game}/` là SSOT cho dev, KHÔNG xuất hiện ở đây.
+ *
+ * ⚠️ Mỗi doc `docs/games/**` có HAI consumer: trang `/guides` (staff đọc) và skill AI agent
+ * (`apps/backoffice/agent/skills/*.ts` import cùng file bằng `?raw`). Thêm/đổi tên/xoá doc
+ * PHẢI cập nhật cả 2 phía trong CÙNG commit — quy trình đầy đủ ở
+ * `.cursor/rules/ops-docs-agent-sync.mdc`.
  *
  * Thêm doc staff mới: thêm 1 entry vào `docs` của topic tương ứng, đồng thời
  * thêm 1 dòng raw import trong `guides/_lib/docs-content.ts` (backoffice).
@@ -83,23 +90,117 @@ function buildResettleTopic(gameKey: string): RunbookTopic {
 }
 
 /**
- * Manifest tài liệu staff cho toàn bộ game có runbook resettle.
+ * Build topic "Sản phẩm & cách chơi" (3 doc: overview, how-to-play, payout) cho một game
+ * theo convention path `games/{gameKey}/{slug}.md` (p1-02 §2.4).
+ *
+ * Doc này KHÔNG chứa số cấu hình — chỉ mô tả cơ chế, xem `docs/games/{gameKey}/*.md`.
+ *
+ * ⚠️ Slug = tên file (tiếng Anh, kebab-case) và cũng là URL segment `/guides/{gameKey}/product/
+ * {slug}`. Đổi slug ở đây là đổi URL → phải cập nhật `docs-content.ts` + skill agent tương ứng,
+ * xem `.cursor/rules/ops-docs-agent-sync.mdc`.
+ *
+ * @param gameKey - Game key (7/7 game: keno, lotto535, mega645, power655, max3d, max3dpro, bingo18).
+ * @param gameTitle - Tên game hiển thị, dùng trong description từng doc.
+ * @returns Topic `product` đầy đủ 3 doc.
+ */
+function buildProductTopic(gameKey: string, gameTitle: string): RunbookTopic {
+  return {
+    key: "product",
+    title: "Sản phẩm & cách chơi",
+    description: "Cơ chế game, nội dung đặt cược, điều kiện trúng và cách trả thưởng.",
+    docs: [
+      {
+        slug: "overview",
+        title: "Tổng quan",
+        description: `Giới thiệu chung sản phẩm ${gameTitle}: cơ chế quay, cách chơi, đặc điểm nổi bật.`,
+        file: `games/${gameKey}/overview.md`,
+      },
+      {
+        slug: "how-to-play",
+        title: "Nội dung đặt cược",
+        description: `Cách chọn số/cược, cấu trúc board/line, công thức tính tiền cược ${gameTitle}.`,
+        file: `games/${gameKey}/how-to-play.md`,
+      },
+      {
+        slug: "payout",
+        title: "Điều kiện trúng & cách trả thưởng",
+        description: `Điều kiện trúng từng hạng giải và cơ chế trả thưởng của ${gameTitle}.`,
+        file: `games/${gameKey}/payout.md`,
+      },
+    ],
+  };
+}
+
+/**
+ * Manifest tài liệu staff cho toàn bộ 7 game — topic `product` (7/7) + topic `resettle`
+ * (chỉ 3 game jackpot: lotto535, mega645, power655), cộng entry `shared` cho khái niệm chung.
  */
 export const RUNBOOK_MANIFEST: RunbookGame[] = [
   {
     gameKey: "power655",
     title: "Power 6/55",
-    topics: [buildResettleTopic("power655")],
+    topics: [buildProductTopic("power655", "Power 6/55"), buildResettleTopic("power655")],
   },
   {
     gameKey: "lotto535",
     title: "Lotto 5/35",
-    topics: [buildResettleTopic("lotto535")],
+    topics: [buildProductTopic("lotto535", "Lotto 5/35"), buildResettleTopic("lotto535")],
   },
   {
     gameKey: "mega645",
     title: "Mega 6/45",
-    topics: [buildResettleTopic("mega645")],
+    topics: [buildProductTopic("mega645", "Mega 6/45"), buildResettleTopic("mega645")],
+  },
+  {
+    gameKey: "keno",
+    title: "Keno",
+    topics: [buildProductTopic("keno", "Keno")],
+  },
+  {
+    gameKey: "max3d",
+    title: "Max 3D",
+    topics: [buildProductTopic("max3d", "Max 3D")],
+  },
+  {
+    gameKey: "max3dpro",
+    title: "Max 3D Pro",
+    topics: [buildProductTopic("max3dpro", "Max 3D Pro")],
+  },
+  {
+    gameKey: "bingo18",
+    title: "Bingo 18",
+    topics: [buildProductTopic("bingo18", "Bingo 18")],
+  },
+  {
+    gameKey: "shared",
+    title: "Kiến thức chung",
+    topics: [
+      {
+        key: "game-concepts",
+        title: "Khái niệm chung 7 sản phẩm",
+        description: "Từ vựng, vòng đời vé và dòng tiền — nền tảng đọc trước khi vào từng game.",
+        docs: [
+          {
+            slug: "glossary",
+            title: "Từ vựng chung",
+            description: "Ticket, board, line, betCount, betUnitCount — quan hệ giữa các khái niệm dùng chung 7 game.",
+            file: "games/_shared/glossary.md",
+          },
+          {
+            slug: "ticket-lifecycle",
+            title: "Vòng đời vé & kỳ quay",
+            description: "Place-bet → chờ quay → settle → payout; void và hoàn tiền.",
+            file: "games/_shared/ticket-lifecycle.md",
+          },
+          {
+            slug: "money-flow",
+            title: "Dòng tiền vận hành",
+            description: "Revenue → hoa hồng đại lý → trả thưởng → (jackpot contribution) → lợi nhuận.",
+            file: "games/_shared/money-flow.md",
+          },
+        ],
+      },
+    ],
   },
 ];
 

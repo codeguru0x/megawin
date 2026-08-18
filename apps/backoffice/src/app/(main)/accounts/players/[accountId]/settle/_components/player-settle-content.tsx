@@ -31,8 +31,8 @@ interface PlayerSettleContentProps {
  * URL state (nuqs + history: "push"):
  * - from/to: date range filter (luôn hiển thị)
  * - game: game product đang drill (View 2+)
- * - fd: financialDate đang drill (View 3+)
- * - draw: drawId đang drill (View 4)
+ * - financialDate: ngày tài chính đang drill (View 3+); biến local `fd`
+ * - drawId: kỳ quay đang drill (View 4); biến local `draw`
  *
  * KPI strip luôn hiện cross-game totals (Phương án A).
  */
@@ -43,8 +43,8 @@ export function PlayerSettleContent({ accountId }: PlayerSettleContentProps) {
 
   // Drill state — mỗi level push history
   const [game, setGame] = useQueryState("game", parseAsString);
-  const [fd, setFd] = useQueryState("fd", parseAsString);
-  const [draw, setDraw] = useQueryState("draw", parseAsString);
+  const [fd, setFd] = useQueryState("financialDate", parseAsString);
+  const [draw, setDraw] = useQueryState("drawId", parseAsString);
 
   // KPI data — always cross-game (View 1)
   const { data: overviewData, isLoading: overviewLoading } = usePlayerOverview(accountId, from, to);

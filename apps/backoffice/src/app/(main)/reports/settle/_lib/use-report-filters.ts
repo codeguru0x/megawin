@@ -16,10 +16,10 @@ export function useSystemReportFilters() {
   const [to, rawSetTo] = useQueryState("to", parseAsString.withDefault(today));
 
   /** Ngày được chọn xem chi tiết (tab Daily) */
-  const [selectedDate, setSelectedDate] = useQueryState("date", parseAsString);
+  const [selectedDate, setSelectedDate] = useQueryState("financialDate", parseAsString);
 
   /** Tenant được chọn xem chi tiết (tab By Tenant) */
-  const [selectedTenant, setSelectedTenant] = useQueryState("tenant", parseAsString);
+  const [selectedTenant, setSelectedTenant] = useQueryState("tenantId", parseAsString);
 
   function setTab(t: (typeof SYSTEM_TABS)[number]) {
     void rawSetTab(t, { history: "push" });

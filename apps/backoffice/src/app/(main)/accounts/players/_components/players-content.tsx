@@ -26,9 +26,9 @@ export function PlayersContent() {
   // tenant + search mutually exclusive
   // after + before mutually exclusive (cursor navigation)
   // Khi đổi tenant → clear after/before
-  const [{ tenant: activeTenantId, search: activeSearch, after, before }, setUrlState] = useQueryStates(
+  const [{ tenantId: activeTenantId, search: activeSearch, after, before }, setUrlState] = useQueryStates(
     {
-      tenant: parseAsString.withDefault(""),
+      tenantId: parseAsString.withDefault(""),
       search: parseAsString.withDefault(""),
       after: parseAsString.withDefault(""),
       before: parseAsString.withDefault(""),
@@ -46,13 +46,13 @@ export function PlayersContent() {
 
   const isSearchActive = !!activeSearch;
 
-  // Khi tenants load xong mà URL chưa có ?tenant= và không đang search,
+  // Khi tenants load xong mà URL chưa có ?tenantId= và không đang search,
   // tự động chọn tenant đầu tiên (replace history — không phải user action).
   useEffect(() => {
     const firstTenant = tenants[0];
     if (!isLoadingOptions && firstTenant && !activeTenantId && !activeSearch) {
       void setUrlState(
-        { tenant: firstTenant.tenantId, search: null, after: null, before: null },
+        { tenantId: firstTenant.tenantId, search: null, after: null, before: null },
         { history: "replace" },
       );
     }
@@ -76,19 +76,19 @@ export function PlayersContent() {
   const handleSubmitSearch = () => {
     const keyword = inputValue.trim();
     if (!keyword) return;
-    void setUrlState({ search: keyword, tenant: null, after: null, before: null });
+    void setUrlState({ search: keyword, tenantId: null, after: null, before: null });
   };
 
   const handleClearSearch = () => {
     setInputValue("");
     setIsSearchOpen(false);
     // Clear search + cursor → useEffect auto-select tenant đầu tiên
-    void setUrlState({ search: null, tenant: null, after: null, before: null }, { history: "replace" });
+    void setUrlState({ search: null, tenantId: null, after: null, before: null }, { history: "replace" });
   };
 
   const handleTenantChange = (v: string) => {
     // Đổi tenant → clear cursor (bắt đầu từ trang đầu)
-    void setUrlState({ tenant: v || null, search: null, after: null, before: null });
+    void setUrlState({ tenantId: v || null, search: null, after: null, before: null });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

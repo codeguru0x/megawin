@@ -7,7 +7,7 @@ import type {
 import { apiClient } from "@megawin/next/client";
 import { useQuery } from "@tanstack/react-query";
 
-import type { GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/_lib/types";
+import type { GetDashboardDrawsOutput } from "@/server/use-cases/draws/types";
 import type { GetDashboardJackpotsOutput } from "@/app/api/dashboard/jackpots/_lib/types";
 import { dashboardKeys } from "@/lib/query-keys/dashboard";
 

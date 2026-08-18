@@ -96,5 +96,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  // `eve/` loại trừ khỏi matcher — withEve() mount `/eve/v1/*` (eve HTTP channel) và eve
+  // tự quản lý auth riêng (fail-closed, xem `agent/channels/eve.ts`), bao gồm `/eve/v1/health`
+  // PHẢI luôn public (health check cho load balancer). Để proxy này chạy trên các route đó sẽ
+  // redirect `/login` trước khi request tới được eve — chặn cả health check lẫn double-guard
+  // auth với logic khác cơ chế (redirect thay vì 401 JSON).
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|eve/).*)"],
 };

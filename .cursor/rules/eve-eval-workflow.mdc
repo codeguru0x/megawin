@@ -1,0 +1,183 @@
+---
+description: Quy trình chạy `eve eval` local cho AI agent backoffice — bật/tắt evalBypass() trong channels/eve.ts, đọc report ở .eve/evals, và cách phân biệt "model chọn sai tool" với "eval thiết kế sai"
+globs: apps/backoffice/evals/**,apps/backoffice/agent/**
+alwaysApply: false
+---
+
+# Chạy `eve eval` local — quy trình bắt buộc
+
+Bộ eval ở `apps/backoffice/evals/` đo **model THẬT** (model cấu hình ở `agent/agent.ts`, không
+`mockModel`) trên **Mongo THẬT**. Nên mỗi lần chạy vừa tốn tiền API vừa mất ~1,5–2 phút, và kết quả
+phụ thuộc dữ liệu trong DB tại thời điểm chạy. Đọc hết rule này trước khi chạy.
+
+---
+
+## 1. BẮT BUỘC: bật `evalBypass()` trước khi chạy, TẮT ngay sau khi chạy
+
+`channels/eve.ts` fail-closed: staff phải có cookie better-auth thật mới gọi được `/eve/v1/*`. Eval
+client local **không gửi header auth nào** (`resolveEvalClientOptions` trả `{ host }` trần khi
+target `kind === "local"`) → không bật bypass thì mọi case fail 401, không phải fail vì model.
+
+```ts
+// TRƯỚC khi chạy `eve eval` — bỏ comment dòng có evalBypass()
+auth: [appSession(), vercelOidc(), evalBypass()],
+
+// SAU khi chạy xong — trả lại trạng thái mặc định (dòng chỉ còn 2 entry)
+auth: [appSession(), vercelOidc()],
+```
+
+**TẮT NGAY sau khi đọc kết quả. Không commit dòng có `evalBypass()` đang bật.**
+
+Vì sao vẫn phải tắt dù `evalBypass()` đã gate kép (`EVE_EVALUATION === "1"` **và** `localDev()`)?
+Không phải vì gate yếu — gate đó đúng và fail-closed. Lý do là **kỷ luật diff**: một entry auth
+đang bật trong nhánh main khiến mọi người đọc `eve.ts` sau này phải tự chứng minh lại rằng nó vô
+hại, và biến "đường bypass" thành mặc định trong đầu người đọc. Với agent đọc dữ liệu tài chính,
+trạng thái mặc định của file phải là trạng thái không có bypass nào.
+
+Trình tự đầy đủ:
+
+```bash
+# 1. Bật evalBypass() trong apps/backoffice/agent/channels/eve.ts (§1)
+# 2. Chạy — cần .env.local (AI gateway key + Mongo URI); KHÔNG tạo/sửa .env* (no-env-file-modification.mdc)
+cd apps/backoffice && npx eve eval
+
+# 3. Đọc report (§3). 4. TẮT evalBypass(). 5. Verify đã tắt:
+rg -n "evalBypass\(\)" apps/backoffice/agent/channels/eve.ts   # chỉ còn dòng comment + định nghĩa hàm
+```
+
+**Warning `lint/correctness/noUnusedVariables` trên `evalBypass` ở trạng thái TẮT là ĐÚNG như thiết
+kế** — hàm còn đó nhưng chuỗi auth không tham chiếu tới. TUYỆT ĐỐI KHÔNG "sửa sạch" bằng cách xoá
+hàm hay thêm `biome-ignore`: xoá hàm thì lần chạy eval sau phải viết lại từ đầu cả JSDoc gate kép,
+còn `biome-ignore` thì che luôn cảnh báo thật nếu sau này có biến khác không dùng trong file này.
+
+Chạy một phần cho vòng lặp nhanh (đỡ tốn tiền và thời gian):
+
+```bash
+npx eve eval evals/tool-choice/list-draws.eval.ts
+npx eve eval evals/tool-efficiency
+```
+
+---
+
+## 2. Eval client KHÔNG gửi `clientContext` — hệ quả phải biết trước khi đọc kết quả
+
+`clientContext` (`now`, `today`, `financialDate`, `route`, `filters`, `page`) do **browser** đính
+trong `prepareSend`. Eval gọi qua HTTP trần nên **không có gì trong đó**.
+
+Hệ quả: mọi case dùng từ chỉ thời gian tương đối ("tuần này", "hôm nay", "7 ngày qua") sẽ khiến
+model **hỏi lại ngày** rồi park trên `ask_question` → `succeeded()` fail. Đó là model làm **ĐÚNG**
+instructions (`20-time-context.md` rule 9 cấm suy ngày bằng cách khác vì ngày trong kiến thức huấn
+luyện là sai) — **không phải regression**.
+
+Đã xảy ra thật (18/08): `tool-choice/list-draws/0000` gửi "Tuần này Keno mở được bao nhiêu kỳ rồi?"
+→ model gọi `ask_question` hỏi hôm nay là ngày nào → park → 2 gate đỏ.
+
+**Quy tắc viết eval:** câu hỏi trong eval phải **nêu ngày tường minh** (`"từ 2026-07-01 đến
+2026-07-30"`), KHÔNG dùng từ chỉ thời gian tương đối — trừ khi chính case đó cố ý đo hành vi "hỏi
+lại khi thiếu context", và khi đó phải assert bằng `parked()` chứ không `succeeded()`.
+
+---
+
+## 3. Đọc report ở `.eve/evals/<timestamp>/` — KHÔNG chỉ đọc stdout
+
+`eve eval` in log rất dài (log tool, log sandbox, log workflow). `tail` sẽ **cắt mất** case fail
+nằm ở đầu — đã xảy ra thật 18/08: stdout tổng kết "5 failed" nhưng `tail -120` chỉ hiện 4, case
+`dispatch-orders/0001` bị mất khỏi tầm nhìn. Luôn đối chiếu với report trên đĩa:
+
+```
+.eve/evals/<timestamp>/
+├── summary.json      # tổng kết
+├── results.jsonl     # 1 dòng/case — nguồn đọc chính
+└── evals/<path>/<index>.json   # chi tiết 1 case: toolCalls (kèm input), finalMessage, assertions
+```
+
+File `<index>.json` là chỗ **duy nhất** thấy được `input` thật của từng tool call và câu trả lời
+cuối — thứ quyết định fail là "chọn sai tool" hay "gọi đúng tool nhiều lần một cách hợp lý".
+
+⚠️ `results.jsonl` ghi `status: "waiting"` cho **cả case đã pass** (session còn mở chờ lượt sau, đó
+là end state bình thường của một turn thành công). **Đừng lọc fail bằng `status`** — đọc
+`verdict`/`assertions[].passed`.
+
+`.eve/` đã gitignore. `eve build` còn sinh `.output/` (~62 MB, cũng đã gitignore) — xoá sau khi
+verify.
+
+---
+
+## 4. Fail rồi thì sửa GÌ — hỏi đúng thứ tự này
+
+Đừng phản xạ sửa instructions ngay khi thấy đỏ. Ba nguyên nhân, ba cách xử lý khác nhau:
+
+| Dấu hiệu trong report | Nguyên nhân | Sửa ở đâu |
+|---|---|---|
+| Gọi tool **khác** với tool eval kỳ vọng | Model chọn sai → mô tả tool chưa phân định rõ ranh giới | `description` của tool (rẻ nhất, hiệu quả nhất) |
+| Gọi **đúng** tool nhưng nhiều lần, mỗi lần **khác tham số hợp lý** | Eval assert quá chặt | Nới assertion trong eval |
+| Gọi đúng tool, lặp **cùng tham số** hoặc đổi tham số vu vơ để "may ra có dữ liệu" | Vi phạm ngân sách tra cứu | `40-tool-policy.md` + eval `maxToolCalls` |
+| Park trên `ask_question` vì thiếu ngày/context | Môi trường eval, không phải hành vi thật (§2) | Sửa câu hỏi trong eval |
+| Fail vì DB không có dữ liệu (`NOT_FOUND`, list rỗng) | Dữ liệu, không phải logic | Đổi case sang dữ liệu có thật, hoặc assert điều không phụ thuộc dữ liệu |
+
+**`requireToolCall` yêu cầu ĐÚNG MỘT call** ("expected exactly one matching … found 2"). Câu hỏi
+mà nghiệp vụ **đúng** cần nhiều lần gọi cùng tool với tham số khác nhau thì `requireToolCall` là
+assertion **sai lựa chọn** — dùng `calledTool` (không ràng buộc số lần) hoặc `count` là predicate.
+
+Bằng chứng thật 18/08 — `tool-choice/list-draws/0001` ("liệt kê kỳ Lotto 5/35 đã có kết quả nhưng
+chưa settle xong") gọi `listDraws` 2 lần: `status: "published"` rồi `status: "settling"`. Đó là
+**cách hiểu đúng** câu hỏi (trạng thái "đã publish, chưa settle xong" trải trên 2 status), nhưng
+`requireToolCall` vẫn đỏ. Lỗi ở eval, không ở model.
+
+`requireToolCall` cũng **không nhận `count`** (type là `Omit<…, "count">`) — cần khẳng định "đúng
+một lần" thì dùng `calledTool(name, { input, count: 1 })`.
+
+---
+
+## 5. Đổi `agent/agent.ts` (model, `reasoning`, `limits`) phải đo, không phán
+
+`reasoning: "low" | "medium" | "high"` và `limits` ảnh hưởng trực tiếp tool-choice và chi phí. Đổi
+thì phải chạy eval **trước và sau**, so tool-choice accuracy + token, ghi số vào bảng ngân sách
+token ở `.cursor/plans/ai-panel/p1-03-ops-data-visibility.plan.md` §3.
+
+Cẩn thận `limits`: `maxInputTokensPerSession`/`maxOutputTokensPerSession` là trần **cả session**.
+Đặt quá chặt thì eval fail `SESSION_TOKEN_LIMIT_REACHED` (task-mode fail thẳng, không hỏi người
+thật như chat) — đỏ vì hết quota, không phải vì model sai. Thấy lỗi đó thì nới `limits` rồi chạy
+lại, đừng đi sửa instructions.
+
+### Lấy usage thật từ report — `usage` KHÔNG nằm ở path đoán được
+
+`usage` không phải field cấp trên của `result`; nó nằm trong từng event `step.completed` **bên trong
+stream event đã lưu**. Đi mò `result.events` sẽ ra `undefined` (đã mất thời gian vì việc này
+18/08). Cách chắc ăn là quét thẳng text rồi tổng hợp:
+
+```bash
+cd apps/backoffice/.eve/evals/<timestamp> && python3 - <<'PY'
+import json,glob,re,statistics as st
+pat=re.compile(r'"usage":\s*\{[^}]*\}')
+per=[]
+for p in glob.glob('evals/**/*.json',recursive=True):
+    raw=open(p,encoding='utf8').read()
+    us=[json.loads(m.group(0)[len('"usage":'):].strip()) for m in pat.finditer(raw)]
+    if us:
+        per.append({'in':sum(u.get('inputTokens',0) for u in us),
+                    'out':sum(u.get('outputTokens',0) for u in us),
+                    'calls':len(us),'cost':sum(u.get('costUsd',0) for u in us)})
+ins=[c['in'] for c in per]; outs=[c['out'] for c in per]
+print(f"input/lượt : trung vị {st.median(ins):,.0f} · tb {st.mean(ins):,.0f} · max {max(ins):,}")
+print(f"output/lượt: trung vị {st.median(outs):,.0f} · tb {st.mean(outs):,.0f} · max {max(outs):,}")
+print(f"model call/lượt: trung vị {st.median([c['calls'] for c in per]):.0f} · max {max(c['calls'] for c in per)}")
+print(f"chi phí tb/lượt: ${st.mean([c['cost'] for c in per]):.4f}")
+PY
+```
+
+⚠️ **`inputTokens` ĐÃ GỘP `cacheReadTokens`** (thấy thật: `inputTokens: 32.039` /
+`cacheReadTokens: 31.912` — cache chiếm 92,2% tổng input của cả bộ eval). Nên prompt cache giảm
+**tiền**, KHÔNG giảm số đếm vào `maxInputTokensPerSession` một chút nào. Đừng trừ cache ra khi quy
+đổi trần thành "được bao nhiêu lượt".
+
+---
+
+## 6. Checklist trước khi commit thay đổi có liên quan eval
+
+- [ ] `evalBypass()` đã **TẮT** trong `channels/eve.ts` (§1) — verify bằng `rg`, không nhớ bằng đầu.
+- [ ] Không có `.output/` sót lại; không commit gì trong `.eve/`.
+- [ ] Eval mới dùng ngày **tường minh**, không dùng "tuần này"/"hôm nay" (§2).
+- [ ] Assertion chọn đúng loại: `requireToolCall` chỉ khi nghiệp vụ thật sự chỉ cần 1 call (§4).
+- [ ] Mỗi case fail đã phân loại theo bảng §4 trước khi sửa bất kỳ file nào.
+- [ ] `npx tsc --noEmit` sạch (eval là TS thật, sai type là fail lúc chạy chứ không lúc viết).

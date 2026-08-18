@@ -15,9 +15,9 @@ export function useKenoVoidFilters() {
 
   const [from, setFrom] = useQueryState("from", parseAsString.withDefault(sevenDaysAgo));
   const [to, setTo] = useQueryState("to", parseAsString.withDefault(today));
-  const [drawId, setDrawId] = useQueryState("draw", parseAsString);
-  const [tenantId, setTenantId] = useQueryState("tenant", parseAsString);
-  const [playerId, setPlayerId] = useQueryState("player", parseAsString);
+  const [drawId, setDrawId] = useQueryState("drawId", parseAsString);
+  const [tenantId, setTenantId] = useQueryState("tenantId", parseAsString);
+  const [playerId, setPlayerId] = useQueryState("accountId", parseAsString);
   const [playerName, setPlayerName] = useQueryState("playerName", parseAsString);
 
   const level: VoidDrillLevel = playerId

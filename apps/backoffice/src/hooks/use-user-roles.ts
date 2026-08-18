@@ -3,45 +3,21 @@
 import { useMemo } from "react";
 
 import type { AccountRole } from "@megawin/identity/entities";
-import { ALL_ROLE_VALUES } from "@megawin/identity/entities";
 
+import { parseAccountRoles } from "@/lib/roles";
 import { useAuth } from "@/providers/auth-provider";
 
 /**
- * Hook lấy danh sách roles của user đang đăng nhập từ session.
+ * Hook lấy danh sách roles của user đang đăng nhập từ session (client-side).
  *
- * Parse chuỗi roles từ better-auth session (Cognito custom claims).
- * Trả về mảng rỗng nếu session chưa load hoặc không có role.
+ * ⚠️ Chỉ dùng cho UI render SAU tương tác của user (dialog, popover…).
+ * KHÔNG dùng để filter nội dung được SSR: `useSession()` chưa có dữ liệu lúc
+ * server render nên roles = `[]` ở server nhưng đầy đủ ở client → hydration
+ * mismatch (đã xảy ra với sidebar, xem `NavMain`). Với nội dung SSR, lấy roles
+ * từ server session rồi truyền xuống bằng prop.
  */
 export function useUserRoles(): AccountRole[] {
   const { session } = useAuth();
 
-  return useMemo(() => {
-    const raw = (session?.user as Record<string, unknown>)?.roles;
-
-    let items: unknown[];
-    if (Array.isArray(raw)) {
-      items = raw;
-    } else if (typeof raw === "string" && raw.length > 0) {
-      items = raw.split(",").map((s) => s.trim());
-    } else {
-      return [];
-    }
-
-    return items.filter(
-      (r): r is AccountRole => typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
-    );
-  }, [session]);
-}
-
-/**
- * Kiểm tra user hiện tại có ít nhất 1 trong các roles cho phép không.
- *
- * @param allowedRoles - Danh sách roles cho phép. Nếu undefined/rỗng → không giới hạn → trả true.
- * @param userRoles    - Roles của user (từ useUserRoles).
- */
-export function hasAnyRole(allowedRoles: AccountRole[] | undefined, userRoles: AccountRole[]): boolean {
-  // Không khai báo roles → không giới hạn → luôn hiển thị
-  if (!allowedRoles || allowedRoles.length === 0) return true;
-  return allowedRoles.some((r) => userRoles.includes(r));
+  return useMemo(() => parseAccountRoles((session?.user as Record<string, unknown>)?.roles), [session]);
 }

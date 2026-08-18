@@ -348,7 +348,7 @@ function TenantDetailView({ tenantId }: { tenantId: string }) {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() =>
                       router.push(
-                        `/games/${row.gameProduct}/reports/settle?from=${from}&to=${to}&tab=tenants&tenant=${tenantId}`,
+                        `/games/${row.gameProduct}/reports/settle?from=${from}&to=${to}&tab=tenants&tenantId=${tenantId}`,
                       )
                     }
                   >

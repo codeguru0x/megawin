@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
 import { ChevronRight } from "lucide-react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
 import { getGameMeta } from "../game-meta";
+import { STAFF_GUIDE_MANIFEST } from "../staff-manifest";
 
 /**
  * Cây điều hướng knowledge base: Game → Topic → Doc, dựng từ manifest staff.
@@ -35,7 +35,7 @@ export function DocsSidebar({ onNavigate }: { onNavigate?: () => void }) {
         Tổng quan
       </Link>
 
-      {RUNBOOK_MANIFEST.map((game) => {
+      {STAFF_GUIDE_MANIFEST.map((game) => {
         const meta = getGameMeta(game.gameKey);
         const Icon = meta.icon;
         const gameActive = pathname.startsWith(`/guides/${game.gameKey}`);

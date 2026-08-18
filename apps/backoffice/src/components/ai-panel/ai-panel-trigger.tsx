@@ -8,13 +8,19 @@
  * Pill gradient (không phải icon-only ghost) — trợ lý AI là tính năng mới, cần bậc thị giác
  * cao hơn các icon tiện ích để user dễ nhận biết & thử. Chiều cao h-9 khớp size-9 của
  * ThemeSwitcher/Avatar để cả hàng thẳng nhau.
+ *
+ * Tự ẩn trên `/ai` (p1-01 §2.1): trang đó CHÍNH LÀ bề mặt chat full-page, hiện thêm panel là
+ * 2 bề mặt trùng lặp nội dung. Panel tự đóng khi vào route này — xử lý trong `AiPanelProvider`
+ * (effect theo `pathname`), component này chỉ lo ẩn nút trigger.
  */
 
-import { Sparkle } from "lucide-react";
+import { usePathname } from "next/navigation";
+
+import { Sparkles } from "lucide-react";
 
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AI_ASSISTANT_NAME } from "@/config/app-config";
+import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/app-config";
 import { cn } from "@/lib/utils";
 
 import { useAiPanel } from "./ai-panel-provider";
@@ -24,6 +30,11 @@ export function AiPanelTrigger() {
     state: { open },
     actions: { toggle },
   } = useAiPanel();
+  const pathname = usePathname();
+
+  if (pathname === AI_FULL_PAGE_PATH) {
+    return null;
+  }
 
   return (
     <Tooltip>
@@ -48,7 +59,7 @@ export function AiPanelTrigger() {
             open && "shadow-indigo-500/40 shadow-lg ring-2 ring-indigo-400/70 brightness-110",
           )}
         >
-          <Sparkle className="size-3.5" />
+          <Sparkles className="size-3.5" />
           {AI_ASSISTANT_NAME}
         </button>
       </TooltipTrigger>

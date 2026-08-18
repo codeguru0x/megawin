@@ -12,6 +12,11 @@ của package và định hình **contract HTTP riêng của app đó**. Logic n
 
 ## 1. Cấu trúc chuẩn trong app
 
+Vị trí `use-cases/` khác nhau giữa 2 loại app — **không phải tùy hứng**, mà vì app Next.js có ranh
+giới server/client cần cưỡng chế, app Lambda/worker thì không có client bundle nào để bảo vệ.
+
+**App Lambda/worker** (`apps/api-player`, `apps/api-tenant`, `apps/worker-*`):
+
 ```
 apps/<app>/src/
 ├── handlers/<game>/<action>.ts     ← THIN: parse/validate + gọi use-case, không business logic
@@ -20,6 +25,61 @@ apps/<app>/src/
     ├── <action>.ts
     └── <action>.types.ts
 ```
+
+**App Next.js** (`apps/backoffice`) — tách theo **đối tượng phục vụ**, trong mỗi nhánh vẫn nhóm theo domain:
+
+```
+apps/backoffice/src/
+├── app/api/<route>/_lib/           ← use-case chỉ MỘT route dùng, đặt cạnh route đó (48 chỗ đang dùng)
+├── server/
+│   ├── server-actions.ts           ← Server Actions ("use server") — client ĐƯỢC import (RPC)
+│   ├── ai/                         ← tồn tại CHỈ vì agent; không route nào dùng shape này
+│   │   ├── payload.ts              ← ConfigItem/ConfigUnit/item() — contract chung MỌI tool
+│   │   ├── index.ts                ← barrel duy nhất cho `agent/tools/*`
+│   │   └── <domain>/               ← game-config/ (+ descriptors/), jackpot/, …
+│   └── use-cases/<domain>/         ← use-case cross-package trả RAW DTO, TRUNG LẬP consumer
+│       ├── <action>.ts               (route Next.js + server/ai/ dùng chung)
+│       └── types.ts
+└── lib/                            ← helper; CHỨA CẢ client code (`*.client.ts`, `auth-client.ts`)
+```
+
+**Hướng phụ thuộc MỘT CHIỀU: `server/ai/**` → `server/use-cases/**`.** Raw facade phải trung lập —
+dashboard route và tool AI dùng chung nó, mỗi bên tự map. Kéo `ConfigItem` (label/unit/note, vốn là
+**prompt engineering**) xuống `use-cases/` là ép route Next.js nhận contract dành cho model. Import
+ngược bị guard chặn (bắt cả `import type`).
+
+Vì sao tách `ai/` khỏi `use-cases/` thay vì lồng `use-cases/<domain>/ai/`: (a) tầng AI còn có thứ
+KHÔNG phải use-case (contract payload, prompt fragment, output shaper) — mô hình lồng không chứa
+được; (b) `game-config/` hiện 100% AI, lồng sẽ tạo thư mục cha rỗng, trái §2; (c) hai nhánh có
+**nhịp thay đổi khác nhau**: sửa `label` cho model hiểu rõ hơn là tinh chỉnh prompt, còn sửa raw DTO
+là breaking change với route.
+
+**Ngưỡng thực tế — đừng mặc định tạo use-case cho mỗi tool.** Đo trên 13 tool hiện có: 7 tool sandbox
+(`bash`, `grep`, `web_fetch`…) và 3 tool báo cáo (`getFinancialByGame`, `getFinancialDailyOverview`,
+`getSystemOutstanding`) **không có file nào** trong `server/`— chúng import thẳng
+`@megawin/game-core-application/use-cases/reports` rồi `serializeDates(await uc.safeRun(input))`.
+Chỉ tool cần **gộp nhiều package** + **gắn nhãn cho model** (`getGameConfig`, `getGameJackpot`) mới
+sinh file trong `server/ai/`. Tool mới: mặc định gọi thẳng package; chỉ tạo `server/ai/<domain>/`
+khi không package nào gộp hộ được.
+
+Vì sao Next.js phải tách `server/`: cả `use-cases/` và `ai/` gọi `@megawin/*-application` → kéo Mongo
+driver. Backoffice là app duy nhất có client bundle, nên cần chặn code này lọt vào đó. Ranh giới nằm
+ngay trong đường dẫn (`@/server/...`) khiến vi phạm nhìn thấy được lúc review, và cưỡng chế bằng
+`pnpm --filter @megawin/backoffice check:server-boundary`.
+
+**KHÔNG đặt use-case vào `src/lib/`** — thư mục đó đang chứa cả client code (`cookie.client.ts`,
+`local-storage.client.ts`, `auth-client.ts`); trộn code chạm DB vào cùng chỗ là xoá đúng ranh giới
+vừa dựng.
+
+**CẤM dùng package `server-only`** để đánh dấu các file này. Package đó resolve theo condition
+`react-server` (Next.js set → `empty.js`); mọi bundler khác lấy `default` → `index.js` **throw ngay
+khi nạp module**. `src/server/{use-cases,ai}/**` còn được `agent/tools/*` import và bundle bằng
+**eve/rolldown** (không set condition đó) → thêm `server-only` là làm chết tool AI lúc runtime. Đã
+verify nội dung package trên npm (2026-08) trước khi chốt loại bỏ. Dùng guard tĩnh
+`src/scripts/check-server-boundary.ts` thay thế: BFS từ mọi file `"use client"` theo **value import**,
+báo lỗi kèm chain khi chạm `server/{use-cases,ai}/`. `import type` KHÔNG bị chặn ở check này
+(`verbatimModuleSyntax` erase hoàn toàn) — client component được phép import type để render, tiền lệ
+`components/ai-chat/tool-renderers/*`.
 
 Nhóm theo **domain** (`use-cases/game/`, `use-cases/account/`), KHÔNG theo kỹ thuật
 (`use-cases/queries/`, `use-cases/aggregations/`).
@@ -184,3 +244,9 @@ player-facing **PHẢI** cập nhật SDK trong cùng PR (bắt buộc, xem `pla
 - [ ] Chưa đủ ngưỡng §2 thì để flat, KHÔNG tạo `dto/`, `mappers/`, `index.ts` rỗng nghĩa?
 - [ ] Không import `@megawin/player-sdk` (§5)?
 - [ ] Endpoint aggregate: `details` dẫn xuất bằng `Omit<>` từ DTO game, không khai báo tay (§6)?
+- [ ] App Next.js: use-case đặt dưới `src/server/use-cases/` (RAW, trung lập consumer) hoặc
+      `src/server/ai/` (payload gắn nhãn cho agent) — KHÔNG phải `src/use-cases/` hay `src/lib/`,
+      hướng phụ thuộc `ai/` → `use-cases/` một chiều, và
+      `pnpm --filter @megawin/backoffice check:server-boundary` xanh (§1)?
+- [ ] Tool AI mới: đã kiểm tra có package nào gộp hộ được chưa (10/13 tool hiện tại KHÔNG cần file
+      nào trong `server/` — gọi thẳng `@megawin/*-application` + `serializeDates`) (§1)?

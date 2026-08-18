@@ -11,9 +11,9 @@
  * `buildOutstandingHref` dựng link tới trang Outstanding của **đúng game** (`gameProduct`),
  * drill sẵn vào kỳ × đại lý × player để staff minh bạch: thấy toàn bộ entry của player kỳ
  * đó + mở entry detail dialog (có sẵn ở trang outstanding mọi game). Tenant suy từ suffix
- * `@tenantId` của megawin username. Mọi game dùng cùng shape query (`draw`/`tenant`/`player`/
- * `playerName`) tại `/games/{gameProduct}/reports/outstanding` — xem `use-outstanding-filters.ts`
- * của từng game.
+ * `@tenantId` của megawin username. Mọi game dùng cùng shape query (`drawId`/`tenantId`/
+ * `accountId`/`playerName`) tại `/games/{gameProduct}/reports/outstanding` — xem
+ * `use-outstanding-filters.ts` của từng game.
  */
 
 import Link from "next/link";
@@ -60,7 +60,7 @@ export function PlayerName({
  *
  * @param gameProduct - Game đang xem (route slug trùng giá trị enum, vd `"keno"`).
  * @param drawId - Kỳ của alert/entry.
- * @param accountId - ID account (param `player`).
+ * @param accountId - ID account (param `accountId`).
  * @param username - Megawin username; tenant + tên hiển thị suy từ đây.
  */
 export function buildOutstandingHref(
@@ -72,9 +72,9 @@ export function buildOutstandingHref(
   const { primary, tenantId } = splitBackofficeUsername(username);
   if (!tenantId) return null;
   const params = new URLSearchParams({
-    draw: drawId,
-    tenant: tenantId,
-    player: accountId,
+    drawId,
+    tenantId,
+    accountId,
     playerName: primary,
   });
   return `/games/${gameProduct}/reports/outstanding?${params.toString()}`;

@@ -8,9 +8,9 @@ import type { OutstandingDrillLevel } from "@/components/reports/game/outstandin
 
 /** URL state hook cho Bingo 18 Outstanding page. */
 export function useBingo18OutstandingFilters() {
-  const [drawId, setDrawId] = useQueryState("draw", parseAsString);
-  const [tenantId, setTenantId] = useQueryState("tenant", parseAsString);
-  const [playerId, setPlayerId] = useQueryState("player", parseAsString);
+  const [drawId, setDrawId] = useQueryState("drawId", parseAsString);
+  const [tenantId, setTenantId] = useQueryState("tenantId", parseAsString);
+  const [playerId, setPlayerId] = useQueryState("accountId", parseAsString);
   // playerName lưu username để hiển thị trong breadcrumb/card title
   const [playerName, setPlayerName] = useQueryState("playerName", parseAsString);
 

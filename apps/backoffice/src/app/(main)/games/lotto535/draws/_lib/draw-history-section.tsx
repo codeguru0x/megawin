@@ -141,7 +141,7 @@ export function DrawHistorySection() {
       onStatusChange={handleStatusChange}
       onPageNext={handlePageNext}
       onPagePrev={handlePagePrev}
-      onRowClick={(draw) => router.push(`${OPS_BASE}?draw=${draw.drawId}`)}
+      onRowClick={(draw) => router.push(`${OPS_BASE}?drawId=${draw.drawId}`)}
       renderStatusBadge={(status) => <DrawStatusBadge status={status} />}
       renderResult={(draw) => {
         if (!draw.result) return null;

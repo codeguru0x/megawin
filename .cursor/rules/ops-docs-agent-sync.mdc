@@ -1,0 +1,320 @@
+---
+description: Đồng bộ tài liệu ops-docs với skill AI agent và game config — sửa doc/đổi tên field/thêm game mới đều phải cập nhật cả 3 phía trong cùng commit
+globs: packages/ops-docs/**,apps/backoffice/agent/**,apps/backoffice/src/server/ai/**,apps/backoffice/src/app/(main)/guides/**
+alwaysApply: false
+---
+
+# ops-docs ↔ AI Agent Sync — Một File `.md`, Hai Người Đọc
+
+Tài liệu vận hành staff ở `packages/ops-docs/docs/` (`games/**` + `resettle/**`) **không phải tài
+liệu thuần**. Mỗi file có **HAI consumer** dùng chung 1 nguồn:
+
+| Consumer | Cách nạp | Ai đọc |
+|---|---|---|
+| Trang `/guides` (backoffice) | `docs-content.ts` import `.md` build-time → render markdown | Staff người thật |
+| Skill AI agent (eve) | `agent/skills/*.ts` import `.md?raw` → inline vào `SKILL.md` lúc build | Model trả lời staff trong chat |
+
+Ngoại lệ duy nhất: `docs/resettle/_developer/**` là SSOT cho **dev** (cycle-ledger, troubleshooting)
+— KHÔNG lên manifest, KHÔNG skill nào nạp. `listStaffMarkdown` trong `docs:check` bỏ qua thư mục này.
+
+**Hệ quả bắt buộc nhớ:** sửa 1 dòng trong `.md` là **đổi luôn hành vi của AI agent**. Đổi tên/xoá
+file mà quên 1 phía → hoặc build đỏ, hoặc tệ hơn: staff đọc `/guides` thấy nội dung mới nhưng AI
+vẫn trả lời theo nội dung cũ (đã bundle) → **AI nói sai mà không ai biết**.
+
+### Bản đồ doc → skill
+
+| Nhóm doc | Số file | Skill nạp |
+|---|---|---|
+| `games/{7 game}/{overview,how-to-play,payout}.md` | 21 | `agent/skills/{gameKey}.ts` (1 skill / game) |
+| `games/_shared/{glossary,ticket-lifecycle,money-flow}.md` | 3 | `agent/skills/shared-game-concepts.ts` |
+| `resettle/{lotto535,mega645,power655}/type-{a,b1,b2}.md` | 9 | `agent/skills/resettle.ts` (1 skill / cả 9 doc) |
+| `resettle/_developer/**` | 18 | — (dev đọc trực tiếp, agent không nạp) |
+
+`resettle.ts` gộp cả 9 doc vì staff không biết trước ca của mình là Type A/B1/B2 — model phải có đủ
+3 type để tự phân loại. Nhưng 9 doc có **H1 trùng nhau giữa 3 game**, nên skill bọc mỗi doc bằng
+một dòng nhãn game (`labeled()`) trước khi gộp; bỏ nhãn đi là mở đường cho model trả lời bước của
+Power 6/55 (có số đặc biệt, JP1+JP2) cho câu hỏi về Mega 6/45.
+
+---
+
+## 1. Ranh giới chân lý: doc dạy CƠ CHẾ, config cấp SỐ
+
+Đây là nguyên tắc gốc của cả hệ thống (`p1-02-game-knowledge-config-truth.plan.md`) — mọi quy tắc
+dưới đây là hệ quả của nó:
+
+| Loại thông tin | Nguồn chân lý | Ví dụ |
+|---|---|---|
+| **Structural** — cơ chế không đổi khi vận hành sửa config | `docs/games/**/*.md` | "chọn 6 số từ tập 01-45", "trúng 3 số được giải ba", "Max 3D Pro trả gộp mọi hạng đã trúng", "board chơi cơ bản luôn có đúng 1 line" |
+| **Config** — giá trị vận hành sửa được trong backoffice | tool `getGameConfig` / `getGameJackpot` | mệnh giá, tiền từng hạng giải, tỷ lệ hoa hồng, trần payout, seed jackpot, **số board tối đa/vé**, **số kỳ liên tiếp tối đa**, **số kỳ mỗi ngày**, **giờ quay**, **ngày quay trong tuần**, **thời gian đóng bán trước**, **sàn/trần betCount** |
+
+**CẤM TUYỆT ĐỐI viết số cấu hình vào doc.** Không phải vì "khó bảo trì" mà vì doc bị bundle vào
+skill lúc build: số trong doc là **snapshot đóng băng tại thời điểm deploy**, vận hành đổi config
+hôm sau thì AI vẫn đọc số cũ và trả lời sai — nhưng nghe rất tự tin vì nó "có tài liệu".
+
+### ⚠️ SỐ ĐẾM cũng là config — lỗi thật đã xảy ra (2026-08)
+
+Rất dễ nhớ "không viết số TIỀN" rồi quên rằng **số đếm cũng cấu hình được**. Đã xảy ra thật: doc
+`lotto535` ghi *"1 vé có tối đa 5 board (đặt tên A-E)"* trong khi `play.maxBoardsPerTicket` được
+vận hành set **10** → agent trả lời staff "5 board", sai hoàn toàn. Đồng thời label descriptor cũng
+ghi `"Số board tối đa trên 1 vé (A-E)"`, nên **cả 2 tầng đều nói sai cùng lúc** — tool trả về 10
+nhưng label vẫn gợi ý A-E.
+
+Ba dạng leak dễ tái phạm nhất, `docs:check-content` rule `so-dem-config` đã chặn:
+
+| Dạng leak | Ví dụ SAI | Viết ĐÚNG |
+|---|---|---|
+| Số đếm + danh từ config | "tối đa 5 board", "quay 2 kỳ mỗi ngày", "đóng bán trước 5 phút" | "số board tối đa tra `getGameConfig` section `play`" |
+| **Dải chữ cái board** | "đặt tên A-E", "board (A-F)" | Không nêu dải — tên board do phía đặt vé gửi lên, dải KHÔNG cho biết trần |
+| Ngày/giờ quay cụ thể | "quay thứ 3, 5, 7", "kỳ tối 21h" | "lịch quay là cấu hình, tra section `play`"; kỳ chia giải xác định bằng **phần tử cuối** danh sách giờ quay |
+
+Cùng luật áp cho `label`/`note` của descriptor (`server/ai/game-config/descriptors/*.ts`): label
+phải mô tả **ý nghĩa**, KHÔNG kèm giá trị hay dải ám chỉ giá trị. `note` không được khẳng định giá
+trị cụ thể (kiểu "quay thứ 2, 4, 6 theo thể lệ Vietlott") — vận hành đổi được, và note sai còn hại
+hơn không có note vì model tin note hơn số.
+
+Guard `docs:check-content` chặn số tiền, phần trăm, "Vietlott + số", **số đếm cấu hình**, đường dẫn
+field, rò rỉ dev. Số **structural** hợp lệ (không gian số, công thức đếm line) phải allowlist tường
+minh:
+
+```markdown
+<!-- structural: không gian số Keno, không phải config -->
+Mỗi kỳ hệ thống quay ngẫu nhiên 20 số từ tập 01-80.
+```
+
+**KHÔNG hạ regex trong `check-game-docs-content.ts` để làm sạch output.** Nếu regex báo
+false-positive thật (vd bắt `how-to-play.md` là field path `play.md`), sửa regex cho **chính xác
+hơn** và bổ sung case kiểm chứng — không nới lỏng phạm vi chặn.
+
+---
+
+## 2. Naming: tên file, slug, topic key — ASCII kebab-case tiếng Anh
+
+**KHÔNG dùng tên file tiếng Việt.** Đã rename toàn bộ (2026-08): `tong-quan.md` → `overview.md`,
+`cach-choi.md` → `how-to-play.md`, `tra-thuong.md` → `payout.md`, `_chung/` → `_shared/`
+(`tu-vung` → `glossary`, `vong-doi-ve` → `ticket-lifecycle`, `tai-chinh` → `money-flow`).
+
+| Thứ | Ngôn ngữ | Ví dụ |
+|---|---|---|
+| Tên file, tên thư mục | **Tiếng Anh** kebab-case | `games/keno/how-to-play.md` |
+| `doc.slug` (manifest, = URL segment) | **Tiếng Anh**, trùng tên file | `slug: "how-to-play"` |
+| `topic.key` (manifest, = URL segment) | **Tiếng Anh** | `product`, `resettle`, `game-concepts` |
+| `gameKey` | game key hệ thống | `keno`, `shared` |
+| `title`, `description`, **nội dung doc** | **Tiếng Việt** (staff Việt đọc) | `title: "Nội dung đặt cược"` |
+
+Convention path bắt buộc — `docs:check` + unit test manifest enforce:
+`file === "games/{gameKey}/{slug}.md"` (topic `product`), `"games/_shared/{slug}.md"` (topic
+`game-concepts`), `"resettle/{gameKey}/{slug}.md"` (topic `resettle`).
+
+`docs:check` có blocklist các slug tiếng Việt đã từng dùng → thêm lại là **đỏ CI**, không phải góp ý.
+
+---
+
+## 3. Checklist: SỬA NỘI DUNG doc có sẵn
+
+1. Sửa file `.md` trong `packages/ops-docs/docs/` (`games/**` hoặc `resettle/**`).
+2. Nếu doc tham chiếu doc khác (`xem \`payout.md\``) → kiểm tra tên file đích còn đúng.
+3. Chạy `pnpm --filter @megawin/backoffice docs:check-content` — chặn số config lọt vào. Guard này
+   **chỉ quét `games/**`**; sửa doc `resettle/**` thì tự soát bằng mắt: không ghi số tiền, không ghi
+   tên field, không ghi mốc thời gian cứng ngoài các ngưỡng thao tác đã có.
+4. **Build lại skill để nội dung mới thực sự vào agent:** `cd apps/backoffice && npx eve build`,
+   rồi đọc `SKILL.md` sinh ra xác nhận nội dung mới có mặt, không rỗng, không `[object Module]`.
+5. Nếu nội dung sửa làm **thay đổi phạm vi câu hỏi** skill phục vụ (vd thêm hẳn một cách chơi mới,
+   thêm một Type resettle) → cập nhật `description` của skill trong `agent/skills/<name>.ts`. Model
+   chọn skill **bằng `description`**, nội dung markdown chỉ được đọc SAU khi đã chọn — description
+   cũ = skill không bao giờ được nạp cho câu hỏi mới.
+
+**KHÔNG cần** sửa `manifest.ts`/`docs-content.ts` khi chỉ sửa nội dung (không đổi tên file).
+
+---
+
+## 4. Checklist: THÊM / ĐỔI TÊN / XOÁ file doc
+
+Ba chỗ phải sửa trong **CÙNG commit** (thiếu 1 chỗ là lệch):
+
+1. **File `.md`** — `packages/ops-docs/docs/games/{gameKey}/{slug}.md`. Bắt buộc có banner
+   "Số liệu trong tài liệu này…" (guard `thieu-banner` chặn).
+2. **`packages/ops-docs/src/manifest.ts`** — entry `{ slug, title, description, file }` (hoặc sửa
+   `buildProductTopic` nếu áp cho cả 7 game).
+3. **`apps/backoffice/src/app/(main)/guides/_lib/docs-content.ts`** — 1 dòng `import` + 1 dòng
+   trong `DOC_CONTENT` (key = `doc.file`).
+4. **`apps/backoffice/agent/skills/<name>.ts`** — thêm/sửa import `?raw` + đưa vào mảng `markdown`.
+   Doc `games/{gameKey}/**` → skill `{gameKey}.ts`; doc `games/_shared/**` →
+   `shared-game-concepts.ts`; doc `resettle/{gameKey}/**` → `resettle.ts` (nhớ bọc `labeled()` đúng
+   nhãn game). `docs:check` chặn nếu quên.
+
+Rồi verify:
+
+```bash
+pnpm --filter @megawin/backoffice docs:check            # manifest ↔ đĩa ↔ skill + tên file ASCII
+pnpm --filter @megawin/backoffice docs:check-content    # nội dung không chứa số config
+pnpm --filter @megawin/ops-docs test                    # convention path + slug ASCII
+cd apps/backoffice && npx eve build                     # skill compile + nội dung inline đúng
+```
+
+`docs:check` chặn 5 loại lệch: THIẾU file, THỪA file (mồ côi manifest), **TÊN FILE tiếng Việt**,
+**DOC KHÔNG ĐƯỢC AGENT NẠP** (có ở `/guides` nhưng không skill nào import → AI trả lời sai; áp cho
+**mọi** doc staff, cả `games/**` và `resettle/**`), **SKILL TRỎ FILE KHÔNG TỒN TẠI**.
+
+---
+
+## 5. ⚠️ Đổi tên/xoá field trong game config — chỗ dễ làm AI nói sai nhất
+
+Doc **cố ý KHÔNG ghi tên field** (guard `field-path` chặn `play.unitPrice`). Nghĩa của con số nằm
+ở `label`/`unit`/`note` trong payload `getGameConfig`, không nằm trong doc. Nhưng doc **có ghi Ý
+NGHĨA của số và tên section** (vd "xem section `play` khi tra mệnh giá"), nên đổi config vẫn kéo
+theo doc.
+
+Khi sửa `GlobalConfigEntity` của một game, đi đúng 4 bước theo thứ tự:
+
+1. **Rename field** → `apps/backoffice/src/server/ai/game-config/descriptors/{game}.ts` **ĐỎ
+   COMPILE** ngay (descriptor dereference field thật, không parse chuỗi). Đây là lá chắn số 1 — sửa
+   property access **và** rà lại `label`/`note` xem còn mô tả đúng ý nghĩa không, và **không kèm giá
+   trị/dải ám chỉ giá trị** (§1).
+2. **Đổi Ý NGHĨA của field** (cùng tên nhưng nghĩa khác, vd `unitPrice` từ "giá 1 line" thành "giá
+   1 lần dự thưởng") → compiler **IM LẶNG**. Phải sửa tay: `label`/`note` ở descriptor **VÀ** mọi
+   câu trong `docs/games/**` mô tả ý nghĩa đó (đặc biệt mục "Số liệu cần tra cấu hình" trong
+   `overview.md` của game và bảng từ vựng `_shared/glossary.md`).
+3. **Thêm field mới** → thêm `item(...)` vào descriptor; nếu là khái niệm staff cần hiểu (không chỉ
+   là con số) → bổ sung một dòng vào doc mô tả **ý nghĩa**, KHÔNG ghi tên field, KHÔNG ghi giá trị.
+4. **Xoá field / đổi tên section** (`GameConfigSection`) → grep doc theo tên section và theo ý
+   nghĩa cũ; xoá/sửa mọi chỗ doc hướng staff tra một số **không còn tồn tại**. Doc chỉ dẫn tra một
+   số đã bị xoá tệ hơn không nói gì: AI sẽ gọi tool, không thấy field, rồi tự bịa.
+
+```bash
+# Rà doc sau khi sửa config (chạy trước khi commit):
+rg -n "mệnh giá|hoa hồng|trần payout|seed|section" packages/ops-docs/docs/games
+pnpm --filter @megawin/backoffice docs:check-content
+```
+
+Sau bước 1-4, **luôn `npx eve build`** — descriptor đúng mà doc cũ vẫn nằm trong bundle skill thì
+AI vẫn dạy staff cách tra sai.
+
+---
+
+## 6. Thêm GAME MỚI (sắp tới: xổ số truyền thống)
+
+Thứ tự bắt buộc — mỗi bước có guard riêng, làm sai thứ tự sẽ mất thời gian sửa vòng lại.
+
+### 6.1. Domain & config (trước tiên, ngoài phạm vi rule này)
+
+1. `GameProduct` (+ `JackpotGameProduct` nếu game có jackpot cycle) trong
+   `packages/game-core/src/entities/game-core.enums.ts`, và `GAME_LABELS` trong
+   `packages/game-core/src/labels/game-labels.ts`. `switch` exhaustive khắp repo sẽ đỏ → đi theo
+   compiler để không sót nơi nào.
+2. `packages/game-{new}/` + `packages/game-{new}-application/` (entity, rules, use-cases,
+   `GetGlobalConfigUseCase`) — theo `entity-typesafe-mongodb.mdc` + `app-use-case-layering.mdc`.
+3. Rule game riêng `.cursor/rules/{new}-game-rules.mdc` — SSOT nghiệp vụ cho AI khi **viết code**
+   (khác doc staff: doc staff dạy AI **trả lời staff**, rule dạy AI **sửa code**).
+
+### 6.2. Doc staff (3 file, không số)
+
+4. `packages/ops-docs/docs/games/{gameKey}/overview.md`, `how-to-play.md`, `payout.md` — tên file
+   **giữ đúng 3 slug này**, không phát minh slug mới cho game mới (staff quen cấu trúc, và
+   `buildProductTopic` giả định đúng 3 slug).
+5. Mỗi file có banner "Số liệu trong tài liệu này…" và mục "Số liệu cần tra cấu hình" liệt kê **ý
+   nghĩa** các số phải lấy bằng `getGameConfig` (không ghi tên field, không ghi giá trị).
+6. Nếu game mới mang khái niệm chưa từng có (vd "lô", "bao lô", "đài" của xổ số truyền thống) →
+   thêm dòng vào `_shared/glossary.md`. Nếu vòng đời vé/dòng tiền khác 7 game hiện tại (vd nhiều
+   đài trong 1 kỳ, hoàn tiền theo đài) → cập nhật `_shared/ticket-lifecycle.md` /
+   `_shared/money-flow.md`, vì `shared-game-concepts` đang tự nhận là "chung cho MỌI game".
+6b. **Game mới CÓ jackpot cycle** → thêm `resettle/{gameKey}/type-{a,b1,b2}.md` (copy 3 doc của game
+   jackpot gần nhất rồi sửa cho khớp: tên game, có/không số đặc biệt, một hay hai jackpot),
+   `buildResettleTopic("{gameKey}")` vào manifest, 3 dòng `DOC_CONTENT`, và **3 import + 3 dòng
+   `labeled("{Nhãn game}", …)` trong `agent/skills/resettle.ts`**. Game **không** có jackpot thì
+   KHÔNG tạo doc resettle — sửa kết quả không kéo theo kỳ khác nên không có runbook riêng; cũng nhớ
+   `description` của skill `resettle` đang liệt kê tên game áp dụng, cập nhật cho khớp.
+
+### 6.3. Registry & UI
+
+7. `packages/ops-docs/src/manifest.ts` — thêm entry `RUNBOOK_MANIFEST`
+   (`buildProductTopic("{gameKey}", "{Tên game}")`).
+8. `apps/backoffice/src/app/(main)/guides/_lib/docs-content.ts` — 3 import + 3 dòng `DOC_CONTENT`.
+9. `apps/backoffice/src/app/(main)/guides/_lib/game-meta.ts` — icon + 3 class màu brand; token
+   `--color-game-{gameKey}` (+ `-muted`) trong `globals.css`. Viết class **tường minh**, không
+   dựng động `text-game-${key}` (Tailwind quét source).
+10. `packages/ops-docs/test/find-runbook-doc.test.ts` — thêm gameKey vào `GAMES_WITH_PRODUCT`.
+
+### 6.4. Config tool cho AI
+
+11. `apps/backoffice/src/server/ai/game-config/descriptors/{gameKey}.ts` — `APPLICABLE_SECTIONS` +
+    hàm `describe*` dereference field thật, mỗi `item()` có `label` tiếng Việt tự giải thích **mà
+    không kèm giá trị hay dải ám chỉ giá trị** (§1), `unit` đúng, `note` khi giá trị dễ hiểu sai
+    (snapshot, seed vs current, override theo đại lý). Bảng ma trận lớn (kiểu `basicPrizes` của
+    Keno) → **CHỈ trả toàn bảng khi caller truyền tham số lọc**, không nổ token.
+12. `get-game-config-snapshot.ts` — thêm nhánh `switch` trên `GameProduct` (nhánh `default:
+    assertNever` sẽ đỏ nếu quên).
+13. Nếu game có jackpot cycle → `src/server/use-cases/jackpot/get-current-jackpots.ts` + `types.ts`
+    và mapper ở 2 consumer (dashboard card, tool `getGameJackpot`).
+
+### 6.5. Skill agent & instructions
+
+14. `apps/backoffice/agent/skills/{gameKey}.ts` — copy pattern từ `keno.ts`: 3 import `?raw`,
+    `description` nêu rõ **khi nào dùng** + câu chốt "tài liệu KHÔNG chứa con số, mọi số liệu phải
+    lấy bằng `getGameConfig` cho `{gameKey}`".
+15. `apps/backoffice/agent/instructions/40-tool-policy.md` — thêm `{gameKey}` vào danh sách skill
+    sản phẩm ở mục "Cách dùng tool & skill". ⚠️ **KHÔNG phải `agent/instructions.md`** — từ 18/08
+    instructions đã tách thành thư mục (xem §8), file root chỉ còn vai trò/văn phong/context nhân
+    viên; danh sách skill nằm ở `40-tool-policy.md`. Nếu game có jackpot → thêm vào cả danh sách
+    game áp dụng của skill `resettle` (hiện ghi rõ 3 game Jackpot và cấm suy diễn sang game khác).
+16. Cập nhật **rule này** (§2 bảng naming nếu có slug mới, bảng doc→skill ở đầu file) và game
+    registry ở các rule liên quan.
+
+### 6.6. Verify (không bỏ bước nào)
+
+```bash
+pnpm --filter @megawin/backoffice docs:check
+pnpm --filter @megawin/backoffice docs:check-content
+pnpm --filter @megawin/ops-docs test
+pnpm --filter @megawin/backoffice check-types
+cd apps/backoffice && npx eve build   # rồi đọc SKILL.md sinh ra, xoá artifact tạm sau khi verify
+npx biome check <các-file-đã-sửa>
+```
+
+---
+
+## 7. Anti-pattern — đã xảy ra hoặc suýt xảy ra
+
+| Sai | Vì sao hỏng | Đúng |
+|---|---|---|
+| Viết tiền giải / % hoa hồng vào doc | Snapshot đóng băng lúc build; vận hành đổi config → AI trả lời sai tự tin | Doc nói ý nghĩa, AI gọi `getGameConfig` mỗi lượt |
+| Viết **số đếm** config vào doc ("tối đa 5 board", "quay 2 kỳ/ngày") | Đã xảy ra thật: config = 10 board, AI nói 5 board | Nói ý nghĩa + section, không nêu số (§1) |
+| Ghi **dải chữ cái board** ("A-E") ở doc hoặc `label` descriptor | Dải ám chỉ trần mà không viết số → lọt guard số, vẫn khiến AI suy sai | Không nêu dải; số board chỉ đến từ tool |
+| `note` descriptor khẳng định giá trị ("quay thứ 2, 4, 6 theo Vietlott") | Model tin `note` hơn giá trị thật; vận hành đổi lịch → note thành sai | `note` chỉ giải thích cách ĐỌC giá trị, không khẳng định giá trị |
+| Sửa doc rồi không `eve build`/deploy | Skill là bundle build-time, không đọc file runtime | Build + đọc `SKILL.md` xác nhận |
+| Đổi tên file `.md` mà chỉ sửa `docs-content.ts` | Skill trỏ file cũ → build đỏ (may) hoặc lệch nội dung (tệ) | Sửa cả 4 chỗ ở §4, chạy `docs:check` |
+| Thêm doc mới chỉ cho `/guides` | Staff đọc thấy, AI không biết → 2 câu trả lời khác nhau cho cùng 1 câu hỏi | Mọi doc staff (`games/**` + `resettle/**`) phải có skill nạp (`docs:check` chặn) |
+| Gộp nhiều doc cùng H1 vào 1 skill mà không gắn nhãn phân biệt | Model mất ranh giới, trả lời bước của game A cho game B | Bọc từng doc bằng nhãn (xem `labeled()` trong `resettle.ts`) |
+| Đổi tên field config, sửa descriptor rồi dừng | Doc vẫn hướng staff tra số theo ý nghĩa cũ | Làm đủ §5 bước 1-4 |
+| Đặt tên file/slug tiếng Việt cho game mới | Lệch convention, blocklist `docs:check` đỏ | ASCII kebab-case tiếng Anh (§2) |
+| Nới regex `docs:check-content` cho hết đỏ | Mất luôn lá chắn cho vi phạm thật | Sửa regex chính xác hơn + case kiểm chứng, hoặc sửa doc |
+| Thêm skill game mới rồi khai báo vào `agent/instructions.md` | File root không còn danh sách skill từ 18/08 → model không biết skill mới tồn tại, im lặng không nạp | Khai báo ở `agent/instructions/40-tool-policy.md` (§6.5 bước 15, §8) |
+
+---
+
+## 8. Cấu trúc `agent/instructions/` — biết sửa file nào
+
+Từ 18/08/2026, system prompt tách thành thư mục (eve đọc non-recursive, áp dụng theo **thứ tự
+alphabet** filename — `node_modules/eve/docs/instructions.mdx` §"Split instructions across a
+directory"; root file đọc TRƯỚC, rồi tới các entry đã sort):
+
+| File | Chứa gì | Sửa khi |
+|---|---|---|
+| `agent/instructions.md` (root) | Vai trò Mira, văn phong, icon, context nhân viên, nguyên tắc gốc | Đổi tính cách/giọng điệu/cách gọi tên |
+| `instructions/10-data-rules.md` | Rule 1-7 (cấm bịa số, cấm nhẩm, VND, config là nguồn số, `label`/`unit`/`note`, realtime vs settle, truncated) + **bốn mức chắc chắn** | Đổi quy tắc về số liệu, thêm ràng buộc nguồn số |
+| `instructions/20-time-context.md` | Rule 8-9 (`clientContext`, `financialDate` đổi lúc 11:00) + tham chiếu ngược hội thoại | Thêm field context, đổi quy tắc suy khoảng ngày |
+| `instructions/30-security.md` | Rule 10-14 (phạm vi, không lộ tên tool/field, `web_fetch` untrusted) | Thêm ràng buộc an ninh |
+| `instructions/40-tool-policy.md` | **Danh sách skill** + ngân sách tra cứu + `navigateTo` | **Thêm game/skill mới** (§6.5 bước 15), thêm quy tắc chọn tool |
+| `instructions/50-answer-shape.md` | Thứ tự trả lời + "bảng đã hiển thị sẵn, đừng đọc lại" | Đổi cách trình bày kết quả |
+
+**Tách file KHÔNG giảm token** — system-role instructions nằm ngoài history và đi kèm MỌI model
+call, nên 5 file vẫn tốn đúng bằng 1 file. Lý do tách là **giảm conflict**: `00-overview.md` của
+`ai-panel` ghi p1-01/p1-02/p1-03 chạy song song và cùng đụng file instructions; tách ra thì mỗi
+nhánh sửa một file khác nhau. Muốn giảm token thật thì chuyển nội dung sang **skill**
+(load-on-demand), không phải tách file — tiền lệ: `ops-investigation` (trình tự điều tra) đặt thành
+skill vì chỉ dùng cho câu hỏi "vì sao", không phải mọi lượt.
+
+Prefix số là **bắt buộc** khi thêm file mới (eve sort bằng `localeCompare`, không có số thì thứ tự
+phụ thuộc tên → rule an ninh có thể đứng trước rule số liệu, khó suy luận khi debug hành vi).
+
+⚠️ eve **không cho** tồn tại đồng thời `instructions.md` và `instructions.ts` ở root — đó là build
+error, không phải cảnh báo.
