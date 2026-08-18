@@ -16,9 +16,11 @@
  * 2. **`networkPolicy: "deny-all"`** — sandbox không có egress, kể cả DNS.
  *
  * Cả hai lớp KHÔNG dựa vào niềm tin: `bootstrap` ở `agent/sandbox/sandbox.ts` **assert** chúng mỗi
- * lần build template (probe `/dev/tcp` + đếm env nhạy cảm) và fail-closed nếu sai. Đây là điểm
- * quan trọng — dạng allowlist theo domain từng **inert** trên microsandbox 0.6.9 mà không có dấu
- * hiệu gì trong log; nếu không có assertion thì `never()` đã mất cơ sở trong im lặng.
+ * lần build template (probe `/dev/tcp` + liệt kê TÊN biến env nhạy cảm) và fail-closed nếu sai. Đây
+ * là điểm quan trọng — dạng allowlist theo domain từng **inert** trên microsandbox 0.6.9 mà không
+ * có dấu hiệu gì trong log; nếu không có assertion thì `never()` đã mất cơ sở trong im lặng. Trên
+ * Vercel Sandbox, assertion egress đã chạy thật và PASS ở build 18/08 ⇒ lớp (2) có hiệu lực ở
+ * production, không chỉ ở local.
  */
 
 import { defineBashTool } from "eve/tools";
