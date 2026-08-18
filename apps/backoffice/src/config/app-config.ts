@@ -2,7 +2,7 @@ const currentYear = new Date().getFullYear();
 
 export const APP_CONFIG = {
   name: "Megawin",
-  version: "20260817",
+  version: "20260818",
   copyright: `© ${currentYear} - Megawin`,
   meta: {
     title: "Megawin Backoffice",
