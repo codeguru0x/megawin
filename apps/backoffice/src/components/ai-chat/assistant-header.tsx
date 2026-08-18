@@ -32,6 +32,11 @@ const MS_IN_S = 1000;
  * staff cần đối chiếu câu nào tra lâu để biết truy vấn nào nặng, và con số này thay luôn vai trò
  * "bằng chứng agent có làm việc" mà card tool từng đảm nhiệm.
  *
+ * ⚠️ `isActive` PHẢI phản ánh trạng thái của CHÍNH message này (`metadata.status === "streaming"`),
+ * KHÔNG phải "là message cuối mảng". Bug 18/08: `ChatPanel` suy `isActive` theo vị trí, nên message
+ * đã xong của lượt trước bị flip true→false một lần nữa khi staff gửi câu tiếp theo — nhánh chốt
+ * tổng dưới đây chạy lại với mốc của LƯỢT MỚI và ghi đè "17 giây" thành "1 giây".
+ *
  * Tổng thời gian chỉ sống trong state của component ⇒ reload trang hoặc resume thread từ storage
  * thì mất, lúc đó không render gì. CHẤP NHẬN: con số này là tín hiệu tức thời cho lượt vừa chạy,
  * không phải dữ liệu cần persist — lưu nó đòi metadata message do server ghi, không đáng cho một
@@ -49,8 +54,8 @@ function AssistantActivityLine({
   /** Mốc `Date.now()` lúc lượt bắt đầu; `null` khi không phải lượt đang chạy. */
   turnStartedAt: number | null;
 }) {
-  // Ref giữ mốc bắt đầu để lúc `isActive` tắt vẫn tính được tổng: ở render đó `turnStartedAt` đã
-  // là `null` (parent reset trước), nên không thể lấy từ prop.
+  // Ref giữ mốc bắt đầu để lúc `isActive` tắt vẫn tính được tổng — prop `turnStartedAt` lúc đó đã
+  // là mốc của lượt KHÁC (parent đặt mốc mới khi staff gửi câu tiếp theo), không dùng được.
   const startedAtRef = useRef<number | null>(null);
   const [activeStartedAt, setActiveStartedAt] = useState<number | null>(null);
   const [totalSeconds, setTotalSeconds] = useState<number | null>(null);
