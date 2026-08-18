@@ -40,9 +40,11 @@ const ALLOWLIST_NOTE = "microsandbox 0.6.9: allowlist theo domain không enforce
  * hỗ trợ allowlist theo domain thật. Vẫn để rất hẹp: sandbox không có nghiệp vụ gì cần internet;
  * mở `ai-gateway` cho trường hợp tương lai chạy nested agent trong sandbox.
  *
- * ⚠️ CHƯA VERIFY trên Vercel (chưa deploy). Trước khi lên production phải chạy đúng probe
- * `EGRESS_PROBE` ở `bootstrap` trên môi trường Vercel; nếu không chặn được thì đổi thẳng sang
- * `"deny-all"` như local.
+ * ✅ ĐÃ VERIFY trên Vercel 18/08 (build log deploy đầu tiên): `bootstrap` chạy tới assertion §4,
+ * tức `EGRESS_PROBE` **KHÔNG** trả `EGRESS_OPEN` ⇒ allowlist ở đây enforce THẬT trên Vercel
+ * Sandbox — khác microsandbox 0.6.9 local (xem `ALLOWLIST_NOTE`). Đây là cơ sở để `bash` giữ
+ * `approval: never()` trên production. Đổi allowlist này thì phải đọc lại build log để xác nhận,
+ * đừng suy từ việc "code có khai policy".
  */
 const VERCEL_NETWORK_POLICY: SandboxNetworkPolicy = {
   allow: ["ai-gateway.vercel.sh"],
@@ -105,6 +107,23 @@ const ALLOW_OPEN_EGRESS = process.env.MEGAWIN_SANDBOX_ALLOW_OPEN_EGRESS === "1";
 
 /** Marker stdout của probe — dùng chuỗi thay vì exit code để `sandbox.run` không throw khi bị chặn. */
 const PROBE_OPEN = "EGRESS_OPEN";
+
+/**
+ * Regex (case-insensitive) khớp **TÊN** biến môi trường nhạy cảm — dùng cho assertion §4.
+ *
+ * ⚠️ CHỈ khớp TÊN, KHÔNG khớp giá trị. Bản trước grep trên cả dòng `KEY=VALUE` mà `env` in ra, nên
+ * một biến vô hại có GIÁ TRỊ chứa "token"/"key" cũng làm fail. Đã xảy ra thật 18/08: deploy Vercel
+ * đầu tiên đỏ ở prewarm với "thấy 1 biến môi trường nhạy cảm", trong khi image mà Vercel Sandbox
+ * boot (`vercel/eve:latest`) chỉ khai 3 biến `PATH`/`LANG`/`LC_ALL` — không tên nào nhạy cảm — và
+ * eve KHÔNG truyền `process.env` của app vào VM (`Sandbox.create` không nhận `env`; docs eve:
+ * "Secrets never enter the sandbox"). Tức đó là false positive từ phần giá trị, không phải leak.
+ *
+ * Từ khoá bám đúng secret của app này (`src/env.ts`) chứ không phải heuristic chung — nhờ vậy phủ
+ * được cả những biến mà bản cũ BỎ SÓT: `redis` (REDIS_URI), `cognito` (5 biến Cognito), `sfn_arn`
+ * (21 ARN), `better_auth` (BETTER_AUTH_SECRET). Còn lại: `mongo` (MONGODB_URI), `_key`
+ * (AI_GATEWAY_API_KEY), `aws_`/`secret`/`password`/`token` (credential AWS + OIDC token).
+ */
+const SENSITIVE_ENV_NAME_PATTERN = "mongo|redis|cognito|sfn_arn|better_auth|aws_|secret|_key|password|token";
 
 export default defineSandbox({
   // `defaultBackend()` tự chọn: Vercel Sandbox khi deploy Vercel → Docker → microsandbox →
@@ -185,16 +204,25 @@ export default defineSandbox({
 
     // ── 4. Assertion: env của app KHÔNG leak vào sandbox ───────────────────────────────────────
     // `bash` chạy `never()` nên nếu `MONGODB_URI`/AWS credential có mặt trong VM thì model đọc
-    // được không cần ai duyệt. Đếm biến khớp từ khoá nhạy cảm; kỳ vọng 0. `|| true` để grep không
+    // được không cần ai duyệt.
+    //
+    // `compgen -e` (không phải `env`) liệt kê **TÊN** biến exported, mỗi tên 1 dòng — nhờ vậy grep
+    // không bao giờ match phần giá trị. `env` in `KEY=VALUE` nên grep trên nó match cả value và
+    // tạo false positive làm đỏ deploy (xem SENSITIVE_ENV_NAME_PATTERN). `|| true` để grep không
     // match cũng exit 0 (grep exit 1 khi rỗng ⇒ `sandbox.run` sẽ throw).
     const envLeak = await sandbox.run({
-      command: "bash -lc 'env | grep -ciE \"mongo|aws_|secret|_key|password|token\" || true'",
+      command: `bash -lc 'compgen -e | grep -iE "${SENSITIVE_ENV_NAME_PATTERN}" || true'`,
     });
-    const leakCount = Number.parseInt(envLeak.stdout.trim(), 10);
-    if (Number.isFinite(leakCount) && leakCount > 0) {
+    // In THẲNG tên biến vào message: bản trước chỉ báo số lượng nên build log không cho biết biến
+    // nào, không debug được từ log Vercel (mất 1 vòng deploy 18/08 vì đúng lý do này).
+    const leakedNames = envLeak.stdout
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    if (leakedNames.length > 0) {
       throw new Error(
-        `Sandbox thấy ${leakCount} biến môi trường nhạy cảm — env của app đang leak vào VM. ` +
-          "KHÔNG được chạy `bash` với approval never() trong tình trạng này.",
+        `Sandbox thấy ${leakedNames.length} biến môi trường nhạy cảm (${leakedNames.join(", ")}) — ` +
+          "env của app đang leak vào VM. KHÔNG được chạy `bash` với approval never() trong tình trạng này.",
       );
     }
   },
