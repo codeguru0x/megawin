@@ -1,53 +1,38 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { GetJackpotCurrentOutput as Lotto535JpOutput } from "@megawin/game-lotto535-application/use-cases/jackpot";
-import { GetJackpotCurrentUseCase as Lotto535JpUseCase } from "@megawin/game-lotto535-application/use-cases/jackpot";
-import type { GetJackpotCurrentOutput as Mega645JpOutput } from "@megawin/game-mega645-application/use-cases/jackpot";
-import { GetJackpotCurrentUseCase as Mega645JpUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
-import type { GetJackpotCurrentOutput as Power655JpOutput } from "@megawin/game-power655-application/use-cases/jackpot";
-import { GetJackpotCurrentUseCase as Power655JpUseCase } from "@megawin/game-power655-application/use-cases/jackpot";
-import { tryLoad } from "@megawin/shared/utils";
 
 import type {
   DashboardJackpotInfo,
   DashboardPower655JackpotInfo,
   GetDashboardJackpotsOutput,
 } from "@/app/api/dashboard/jackpots/_lib/types";
-
-/** Label dùng cho log khi 1 game lỗi bất thường. */
-const SCOPE = "GetDashboardJackpots";
+import { GetCurrentJackpotsUseCase } from "@/server/use-cases/jackpot/get-current-jackpots";
+import type {
+  Lotto535JackpotOutput as Lotto535JpOutput,
+  Mega645JackpotOutput as Mega645JpOutput,
+  Power655JackpotOutput as Power655JpOutput,
+} from "@/server/use-cases/jackpot/types";
 
 /**
- * Lấy jackpot pool hiện tại cho 3 game có jackpot (Mega645, Power655, Lotto535).
+ * Lấy jackpot pool hiện tại cho 3 game có jackpot (Mega645, Power655, Lotto535), map sang
+ * shape hiển thị card dashboard.
  *
- * App-level use case — nằm trong backoffice vì orchestrate 3 game packages.
- * Không thể đặt ở game-core-application (vi phạm dependency direction).
- *
- * Gọi `GetJackpotCurrentUseCase` của từng game — cùng class mà route riêng của game dùng. Nó trả
- * raw DTO và throw `AppException`, nên dùng trực tiếp được từ đây không qua vòng serialize/parse
- * JSON nào.
- *
- * Chạy song song 3 game qua `tryLoad` (không reject → dùng `Promise.all`):
- *   - Game chưa có active cycle → `NOT_FOUND` → trả `null`, KHÔNG log (đúng nghiệp vụ).
- *   - Lỗi bất thường (DB down, bug) → log error kèm `source`, vẫn trả `null` để 2 game
- *     còn lại hiển thị được.
+ * Orchestration (gọi 3 use-case package qua `tryLoad`, phân loại NOT_FOUND vs lỗi bất thường)
+ * đã gộp về `GetCurrentJackpotsUseCase` (`@/server/use-cases/jackpot/`) — class này CHỈ map RAW DTO
+ * sang `DashboardJackpotInfo`/`DashboardPower655JackpotInfo`. Tool AI `getGameJackpot` dùng
+ * CÙNG facade RAW nhưng map sang contract `ConfigItem` khác — xem giải thích tách 2 mapper ở
+ * `get-current-jackpots.ts`.
  */
 export class GetDashboardJackpotsUseCase extends UseCase<void, GetDashboardJackpotsOutput> {
-  private readonly mega645Uc = new Mega645JpUseCase();
-  private readonly power655Uc = new Power655JpUseCase();
-  private readonly lotto535Uc = new Lotto535JpUseCase();
+  private readonly jackpots = new GetCurrentJackpotsUseCase();
 
   protected async execute(): Promise<GetDashboardJackpotsOutput> {
-    const [mega645, power655, lotto535] = await Promise.all([
-      tryLoad(() => this.mega645Uc.run().then(mapMega645), { scope: SCOPE, source: "mega645" }),
-      tryLoad(() => this.power655Uc.run().then(mapPower655), { scope: SCOPE, source: "power655" }),
-      tryLoad(() => this.lotto535Uc.run().then(mapLotto535), { scope: SCOPE, source: "lotto535" }),
-    ]);
+    const { mega645, power655, lotto535 } = await this.jackpots.run({});
 
-    // Output contract dùng `null` cho game thiếu dữ liệu; `tryLoad` trả `undefined`.
+    // Output contract dùng `null` cho game thiếu dữ liệu; facade trả `undefined`.
     return {
-      mega645: mega645 ?? null,
-      power655: power655 ?? null,
-      lotto535: lotto535 ?? null,
+      mega645: mega645 ? mapMega645(mega645) : null,
+      power655: power655 ? mapPower655(power655) : null,
+      lotto535: lotto535 ? mapLotto535(lotto535) : null,
     };
   }
 }

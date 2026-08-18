@@ -57,7 +57,7 @@ function toOutstandingEntryRow(entry: PlayerOutstandingEntryResponse): Outstandi
  *   Columns: Ky mo thuong | Phieu cuoc | Uoc tinh hoa hong | Tien cuoc
  * View 3 (chon ky): OutstandingEntryList phan trang + click -> dialog.
  *
- * URL state: og = game dang drill, od = drawId dang xem entries.
+ * URL state: `?game=` game đang drill, `?drawId=` kỳ đang xem entries, `?page=` trang entry list.
  */
 
 /**
@@ -96,12 +96,12 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
   const qc = useQueryClient();
   const { data, isLoading, isError, isFetching } = usePlayerOutstanding(accountId);
 
-  // og = outstanding game dang drill (view 2 hoac 3)
-  const [og, setOg] = useQueryState("og", parseAsString);
-  // od = drawId dang xem entries (view 3)
-  const [od, setOd] = useQueryState("od", parseAsString);
-  // odp = page trong view 3 entry list
-  const [odp, setOdp] = useQueryState("odp", parseAsInteger.withDefault(1));
+  // `?game=` — game đang drill (view 2 hoặc 3). Biến local đặt `og` cho ngắn.
+  const [og, setOg] = useQueryState("game", parseAsString);
+  // `?drawId=` — kỳ đang xem entries (view 3).
+  const [od, setOd] = useQueryState("drawId", parseAsString);
+  // `?page=` — trang trong entry list (view 3).
+  const [odp, setOdp] = useQueryState("page", parseAsInteger.withDefault(1));
 
   // Entry dang chon de mo dialog
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);

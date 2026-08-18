@@ -128,7 +128,7 @@ const DEFAULT_VISUAL: (typeof STATUS_VISUALS)[string] = {
 const OPS_BASE = "/games/power655/operations";
 
 function opsLink(drawId?: string) {
-  return drawId ? `${OPS_BASE}?draw=${drawId}` : OPS_BASE;
+  return drawId ? `${OPS_BASE}?drawId=${drawId}` : OPS_BASE;
 }
 
 const SHOW_PING = new Set([

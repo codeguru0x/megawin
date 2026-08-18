@@ -24,6 +24,12 @@
  *   JSON → lại là "type nói dối". Quyết định "Decimal128 → number hay string" là
  *   nghiệp vụ, thuộc về mapper (nơi có ngữ cảnh), không phải type generic này.
  *
+ * Nhánh array khớp `readonly (infer U)[]` để bao cả `readonly T[]`/`ReadonlyArray<T>`
+ * (`Array<infer U>` KHÔNG khớp readonly array → cả object rơi xuống nhánh mapped type,
+ * `Date` bên trong không được map, type nói dối). Kết quả trả về mutable `WireType<U>[]`
+ * có chủ đích: qua JSON wire thì `readonly` không tồn tại, `JSON.parse` luôn cho array
+ * mutable — giữ `readonly` ở đây là hứa một ràng buộc mà runtime không có.
+ *
  * @example
  * ```ts
  * interface DrawEntity { drawTime: Date; result?: { publishedAt: Date } }
@@ -39,8 +45,8 @@
  */
 export type WireType<T> = T extends Date
   ? string
-  : T extends Array<infer U>
-    ? Array<WireType<U>>
+  : T extends readonly (infer U)[]
+    ? WireType<U>[]
     : T extends object
       ? { [K in keyof T]: WireType<T[K]> }
       : T;

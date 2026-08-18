@@ -201,6 +201,14 @@
       }
     },
     {
+      "includes": ["apps/*/agent/**"],
+      "linter": {
+        "rules": {
+          "style": { "noDefaultExport": "off", "useFilenamingConvention": "off", "noProcessEnv": "off" }
+        }
+      }
+    },
+    {
       "includes": ["apps/backoffice/src/components/ui/**"],
       "linter": { "enabled": false },
       "formatter": { "enabled": false },

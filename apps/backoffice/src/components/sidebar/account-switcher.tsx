@@ -13,9 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { AccountDisplayUser } from "@/lib/account-user";
 import { signOutAndRedirect } from "@/lib/auth/sign-out";
 import { getInitials } from "@/lib/utils";
-import { useAuth } from "@/providers/auth-provider";
 
 /**
  * Menu tài khoản RÚT GỌN ở header (góc trên phải) — shortcut nhanh.
@@ -23,22 +23,12 @@ import { useAuth } from "@/providers/auth-provider";
  * CỐ Ý chỉ gồm "Thông tin cá nhân" + "Thoát" để tránh trùng lặp với menu đầy đủ
  * ở sidebar footer ({@link NavUser}). Header ưu tiên cho tiện ích global (theme,
  * sau này thêm thông báo/help); menu tài khoản đầy đủ thuộc về sidebar footer.
+ *
+ * `user` NHẬN QUA PROP từ server layout — lý do xem JSDoc {@link NavUser}.
  */
-export function AccountSwitcher() {
-  const { session, isPending } = useAuth();
-
-  const user = {
-    name: ((session?.user as Record<string, unknown>)?.username as string) ?? session?.user?.name ?? "User",
-    email: session?.user?.email ?? "",
-    avatar: session?.user?.image ?? "",
-  };
-
+export function AccountSwitcher({ user }: Readonly<{ user: AccountDisplayUser }>) {
   async function handleSignOut() {
     await signOutAndRedirect();
-  }
-
-  if (isPending) {
-    return <div className="size-9 animate-pulse rounded-lg bg-muted" />;
   }
 
   return (

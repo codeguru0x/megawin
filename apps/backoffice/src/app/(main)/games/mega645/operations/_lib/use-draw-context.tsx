@@ -22,6 +22,8 @@ import { createContext, type ReactNode, useCallback, useContext } from "react";
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { useQueryState } from "nuqs";
 
+import { useAiPageContext } from "@/hooks/use-ai-page-context";
+
 import { type DrawSelectorItem, type OpsQueryParams, useDrawDetail, useDrawSelectorList } from "./use-operations";
 
 // ─── Context shape ────────────────────────────────────────────────────────────
@@ -59,7 +61,7 @@ const DrawContext = createContext<DrawContextValue | null>(null);
 
 export function DrawContextProvider({ children }: { children: ReactNode }) {
   // nuqs đồng bộ 2 chiều: chọn draw → cập nhật URL, refresh → đọc lại URL
-  const [selectedDrawId, setSelectedDrawId] = useQueryState("draw", { defaultValue: "" });
+  const [selectedDrawId, setSelectedDrawId] = useQueryState("drawId", { defaultValue: "" });
 
   const { data: selectorData, isLoading: selectorLoading } = useDrawSelectorList();
   const draws = selectorData?.draws ?? [];
@@ -82,7 +84,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   // Kỳ cũ: selectedDrawId có giá trị, không trong list, và selector đã load xong
   const isHistorical = !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
 
-  // Không tồn tại trong DB: URL có ?draw=xxx, selector đã load xong,
+  // Không tồn tại trong DB: URL có ?drawId=xxx, selector đã load xong,
   // draw không có trong list VÀ detail cũng không tìm thấy.
   const drawNotFound =
     !!selectedDrawId && !selectorLoading && !selectedInList && !remoteLoading && (remoteError || !remoteDraw);
@@ -133,6 +135,18 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     },
     [draws, setSelectedDrawId],
   );
+
+  // Công bố kỳ đang xem cho AI Panel. BẮT BUỘC phải publish ở đây: `onSelectDraw` bên trên xoá
+  // `?drawId=` khỏi URL khi staff xem kỳ đang hoạt động (giữ URL gọn), nên `clientContext.filters`
+  // (đọc từ URL) KHÔNG chứa kỳ này ⇒ model không biết staff đang hỏi về kỳ nào.
+  // Hook không gây re-render — chỉ ghi hàm đọc vào store, provider đọc lúc bấm Gửi.
+  useAiPageContext("operations", {
+    drawId: effectiveDrawId,
+    drawStatus: status,
+    financialDate: draw?.financialDate,
+    // Chỉ gửi khi true — `false` mỗi turn chỉ làm nhiễu prompt.
+    isHistoricalDraw: isHistorical || undefined,
+  });
 
   const value: DrawContextValue = {
     draws,

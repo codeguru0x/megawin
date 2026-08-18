@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # p0-01 — AI Panel Shell: khung panel, responsive 4 tầng, toggle & persist state
 
 > **Nguồn:** `.cursor/plans/ai-panel/00-overview.md`

@@ -33,10 +33,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       data-font={font}
       suppressHydrationWarning
     >
-      <head>
-        {/* Applies theme and layout preferences on load to avoid flicker and unnecessary server rerenders. */}
-        <ThemeBootScript />
-      </head>
+      {/* Applies theme and layout preferences on load to avoid flicker and unnecessary server rerenders. */}
+      {/* Script tự bơm vào <head> qua useServerInsertedHTML — không cần thẻ <head> ở đây. */}
+      <ThemeBootScript />
       <body className={`${fontVars} min-h-screen antialiased`}>
         <AuthProvider>
           <NuqsAdapter>

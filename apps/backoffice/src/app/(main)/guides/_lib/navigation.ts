@@ -1,4 +1,6 @@
-import { RUNBOOK_MANIFEST, type RunbookDoc, type RunbookGame, type RunbookTopic } from "@megawin/ops-docs/manifest";
+import type { RunbookDoc, RunbookGame, RunbookTopic } from "@megawin/ops-docs/manifest";
+
+import { STAFF_GUIDE_MANIFEST } from "./staff-manifest";
 
 /** Một doc đã "phẳng hoá" kèm ngữ cảnh game/topic + route đầy đủ. */
 export interface FlatDoc {
@@ -10,15 +12,14 @@ export interface FlatDoc {
 }
 
 /**
- * Phẳng hoá toàn bộ manifest thành danh sách doc theo thứ tự duyệt cây.
- *
- * Dùng cho search palette (index phẳng) và pager (prev/next theo thứ tự).
+ * Phẳng hoá `STAFF_GUIDE_MANIFEST` (chỉ topic staff-facing) thành danh sách doc theo thứ tự duyệt
+ * cây. Dùng cho search palette (index phẳng) và pager (prev/next theo thứ tự).
  *
  * @returns Mảng `FlatDoc` theo thứ tự game → topic → doc.
  */
 export function flattenDocs(): FlatDoc[] {
   const out: FlatDoc[] = [];
-  for (const game of RUNBOOK_MANIFEST) {
+  for (const game of STAFF_GUIDE_MANIFEST) {
     for (const topic of game.topics) {
       for (const doc of topic.docs) {
         out.push({
@@ -36,6 +37,8 @@ export function flattenDocs(): FlatDoc[] {
 /**
  * Tìm doc liền trước/sau trong cùng topic (dùng cho pager Prev/Next).
  *
+ * Tra trên `STAFF_GUIDE_MANIFEST` — pager không được trỏ sang doc thuộc topic đã ẩn.
+ *
  * @param gameKey - Game key.
  * @param topicKey - Topic key.
  * @param slug - Doc slug hiện tại.
@@ -46,7 +49,7 @@ export function getAdjacentDocs(
   topicKey: string,
   slug: string,
 ): { prev: FlatDoc | null; next: FlatDoc | null } {
-  const game = RUNBOOK_MANIFEST.find((g) => g.gameKey === gameKey);
+  const game = STAFF_GUIDE_MANIFEST.find((g) => g.gameKey === gameKey);
   const topic = game?.topics.find((t) => t.key === topicKey);
   if (!game || !topic) return { prev: null, next: null };
 

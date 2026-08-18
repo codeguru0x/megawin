@@ -1,5 +1,6 @@
 import "./src/env";
 
+import { withEve } from "eve/next";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -24,4 +25,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// agent/ nằm ngay trong app này — cùng dev server, cùng deploy Vercel (00-overview.md
+// "eve NGAY TỪ P0"). Mặc định withEve() tự tìm `agent/` ở root project, không cần eveRoot.
+export default withEve(nextConfig);

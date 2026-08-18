@@ -14,9 +14,10 @@
  * được, đổi lại không chèn cache concern vào đường settle. `invalidate()` vẫn export
  * để dùng khi có nhu cầu thật (VD ops flush).
  *
- * ⚠️ Entity chứa field `Date` (createdAt/updatedAt). Qua L2 Redis (JSON) chúng trở
- * thành string — consumer đọc field Date PHẢI bọc `new Date(...)` trước khi gọi method
- * của Date.
+ * ⚠️ Entity chứa field `Date` (startedAt/closedAt/createdAt/updatedAt). Từ 17/08 L2 Redis giữ
+ * nguyên kiểu `Date` qua `json-date-codec` (`@megawin/cache`), nên KHÔNG còn bị JSON làm thành
+ * string. Vẫn nên bọc `new Date(...)` khi gọi method của Date: entry được ghi TRƯỚC deploy codec
+ * còn nằm trong Redis tới hết TTL, và một app chưa deploy vẫn có thể ghi entry định dạng cũ.
  */
 
 import { createCachedFetcher, getDefaultCacheStore } from "@megawin/cache";

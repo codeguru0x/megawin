@@ -94,7 +94,7 @@ export function Bingo18DrawHistorySection() {
       onStatusChange={handleStatusChange}
       onPageNext={() => setPage(page + 1)}
       onPagePrev={() => page > 1 && setPage(page - 1)}
-      onRowClick={(draw) => router.push(`${OPS_BASE}?draw=${draw.drawId}`)}
+      onRowClick={(draw) => router.push(`${OPS_BASE}?drawId=${draw.drawId}`)}
       renderStatusBadge={(status) => <Bingo18DrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
         const result = draw.result as { diceNumbers?: number[] } | undefined;

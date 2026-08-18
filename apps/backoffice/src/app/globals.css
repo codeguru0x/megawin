@@ -7,6 +7,19 @@
 @import "../styles/presets/soft-pop.css";
 @import "../styles/presets/tangerine.css";
 
+/* Streamdown (markdown của AI chat) sinh class Tailwind TRONG file JS đã build của nó.
+   Tailwind không quét node_modules → thiếu @source thì `list-inside`, `[li_&]:pl-6`,
+   `[&>p]:inline`… KHÔNG được sinh ra, markdown mất bullet/thụt lề và chỉ còn những class
+   trùng tình cờ với phần còn lại của app (đã verify bằng grep CSS served, p0-04 §4.13).
+   Path trỏ vào symlink pnpm ở apps/backoffice/node_modules — root node_modules KHÔNG có
+   streamdown (pnpm không hoist), nên KHÔNG đổi thành `../../../../node_modules/...`.
+   Đặt SAU mọi @import: @source không phải @import nên chèn vào giữa sẽ làm các @import
+   phía dưới thành invalid (biome noInvalidPositionAtImportRule). */
+@source "../../node_modules/streamdown/dist/*.js";
+@source "../../node_modules/@streamdown/cjk/dist/*.js";
+@source "../../node_modules/@streamdown/code/dist/*.js";
+@source "../../node_modules/@streamdown/mermaid/dist/*.js";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -319,8 +332,163 @@ html {
   overscroll-behavior: none;
 }
 
+/* ── AI chat markdown typography (.chat-md) ────────────────────────────────────
+   Streamdown mặc định là "markdown viewer" (h1 = text-3xl, list-inside, heading
+   mt-6/mb-2 rời rạc) — sai ngữ cảnh chat: câu trả lời là một khối văn xuôi ngắn
+   trong panel hẹp, không phải trang tài liệu.
+
+   Sửa bằng CSS thay vì override class Tailwind vì streamdown merge class qua
+   tailwind-merge: đè `text-3xl` phải biết đúng class gốc, mai nó đổi là hỏng thầm.
+   Selector `[data-streamdown]` là API công khai của streamdown (v2), bền hơn.
+
+   Đơn vị dùng `em`/`rem` để scale theo font panel; heading dùng thang nén
+   (1.0625–1.25rem) giống ChatGPT/Claude thay vì thang trang landing. */
+.chat-md {
+  /* Cỡ chữ qua biến để nơi dùng override được: `.chat-md` là CSS unlayered nên nếu khai
+     `font-size` cứng, mọi utility `text-*` (ở @layer utilities) sẽ bị nó đè, không sửa được.
+     15px là chuẩn chat app — 14px quá nhỏ cho đoạn văn dài. */
+  font-size: var(--chat-md-size, 0.9375rem);
+  line-height: 1.65;
+  /* Số tiền/ngày dài không phá layout panel hẹp. */
+  overflow-wrap: break-word;
+}
+
+/* Khoảng cách giữa các block: streamdown dùng `space-y-4` (1rem) — hơi thưa với panel hẹp.
+   Phải override CHÍNH `margin-block-end` của nó, không thêm `margin-top` cho sibling: margin
+   liền kề trong block flow bị collapse (giá trị lớn hơn thắng) nên 1rem của space-y-4 sẽ ăn
+   mất. Tailwind v4 bọc rule đó trong `:where()` (specificity 0) → selector này luôn thắng. */
+.chat-md > :not(:last-child) {
+  margin-block-end: 0.75em;
+}
+
+/* Đoạn văn căn đều 2 lề. Panel chat hẹp (~380px) nên lề phải răng cưa rất lộ: dòng ngắn cạnh
+   dòng dài trông như text bị lỗi. Tiếng Việt là chuỗi âm tiết ngắn → mỗi dòng có RẤT nhiều
+   khoảng trắng để dàn đều, nên không tạo "river" như tiếng Anh nhiều từ dài.
+   Dòng CUỐI mỗi đoạn luôn căn trái theo spec `justify` → không bị giãn chữ bất thường.
+   CHÚ Ý: selector là `p` trần, KHÔNG phải `[data-streamdown="paragraph"]` — streamdown 2.5
+   không gắn data-attr cho <p> (chỉ heading-*, list-item, table*, link, inline-code…, verify
+   bằng grep `"data-streamdown":` trong dist/*.js). Đoán sai attr = rule không bao giờ chạy. */
+.chat-md p,
+.chat-md [data-streamdown="list-item"] {
+  text-align: justify;
+  text-justify: inter-word;
+  /* Không tự ngắt gạch nối: browser không có từ điển ngắt âm tiếng Việt, bật lên sẽ ngắt sai. */
+  hyphens: manual;
+}
+
+/* Ô bảng KHÔNG justify: cột hẹp chỉ 2–3 từ sẽ bị dàn thành khoảng trắng khổng lồ giữa từ. */
+.chat-md [data-streamdown="table-cell"] p,
+.chat-md [data-streamdown="table-header-cell"] p {
+  text-align: inherit;
+}
+
+/* KHỐI ĐANG ĐƯỢC VIẾT (message assistant còn streaming) tạm KHÔNG justify.
+   Lý do: spec `justify` không dàn dòng CUỐI của đoạn — nên dòng đang gõ thì căn trái, nhưng ngay khi
+   nó wrap sang dòng mới thì thành dòng-không-cuối và bị dàn đều, làm toàn bộ chữ vừa đọc nhảy ngang
+   (đo thật 17/08: tới 31px ở cuối dòng). Cứ mỗi lần xuống dòng lại giật một nhịp — đây là nguồn giật
+   độc lập với hiệu ứng fade-in.
+   CHỈ áp cho khối CUỐI, không phải cả message: các đoạn phía trên đã chốt nội dung, justify chúng
+   ngay thì lề phải thẳng luôn và không gây reflow nào. Nếu tắt justify cho cả message thì lúc turn
+   kết thúc toàn bộ câu trả lời (kể cả đoạn staff đang đọc) dàn lại một lượt — giật to hơn.
+   Class `chat-md-streaming` do `MessageResponse` gắn theo `isAnimating`. */
+.chat-md-streaming > p:last-child,
+.chat-md-streaming > :last-child [data-streamdown="list-item"]:last-child {
+  text-align: start;
+}
+
+.chat-md [data-streamdown^="heading-"] {
+  margin-top: 1.5em;
+  margin-bottom: 0.4em;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+/* Heading đầu message không được thụt xuống — nó là dòng mở đầu câu trả lời. */
+.chat-md > [data-streamdown^="heading-"]:first-child {
+  margin-top: 0;
+}
+
+.chat-md [data-streamdown="heading-1"] {
+  font-size: 1.25em;
+}
+.chat-md [data-streamdown="heading-2"] {
+  font-size: 1.15em;
+}
+.chat-md [data-streamdown="heading-3"] {
+  font-size: 1.05em;
+}
+/* h4–h6 giữ cỡ body, chỉ đậm — sâu hơn h3 trong chat là dấu hiệu model over-format. */
+.chat-md [data-streamdown="heading-4"],
+.chat-md [data-streamdown="heading-5"],
+.chat-md [data-streamdown="heading-6"] {
+  font-size: 1em;
+}
+
+/* List: streamdown dùng `list-inside` → marker nằm TRONG dòng text, nên dòng 2
+   trở đi trôi về sát lề, mất cột. Chuyển sang hanging indent (outside) như mọi
+   chat app. `list-style` khai lại vì `list-inside` của Tailwind chỉ set position. */
+.chat-md [data-streamdown="unordered-list"],
+.chat-md [data-streamdown="ordered-list"] {
+  list-style-position: outside;
+  padding-left: 1.5em;
+}
+
+.chat-md [data-streamdown="list-item"] {
+  padding-block: 0.125em;
+}
+
+/* List lồng nhau: sát hơn list gốc, không cộng dồn khoảng trắng. */
+.chat-md [data-streamdown="list-item"] > [data-streamdown$="-list"] {
+  margin-top: 0.25em;
+  margin-bottom: 0;
+}
+
+/* Bảng: streamdown đã bọc `<table>` trong div `overflow-x-auto`, nhưng table mang `w-full`
+   (width:100%) nên nó KHÔNG BAO GIỜ nở rộng hơn wrapper → wrapper không bao giờ scroll và cột
+   số bị bóp xuống wrap giữa số ("1.400.00 / VND"). `max-content` + `min-width:100%` cho bảng
+   nở theo nội dung rồi để wrapper scroll ngang — hẹp thì vẫn full width.
+   KHÔNG set `overflow-x` ở đây: sẽ thành scroller lồng trong scroller. */
+.chat-md [data-streamdown="table"] {
+  width: max-content;
+  min-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Padding chặt hơn `px-4 py-2` của streamdown — bảng số liệu trong panel hẹp cần
+   nhiều cột hiển thị hơn là nhiều khoảng trắng. */
+.chat-md [data-streamdown="table-cell"],
+.chat-md [data-streamdown="table-header-cell"] {
+  padding: 0.375em 0.75em;
+}
+
+/* Inline code: `text-sm` cứng của streamdown nhỏ hơn hẳn body khi body là 15px. */
+.chat-md [data-streamdown="inline-code"] {
+  font-size: 0.875em;
+  word-break: break-word;
+}
+
+/* Link đã có `text-primary underline` từ streamdown — chỉ hạ gạch chân xuống để không cắt
+   qua dấu thanh tiếng Việt (ằ, ộ, ị…) ở font 15px. */
+.chat-md [data-streamdown="link"] {
+  text-underline-offset: 2px;
+}
+
 .disable-transitions * {
   transition: none !important;
+}
+
+/* Streaming text của AI chat fade-in từng từ qua `[data-sd-animate]` (keyframes ở
+   `streamdown/styles.css`, tham số ở `ai-elements/message.tsx`). Ai bật "giảm chuyển động" của OS thì
+   tắt hẳn: chữ hiện ngay, không fade.
+   Selector cố tình có `html` phía trước (specificity 0,1,1 > 0,1,0 của `[data-sd-animate]`) — thứ tự
+   inject CSS giữa file này và `streamdown/styles.css` do bundler quyết định, không đảm bảo file nào
+   sau; nâng specificity thì thắng bất kể thứ tự, khỏi cần `!important`.
+   `animation: none` an toàn vì keyframes gốc dùng `both` để giữ trạng thái CUỐI (opacity 1) — bỏ
+   animation đi thì element về đúng opacity mặc định, không bị vô hình. */
+@media (prefers-reduced-motion: reduce) {
+  html [data-sd-animate] {
+    animation: none;
+  }
 }
 
 @keyframes shimmer {

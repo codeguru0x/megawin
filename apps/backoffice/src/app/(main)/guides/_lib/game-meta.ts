@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { ChessKing, ChessQueen, ChessRook } from "lucide-react";
+import { ChessBishop, ChessKing, ChessKnight, ChessPawn, ChessQueen, ChessRook } from "lucide-react";
 
 /**
  * Metadata hiển thị cho từng game trong knowledge base: icon + class màu brand.
@@ -40,6 +40,30 @@ export const GAME_META: Record<string, GameMeta> = {
     text: "text-game-mega645",
     bgMuted: "bg-game-mega645-muted",
     border: "border-game-mega645",
+  },
+  keno: {
+    icon: ChessBishop,
+    text: "text-game-keno",
+    bgMuted: "bg-game-keno-muted",
+    border: "border-game-keno",
+  },
+  max3d: {
+    icon: ChessRook,
+    text: "text-game-max3d",
+    bgMuted: "bg-game-max3d-muted",
+    border: "border-game-max3d",
+  },
+  max3dpro: {
+    icon: ChessPawn,
+    text: "text-game-max3dpro",
+    bgMuted: "bg-game-max3dpro-muted",
+    border: "border-game-max3dpro",
+  },
+  bingo18: {
+    icon: ChessKnight,
+    text: "text-game-bingo18",
+    bgMuted: "bg-game-bingo18-muted",
+    border: "border-game-bingo18",
   },
 };
 

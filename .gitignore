@@ -19,6 +19,12 @@ coverage
 # Vercel
 .vercel
 
+# eve (AI Panel agent — local dev cache/runtime artifacts, xem apps/*/agent/)
+.eve/
+# `eve build` sinh thêm bundle Nitro ở `<app>/.output/` (kèm SKILL.md đã compile).
+# Artifact build, tái tạo được — không commit.
+.output/
+
 # Build Outputs
 .next/
 out/

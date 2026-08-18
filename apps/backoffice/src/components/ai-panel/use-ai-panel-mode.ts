@@ -39,6 +39,20 @@ function fits(viewport: number, sidebar: number, panel: number): boolean {
   return viewport - sidebar - panel >= CONTENT_MIN;
 }
 
+/**
+ * Viewport giả định cho render ĐẦU TIÊN (SSR + lần hydrate đầu ở client).
+ *
+ * BẮT BUỘC là hằng số, KHÔNG được đọc `window.innerWidth` trong lazy init của `useState`:
+ * server không có `window` nên sẽ dùng fallback, còn client đọc giá trị thật → `mode` lệch
+ * nhau giữa 2 lần render đầu → React báo "Hydration failed because the server rendered HTML
+ * didn't match the client" (docked render `<aside>`, overlay render `<div fixed>`, drawer
+ * render vaul portal — DOM khác hẳn nhau, không phải khác vài attribute).
+ *
+ * Chọn 1280px (desktop phổ biến) → render đầu là `Docked`, khớp layout mặc định của
+ * backoffice; sau khi mount, effect đo viewport thật và re-render sang mode đúng.
+ */
+const SSR_VIEWPORT_FALLBACK = 1280;
+
 interface UseAiPanelModeInput {
   panelOpen: boolean;
   panelWidth: number;
@@ -47,15 +61,19 @@ interface UseAiPanelModeInput {
 export function useAiPanelMode({ panelOpen, panelWidth }: UseAiPanelModeInput): AiPanelMode {
   const { open: sidebarOpen, setOpen: setSidebarOpen, isMobile } = useSidebar();
 
-  // Measured viewport width — cập nhật qua resize listener (passive, debounce 100ms) để tránh
-  // setState mỗi px khi user kéo resize cửa sổ.
-  const [viewport, setViewport] = useState<number>(() => (typeof window === "undefined" ? 1280 : window.innerWidth));
+  // Measured viewport width — `undefined` cho tới khi mount xong (giữ render đầu SSR-safe, xem
+  // SSR_VIEWPORT_FALLBACK), sau đó cập nhật qua resize listener (passive, debounce 100ms) để
+  // tránh setState mỗi px khi user kéo resize cửa sổ.
+  const [measuredViewport, setMeasuredViewport] = useState<number | undefined>(undefined);
 
   useEffect(() => {
+    // Đo ngay khi mount — resize listener chỉ bắn khi cửa sổ thay đổi, không bắn lần đầu.
+    setMeasuredViewport(window.innerWidth);
+
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const onResize = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => setViewport(window.innerWidth), RESIZE_DEBOUNCE_MS);
+      timeoutId = setTimeout(() => setMeasuredViewport(window.innerWidth), RESIZE_DEBOUNCE_MS);
     };
     window.addEventListener("resize", onResize, { passive: true });
     return () => {
@@ -63,6 +81,8 @@ export function useAiPanelMode({ panelOpen, panelWidth }: UseAiPanelModeInput): 
       clearTimeout(timeoutId);
     };
   }, []);
+
+  const viewport = measuredViewport ?? SSR_VIEWPORT_FALLBACK;
 
   const fitsWithFullSidebar = fits(viewport, SIDEBAR_FULL, panelWidth);
   const fitsWithIconSidebar = fits(viewport, SIDEBAR_ICON, panelWidth);

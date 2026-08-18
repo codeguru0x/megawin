@@ -16,9 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
+import type { AccountDisplayUser } from "@/lib/account-user";
 import { signOutAndRedirect } from "@/lib/auth/sign-out";
 import { getInitials } from "@/lib/utils";
-import { useAuth } from "@/providers/auth-provider";
 
 /**
  * Menu tài khoản ĐẦY ĐỦ ở sidebar footer (góc dưới trái) — "identity anchor".
@@ -26,35 +26,17 @@ import { useAuth } from "@/providers/auth-provider";
  * Đây là điểm vào CHÍNH cho khu vực tài khoản cá nhân: liệt kê toàn bộ
  * {@link ACCOUNT_NAV_ITEMS} (Profile / Nhật ký / Đổi mật khẩu / MFA) + Hướng dẫn
  * + Thoát. Menu rút gọn ở header ({@link AccountSwitcher}) chỉ là shortcut nhanh.
+ *
+ * `user` NHẬN QUA PROP từ server layout — KHÔNG đọc `useAuth()` ở đây. Trước đây
+ * component render skeleton khi `isPending` (luôn true lúc SSR) nhưng client
+ * hydrate với session đã cache ⇒ 2 cây DOM khác nhau (`SidebarMenuButton` trần vs
+ * `DropdownMenuTrigger`) ⇒ hydration mismatch làm React dựng lại cả cây.
  */
-export function NavUser() {
-  const { session, isPending } = useAuth();
+export function NavUser({ user }: Readonly<{ user: AccountDisplayUser }>) {
   const { isMobile } = useSidebar();
-
-  const user = {
-    name: ((session?.user as Record<string, unknown>)?.username as string) ?? session?.user?.name ?? "User",
-    email: session?.user?.email ?? "",
-    avatar: session?.user?.image ?? "",
-  };
 
   async function handleSignOut() {
     await signOutAndRedirect();
-  }
-
-  if (isPending) {
-    return (
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton size="lg" className="animate-pulse">
-            <div className="h-8 w-8 rounded-lg bg-muted" />
-            <div className="grid flex-1 gap-1">
-              <div className="h-3 w-20 rounded bg-muted" />
-              <div className="h-2.5 w-28 rounded bg-muted" />
-            </div>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    );
   }
 
   return (

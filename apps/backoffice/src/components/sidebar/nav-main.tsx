@@ -1,10 +1,11 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import type { AccountRole } from "@megawin/identity/entities";
 import { ChevronRight } from "lucide-react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -26,11 +27,19 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { hasAnyRole, useUserRoles } from "@/hooks/use-user-roles";
-import type { NavGroup, NavMainItem, NavSubItem } from "@/navigation/sidebar/sidebar-items";
+import { hasAnyRole } from "@/lib/roles";
+import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
+  /**
+   * Roles của user (từ server session, truyền xuống qua `AppSidebar`).
+   *
+   * KHÔNG đọc từ `useUserRoles()` ở đây: hook đó dựa trên `useSession()`
+   * client-only nên lúc SSR trả `[]` → server bỏ item admin-only, client giữ lại
+   * → React so lệch `href`/icon của các item sau đó và huỷ toàn bộ tree.
+   */
+  readonly userRoles: readonly AccountRole[];
 }
 
 const IsComingSoon = () => (
@@ -156,10 +165,9 @@ const NavItemCollapsed = ({
   );
 };
 
-export function NavMain({ items }: NavMainProps) {
+export function NavMain({ items, userRoles }: NavMainProps) {
   const path = usePathname();
   const { state, isMobile } = useSidebar();
-  const userRoles = useUserRoles();
 
   const isItemActive = (url: string, subItems?: NavMainItem["subItems"]) => {
     if (subItems?.length) {
@@ -172,20 +180,26 @@ export function NavMain({ items }: NavMainProps) {
     return subItems?.some((sub) => path.startsWith(sub.url)) ?? false;
   };
 
-  // Filter groups → items → subItems theo roles của user hiện tại
-  const visibleGroups = items
-    .filter((group) => hasAnyRole(group.roles, userRoles))
-    .map((group) => ({
-      ...group,
-      items: group.items
-        .filter((item) => hasAnyRole(item.roles, userRoles))
-        .map((item) => ({
-          ...item,
-          subItems: item.subItems?.filter((sub) => hasAnyRole(sub.roles, userRoles)),
-        })),
-    }))
-    // Bỏ group không còn item nào sau khi filter
-    .filter((group) => group.items.length > 0);
+  // Filter groups → items → subItems theo roles của user hiện tại.
+  // `items` là const module-level và `userRoles` đến từ server prop → deps stable,
+  // memo tránh dựng lại toàn bộ mảng nav mỗi lần đổi route (usePathname).
+  const visibleGroups = useMemo(
+    () =>
+      items
+        .filter((group) => hasAnyRole(group.roles, userRoles))
+        .map((group) => ({
+          ...group,
+          items: group.items
+            .filter((item) => hasAnyRole(item.roles, userRoles))
+            .map((item) => ({
+              ...item,
+              subItems: item.subItems?.filter((sub) => hasAnyRole(sub.roles, userRoles)),
+            })),
+        }))
+        // Bỏ group không còn item nào sau khi filter
+        .filter((group) => group.items.length > 0),
+    [items, userRoles],
+  );
 
   return (
     <>

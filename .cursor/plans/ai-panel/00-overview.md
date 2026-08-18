@@ -32,15 +32,19 @@ nhanh trên trang. Hai surface, MỘT engine:
 | Giữ state chat khi toggle panel | Provider mount cố định ở layout + React `<Activity>` bọc panel body | Đóng/mở KHÔNG unmount → stream đang chạy không đứt. Reload khôi phục bằng **session cursor + event log** (eve resumable sessions) thay vì sessionStorage messages tự chế. |
 | CopilotKit / AG-UI | **KHÔNG dùng** (đánh giá 13/08/2026) | Headless UI là tính năng trả phí Enterprise; AG-UI không hỗ trợ eve. Đánh giá lại chỉ khi: agent backend ngoài TS (LangGraph…) hoặc shared-state đa thiết bị phức tạp. |
 | Multi-channel | **eve channels** (P2) — thêm file `agent/channels/telegram.ts`, KHÔNG còn khái niệm "migration" | Lợi ích trực tiếp của eve-first: p2-01 thu gọn từ "migration + channels" xuống chỉ còn "channels". |
+| Tri thức sản phẩm game (p1-02) | **Tài liệu dạy CƠ CHẾ (eve skills, không chứa số) + config cấp SỐ (tool `getGameConfig`)** — KHÔNG nạp `.cursor/rules/*-game-rules.mdc` vào agent | 3 lý do đo được: (1) 7 file `.mdc` = ~145 KB (~36–40k token) → nhồi vào instructions là chi phí đó **mỗi model call**, và system-role nằm ngoài history nên compaction không cắt được; (2) `.mdc` là dev-facing (collection, path, tên class) — staff không cần, ăn token; (3) `.mdc` **cố ý chứa giá trị mặc định tham khảo** ("2 tỷ", "20% revenue") → nạp vào là dạy agent đúng thứ ta đang cấm nó nói. Skill static markdown của eve không cần sandbox (`skills.mdx:12`) nên chi phí luôn-bật chỉ là 8 dòng description. Tài liệu đặt ở `packages/ops-docs` để **một bản, hai người đọc**: staff qua `/guides`, model qua `load_skill` — doc sai thì staff phát hiện, không phải chờ agent trả lời sai mới biết. |
 
 ## Bảng trạng thái
 
 | Plan | Phase | Status | Phụ thuộc | Ghi chú |
 | --- | --- | --- | --- | --- |
-| p0-01-panel-shell | P0 | ⏳ pending | — | Shell + responsive 4 tầng + toggle/persist. **Không đổi gì theo revision eve** — vốn transport-agnostic. |
-| p0-02-eve-foundation | P0 | ⏳ pending | — | GATE spike `withEve()` → `agent/` (instructions, tools `safeRun()`, channel auth better-auth) → deploy staging. Song song được với p0-01. |
-| p0-03-chat-ui-generative | P0 | ⏳ pending | 01, 02 | Panel chat trên `useEveAgent` + AI Elements adapter `EveMessage` + context `prepareSend` + tool renderers + resume qua session cursor. |
-| p1-01-ai-page-threads-hitl | P1 | ⏳ pending | 03 | Trang `/ai` full-page kiểu ChatGPT + thread sidebar + promote từ panel + HITL native eve + tool điều hướng. |
+| p0-01-panel-shell | P0 | ✅ done | — | Shell + responsive 4 tầng + toggle/persist. **Không đổi gì theo revision eve** — vốn transport-agnostic. |
+| p0-02-eve-foundation | P0 | ✅ done (local, verify UI thật xong) | — | GATE spike PASS local (`withEve()` boot, `/eve/v1/health` 200, auth fail-closed verify bằng 401). `agent/` core xong: `agent.ts`, `instructions.md`, `channels/eve.ts` (auth better-auth, KHÔNG `localDev()`), 3 tools report (`safeRun()` verify chạy thật với Mongo). Turn thật qua UI browser + session Cognito thật (16/08): tool call đúng, số khớp Mongo, agent tự chặn câu hỏi/tool ngoài phạm vi đúng rule. **CHƯA deploy staging** (§0 mục deploy/session-resume của GATE chưa test — cần Vercel project settings, xem phần "Cấu hình Vercel" bên dưới; không phải blocker cho P1). |
+| p0-03-chat-ui-generative | P0 | ✅ done (local, verify UI thật xong) | 01, 02 | Panel chat trên `useEveAgent` + AI Elements adapter `EveMessage` + context `prepareSend` + tool renderers + resume qua session cursor. **Bug phát hiện khi test thật 16/08 → p0-04.** |
+| p0-04-sandbox-chat-ux | P0 | ✅ done (verify UI thật xong) | 03 | Sandbox thật (`bash` chạy được, `deny-all` + assertion tự động) + `web_fetch` allowlist (approval `always()` + domain block verify qua UI thật) + fix nút Stop (verify qua UI thật: submitted/streaming/orphaned) + redesign UI ngang tầm ChatGPT/Claude (verify U1-U10 qua UI thật, kể cả dark mode) + render tool 3 tầng + context thời gian VN & state trang + `serializeDates`/`WireType` thay `json-safe.ts` + ẩn nội thất tool khỏi UI staff. Sinh ra từ bug report thật của user 16/08. |
+| p1-01-ai-page-threads-hitl | P1 | ⏳ pending | 04 | Trang `/ai` full-page kiểu ChatGPT + thread sidebar + promote từ panel + HITL native eve + tool điều hướng. **Đổi phụ thuộc 03 → 04** để kế thừa UI đã đẹp, không redesign 2 lần. |
+| p1-02-game-knowledge-config-truth | P1 | ⏳ pending | 04 (**song song p1-01**) | Tri thức 7 sản phẩm game cho agent: 24 doc staff-facing ở `packages/ops-docs` (dạy CƠ CHẾ, **không chứa số, không chứa tên field**) nạp qua eve skills + tool `getGameConfig`/`getGameJackpot` trả **payload tự giải thích** (`label`/`unit`/`note` đi kèm từng giá trị) làm nguồn số DUY NHẤT. Chặn agent trả lời bằng số mặc định/số Vietlott/số cũ trong hội thoại. Có GATE (§0: doc `.md` vào skill bằng đường nào) + §5.0 giải trình vì sao "1 skill/game" chưa đủ + 3 lớp guard. Sinh từ yêu cầu user 16/08. |
+| p1-03-ops-data-visibility | P1 | ⏳ pending | 04 (**song song p1-01/p1-02**) | Phủ dữ liệu vận hành cho Mira: 13 tool đọc mới (2 wave) theo nguyên tắc "tool sinh theo CÂU HỎI staff, không theo route" — draws/ops realtime, settle drill-down, tenant config+report, jackpot history, player, audit, integration health. Kiến trúc 3 tầng (tool mỏng → dispatcher `server/ai/<domain>/` switch 7 game → package use-case), read-only enforce bằng grep guard, ngân sách token đo thật, trigger đo được để mở subagent (p2-02). Sinh từ yêu cầu user 17/08. |
 | p2-01-channels | P2 | ⏳ pending | p1-01 + trigger thật | Telegram channel (allowlist staff) + schedules proactive + Slack khi cần. Chỉ khởi động khi có nhu cầu kênh ngoài web THẬT. |
 
 Status: ⏳ pending · 🔨 in-progress · ✅ done · ⏸️ blocked.
@@ -52,17 +56,47 @@ Status: ⏳ pending · 🔨 in-progress · ✅ done · ⏸️ blocked.
 p0-02 §0 GATE spike (0.5–1 ngày, ĐI ĐẦU — fail gate là đổi hướng sớm nhất có thể)
    │ pass
 p0-01 (shell, độc lập)  ──┐
-p0-02 §1–4 (agent core)  ─┴──► p0-03 (panel chat UI)
+p0-02 §1–4 (agent core)  ─┴──► p0-03 (panel chat UI)  ──► p0-04 (sandbox + Stop + UI đẹp)
 ━━━ BATCH 2 (ngay sau P0 — UI ChatGPT là yêu cầu chính, KHÔNG chờ trigger) ━━
-p0-03 ──► p1-01 (trang /ai + threads + HITL)
+p0-04 ──┬──► p1-01 (trang /ai + threads + HITL)
+        ├──► p1-02 (tri thức 7 game + tool config)   ← song song, giao nhau 2 file
+        └──► p1-03 (13 tool dữ liệu vận hành)        ← song song, giao nhau 2 file
 ━━━ CHỜ TRIGGER THẬT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 p1-01 ──► p2-01 (Telegram/Slack channels + schedules)
+p1-03 ──► p2-02 (subagents — chỉ khi 1 trong 3 trigger đo được ở p1-03 §6 kích hoạt)
 ```
 
-**Ranh giới batch 1:** p0-01, p0-02, p0-03. Prerequisite backend (redesign use-case
+**p1-01, p1-02 và p1-03 song song được:** khác trục (p1-01 = UI/transport, p1-02 = tri thức/tool
+config, p1-03 = tool dữ liệu vận hành). Cả ba chỉ giao nhau ở 2 file — `agent/instructions.md`
+và `tool-renderers/registry.tsx` (`AiToolName` + `AI_TOOL_LABELS`). Ai làm sau rebase, không ai
+chờ ai.
+
+**Ranh giới batch 1:** p0-01, p0-02, p0-03, **p0-04**. Prerequisite backend (redesign use-case
 `run()/safeRun()`) **ĐÃ XONG trong codebase** (verify 14/08/2026). Spike gate của p0-02 là việc
 ĐẦU TIÊN của toàn feature — nếu fail hard blocker, fallback về kiến trúc AI SDK (bộ plan cũ nằm
 trong git history của thư mục này, commit trước revision 14/08).
+
+**p0-04 sinh ra 16/08/2026** từ bug report thật khi user test p0-03 trên dev: `bash` treo do sandbox
+chưa bootstrap, nút Stop không dừng được, UI chưa đạt chuẩn app chat. p0-04 có GATE riêng (§1.1 —
+microsandbox boot được không) vì §1/§2 phụ thuộc sandbox chạy thật; §3 (Stop) độc lập, làm song song
+được nếu GATE chờ cài Docker.
+
+**Kết quả p0-04 (16/08, cùng ngày):** GATE pass sau khi đổi base image sang `debian:stable-slim`
+(image gốc `ghcr.io/vercel/eve:latest` không tải nổi trên mạng dev — đo 5/5 lần đứt giữa dòng).
+Phát hiện ngoài dự kiến: **allowlist network theo domain không được enforce** trên microsandbox
+0.6.9 dù log nói ngược lại → chuyển sang `deny-all` và **assert bằng probe trong `bootstrap`**
+(p0-04 §1.6). Bài học chung cho mọi plan sau: **policy an ninh phải được đo, không chỉ được khai
+báo** — và chỗ đo đúng là `bootstrap` (ngoài turn user, fail-closed).
+
+**Verify UI thật (16/08, browser + session Cognito thật):** cả 3 khoản còn treo đã pass —
+(1) nút Stop: `sleep 8s` trong `bash` → click "Dừng tạo câu trả lời" giữa lúc streaming → turn dừng
+đúng, composer về idle, không orphan; (2) UI redesign U1-U10 (bubble, reasoning, tool card, copy/
+resend, 3-dot menu, panel width, dark mode) — dark mode ban đầu tưởng sai do thumbnail preview của
+IDE hiển thị nhầm, verify lại bằng `browser_cdp` đọc computed style + sample pixel PNG thật thì
+đúng; (3) `web_fetch` allowlist: approval card hiện đúng `{"url": "..."}` khi `approval-requested`,
+sau khi Approve vẫn bị chặn ở tầng `execute` cho domain ngoài allowlist (`example.com`), model tự
+diễn giải đúng phạm vi cho phép, không cố lách. Tiện thể verify luôn 2 khoản treo từ p0-02 §5 (turn
+thật qua UI + agent tự chặn câu hỏi ngoài phạm vi).
 
 ## Nguyên tắc chung (áp cho MỌI plan trong thư mục)
 
@@ -99,6 +133,10 @@ trong git history của thư mục này, commit trước revision 14/08).
 - HITL: tool gắn approval → card Duyệt/Từ chối trong chat (cả panel lẫn trang), `respond()`
   resume turn; từ chối → model diễn giải lại.
 - Tool điều hướng: agent mở đúng trang + filter, panel giữ nguyên hội thoại.
+- Agent hiểu 7 sản phẩm game: hỏi cách chơi/nội dung đặt cược/điều kiện trúng → load đúng skill game
+  và giải thích đúng cơ chế; hỏi bất kỳ con số cấu hình → gọi `getGameConfig`, số khớp DB, kèm mốc
+  `version`/`updatedAt`. Hỏi giá trị mà Vietlott có số nổi tiếng trong lúc config test đặt **khác** →
+  agent trả số của config (p1-02).
 
 ## Ngoài scope P0/P1 (ghi nhận, không làm)
 
@@ -107,7 +145,12 @@ trong git history của thư mục này, commit trước revision 14/08).
   portable nên không cần chuẩn bị gì thêm ngoài việc KHÔNG hardcode phụ thuộc Vercel trong tools.
 - Tool ghi dữ liệu nghiệp vụ (duyệt rút, sửa config…) — mọi tool P0/P1 read-only hoặc điều hướng.
   Khi có tool ghi thật: bắt buộc HITL approval + audit log `@megawin/audit` (khung đã có ở p1-01).
-- Sandbox/subagents/evals của eve — có sẵn trong framework, dùng khi có nhu cầu thật (evals nên
-  cân nhắc sớm ở P1+ khi system prompt bắt đầu phức tạp).
+- ~~Sandbox/subagents/evals của eve~~ — **sandbox ĐÃ VÀO SCOPE ở p0-04** (16/08/2026): user cần
+  `bash` + `web_fetch` để agent lấy thông tin hữu ích/mới. **Evals ĐÃ VÀO SCOPE ở p1-02 §7.2** (16/08):
+  policy "agent không được trả số mặc định/số Vietlott" là loại policy **chỉ đo được bằng eval** — lint
+  tài liệu chặn được số trong doc, nhưng không chặn được model tự nhớ số. Subagents vẫn ngoài scope —
+  trigger đo được để mở (`p2-02-subagents`) đã định nghĩa ở p1-03 §6 (17/08).
+- Audit log cho tool call `bash`/`web_fetch` — ghi nhận ở p0-04 §9, làm khi lên production thật.
+- Rate limit số sandbox VM per staff — P2, cùng mục rate limiting bên dưới.
 - Thread registry lên Mongo (cross-device/search) — P2.
 - Rate limiting per-user — P2.

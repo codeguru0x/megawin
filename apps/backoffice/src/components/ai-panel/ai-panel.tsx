@@ -5,14 +5,14 @@
  *
  * LUÔN mounted (kể cả khi đóng) — chỉ ẨN bằng CSS/Activity, KHÔNG unmount. Đây là điều kiện
  * để p0-03 giữ được state chat (`useEveAgent` sống trong `AiPanelProvider`) khi toggle panel.
- * Nội dung bên trong (`panelBody`) hiện là placeholder — p0-03 lắp chat UI thật vào.
+ * Nội dung bên trong dùng `ChatPanel` (`src/components/ai-chat/`) — dùng chung với trang
+ * `/ai` tương lai (p1-01), panel chỉ thêm frame/resize/drawer xung quanh.
  */
 
 import { Activity, type PointerEvent as ReactPointerEvent, useCallback, useRef } from "react";
 
-import { Sparkles, X } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { PanelChatHeader } from "@/components/ai-chat/chat-header";
+import { ChatPanel } from "@/components/ai-chat/chat-panel";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { AI_ASSISTANT_NAME } from "@/config/app-config";
 import { AI_PANEL_MAX_WIDTH, AI_PANEL_MIN_WIDTH } from "@/lib/preferences/ai-panel";
@@ -20,29 +20,6 @@ import { cn } from "@/lib/utils";
 
 import { useAiPanel } from "./ai-panel-provider";
 import { AiPanelMode } from "./use-ai-panel-mode";
-
-function AiPanelHeader({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
-      <div className="flex items-center gap-2 font-medium text-sm">
-        <Sparkles className="size-4 text-primary" />
-        {AI_ASSISTANT_NAME}
-      </div>
-      <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label={`Đóng panel ${AI_ASSISTANT_NAME}`}>
-        <X />
-      </Button>
-    </div>
-  );
-}
-
-function AiPanelPlaceholderBody() {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground text-sm">
-      <Sparkles className="size-8 text-muted-foreground/50" />
-      <p>Chat với {AI_ASSISTANT_NAME} để hỗ trợ bạn vận hành MegaWin tốt nhất.</p>
-    </div>
-  );
-}
 
 /**
  * Resize handle — mép trái panel (chỉ docked/overlay). Kéo cập nhật width qua ref +
@@ -133,8 +110,7 @@ export function AiPanel() {
 
   const panelBody = (
     <Activity mode={open ? "visible" : "hidden"}>
-      <AiPanelHeader onClose={() => setOpen(false)} />
-      <AiPanelPlaceholderBody />
+      <ChatPanel header={<PanelChatHeader onClose={() => setOpen(false)} />} />
     </Activity>
   );
 
@@ -167,13 +143,20 @@ export function AiPanel() {
   }
 
   // Docked — flex sibling của SidebarInset; width 0 khi đóng (không border để tránh sliver 1px).
+  //
+  // `sticky top-0 h-svh self-start` là BẮT BUỘC, không phải trang trí: `sidebar-wrapper` dùng
+  // `min-h-svh` (chiều cao AUTO, grow theo con cao nhất) nên nếu panel để `align-items: stretch`
+  // mặc định thì chiều cao panel = chiều cao wrapper = chiều cao nội dung chat → chat KHÔNG bao
+  // giờ scroll nội bộ, thay vào đó đẩy dài cả trang và để lại vệt trắng bên cột nội dung.
+  // `self-start` cắt stretch, `h-svh` chốt chiều cao = viewport (điều kiện để `overflow` bên
+  // trong có tác dụng), `sticky top-0` giữ panel trong tầm mắt khi trang cuộn.
   return (
     <aside
       ref={panelRef}
       data-ai-panel={open ? "open" : "closed"}
       style={{ width: open ? width : 0 }}
       className={cn(
-        "relative flex shrink-0 flex-col overflow-hidden bg-background transition-[width] duration-200 ease-linear",
+        "sticky top-0 flex h-svh shrink-0 flex-col self-start overflow-hidden bg-background transition-[width] duration-200 ease-linear",
         open && "border-l",
       )}
     >

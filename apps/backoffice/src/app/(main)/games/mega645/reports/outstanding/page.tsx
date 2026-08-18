@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { Mega645OutstandingContent } from "./_libs/outstanding-content";
+import { Mega645OutstandingContent } from "./_lib/outstanding-content";
 
 function OutstandingPageSkeleton() {
   return (

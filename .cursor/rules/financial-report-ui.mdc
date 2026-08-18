@@ -1,6 +1,6 @@
 ---
 description: Thiết kế UI trang báo cáo tài chính cho hệ thống và từng game trong backoffice
-globs: apps/backoffice/src/app/(main)/reports/**,apps/backoffice/src/app/(main)/games/*/financial-reports/**,apps/backoffice/src/app/(main)/games/*/outstanding/**,apps/backoffice/src/app/(main)/games/*/void-reports/**,apps/backoffice/src/app/api/reports/**,apps/backoffice/src/app/api/*/reports/**
+globs: apps/backoffice/src/app/(main)/reports/**,apps/backoffice/src/app/(main)/games/*/reports/**,apps/backoffice/src/app/(main)/accounts/players/**,apps/backoffice/src/app/api/reports/**,apps/backoffice/src/app/api/*/reports/**
 alwaysApply: false
 ---
 
@@ -56,11 +56,11 @@ apps/backoffice/src/app/api/reports/
 ### 2.2 Per-Game Reports (ví dụ Lotto 5/35) — 3 pages
 
 ```
-apps/backoffice/src/app/(main)/games/lotto535/
-├── financial-reports/
+apps/backoffice/src/app/(main)/games/lotto535/reports/
+├── settle/
 │   ├── page.tsx                     ← 2 tabs: Theo kỳ quay / Theo đại lý
 │   └── _lib/
-│       ├── use-report-filters.ts    ← nuqs: tab, from, to, draw, tenant, player
+│       ├── use-report-filters.ts    ← nuqs: tab, from, to, drawId, tenantId, accountId
 │       ├── types.ts
 │       ├── tabs/
 │       │   ├── by-draw.tsx
@@ -73,10 +73,12 @@ apps/backoffice/src/app/(main)/games/lotto535/
 ├── outstanding/
 │   ├── page.tsx                     ← Single view, auto-refresh
 │   └── _lib/
+│       ├── use-outstanding-filters.ts  ← nuqs: drawId, tenantId, accountId, playerName
 │       └── outstanding-table.tsx
-└── void-reports/
+└── void/
     ├── page.tsx                     ← Single view, date range filter
     └── _lib/
+        ├── use-void-filters.ts      ← nuqs: from, to, drawId, tenantId, accountId
         ├── void-table.tsx
         └── void-snapshot-dialog.tsx
 
@@ -96,15 +98,15 @@ apps/backoffice/src/app/api/lotto535/reports/
 
 ### 2.3 Tất cả 7 game — Cùng cấu trúc, khác route prefix
 
-| Game       | Financial Reports                          | Outstanding                         | Void Reports                          |
-|------------|-------------------------------------------|-------------------------------------|---------------------------------------|
-| Lotto 5/35 | `/games/lotto535/financial-reports`        | `/games/lotto535/outstanding`       | `/games/lotto535/void-reports`        |
-| Mega 6/45  | `/games/mega645/financial-reports`        | `/games/mega645/outstanding`        | `/games/mega645/void-reports`         |
-| Power 6/55 | `/games/power655/financial-reports`       | `/games/power655/outstanding`       | `/games/power655/void-reports`        |
-| Keno       | `/games/keno/financial-reports`           | `/games/keno/outstanding`           | `/games/keno/void-reports`            |
-| Bingo 18   | `/games/bingo18/financial-reports`        | `/games/bingo18/outstanding`        | `/games/bingo18/void-reports`         |
-| Max 3D     | `/games/max3d/financial-reports`          | `/games/max3d/outstanding`          | `/games/max3d/void-reports`           |
-| Max 3D Pro | `/games/max3dpro/financial-reports`       | `/games/max3dpro/outstanding`       | `/games/max3dpro/void-reports`        |
+| Game       | Settle Report                        | Outstanding                              | Void Report                        |
+|------------|--------------------------------------|------------------------------------------|------------------------------------|
+| Lotto 5/35 | `/games/lotto535/reports/settle`     | `/games/lotto535/reports/outstanding`    | `/games/lotto535/reports/void`     |
+| Mega 6/45  | `/games/mega645/reports/settle`      | `/games/mega645/reports/outstanding`     | `/games/mega645/reports/void`      |
+| Power 6/55 | `/games/power655/reports/settle`     | `/games/power655/reports/outstanding`    | `/games/power655/reports/void`     |
+| Keno       | `/games/keno/reports/settle`         | `/games/keno/reports/outstanding`        | `/games/keno/reports/void`         |
+| Bingo 18   | `/games/bingo18/reports/settle`      | `/games/bingo18/reports/outstanding`     | `/games/bingo18/reports/void`      |
+| Max 3D     | `/games/max3d/reports/settle`        | `/games/max3d/reports/outstanding`       | `/games/max3d/reports/void`        |
+| Max 3D Pro | `/games/max3dpro/reports/settle`     | `/games/max3dpro/reports/outstanding`    | `/games/max3dpro/reports/void`     |
 
 ---
 
@@ -121,7 +123,7 @@ Thêm NavGroup mới (id: 2) trong `sidebar-items.ts`:
   items: [
     {
       title: "Báo cáo tài chính",
-      url: "/reports/financial",
+      url: "/reports/settle",
       icon: BarChart3,
     },
     {
@@ -138,18 +140,18 @@ Thêm NavGroup mới (id: 2) trong `sidebar-items.ts`:
 ```typescript
 {
   title: "Báo cáo tài chính",
-  url: "/games/{game}/financial-reports",
+  url: "/games/{game}/reports/settle",
   icon: CircleDollarSign,
   sectionLabel: "Báo cáo",
 },
 {
   title: "Outstanding",
-  url: "/games/{game}/outstanding",
+  url: "/games/{game}/reports/outstanding",
   icon: Clock,
 },
 {
   title: "Kỳ huỷ",
-  url: "/games/{game}/void-reports",
+  url: "/games/{game}/reports/void",
   icon: Ban,
 },
 ```
@@ -158,13 +160,56 @@ Thêm NavGroup mới (id: 2) trong `sidebar-items.ts`:
 
 ## 4. URL State Management — nuqs
 
-### 4.1 System Financial Reports
+### 4.0 Từ vựng query param canonical — BẮT BUỘC dùng, KHÔNG sáng tạo tên mới
+
+URL là **hợp đồng công khai** giữa mọi trang: staff bookmark, dán cho nhau, và AI agent dựng
+deep-link từ đó. `nuqs` **im lặng bỏ qua** key nó không khai báo và **im lặng fallback default**
+khi giá trị ngoài enum → link sai key vẫn mở trang bình thường nhưng **hiển thị SAI dữ liệu**,
+không exception, không log. Vì vậy tên param phải đồng nhất tuyệt đối.
+
+| Khái niệm | Key canonical | KHÔNG dùng |
+|---|---|---|
+| Kỳ quay | `drawId` | ~~`draw`~~, ~~`od`~~ |
+| Đại lý | `tenantId` | ~~`tenant`~~ |
+| Tài khoản người chơi | `accountId` | ~~`player`~~, ~~`playerId`~~ |
+| Ngày tài chính (1 ngày cụ thể đang drill) | `financialDate` | ~~`date`~~, ~~`fd`~~ |
+| Game product | `game` | ~~`gp`~~, ~~`og`~~ |
+| Khoảng ngày | `from`, `to` | — |
+| Trang (pagination) | `page` | ~~`odp`~~, ~~`p`~~ |
+| Tab đang mở | `tab` | — |
+
+Quy tắc: **mọi param mang ID dùng hậu tố `Id`**. Param không phải ID (`from`, `to`, `tab`,
+`game`, `page`, `search`) dùng danh từ trần. Tên biến local được phép ngắn hơn key (vd `fd`,
+`og`) nhưng **key trong `useQueryState`/`useQueryStates` phải đúng bảng trên**.
+
+> Lịch sử: trước 2026-08 param bị chia hai hệ (`draw`/`tenant`/`player` vs `drawId`/`tenantId`/
+> `accountId`). Hệ quả thật: tab "Theo đại lý" của `/reports/settle` dựng link `?tenant=` sang
+> trang game đọc `tenantId` → **mất filter đại lý mà không ai biết**; renderer AI dựng
+> `?tab=game` trong khi enum là `by-game` → rơi về tab `daily`. Cả hai do
+> `pnpm --filter @megawin/backoffice check:url-params` phát hiện.
+
+### 4.0.1 Guard tự động — `check:url-params`
+
+`apps/backoffice/src/scripts/check-url-params.ts` đối chiếu tĩnh **producer** (chỗ dựng link) với
+**consumer** (page đọc param):
+
+1. **Key** — mọi query key producer sinh ra phải nằm trong tập key route đích thực sự đọc.
+2. **Giá trị enum** — giá trị literal cho key khai báo `parseAsStringEnum`/`parseAsStringLiteral`
+   phải thuộc tập cho phép.
+
+Bắt buộc chạy khi thêm/đổi bất kỳ query param hoặc bất kỳ link nội bộ. Guard bỏ qua URL của
+`apiClient.*`/`fetch` (contract API do Zod schema ở route handler chặn).
+
+### 4.1 System Settle Report (`/reports/settle`)
 
 ```
-/reports/financial?tab=daily&from=2026-03-01&to=2026-03-14
-/reports/financial?tab=by-game&from=2026-03-01&to=2026-03-14
-/reports/financial?tab=by-tenant&from=2026-03-01&to=2026-03-14&tenant=T001
+/reports/settle?tab=daily&from=2026-03-01&to=2026-03-14
+/reports/settle?tab=by-game&from=2026-03-01&to=2026-03-14
+/reports/settle?tab=by-tenant&from=2026-03-01&to=2026-03-14&tenantId=T001
+/reports/settle?tab=daily&financialDate=2026-03-07     ← drill 1 ngày cụ thể
 ```
+
+`tab` là enum `["daily", "by-game", "by-tenant"]` — giá trị khác bị nuqs bỏ, rơi về `daily`.
 
 ### 4.2 System Outstanding
 
@@ -172,25 +217,44 @@ Thêm NavGroup mới (id: 2) trong `sidebar-items.ts`:
 /reports/outstanding          ← Không có params (live data)
 ```
 
-### 4.3 Per-Game Financial Reports
+### 4.3 Per-Game Settle Report (`/games/{game}/reports/settle`)
 
 ```
-/games/lotto535/financial-reports?tab=draws&from=2026-03-01&to=2026-03-14
-/games/lotto535/financial-reports?tab=draws&draw=DRW123
-/games/lotto535/financial-reports?tab=draws&draw=DRW123&tenant=T001
-/games/lotto535/financial-reports?tab=draws&draw=DRW123&tenant=T001&player=ACC456
-/games/lotto535/financial-reports?tab=tenants&from=...&to=...
-/games/lotto535/financial-reports?tab=tenants&tenant=T001
+/games/lotto535/reports/settle?tab=draws&from=2026-03-01&to=2026-03-14
+/games/lotto535/reports/settle?tab=draws&drawId=2026-03-07.001
+/games/lotto535/reports/settle?tab=draws&drawId=2026-03-07.001&tenantId=T001
+/games/lotto535/reports/settle?tab=draws&drawId=2026-03-07.001&tenantId=T001&accountId=ACC456
+/games/lotto535/reports/settle?tab=tenants&from=...&to=...
+/games/lotto535/reports/settle?tab=tenants&tenantId=T001
 ```
 
 ### 4.4 Per-Game Outstanding & Void
 
+Cùng shape param cho **cả 7 game** — xem `use-outstanding-filters.ts` / `use-void-filters.ts`:
+
 ```
-/games/lotto535/outstanding         ← Không có params (live data)
-/games/lotto535/void-reports?from=2026-03-01&to=2026-03-14
+/games/lotto535/reports/outstanding?drawId=2026-03-07.001&tenantId=T001&accountId=ACC456&playerName=user_A
+/games/lotto535/reports/void?from=2026-03-01&to=2026-03-14&drawId=...&tenantId=...&accountId=...
 ```
 
-### 4.5 Breadcrumb từ URL state (chỉ financial-reports page)
+### 4.5 Per-Game Operations
+
+```
+/games/lotto535/operations?drawId=2026-03-07.001
+```
+
+Trang tự xoá `?drawId=` khỏi URL sau khi chọn kỳ mặc định — state kỳ đang xem KHÔNG luôn nằm
+trong URL, nên context gửi cho AI phải lấy từ React state (xem `ai-page-context.ts`).
+
+### 4.6 Player Detail (`/accounts/players/[accountId]/…`)
+
+```
+/accounts/players?tenantId=T001&search=user_A&after=<cursor>
+/accounts/players/ACC456/settle?from=...&to=...&game=lotto535&financialDate=2026-03-07&drawId=2026-03-07.001
+/accounts/players/ACC456/outstanding?game=lotto535&drawId=2026-03-07.001&page=2
+```
+
+### 4.7 Breadcrumb từ URL state (chỉ trang settle report)
 
 ```
 Tab "Theo kỳ quay":
@@ -212,7 +276,7 @@ Tab "Theo đại lý":
 
 ```
 Tab "Tổng quan ngày": click ngày → inline expand game breakdown
-Tab "Theo game": click game → navigate /games/{game}/financial-reports
+Tab "Theo game": click game → navigate /games/{game}/reports/settle
 Tab "Theo đại lý": click tenant → inline expand game breakdown per tenant
 ```
 

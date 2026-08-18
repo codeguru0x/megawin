@@ -1,0 +1,41 @@
+"use client";
+
+/**
+ * AI Threads — Provider theo khuôn `stores/preferences/preferences-provider.tsx`.
+ *
+ * Mounted ở `(main)/layout.tsx`, BAO NGOÀI `AiPanelProvider` — cả panel và trang `/ai` đọc
+ * cùng registry này để biết thread nào đang active (điều kiện cho "1 agent instance", p1-01
+ * §2.1.1). Store khởi tạo rỗng, hydrate thật từ `localStorage` trong effect đầu tiên — xem
+ * JSDoc `ai-threads-store.ts` về lý do (tránh hydration mismatch).
+ */
+
+import { createContext, useContext, useEffect, useState } from "react";
+
+import { type StoreApi, useStore } from "zustand";
+
+import { type AiThreadsState, createAiThreadsStore } from "./ai-threads-store";
+import { loadOrInitThreadRegistry } from "./thread-storage";
+
+const AiThreadsStoreContext = createContext<StoreApi<AiThreadsState> | null>(null);
+
+export function AiThreadsProvider({ children }: { children: React.ReactNode }) {
+  const [store] = useState<StoreApi<AiThreadsState>>(() => createAiThreadsStore());
+
+  // Chạy đúng 1 lần sau mount — đọc/khởi tạo registry (tạo thread rỗng nếu chưa có, migrate
+  // saved chat panel-only cũ nếu có) rồi đổ vào store. Trước lúc này `hydrated=false`, UI phải
+  // tự gate theo cờ đó (xem `useAiThreadsStore` selector `hydrated`).
+  useEffect(() => {
+    const registry = loadOrInitThreadRegistry();
+    store.getState().hydrate(registry.threads, registry.activeThreadId);
+  }, [store]);
+
+  return <AiThreadsStoreContext.Provider value={store}>{children}</AiThreadsStoreContext.Provider>;
+}
+
+export function useAiThreadsStore<T>(selector: (state: AiThreadsState) => T): T {
+  const store = useContext(AiThreadsStoreContext);
+  if (!store) {
+    throw new Error("useAiThreadsStore must be used within an AiThreadsProvider");
+  }
+  return useStore(store, selector);
+}
