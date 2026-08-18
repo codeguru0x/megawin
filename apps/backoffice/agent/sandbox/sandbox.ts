@@ -109,21 +109,43 @@ const ALLOW_OPEN_EGRESS = process.env.MEGAWIN_SANDBOX_ALLOW_OPEN_EGRESS === "1";
 const PROBE_OPEN = "EGRESS_OPEN";
 
 /**
- * Regex (case-insensitive) khớp **TÊN** biến môi trường nhạy cảm — dùng cho assertion §4.
+ * Tên biến mà sự hiện diện trong VM sandbox nghĩa là env đang leak — blocklist cho assertion §4.
  *
- * ⚠️ CHỈ khớp TÊN, KHÔNG khớp giá trị. Bản trước grep trên cả dòng `KEY=VALUE` mà `env` in ra, nên
- * một biến vô hại có GIÁ TRỊ chứa "token"/"key" cũng làm fail. Đã xảy ra thật 18/08: deploy Vercel
- * đầu tiên đỏ ở prewarm với "thấy 1 biến môi trường nhạy cảm", trong khi image mà Vercel Sandbox
- * boot (`vercel/eve:latest`) chỉ khai 3 biến `PATH`/`LANG`/`LC_ALL` — không tên nào nhạy cảm — và
- * eve KHÔNG truyền `process.env` của app vào VM (`Sandbox.create` không nhận `env`; docs eve:
- * "Secrets never enter the sandbox"). Tức đó là false positive từ phần giá trị, không phải leak.
+ * VÌ SAO BLOCKLIST NGẮN LÀ ĐỦ, không cần allowlist mọi biến được phép: **env leak là
+ * all-or-nothing**. Không có cơ chế nào truyền lẻ một biến vào VM — nếu eve/Vercel bật inherit env
+ * thì nó vào hàng loạt. Chế độ hỏng thật trông như "cả trăm biến quen tên xuất hiện", chứ không
+ * phải "một biến tên lạ". Nên chỉ cần vài tên **chắc chắn có trong app process** làm canary là bắt
+ * được, không cần liệt kê hết những gì vô hại.
  *
- * Từ khoá bám đúng secret của app này (`src/env.ts`) chứ không phải heuristic chung — nhờ vậy phủ
- * được cả những biến mà bản cũ BỎ SÓT: `redis` (REDIS_URI), `cognito` (5 biến Cognito), `sfn_arn`
- * (21 ARN), `better_auth` (BETTER_AUTH_SECRET). Còn lại: `mongo` (MONGODB_URI), `_key`
- * (AI_GATEWAY_API_KEY), `aws_`/`secret`/`password`/`token` (credential AWS + OIDC token).
+ * ⚠️ ĐÃ THỬ ALLOWLIST (deny-by-default trên tên biến VM) VÀ BỎ: nhạy hơn về lý thuyết, nhưng tập
+ * biến Vercel Sandbox tự set trong VM không có tài liệu nào liệt kê đủ (`AWS_CA_BUNDLE` là phát
+ * hiện tình cờ qua build đỏ 18/08) ⇒ mỗi biến platform mới là một lần **chặn deploy production**.
+ * Cân chi phí sai: dương tính giả ở đây làm app tài chính không deploy được (đã xảy ra 2 lần
+ * 18/08), còn âm tính giả thì gần như không có cơ chế nào tạo ra vì lý do all-or-nothing ở trên.
+ * Trả giá đắt cho rủi ro gần bằng không là sai — nên giữ blocklist, và bù bằng dòng log trọn danh
+ * sách tên biến VM ở §4 (quan sát được mà không chặn deploy).
+ *
+ * KHÔNG phải danh sách đầy đủ secret của app — đừng đọc nó như vậy. Nó là canary, và giá trị của
+ * nó nằm ở việc các tên này chắc chắn có mặt phía app, chứ không ở độ dài.
  */
-const SENSITIVE_ENV_NAME_PATTERN = "mongo|redis|cognito|sfn_arn|better_auth|aws_|secret|_key|password|token";
+const FORBIDDEN_CREDENTIAL_ENV_NAMES = new Set([
+  // Credential của platform. `VERCEL_OIDC_TOKEN` là canary tốt nhất: trên Vercel nó CHẮC CHẮN có
+  // trong app process — eve dùng chính nó để prewarm template này — nên nếu inheritance bật thì nó
+  // vào VM và assertion đỏ ngay.
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+  "AWS_SESSION_TOKEN",
+  "VERCEL_OIDC_TOKEN",
+  "VERCEL_TOKEN",
+  // Secret của app đáng giá nhất nếu model đọc được: quyền đọc/ghi toàn bộ DB nghiệp vụ và khả năng
+  // tự ký session. Thêm vào đây vì chúng rẻ để kiểm và là thứ ta sợ nhất, không phải vì danh sách
+  // cần đầy đủ (xem JSDoc: canary, không phải inventory).
+  "MONGODB_URI",
+  "REDIS_URI",
+  "BETTER_AUTH_SECRET",
+  "AI_GATEWAY_API_KEY",
+
+]);
 
 export default defineSandbox({
   // `defaultBackend()` tự chọn: Vercel Sandbox khi deploy Vercel → Docker → microsandbox →
@@ -206,23 +228,39 @@ export default defineSandbox({
     // `bash` chạy `never()` nên nếu `MONGODB_URI`/AWS credential có mặt trong VM thì model đọc
     // được không cần ai duyệt.
     //
-    // `compgen -e` (không phải `env`) liệt kê **TÊN** biến exported, mỗi tên 1 dòng — nhờ vậy grep
-    // không bao giờ match phần giá trị. `env` in `KEY=VALUE` nên grep trên nó match cả value và
-    // tạo false positive làm đỏ deploy (xem SENSITIVE_ENV_NAME_PATTERN). `|| true` để grep không
-    // match cũng exit 0 (grep exit 1 khi rỗng ⇒ `sandbox.run` sẽ throw).
-    const envLeak = await sandbox.run({
-      command: `bash -lc 'compgen -e | grep -iE "${SENSITIVE_ENV_NAME_PATTERN}" || true'`,
-    });
-    // In THẲNG tên biến vào message: bản trước chỉ báo số lượng nên build log không cho biết biến
-    // nào, không debug được từ log Vercel (mất 1 vòng deploy 18/08 vì đúng lý do này).
-    const leakedNames = envLeak.stdout
+    // CÁCH LÀM: so khớp CHÍNH XÁC tên biến với `FORBIDDEN_CREDENTIAL_ENV_NAMES` (canary — xem JSDoc
+    // ở đó để biết vì sao list ngắn là đủ). KHÔNG dùng regex từ khoá: đã thất bại 2 lần thật ngày
+    // 18/08, cả hai đều là dương tính giả chặn deploy production:
+    //
+    // 1. `env | grep -iE "mongo|aws_|secret|…"` — match cả phần GIÁ TRỊ, nên biến vô hại có giá trị
+    //    chứa chữ "token" cũng làm đỏ build.
+    // 2. Vẫn regex nhưng chỉ khớp TÊN — `AWS_CA_BUNDLE` (đường dẫn file CA công khai) khớp `aws_`.
+    //
+    // Gốc của cả hai: regex từ khoá đoán bừa. So khớp chính xác thì không có chuyện đó.
+    //
+    // `compgen -e` (không phải `env`) liệt kê đúng tập biến **exported** — tức đúng thứ process con
+    // của model đọc được — mỗi tên một dòng, nên không bao giờ chạm tới giá trị.
+    const vmEnv = await sandbox.run({ command: "bash -lc 'compgen -e'" });
+    const vmEnvNames = vmEnv.stdout
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
+    // Log TRỌN danh sách tên biến trong VM, kể cả khi assertion PASS. Đây là phần BÙ cho việc chọn
+    // blocklist thay vì allowlist: ta không chặn biến lạ, nhưng luôn NHÌN THẤY chúng. Không có dòng
+    // này thì tập biến VM là vùng tối hoàn toàn (`AWS_CA_BUNDLE` chỉ lộ ra nhờ một build đỏ).
+    // An toàn để log: chỉ TÊN, không có giá trị.
+    console.log(`[sandbox] Tên biến env trong VM (${vmEnvNames.length}): ${vmEnvNames.join(", ")}`);
+    // In THẲNG tên biến vào message: bản đầu chỉ báo số lượng ("thấy 1 biến") nên build log Vercel
+    // không cho biết biến nào ⇒ không debug được, mất trọn một vòng deploy 18/08. Tên biến an toàn
+    // để log; giá trị thì TUYỆT ĐỐI không.
+    const leakedNames = vmEnvNames.filter((name) => FORBIDDEN_CREDENTIAL_ENV_NAMES.has(name));
     if (leakedNames.length > 0) {
       throw new Error(
-        `Sandbox thấy ${leakedNames.length} biến môi trường nhạy cảm (${leakedNames.join(", ")}) — ` +
-          "env của app đang leak vào VM. KHÔNG được chạy `bash` với approval never() trong tình trạng này.",
+        `Sandbox thấy ${leakedNames.length} credential trong VM (${leakedNames.join(", ")}) — ` +
+          "env đang leak vào sandbox. KHÔNG được chạy `bash` với approval never() trong tình trạng " +
+          "này: model đọc được credential đó mà không ai duyệt. Vì env leak là all-or-nothing, hãy " +
+          "coi đây là dấu hiệu TOÀN BỘ env của app đã vào VM, không chỉ mấy biến vừa in ra — đọc " +
+          "dòng log tên biến ở trên để xác nhận, và KHÔNG nới assertion này để lấy build xanh.",
       );
     }
   },

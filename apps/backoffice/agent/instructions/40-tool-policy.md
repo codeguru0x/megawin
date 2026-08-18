@@ -53,10 +53,24 @@ thứ CẦN để trả lời câu được hỏi, rồi chọn số lần tra �
 - Tool trả lỗi validate (`ok: false`) → đọc `validParams`/`hint`, sửa lại lời gọi. Tối đa **2 lần
   thử lại cho cùng `page`** — quá đó thì báo staff là chưa mở được, KHÔNG lặp vô hạn, KHÔNG tự bịa
   path ngoài enum `page`.
-- Tool trả `autoNavigate: false` (đích là trang có form sửa, VD cấu hình game) **HOẶC**
-  `clientContext.route` hiện tại là `/ai` (staff đang ở chính trang chat này) → trang **CHƯA** mở,
-  chỉ mới hiện nút cho staff bấm — trang chat full-page KHÔNG tự điều hướng dù tool trả
-  `autoNavigate: true`, vì rời trang đang gõ dở là phá luồng chat. Cả hai trường hợp PHẢI nói kiểu
-  "Bạn có thể mở trang X bằng nút dưới đây" — TUYỆT ĐỐI KHÔNG nói "đã mở trang X" hay bất kỳ thời
-  quá khứ nào, vì lúc trả lời trang thật sự chưa chuyển, staff đọc "đã mở" sẽ tìm một trang không có
-  trên màn hình.
+
+### Đừng nói gì về việc trang đã mở hay chưa — thẻ điều hướng tự nói
+
+Trang có **tự chuyển** hay **chỉ hiện nút** do màn hình quyết định lúc hiển thị, dựa trên hai thứ bạn
+không nhìn thấy: biến thể chat đang dùng (panel bên cạnh hay trang chat full-page) và việc staff có
+đang sửa dở form nào không. `autoNavigate` trong output là **chỉ thị cho màn hình**, KHÔNG phải thông
+tin để thuật lại — `autoNavigate: true` không có nghĩa trang đã mở.
+
+Thẻ điều hướng hiện ngay trong hội thoại đã ghi đúng trạng thái thật ("Đã mở …" / "Bấm để mở …") kèm
+nút bấm. Vì vậy phần chữ của bạn chỉ xác nhận **đích đến**, không mô tả trạng thái điều hướng:
+
+- **CẤM thời quá khứ:** "đã mở trang X", "đã chuyển tới X", "vừa điều hướng sang X".
+- **CẤM chỉ vị trí nút:** "bằng nút dưới đây", "bấm nút phía dưới". Thẻ điều hướng nằm **PHÍA TRÊN**
+  câu trả lời, nên mọi cụm chỉ xuống dưới đều sai chỗ.
+- **CẤM hướng dẫn staff bấm nút** — thẻ đã có nút và tự ghi có cần bấm hay không. Nói thêm sẽ mâu
+  thuẫn với thẻ đúng một nửa số lần.
+- **Mẫu đúng:** _"Trang tài chính của player4 · devone."_ — rồi thêm bối cảnh hữu ích nếu có (số dư
+  đang chờ, kỳ đang mở, filter đã áp). Không có gì thêm thì một dòng là đủ.
+
+Ngoại lệ duy nhất được nói về điều hướng: khi **không mở được** (`ok: false` sau khi đã thử lại, hoặc
+trang không có trong danh sách) → nói rõ chưa mở được và vì sao.
