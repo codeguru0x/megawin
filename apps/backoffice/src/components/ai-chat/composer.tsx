@@ -7,8 +7,8 @@
  * KHÔNG phải dải footer có `border-t` chia cắt màn hình. Cụ thể:
  * - Không đường kẻ ngang nào. Thay bằng gradient fade từ `background` → trong suốt phía trên, để
  *   tin nhắn cuối "chìm" dần khi cuộn qua composer (cảm giác liền mạch, không bị cắt khúc).
- * - Khung input bo tròn lớn (`rounded-3xl`) + shadow + nền `muted` → nổi khỏi mặt phẳng hội thoại
- *   (xem `BUBBLE_CLASS` cho lý do chọn `muted` thay vì `card`).
+ * - Khung input bo tròn lớn (`rounded-3xl`), chỉ có viền — KHÔNG tô nền, KHÔNG shadow nặng (xem
+ *   `BUBBLE_CLASS` cho lịch sử đã thử và lý do chốt).
  * - Căn giữa cùng `max-w-3xl` với `ConversationContent` để input thẳng cột với tin nhắn.
  * - KHÔNG có dòng hint "Enter để gửi · Shift + Enter để xuống dòng" (bỏ 17/08): đây là quy ước
  *   phổ thông của mọi khung chat, staff dùng hằng ngày không cần nhắc; nó chiếm một dòng dưới
@@ -34,7 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { InputGroupAddon } from "@/components/ui/input-group";
 
-import { describeAgentError } from "./agent-error";
+import { AgentErrorRecovery, describeAgentError } from "./agent-error";
 
 /**
  * Cửa duy nhất để bên ngoài ghi vào composer — dùng bởi nút "Sửa lại" trên message user
@@ -58,24 +58,22 @@ export interface AiComposerHandle {
  * `<textarea>`; ở đây `PromptInputBody` là div `display:contents` nên `has-[>textarea]` không
  * match, thiếu class này khung bị bóp còn 36px và cắt mất textarea.
  *
- * MÀU NỀN `bg-muted` (19/08 lần 3): trước dùng `bg-card` = ĐÚNG màu `--background`, nên bubble chỉ
- * được nhận ra nhờ viền + shadow — trên nền trắng nó gần như vô hình. Đã thử cách ngược lại (tô xám
- * cả panel để bubble trắng nổi lên) nhưng nền xám làm mọi card/bảng trong panel chìm xuống và panel
- * lệch hẳn so với trang `/ai`. Chốt lại: **nền vùng chat giữ `--background` ở CẢ panel và `/ai`, chỉ
- * bubble được tô** — khác biệt bề mặt gói trong đúng một thành phần, không ảnh hưởng vùng đọc.
+ * KHÔNG TÔ NỀN, KHÔNG SHADOW RIÊNG (19/08 lần 4): đã thử `bg-card` (trùng nền, vô hình) rồi
+ * `bg-muted` + `shadow-lg` (thấy rõ nhưng nặng nề — một khối xám đặc chiếm đáy khung chat). Chốt:
+ * chỉ để lại **viền + shadow mặc định của `InputGroup`** (`border-input`, `shadow-xs`, ring khi
+ * focus). Ô nhập được nhận ra bằng ĐƯỜNG VIỀN chứ không bằng mảng màu — nhẹ nhất mà vẫn rõ, và
+ * không có mảng màu nào hút mắt khỏi vùng đọc.
  *
- * `focus-within:bg-card` + `ring`: lúc gõ, bubble sáng lên thành mặt phẳng riêng — vừa là phản hồi
- * focus, vừa cho nền trắng dễ đọc khi soạn câu dài.
+ * Dark mode vẫn có nền nhẹ nhờ `dark:bg-input/30` mặc định của `InputGroup` — nền tối cần chút fill
+ * để phân biệt, không cần override ở đây.
+ *
+ * Chỉ giữ lại đúng ba thứ khác mặc định: `h-auto` (bắt buộc, xem trên), `rounded-3xl` (bo lớn kiểu
+ * khung chat thay vì `rounded-md` của form), `px-1.5` (chừa chỗ cho nút gửi trong hàng).
  */
 const BUBBLE_CLASS = [
   "[&>[data-slot=input-group]]:h-auto",
   "[&>[data-slot=input-group]]:rounded-3xl",
-  "[&>[data-slot=input-group]]:border-border/60",
-  "[&>[data-slot=input-group]]:bg-muted",
   "[&>[data-slot=input-group]]:px-1.5",
-  "[&>[data-slot=input-group]]:shadow-lg",
-  "[&>[data-slot=input-group]]:transition-colors",
-  "[&>[data-slot=input-group]]:focus-within:bg-card",
 ].join(" ");
 
 export function AiComposer({
@@ -144,6 +142,16 @@ export function AiComposer({
     }
   }, [onSend]);
 
+  // Lỗi phiên làm việc: `window.location.reload()` (KHÔNG `router.refresh()`) — refresh chỉ fetch lại
+  // RSC payload, còn client agent store vẫn giữ session eve đã 401; phải load lại trang để proxy
+  // `src/proxy.ts` thấy cookie hết hạn và điều hướng sang `/login`.
+  const handleReload = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  const showRetry = errorDisplay.recovery === AgentErrorRecovery.Retry && lastSentTextRef.current !== undefined;
+  const showReload = errorDisplay.recovery === AgentErrorRecovery.Reload;
+
   return (
     <div className="relative">
       {/* Fade phía trên bubble: nội dung cuộn mờ dần thay vì bị `border-t` cắt ngang. */}
@@ -167,10 +175,14 @@ export function AiComposer({
                   )}
                 </span>
               </span>
-              {/* biome-ignore lint/suspicious/noUnnecessaryConditions: Biome không track mutation runtime của ref.current qua các lần render — lastSentTextRef.current thực sự có thể là string (set ở handleSubmit). */}
-              {lastSentTextRef.current && (
+              {showRetry && (
                 <Button className="h-6 shrink-0 px-2 text-xs" onClick={handleRetry} size="sm" variant="ghost">
                   Thử lại
+                </Button>
+              )}
+              {showReload && (
+                <Button className="h-6 shrink-0 px-2 text-xs" onClick={handleReload} size="sm" variant="ghost">
+                  Tải lại trang
                 </Button>
               )}
             </div>
