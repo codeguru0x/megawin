@@ -78,7 +78,12 @@ function pruneEmpty(value: AiPageContextValue): AiPageContextPayload | undefined
  * Gom snapshot của mọi nguồn đang mount. Trả `undefined` khi không có gì để gửi (để
  * `clientContext` không mang khoá rỗng vô nghĩa).
  *
- * Lỗi trong một contributor bị bắt và bỏ qua: một trang lỗi KHÔNG được làm chết nút Gửi.
+ * Lỗi trong một contributor bị bắt và bỏ qua: một trang lỗi KHÔNG được làm chết nút Gửi. NHƯNG
+ * "bỏ qua" ở đây là fail-OPEN với hệ quả nghiệp vụ: `navigate-tool-card` suy "không dirty" từ việc
+ * VẮNG khoá `formDirty`, nên contributor throw ⇔ mất chốt chặn, thẻ tự kéo staff khỏi form đang sửa
+ * dở. Chính xác cách bug 19/08 sống sót: `useAiPageContext` bọc contributor bằng `useEffectEvent`
+ * (React 19 cấm gọi trong render) → throw ở đúng đường thẻ đọc → dòng log này là dấu vết DUY NHẤT,
+ * và không ai đọc console. Vì vậy ở dev nó `throw` để vỡ ngay tại chỗ; prod vẫn giữ nút Gửi sống.
  */
 export function collectAiPageContext(): Record<string, AiPageContextPayload> | undefined {
   if (contributors.size === 0) {
@@ -98,6 +103,12 @@ export function collectAiPageContext(): Record<string, AiPageContextPayload> | u
       }
     } catch (error) {
       console.error(`[ai-page-context] đọc context "${key}" thất bại`, error);
+      // Dev: vỡ to và ngay. Contributor throw luôn là BUG lập trình (gọi hook sai pha, đọc field
+      // của object undefined) — không phải điều kiện runtime hợp lệ nào cần chịu đựng.
+      // biome-ignore lint/style/noProcessEnv: cần cổng "đang là dev BUILD" (nơi lập trình viên sửa code). `@/env` không quản `NODE_ENV`, và `NEXT_PUBLIC_APP_ENV` sai ngữ nghĩa ở đây — staging build có `NODE_ENV=production` nên KHÔNG throw vào mặt staff, đúng ý định. Tiền lệ: `lib/local-storage.client.ts`.
+      if (process.env.NODE_ENV !== "production") {
+        throw error;
+      }
     }
   }
 

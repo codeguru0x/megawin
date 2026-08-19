@@ -12,6 +12,14 @@
  * - Đầu GHI: `useAiFormDirty` publish đúng khoá `formDirty`, và VẮNG MẶT khi form sạch.
  * - Đầu ĐỌC: thẻ hạ cấp auto-navigate + hiện cảnh báo amber khi có form dirty.
  *
+ * BÀI HỌC 19/08 — vì sao ca "form THẬT mount rồi card đọc" là bắt buộc: phiên bản đầu của file này
+ * chỉ gọi `registerAiPageContext` trực tiếp, tức BỎ QUA `useAiPageContext`. Nó xanh trong khi app
+ * hỏng thật: hook bọc contributor bằng `useEffectEvent`, và React 19 cấm gọi hàm đó TRONG RENDER —
+ * đúng chỗ thẻ đọc store (`useState(() => ...)`). Contributor throw, `collectAiPageContext` nuốt lỗi
+ * rồi bỏ qua nhóm đó ⇒ thẻ ghi "Đã mở" + tự điều hướng, ngay dưới câu Mira nhắc "form Jackpot đang
+ * có thay đổi chưa lưu" (model đọc ở `prepareSend` — ngoài render — nên vẫn thấy dirty). Mock tầng
+ * dưới hợp đồng thì test không chứng minh được hợp đồng: ít nhất MỘT ca phải đi qua hook thật.
+ *
  * PURE — không DB, không network. `buildNavHref` được gọi THẬT (không mock) để href/nhãn trong test
  * luôn khớp registry: hardcode `"/games/keno/operations"` thì đổi `pathTemplate` là test vẫn xanh
  * trong khi UI thật đã hỏng.
@@ -62,6 +70,12 @@ function navigateToPart(autoNavigate: boolean): EveDynamicToolPart {
 }
 
 const AMBER_WARNING = /Trang hiện tại có thay đổi chưa lưu/;
+
+/** Form config THẬT (đi qua `useAiFormDirty` → `useAiPageContext`), không phải store giả. */
+function DirtyConfigForm() {
+  useAiFormDirty("jackpot", true);
+  return <div>form cấu hình Jackpot</div>;
+}
 
 describe("useAiFormDirty — đầu GHI của hợp đồng dirty", () => {
   it("publish khoá `formDirty: true` khi form dirty", () => {
@@ -131,6 +145,28 @@ describe("navigate-tool-card — nhãn thẻ + auto-navigate", () => {
     } finally {
       unregister();
     }
+  });
+
+  it("form THẬT (qua useAiFormDirty) đang mở: thẻ thấy dirty — regression bug 19/08", () => {
+    // Ca DUY NHẤT đi trọn đường thật: form config mount trước (staff đang sửa), rồi tool part về và
+    // thẻ mount sau. Đây là tình huống đã hỏng trong app mà 3 ca dirty ở trên vẫn xanh, vì chúng gọi
+    // `registerAiPageContext` trực tiếp — bỏ qua chính cái hook gây lỗi. KHÔNG thay bằng store giả.
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      // Nuốt output: `collectAiPageContext` log rồi (ở dev) throw. Test chỉ cần biết CÓ log hay
+      // không, không cần bẩn stderr của suite.
+    });
+
+    render(<DirtyConfigForm />);
+    render(renderNavigateTo(navigateToPart(true)));
+
+    // Contributor throw ⇒ `collectAiPageContext` chỉ log rồi bỏ qua nhóm đó. Không assert dòng log
+    // này thì lỗi lại chìm đúng cách nó đã chìm lần trước.
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+
+    expect(routerPush).not.toHaveBeenCalled();
+    expect(screen.getByText("Mở trang")).toBeInTheDocument();
+    expect(screen.getByText(AMBER_WARNING)).toBeInTheDocument();
   });
 
   it("dirty tính theo trạng thái LÚC MOUNT — staff lưu xong giữa lượt không tự kéo trang đi", () => {
