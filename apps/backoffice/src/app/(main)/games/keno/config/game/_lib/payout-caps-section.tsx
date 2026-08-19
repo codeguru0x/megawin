@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 import { cn } from "@/lib/utils";
 
 import type { KenoGameConfig } from "./use-game-config";
@@ -61,6 +62,8 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
     resolver: zodResolver(capsFormSchema) as any,
     values: { ...config.payoutCaps },
   });
+
+  useAiFormDirty("payout-caps", form.formState.isDirty);
 
   function handleSubmit(values: CapsFormValues) {
     onSave({ payoutCaps: values });

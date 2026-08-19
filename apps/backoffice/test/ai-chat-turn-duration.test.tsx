@@ -1,15 +1,25 @@
 /**
- * AI Chat — nhãn thời lượng lượt trả lời ("Đã xử lý trong N giây").
+ * AI Chat — tín hiệu trạng thái lượt trả lời: dot "live" khi đang chạy, "Đã xử lý trong N giây" khi xong.
  *
- * VÌ SAO CÓ FILE NÀY (bug 18/08): staff báo "suy nghĩ khá lâu nhưng trả lời xong báo xử lý có 1
- * giây". Gốc rễ nằm ở `ChatPanel`: nó suy "message nào đang chạy" bằng vị trí cuối mảng, nhưng store
- * eve set `status: "submitted"` và notify NGAY khi bấm gửi, còn optimistic user message chỉ được
- * thêm SAU `await prepareSend()`. Trong cửa sổ đó message cuối vẫn là message assistant ĐÃ XONG của
- * lượt trước ⇒ nó bị đánh dấu "đang chạy" một nhịp, và cú flip true→false đó khiến nhãn thời lượng
- * của nó bị tính lại từ mốc lượt MỚI → ghi đè "17 giây" thành "1 giây".
+ * VÌ SAO CÓ FILE NÀY — ba lần sửa thật, ba gốc rễ khác nhau, cùng đập vào một dòng UI:
  *
- * Hai tầng test tương ứng hai tầng trách nhiệm:
- * - `ChatPanel` — message đã `complete` KHÔNG BAO GIỜ được đánh dấu đang chạy (guard cho gốc rễ).
+ * - **18/08** "suy nghĩ khá lâu nhưng trả lời xong báo xử lý có 1 giây". `ChatPanel` suy "message nào
+ *   đang chạy" bằng vị trí cuối mảng, nhưng store eve set `status: "submitted"` và notify NGAY khi
+ *   bấm gửi, còn optimistic user message chỉ được thêm SAU `await prepareSend()`. Trong cửa sổ đó
+ *   message cuối vẫn là message assistant ĐÃ XONG của lượt trước ⇒ nó bị đánh dấu "đang chạy" một
+ *   nhịp, và cú flip true→false đó khiến nhãn thời lượng bị tính lại từ mốc lượt MỚI.
+ * - **19/08 (a)** "trả lời hay bị đứt, đồng hồ nhảy lung tung / đếm lại từ 0, message mới nhất bị
+ *   mất". Bản vá 18/08 chuyển sang suy theo `metadata.status === "streaming"`, nhưng reducer eve tính
+ *   status theo PART vừa upsert, không theo lượt: mỗi lần Mira viết xong một đoạn text giữa lượt,
+ *   status nhảy `complete` rồi lại `streaming`. Mỗi cú nhảy chốt tổng sớm + mọc thêm một khối Mira rỗng.
+ * - **19/08 (b)** "đồng hồ đếm lên khiến cảm giác chờ rất sốt ruột". Bỏ hẳn chữ + số giây trong lúc
+ *   chạy, thay bằng dot nhấp nháy (`ai-elements/live-indicator.tsx`); con số chỉ chốt MỘT LẦN sau khi
+ *   xong. Vì vậy test dưới đây assert tín hiệu đang chạy qua `role="status"`, KHÔNG qua chữ.
+ *
+ * Cả ba chỉ đứng vững nếu "message nào đang chạy" được suy từ ẢNH CHỤP lúc lượt bắt đầu
+ * (`resolveActiveAssistantId`) — hai tầng test dưới đây khoá cả hai tầng trách nhiệm:
+ * - `ChatPanel` — message của lượt trước không bao giờ bị đánh dấu đang chạy, message của lượt hiện
+ *   tại không bao giờ bị bỏ đánh dấu giữa lượt.
  * - `AssistantHeader` — tổng đo từ MỐC LƯỢT (không phải lúc component mount) và không tự đổi khi
  *   `turnStartedAt` nhận mốc của lượt sau.
  */
@@ -22,13 +32,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AssistantHeader } from "@/components/ai-chat/assistant-header";
 import { ChatPanel } from "@/components/ai-chat/chat-panel";
-
-// `Shimmer` chạy animation vô hạn qua `motion/react` (requestAnimationFrame) — với fake timers nó
-// chỉ thêm tick vô nghĩa vào mỗi lần `advanceTimersByTime`. Nội dung cần assert là CHỮ, nên thay
-// bằng `<span>` trần.
-vi.mock("@/components/ai-elements/shimmer", () => ({
-  Shimmer: ({ children }: { children: string }) => <span>{children}</span>,
-}));
+import { AI_ASSISTANT_NAME } from "@/config/app-config";
 
 /** Mốc bắt đầu lượt đầu tiên — số cố định để mọi phép trừ trong test là tường minh. */
 const TURN_1_STARTED_AT = 1_700_000_000_000;
@@ -57,7 +61,7 @@ vi.mock("@/components/ai-panel/ai-panel-provider", () => ({
 }));
 
 // Lần render đầu luôn là empty state (lịch sử chỉ đổ sau khi hydrate — xem `chat-panel.tsx`); nó kéo
-// theo `usePathname` + `ConversationEmptyState`, đều không liên quan tới nhãn thời lượng.
+// theo `usePathname` + `ConversationEmptyState`, đều không liên quan tới tín hiệu trạng thái.
 vi.mock("@/components/ai-chat/empty-state", () => ({
   AiEmptyState: () => null,
 }));
@@ -68,7 +72,7 @@ vi.mock("@/env", () => ({
   env: { NEXT_PUBLIC_AI_CHAT_DEBUG: "false" },
 }));
 
-// Composer kéo theo cả form + upload + shortcut; không liên quan tới nhãn thời lượng.
+// Composer kéo theo cả form + upload + shortcut; không liên quan tới tín hiệu trạng thái.
 vi.mock("@/components/ai-chat/composer", () => ({
   AiComposer: () => null,
 }));
@@ -98,7 +102,7 @@ function userMessage(turnId: string, text: string): EveMessage {
   };
 }
 
-describe("AssistantHeader — nhãn thời lượng", () => {
+describe("AssistantHeader — tín hiệu trạng thái", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(TURN_1_STARTED_AT);
@@ -108,43 +112,47 @@ describe("AssistantHeader — nhãn thời lượng", () => {
     vi.useRealTimers();
   });
 
-  it("đếm giây từ mốc lượt, không từ lúc component mount", () => {
-    // Message assistant chỉ xuất hiện SAU khi server trả part đầu — ở đây là giây thứ 12. Nhãn phải
-    // hiện 12 giây (tính từ mốc lượt), không phải 0 giây.
+  it("đang chạy: hiện dot live cạnh tên, TUYỆT ĐỐI không hiện số giây (feedback 19/08)", () => {
+    // Con số đếm lên trong lúc chờ chính là thứ làm staff sốt ruột — đây là tính chất sản phẩm, không
+    // phải chi tiết trình bày, nên khoá bằng test. Dot nằm CÙNG HÀNG với tên trợ lý (đổi lần 3): cùng
+    // chỗ mà lát nữa hiện "Đã xử lý trong N giây" ⇒ lượt kết thúc không có gì nhảy chỗ.
     vi.setSystemTime(TURN_1_STARTED_AT + 12 * MS_IN_S);
-    render(<AssistantHeader hasText={true} isActive={true} turnStartedAt={TURN_1_STARTED_AT} />);
+    render(<AssistantHeader isActive={true} turnStartedAt={TURN_1_STARTED_AT} />);
 
-    expect(screen.getByText(/Đang trả lời… 12 giây/)).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.queryByText(/giây/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Đang suy nghĩ|Đang trả lời/)).not.toBeInTheDocument();
   });
 
   it("chốt tổng thời gian thật của lượt khi lượt kết thúc", () => {
-    const view = render(<AssistantHeader hasText={false} isActive={true} turnStartedAt={TURN_1_STARTED_AT} />);
+    const view = render(<AssistantHeader isActive={true} turnStartedAt={TURN_1_STARTED_AT} />);
 
     act(() => {
       vi.advanceTimersByTime(17 * MS_IN_S);
     });
-    expect(screen.getByText(/Đang suy nghĩ… 17 giây/)).toBeInTheDocument();
 
     // Lượt xong: `isActive` tắt. `turnStartedAt` giữ nguyên mốc lượt vừa chạy.
-    view.rerender(<AssistantHeader hasText={true} isActive={false} turnStartedAt={TURN_1_STARTED_AT} />);
+    view.rerender(<AssistantHeader isActive={false} turnStartedAt={TURN_1_STARTED_AT} />);
 
     expect(screen.getByText(/Đã xử lý trong 17 giây/)).toBeInTheDocument();
+    // Dot phải tắt cùng lúc — hai tín hiệu cùng hiện thì staff không biết còn chạy hay đã xong.
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("KHÔNG ghi đè tổng đã chốt khi lượt kế tiếp bắt đầu (regression 18/08)", () => {
-    const view = render(<AssistantHeader hasText={false} isActive={true} turnStartedAt={TURN_1_STARTED_AT} />);
+    const view = render(<AssistantHeader isActive={true} turnStartedAt={TURN_1_STARTED_AT} />);
 
     act(() => {
       vi.advanceTimersByTime(17 * MS_IN_S);
     });
-    view.rerender(<AssistantHeader hasText={true} isActive={false} turnStartedAt={TURN_1_STARTED_AT} />);
+    view.rerender(<AssistantHeader isActive={false} turnStartedAt={TURN_1_STARTED_AT} />);
     expect(screen.getByText(/Đã xử lý trong 17 giây/)).toBeInTheDocument();
 
     // Staff gửi câu tiếp theo: `ChatPanel` đặt mốc mới. Message này đã xong nên `isActive` PHẢI ở
     // false — nhãn 17 giây không được đổi.
     const turn2StartedAt = TURN_1_STARTED_AT + 20 * MS_IN_S;
     vi.setSystemTime(turn2StartedAt);
-    view.rerender(<AssistantHeader hasText={true} isActive={false} turnStartedAt={turn2StartedAt} />);
+    view.rerender(<AssistantHeader isActive={false} turnStartedAt={turn2StartedAt} />);
 
     expect(screen.getByText(/Đã xử lý trong 17 giây/)).toBeInTheDocument();
     expect(screen.queryByText(/Đã xử lý trong 1 giây/)).not.toBeInTheDocument();
@@ -153,10 +161,10 @@ describe("AssistantHeader — nhãn thời lượng", () => {
   it("không hiện nhãn nào cho message chưa từng chạy trong lượt hiện tại", () => {
     // Message assistant của lượt trước (resume từ storage, hoặc đang có lượt khác chạy): chưa bao
     // giờ `isActive` ⇒ không có gì để chốt, tuyệt đối không được suy ra con số nào.
-    render(<AssistantHeader hasText={true} isActive={false} turnStartedAt={TURN_1_STARTED_AT} />);
+    render(<AssistantHeader isActive={false} turnStartedAt={TURN_1_STARTED_AT} />);
 
     expect(screen.queryByText(/Đã xử lý trong/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Đang suy nghĩ/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });
 
@@ -210,31 +218,110 @@ describe("ChatPanel — message nào được coi là đang chạy", () => {
     panelState.status = "submitted";
     render(<ChatPanel header={null} />);
 
-    act(() => {
-      vi.advanceTimersByTime(3 * MS_IN_S);
-    });
-
-    // Lượt mới đã bắt đầu nhưng chưa có message nào ⇒ phải có đồng hồ đang chạy, nếu không panel im
-    // lặng hoàn toàn đúng lúc staff sốt ruột nhất.
-    expect(screen.getByText(/Đang suy nghĩ… 3 giây/)).toBeInTheDocument();
+    // Lượt mới đã bắt đầu nhưng chưa có message nào ⇒ phải có tín hiệu đang chạy, nếu không panel im
+    // lặng hoàn toàn đúng lúc staff sốt ruột nhất. ĐÚNG MỘT `role="status"`: tín hiệu duy nhất là
+    // `ThinkingDot` ở vùng nội dung — header không còn dot riêng (đổi 19/08, tránh hai tín hiệu nói
+    // cùng một điều ở hai chỗ).
+    expect(screen.getAllByRole("status")).toHaveLength(1);
   });
 
-  it("đánh dấu đang chạy theo `metadata.status`, không theo vị trí cuối mảng", () => {
+  it("đánh dấu đang chạy theo mốc lượt, không theo vị trí cuối mảng", () => {
     // Lượt mới đã có optimistic user message, message assistant lượt trước KHÔNG còn ở cuối nhưng
-    // cũng không được coi là đang chạy — chỉ có đúng MỘT đồng hồ trên màn hình.
+    // cũng không được coi là đang chạy — message đã xong đó tuyệt đối không được có tín hiệu live.
+    panelState.messages = [
+      userMessage("turn-1", "Jackpot bao nhiêu?"),
+      assistantMessage("turn-1", "complete", "2.002.181.200 VND"),
+    ];
+    panelState.status = "ready";
+    const view = render(<ChatPanel header={null} />);
+
     panelState.messages = [
       userMessage("turn-1", "Jackpot bao nhiêu?"),
       assistantMessage("turn-1", "complete", "2.002.181.200 VND"),
       userMessage("turn-2", "Bạn có thể giúp được gì"),
     ];
     panelState.status = "submitted";
-    render(<ChatPanel header={null} />);
+    view.rerender(<ChatPanel header={null} />);
+
+    // Đúng MỘT tín hiệu đang chạy (dot của `PendingAssistantTurn`), không có tín hiệu thứ hai từ
+    // message lượt trước; và message lượt trước không bị chốt lại tổng.
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.queryByText(/Đã xử lý trong/)).not.toBeInTheDocument();
+  });
+
+  it("tắt dot NGAY khi chữ đầu tiên chảy xuống, nhưng chưa chốt tổng (feedback 19/08 lần 4)", () => {
+    // Chữ đang hiện ra tự nó đã là tín hiệu sống rõ hơn mọi indicator ⇒ giữ dot lúc đó chỉ là nhiễu.
+    // Bẫy ở đây: rất dễ "sửa" bằng cách tắt luôn `isActive` khi có chữ — làm vậy thì tổng thời gian bị
+    // chốt ngay chữ đầu tiên, đọc như câu trả lời đã xong giữa lúc còn đang chảy. Test khoá cả hai.
+    panelState.messages = [userMessage("turn-1", "Jackpot bao nhiêu?")];
+    panelState.status = "submitted";
+    const view = render(<ChatPanel header={null} />);
+
+    // Chưa có chữ: dot phải có, nếu không panel im lặng hoàn toàn lúc staff chờ.
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+
+    panelState.messages = [
+      userMessage("turn-1", "Jackpot bao nhiêu?"),
+      assistantMessage("turn-1", "streaming", "2.002"),
+    ];
+    panelState.status = "streaming";
+    view.rerender(<ChatPanel header={null} />);
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Đã xử lý trong/)).not.toBeInTheDocument();
+  });
+
+  it("không chốt tổng khi message assistant tạm về `complete` giữa lượt (regression 19/08)", () => {
+    // Reducer eve tính `metadata.status` theo part vừa upsert, nên mỗi lần Mira viết XONG một đoạn
+    // text giữa lượt (nói một câu rồi mới gọi tool) status nhảy `streaming` → `complete` → `streaming`.
+    // Suy "đang chạy" từ status ⇒ chốt "Đã xử lý trong N giây" giữa lúc còn đang trả lời (đọc như
+    // câu trả lời bị ĐỨT) và mọc thêm một khối Mira rỗng.
+    panelState.messages = [userMessage("turn-1", "Jackpot bao nhiêu?")];
+    panelState.status = "submitted";
+    const view = render(<ChatPanel header={null} />);
+
+    // Mira viết xong đoạn dẫn — part `done`, status `complete`, nhưng LƯỢT VẪN CHẠY.
+    panelState.messages = [
+      userMessage("turn-1", "Jackpot bao nhiêu?"),
+      assistantMessage("turn-1", "complete", "Để tôi tra."),
+    ];
+    panelState.status = "streaming";
+    view.rerender(<ChatPanel header={null} />);
 
     act(() => {
-      vi.advanceTimersByTime(5 * MS_IN_S);
+      vi.advanceTimersByTime(6 * MS_IN_S);
     });
 
-    expect(screen.getAllByText(/Đang suy nghĩ… 5 giây/)).toHaveLength(1);
+    // Chưa chốt tổng, và KHÔNG mọc thêm khối Mira thứ hai (`PendingAssistantTurn` không được render
+    // vì message của lượt đã được nhận diện đúng là đang chạy).
     expect(screen.queryByText(/Đã xử lý trong/)).not.toBeInTheDocument();
+    expect(screen.getAllByText(AI_ASSISTANT_NAME)).toHaveLength(1);
+  });
+
+  it("chốt tổng đúng một lần khi lượt thực sự kết thúc", () => {
+    panelState.messages = [userMessage("turn-1", "Jackpot bao nhiêu?")];
+    panelState.status = "submitted";
+    const view = render(<ChatPanel header={null} />);
+
+    panelState.messages = [
+      userMessage("turn-1", "Jackpot bao nhiêu?"),
+      assistantMessage("turn-1", "streaming", "2.002"),
+    ];
+    panelState.status = "streaming";
+    view.rerender(<ChatPanel header={null} />);
+
+    act(() => {
+      vi.advanceTimersByTime(9 * MS_IN_S);
+    });
+
+    panelState.messages = [
+      userMessage("turn-1", "Jackpot bao nhiêu?"),
+      assistantMessage("turn-1", "complete", "2.002.181.200 VND"),
+    ];
+    panelState.status = "ready";
+    view.rerender(<ChatPanel header={null} />);
+
+    expect(screen.getByText(/Đã xử lý trong 9 giây/)).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });

@@ -2,8 +2,9 @@
 
 import * as React from "react";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
+import { defaultFilter, useCommandState } from "cmdk";
 import type { LucideIcon } from "lucide-react";
 import { BookOpenIcon, LayoutDashboardIcon, Search, SparklesIcon } from "lucide-react";
 
@@ -12,14 +13,13 @@ import { useAiPanel } from "@/components/ai-panel/ai-panel-provider";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { AI_ASSISTANT_NAME } from "@/config/app-config";
+import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/app-config";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
 import { buildNavHref, NAV_REGISTRY, NavPage } from "@/lib/nav-registry";
@@ -153,12 +153,95 @@ function buildResettleEntries(): SearchEntry[] {
   return entries;
 }
 
+/**
+ * `value` của `CommandItem` "Hỏi Mira" — sentinel để {@link scorePaletteItem} nhận ra item này
+ * mà không phải so theo nhãn (nhãn đổi theo query, xem {@link SearchDialog}).
+ */
+const ASK_AI_ITEM_VALUE = "ask-mira";
+
+/**
+ * Score cố định cho item "Hỏi Mira": **dương** nên item KHÔNG BAO GIỜ bị `cmdk` filter ẩn, dù staff
+ * gõ câu hỏi chẳng khớp nhãn của nó.
+ *
+ * Đây là nửa đầu bản sửa bug 19/08: palette mở ra chọn sẵn "Hỏi Mira về trang này", nhưng vừa gõ
+ * nội dung là item đó biến mất (`cmdk` filter item theo text của chính item) ⇒ không còn đường nào
+ * đưa nội dung vừa gõ sang Mira. Nửa sau là **vị trí** của item (xem {@link SearchDialog}).
+ *
+ * Giá trị nhỏ hơn mọi score thật của `defaultFilter` (thang ~0.1–1) nên trong nội bộ nhóm "AI" nó
+ * luôn xếp sau — nhưng KHÔNG dựa vào đó để quyết định item nào được chọn mặc định: xem
+ * {@link SearchDialog} vì sao thứ tự thật là thứ tự DOM.
+ */
+const ASK_AI_SCORE = 1e-6;
+
+/**
+ * Filter của palette — `defaultFilter` (fuzzy score của cmdk) cho mọi entry điều hướng, score cố
+ * định cho item "Hỏi Mira" (xem {@link ASK_AI_SCORE}).
+ */
+function scorePaletteItem(value: string, search: string, keywords?: string[]): number {
+  if (value === ASK_AI_ITEM_VALUE) {
+    return ASK_AI_SCORE;
+  }
+  return defaultFilter(value, search, keywords);
+}
+
+/**
+ * Dòng "không có trang nào khớp" — thay cho `CommandEmpty`.
+ *
+ * `CommandEmpty` render theo `filtered.count === 0`, nhưng item "Hỏi Mira" luôn có score dương
+ * (xem {@link ASK_AI_SCORE}) nên count không bao giờ về 0 ⇒ `CommandEmpty` thành dead code. Đọc
+ * count qua `useCommandState` và trừ đi chính item AI: `count <= 1` ⇔ chỉ còn item AI.
+ */
+function NoPageMatchHint() {
+  const onlyAskAiLeft = useCommandState((state) => state.search !== "" && state.filtered.count <= 1);
+  if (!onlyAskAiLeft) {
+    return null;
+  }
+  return (
+    <p className="py-6 text-center text-muted-foreground text-sm">
+      Không có trang nào khớp — nhấn Enter để hỏi {AI_ASSISTANT_NAME}.
+    </p>
+  );
+}
+
+/**
+ * Command palette `⌘J` — tìm trang + đường tắt sang chat với Mira.
+ *
+ * ## Vì sao item "Hỏi Mira" cần cả `filter` riêng LẪN vị trí DOM động
+ *
+ * Bug 19/08: palette mở ra chọn sẵn "Hỏi Mira về trang này", nhưng staff gõ nội dung thì item đó
+ * biến mất và không có cách nào chuyển nội dung vừa gõ sang Mira — phải mở panel gõ lại từ đầu.
+ * Sửa cần HAI thứ, vì `cmdk` quyết định "hiện hay ẩn" và "được chọn mặc định" bằng hai cơ chế khác
+ * nhau:
+ *
+ * 1. **Hiện hay ẩn** — theo score của `filter`. `CommandItem` tự ẩn khi score = 0, và nhãn của item
+ *    AI không bao giờ khớp câu hỏi staff gõ ⇒ phải cấp score dương cố định
+ *    ({@link scorePaletteItem} + {@link ASK_AI_SCORE}).
+ * 2. **Được chọn mặc định** — theo **thứ tự DOM**, KHÔNG theo score. `cmdk` có sort theo score,
+ *    nhưng nó chỉ sort **item trong cùng một group**; phần sort GROUP của cmdk 1.1.1 hỏng: nó tìm
+ *    group bằng `querySelector('[cmdk-group=""][data-value="<group id>"]')`, trong khi `data-value`
+ *    của group được set từ **heading** ("AI", "Báo cáo"…) chứ không phải id ⇒ selector không khớp gì
+ *    và mọi group giữ nguyên thứ tự khai báo (đã verify bằng cách dump DOM trong test: item AI vẫn
+ *    nằm đầu dù score 1e-6 so với "Tài chính" score ~1).
+ *
+ * Nên vị trí nhóm "AI" phải do CHÍNH component quyết định, và nó đảo theo ý định của staff:
+ * - Chưa gõ gì ⇒ nhóm AI ở **đầu**: `⌘J` rồi Enter là "hỏi Mira về trang đang xem".
+ * - Đang gõ ⇒ nhóm AI xuống **cuối**: trang khớp giữ quyền chọn mặc định, Enter vẫn ĐIỀU HƯỚNG như
+ *   trước (palette + 2 ký tự là đường nhanh nhất cho việc này — `p1-04` §5, không được để AI chiếm
+ *   Enter). Khi không trang nào khớp, item AI là item duy nhất còn lại nên tự được chọn ⇒ Enter gửi
+ *   thẳng câu hỏi cho Mira.
+ */
 export function SearchDialog() {
   const [open, setOpen] = React.useState(false);
+  /**
+   * Query đang gõ — PHẢI controlled (không để cmdk tự giữ): đây là nội dung được chuyển sang Mira
+   * khi staff chọn item "Hỏi Mira".
+   */
+  const [query, setQuery] = React.useState("");
   const router = useRouter();
+  const pathname = usePathname();
   const userRoles = useUserRoles();
   const {
-    actions: { setOpen: setAiPanelOpen },
+    actions: { setOpen: setAiPanelOpen, send: sendToAi },
   } = useAiPanel();
 
   // Đồng bộ với NavMain: chỉ đưa vào kết quả tìm kiếm route mà user hiện tại
@@ -196,10 +279,20 @@ export function SearchDialog() {
     return [...fromSidebar, ...extraGroups];
   }, [userRoles]);
 
+  const handleOpenChange = React.useCallback((next: boolean) => {
+    setOpen(next);
+    // Query là state của app (không của cmdk) nên phải tự dọn — nếu không, lần mở sau còn nguyên
+    // câu hỏi cũ và item "Hỏi Mira" gợi ý gửi lại nó.
+    if (!next) {
+      setQuery("");
+    }
+  }, []);
+
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "j" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
+        setQuery("");
         setOpen((open) => !open);
       }
     };
@@ -207,17 +300,49 @@ export function SearchDialog() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  const askQuery = query.trim();
+
+  /**
+   * Chuyển staff sang chat với Mira. Có nội dung đang gõ ⇒ gửi luôn nội dung đó (Mira tự nhận thêm
+   * route + filter URL của trang đang xem qua `prepareSend`); không có ⇒ chỉ mở panel để staff tự gõ.
+   */
   const handleAskAi = React.useCallback(() => {
-    setOpen(false);
-    setAiPanelOpen(true);
-  }, [setAiPanelOpen]);
+    handleOpenChange(false);
+    // Trên `/ai` KHÔNG mở panel: trang đó chính là bề mặt chat và dùng CÙNG một agent instance —
+    // mở thêm panel là 2 bề mặt hiển thị y hệt nhau (xem `AiPanelProvider`).
+    if (pathname !== AI_FULL_PAGE_PATH) {
+      setAiPanelOpen(true);
+    }
+    if (askQuery !== "") {
+      sendToAi(askQuery);
+    }
+  }, [askQuery, handleOpenChange, pathname, setAiPanelOpen, sendToAi]);
 
   const handleSelect = React.useCallback(
     (url: string) => {
-      setOpen(false);
+      handleOpenChange(false);
       router.push(url);
     },
-    [router],
+    [handleOpenChange, router],
+  );
+
+  /**
+   * Nhóm "AI" — render ở ĐẦU hoặc CUỐI `CommandList` tuỳ có đang gõ hay không (xem JSDoc component).
+   * Dựng một lần rồi đặt vào một trong hai chỗ: nội dung y hệt nhau, khác duy nhất vị trí DOM.
+   */
+  const askAiGroup = (
+    <CommandGroup heading="AI">
+      <CommandItem className="py-1.5!" onSelect={handleAskAi} value={ASK_AI_ITEM_VALUE}>
+        <SparklesIcon className="text-primary" />
+        {askQuery === "" ? (
+          <span>Hỏi {AI_ASSISTANT_NAME} về trang này</span>
+        ) : (
+          <span className="truncate">
+            Hỏi {AI_ASSISTANT_NAME}: <span className="text-foreground">“{askQuery}”</span>
+          </span>
+        )}
+      </CommandItem>
+    </CommandGroup>
   );
 
   return (
@@ -233,17 +358,13 @@ export function SearchDialog() {
           <span className="text-xs">⌘</span>J
         </kbd>
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Tìm trang, báo cáo, cấu hình…" />
+      <CommandDialog commandProps={{ filter: scorePaletteItem }} open={open} onOpenChange={handleOpenChange}>
+        <CommandInput onValueChange={setQuery} placeholder="Tìm trang, báo cáo, cấu hình…" value={query} />
         <CommandList>
-          <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
-          <CommandGroup heading="AI">
-            <CommandItem className="py-1.5!" onSelect={handleAskAi}>
-              <SparklesIcon className="text-primary" />
-              <span>Hỏi {AI_ASSISTANT_NAME} về trang này</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
+          <NoPageMatchHint />
+          {/* Nhóm AI ĐẦU danh sách khi CHƯA gõ gì: lúc đó không có ý định tìm trang cụ thể, "Hỏi
+              Mira về trang này" là hành động hợp lý nhất để chọn sẵn (bấm ⌘J rồi Enter). */}
+          {askQuery === "" && askAiGroup}
           {searchGroups.map((group, i) => (
             <React.Fragment key={group.id}>
               {i !== 0 && <CommandSeparator />}
@@ -265,6 +386,15 @@ export function SearchDialog() {
               </CommandGroup>
             </React.Fragment>
           ))}
+          {/* Đang gõ ⇒ nhóm AI xuống CUỐI. Xem JSDoc `SearchDialog` mục "vị trí": cmdk 1.1.1 không
+              sort được group nên đây là cách duy nhất nhường quyền chọn mặc định cho trang khớp —
+              và khi không trang nào khớp, item AI là item duy nhất còn lại nên tự được chọn. */}
+          {askQuery !== "" && (
+            <>
+              <CommandSeparator />
+              {askAiGroup}
+            </>
+          )}
         </CommandList>
       </CommandDialog>
     </>

@@ -16,6 +16,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -83,6 +84,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
     resolver: zodResolver(prizesFormSchema),
     values: { ...config.defaultPrizes },
   });
+
+  useAiFormDirty("prizes", form.formState.isDirty);
 
   const watchedValues = form.watch();
   const unitPrice = config.play.unitPrice;

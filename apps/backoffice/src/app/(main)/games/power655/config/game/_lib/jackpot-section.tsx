@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -74,6 +75,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
       jp1OverflowThreshold: config.jackpot.jp1OverflowThreshold,
     },
   });
+
+  useAiFormDirty("jackpot", form.formState.isDirty);
 
   const jp1Ratio = useWatch({ control: form.control, name: "jp1ContributionRatio" }) ?? 90;
   const jp2Ratio = 100 - jp1Ratio;

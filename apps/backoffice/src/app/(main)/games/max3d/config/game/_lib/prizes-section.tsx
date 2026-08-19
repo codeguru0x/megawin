@@ -25,6 +25,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -486,6 +487,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
       plusSixth: config.defaultPrizes.plus.sixth,
     },
   });
+
+  useAiFormDirty("prizes", form.formState.isDirty);
 
   const w = form.watch();
   const unitPrice = config.play.unitPrice;

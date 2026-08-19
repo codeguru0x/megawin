@@ -40,6 +40,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 import { cn } from "@/lib/utils";
 
 import type { Bingo18GameConfig } from "./use-game-config";
@@ -483,6 +484,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
     bigSmallDrawPrizes: { ...config.bigSmallDrawPrizes },
   }));
   const [isDirty, setIsDirty] = useState(false);
+
+  useAiFormDirty("prizes", isDirty);
 
   const unitPrice = config.play.unitPrice;
 

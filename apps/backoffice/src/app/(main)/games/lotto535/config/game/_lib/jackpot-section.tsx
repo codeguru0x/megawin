@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -55,6 +56,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
       tier5: config.jackpot.splitRatios.tier5,
     },
   });
+
+  useAiFormDirty("jackpot", form.formState.isDirty);
 
   function handleSubmit(values: JackpotFormValues) {
     onSave({
