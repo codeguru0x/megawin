@@ -17,13 +17,26 @@
  * ra ngay. Trước đây là `SquarePlusIcon` (dấu +), dễ bị đọc thành "thêm mục vào danh sách hiện tại".
  * Ở header chỉ để icon + tooltip, KHÔNG kèm chữ: header cao 48px dùng chung với tên trợ lý, thêm
  * nhãn chữ làm hàng nút lấn sang phần thương hiệu.
+ *
+ * NÚT "MỞ RỘNG" — ba thứ phối hợp để cú chuyển sang `/ai` không còn hẫng (sửa 19/08): prefetch khi
+ * hover/focus, `useTransition` để nút hiện spinner trong lúc chờ, và KHÔNG tự đóng panel tại chỗ
+ * (để effect `pathname` của `AiPanelProvider` đóng sau khi trang mới đã lên). Chi tiết ở `onClick`.
  */
 
 import type { ReactNode } from "react";
+import { useCallback, useTransition } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { ExpandIcon, PanelRightCloseIcon, PanelRightOpenIcon, Sparkles, SquarePenIcon, X } from "lucide-react";
+import {
+  ExpandIcon,
+  Loader2Icon,
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
+  Sparkles,
+  SquarePenIcon,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -52,6 +65,20 @@ export function PanelChatHeader({ onClose }: { onClose: () => void }) {
     actions: { newChat },
   } = useAiPanel();
 
+  const fullPageHref = activeThreadId ? `${AI_FULL_PAGE_PATH}?thread=${activeThreadId}` : AI_FULL_PAGE_PATH;
+
+  // `isPending` bật trong suốt lúc Next tải RSC payload của `/ai` — nút đổi sang spinner để staff
+  // biết cú bấm ĐÃ được nhận. Bản trước không có tín hiệu nào ở đây: panel biến mất tức thì rồi màn
+  // hình đứng im vài trăm ms tới vài giây, đọc ra thành "bấm xong web tự tắt panel rồi treo".
+  const [isNavigating, startNavigation] = useTransition();
+
+  // Warm RSC payload của `/ai` ngay khi con trỏ/tiêu điểm chạm nút — lúc staff thật sự bấm thì
+  // payload đã nằm trong router cache, navigation gần như tức thì (react-best-practices §2.5).
+  // KHÔNG prefetch lúc mount: panel mở ở mọi trang, đa số lượt mở panel không hề bấm expand.
+  const prefetchFullPage = useCallback(() => {
+    router.prefetch(fullPageHref);
+  }, [router, fullPageHref]);
+
   return (
     <ChatHeaderFrame className="border-b px-4">
       <Tooltip>
@@ -66,17 +93,27 @@ export function PanelChatHeader({ onClose }: { onClose: () => void }) {
         <TooltipTrigger asChild>
           <Button
             aria-label="Mở rộng sang trang chat"
+            disabled={isNavigating}
             onClick={() => {
               // Cùng agent instance (p1-01 §2.1.1) — promote chỉ là đổi surface, KHÔNG
               // chuyển state: `/ai` đọc `activeThreadId` từ ĐÚNG registry panel đang dùng.
-              const href = activeThreadId ? `${AI_FULL_PAGE_PATH}?thread=${activeThreadId}` : AI_FULL_PAGE_PATH;
-              router.push(href);
-              onClose();
+              //
+              // ⚠️ KHÔNG gọi `onClose()` ở đây (sửa 19/08). `router.push` là bất đồng bộ; đóng panel
+              // ngay tại chỗ làm nội dung chat biến mất TRƯỚC khi `/ai` render xong, để lại một
+              // khoảng trống — chính cảm giác "bấm xong web tắt panel rồi chờ mới sang trang".
+              // `AiPanelProvider` đã có effect tự đóng panel khi `pathname === "/ai"`, tức panel chỉ
+              // tắt SAU khi trang mới đã lên. Bọc trong `startTransition` để `isPending` phản ánh
+              // đúng thời gian chờ đó.
+              startNavigation(() => {
+                router.push(fullPageHref);
+              });
             }}
+            onFocus={prefetchFullPage}
+            onMouseEnter={prefetchFullPage}
             size="icon-sm"
             variant="ghost"
           >
-            <ExpandIcon />
+            {isNavigating ? <Loader2Icon className="animate-spin" /> : <ExpandIcon />}
           </Button>
         </TooltipTrigger>
         <TooltipContent>Mở rộng</TooltipContent>

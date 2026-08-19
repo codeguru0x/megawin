@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -39,6 +40,8 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
       companyRate: config.rates.companyRate * 100,
     },
   });
+
+  useAiFormDirty("rates", form.formState.isDirty);
 
   function handleSubmit(values: RatesFormValues) {
     onSave({

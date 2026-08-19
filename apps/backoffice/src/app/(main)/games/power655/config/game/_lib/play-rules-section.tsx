@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -85,6 +86,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
       drawDaysOfWeek: config.play.drawDaysOfWeek ?? [2, 4, 6],
     },
   });
+
+  useAiFormDirty("play-rules", form.formState.isDirty);
 
   const drawDays = form.watch("drawDaysOfWeek");
 

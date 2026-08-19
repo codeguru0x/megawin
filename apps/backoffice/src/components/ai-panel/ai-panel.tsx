@@ -117,7 +117,7 @@ export function AiPanel() {
   if (mode === AiPanelMode.Drawer) {
     return (
       <Drawer open={open} onOpenChange={setOpen} direction="right">
-        <DrawerContent className="flex flex-col p-0 data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-sm">
+        <DrawerContent className="flex flex-col bg-background p-0 data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-sm">
           <DrawerTitle className="sr-only">{AI_ASSISTANT_NAME}</DrawerTitle>
           {panelBody}
         </DrawerContent>
@@ -150,6 +150,10 @@ export function AiPanel() {
   // giờ scroll nội bộ, thay vào đó đẩy dài cả trang và để lại vệt trắng bên cột nội dung.
   // `self-start` cắt stretch, `h-svh` chốt chiều cao = viewport (điều kiện để `overflow` bên
   // trong có tác dụng), `sticky top-0` giữ panel trong tầm mắt khi trang cuộn.
+  // Nền panel = `--background`, GIỐNG HỆT trang `/ai` (feedback 19/08 lần 3): thử đổi panel sang
+  // `--sidebar` cho tách khỏi dashboard, nhưng nền xám làm mọi card/bảng trong panel chìm xuống và
+  // panel đọc khác hẳn trang `/ai` — cùng một khung chat mà hai bộ mặt. Sự phân định với vùng
+  // dashboard do `border-l` + shadow lo; khác biệt bề mặt dồn vào BUBBLE ô nhập (xem `composer.tsx`).
   return (
     <aside
       ref={panelRef}

@@ -26,6 +26,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 import { cn } from "@/lib/utils";
 
 import type { GameConfig } from "./use-game-config";
@@ -270,6 +271,8 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
       enabled: { ...alerts.enabled },
     },
   });
+
+  useAiFormDirty("ops", form.formState.isDirty);
 
   function handleSubmit(values: OpsFormValues) {
     onSave({

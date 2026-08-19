@@ -713,7 +713,18 @@ export function buildNavHref(
   return { ok: true, href, appliedLabel: buildAppliedLabel(entry, resolvedSegments, rawParams) };
 }
 
-/** Nhãn ngắn mô tả đích đã resolve — vd "Vận hành kỳ quay · Keno · kỳ #2026-08-17.095". */
+/**
+ * Nhãn ngắn mô tả đích đã resolve — vd "Vận hành kỳ quay · Keno · kỳ #2026-08-17.095".
+ *
+ * Phần tử ĐẦU luôn là tên trang; các phần tử sau là ngữ cảnh đã áp. Renderer client tách lại theo
+ * dấu `" · "` để dựng 2 dòng (tên trang / ngữ cảnh) — xem `navigate-tool-card.tsx`. Vì vậy KHÔNG
+ * dùng `" · "` bên trong một phần tử, và không đảo tên trang khỏi vị trí đầu.
+ *
+ * KHÔNG đưa `accountId` (ULID) vào nhãn: `player-display-username.mdc` §2 chốt accountId chỉ dùng
+ * để DỰNG LINK, không hiển thị. Nó từng được ghép thẳng vào đây và staff nhận một nhãn kiểu
+ * "Tài chính người chơi · player 01KK1H0RVS0ZQ40NVF4XB9110B" — dài gấp đôi tên trang, wrap 2 dòng
+ * trong panel, mà không nói thêm điều gì (username thật nằm trong câu trả lời của trợ lý).
+ */
 function buildAppliedLabel(
   entry: NavPageDefinition,
   segments: Readonly<Record<string, string>>,
@@ -722,9 +733,6 @@ function buildAppliedLabel(
   const parts = [entry.label];
   if (segments.gameKey) {
     parts.push(GAME_LABELS[segments.gameKey as GameProduct] ?? segments.gameKey);
-  }
-  if (segments.accountId) {
-    parts.push(`player ${segments.accountId}`);
   }
   if (params.drawId) {
     parts.push(`kỳ #${params.drawId}`);

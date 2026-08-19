@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <title>navigate-tool-card preview</title>
+    <style>
+      :root {
+        --background: oklch(1 0 0);
+        --foreground: oklch(0.141 0.005 285.823);
+        --card: oklch(1 0 0);
+        --primary: oklch(0.488 0.243 264.376);
+        --muted: oklch(0.967 0.001 286.375);
+        --muted-foreground: oklch(0.552 0.016 285.938);
+        --accent: oklch(0.967 0.001 286.375);
+        --border: oklch(0.92 0.004 286.32);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; padding: 24px; display: flex; gap: 24px; align-items: flex-start;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #f4f4f5; color: var(--foreground);
+      }
+      .panel { background: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+      .panel h4 { margin: 0 0 10px; font-size: 11px; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .04em; }
+      .stack { display: flex; flex-direction: column; gap: 12px; }
+      .msg { font-size: 14px; line-height: 1.55; }
+
+      /* ── card = <Link> ─────────────────────────────────────────────── */
+      .card { display: flex; width: 100%; align-items: flex-start; gap: 10px;
+        border: 1px solid var(--border); border-radius: 8px; background: var(--card);
+        padding: 8px 10px; text-decoration: none; color: inherit; }
+      .card:hover { border-color: color-mix(in oklab, var(--primary) 40%, transparent); background: color-mix(in oklab, var(--accent) 40%, transparent); }
+      .icon { display: flex; width: 24px; height: 24px; flex: 0 0 auto; align-items: center; justify-content: center; border-radius: 6px; }
+      .icon.action { background: color-mix(in oklab, var(--primary) 10%, transparent); color: var(--primary); }
+      .icon.done { background: var(--muted); color: var(--muted-foreground); }
+      .icon svg { width: 14px; height: 14px; }
+      .body { min-width: 0; flex: 1 1 auto; }
+      .row1 { display: flex; align-items: baseline; gap: 8px; }
+      .title { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; font-size: 14px; }
+      .state { flex: 0 0 auto; font-size: 11px; }
+      .state.action { color: var(--primary); }
+      .state.done { color: var(--muted-foreground); }
+      .ctx { display: block; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-foreground); font-size: 12px; }
+      .dirty { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 11px; color: #d97706; }
+      .dirty svg { width: 12px; height: 12px; flex: 0 0 auto; }
+
+      /* ── bản CŨ để đối chiếu ───────────────────────────────────────── */
+      .old { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 12px; font-size: 14px; }
+      .old .txt { color: var(--muted-foreground); }
+      .old .txt b { color: var(--foreground); font-weight: 500; }
+      .old button { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+        border: 1px solid var(--border); border-radius: 6px; background: var(--background);
+        padding: 6px 12px; font-size: 14px; font-weight: 500; height: 32px; }
+      .old button svg { width: 14px; height: 14px; }
+    </style>
+  </head>
+  <body>
+    <template id="arrow">
+      <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+    </template>
+
+    <div class="panel" style="width: 340px">
+      <h4>MỚI · panel 340px (min)</h4>
+      <div class="stack">
+        <a class="card" href="#">
+          <span class="icon done"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
+          <span class="body">
+            <span class="row1"><span class="title">Vận hành kỳ quay</span><span class="state done">Đã mở</span></span>
+            <span class="ctx">Max 3D</span>
+          </span>
+        </a>
+        <p class="msg">Trang vận hành Max 3D.</p>
+        <a class="card" href="#">
+          <span class="icon done"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
+          <span class="body">
+            <span class="row1"><span class="title">Tài chính người chơi</span><span class="state done">Đã mở</span></span>
+          </span>
+        </a>
+        <p class="msg">Trang tài chính của player4 · devone.</p>
+        <a class="card" href="#">
+          <span class="icon action"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
+          <span class="body">
+            <span class="row1"><span class="title">Cấu hình game</span><span class="state action">Mở trang</span></span>
+            <span class="ctx">Keno</span>
+          </span>
+        </a>
+        <a class="card" href="#">
+          <span class="icon action"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
+          <span class="body">
+            <span class="row1"><span class="title">Báo cáo tài chính game</span><span class="state action">Mở trang</span></span>
+            <span class="ctx">Power 6/55 · kỳ #2026-08-17.095 · đại lý devone</span>
+            <span class="dirty"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Trang hiện tại có thay đổi chưa lưu</span>
+          </span>
+        </a>
+      </div>
+    </div>
+
+    <div class="panel" style="width: 340px">
+      <h4>CŨ · panel 340px (min)</h4>
+      <div class="stack">
+        <div class="old">
+          <span class="txt">→ Đã mở <b>Vận hành kỳ quay · Max 3D</b></span>
+          <button><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Mở trang</button>
+        </div>
+        <p class="msg">Trang vận hành Max 3D.</p>
+        <div class="old">
+          <span class="txt">→ Đã mở <b>Tài chính người chơi · player 01KK1H0RVS0ZQ40NVF4XB9110B</b></span>
+          <button><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Mở trang</button>
+        </div>
+        <p class="msg">Trang tài chính của player4 · devone.</p>
+      </div>
+    </div>
+
+    <div class="panel" style="width: 480px">
+      <h4>MỚI · panel 480px (max)</h4>
+      <div class="stack">
+        <a class="card" href="#">
+          <span class="icon done"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
+          <span class="body">
+            <span class="row1"><span class="title">Báo cáo tài chính game</span><span class="state done">Đã mở</span></span>
+            <span class="ctx">Power 6/55 · kỳ #2026-08-17.095 · đại lý devone</span>
+          </span>
+        </a>
+        <a class="card" href="#">
+          <span class="icon action"><svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></span>
+          <span class="body">
+            <span class="row1"><span class="title">Cấu hình đại lý theo game</span><span class="state action">Mở trang</span></span>
+            <span class="ctx">Lotto 5/35 · đại lý devone</span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

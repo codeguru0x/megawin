@@ -7,7 +7,8 @@
  * KHÔNG phải dải footer có `border-t` chia cắt màn hình. Cụ thể:
  * - Không đường kẻ ngang nào. Thay bằng gradient fade từ `background` → trong suốt phía trên, để
  *   tin nhắn cuối "chìm" dần khi cuộn qua composer (cảm giác liền mạch, không bị cắt khúc).
- * - Khung input bo tròn lớn (`rounded-3xl`) + shadow + nền `card` → nổi khỏi mặt phẳng hội thoại.
+ * - Khung input bo tròn lớn (`rounded-3xl`) + shadow + nền `muted` → nổi khỏi mặt phẳng hội thoại
+ *   (xem `BUBBLE_CLASS` cho lý do chọn `muted` thay vì `card`).
  * - Căn giữa cùng `max-w-3xl` với `ConversationContent` để input thẳng cột với tin nhắn.
  * - KHÔNG có dòng hint "Enter để gửi · Shift + Enter để xuống dòng" (bỏ 17/08): đây là quy ước
  *   phổ thông của mọi khung chat, staff dùng hằng ngày không cần nhắc; nó chiếm một dòng dưới
@@ -17,7 +18,8 @@
  * cho vùng cuộn nằm ở `ConversationContent` (`pb-32`), KHÔNG ở đây.
  */
 
-import { useCallback, useRef, useState } from "react";
+import type { Ref } from "react";
+import { useCallback, useImperativeHandle, useRef, useState } from "react";
 
 import type { UseEveAgentStatus } from "eve/react";
 import { AlertCircleIcon } from "lucide-react";
@@ -35,21 +37,45 @@ import { InputGroupAddon } from "@/components/ui/input-group";
 import { describeAgentError } from "./agent-error";
 
 /**
+ * Cửa duy nhất để bên ngoài ghi vào composer — dùng bởi nút "Sửa lại" trên message user
+ * (`render-message.tsx`).
+ *
+ * VÌ SAO IMPERATIVE, KHÔNG LIFT STATE LÊN `ChatPanel`: thao tác này không phải "đồng bộ một giá
+ * trị" mà là một MỆNH LỆNH tại một thời điểm — nạp text, focus, đặt caret ở cuối. Lift `input` lên
+ * cha thì mỗi ký tự staff gõ đều re-render cả cây message, và riêng phần focus/caret vẫn phải
+ * imperative. Đây đúng ca `useImperativeHandle` được thiết kế cho.
+ */
+export interface AiComposerHandle {
+  /** Ghi `text` vào ô nhập, focus, đặt caret ở cuối để staff sửa tiếp ngay. Ghi ĐÈ nội dung đang có. */
+  loadDraft: (text: string) => void;
+}
+
+/**
  * Style bubble áp lên `InputGroup` bên trong `PromptInput` (form là con ngoài cùng, `InputGroup`
  * là con trực tiếp của nó → phải nhắm qua `[&>[data-slot=input-group]]`).
  *
  * `h-auto` là BẮT BUỘC: `InputGroup` chốt `h-9` và chỉ nhả `h-auto` khi con TRỰC TIẾP là
  * `<textarea>`; ở đây `PromptInputBody` là div `display:contents` nên `has-[>textarea]` không
  * match, thiếu class này khung bị bóp còn 36px và cắt mất textarea.
+ *
+ * MÀU NỀN `bg-muted` (19/08 lần 3): trước dùng `bg-card` = ĐÚNG màu `--background`, nên bubble chỉ
+ * được nhận ra nhờ viền + shadow — trên nền trắng nó gần như vô hình. Đã thử cách ngược lại (tô xám
+ * cả panel để bubble trắng nổi lên) nhưng nền xám làm mọi card/bảng trong panel chìm xuống và panel
+ * lệch hẳn so với trang `/ai`. Chốt lại: **nền vùng chat giữ `--background` ở CẢ panel và `/ai`, chỉ
+ * bubble được tô** — khác biệt bề mặt gói trong đúng một thành phần, không ảnh hưởng vùng đọc.
+ *
+ * `focus-within:bg-card` + `ring`: lúc gõ, bubble sáng lên thành mặt phẳng riêng — vừa là phản hồi
+ * focus, vừa cho nền trắng dễ đọc khi soạn câu dài.
  */
 const BUBBLE_CLASS = [
   "[&>[data-slot=input-group]]:h-auto",
   "[&>[data-slot=input-group]]:rounded-3xl",
   "[&>[data-slot=input-group]]:border-border/60",
-  "[&>[data-slot=input-group]]:bg-card",
+  "[&>[data-slot=input-group]]:bg-muted",
   "[&>[data-slot=input-group]]:px-1.5",
   "[&>[data-slot=input-group]]:shadow-lg",
-  "[&>[data-slot=input-group]]:dark:bg-card",
+  "[&>[data-slot=input-group]]:transition-colors",
+  "[&>[data-slot=input-group]]:focus-within:bg-card",
 ].join(" ");
 
 export function AiComposer({
@@ -57,13 +83,17 @@ export function AiComposer({
   error,
   onSend,
   onStop,
+  ref,
 }: {
   status: UseEveAgentStatus;
   error: Error | undefined;
   onSend: (text: string) => void;
   onStop: () => void;
+  /** Xem {@link AiComposerHandle}. React 19: `ref` là prop thường, không cần `forwardRef`. */
+  ref?: Ref<AiComposerHandle>;
 }) {
   const [input, setInput] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isGenerating = status === "submitted" || status === "streaming";
   // Chuẩn hoá lỗi thô thành câu staff đọc được + ghi log chi tiết (xem `agent-error.ts`). Chỉ tính
   // khi thật sự đang ở trạng thái lỗi — tránh log lại error cũ mỗi lần component render vì lý do khác.
@@ -71,6 +101,28 @@ export function AiComposer({
   // Giữ text vừa gửi để nút "Thử lại" gửi lại đúng nội dung — PromptInput đã tự clear input
   // ngay sau submit nên KHÔNG thể đọc lại từ state `input`.
   const lastSentTextRef = useRef<string | undefined>(undefined);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      loadDraft: (text: string) => {
+        setInput(text);
+        // Focus + caret cuối trong microtask kế tiếp: `setInput` chưa commit thì `value` của DOM node
+        // vẫn là text cũ, `setSelectionRange` sẽ đặt caret theo độ dài CŨ (kẹp về giữa câu nếu text
+        // mới dài hơn). Đọc `value` thật của node thay vì `text.length` để không lệch khi PromptInput
+        // chuẩn hoá nội dung.
+        requestAnimationFrame(() => {
+          const node = textareaRef.current;
+          if (node === null) {
+            return;
+          }
+          node.focus();
+          node.setSelectionRange(node.value.length, node.value.length);
+        });
+      },
+    }),
+    [],
+  );
 
   const handleSubmit = useCallback(
     (message: PromptInputMessage) => {
@@ -132,6 +184,7 @@ export function AiComposer({
                 className="min-h-11 px-3 py-3"
                 onChange={(event) => setInput(event.currentTarget.value)}
                 placeholder="Hỏi Mira…"
+                ref={textareaRef}
                 value={input}
               />
             </PromptInputBody>

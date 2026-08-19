@@ -208,7 +208,7 @@ function isChunkRunning(items: readonly IndexedPart[]): boolean {
  * Nhãn tĩnh dành cho staff — CHỐT LẦN 2 (17/08 tối): một câu DUY NHẤT, không đổi theo tool, không
  * đổi theo số lần gọi, không đổi theo đang chạy hay đã xong. Cố tình KHÔNG chia "Đang…"/"Đã…" như
  * bản chi tiết cũ — ghép thì vào đây dễ trôi lại thành mô tả tiến trình ("Đang tra gì đó"), và tín
- * hiệu "agent còn đang chạy" đã có dòng đếm giây cạnh tên Mira (`assistant-header.tsx`) lo rồi.
+ * hiệu "agent còn đang chạy" đã có dot live cạnh tên Mira (`assistant-header.tsx`) lo rồi.
  * Coi đây là nhãn của Ô GẤP ("có dữ liệu nguồn ở đây, muốn xem thì bấm"), không phải báo tiến độ.
  *
  * CHỐT LẦN 3: từ khi debug tắt (mặc định) khiến `toMessageSegments` bỏ qua toàn bộ part nội thất
@@ -253,7 +253,7 @@ export function describeInternalChunk(items: readonly IndexedPart[]): string {
  *
  * `defaultOpen` cố định `false`: KHÔNG mở tự động khi đang chạy. Mở lúc chạy rồi đóng lúc xong tạo
  * ra đúng thứ ta muốn bỏ — nội dung kỹ thuật nhảy vào mắt staff giữa lúc họ chờ, kèm layout co giãn.
- * Tín hiệu "đang làm việc" đã do dòng đếm giây cạnh tên Mira đảm nhiệm (`assistant-header.tsx`).
+ * Tín hiệu "đang làm việc" đã do dot live cạnh tên Mira đảm nhiệm (`assistant-header.tsx`).
  */
 export function InternalSteps({ children, items }: { children: ReactNode; items: readonly IndexedPart[] }) {
   return (

@@ -41,6 +41,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 import { type TenantOption, useTenantOptions } from "@/hooks/use-tenant-options";
 
 import {
@@ -225,6 +226,11 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
       isEnabled: config.isEnabled,
     },
   });
+
+  // Key mang `tenantId`: trang render MỘT card cho MỖI đại lý, tất cả mount cùng lúc. Dùng chung
+  // key thì card sạch cuối cùng đè lên card staff đang sửa dở ⇒ mất cảnh báo đúng lúc cần nhất.
+  useAiFormDirty(`tenant-config.${config.tenantId}`, form.formState.isDirty);
+
   const isEnabled = form.watch("isEnabled");
 
   function handleSubmit(values: TenantFormValues) {

@@ -26,6 +26,7 @@ import {
   FileIcon,
   ImageIcon,
   KeyRoundIcon,
+  PencilLineIcon,
   RefreshCwIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -596,8 +597,8 @@ function partKey(part: EveMessagePart, index: number): string {
   }
 }
 
-/** Copy toàn bộ text của message assistant; đổi icon 2 giây để user biết đã copy. */
-function CopyMessageAction({ text }: { text: string }) {
+/** Copy text của message; đổi icon 2 giây để user biết đã copy. */
+function CopyMessageAction({ label, text }: { label: string; text: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(() => {
@@ -621,7 +622,7 @@ function CopyMessageAction({ text }: { text: string }) {
   }, [copied]);
 
   return (
-    <MessageAction onClick={handleCopy} tooltip={copied ? "Đã copy" : "Copy câu trả lời"}>
+    <MessageAction onClick={handleCopy} tooltip={copied ? "Đã copy" : label}>
       {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
     </MessageAction>
   );
@@ -638,6 +639,7 @@ export function AgentMessage({
   isActive,
   isStreaming,
   message,
+  onEditPrompt,
   onInputResponses,
   onResend,
   turnEnded,
@@ -645,12 +647,19 @@ export function AgentMessage({
 }: {
   canRespond: boolean;
   /**
-   * Lượt này đang chạy (`submitted`/`streaming`) — bật dòng đếm giây cạnh tên trợ lý.
-   * Rộng hơn `isStreaming`: bao cả pha `submitted` khi message đã tạo nhưng chưa có part nào.
+   * Lượt này đang chạy (`submitted`/`streaming`) — bật `LiveDot` cuối hàng tên trợ lý. Rộng hơn
+   * `isStreaming`: bao cả pha `submitted` khi message đã tạo nhưng chưa có part nào.
    */
   isActive: boolean;
   isStreaming: boolean;
   message: EveMessage;
+  /**
+   * Nạp lại câu hỏi này vào ô nhập để staff viết lại (chỉ message user). `undefined` ⇒ ẩn nút.
+   *
+   * KHÔNG phải sửa tại chỗ: message đã gửi thuộc lịch sử thread trên server, không xoá/ghi đè được.
+   * Bấm "Sửa lại" chỉ mang chữ xuống composer; gửi đi là một câu hỏi MỚI.
+   */
+  onEditPrompt?: (text: string) => void;
   onInputResponses: (responses: readonly AgentInputResponseInput[]) => void;
   /** Gửi lại prompt của user ngay TRƯỚC message này. `undefined` ⇒ ẩn nút. */
   onResend?: () => void;
@@ -666,7 +675,11 @@ export function AgentMessage({
     .filter((part): part is Extract<EveMessagePart, { type: "text" }> => part.type === "text")
     .map((part) => part.text)
     .join("\n\n");
-  const showActions = isAssistant && !isStreaming && plainText.trim() !== "";
+  const hasText = plainText.trim() !== "";
+  const showAssistantActions = isAssistant && !isStreaming && hasText;
+  // Message user: copy + "sửa lại". Không chờ `!isStreaming` — staff hay nhận ra câu hỏi thiếu ý
+  // NGAY khi Mira bắt đầu chạy, và đó chính là lúc họ cần mang chữ xuống composer để viết lại.
+  const showUserActions = !isAssistant && hasText;
   // Nội thất agent (reasoning, tool đang chạy/lỗi/JSON thô) gộp vào mục đóng sẵn — xem
   // `internal-steps.tsx`. Chỉ áp cho assistant; message user không có part loại này.
   const segments = toMessageSegments(message.parts);
@@ -674,7 +687,11 @@ export function AgentMessage({
   return (
     <Message data-optimistic={message.metadata?.optimistic ? "true" : undefined} from={message.role}>
       {isAssistant && (
-        <AssistantHeader hasText={lastTextIndex >= 0} isActive={isActive} turnStartedAt={turnStartedAt} />
+        // `isThinking`: dot chỉ sống trong khoảng từ lúc bấm gửi tới chữ ĐẦU TIÊN. Ngay khi có chữ,
+        // chữ đang chảy tự nó là tín hiệu — dot thành nhiễu (feedback 19/08 lần 4). `isActive` vẫn
+        // truyền nguyên để chốt tổng thời gian đúng lúc lượt kết thúc, KHÔNG được gộp hai cờ này
+        // (xem `assistant-header.tsx`).
+        <AssistantHeader isActive={isActive} isThinking={isActive && !hasText} turnStartedAt={turnStartedAt} />
       )}
       <MessageContent>
         {segments.map((segment) =>
@@ -703,7 +720,7 @@ export function AgentMessage({
           ),
         )}
       </MessageContent>
-      {showActions && (
+      {showAssistantActions && (
         // `-mt-1.5`: huỷ phần lớn `gap-2` của `Message` — toolbar là phần phụ của câu trả lời,
         // dán sát text mới đọc thành một khối; để 8px thì nó trôi lửng giữa 2 message (p0-04 §4.14).
         <MessageToolbar className="-mt-1.5">
@@ -712,10 +729,24 @@ export function AgentMessage({
               `[&>button]:size-7` (28px): nhỏ hơn `icon-sm` mặc định (32px) — icon 14px trong ô 32px
               tạo viền trống dày, làm hàng nút trông xa text hơn thực tế. */}
           <MessageActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [&>button]:size-7">
-            <CopyMessageAction text={plainText} />
+            <CopyMessageAction label="Copy câu trả lời" text={plainText} />
             {onResend && (
               <MessageAction onClick={onResend} tooltip="Gửi lại câu hỏi">
                 <RefreshCwIcon className="size-3.5" />
+              </MessageAction>
+            )}
+          </MessageActions>
+        </MessageToolbar>
+      )}
+      {showUserActions && (
+        // `justify-end`: bám theo bubble user đang căn phải. `-mt-1` chặt hơn phía assistant vì bubble
+        // user có padding riêng, để 6px là đủ tách khỏi mép bubble.
+        <MessageToolbar className="-mt-1 justify-end">
+          <MessageActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [&>button]:size-7">
+            <CopyMessageAction label="Copy câu hỏi" text={plainText} />
+            {onEditPrompt && (
+              <MessageAction onClick={() => onEditPrompt(plainText)} tooltip="Sửa lại câu hỏi">
+                <PencilLineIcon className="size-3.5" />
               </MessageAction>
             )}
           </MessageActions>

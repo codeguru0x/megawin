@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Spinner } from "@/components/ui/spinner";
 import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { KenoGameConfig } from "./use-game-config";
 
@@ -77,6 +78,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
       lastDrawTime: config.play.lastDrawTime,
     },
   });
+
+  useAiFormDirty("play-rules", form.formState.isDirty);
 
   function handleSubmit(values: PlayFormValues) {
     onSave({

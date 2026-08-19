@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
+import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -33,6 +34,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
       seedAmount: config.jackpot.seedAmount,
     },
   });
+
+  useAiFormDirty("jackpot", form.formState.isDirty);
 
   function handleSubmit(values: JackpotFormValues) {
     onSave({
