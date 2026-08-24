@@ -131,7 +131,7 @@ const actionValues = Object.keys(AuditActionLabel) as [string, ...string[]];
 export default defineTool({
   description:
     "Nhật ký thao tác (audit log) toàn hệ thống: ai làm gì, lên đối tượng nào, lúc nào, kết quả " +
-    "thành công/thất bại. Dùng cho câu hỏi kiểu 'ai huỷ kỳ #095', 'staff nào sửa cấu hình Keno " +
+    "thành công/thất bại. Dùng cho câu hỏi kiểu 'ai huỷ kỳ #095', 'nhân viên nào sửa cấu hình Keno " +
     "hôm qua', 'có ai đăng nhập từ IP lạ không'. Bỏ trống `from`/`to` → log MỚI NHẤT (giới hạn " +
     "`limit`). Có cả hai → phạm vi tối đa 31 ngày, chỉ tra được trong 90 ngày gần nhất (log cũ " +
     "hơn đã bị xoá tự động). `actor` khớp `actorId` (chính xác) HOẶC tên chứa chuỗi đó — không " +

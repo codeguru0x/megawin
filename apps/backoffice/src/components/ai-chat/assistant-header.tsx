@@ -8,15 +8,22 @@
  * khoảng từ lúc bấm gửi tới lúc chữ đầu tiên hiện ra trở thành im lặng hoàn toàn, staff không phân
  * biệt được "đang xử lý" với "treo".
  *
- * BA PHA (đổi 19/08, tinh chỉnh tới lần 4):
- * - **Đang suy nghĩ** (chạy, chưa có chữ nào) → `LiveDot`: dot màu primary nhấp nháy, CÙNG HÀNG với
- *   tên trợ lý, KHÔNG CHỮ, KHÔNG SỐ GIÂY. Bản cũ hiện "Đang suy nghĩ… N giây" và chính con số tăng
- *   dần mỗi giây là thứ làm staff sốt ruột — nó đếm to thời gian chờ mà không giúp họ quyết định gì.
- * - **Đang viết** (chữ đã bắt đầu chảy) → KHÔNG hiện gì. Chữ đang hiện ra tự nó đã là tín hiệu sống
- *   rõ hơn mọi indicator; giữ dot lúc này chỉ là nhiễu cạnh tên.
+ * BA PHA (đổi 19/08, tinh chỉnh tới lần 5):
+ * - **Đang làm việc** (lượt đang chạy, KHÔNG phải lúc chữ đang chảy) → `LiveDot`: dot màu primary
+ *   nhấp nháy, CÙNG HÀNG với tên trợ lý, KHÔNG CHỮ, KHÔNG SỐ GIÂY. Bản cũ hiện "Đang suy nghĩ…
+ *   N giây" và chính con số tăng dần mỗi giây là thứ làm staff sốt ruột — nó đếm to thời gian chờ mà
+ *   không giúp họ quyết định gì.
+ * - **Đang viết** (part CUỐI là text, tức chữ đang chảy ra) → KHÔNG hiện gì. Chữ đang hiện ra tự nó
+ *   đã là tín hiệu sống rõ hơn mọi indicator; giữ dot lúc này chỉ là nhiễu cạnh tên.
  * - **Đã xong** → chữ "Đã xử lý trong N giây": lúc này con số mới có ích, để staff đối chiếu câu nào
  *   tra nặng (quyết định sản phẩm 17/08, giữ nguyên). Nó cũng thay vai trò "bằng chứng agent có làm
  *   việc" mà card tool từng đảm nhiệm.
+ *
+ * ⚠️ PHA "đang làm việc" KHÔNG PHẢI CHỈ ĐOẠN ĐẦU LƯỢT (sửa 23/08, feedback ảnh 1): bản trước tính
+ * `isThinking = isActive && chưa có chữ nào`, nên khi Mira viết một câu mở đầu ("Tra doanh thu từng
+ * ngày…") rồi mới đi gọi tool, dot tắt VĨNH VIỄN dù agent còn tra 50 giây nữa — staff đọc như "trả
+ * lời xong rồi" và bỏ đi. Điều kiện đúng là "đang chạy VÀ chữ KHÔNG đang chảy" (xem
+ * `render-message.tsx`: part cuối không phải text) ⇒ dot QUAY LẠI mỗi khi agent rời chữ đi tra tool.
  *
  * Cả ba pha dùng ĐÚNG một vị trí (cuối hàng tên) nên không có gì nhảy chỗ giữa các pha.
  *
@@ -41,8 +48,10 @@ const MS_IN_S = 1000;
  * ở chỗ khác lúc xong. Gắn cả hai vào cuối hàng tên thì dot tắt — chữ hiện đúng chỗ dot vừa đứng.
  *
  * ⚠️ `isThinking` VÀ `isActive` LÀ HAI THỨ KHÁC NHAU, KHÔNG ĐƯỢC GỘP:
- * - `isThinking` (hiện dot) tắt NGAY khi chữ đầu tiên chảy xuống — lúc đó chữ tự nó là tín hiệu
- *   sống, dot thành nhiễu (feedback 19/08 lần 4).
+ * - `isThinking` (hiện dot) tắt CHỈ trong lúc chữ đang chảy ra — lúc đó chữ tự nó là tín hiệu sống,
+ *   dot thành nhiễu (feedback 19/08 lần 4). Chữ ngừng chảy mà lượt chưa xong (agent đi gọi tool) thì
+ *   dot BẬT LẠI (feedback 23/08 ảnh 1) — nếu không, câu mở đầu của Mira sẽ trông như câu trả lời
+ *   cuối cùng trong suốt thời gian tra tool.
  * - `isActive` (đang trong lượt) chạy tới hết lượt, và là mốc DUY NHẤT được dùng để chốt tổng thời
  *   gian. Nếu chốt tổng theo `isThinking` thì "Đã xử lý trong N giây" hiện ra ngay khi Mira mới viết
  *   được một chữ — đọc như câu trả lời đã xong trong lúc còn đang chảy (đúng hình dạng bug 19/08).
@@ -74,7 +83,7 @@ function AssistantActivityLine({
 }: {
   /** Lượt này đang chạy (status `submitted`/`streaming`) — mốc chốt tổng thời gian. */
   isActive: boolean;
-  /** Đang chạy VÀ chưa viết ra chữ nào — pha duy nhất hiện `LiveDot`. */
+  /** Đang chạy VÀ chữ KHÔNG đang chảy (chưa viết gì, hoặc đã viết xong đoạn và đi gọi tool). */
   isThinking: boolean;
   /**
    * Mốc `Date.now()` lúc lượt bắt đầu.
@@ -132,8 +141,8 @@ export function AssistantHeader({
   /** Message này thuộc lượt đang chạy — điều khiển việc chốt tổng thời gian. */
   isActive: boolean;
   /**
-   * Đang chạy VÀ chưa có chữ nào hiện ra ⇒ hiện `LiveDot`. Mặc định bằng `isActive` cho chỗ đứng
-   * chưa có message thật (`PendingAssistantTurn`), nơi hai điều kiện luôn trùng nhau.
+   * Đang chạy VÀ chữ không đang chảy ⇒ hiện `LiveDot`. Mặc định bằng `isActive` cho chỗ đứng chưa
+   * có message thật (`PendingAssistantTurn`), nơi hai điều kiện luôn trùng nhau.
    */
   isThinking?: boolean;
   turnStartedAt: number | null;

@@ -20,7 +20,7 @@
    con số cấu hình, giá trị từ tool THẮNG.
 
    Số cấu hình chỉ dùng được trong **LƯỢT đã gọi tool** — sang lượt mới cần số cấu hình thì GỌI
-   LẠI (staff có thể vừa sửa); jackpot thì LUÔN gọi lại (biến thiên liên tục). Khi trả lời số cấu
+   LẠI (có thể vừa bị sửa); jackpot thì LUÔN gọi lại (biến thiên liên tục). Khi trả lời số cấu
    hình, ghi kèm mốc tin cậy (`configVersion`/`updatedAt`).
 
 5. **Đọc `label`/`unit`/`note` của mỗi giá trị tool trả về, đừng suy nghĩa từ tên field.**
@@ -32,7 +32,7 @@
    Cùng lý do đó, **tiền đang treo chưa settle KHÔNG được cộng vào tiền đã chốt** để ra một tổng
    duy nhất — hai con số trả lời hai câu hỏi khác nhau; cần cả hai thì trình bày tách bạch.
 7. **Dữ liệu bị cắt phải nói rõ, không trình bày như danh sách đầy đủ.** Khi output có
-   `meta.truncated` (hoặc `total` lớn hơn số phần tử trả về), PHẢI nói staff đang xem "X/Y" và đề
+   `meta.truncated` (hoặc `total` lớn hơn số phần tử trả về), PHẢI nói rõ đang xem "X/Y" và đề
    nghị thu hẹp phạm vi theo gợi ý trong `meta` — KHÔNG lặng lẽ trình bày phần trả về như toàn bộ.
 
 ## Bốn mức chắc chắn — nói đúng mức mà bằng chứng cho phép

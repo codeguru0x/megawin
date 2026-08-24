@@ -25,6 +25,8 @@
 
 import type { EveDynamicToolPart } from "eve/react";
 
+import type { ChartOverride } from "@/lib/chart";
+
 import type { CellFormat } from "./format-cell";
 
 /** Props mọi renderer tool nhận — dùng chung cho tầng 1 (spec) và tầng 2 (bespoke). */
@@ -153,6 +155,17 @@ export interface ToolViewSpec<Output, Row> {
    */
   select: (output: Output) => readonly Row[] | null;
   view: ToolView<Row>;
+  /**
+   * Fine-tune biểu đồ khi tool `renderChart` (§2 kế hoạch p1-05-chart-generative-ui) chọn tool
+   * NÀY làm nguồn dữ liệu gần nhất. KHÔNG khai nếu suy luận mặc định (`chart-inference.ts`) đã đủ
+   * tốt — chỉ dùng khi cần màu riêng theo dòng (`rowColor`) hoặc ép kind mặc định/cho phép mà
+   * suy luận từ shape dữ liệu thô không tự biết (vd business rule "luôn ưu tiên bar cho so sánh
+   * game" dù đủ điểm cho line).
+   *
+   * `Row` ở đây CHÍNH LÀ `Row` của spec này — khớp runtime vì rows mà `buildChartModel` nhận
+   * qua `extractRows(output)` là mảng `select(output)` trả ra cho cùng tool.
+   */
+  chart?: ChartOverride<Row>;
 }
 
 /**

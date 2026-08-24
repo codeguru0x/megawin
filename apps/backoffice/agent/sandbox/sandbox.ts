@@ -144,7 +144,6 @@ const FORBIDDEN_CREDENTIAL_ENV_NAMES = new Set([
   "REDIS_URI",
   "BETTER_AUTH_SECRET",
   "AI_GATEWAY_API_KEY",
-
 ]);
 
 export default defineSandbox({

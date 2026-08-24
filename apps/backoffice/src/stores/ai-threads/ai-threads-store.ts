@@ -30,13 +30,47 @@ export interface AiThreadsState {
   removeThread: (id: string) => void;
   renameThread: (id: string, title: string) => void;
   /**
-   * Ghi kết quả 1 turn vào thread — gọi trong `onFinish` của `useEveAgent`. Set title từ message
-   * user đầu tiên nếu thread chưa có title (p1-01 §2.4).
+   * Ghi state của 1 thread — nguồn duy nhất để `AgentBridge` mirror stream eve vào registry.
+   *
+   * Chỉ ghi field CÓ trong `patch` (partial). `title` chỉ được set khi thread còn rỗng title
+   * (p1-01 §2.4) — lượt sau không đổi tên hội thoại.
+   *
+   * Gọi ở 4 thời điểm (xem `AgentBridge`): lúc gửi (`pendingTurn: true`), lúc eve cấp/đổi
+   * session, throttle trong lúc stream, và lúc turn kết thúc (`pendingTurn: false`). Bản trước
+   * CHỈ ghi ở `onFinish` — reload/đổi thread giữa lượt làm cursor tụt lại, gây bug replay lượt cũ
+   * (xem {@link threadNeedsCursorResync}).
+   *
+   * `updatedAt` CHỈ nhích khi thread có **nội dung mới** (số event tăng) — không nhích khi patch
+   * chỉ mang `session`/`pendingTurn`. Xem {@link hasNewContent} cho lý do.
    */
-  recordTurn: (
+  syncThread: (
     id: string,
-    turn: { events: AiThread["events"]; session: AiThread["session"]; title: string | undefined },
+    patch: {
+      events?: AiThread["events"];
+      session?: AiThread["session"];
+      title?: string | undefined;
+      pendingTurn?: boolean;
+    },
   ) => void;
+}
+
+/**
+ * Patch này có mang NỘI DUNG MỚI cho thread không (số event tăng so với bản đang giữ)?
+ *
+ * Dùng để quyết định có nhích `updatedAt` hay không. `updatedAt` là khoá sắp xếp + phân nhóm ngày
+ * của `ThreadSidebar`, nên mỗi lần nhích là danh sách nhảy thứ tự trước mắt người dùng.
+ *
+ * Bug 24/08: chỉ CLICK chọn 1 hội thoại cũ cũng làm nó nhảy lên đầu danh sách (và đổi nhóm sang
+ * "Hôm nay"). Nguyên nhân: `AgentBridge` mount lại → resync cursor với server → `syncThread({
+ * events, session, pendingTurn: false })`. Patch đó KHÔNG thêm nội dung nào (events y như cũ),
+ * chỉ làm lành cursor, nhưng vẫn set `updatedAt: Date.now()`. Với thread dài, cú nhảy đó trông
+ * như giao diện bị nháy.
+ *
+ * So sánh bằng ĐỘ DÀI thay vì deep-equal: mirror trong lúc stream gọi hàm này vài lần/giây, và
+ * events là append-only (eve chỉ nối event mới vào cuối) nên độ dài đủ để phát hiện nội dung mới.
+ */
+function hasNewContent(current: AiThread, patch: { events?: AiThread["events"] }): boolean {
+  return patch.events !== undefined && patch.events.length > current.events.length;
 }
 
 export const createAiThreadsStore = () =>
@@ -96,17 +130,22 @@ export const createAiThreadsStore = () =>
       persistThreadRegistry({ threads: next, activeThreadId });
     },
 
-    recordTurn: (id, turn) => {
+    syncThread: (id, patch) => {
       const { threads, activeThreadId } = get();
-      const now = Date.now();
+      const target = threads.find((thread) => thread.id === id);
+      if (!target) {
+        return;
+      }
       const next = threads.map((thread) =>
         thread.id === id
           ? {
               ...thread,
-              events: turn.events,
-              session: turn.session,
-              title: thread.title === "" ? (turn.title ?? thread.title) : thread.title,
-              updatedAt: now,
+              ...(patch.events === undefined ? {} : { events: patch.events }),
+              ...(patch.session === undefined ? {} : { session: patch.session }),
+              ...(patch.pendingTurn === undefined ? {} : { pendingTurn: patch.pendingTurn }),
+              title: thread.title === "" ? (patch.title ?? thread.title) : thread.title,
+              // Chỉ nhích khi thực sự có nội dung mới — xem `hasNewContent`.
+              updatedAt: hasNewContent(target, patch) ? Date.now() : thread.updatedAt,
             }
           : thread,
       );

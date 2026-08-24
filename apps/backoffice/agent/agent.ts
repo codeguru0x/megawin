@@ -52,4 +52,6 @@ export default defineAgent({
   // envelope checkpoint vào ngưỡng kích hoạt. Hạ xuống 0.8 (default 0.9) để nén sớm hơn, tránh
   // turn điều tra nhiều bước bị cắt giữa chừng.
   compaction: { thresholdPercent: 0.8 },
+
+  
 });

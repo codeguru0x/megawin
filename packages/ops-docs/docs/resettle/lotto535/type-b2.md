@@ -14,7 +14,7 @@ Hệ thống sẽ cho biết danh sách các kỳ cần xử lý và **đúng th
 ## Trước khi bắt đầu
 
 1. Báo **Quản trị viên (DBA)** sao lưu dữ liệu trước khi bắt đầu.
-2. Lấy **danh sách các kỳ cần xử lý theo thứ tự** từ bước kiểm tra của hệ thống. **Quản trị viên chỉ định rõ phải kết sổ lại HẾT các kỳ sau kỳ đầu tiên** — staff làm tuần tự cho đến kỳ cuối cùng trong danh sách, không bỏ sót kỳ nào.
+2. Lấy **danh sách các kỳ cần xử lý theo thứ tự** từ bước kiểm tra của hệ thống. **Quản trị viên chỉ định rõ phải kết sổ lại HẾT các kỳ sau kỳ đầu tiên** — nhân viên vận hành làm tuần tự cho đến kỳ cuối cùng trong danh sách, không bỏ sót kỳ nào.
 3. **Không mở bán / không kết sổ kỳ mới** trong lúc đang xử lý chuỗi kỳ này.
 
 ## Các bước thực hiện (lặp cho từng kỳ, đúng thứ tự)

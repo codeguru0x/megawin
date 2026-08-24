@@ -29,6 +29,8 @@ import { createContext, type RefObject, use, useCallback, useEffect, useRef, use
 import { usePathname } from "next/navigation";
 
 import { financialDateTodayVN, formatVNDate, formatVNDateTime, VN_TIMEZONE } from "@megawin/shared/utils";
+import type { ClientSessionState, MessageStreamEvent } from "eve/client";
+import { Client, defaultMessageReducer, isCurrentTurnBoundaryEvent } from "eve/client";
 import type { EveMessage, EveMessageData, UseEveAgentHelpers, UseEveAgentStatus } from "eve/react";
 import { useEveAgent } from "eve/react";
 
@@ -36,8 +38,9 @@ import { AI_FULL_PAGE_PATH } from "@/config/app-config";
 import { collectAiPageContext } from "@/lib/ai-page-context";
 import { AI_PANEL_MAX_WIDTH, AI_PANEL_MIN_WIDTH } from "@/lib/preferences/ai-panel";
 import { setValueToCookie } from "@/server/server-actions";
-import { useAiThreadsStore } from "@/stores/ai-threads/ai-threads-provider";
-import { deriveThreadTitle } from "@/stores/ai-threads/thread-storage";
+import { useAiThreadsStore, useAiThreadsStoreApi } from "@/stores/ai-threads/ai-threads-provider";
+import type { AiThreadsState } from "@/stores/ai-threads/ai-threads-store";
+import { deriveThreadTitle, threadNeedsCursorResync } from "@/stores/ai-threads/thread-storage";
 
 import { AiPanelMode, useAiPanelMode } from "./use-ai-panel-mode";
 
@@ -102,6 +105,16 @@ const WIDTH_COOKIE_DEBOUNCE_MS = 300;
  * hiện lối thoát "Bắt đầu chat mới" — không để user bấm Dừng vô vọng như bug 16/08.
  */
 const CANCEL_STUCK_TIMEOUT_MS = 8000;
+
+/**
+ * Nhịp tối thiểu giữa 2 lần mirror `events`/cursor xuống `localStorage` trong lúc stream.
+ *
+ * `localStorage.setItem` là I/O ĐỒNG BỘ trên main thread và payload là cả event log của thread —
+ * ghi mỗi event (một lượt có tool + chart dễ tới hàng trăm event) sẽ giật UI. 400ms giữ được
+ * "reload bất kỳ lúc nào cũng chỉ mất ≤1 nhịp" mà không nghẽn. Mốc kết thúc lượt và lúc unmount
+ * LUÔN ghi, không qua throttle.
+ */
+const MIRROR_THROTTLE_MS = 400;
 
 function clampWidth(width: number): number {
   return Math.min(AI_PANEL_MAX_WIDTH, Math.max(AI_PANEL_MIN_WIDTH, width));
@@ -177,31 +190,158 @@ interface AgentBridgeProps {
   onSlice: (slice: AgentSlice) => void;
 }
 
+/** Seed cấp cho `useEveAgent` lúc mount — đã được `AgentBridge` xác thực là cursor đáng tin. */
+interface AgentSeed {
+  events: readonly MessageStreamEvent[];
+  session: ClientSessionState | undefined;
+}
+
+interface AgentSessionProps extends AgentBridgeProps {
+  seed: AgentSeed;
+}
+
 /**
- * Tầng NẮM `useEveAgent` — remount bằng `key={threadId}` ở component cha (`AiPanelProvider`).
- * Đọc events/session của ĐÚNG thread active lúc mount (chỉ đọc 1 lần, đổi thread ⇒ remount mới
- * đọc lại — đúng model resumable session của eve, p1-01 §2.3).
+ * Dựng message từ event log đã lưu, KHÔNG cần eve session.
  *
- * Trả về `null` — KHÔNG render `children`. Component này chỉ tồn tại để giữ hook `useEveAgent`
- * bên trong 1 boundary có thể remount qua `key`; state được đẩy lên qua `onSlice` (xem JSDoc
- * đầu file mục "QUAN TRỌNG").
+ * Dùng cho khoảng `AgentBridge` đang resync cursor: hội thoại vẫn hiện đầy đủ thay vì trắng bảng,
+ * chỉ tạm chưa gửi được. Dùng đúng reducer eve dùng nội bộ nên projection khớp 1:1 với lúc agent đã
+ * mount — không phát sinh nhánh render thứ hai phải bảo trì song song.
+ */
+function projectStoredMessages(events: readonly MessageStreamEvent[]): readonly EveMessage[] {
+  const reducer = defaultMessageReducer();
+  const data = events.reduce<EveMessageData>((acc, event) => reducer.reduce(acc, event), reducer.initial());
+  return data.messages;
+}
+
+/**
+ * Tầng GATE — đảm bảo cursor cấp cho eve là ĐÚNG tail của server trước khi cho gửi lượt mới.
+ * Remount bằng `key={threadId}` ở component cha (`AiPanelProvider`).
+ *
+ * BUG THẬT (23/08 — "prompt nhảy lung tung"): gõ prompt mới nhưng bubble hiện câu hỏi CŨ và trợ lý
+ * trả lời đúng câu cũ đó. Nguyên nhân: eve mở stream của lượt mới tại `session.streamIndex` do app
+ * cấp. Cursor tụt sau tail thật ⇒ server phát lại lượt CŨ; eve gán `message.received` cũ vào chính
+ * bubble optimistic vừa tạo (nó chỉ khớp theo "đang có submission chờ", KHÔNG so `turnId`) ⇒ text
+ * vừa gõ bị ghi đè. Stream cắt tại mốc lượt cũ nên cursor chỉ nhích 1 lượt ⇒ lệch VĨNH VIỄN, và độ
+ * lệch đó được ghi vào `localStorage` nên sống qua reload.
+ *
+ * KHÔNG thể tự đoán cursor để chữa:
+ * - `streamIndex: 0` ⇒ eve cắt ở mốc lượt ĐẦU TIÊN của session, còn lệch nặng hơn.
+ * - Suy từ `events.length` ⇒ sai vì log lưu bị cap (xem `thread-storage.ts`).
+ * Chỉ server biết tail thật ⇒ hỏi bằng `snapshot()` (trả prefix đầy đủ + cursor đúng ngay sau
+ * prefix). Chỉ chạy khi {@link threadNeedsCursorResync} báo nghi vấn, nên đường bình thường (mở
+ * app, đổi thread lúc rảnh) KHÔNG tốn thêm request.
  */
 function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
+  // Đọc registry NGAY LÚC MOUNT qua store API thô — KHÔNG subscribe. `AgentSession` ghi vào registry
+  // liên tục trong lúc stream; subscribe bằng selector sẽ biến mỗi lần tự ghi thành 1 re-render.
+  // Remount toàn bộ khi `threadId` đổi (key ở cha) nên "đọc 1 lần lúc mount" == "đọc đúng lúc đổi
+  // sang thread mới".
+  const threadsApi = useAiThreadsStoreApi();
+  const [stored] = useState(() => threadsApi.getState().threads.find((thread) => thread.id === threadId));
+  const [seed, setSeed] = useState<AgentSeed | undefined>(() =>
+    stored !== undefined && threadNeedsCursorResync(stored)
+      ? undefined
+      : { events: stored?.events ?? [], session: stored?.session },
+  );
+
+  useEffect(() => {
+    if (seed !== undefined) {
+      return;
+    }
+    const sessionId = stored?.session?.sessionId;
+    if (sessionId === undefined) {
+      setSeed({ events: stored?.events ?? [], session: undefined });
+      return;
+    }
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        // `host: ""` = same-origin `/eve/v1/...`, đúng mặc định `useEveAgent` đang dùng (không
+        // truyền `host`/`agent`) nên đọc cùng session store phía server.
+        const session = new Client({ host: "" }).sessions.attach(sessionId);
+        const snapshot = await session.snapshot({ signal: controller.signal });
+        if (controller.signal.aborted) {
+          return;
+        }
+        // Cursor vừa lấy là của server ⇒ đáng tin, hạ `pendingTurn`. Nhờ vậy thread đang lệch sẵn
+        // trong `localStorage` cũng tự lành ngay lần mở đầu tiên, staff không phải "Chat mới".
+        threadsApi
+          .getState()
+          .syncThread(threadId, { events: snapshot.events, session: snapshot.session, pendingTurn: false });
+        setSeed({ events: snapshot.events, session: snapshot.session });
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        // Resync fail (offline, session đã bị retire) — vẫn phải cho staff chat tiếp. Dùng lại
+        // cursor cũ: rủi ro replay còn đó nhưng `pendingTurn` giữ nguyên nên lần mount sau thử lại.
+        console.error("[ai-panel] resync cursor eve thất bại", error);
+        setSeed({ events: stored?.events ?? [], session: stored?.session });
+      }
+    })();
+    return () => controller.abort();
+  }, [seed, stored, threadId, threadsApi]);
+
+  // Đang resync: hội thoại hiện từ log đã lưu nhưng CHẶN gửi (`status: "submitted"` ⇒ composer tự
+  // disable) — gửi lúc này là gửi bằng cursor chưa xác thực, đúng thứ gây bug. Cửa sổ này chỉ dài
+  // bằng 1 request và chỉ mở khi lượt trước bị ngắt.
+  const resolving = seed === undefined;
+  useEffect(() => {
+    if (!resolving) {
+      return;
+    }
+    onSlice({
+      activeThreadId: threadId,
+      messages: projectStoredMessages(stored?.events ?? []),
+      status: "submitted",
+      error: undefined,
+      cancelling: false,
+      cancelStuck: false,
+      send: () => {
+        // no-op: đang đồng bộ lại cursor với server — xem JSDoc component.
+      },
+      respond: async () => {
+        // no-op: đang đồng bộ lại cursor với server.
+      },
+      stop: () => {
+        // no-op: không có turn nào của client đang chạy để dừng.
+      },
+      newChat: () => {
+        threadsApi.getState().createThread();
+      },
+    });
+  }, [resolving, onSlice, threadId, stored, threadsApi]);
+
+  if (seed === undefined) {
+    return null;
+  }
+  return <AgentSession onSlice={onSlice} seed={seed} threadId={threadId} />;
+}
+
+/**
+ * Tầng NẮM `useEveAgent`. Trả về `null` — KHÔNG render `children`; chỉ tồn tại để giữ hook trong 1
+ * boundary remount được, state đẩy lên qua `onSlice` (xem JSDoc đầu file mục "QUAN TRỌNG").
+ *
+ * Mirror `events`/cursor/`pendingTurn` xuống registry LIÊN TỤC trong lúc stream, không chỉ ở
+ * `onFinish` như bản trước. Lý do: `onFinish` KHÔNG chạy khi lượt bị ngắt (reload, đổi thread,
+ * "Chat mới", HMR) — mà đó chính là lúc cursor tụt lại và sinh bug replay lượt cũ (xem JSDoc
+ * `AgentBridge`). Ghi liên tục để lần mount sau biết chính xác log dừng ở đâu.
+ */
+function AgentSession({ threadId, onSlice, seed }: AgentSessionProps) {
   const [cancelling, setCancelling] = useState(false);
   const [cancelStuck, setCancelStuck] = useState(false);
 
-  // Đọc events/session của thread NGAY LÚC MOUNT — lazy init để không re-đọc registry mỗi
-  // render (registry là nguồn cho state ban đầu, không phải nguồn sống của agent — sau mount
-  // agent tự quản lý stream, ghi lại registry qua `recordTurn` ở `onFinish`). Component này
-  // remount toàn bộ mỗi khi `threadId` đổi (key ở component cha) nên "đọc 1 lần lúc mount" ==
-  // "đọc đúng lúc đổi sang thread mới" — không cần đồng bộ lại khi registry đổi ở nơi khác.
-  const threadFromStore = useAiThreadsStore((s) => s.threads.find((t) => t.id === threadId));
-  const [initialSnapshot] = useState(() => threadFromStore);
-  const recordTurn = useAiThreadsStore((s) => s.recordTurn);
+  const threadsApi = useAiThreadsStoreApi();
+  const syncThread = useCallback(
+    (patch: Parameters<AiThreadsState["syncThread"]>[1]) => {
+      threadsApi.getState().syncThread(threadId, patch);
+    },
+    [threadsApi, threadId],
+  );
 
   const agent = useEveAgent({
-    initialEvents: initialSnapshot?.events,
-    initialSession: initialSnapshot?.session,
+    initialEvents: seed.events,
+    initialSession: seed.session,
     prepareSend: (input) => {
       // State trang mà URL KHÔNG mô tả (vd kỳ quay đang xem khi `?drawId=` bị xoá khỏi URL).
       const pageContext = collectAiPageContext();
@@ -221,23 +361,68 @@ function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
         },
       };
     },
+    // eve cấp session cho turn ĐẦU của thread ở đây. Ghi ngay, nếu không thì reload giữa lượt đầu
+    // làm mất luôn `sessionId` ⇒ hội thoại mồ côi, không resume được.
+    onSessionChange: (session) => {
+      syncThread({ session });
+    },
     onFinish: (snapshot) => {
       const userText = firstUserText(snapshot.data.messages);
-      recordTurn(threadId, {
+      syncThread({
         events: snapshot.events,
         session: snapshot.session,
         title: userText ? deriveThreadTitle(userText) : undefined,
+        pendingTurn: false,
       });
     },
   });
 
+  /**
+   * Mirror throttled theo `agent.events` — mỗi event ghi 1 lần là hàng trăm lượt `JSON.stringify` +
+   * `localStorage.setItem` ĐỒNG BỘ cho một lượt dài (tool + chart), đủ để giật UI.
+   *
+   * `pendingTurn` suy từ event cuối: chưa tới mốc kết thúc lượt ⇒ cursor chưa đáng tin. Đúng mốc thì
+   * ghi NGAY (bỏ throttle) để chốt trạng thái sạch. Nhánh throttle luôn đặt timer trailing nên event
+   * cuối không bao giờ bị bỏ.
+   */
+  const lastMirrorAtRef = useRef(0);
+  const pendingMirrorRef = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => {
+    const events = agent.events;
+    const lastEvent = events.at(-1);
+    if (lastEvent === undefined) {
+      return;
+    }
+    const turnSettled = isCurrentTurnBoundaryEvent(lastEvent);
+    const write = () => {
+      lastMirrorAtRef.current = Date.now();
+      pendingMirrorRef.current = undefined;
+      syncThread({ events, session: agent.session, pendingTurn: !turnSettled });
+    };
+    const elapsed = Date.now() - lastMirrorAtRef.current;
+    if (turnSettled || elapsed >= MIRROR_THROTTLE_MS) {
+      write();
+      return;
+    }
+    pendingMirrorRef.current = write;
+    const timer = setTimeout(write, MIRROR_THROTTLE_MS - elapsed);
+    return () => clearTimeout(timer);
+  }, [agent.events, agent.session, syncThread]);
+
   const send = useCallback(
     (text: string) => {
+      // Bật `pendingTurn` TRƯỚC khi POST: từ giây này server có thể đã nhận turn và bắt đầu sinh
+      // event. Ngắt trong khe đó (reload, đổi thread) mà không có cờ thì log vẫn kết thúc bằng mốc
+      // của lượt trước — nhìn như đã sạch, nhưng cursor đã tụt ⇒ lượt sau replay lượt cũ.
+      syncThread({ pendingTurn: true });
       void agent.send(text).catch((error: unknown) => {
         console.error("[ai-panel] gửi tin nhắn thất bại", error);
+        // Gửi lỗi: KHÔNG hạ cờ. Không phân biệt được "server chưa nhận" với "server đã nhận rồi
+        // mới đứt kết nối" — giữ cờ để lần mount sau resync cursor, thà đọc lại prefix stream còn
+        // hơn trả lời sai lượt.
       });
     },
-    [agent],
+    [agent, syncThread],
   );
 
   const stop = useCallback(() => {
@@ -272,6 +457,21 @@ function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
     const timer = setTimeout(() => setCancelStuck(true), CANCEL_STUCK_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [cancelling]);
+
+  /**
+   * Unmount giữa lượt (đổi thread, "Chat mới", điều hướng hard, HMR) ⇒ ghi nốt nhịp đang chờ.
+   *
+   * `detachEveAgentStore` (cleanup của `useEveAgent`) chỉ ngắt stream phía CLIENT — server vẫn chạy
+   * tiếp lượt đó, và `onFinish` KHÔNG chạy. Không flush ở đây thì mất nhịp cuối, log lưu lại dừng
+   * sớm hơn thực tế.
+   *
+   * Cleanup chỉ đọc ref nên deps rỗng là đúng — chạy 1 lần lúc unmount.
+   */
+  useEffect(() => {
+    return () => {
+      pendingMirrorRef.current?.();
+    };
+  }, []);
 
   const createThread = useAiThreadsStore((s) => s.createThread);
   const newChat = useCallback(() => {

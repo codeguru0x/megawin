@@ -91,7 +91,7 @@ export default defineTool({
   description:
     "Tổng quan tài chính/vận hành của 1 player ĐÃ BIẾT `accountId`: tổng quan cược/trúng theo " +
     "khoảng ngày, tài chính theo ngày từng game, vé đang chờ settle. Dùng cho câu hỏi kiểu 'tuần " +
-    "này player X cược/trúng bao nhiêu, còn vé chờ không'. CHƯA CÓ `accountId` (staff chỉ nêu " +
+    "này player X cược/trúng bao nhiêu, còn vé chờ không'. CHƯA CÓ `accountId` (chỉ nêu " +
     "username) → gọi `getPlayerAccountInfo` TRƯỚC để tra accountId, KHÔNG gọi tool này với " +
     "username (tool này KHÔNG search được). Muốn `overview`/`financials` (theo khoảng ngày) " +
     "PHẢI truyền cả `from` và `to` — suy từ `clientContext` theo đúng rule ngày tài chính, KHÔNG " +

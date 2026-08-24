@@ -27,7 +27,7 @@ export default defineTool({
     "Snapshot vận hành REALTIME của 1 kỳ đang mở: doanh thu đang tích luỹ, exposure worst-case, " +
     "top combo/người chơi bị dồn cược, đếm alert (mới/nghiêm trọng). Dùng cho câu hỏi kiểu 'kỳ " +
     "đang mở của Lotto doanh thu bao nhiêu rồi'. `drawId` BẮT BUỘC — lấy từ " +
-    "`clientContext.page.operations.drawId` nếu staff đang xem 1 kỳ, hoặc gọi `getDrawDetail` " +
+    "`clientContext.page.operations.drawId` nếu người dùng đang xem 1 kỳ, hoặc gọi `getDrawDetail` " +
     "trước để biết kỳ hiện hành. KHÔNG dùng tool này cho kỳ ĐÃ SETTLE (số không cập nhật nữa) — " +
     "dùng `getDrawSettleReport`. Muốn chi tiết TỪNG alert (không chỉ đếm) → dùng `getOpsAlerts`.",
   inputSchema: z.object({

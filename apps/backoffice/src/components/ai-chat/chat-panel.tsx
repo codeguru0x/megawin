@@ -164,7 +164,7 @@ export function ChatPanel({ header }: { header: ReactNode }) {
   // `undefined` = render đầu tiên (ref chưa được gán lần nào). Không dùng `useRef(true)`: Biome hẹp
   // type về literal `true` và báo `noUnnecessaryConditions`.
   const hasRenderedRef = useRef<boolean | undefined>(undefined);
-  // Cửa ghi vào composer cho nút "Sửa lại" trên message user — xem `AiComposerHandle`.
+  // Cửa ghi vào composer cho nút "Hỏi lại câu này" trên message assistant — xem `AiComposerHandle`.
   const composerRef = useRef<AiComposerHandle>(null);
   if (isActiveTurn && !wasActiveTurnRef.current) {
     const lastAssistant = messages.findLast((message) => message.role === "assistant");
@@ -208,11 +208,15 @@ export function ChatPanel({ header }: { header: ReactNode }) {
   );
 
   /**
-   * Gửi lại prompt user NGAY TRƯỚC message assistant thứ `index` — không phải copy nội dung
-   * assistant. Trả `undefined` khi không tìm được prompt (message đầu tiên là assistant) để
-   * `AgentMessage` ẩn nút thay vì hiện nút bấm không có tác dụng.
+   * Nạp câu hỏi user NGAY TRƯỚC message assistant thứ `index` xuống ô nhập — không phải copy nội
+   * dung assistant. Trả `undefined` khi không tìm được câu hỏi (message đầu hội thoại là assistant)
+   * để `AgentMessage` ẩn nút thay vì hiện nút bấm không có tác dụng.
+   *
+   * KHÔNG gửi thẳng (đổi 24/08): xem {@link AgentMessage} prop `onReuseQuestion` cho lý do đầy đủ.
+   * Tóm lại — staff bấm nút này phần lớn vì câu hỏi CŨ thiếu ý, nên bước hữu ích là mang chữ xuống ô
+   * nhập; muốn gửi nguyên văn thì chỉ cần bấm gửi thêm một nhịp.
    */
-  const makeResendHandler = useCallback(
+  const makeReuseQuestionHandler = useCallback(
     (index: number): (() => void) | undefined => {
       for (let i = index - 1; i >= 0; i--) {
         const candidate = messages[i];
@@ -227,24 +231,12 @@ export function ChatPanel({ header }: { header: ReactNode }) {
         if (prompt === "") {
           return undefined;
         }
-        return () => send(prompt);
+        return () => composerRef.current?.loadDraft(prompt);
       }
       return undefined;
     },
-    [messages, send],
+    [messages],
   );
-
-  /**
-   * Mang nội dung một câu hỏi CŨ xuống composer để staff viết lại.
-   *
-   * KHÔNG sửa tại chỗ và KHÔNG cắt lịch sử: message đã gửi nằm trong thread trên server, client
-   * không xoá được. Câu viết lại đi tiếp như một lượt MỚI — đúng mô hình "hỏi lại cho rõ" của staff
-   * ops, và tránh hẳn lớp trạng thái "đang sửa message X" (giữ bản gốc, huỷ sửa, đồng bộ lại lịch
-   * sử) không đáng cho một khung chat nội bộ.
-   */
-  const handleEditPrompt = useCallback((text: string) => {
-    composerRef.current?.loadDraft(text);
-  }, []);
 
   return (
     // `min-h-0` + `overflow-hidden`: chốt vùng chat trong khung cha (panel `h-svh` hoặc trang
@@ -264,9 +256,8 @@ export function ChatPanel({ header }: { header: ReactNode }) {
                   isStreaming={isStreaming && message.id === activeAssistantId}
                   key={message.id}
                   message={message}
-                  onEditPrompt={message.role === "user" ? handleEditPrompt : undefined}
                   onInputResponses={handleInputResponses}
-                  onResend={message.role === "assistant" ? makeResendHandler(index) : undefined}
+                  onReuseQuestion={message.role === "assistant" ? makeReuseQuestionHandler(index) : undefined}
                   turnEnded={turnEnded}
                   turnStartedAt={turnStartedAt}
                 />

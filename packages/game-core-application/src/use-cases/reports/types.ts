@@ -9,10 +9,14 @@ import type {
   SystemOutstandingGameDaily,
   SystemSettleGameDaily,
 } from "@megawin/game-core/entities";
+import type { FinancialPeriod } from "@megawin/shared/utils";
 
 import type {
   DailyOverviewRow,
   DashboardGameDailyData,
+  GamePeriodByGameRow,
+  GamePeriodMetricKey,
+  GamePeriodRow,
   GameSummaryRow,
   PlayerDrawBreakdownRow,
   PlayerOutstandingSummary,
@@ -40,10 +44,64 @@ export interface GetDailyOverviewOutput {
 export interface GetGameSummaryInput {
   from: string;
   to: string;
+  /** Lọc 1 game. Bỏ trống = tất cả game (mặc định, dùng cho tab "Theo game"). */
+  game?: string;
 }
 
 export interface GetGameSummaryOutput {
   data: GameSummaryRow[];
+}
+
+// ─── Game Period Trend ────────────────────────────────────────────────────────
+
+export interface GetGamePeriodTrendInput {
+  from: string;
+  to: string;
+  /** Độ chia kỳ: `day` | `week` | `month`. */
+  period: FinancialPeriod;
+  /** Lọc 1 game. Bỏ trống = tất cả game gộp lại theo từng kỳ. */
+  game?: string;
+}
+
+export interface GetGamePeriodTrendOutput {
+  data: GamePeriodRow[];
+  /** Echo lại tham số đã dùng — người đọc/biểu đồ phải biết dòng đang là ngày, tuần hay tháng. */
+  meta: {
+    period: FinancialPeriod;
+    /** `undefined` = không lọc game (tổng hệ thống). */
+    game?: string;
+    /** Tên game để hiển thị. `undefined` khi không lọc game. */
+    gameLabel?: string;
+    from: string;
+    to: string;
+  };
+}
+
+// ─── Game Period Trend By Game (so sánh N game trên 1 chỉ số) ───────────────
+
+export interface GetGamePeriodTrendByGameInput {
+  from: string;
+  to: string;
+  /** Độ chia kỳ: `day` | `week` | `month`. */
+  period: FinancialPeriod;
+  /** Danh sách game cần so sánh — tối thiểu 2. */
+  games: string[];
+  /** Chỉ số DUY NHẤT để so sánh giữa các game (vd `"ggr"`, `"totalStake"`). */
+  metric: GamePeriodMetricKey;
+}
+
+export interface GetGamePeriodTrendByGameOutput {
+  data: GamePeriodByGameRow[];
+  /** Echo lại tham số đã dùng — dòng dữ liệu chỉ có khoá kỳ + cột game, không tự nói được chỉ số nào. */
+  meta: {
+    period: FinancialPeriod;
+    games: string[];
+    gameLabels: string[];
+    metric: GamePeriodMetricKey;
+    metricLabel: string;
+    from: string;
+    to: string;
+  };
 }
 
 // ─── Tenant Summary ───────────────────────────────────────────────────────────

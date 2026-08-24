@@ -13,15 +13,18 @@
  */
 
 import type { GameProduct } from "@megawin/game-core/entities";
-import { GAME_LABELS } from "@megawin/game-core/labels";
-import type { DailyOverviewRow, GameSummaryRow } from "@megawin/game-core-application/repos";
+import { GAME_LABELS, getGameLabel } from "@megawin/game-core/labels";
+import type { DailyOverviewRow, GamePeriodRow, GameSummaryRow } from "@megawin/game-core-application/repos";
 import type {
   GetDailyOverviewOutput,
+  GetGamePeriodTrendOutput,
   GetGameSummaryOutput,
   GetSystemOutstandingOutput,
 } from "@megawin/game-core-application/use-cases/reports";
 import type { WireType } from "@megawin/shared/types";
+import { FinancialPeriod } from "@megawin/shared/utils";
 
+import { getGameHex } from "@/lib/game-colors";
 import type { GetGameConfigOutput, GetGameJackpotOutput } from "@/server/ai";
 import type { GetDrawSettleReportDispatchOutput, ReportDispatchMeta } from "@/server/ai/reports/types";
 
@@ -80,6 +83,33 @@ export const dailyOverviewView = defineToolView<WireType<GetDailyOverviewOutput>
   },
 });
 
+/**
+ * Mã game trong DB (`"power655"`) → tên hiển thị (`"Power 6/55"`), dùng làm `ChartOverride.xLabel`.
+ *
+ * Ép kiểu tại ĐÂY (1 chỗ) vì `xLabel` nhận `string` — recharts đưa cho tick/legend/tooltip formatter
+ * giá trị thô, không giữ kiểu `GameProduct`. `getGameLabel` tự fallback về chính key khi không khớp
+ * enum, nên mã lạ vẫn hiện nguyên văn thay vì rỗng.
+ */
+const gameProductLabel = (value: string): string => getGameLabel(value as GameProduct);
+
+/** Nhãn độ chia kỳ dùng trong tiêu đề card `getFinancialTrend` ("… theo tháng"). */
+const PERIOD_LABELS: Record<FinancialPeriod, string> = {
+  [FinancialPeriod.Day]: "ngày",
+  [FinancialPeriod.Week]: "tuần",
+  [FinancialPeriod.Month]: "tháng",
+};
+
+/**
+ * 1 dòng hiển thị của `getFinancialTrend` — `GamePeriodRow` + 2 nhãn lấy từ `meta`.
+ *
+ * `periodLabel`/`gameLabel` là HẰNG SỐ cho mọi dòng, chỉ tồn tại để `titleFrom` dựng được tiêu đề
+ * (xem JSDoc `financialTrendView`) — KHÔNG hiển thị thành cột.
+ */
+interface TrendDisplayRow extends GamePeriodRow {
+  periodLabel: string;
+  gameLabel: string;
+}
+
 /** `getFinancialByGame` — bảng theo game, sắp theo thứ tự use-case trả về. */
 export const gameSummaryView = defineToolView<WireType<GetGameSummaryOutput>, GameSummaryRow>({
   select: (output) => output.data,
@@ -98,6 +128,58 @@ export const gameSummaryView = defineToolView<WireType<GetGameSummaryOutput>, Ga
     ],
     link: { label: "Mở báo cáo tài chính", href: () => "/reports/settle?tab=by-game" },
     empty: "Không có dữ liệu game trong khoảng ngày này.",
+  },
+  // So sánh giữa các game phải dùng ĐÚNG màu brand của game (đồng nhất với dashboard/reports),
+  // không phải palette `--chart-1..5` chung — xem `chart-inference.ts` §`ChartOverride.rowColor`.
+  // `xLabel`: bảng/chart phải gọi game bằng tên người dùng biết (`Power 6/55`), không phải mã kỹ
+  // thuật trong DB (`power655`) — feedback 24/08.
+  chart: { rowColor: (row) => getGameHex(row.gameProduct), xLabel: gameProductLabel },
+});
+
+/**
+ * `getFinancialTrend` — chuỗi thời gian, 1 dòng = 1 kỳ (ngày/tuần/tháng), có thể chỉ 1 game.
+ *
+ * `titleFrom` gần như BẮT BUỘC ở đây: cùng một tool trả "Keno theo tháng" và "toàn hệ thống theo
+ * tuần", mà dòng dữ liệu chỉ có khoá kỳ (`"2026-06"`) — tiêu đề tĩnh sẽ khiến hai câu trả lời khác
+ * hẳn nhau hiện cùng một nhãn. Nhưng `TitleFrom` chỉ nhận `rows`, còn game/độ chia nằm ở `meta`,
+ * nên `select` gắn `periodLabel`/`gameLabel` vào từng dòng (hằng số cho mọi dòng) để dựng nhãn.
+ *
+ * Hai field nhãn đó KHÔNG có trong `columns`: chúng chỉ để dựng tiêu đề. Nếu để chúng lộ ra bảng
+ * thì mỗi dòng lặp lại cùng một giá trị, và tệ hơn — `chart-inference.ts` thấy thêm cột phân loại
+ * và có thể chọn nó làm trục X (mọi dòng cùng giá trị ⇒ biểu đồ 1 cột). Vì lý do đó `chart.xLabel`
+ * ở đây KHÔNG map tên game: trục X là kỳ thời gian, không phải game.
+ */
+export const financialTrendView = defineToolView<WireType<GetGamePeriodTrendOutput>, TrendDisplayRow>({
+  select: (output) =>
+    output.data.map((row) => ({
+      ...row,
+      periodLabel: PERIOD_LABELS[output.meta.period],
+      gameLabel: output.meta.gameLabel ?? "toàn hệ thống",
+    })),
+  view: {
+    kind: "table",
+    title: "Tài chính theo kỳ",
+    titleFrom: (rows) => {
+      const first = rows[0];
+      return first === undefined ? "Tài chính theo kỳ" : `Tài chính ${first.gameLabel} theo ${first.periodLabel}`;
+    },
+    // Khoảng dài chia theo ngày có thể ra ~180 dòng — mặc định 7 quá ít để thấy hình dạng chuỗi,
+    // nhưng vẫn phải chặn để card không đẩy hết hội thoại xuống dưới.
+    maxRows: 14,
+    totals: [
+      { key: "totalStake", label: "Tiền cược" },
+      { key: "ggr", label: "GGR" },
+      { key: "netProfit", label: "Lợi nhuận ròng", signed: true },
+    ],
+    columns: [
+      // KHÔNG dùng `CellFormat.Date`: khoá kỳ có thể là `YYYY-MM` (tháng), formatter ngày sẽ hiểu
+      // sai. Biểu đồ đã tự nhận dạng mốc thời gian qua `chart-format.ts`.
+      { key: "period", label: "Kỳ", alignRight: false },
+      { key: "totalStake", label: "Tiền cược", format: CellFormat.Number },
+      { key: "netProfit", label: "Lợi nhuận", format: CellFormat.Number, signed: true },
+    ],
+    link: { label: "Mở báo cáo tài chính", href: () => "/reports/settle?tab=daily" },
+    empty: "Không có dữ liệu tài chính trong khoảng này.",
   },
 });
 
@@ -126,6 +208,8 @@ export const systemOutstandingView = defineToolView<
     link: { label: "Mở báo cáo kỳ chờ settle", href: () => "/reports/outstanding" },
     empty: "Hiện không có kỳ quay nào đang chờ settle.",
   },
+  // Cùng lý do với `gameSummaryView` — so sánh chéo game phải nhất quán màu brand và tên game.
+  chart: { rowColor: (row) => getGameHex(row.gameProduct), xLabel: gameProductLabel },
 });
 
 /** 1 dòng hiển thị của `getGameConfig` — `game`/`gameLabel` chỉ dùng dựng href + tiêu đề, không hiện trên bảng. */

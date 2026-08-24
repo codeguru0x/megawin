@@ -1,5 +1,7 @@
 export { GetDailyOverviewUseCase } from "./get-daily-overview";
 export { GetDashboardKpisUseCase } from "./get-dashboard-kpis";
+export { GetGamePeriodTrendByGameUseCase } from "./get-game-period-trend-by-game";
+export { GetGamePeriodTrendUseCase } from "./get-game-period-trend";
 export { GetGameSummaryUseCase } from "./get-game-summary";
 export { GetPlayerDrawBreakdownUseCase } from "./get-player-draw-breakdown";
 export { GetPlayerEntriesUseCase } from "./get-player-entries";
@@ -14,6 +16,10 @@ export type {
   GetDailyOverviewOutput,
   GetDashboardKpisInput,
   GetDashboardKpisOutput,
+  GetGamePeriodTrendByGameInput,
+  GetGamePeriodTrendByGameOutput,
+  GetGamePeriodTrendInput,
+  GetGamePeriodTrendOutput,
   GetGameSummaryInput,
   GetGameSummaryOutput,
   GetPlayerDrawBreakdownInput,

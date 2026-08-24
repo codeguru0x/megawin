@@ -7,9 +7,13 @@ export type {
   PlayerOverviewResult,
 } from "./player-settle-game-daily.types";
 export type { OutstandingPerGameAggregateResult } from "./system-outstanding.types";
+export { GAME_PERIOD_METRIC_KEYS } from "./system-settle-game-daily.types";
 export type {
   DailyOverviewRow,
   DashboardGameDailyData,
+  GamePeriodByGameRow,
+  GamePeriodMetricKey,
+  GamePeriodRow,
   GameSummaryRow,
   SettleGameDailyAggregateResult,
 } from "./system-settle-game-daily.types";

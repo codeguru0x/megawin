@@ -25,7 +25,7 @@ export default defineTool({
   description:
     "Chi tiết 1 kỳ quay của 1 game: trạng thái, giờ mở/đóng bán, doanh thu, kết quả (nếu đã " +
     "công bố), jackpot (nếu game có). Bỏ trống `drawId` để lấy KỲ HIỆN HÀNH (đang mở/sắp mở gần " +
-    "nhất) — ưu tiên lấy `drawId` từ `clientContext.page.operations.drawId` nếu staff đang xem " +
+    "nhất) — ưu tiên lấy `drawId` từ `clientContext.page.operations.drawId` nếu người dùng đang xem " +
     "1 kỳ cụ thể trên trang vận hành. Muốn bức tranh NHIỀU game cùng lúc → dùng `getDrawsOverview`. " +
     "Muốn danh sách NHIỀU kỳ có filter → dùng `listDraws`.",
   inputSchema: z.object({

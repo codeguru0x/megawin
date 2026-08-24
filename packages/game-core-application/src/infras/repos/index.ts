@@ -14,4 +14,5 @@ export { SystemSettleTenantDailyRepository } from "./system-settle-tenant-daily-
 export type { TicketSeqResult } from "./ticket-counter-repo";
 export { TicketCounterRepository } from "./ticket-counter-repo";
 export { TxIntentRepository } from "./tx-intent-repo";
+export { GAME_PERIOD_METRIC_KEYS } from "./types";
 export type * from "./types";

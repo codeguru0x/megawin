@@ -51,11 +51,11 @@ function buildGroupedPageList(): string {
 export default defineTool({
   description:
     `Mở một trang cụ thể trong backoffice kèm filter đúng. Các trang theo nhóm — ${buildGroupedPageList()}. ` +
-    "CHỈ gọi khi staff muốn XEM trang đó (hoặc cần thao tác tiếp trên trang — ack alert, sửa config, " +
-    "publish kết quả); câu hỏi cần SỐ thì trả lời trực tiếp bằng tool dữ liệu, KHÔNG mở trang để 'staff " +
-    "tự xem'. Trang cần `accountId` (player) — tra bằng `getPlayerAccountInfo` TRƯỚC, tool này không " +
-    "tra hộ và không nhận username. Gọi lỗi → đọc `validParams`/`hint` trong output, sửa lại lời gọi " +
-    "TỐI ĐA 2 lần cho cùng `page`, sau đó báo staff là chưa mở được.",
+    "CHỈ gọi khi người dùng muốn XEM trang đó (hoặc cần thao tác tiếp trên trang — ack alert, sửa " +
+    "config, publish kết quả); câu hỏi cần SỐ thì trả lời trực tiếp bằng tool dữ liệu, KHÔNG mở " +
+    "trang để 'họ tự xem'. Trang cần `accountId` (player) — tra bằng `getPlayerAccountInfo` TRƯỚC, " +
+    "tool này không tra hộ và không nhận username. Gọi lỗi → đọc `validParams`/`hint` trong output, " +
+    "sửa lại lời gọi TỐI ĐA 2 lần cho cùng `page`, sau đó nói rõ là chưa mở được.",
   inputSchema: z.object({
     page: z.enum(NavPage).describe("Trang cần mở — chỉ nhận giá trị trong enum."),
     segments: z

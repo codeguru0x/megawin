@@ -26,7 +26,7 @@ export default defineTool({
     "crashed/disabled). Dùng cho câu hỏi kiểu 'hệ thống có ổn không', 'có lệnh trả thưởng nào " +
     "kẹt không', 'worker settle Keno có đang bật không'. Nguồn nào lỗi sẽ có " +
     "`unavailable: true` — PHẢI nói rõ nguồn đó tạm không đọc được, KHÔNG suy đoán số. Muốn " +
-    "CHI TIẾT từng order dispatch (không chỉ 10 order kẹt) → chưa có tool, hướng dẫn staff vào " +
+    "CHI TIẾT từng order dispatch (không chỉ 10 order kẹt) → chưa có tool, chỉ đường vào " +
     "trang vận hành dispatch.",
   inputSchema: z.object({
     from: z.string().optional().describe("Ngày bắt đầu range cho KPI dispatch, format YYYY-MM-DD."),

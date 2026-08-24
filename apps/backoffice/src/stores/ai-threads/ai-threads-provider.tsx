@@ -39,3 +39,19 @@ export function useAiThreadsStore<T>(selector: (state: AiThreadsState) => T): T 
   }
   return useStore(store, selector);
 }
+
+/**
+ * Store API thô — đọc/ghi KHÔNG subscribe (`getState()`), dùng khi component chỉ cần snapshot tại
+ * một thời điểm chứ không muốn re-render theo registry.
+ *
+ * Cần thiết cho `AgentBridge`: nó mirror stream eve vào registry liên tục trong lúc stream, nên nếu
+ * subscribe bằng selector `threads.find(...)` thì mỗi lần tự ghi sẽ tự làm chính nó re-render
+ * (vòng ghi → re-render → ghi). Đọc bằng `getState()` cắt hẳn vòng đó.
+ */
+export function useAiThreadsStoreApi(): StoreApi<AiThreadsState> {
+  const store = useContext(AiThreadsStoreContext);
+  if (!store) {
+    throw new Error("useAiThreadsStoreApi must be used within an AiThreadsProvider");
+  }
+  return store;
+}

@@ -64,10 +64,13 @@ const ROUTE_REGISTRY: ReadonlyArray<{
     entry: {
       // Cả ba đều 1 query: `getFinancialDailyOverview` (theo ngày) và `getFinancialByGame` (theo
       // game). Đã bỏ "Ngày nào tỷ lệ trả thưởng bất thường?" — câu điều tra, kéo theo nhiều lượt tra.
+      // Câu vẽ chart vẫn đúng tiêu chí §1: `getFinancialByGame` (1 query) + `renderChart` (tool tín
+      // hiệu, execute() không truy vấn gì — xem `agent/tools/renderChart.ts`) = tổng chi phí rẻ.
       suggestions: [
         "Tóm tắt tài chính 7 ngày gần nhất",
         "So sánh doanh thu 7 ngày qua theo game",
         "Lợi nhuận tháng này so với tháng trước",
+        "Vẽ biểu đồ doanh thu 7 ngày qua theo game",
       ],
     },
   },

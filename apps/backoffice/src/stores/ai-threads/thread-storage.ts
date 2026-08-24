@@ -10,16 +10,32 @@
  */
 
 import type { ClientSessionState, MessageStreamEvent } from "eve/client";
+import { isCurrentTurnBoundaryEvent } from "eve/client";
 
 export interface AiThread {
   /** uuid sinh ở client (`crypto.randomUUID()`) — KHÔNG phải `sessionId` của eve. */
   id: string;
   /** 60 ký tự đầu của message user đầu tiên; rỗng cho tới khi có message (p1-01 §2.4). */
   title: string;
-  /** Cursor resume của eve — `undefined` cho tới khi có ít nhất 1 turn hoàn tất. */
+  /**
+   * Cursor resume của eve — `undefined` cho tới khi turn đầu tiên bắt đầu.
+   *
+   * `streamIndex` là SỐ ĐẾM TUYỆT ĐỐI event đã tiêu thụ từ đầu session (eve mở stream mới tại
+   * đúng vị trí này). Cursor tụt sau tail thật của server ⇒ eve replay lại lượt cũ — xem
+   * {@link threadNeedsCursorResync}.
+   */
   session: ClientSessionState | undefined;
   /** Cache render — cap {@link MAX_STORED_EVENTS_PER_THREAD} phần tử cuối. */
   events: readonly MessageStreamEvent[];
+  /**
+   * Đã POST 1 turn lên eve mà CHƯA thấy mốc kết thúc lượt (`session.waiting`/`completed`/`failed`).
+   *
+   * Bật ngay lúc gửi, tắt khi event mốc về. Nếu cờ này còn `true` lúc mở lại thread ⇒ lượt trước
+   * bị ngắt giữa (reload, đổi thread, HMR, POST lỗi) ⇒ cursor KHÔNG đáng tin, phải resync từ
+   * server. Cần cờ riêng vì có khe: ngắt SAU khi server nhận turn nhưng TRƯỚC event đầu tiên —
+   * lúc đó `events` vẫn kết thúc bằng mốc của lượt trước, nhìn như đã sạch.
+   */
+  pendingTurn?: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -50,6 +66,38 @@ function isAiThread(value: unknown): value is AiThread {
     typeof candidate.createdAt === "number" &&
     typeof candidate.updatedAt === "number"
   );
+}
+
+/**
+ * Cursor của thread có đáng tin để resume trực tiếp hay phải hỏi lại server?
+ *
+ * BUG THẬT (23/08 — prompt vừa gõ bị thay bằng prompt CŨ): eve mở stream tại `session.streamIndex`
+ * lấy từ `localStorage`. Nếu số này TỤT sau tail thật của server, lượt gửi mới nhận về event của
+ * LƯỢT CŨ; eve gán `message.received` cũ đó vào chính bubble optimistic vừa tạo (nó chỉ khớp theo
+ * "có submission đang chờ", không so turnId) ⇒ text vừa gõ bị ghi đè bằng câu hỏi cũ, rồi câu trả
+ * lời cũ chảy ra. Stream cắt tại mốc lượt cũ nên cursor chỉ nhích đúng 1 lượt ⇒ LỆCH VĨNH VIỄN,
+ * và trạng thái lệch được ghi lại vào `localStorage` nên sống qua reload.
+ *
+ * Hai điều kiện phát hiện lệch (chỉ 1 trong 2 đúng là đủ):
+ * 1. `pendingTurn` còn bật ⇒ lượt trước bị ngắt giữa (reload/đổi thread/POST lỗi), server đã hoặc
+ *    đang sinh thêm event mà client chưa đọc.
+ * 2. Event cuối trong log KHÔNG phải mốc kết thúc lượt ⇒ log dừng giữa lượt.
+ *
+ * Có session nhưng `events` rỗng (log bị cap {@link MAX_STORED_EVENTS_PER_THREAD} hoặc chỉ mất
+ * cache) thì KHÔNG kết luận được gì từ log — dựa vào `pendingTurn`.
+ */
+export function threadNeedsCursorResync(thread: Pick<AiThread, "events" | "pendingTurn" | "session">): boolean {
+  if (thread.session === undefined) {
+    return false;
+  }
+  if (thread.pendingTurn === true) {
+    return true;
+  }
+  const lastEvent = thread.events.at(-1);
+  if (lastEvent === undefined) {
+    return false;
+  }
+  return !isCurrentTurnBoundaryEvent(lastEvent);
 }
 
 /** Đọc registry từ `localStorage`. Bọc try-catch — private mode/quota exceeded throw khi truy cập storage. */
@@ -180,6 +228,7 @@ function newEmptyThread(): AiThread {
     title: "",
     session: undefined,
     events: [],
+    pendingTurn: false,
     createdAt: now,
     updatedAt: now,
   };
