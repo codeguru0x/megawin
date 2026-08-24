@@ -30,7 +30,7 @@ export default defineTool({
     "combo_concentration…), kèm severity cao nhất mỗi nhóm. Dùng cho câu hỏi 'kỳ này có alert " +
     "chưa xử lý không', 'có cảnh báo exposure không'. Mặc định chỉ lấy alert CHƯA xử lý " +
     "(`status: new`) — truyền `status` khác để xem alert đã ack/resolved. Tool này CHỈ ĐỌC, " +
-    "KHÔNG ack được — muốn xử lý alert, hướng dẫn staff vào trang vận hành của game (có thể gợi " +
+    "KHÔNG ack được — muốn xử lý alert, chỉ đường vào trang vận hành của game (có thể gợi " +
     "ý `navigateTo`). Muốn CHỈ SỐ ĐẾM alert (không cần chi tiết) → `getOpsSnapshot` đã có " +
     "`alertCounts`, không cần gọi tool này.",
   inputSchema: z.object({

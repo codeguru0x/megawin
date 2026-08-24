@@ -40,7 +40,7 @@ export default defineTool({
     "danh nào → lọc theo chiều (đại lý/game/trạng thái/loại lệnh/khoảng ngày). `retryMode: " +
     "\"stuck\"` lọc order đang kẹt retry cao — dùng khi hỏi 'có lệnh nào bị kẹt không' (hoặc dùng " +
     "`getIntegrationHealth` cho top 10 kẹt nhất kèm KPI tổng quan). Kết quả phân trang qua " +
-    "`cursor`/`nextCursor` — kết quả chưa hết trang thì phải nói rõ với staff là danh sách chưa đủ.",
+    "`cursor`/`nextCursor` — kết quả chưa hết trang thì phải nói rõ danh sách chưa đủ.",
   inputSchema: z.object({
     tx: z.string().optional().describe("Mã giao dịch (UUIDv7 idempotency key) — tra 1 order chính xác."),
     batchKey: z.string().optional().describe("Mã batch — tra mọi order trong 1 lần dispatch hàng loạt."),

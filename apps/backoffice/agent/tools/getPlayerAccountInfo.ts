@@ -82,7 +82,7 @@ export default defineTool({
     "lúc nào cần tra `accountId` từ username trước khi gọi tool khác cần accountId (vd " +
     "`getPlayerInsight`, `getFinancialByGame` không nhận username). Truyền `keyword` → chế độ " +
     "TÌM: dạng đầy đủ `username@tenantId` cho ĐÚNG 1 kết quả; username trần (không `@`) khớp " +
-    "PREFIX, có thể trả NHIỀU người trùng tên ở đại lý khác nhau — hỏi lại staff chọn đúng người " +
+    "PREFIX, có thể trả NHIỀU người trùng tên ở đại lý khác nhau — hỏi lại để chọn đúng người " +
     "khi có >1 kết quả. Truyền `accountId` → chế độ CHI TIẾT, trả đúng 1 hồ sơ. Muốn xem TÀI " +
     "CHÍNH/VÉ CHỜ của player → dùng `getPlayerInsight` (tool đó KHÔNG search theo username, cần " +
     "`accountId` sẵn — lấy từ tool này trước).",

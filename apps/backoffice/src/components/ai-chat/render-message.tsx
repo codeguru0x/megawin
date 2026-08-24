@@ -26,7 +26,6 @@ import {
   FileIcon,
   ImageIcon,
   KeyRoundIcon,
-  PencilLineIcon,
   RefreshCwIcon,
   XCircleIcon,
 } from "lucide-react";
@@ -42,6 +41,7 @@ import {
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai-elements/reasoning";
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Button } from "@/components/ui/button";
+import { env } from "@/env";
 import { cn } from "@/lib/utils";
 
 import { AssistantHeader } from "./assistant-header";
@@ -50,6 +50,15 @@ import { getToolLabel, getToolRenderer } from "./tool-renderers/registry";
 
 /** Giữ icon "đã copy" 2 giây — đủ để user thấy phản hồi, không quá lâu gây nhầm trạng thái. */
 const COPY_FEEDBACK_MS = 2000;
+
+/**
+ * Cho phép hiện khối JSON tham số của tool — CÙNG cổng env với `SHOW_TOOL_DETAIL`
+ * (`internal-steps.tsx`), vì cùng bản chất: dữ kiện để dev đối soát, không phải nội dung nghiệp vụ.
+ *
+ * Ngoại lệ KHÔNG đi qua cổng này: cửa duyệt hành động (`tool-approval`) luôn phải cho thấy tham số,
+ * kể cả debug tắt — xem giải thích ở {@link DefaultToolView}.
+ */
+const SHOW_TOOL_PARAMS = env.NEXT_PUBLIC_AI_CHAT_DEBUG === "true";
 
 type EveFilePart = Extract<EveMessagePart, { type: "file" }>;
 
@@ -227,8 +236,8 @@ const TOOL_APPROVAL_OPTION_LABELS: Record<string, string> = {
  *
  * Bản dịch CỐ Ý bỏ con số token và cụm "guardrail": staff không quyết định được gì tốt hơn nhờ biết
  * "20M input token", còn phơi ra thì vi phạm nguyên tắc "chi tiết kỹ thuật thuộc log, không thuộc
- * hội thoại của staff" (`tool-renderers/registry.tsx`). Số token thật vẫn còn nguyên trong
- * `ToolInput` của thẻ và trong log server khi cần điều tra.
+ * hội thoại của staff" (`tool-renderers/registry.tsx`). Số token thật vẫn còn nguyên trong log
+ * server, và hiện lại trên thẻ khi bật `NEXT_PUBLIC_AI_CHAT_DEBUG` (xem {@link SHOW_TOOL_PARAMS}).
  *
  * `id` "continue"/"stop" do framework đặt CỐ ĐỊNH (`SESSION_LIMIT_CONTINUE_OPTION_ID`/
  * `SESSION_LIMIT_STOP_OPTION_ID`) nên map theo id an toàn — KHÁC bộ id của `tool-approval`
@@ -453,13 +462,18 @@ function DefaultToolView({
   const needsApproval = part.state === "approval-requested" || part.state === "approval-responded";
   // Mở sẵn CHỈ khi user cần hành động (duyệt) hoặc cần thấy lỗi. Còn lại đóng cho gọn.
   const shouldOpen = needsApproval || part.state === "output-error";
-  // Tham số thô CHỈ hiện ở 2 tình huống staff thật sự cần:
-  //   - đang chờ duyệt: duyệt mà không thấy duyệt cái gì thì việc duyệt vô nghĩa và thành lỗ hổng
-  //     (`web_fetch` phải cho thấy URL, `bash` phải cho thấy command);
-  //   - tool lỗi: tham số là dữ kiện đầu tiên để đoán nguyên nhân khi staff báo lỗi.
-  // Các lúc khác nó chỉ là chi tiết implementation (`{tenantId, from, to}`) — không giúp gì cho
-  // nghiệp vụ, mà phơi nội thất agent ra UI. Số liệu để kiểm chứng nằm ở phần output.
-  const showInput = needsApproval || part.state === "output-error";
+  // Tham số thô ĐƯỢC PHÉP hiện ở ĐÚNG MỘT tình huống: chờ duyệt một hành động (`tool-approval`) —
+  // duyệt mà không thấy duyệt cái gì thì việc duyệt vô nghĩa và thành lỗ hổng (`web_fetch` phải cho
+  // thấy URL). Ngoài ra chỉ hiện khi bật debug.
+  //
+  // ĐÃ CẮT (24/08, feedback ảnh 3): khi Mira HỎI LẠI (`ask_question`, `inputRequest.kind` là
+  // `"question"`) và khi tool LỖI. Câu hỏi đã nằm nguyên văn trong khối vàng ngay bên dưới, còn khối
+  // JSON `{gameKey, from, to}` bên trên nó chỉ làm người vận hành tưởng mình phải hiểu/điền cái gì
+  // đó. Với tool lỗi, `errorText` thô đã bị thay bằng câu tiếng Việt trung tính (xem
+  // {@link TOOL_ERROR_NOTE}) — phơi tham số thô ngay cạnh là tự phá quy tắc đó; đường điều tra thật
+  // là log server + bật `NEXT_PUBLIC_AI_CHAT_DEBUG`.
+  const isApprovalGate = needsApproval && part.toolMetadata?.eve?.inputRequest?.kind === "tool-approval";
+  const showInput = isApprovalGate || (SHOW_TOOL_PARAMS && (needsApproval || part.state === "output-error"));
   const errorText = part.errorText;
   // Ẩn tham số làm lộ ra một lỗ: lúc tool ĐANG chạy thì output chưa có (`ToolOutput` trả `null`)
   // và không có input request ⇒ mở card ra là khung trống. Thay bằng một dòng trạng thái.
@@ -499,13 +513,19 @@ function DefaultToolView({
 
 function DynamicToolPartView({
   canRespond,
+  messageParts,
   onInputResponses,
   part,
+  partIndex,
   turnEnded,
 }: {
   canRespond: boolean;
+  /** Toàn bộ part của message đang chứa `part` — cần cho renderer dò part LIỀN TRƯỚC (`renderChart`). */
+  messageParts: readonly EveMessagePart[];
   onInputResponses: (responses: readonly AgentInputResponseInput[]) => void;
   part: EveDynamicToolPart;
+  /** Vị trí của CHÍNH `part` này trong `messageParts`. */
+  partIndex: number;
   turnEnded: boolean;
 }) {
   const fallback = (
@@ -525,14 +545,16 @@ function DynamicToolPartView({
 
   // Renderer trả `null` ⇒ output ở dạng spec/card không mô tả được. Fallback về JSON gập lại
   // để staff vẫn xem được dữ liệu thô, thay vì thấy khoảng trắng (p0-04 §4.11).
-  return render(part) ?? fallback;
+  return render(part, { messageParts, partIndex }) ?? fallback;
 }
 
 function AgentMessagePart({
   canRespond,
   isStreamingText,
+  messageParts,
   onInputResponses,
   part,
+  partIndex,
   turnEnded,
 }: {
   canRespond: boolean;
@@ -541,8 +563,12 @@ function AgentMessagePart({
    * Chỉ đúng một part trong cả hội thoại có giá trị `true` tại một thời điểm (xem {@link AgentMessage}).
    */
   isStreamingText: boolean;
+  /** Toàn bộ part của message chứa `part` — truyền xuống `DynamicToolPartView` cho renderer cần dò part khác. */
+  messageParts: readonly EveMessagePart[];
   onInputResponses: (responses: readonly AgentInputResponseInput[]) => void;
   part: EveMessagePart;
+  /** Vị trí của CHÍNH `part` trong `messageParts`. */
+  partIndex: number;
   turnEnded: boolean;
 }) {
   switch (part.type) {
@@ -576,8 +602,10 @@ function AgentMessagePart({
       return (
         <DynamicToolPartView
           canRespond={canRespond}
+          messageParts={messageParts}
           onInputResponses={onInputResponses}
           part={part}
+          partIndex={partIndex}
           turnEnded={turnEnded}
         />
       );
@@ -639,9 +667,8 @@ export function AgentMessage({
   isActive,
   isStreaming,
   message,
-  onEditPrompt,
   onInputResponses,
-  onResend,
+  onReuseQuestion,
   turnEnded,
   turnStartedAt,
 }: {
@@ -653,22 +680,32 @@ export function AgentMessage({
   isActive: boolean;
   isStreaming: boolean;
   message: EveMessage;
-  /**
-   * Nạp lại câu hỏi này vào ô nhập để staff viết lại (chỉ message user). `undefined` ⇒ ẩn nút.
-   *
-   * KHÔNG phải sửa tại chỗ: message đã gửi thuộc lịch sử thread trên server, không xoá/ghi đè được.
-   * Bấm "Sửa lại" chỉ mang chữ xuống composer; gửi đi là một câu hỏi MỚI.
-   */
-  onEditPrompt?: (text: string) => void;
   onInputResponses: (responses: readonly AgentInputResponseInput[]) => void;
-  /** Gửi lại prompt của user ngay TRƯỚC message này. `undefined` ⇒ ẩn nút. */
-  onResend?: () => void;
+  /**
+   * Nạp câu hỏi user NGAY TRƯỚC message này vào ô nhập để staff sửa rồi tự bấm gửi. `undefined` ⇒
+   * ẩn nút (message đầu hội thoại là assistant, không có câu hỏi nào phía trước).
+   *
+   * KHÔNG gửi thẳng (đổi 24/08): bản trước bấm là gửi lại NGUYÊN VĂN ngay, nên nút chỉ hữu ích khi
+   * câu hỏi vốn đã đúng — mà lý do thật khiến staff bấm lại thường là câu hỏi THIẾU Ý (quên nêu kỳ
+   * hạn, quên nêu game, quên nêu loại biểu đồ). Nạp xuống ô nhập phục vụ được CẢ HAI: sửa rồi gửi,
+   * hoặc bấm gửi luôn nếu không cần sửa.
+   *
+   * Đây cũng là lý do bubble message user KHÔNG còn hàng nút riêng: "Copy câu hỏi" + "Sửa lại câu
+   * hỏi" ở đó làm đúng việc mà nút này đã làm, chỉ khác chỗ bấm (feedback 24/08).
+   *
+   * Lưu ý về mô hình: KHÔNG phải sửa tại chỗ. Message đã gửi thuộc lịch sử thread trên server,
+   * client không xoá/ghi đè được — câu sửa lại đi tiếp như một lượt MỚI.
+   */
+  onReuseQuestion?: () => void;
   /** Turn đã kết thúc — dùng để phát hiện tool call mồ côi (p0-04 §3.2). */
   turnEnded: boolean;
   /** Mốc `Date.now()` lúc lượt bắt đầu (xem `assistant-header.tsx`); `null` nếu không phải lượt đang chạy. */
   turnStartedAt: number | null;
 }) {
   const lastTextIndex = message.parts.reduce((last, part, index) => (part.type === "text" ? index : last), -1);
+  // Chữ ĐANG chảy ⇔ part CUỐI của message là text (agent chưa rời chữ đi làm việc khác). Dùng để
+  // tắt `LiveDot` đúng lúc — xem `isThinking` bên dưới.
+  const isWritingText = lastTextIndex === message.parts.length - 1;
   const isAssistant = message.role === "assistant";
   // Chỉ gộp text part cho nút Copy — không copy reasoning/tool JSON (user muốn câu trả lời).
   const plainText = message.parts
@@ -677,9 +714,6 @@ export function AgentMessage({
     .join("\n\n");
   const hasText = plainText.trim() !== "";
   const showAssistantActions = isAssistant && !isStreaming && hasText;
-  // Message user: copy + "sửa lại". Không chờ `!isStreaming` — staff hay nhận ra câu hỏi thiếu ý
-  // NGAY khi Mira bắt đầu chạy, và đó chính là lúc họ cần mang chữ xuống composer để viết lại.
-  const showUserActions = !isAssistant && hasText;
   // Nội thất agent (reasoning, tool đang chạy/lỗi/JSON thô) gộp vào mục đóng sẵn — xem
   // `internal-steps.tsx`. Chỉ áp cho assistant; message user không có part loại này.
   const segments = toMessageSegments(message.parts);
@@ -687,11 +721,13 @@ export function AgentMessage({
   return (
     <Message data-optimistic={message.metadata?.optimistic ? "true" : undefined} from={message.role}>
       {isAssistant && (
-        // `isThinking`: dot chỉ sống trong khoảng từ lúc bấm gửi tới chữ ĐẦU TIÊN. Ngay khi có chữ,
-        // chữ đang chảy tự nó là tín hiệu — dot thành nhiễu (feedback 19/08 lần 4). `isActive` vẫn
-        // truyền nguyên để chốt tổng thời gian đúng lúc lượt kết thúc, KHÔNG được gộp hai cờ này
-        // (xem `assistant-header.tsx`).
-        <AssistantHeader isActive={isActive} isThinking={isActive && !hasText} turnStartedAt={turnStartedAt} />
+        // `isThinking`: dot sống trong MỌI khoảng agent đang làm việc mà chữ không chảy ra — đầu
+        // lượt (chưa viết gì) VÀ mỗi lần agent viết xong một đoạn rồi đi gọi tool (feedback 23/08:
+        // tra tool 50 giây mà dot đã tắt thì staff tưởng đã trả lời xong). Chỉ tắt trong lúc chữ
+        // đang chảy, vì lúc đó chữ tự nó là tín hiệu (feedback 19/08 lần 4). `isActive` vẫn truyền
+        // nguyên để chốt tổng thời gian đúng lúc lượt kết thúc, KHÔNG được gộp hai cờ này (xem
+        // `assistant-header.tsx`).
+        <AssistantHeader isActive={isActive} isThinking={isActive && !isWritingText} turnStartedAt={turnStartedAt} />
       )}
       <MessageContent>
         {segments.map((segment) =>
@@ -700,8 +736,10 @@ export function AgentMessage({
               canRespond={canRespond}
               isStreamingText={isStreaming && isAssistant && segment.item.index === lastTextIndex}
               key={partKey(segment.item.part, segment.item.index)}
+              messageParts={message.parts}
               onInputResponses={onInputResponses}
               part={segment.item.part}
+              partIndex={segment.item.index}
               turnEnded={turnEnded}
             />
           ) : (
@@ -711,8 +749,10 @@ export function AgentMessage({
                   canRespond={canRespond}
                   isStreamingText={false}
                   key={partKey(item.part, item.index)}
+                  messageParts={message.parts}
                   onInputResponses={onInputResponses}
                   part={item.part}
+                  partIndex={item.index}
                   turnEnded={turnEnded}
                 />
               ))}
@@ -730,23 +770,12 @@ export function AgentMessage({
               tạo viền trống dày, làm hàng nút trông xa text hơn thực tế. */}
           <MessageActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [&>button]:size-7">
             <CopyMessageAction label="Copy câu trả lời" text={plainText} />
-            {onResend && (
-              <MessageAction onClick={onResend} tooltip="Gửi lại câu hỏi">
+            {onReuseQuestion && (
+              // Nhãn nói ĐÚNG việc nó làm: nạp chữ xuống ô nhập, KHÔNG tự gửi. Nhãn cũ ("Gửi lại câu
+              // hỏi") hứa một hành động dứt điểm mà giờ không còn xảy ra — staff bấm rồi ngồi chờ câu
+              // trả lời sẽ tưởng nút bị hỏng.
+              <MessageAction onClick={onReuseQuestion} tooltip="Hỏi lại câu này">
                 <RefreshCwIcon className="size-3.5" />
-              </MessageAction>
-            )}
-          </MessageActions>
-        </MessageToolbar>
-      )}
-      {showUserActions && (
-        // `justify-end`: bám theo bubble user đang căn phải. `-mt-1` chặt hơn phía assistant vì bubble
-        // user có padding riêng, để 6px là đủ tách khỏi mép bubble.
-        <MessageToolbar className="-mt-1 justify-end">
-          <MessageActions className="opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [&>button]:size-7">
-            <CopyMessageAction label="Copy câu hỏi" text={plainText} />
-            {onEditPrompt && (
-              <MessageAction onClick={() => onEditPrompt(plainText)} tooltip="Sửa lại câu hỏi">
-                <PencilLineIcon className="size-3.5" />
               </MessageAction>
             )}
           </MessageActions>

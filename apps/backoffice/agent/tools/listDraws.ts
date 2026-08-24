@@ -35,13 +35,7 @@ export default defineTool({
     fromDate: z.string().optional().describe("Từ ngày, format YYYY-MM-DD, inclusive."),
     toDate: z.string().optional().describe("Đến ngày, format YYYY-MM-DD, inclusive."),
     page: z.number().int().positive().optional().describe("Trang hiện tại (1-based), mặc định 1."),
-    size: z
-      .number()
-      .int()
-      .positive()
-      .max(MAX_SIZE)
-      .default(10)
-      .describe("Số kỳ mỗi trang, mặc định 10, tối đa 30."),
+    size: z.number().int().positive().max(MAX_SIZE).default(10).describe("Số kỳ mỗi trang, mặc định 10, tối đa 30."),
   }),
   execute: async (input) => toToolResult(await useCase.safeRun(input), "listDraws"),
 });

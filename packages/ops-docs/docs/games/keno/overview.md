@@ -47,4 +47,4 @@ thưởng ở các bậc chọn nhiều số (xem `payout.md`).
 - Đóng bán trước giờ quay của Keno đo bằng **giây** (`salesCloseBeforeSeconds`), không phải phút
   như Lotto 5/35, Mega 6/45, Power 6/55, Max 3D, Max 3D Pro.
 - "Panel" trong tài liệu Vietlott gốc = "board" trong hệ thống MegaWin — dùng thuật ngữ `board`
-  cho nhất quán khi trả lời staff.
+  cho nhất quán khi trả lời.

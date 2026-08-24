@@ -104,3 +104,52 @@ export function isInFinancialDate(
 }
 
 export { DEFAULT_TIMEZONE as FINANCIAL_TIMEZONE, FINANCIAL_DAY_START_HOUR };
+
+/**
+ * Độ chia thời gian khi gộp báo cáo theo ngày tài chính.
+ *
+ * Dùng cho báo cáo xu hướng: 1 dòng = 1 kỳ (ngày / tuần / tháng) thay vì 1 dòng = 1 ngày.
+ */
+export const FinancialPeriod = {
+  Day: "day",
+  Week: "week",
+  Month: "month",
+} as const;
+export type FinancialPeriod = (typeof FinancialPeriod)[keyof typeof FinancialPeriod];
+
+/**
+ * Khoá gộp kỳ của một ngày tài chính — dùng làm `_id` khi roll-up nhiều ngày thành 1 dòng.
+ *
+ * | Độ chia | Khoá trả về | Ví dụ (từ `"2026-06-17"`) |
+ * |---|---|---|
+ * | `day`   | chính ngày đó `YYYY-MM-DD` | `"2026-06-17"` |
+ * | `week`  | **thứ Hai** của tuần ISO, `YYYY-MM-DD` | `"2026-06-15"` |
+ * | `month` | `YYYY-MM` | `"2026-06"` |
+ *
+ * Tuần trả về NGÀY BẮT ĐẦU (không phải `"2026-W25"`) vì khoá này đi thẳng lên biểu đồ/bảng: dạng
+ * `YYYY-MM-DD` được nhận là mốc thời gian nên trục X hiện `15/06`, còn `"2026-W25"` chỉ là chuỗi
+ * phân loại — người vận hành phải tự tra tuần 25 là tuần nào.
+ *
+ * Tính bằng chuỗi + UTC, KHÔNG dùng timezone: `financialDate` đã là ngày tài chính đã chốt (mốc
+ * 11:00 giờ VN đã áp lúc tạo draw), nên gộp kỳ chỉ là phép chia lịch trên chuỗi đó. Đưa timezone
+ * vào đây là dịch ngày lần thứ hai.
+ *
+ * @param financialDate - Ngày tài chính `YYYY-MM-DD`.
+ * @param period - Độ chia cần gộp.
+ * @returns Khoá kỳ; sort lexicographic của khoá LUÔN đúng thứ tự thời gian (cả 3 độ chia).
+ */
+export function financialPeriodKey(financialDate: string, period: FinancialPeriod): string {
+  if (period === FinancialPeriod.Month) {
+    return financialDate.slice(0, 7);
+  }
+  if (period === FinancialPeriod.Day) {
+    return financialDate;
+  }
+  // Tuần: lùi về thứ Hai. `getUTCDay()` trả 0 cho Chủ nhật — với tuần ISO, Chủ nhật là ngày CUỐI
+  // tuần nên phải lùi 6 ngày, không phải 0 (lỗi off-by-one kinh điển nếu dùng thẳng getUTCDay).
+  const date = new Date(`${financialDate}T00:00:00Z`);
+  const weekday = date.getUTCDay();
+  const daysSinceMonday = weekday === 0 ? 6 : weekday - 1;
+  date.setUTCDate(date.getUTCDate() - daysSinceMonday);
+  return date.toISOString().slice(0, 10);
+}

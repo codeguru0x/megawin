@@ -26,9 +26,21 @@
 
 import type React from "react";
 
+import type { GameProduct } from "@megawin/game-core/entities";
+import { GAME_LABELS, getGameLabel, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { logInfo } from "@megawin/shared/utils";
-import type { EveDynamicToolPart } from "eve/react";
+import type { EveDynamicToolPart, EveMessagePart } from "eve/react";
 
+import {
+  buildChartModel,
+  CHART_KIND_VALUES,
+  ChartFieldType,
+  type ChartKind,
+  type ChartOverride,
+  type ChartRow,
+  ChartToolView,
+  extractRows,
+} from "../chart";
 import { renderIntegrationHealth, renderOpsSnapshot } from "./daily-ops-cards";
 import { resolveToolViewData, ToolResultLine, ToolViewCard, toolViewTitle } from "./generic-tool-view";
 import { renderNavigateTo } from "./navigate-tool-card";
@@ -36,6 +48,7 @@ import { drawsOverviewView } from "./ops-views";
 import {
   dailyOverviewView,
   drawSettleReportView,
+  financialTrendView,
   gameConfigView,
   gameJackpotView,
   gameSummaryView,
@@ -49,10 +62,13 @@ export type { ToolRendererProps } from "./view-spec";
 export const AiToolName = {
   FinancialByGame: "getFinancialByGame",
   FinancialDailyOverview: "getFinancialDailyOverview",
+  FinancialTrend: "getFinancialTrend",
+  FinancialTrendByGame: "getFinancialTrendByGame",
   SystemOutstanding: "getSystemOutstanding",
   GameConfig: "getGameConfig",
   GameJackpot: "getGameJackpot",
   NavigateTo: "navigateTo",
+  RenderChart: "renderChart",
   // Wave 1 — p1-03-ops-data-visibility.
   DrawsOverview: "getDrawsOverview",
   DrawDetail: "getDrawDetail",
@@ -73,14 +89,27 @@ export const AiToolName = {
 export type AiToolName = (typeof AiToolName)[keyof typeof AiToolName];
 
 /**
- * Hợp đồng của mọi renderer: nhận part, trả node — hoặc `null` để caller fallback về `<Tool>`
- * mặc định.
+ * Ngữ cảnh kèm theo mỗi lần gọi renderer — hiện chỉ cần cho `renderChart` (dò part tool dữ liệu
+ * GẦN NHẤT phía trước nó trong CÙNG message, xem {@link renderChartTool}). Truyền tay thay vì đọc
+ * qua React context vì renderer là HÀM thuần (không phải component con nằm trong tree), không có
+ * Provider nào bọc quanh nó.
+ */
+export interface ToolRenderContext {
+  /** Snapshot toàn bộ part của message đang chứa `part` này (`EveMessage.parts`). */
+  messageParts: readonly EveMessagePart[];
+  /** Vị trí của CHÍNH part đang render trong `messageParts` — dùng để dò lùi (`i < partIndex`). */
+  partIndex: number;
+}
+
+/**
+ * Hợp đồng của mọi renderer: nhận part (+ ngữ cảnh vị trí trong message), trả node — hoặc `null`
+ * để caller fallback về `<Tool>` mặc định.
  *
  * Là HÀM chứ không phải component vì caller cần phân biệt "render ra rỗng" với "không render
  * được": component trả `null` thì bên ngoài không có cách nào biết, staff sẽ thấy khoảng trắng
  * thay vì JSON gập lại.
  */
-export type ToolPartRenderer = (part: EveDynamicToolPart) => React.ReactNode | null;
+export type ToolPartRenderer = (part: EveDynamicToolPart, context: ToolRenderContext) => React.ReactNode | null;
 
 /**
  * Biến 1 `ToolViewSpec` thành renderer — giữ nguyên generic nên KHÔNG cần cast, `Output`/`Row`
@@ -103,13 +132,256 @@ function specRenderer<Output, Row>(spec: ToolViewSpec<Output, Row>): ToolPartRen
   };
 }
 
+/**
+ * Envelope `safeRun()` (`{ success, data, error }`, xem `resolveToolViewData`) → `data`; thất bại
+ * → `null` (không có gì để vẽ). Tool output KHÔNG theo envelope này (hiếm, phần lớn tool nội bộ
+ * đều qua `safeRun`) → dùng nguyên như cũ.
+ */
+function unwrapChartSourceOutput(output: unknown): unknown {
+  if (typeof output !== "object" || output === null || !("success" in output)) {
+    return output;
+  }
+  const result = output as { success: boolean; data?: unknown };
+  return result.success ? result.data : null;
+}
+
+/**
+ * Bảng tra override chart THEO TOOL — gom `.chart` của mọi `ToolViewSpec` đã khai (nếu có), tách
+ * khỏi `toolRenderers` vì `renderChart` cần tra override của tool DỮ LIỆU (khác tool đang render),
+ * không đi qua `getToolRenderer` (chỉ tra theo tool CHÍNH part đang render).
+ *
+ * `as ChartOverride<ChartRow>`: an toàn ở runtime — `rowColor` của spec luôn nhận đúng `Row` của
+ * CHÍNH spec đó (xem JSDoc `ToolViewSpec.chart`), rows thực tế đi vào đây LÀ `select(output)` của
+ * cùng spec. Ép kiểu 1 LẦN ở đây thay vì rải cast khắp `chart-inference.ts`.
+ */
+const toolChartOverrides: Partial<Record<AiToolName, ChartOverride<ChartRow>>> = {
+  [AiToolName.FinancialByGame]: gameSummaryView.chart as ChartOverride<ChartRow> | undefined,
+  [AiToolName.SystemOutstanding]: systemOutstandingView.chart as ChartOverride<ChartRow> | undefined,
+};
+
+/**
+ * 6/10 field {@link GAME_PERIOD_METRIC_KEYS} là tiền VND (còn lại là số đếm: kỳ quay, phiếu cược,
+ * người chơi, đại lý) — dùng để ép `seriesType` Currency cho cột game khi `metric` khớp.
+ *
+ * ĐỒNG BỘ TAY với `GAME_PERIOD_METRIC_KEYS`
+ * (`packages/game-core-application/src/infras/repos/types/system-settle-game-daily.types.ts`):
+ * `chart-inference.ts` chỉ đọc được TÊN CỘT (mã game, vd `"keno"`), không đọc được `metric` của
+ * lần gọi tool, nên không tự phân loại được cột này là tiền hay số đếm — xem
+ * {@link financialTrendByGameChartOverride}.
+ */
+const CURRENCY_GAME_PERIOD_METRICS: ReadonlySet<string> = new Set([
+  "totalStake",
+  "totalWin",
+  "totalPayout",
+  "ggr",
+  "totalCommission",
+  "netProfit",
+]);
+
+/**
+ * Override chart CHO TỪNG LẦN GỌI `getFinancialTrendByGame` — khác mọi entry khác của
+ * `toolChartOverrides` (khai TĨNH 1 lần), override này đọc `part.input.metric`/`games` để biết cột
+ * game (`"keno"`, `"power655"`) đang chứa tiền VND hay số đếm, rồi ép `seriesType` cho đúng.
+ *
+ * Không thể khai tĩnh vì `GamePeriodByGameRow` dùng RAW `gameProduct` làm tên cột — tên đó không
+ * gợi ý được đơn vị (`CURRENCY_NAME_PATTERN` không khớp `"keno"`), nên nếu không ép, tooltip mất
+ * `₫` và hiện số trần dù `metric` thực tế là doanh thu/lợi nhuận.
+ *
+ * CHỈ ép cột nằm trong `input.games` — TUYỆT ĐỐI không ép vô điều kiện mọi `key` (bug thật lúc
+ * viết: `() => Currency` không lọc key sẽ ép luôn cột `period`, biến trục thời gian thành
+ * `currency` ⇒ `pickXAxis` không tìm được trục nào ⇒ `buildChartModel` trả `null`, chart biến mất
+ * hoàn toàn — phát hiện qua unit test `chart-inference.test.ts`, không phải qua đọc code).
+ */
+function financialTrendByGameChartOverride(part: EveDynamicToolPart): ChartOverride<ChartRow> | undefined {
+  const input = part.input as { metric?: unknown; games?: unknown } | undefined;
+  const metric = typeof input?.metric === "string" ? input.metric : undefined;
+  if (metric === undefined || !CURRENCY_GAME_PERIOD_METRICS.has(metric)) {
+    return undefined;
+  }
+  const games = Array.isArray(input?.games) ? new Set(input.games.filter((g) => typeof g === "string")) : undefined;
+  if (games === undefined || games.size === 0) {
+    return undefined;
+  }
+  return { seriesType: (key) => (games.has(key) ? ChartFieldType.Currency : undefined) };
+}
+
+/**
+ * Dò LÙI từ ngay trước `beforeIndex` (không gồm chính part đang xét) tìm tool part GẦN NHẤT đã
+ * có output THÀNH CÔNG và chartable (`extractRows` khác `null`) — đây là "dữ liệu của
+ * `renderChart`" theo thiết kế signal-only (xem JSDoc `agent/tools/renderChart.ts`: tool này
+ * KHÔNG chở dữ liệu, hệ thống tự ghép với tool dữ liệu vừa gọi trước đó trong CÙNG message).
+ *
+ * Bỏ qua chính tool `renderChart` (model lỡ gọi liên tiếp 2 lần) để không tự tham chiếu vào nhau.
+ */
+function findChartableSource(
+  messageParts: readonly EveMessagePart[],
+  beforeIndex: number,
+): { output: unknown; title: string; sourceNote?: string; override?: ChartOverride<ChartRow> } | null {
+  for (let i = beforeIndex - 1; i >= 0; i--) {
+    const candidate = messageParts[i];
+    if (candidate === undefined || candidate.type !== "dynamic-tool") {
+      continue;
+    }
+    if (candidate.toolName === AiToolName.RenderChart) {
+      continue;
+    }
+    if (candidate.state !== "output-available" || candidate.partial) {
+      continue;
+    }
+    const unwrapped = unwrapChartSourceOutput(candidate.output);
+    if (extractRows(unwrapped) === null) {
+      continue;
+    }
+    const dynamicOverride =
+      candidate.toolName === AiToolName.FinancialTrendByGame ? financialTrendByGameChartOverride(candidate) : undefined;
+    return {
+      output: unwrapped,
+      title: getToolLabel(candidate.toolName),
+      sourceNote: chartSourceNote(candidate),
+      override: dynamicOverride ?? toolChartOverrides[candidate.toolName as AiToolName],
+    };
+  }
+  return null;
+}
+
+/**
+ * Dòng nguồn dữ liệu in dưới tiêu đề chart — tên báo cáo + phạm vi của ĐÚNG lần gọi tool được ghép
+ * vào chart (xem `ChartToolViewProps.sourceNote` để biết vì sao cần).
+ *
+ * Đọc `from`/`to` (input chung của các tool báo cáo) và `game`/`games` nếu lần gọi đó có lọc game.
+ * Phạm vi game quan trọng đúng bằng khoảng ngày: sự cố 24/08 là chart vẽ CẢ 7 GAME trong khi câu hỏi
+ * chỉ về Keno — nếu dòng nguồn không nói phạm vi game thì người đọc không có cách nào phát hiện, vì
+ * bảng số liệu bên dưới trông hoàn toàn hợp lệ. `games` (mảng, dùng bởi `getFinancialTrendByGame`)
+ * là biến thể "nhiều game" của cùng lỗi — liệt kê đủ TÊN các game đang so sánh để phát hiện ngay nếu
+ * thiếu game nào trên hình.
+ *
+ * Tool không có `from`/`to` → trả `undefined`, card chỉ hiện tiêu đề như trước (không bịa dòng
+ * nguồn rỗng nghĩa).
+ */
+function chartSourceNote(part: EveDynamicToolPart): string | undefined {
+  const input = part.input as { from?: unknown; to?: unknown; game?: unknown; games?: unknown } | undefined;
+  const from = typeof input?.from === "string" ? input.from : undefined;
+  const to = typeof input?.to === "string" ? input.to : undefined;
+  if (from === undefined || to === undefined) {
+    return undefined;
+  }
+  const parts = [getToolLabel(part.toolName)];
+  if (typeof input?.game === "string") {
+    parts.push(getGameLabel(input.game as GameProduct));
+  } else if (Array.isArray(input?.games) && input.games.every((g) => typeof g === "string")) {
+    parts.push((input.games as string[]).map((g) => getGameLabel(g as GameProduct)).join(", "));
+  }
+  parts.push(from === to ? formatIsoDate(from) : `${formatIsoDate(from)} – ${formatIsoDate(to)}`);
+  return parts.join(" · ");
+}
+
+/** `YYYY-MM-DD` → `DD/MM/YYYY`; chuỗi không đúng dạng thì giữ nguyên (không nuốt giá trị lạ). */
+function formatIsoDate(value: string): string {
+  const parts = value.split("-");
+  if (parts.length !== 3) {
+    return value;
+  }
+  const [year, month, day] = parts;
+  return `${day}/${month}/${year}`;
+}
+
+/**
+ * Ghi chú khi không dựng được biểu đồ — KHÔNG phải trạng thái lỗi hệ thống (không tô đỏ, không
+ * `ToolErrorCard`), nhưng PHẢI nói rõ vì sao và thiếu gì.
+ *
+ * Trước 23/08 chỉ có 1 câu chung "Không có dữ liệu phù hợp từ bước tra cứu trước đó" — dùng cho cả
+ * trường hợp staff DÁN dữ liệu (không có bước tra cứu nào), nên câu đó vừa sai ngữ cảnh vừa không
+ * cho staff biết cần sửa gì. Tách 2 lý do vì hành động sửa của staff khác nhau hoàn toàn.
+ */
+function ChartUnavailableNote({ reason }: { reason: "noSourceTool" | "notChartable" }) {
+  return (
+    <p className="text-muted-foreground text-xs">
+      {reason === "noSourceTool"
+        ? "Chưa vẽ được biểu đồ: bước tra cứu trước đó không trả về dữ liệu dạng bảng để vẽ."
+        : "Chưa vẽ được biểu đồ: dữ liệu cần tối thiểu 2 dòng, một cột làm trục (ngày/tháng, nhóm, hoặc mốc số) và một cột số để đo."}
+    </p>
+  );
+}
+
+/**
+ * Từ điển nhãn CHUNG cho `ChartToolView`/`ChartBody` — `REPORT_COLUMN_LABELS` (tên cột báo cáo) gộp
+ * thêm `GAME_LABELS` (mã game → tên đầy đủ).
+ *
+ * Cần gộp vì `ChartOverride.xLabel` (`report-views.ts`) CHỈ đổi nhãn khi mã game nằm ở TRỤC X (giá
+ * trị). Khi model tự gộp nhiều lần gọi 1-game thành `rows` ad-hoc, mã game lại nằm ở vị trí SERIES/
+ * KEY (cột `keno`, `power655` — mỗi game 1 cột theo thời gian) — `xLabel` không chạm tới vì đó không
+ * phải giá trị trục X. `prettifyLabel` tra `reportLabels` cho MỌI key (trục lẫn series), nên gộp
+ * `GAME_LABELS` vào đây là chỗ DUY NHẤT sửa được cả hai trường hợp, không phải sửa riêng từng nơi
+ * `prettifyLabel` được gọi trong `chart-body.tsx`. Bug thật (24/08): so sánh Keno/Power 6/55 theo
+ * tháng ra legend "power655" thay vì "Power 6/55".
+ */
+const CHART_REPORT_LABELS: Readonly<Record<string, string>> = { ...REPORT_COLUMN_LABELS, ...GAME_LABELS };
+
+/**
+ * Renderer cho tool `renderChart` — tool TÍN HIỆU vẽ chart (§1.1 kế hoạch p1-05-chart-generative-ui),
+ * HAI CHẾ ĐỘ theo `part.input.rows` (xem JSDoc `agent/tools/renderChart.ts`):
+ *
+ * 1. `rows` bỏ trống — chế độ thường: tự dò tool dữ liệu GẦN NHẤT phía trước qua
+ *    `context.messageParts`/`context.partIndex` ({@link findChartableSource}).
+ * 2. `rows` có điền — chế độ dữ liệu tự nhập: model đã tự phân loại dữ liệu staff dán/mô tả thành
+ *    mảng object phẳng, dùng THẲNG mảng đó, KHÔNG dò lùi tool nào (không có override per-tool vì
+ *    không gắn với 1 tool cụ thể).
+ *
+ * Cả 2 chế độ đều suy luận `ChartModel` qua `buildChartModel` (`chart-inference.ts`) rồi vẽ bằng
+ * `ChartToolView`. Không tìm được dữ liệu hoặc suy luận thất bại (không chọn được trục X/series)
+ * → note nhẹ, KHÔNG fallback về `<Tool>` mặc định (JSON `{ ok: true }` của tool này vô nghĩa với
+ * staff).
+ *
+ * Chart hiện NGAY, KHÔNG bọc `ToolResultLine` (đổi 23/08): staff vừa yêu cầu "vẽ biểu đồ" thì phải
+ * thấy biểu đồ, bắt bấm thêm 1 lần vào dòng gập là làm ngược ý định vừa nêu. `ToolResultLine` vẫn
+ * đúng cho các tool DỮ LIỆU (staff hỏi số, bảng chỉ là bằng chứng phụ) — khác bản chất ở đây.
+ *
+ * `AI_TOOL_CARD_PLACEMENT[RenderChart]` PHẢI là `Primary` (xem khai báo bên dưới) — nếu để
+ * `Reference` như mọi tool dữ liệu khác, `isInternalPart` (`internal-steps.tsx`) sẽ gộp part này
+ * vào mục "nội thất" và khi debug tắt (mặc định) nó biến mất HOÀN TOÀN khỏi cây render, tức chart
+ * mà staff vừa yêu cầu không bao giờ hiện — ngược hẳn mục đích của cả tính năng.
+ */
+function renderChartTool(part: EveDynamicToolPart, context: ToolRenderContext): React.ReactNode {
+  const input = part.input as { chartType?: string; rows?: ChartRow[]; title?: string } | undefined;
+  const requestedRaw = input?.chartType;
+  const requestedKind = (CHART_KIND_VALUES as readonly string[]).includes(requestedRaw ?? "")
+    ? (requestedRaw as ChartKind)
+    : undefined;
+
+  // Chế độ (2): model đã tự phân loại dữ liệu staff cung cấp thành `rows` — dùng thẳng, không dò
+  // lùi tool nào (đây không phải output của 1 tool dữ liệu cụ thể).
+  if (input?.rows !== undefined && input.rows.length > 0) {
+    const adhocTitle = input.title ?? "Dữ liệu tự nhập";
+    const model = buildChartModel(input.rows, requestedKind, adhocTitle);
+    if (model === null) {
+      return <ChartUnavailableNote reason="notChartable" />;
+    }
+    return <ChartToolView model={model} reportLabels={CHART_REPORT_LABELS} />;
+  }
+
+  // Chế độ (1): dò lùi tool dữ liệu gần nhất như cũ.
+  const source = findChartableSource(context.messageParts, context.partIndex);
+  if (source === null) {
+    return <ChartUnavailableNote reason="noSourceTool" />;
+  }
+
+  const model = buildChartModel(source.output, requestedKind, source.title, source.override);
+  if (model === null) {
+    return <ChartUnavailableNote reason="notChartable" />;
+  }
+
+  return <ChartToolView model={model} reportLabels={CHART_REPORT_LABELS} sourceNote={source.sourceNote} />;
+}
+
 const toolRenderers: Partial<Record<AiToolName, ToolPartRenderer>> = {
   [AiToolName.FinancialByGame]: specRenderer(gameSummaryView),
   [AiToolName.FinancialDailyOverview]: specRenderer(dailyOverviewView),
+  [AiToolName.FinancialTrend]: specRenderer(financialTrendView),
   [AiToolName.SystemOutstanding]: specRenderer(systemOutstandingView),
   [AiToolName.GameConfig]: specRenderer(gameConfigView),
   [AiToolName.GameJackpot]: specRenderer(gameJackpotView),
   [AiToolName.NavigateTo]: renderNavigateTo,
+  [AiToolName.RenderChart]: renderChartTool,
   // 4 tool "hằng ngày" (p1-03 §8).
   [AiToolName.DrawsOverview]: specRenderer(drawsOverviewView),
   [AiToolName.DrawSettleReport]: specRenderer(drawSettleReportView),
@@ -168,10 +440,13 @@ const AI_TOOL_LABELS: Record<LabeledToolName, string> = {
   [EveHarnessToolName.SessionLimitContinuation]: "Tiếp tục phiên làm việc",
   [AiToolName.FinancialByGame]: "Tài chính theo game",
   [AiToolName.FinancialDailyOverview]: "Báo cáo tài chính theo ngày",
+  [AiToolName.FinancialTrend]: "Tài chính theo kỳ",
+  [AiToolName.FinancialTrendByGame]: "So sánh game theo kỳ",
   [AiToolName.SystemOutstanding]: "Kỳ quay chờ settle",
   [AiToolName.GameConfig]: "Cấu hình game",
   [AiToolName.GameJackpot]: "Jackpot hiện tại",
   [AiToolName.NavigateTo]: "Mở trang",
+  [AiToolName.RenderChart]: "Biểu đồ",
   [AiToolName.DrawsOverview]: "Bức tranh kỳ quay",
   [AiToolName.DrawDetail]: "Chi tiết kỳ quay",
   [AiToolName.ListDraws]: "Danh sách kỳ quay",
@@ -209,10 +484,13 @@ const AI_TOOL_ACTIVITY_PHRASES: Record<LabeledToolName, string> = {
   [EveHarnessToolName.SessionLimitContinuation]: "chờ xác nhận tiếp tục phiên",
   [AiToolName.FinancialByGame]: "đọc số tài chính theo game",
   [AiToolName.FinancialDailyOverview]: "đọc báo cáo tài chính theo ngày",
+  [AiToolName.FinancialTrend]: "đọc tài chính theo kỳ",
+  [AiToolName.FinancialTrendByGame]: "so sánh tài chính giữa các game theo kỳ",
   [AiToolName.SystemOutstanding]: "đọc danh sách kỳ chờ settle",
   [AiToolName.GameConfig]: "đọc cấu hình game",
   [AiToolName.GameJackpot]: "đọc số jackpot",
   [AiToolName.NavigateTo]: "mở trang",
+  [AiToolName.RenderChart]: "vẽ biểu đồ",
   [AiToolName.DrawsOverview]: "đọc tóm tắt kỳ quay",
   [AiToolName.DrawDetail]: "đọc chi tiết kỳ quay",
   [AiToolName.ListDraws]: "đọc danh sách kỳ quay",
@@ -258,20 +536,27 @@ export type ToolCardPlacement = (typeof ToolCardPlacement)[keyof typeof ToolCard
  * `Reference` cho tất cả thì trần độ cao hội thoại là hằng số, không phụ thuộc số game/kỳ/đại lý
  * mà model quyết định tra.
  *
- * NGOẠI LỆ DUY NHẤT là `navigateTo`, và nó KHÔNG phải ngoại lệ về dữ liệu mà về BẢN CHẤT:
- * output của nó là một NÚT ĐIỀU HƯỚNG, không phải số để đọc. Gộp nút vào mục đóng thì trên trang
- * `/ai` (nơi card chỉ hiện nút, không auto-navigate — xem `navigate-tool-card.tsx`) staff không
- * thấy gì để bấm ⇒ tool mất tác dụng hoàn toàn. Cùng một lý lẽ với việc `isInternalPart` luôn cho
- * HITL (`web_fetch` chờ duyệt, `ask_question`) hiện thẳng: **cần staff hành động ⇒ phải thấy**.
+ * NGOẠI LỆ là `navigateTo` và `renderChart`, và cả hai KHÔNG phải ngoại lệ về dữ liệu mà về BẢN
+ * CHẤT: output của `navigateTo` là một NÚT ĐIỀU HƯỚNG, output của `renderChart` là tín hiệu VẼ
+ * (`{ ok: true }`, không chở số — xem `agent/tools/renderChart.ts`) mà UI thật (biểu đồ) được
+ * dựng ở renderer bằng cách dò tool dữ liệu trước đó, KHÔNG nằm trong `part.output` của chính nó.
+ * Gộp `renderChart` vào mục đóng thì khi debug tắt (mặc định, CHỐT LẦN 3 ở `internal-steps.tsx`)
+ * toàn bộ part nội thất bị bỏ qua khỏi cây render ⇒ biểu đồ mà staff vừa yêu cầu KHÔNG BAO GIỜ
+ * hiện ra — ngược hẳn mục đích của tính năng. Cùng một lý lẽ với việc `isInternalPart` luôn cho
+ * HITL (`web_fetch` chờ duyệt, `ask_question`) hiện thẳng: **cần staff THẤY KẾT QUẢ ⇒ phải thấy**.
  *
- * Vì vậy tiêu chí giờ chỉ còn MỘT câu: part này có cần staff BẤM/QUYẾT ĐỊNH gì không? Có ⇒
- * `Primary`. Chỉ để đọc số ⇒ `Reference`. Thêm tool mới mà băn khoăn thì chọn `Reference`.
+ * Vì vậy tiêu chí giờ là: part này có cần staff BẤM/QUYẾT ĐỊNH, hoặc mang UI THẬT không nằm trong
+ * `part.output` của chính nó, không? Có ⇒ `Primary`. Chỉ để đọc số ⇒ `Reference`. Thêm tool mới
+ * mà băn khoăn thì chọn `Reference`.
  */
 const AI_TOOL_CARD_PLACEMENT: Record<AiToolName, ToolCardPlacement> = {
-  // Output là NÚT điều hướng, không phải số — xem giải thích ngoại lệ ở trên.
+  // Output là NÚT điều hướng / tín hiệu vẽ chart — xem giải thích ngoại lệ ở trên.
   [AiToolName.NavigateTo]: ToolCardPlacement.Primary,
+  [AiToolName.RenderChart]: ToolCardPlacement.Primary,
   [AiToolName.FinancialByGame]: ToolCardPlacement.Reference,
   [AiToolName.FinancialDailyOverview]: ToolCardPlacement.Reference,
+  [AiToolName.FinancialTrend]: ToolCardPlacement.Reference,
+  [AiToolName.FinancialTrendByGame]: ToolCardPlacement.Reference,
   [AiToolName.SystemOutstanding]: ToolCardPlacement.Reference,
   [AiToolName.GameJackpot]: ToolCardPlacement.Reference,
   [AiToolName.GameConfig]: ToolCardPlacement.Reference,

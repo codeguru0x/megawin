@@ -37,7 +37,7 @@ import { InputGroupAddon } from "@/components/ui/input-group";
 import { AgentErrorRecovery, describeAgentError } from "./agent-error";
 
 /**
- * Cửa duy nhất để bên ngoài ghi vào composer — dùng bởi nút "Sửa lại" trên message user
+ * Cửa duy nhất để bên ngoài ghi vào composer — dùng bởi nút "Hỏi lại câu này" trên message assistant
  * (`render-message.tsx`).
  *
  * VÌ SAO IMPERATIVE, KHÔNG LIFT STATE LÊN `ChatPanel`: thao tác này không phải "đồng bộ một giá

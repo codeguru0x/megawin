@@ -85,8 +85,9 @@ function isFailedToolOutput(output: unknown): boolean {
  *   biến thành nút không ai bấm, agent treo tới hết timeout. Đây là ngoại lệ tuyệt đối, và xét theo
  *   `inputRequest` chứ không theo `state` vì `ask_question` chờ trả lời ở `input-available` —
  *   trùng state với "tool đang chạy" mà ta ẩn.
- * - tool `Primary` có KẾT QUẢ THÀNH CÔNG và có renderer — hiện chỉ `navigateTo`, vì output
- *   của nó là NÚT điều hướng chứ không phải số để đọc. Xem {@link ToolCardPlacement}.
+ * - tool `Primary` có KẾT QUẢ THÀNH CÔNG và có renderer — hiện `navigateTo` (output là NÚT điều
+ *   hướng) và `renderChart` (output là tín hiệu vẽ, UI thật do renderer tự dò tool dữ liệu trước
+ *   đó dựng ra — xem `AI_TOOL_CARD_PLACEMENT` ở `tool-renderers/registry.tsx`). Xem {@link ToolCardPlacement}.
  *
  * GỘP VÀO MỤC ĐÓNG: `reasoning` (chain-of-thought), tool đang chạy, tool lỗi (cả `output-error` lẫn
  * envelope `success: false`), tool bị từ chối, mọi tool TRẢ DỮ LIỆU (bảng số là dữ liệu đối soát,
