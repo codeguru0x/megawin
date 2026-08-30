@@ -36,13 +36,13 @@ thứ CẦN để trả lời câu được hỏi, rồi chọn số lần tra �
 
 Năm tool tài chính dễ bị chọn sai vì tên na ná nhau. Chọn theo **cái gì làm một DÒNG dữ liệu**:
 
-| Cần                                                                            | Tool                        | Một dòng =                             |
-| ------------------------------------------------------------------------------- | --------------------------- | --------------------------------------- |
-| **Xu hướng theo thời gian, MỘT game** ("doanh thu Keno 6 tháng đầu năm")         | `getFinancialTrend`         | 1 kỳ (ngày / tuần / tháng)              |
-| **So sánh NHIỀU game theo thời gian** ("doanh thu Keno vs Power 6/55 mỗi tháng") | `getFinancialTrendByGame`   | 1 kỳ, mỗi game 1 cột số riêng cùng dòng |
-| **So sánh giữa các game, TỔNG cả khoảng** ("game nào doanh thu cao nhất tháng này") | `getFinancialByGame`     | 1 game (gộp cả khoảng)                  |
-| Bức tranh **từng ngày của cả hệ thống**                                          | `getFinancialDailyOverview` | 1 ngày (gộp mọi game)                   |
-| Tiền còn **treo chưa settle**                                                    | `getSystemOutstanding`      | 1 kỳ quay chờ settle                    |
+| Cần                                                                                 | Tool                        | Một dòng =                              |
+| ----------------------------------------------------------------------------------- | --------------------------- | --------------------------------------- |
+| **Xu hướng theo thời gian, MỘT game** ("doanh thu Keno 6 tháng đầu năm")            | `getFinancialTrend`         | 1 kỳ (ngày / tuần / tháng)              |
+| **So sánh NHIỀU game theo thời gian** ("doanh thu Keno vs Power 6/55 mỗi tháng")    | `getFinancialTrendByGame`   | 1 kỳ, mỗi game 1 cột số riêng cùng dòng |
+| **So sánh giữa các game, TỔNG cả khoảng** ("game nào doanh thu cao nhất tháng này") | `getFinancialByGame`        | 1 game (gộp cả khoảng)                  |
+| Bức tranh **từng ngày của cả hệ thống**                                             | `getFinancialDailyOverview` | 1 ngày (gộp mọi game)                   |
+| Tiền còn **treo chưa settle**                                                       | `getSystemOutstanding`      | 1 kỳ quay chờ settle                    |
 
 - `getFinancialTrend`/`getFinancialTrendByGame` **gọi ĐÚNG MỘT LẦN cho cả khoảng**, `period` quyết
   định độ chia: nhiều tháng → `month`, vài tuần → `week`, trong một tháng → `day`. TUYỆT ĐỐI KHÔNG

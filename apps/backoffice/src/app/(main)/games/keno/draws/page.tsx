@@ -4,7 +4,7 @@
  * Keno — Trang Kỳ quay
  *
  * Tổng quan kỳ quay Keno đang active và lịch sử.
- * Keno: ~120 kỳ/ngày, 8 phút/kỳ — hiển thị drawNo + drawTime.
+ * Keno: ~119 kỳ/ngày, 8 phút/kỳ — hiển thị drawNo + drawTime.
  * Link đến trang vận hành để quản lý chi tiết.
  * Theme: orange.
  */
@@ -35,7 +35,7 @@ export default function KenoDrawsPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Kỳ quay</h1>
-            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử (~120 kỳ/ngày)</p>
+            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử (~119 kỳ/ngày)</p>
           </div>
         </div>
       </div>

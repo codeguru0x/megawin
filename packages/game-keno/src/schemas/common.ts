@@ -19,6 +19,18 @@ import { z } from "zod";
 
 import { KENO_DRAW_COUNT, KENO_NUMBER_MAX, KENO_NUMBER_MIN } from "../entities/types";
 
+/**
+ * Trần rộng (sanity ceiling) cho số kỳ tối đa trong 1 lần tạo — dùng chung giữa Zod schema
+ * route (`createDrawSchema.draws`, `previewDrawsSchema.count`) và input UI
+ * (`create-draw-action.tsx`) để tránh lệch giá trị giữa 2 nơi.
+ *
+ * Keno quay nhanh (~119 kỳ/ngày, 8 phút/kỳ) nên trần phải đủ rộng cho 1 ngày + 1 ngày kế
+ * tiếp trong cùng batch. KHÔNG phải giới hạn nghiệp vụ thật — giới hạn thật
+ * (drawsPerDay × 2 ngày) do use-case tính lại theo GlobalConfig tại thời điểm tạo. Hằng số
+ * này chỉ chặn input vô lý (batch quá khổ).
+ */
+export const KENO_CREATE_DRAW_BATCH_MAX = 400;
+
 // ─── Atomic schemas ───
 
 /** Schema validate 1 số Keno hợp lệ: string "01"-"80" (zero-padded). */
@@ -98,7 +110,7 @@ export const editScheduleSchema = z
     // Client chỉ đảm bảo thứ tự cơ bản — server validate buffer chính xác
     if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs <= closeMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["drawTime"],
         message: "Giờ quay số phải sau giờ đóng bán",
       });

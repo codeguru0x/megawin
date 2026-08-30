@@ -20,9 +20,18 @@ import {
   LOTTO535_SPECIAL_MIN,
 } from "../entities/types";
 
-// ─── Atomic schemas ───
+/**
+ * Trần rộng (sanity ceiling) cho số kỳ tối đa trong 1 lần tạo — dùng chung giữa Zod schema
+ * route (`createDrawSchema.draws`, `previewDrawsSchema.count`) và input UI
+ * (`create-draw-action.tsx`) để tránh lệch giá trị giữa 2 nơi.
+ *
+ * Lotto 5/35 quay 1 kỳ/ngày nên trần đủ cho ~2 tuần/lần tạo. KHÔNG phải giới hạn nghiệp
+ * vụ thật — giới hạn thật do use-case tính lại theo GlobalConfig tại thời điểm tạo. Hằng
+ * số này chỉ chặn input vô lý (batch quá khổ).
+ */
+export const LOTTO535_CREATE_DRAW_BATCH_MAX = 12;
 
-export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E"] as const;
+// ─── Atomic schemas ───
 
 export const lotto535MainNumberSchema = z
   .string()
@@ -105,7 +114,7 @@ export const editScheduleSchema = z
 
     if (!isNaN(openMs) && !isNaN(closeMs) && closeMs <= openMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["salesCloseTime"],
         message: "Giờ đóng bán phải sau giờ mở bán",
       });
@@ -113,7 +122,7 @@ export const editScheduleSchema = z
 
     if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs <= closeMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["drawTime"],
         message: "Giờ quay số phải sau giờ đóng bán",
       });

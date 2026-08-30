@@ -7,6 +7,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
+import { POWER655_CREATE_DRAW_BATCH_MAX } from "@megawin/game-power655/schemas";
 import { AppException } from "@megawin/shared/errors";
 
 import { calcPower655DrawSlots } from "../../helpers/calc-draw-slots";
@@ -28,8 +29,10 @@ export class PreviewDrawsUseCase extends UseCase<PreviewDrawsInput, PreviewDraws
 
     const globalConfig = await this.getGlobalConfig.run();
 
-    if (count < 1 || count > 12) {
-      throw AppException.badRequest("Số kỳ xem trước phải từ 1 đến 12.");
+    // Zod route (previewDrawsSchema) đã chặn count qua POWER655_CREATE_DRAW_BATCH_MAX — check lại
+    // ở đây để tham chiếu ĐÚNG 1 hằng số duy nhất, không hardcode số lặp lại (dễ lệch khi đổi limit).
+    if (count < 1 || count > POWER655_CREATE_DRAW_BATCH_MAX) {
+      throw AppException.badRequest(`Số kỳ xem trước phải từ 1 đến ${POWER655_CREATE_DRAW_BATCH_MAX}.`);
     }
 
     // getUnfinishedDraws() default = TOÀN BỘ status chưa hoàn thành (KHÔNG lookback ngày) — không

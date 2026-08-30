@@ -22,6 +22,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import type { Route } from "next";
 
 import { KenoMatchBall } from "@/components/games/keno/keno-number-ball";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
@@ -115,7 +116,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
     : 0;
 
   const tenantUsername = toTenantUsername(entry.username);
-  const playerLink = `/accounts/players/${entry.accountId}`;
+  const playerLink = `/accounts/players/${entry.accountId}` as Route;
   const MAX_LEN = 14;
   const displayUsername = tenantUsername.length > MAX_LEN ? tenantUsername.slice(0, MAX_LEN) + "…" : tenantUsername;
 

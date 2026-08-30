@@ -3,7 +3,7 @@
 /**
  * Bingo 18 – Draw Selector
  *
- * Bingo 18 có ~160 kỳ/ngày, 1 kỳ mỗi 6 phút → danh sách lớn.
+ * Bingo 18 có ~158 kỳ/ngày, 1 kỳ mỗi 6 phút → danh sách lớn.
  * Dùng Command Palette pattern (Popover + search inline):
  * - Search/filter theo giờ quay hoặc số kỳ
  * - Group: Đang diễn ra | Kỳ sắp tới | Vừa hoàn thành

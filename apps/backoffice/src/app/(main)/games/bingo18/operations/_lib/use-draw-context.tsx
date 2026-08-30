@@ -4,7 +4,7 @@
  * Bingo 18 Operations — Draw Selection Context
  *
  * Cung cấp draw đang được chọn cho toàn trang operations.
- * Bingo 18: ~160 kỳ/ngày (~6 phút/kỳ) → group active/future/recent.
+ * Bingo 18: ~158 kỳ/ngày (~6 phút/kỳ) → group active/future/recent.
  * drawNo có ý nghĩa — dùng kết hợp với drawDate để hiển thị.
  *
  * Auto-select: ưu tiên kỳ đang active, fallback kỳ future đầu tiên.

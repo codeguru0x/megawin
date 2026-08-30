@@ -2,7 +2,11 @@
 
 import { useEffect, useEffectEvent } from "react";
 
-import type { GetDrawDetailOutput, PreviewDrawsOutput } from "@megawin/game-keno-application/use-cases/draws";
+import type {
+  GetDrawDetailOutput,
+  GetVietlottSuggestionOutput,
+  PreviewDrawsOutput,
+} from "@megawin/game-keno-application/use-cases/draws";
 import type {
   GetComboLookupOutput,
   GetDrawSelectorOutput,
@@ -51,7 +55,7 @@ const BASE = "/keno/operations";
 
 /**
  * Danh sách kỳ quay cho dropdown chọn kỳ.
- * Keno: ~120 kỳ/ngày — group active/future/recent.
+ * Keno: ~119 kỳ/ngày — group active/future/recent.
  * Refetch mỗi 15s (tần suất cao hơn do kỳ ngắn ~8 phút).
  */
 export function useDrawSelectorList() {
@@ -76,6 +80,23 @@ export function useDrawDetail(drawId: string | undefined) {
     queryFn: () => apiClient.get<GetDrawDetailOutput>(`/keno/draws/${drawId}`),
     enabled: !!drawId,
     staleTime: 5 * 60_000,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Vietlott Suggestion — gợi ý mã kỳ cho dialog publish (on-demand khi dialog mở)
+// ─────────────────────────────────────────────
+
+/**
+ * Gợi ý `vietlottRef.drawPeriod` cho dialog công bố kết quả — chỉ fetch khi dialog
+ * mở (`enabled`). Không poll: neo + lịch quay hiếm khi đổi giữa lúc dialog đang mở.
+ */
+export function useVietlottSuggestion(drawId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: kenoKeys.vietlottSuggestion(drawId ?? ""),
+    queryFn: () => apiClient.get<GetVietlottSuggestionOutput>(`/keno/draws/${drawId}/vietlott-suggestion`),
+    enabled: !!drawId && enabled,
+    staleTime: 60_000,
   });
 }
 

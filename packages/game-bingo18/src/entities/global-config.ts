@@ -12,6 +12,7 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+import type { VietlottPeriodAnchor } from "@megawin/game-core/types";
 
 import type {
   BigSmallDrawPrizes,
@@ -57,6 +58,11 @@ export interface GlobalConfigDoc {
    */
   ops: OpsConfig;
 
+  // ───── Vietlott Period Anchor ─────
+
+  /** Neo suy mã kỳ Vietlott (`vietlottRef.drawPeriod`) — optional, `undefined` = chưa cấu hình. */
+  vietlott?: VietlottPeriodAnchor;
+
   // ───── Metadata ─────
 
   version: number;
@@ -69,3 +75,5 @@ export interface GlobalConfigEntity extends Omit<GlobalConfigDoc, "_id"> {
   /** MongoDB ObjectId đã chuyển sang hex string. */
   id: string;
 }
+
+export type { VietlottPeriodAnchor };

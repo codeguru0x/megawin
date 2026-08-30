@@ -9,7 +9,7 @@
  *   Tổng không gian mẫu: 6^3 = 216 trường hợp.
  *
  *   Giá vé mặc định: 10.000 VND / lần tham gia / cách chơi (`play.unitPrice`).
- *   Lịch quay mặc định: mỗi 6 phút, 06:00 – 21:53 → 159 kỳ/ngày. Cả 3 tham số
+ *   Lịch quay mặc định: mỗi 6 phút, 06:06 – 21:53 → 158 kỳ/ngày. Cả 3 tham số
  *   (`drawIntervalMinutes`, `firstDrawTime`, `lastDrawTime`) đều cấu hình được nên
  *   số kỳ/ngày phải tính lại theo config, KHÔNG coi là hằng số.
  *

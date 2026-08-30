@@ -9,6 +9,7 @@ import type {
   SingleNumPrizes,
   SumTotalPrizes,
   TripleMatchPrizes,
+  VietlottPeriodAnchor,
 } from "@megawin/game-bingo18/entities";
 import type { OpsStatsConfigBase } from "@megawin/game-core/types";
 
@@ -53,6 +54,8 @@ export interface UpdateGameConfigInput {
    * (alerts/stats), `enabled` merge shallow ở use-case.
    */
   ops?: UpdateOpsInput;
+  /** Neo suy mã kỳ Vietlott (`vietlottRef.drawPeriod`) — deep-partial, merge với config hiện có. */
+  vietlott?: Partial<VietlottPeriodAnchor>;
   /** Chủ thể thực hiện (staff BO) — dùng cho audit. */
   actor: AuditActor;
 }

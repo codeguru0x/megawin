@@ -2,7 +2,7 @@
  * Keno – Draw Selector DTO
  *
  * Dropdown chọn kỳ quay trên dashboard vận hành.
- * Keno có ~120 kỳ/ngày (8 phút/kỳ) — group theo trạng thái để tránh quá tải.
+ * Keno có ~119 kỳ/ngày (8 phút/kỳ) — group theo trạng thái để tránh quá tải.
  */
 
 import type { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
@@ -12,7 +12,7 @@ export interface DrawSelectorItem {
   drawId: string;
   /** Ngày quay, format DD/MM/YYYY. */
   drawDate: string;
-  /** Số thứ tự kỳ trong ngày (1-~120). */
+  /** Số thứ tự kỳ trong ngày (1-~119). */
   drawNo: number;
   /** Giờ quay, format HH:mm (giờ VN). */
   drawTime: string;

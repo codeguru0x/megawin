@@ -52,6 +52,15 @@ interface GameConfig {
       topCombosK: number;
     };
   };
+  /**
+   * Neo suy mã kỳ Vietlott (`drawPeriod`) cho dialog công bố kết quả.
+   * `undefined` = chưa cấu hình = chưa bật gợi ý.
+   */
+  vietlott?: {
+    anchorDrawDate: string;
+    anchorDrawTime: string;
+    anchorPeriod: string;
+  };
   version: number;
   createdAt: string;
   updatedAt: string;

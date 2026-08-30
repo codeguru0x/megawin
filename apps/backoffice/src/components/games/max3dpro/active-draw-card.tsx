@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { displayVNDateTime, displayVNTime, formatVND, formatVNTime } from "@megawin/shared/utils";
 import { Ban, CalendarCheck, CircleDollarSign, Clock, Loader2, Lock, Radio, Ticket, Unlock } from "lucide-react";
+import type { Route } from "next";
 
 import type { CurrentDrawInfo } from "@/app/(main)/games/max3dpro/draws/_lib/use-draws";
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
@@ -118,8 +119,8 @@ const DEFAULT_VISUAL: (typeof STATUS_VISUALS)[string] = {
 
 const OPS_BASE = "/games/max3dpro/operations";
 
-function opsLink(drawId?: string) {
-  return drawId ? `${OPS_BASE}?drawId=${drawId}` : OPS_BASE;
+function opsLink(drawId?: string): Route {
+  return (drawId ? `${OPS_BASE}?drawId=${drawId}` : OPS_BASE) as Route;
 }
 
 const SHOW_PING = new Set([

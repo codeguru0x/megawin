@@ -1,7 +1,7 @@
 /**
  * Tính danh sách draw slots dựa theo lịch game Keno.
  *
- * Lịch game: firstDrawTime + N * interval (VD: 06:00, 06:08, 06:16, ...)
+ * Lịch game: firstDrawTime + N * interval (VD keno: 06:08, 06:16, 06:24, ...)
  *
  * Quy tắc cross-day rollover:
  *   - Bắt đầu từ thời điểm hiện tại (giờ VN), tìm slot tiếp theo khả dụng

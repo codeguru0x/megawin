@@ -1,7 +1,7 @@
 /**
  * Tính danh sách draw slots dựa theo lịch game Bingo 18.
  *
- * Lịch game: firstDrawTime + N * interval (VD: 06:00, 06:06, 06:12, ...)
+ * Lịch game: firstDrawTime + N * interval (VD: 06:06, 06:12, 06:18, ...)
  *
  * Quy tắc cross-day rollover:
  *   - Bắt đầu từ thời điểm hiện tại (giờ VN), tìm slot tiếp theo khả dụng

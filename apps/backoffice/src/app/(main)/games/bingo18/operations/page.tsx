@@ -4,7 +4,7 @@
  * Bingo 18 — Trang Vận hành
  *
  * Trang tổng hợp quản lý và giám sát kỳ quay Bingo 18.
- * Bingo 18: ~160 kỳ/ngày, 6 phút/kỳ, không có Jackpot, 3 xúc xắc (1-6).
+ * Bingo 18: ~158 kỳ/ngày, 6 phút/kỳ, không có Jackpot, 3 xúc xắc (1-6).
  *
  * Zones:
  *   1. Draw Management (command center + dialogs)
@@ -113,7 +113,7 @@ function OperationsContent() {
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Bingo 18 — Vận hành</h1>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay (~160 kỳ/ngày)</p>
+              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay (~158 kỳ/ngày)</p>
               {isActiveForRefresh ? <LastUpdatedBadge drawId={effectiveDrawId} /> : null}
             </div>
           </div>

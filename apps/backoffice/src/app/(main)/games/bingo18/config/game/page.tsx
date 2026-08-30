@@ -1,7 +1,7 @@
 "use client";
 
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { Percent, Settings2, ShieldAlert, Trophy } from "lucide-react";
+import { ExternalLink, Percent, Settings2, ShieldAlert, Trophy } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,7 @@ import { PlayRulesSection } from "./_lib/play-rules-section";
 import { PrizesSection } from "./_lib/prizes-section";
 import { RatesSection } from "./_lib/rates-section";
 import { useBingo18GameConfig, useUpdateBingo18GameConfig } from "./_lib/use-game-config";
+import { VietlottAnchorSection } from "./_lib/vietlott-anchor-section";
 
 function ConfigSkeleton() {
   return (
@@ -30,7 +31,7 @@ export default function Bingo18ConfigPage() {
 
   const [tab, setTab] = useQueryState(
     "tab",
-    parseAsStringEnum(["prizes", "rates", "play", "ops"]).withDefault("prizes"),
+    parseAsStringEnum(["prizes", "rates", "play", "ops", "vietlott"]).withDefault("prizes"),
   );
 
   return (
@@ -78,6 +79,10 @@ export default function Bingo18ConfigPage() {
               <ShieldAlert className="size-4 text-red-500" />
               Vận hành
             </TabsTrigger>
+            <TabsTrigger value="vietlott" className="gap-1.5">
+              <ExternalLink className="size-4 text-blue-500" />
+              Vietlott
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="prizes" className="mt-2">
@@ -94,6 +99,10 @@ export default function Bingo18ConfigPage() {
 
           <TabsContent value="ops" className="mt-2">
             <OpsSection config={config} onSave={handleSave} isPending={mutation.isPending} />
+          </TabsContent>
+
+          <TabsContent value="vietlott" className="mt-2">
+            <VietlottAnchorSection config={config} onSave={handleSave} isPending={mutation.isPending} />
           </TabsContent>
         </Tabs>
       )}

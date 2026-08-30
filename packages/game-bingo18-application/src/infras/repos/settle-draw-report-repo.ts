@@ -79,7 +79,7 @@ export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity,
   /**
    * Lấy danh sách draws trong khoảng ngày tài chính — có pagination.
    *
-   * Bingo 18 ~160 kỳ/ngày — pagination BẮT BUỘC.
+   * Bingo 18 ~158 kỳ/ngày — pagination BẮT BUỘC.
    */
   async findByDateRange(
     from: string,

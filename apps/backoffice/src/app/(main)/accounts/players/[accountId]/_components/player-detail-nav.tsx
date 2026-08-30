@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { BarChart3, Clock } from "lucide-react";
+import type { Route } from "next";
 
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,7 @@ export function PlayerDetailNav({ accountId }: PlayerDetailNavProps) {
   return (
     <nav className="flex flex-row gap-1 lg:flex-col">
       {playerNavItems.map((item) => {
-        const href = `${base}/${item.href}`;
+        const href = `${base}/${item.href}` as Route;
         const isActive = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link

@@ -2,7 +2,10 @@
 
 import { useEffect, useEffectEvent } from "react";
 
-import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
+import type {
+  GetDrawDetailOutput,
+  GetVietlottSuggestionOutput,
+} from "@megawin/game-bingo18-application/use-cases/draws";
 import type {
   GetDrawSelectorOutput,
   GetLiveEntriesOutput,
@@ -44,7 +47,7 @@ const BASE = "/bingo18/operations";
 
 /**
  * Danh sách kỳ quay cho dropdown chọn kỳ.
- * Bingo 18: ~160 kỳ/ngày — group active/future/recent.
+ * Bingo 18: ~158 kỳ/ngày — group active/future/recent.
  * Refetch mỗi 15s (tần suất cao do kỳ ngắn ~6 phút).
  */
 export function useDrawSelectorList() {
@@ -69,6 +72,23 @@ export function useDrawDetail(drawId: string | undefined) {
     queryFn: () => apiClient.get<GetDrawDetailOutput>(`/bingo18/draws/${drawId}`),
     enabled: !!drawId,
     staleTime: 5 * 60_000,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Vietlott Suggestion — gợi ý mã kỳ cho dialog publish (on-demand khi dialog mở)
+// ─────────────────────────────────────────────
+
+/**
+ * Gợi ý `vietlottRef.drawPeriod` cho dialog công bố kết quả — chỉ fetch khi dialog
+ * mở (`enabled`). Không poll: neo + lịch quay hiếm khi đổi giữa lúc dialog đang mở.
+ */
+export function useVietlottSuggestion(drawId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: bingo18Keys.vietlottSuggestion(drawId ?? ""),
+    queryFn: () => apiClient.get<GetVietlottSuggestionOutput>(`/bingo18/draws/${drawId}/vietlott-suggestion`),
+    enabled: !!drawId && enabled,
+    staleTime: 60_000,
   });
 }
 
@@ -346,7 +366,6 @@ export function useCreateDraw() {
     mutationFn: (data: {
       draws: Array<{
         drawDate: string;
-        drawNo: number;
         drawTime: string;
         openNow: boolean;
       }>;

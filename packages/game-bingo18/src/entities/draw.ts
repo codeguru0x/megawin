@@ -4,12 +4,12 @@
  * Collection: bingo18_draws
  *
  * 1 document = 1 kỳ quay Bingo 18.
- * Bingo 18 quay mỗi 6 phút, từ 06:00 đến 21:53.
+ * Bingo 18 quay mỗi 6 phút, từ 06:06 đến 21:53 (~158 kỳ/ngày).
  *
  * Kết quả: 3 số từ {1, 2, 3, 4, 5, 6}.
  */
 
-import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawResultSource, DrawStatus } from "@megawin/game-core/entities";
 import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
 
 import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./enums";
@@ -19,7 +19,7 @@ import type { ISODateString } from "./types";
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-export type { DrawSales, DrawVietlottRef };
+export type { DrawResultSource, DrawSales, DrawVietlottRef };
 
 /**
  * Kết quả kỳ quay: 3 số từ {1,2,3,4,5,6}.
@@ -32,6 +32,14 @@ export interface DrawResult {
   sum: number;
   /** Thời điểm công bố kết quả. Set bởi admin hoặc hệ thống tự động. */
   publishedAt: Date;
+  /**
+   * Nguồn ghi kết quả — `Manual` (staff nhập tay qua backoffice) hiện là nguồn
+   * DUY NHẤT. Field chuẩn bị cho auto-import (`Import`/`Vietlott`) — PHẢI phân
+   * biệt được nguồn trước khi bất kỳ luồng nào dùng `vietlottRef` làm ground
+   * truth đối chiếu, tránh so kết quả tự suy với chính nó (an toàn giả — xem
+   * `vietlott-period-suggestion/00-overview.md` §9).
+   */
+  source: DrawResultSource;
 }
 
 /**

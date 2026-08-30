@@ -84,7 +84,7 @@ export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity,
   /**
    * Lấy danh sách draws trong khoảng ngày tài chính — có pagination.
    *
-   * Keno ~120 kỳ/ngày → pagination BẮT BUỘC.
+   * Keno ~119 kỳ/ngày → pagination BẮT BUỘC.
    * Sort: financialDate DESC, drawId DESC để mới nhất lên đầu.
    */
   async findByDateRange(

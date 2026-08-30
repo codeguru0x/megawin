@@ -1,0 +1,77 @@
+---
+description: Quy tắc throw lỗi trong use-case/repo — AppException là "controlled error" trả THẲNG ra client, cấm throw raw Error/message kỹ thuật
+globs: apps/**/*.ts,packages/**/*.ts
+alwaysApply: false
+---
+
+# Error Handling — AppException Là Ranh Giới An Toàn Duy Nhất Với Client
+
+## Cơ chế thật của hệ thống (đọc trước khi throw bất cứ gì)
+
+`catchToApiResponse` (`packages/next/src/server/response.ts`) chia lỗi thành 2 nhóm:
+
+1. **`AppException`/`AppError`** → coi là lỗi **ĐÃ KIỂM SOÁT** → trả `message` (và `details`)
+   **NGUYÊN VĂN** cho client. Không hề che giấu gì thêm.
+2. **Mọi `Error` khác** → log đầy đủ qua `logError`, nhưng client chỉ nhận message chung
+   `"Lỗi xảy ra trên hệ thống, vui lòng liên hệ quản trị viên."` (500).
+
+**Cái bẫy:** `UseCase.run()` (`packages/app-core/src/use-cases/use-case.ts`) bọc MỌI lỗi thoát ra
+từ `execute()` bằng `handleError()`. Nếu lỗi không phải `AppException`, nó bị **tự động nâng cấp**
+thành `AppException.internal(err.message, err)` — **GIỮ NGUYÊN message gốc**. Kết quả: một `throw
+new Error("[SomeRepo] ...")` ở tầng repo/helper sâu bên trong sẽ lọt qua nhánh (1) ở trên và lộ
+NGUYÊN VĂN cho client, dù không ai chủ đích cho phép điều đó.
+
+**Bug thật đã xảy ra (2026-08):** `DrawCounterRepository.getNextDrawNoBatch` (Bingo18 + Keno) throw
+`new Error(`[DrawCounterRepository] upsert lastDrawNo thất bại cho drawDate=${drawDate}.`)` khi
+`findOneAndUpdate` trả `null`. Vì đây là `Error` thường (không phải `AppException`), nó bị
+`UseCase.run()` nâng cấp giữ nguyên message rồi trả thẳng ra client backoffice — lộ tên class nội
+bộ, tên field, mà người dùng cuối không hiểu và không cần biết.
+
+## Quy tắc
+
+1. **KHÔNG BAO GIỜ `throw new Error(...)` với message chứa tên class/method/field nội bộ** ở bất
+   kỳ tầng nào (repo, helper, use-case) — message đó CÓ THỂ lộ nguyên văn ra client qua cơ chế ở
+   trên.
+2. **Luôn throw `AppException`** (qua static helper: `.internal()`, `.badRequest()`,
+   `.notFound()`, `.conflict()`, …) với message **Tiếng Việt, chung, hiểu được bởi người dùng
+   cuối** — vì message này SẼ hiển thị y nguyên cho họ. Coi message của `AppException` như một
+   phần UI, không phải log.
+3. **Nếu cần giữ chi tiết kỹ thuật để debug** (tên field, giá trị input, stack gốc) — ghi qua
+   `logError(label, err, ctx)` (`@megawin/shared/utils`) **TRƯỚC KHI** throw `AppException` chung.
+   `logError` ghi vào `console.error`/CloudWatch, KHÔNG bao giờ tới client.
+4. **KHÔNG nhồi chi tiết kỹ thuật vào `details` của `AppException`** nếu route đó set
+   `details` — `details` cũng bị trả nguyên văn cho client giống `message` (xem nhánh 1 ở trên).
+
+```typescript
+/** SAI — Error thường, message lộ tên class/field ra client qua UseCase.run() → AppException.internal(err.message) */
+if (!result) {
+  throw new Error(`[DrawCounterRepository] upsert lastDrawNo thất bại cho drawDate=${drawDate}.`);
+}
+
+/** ĐÚNG — log kỹ thuật cho audit, throw AppException với message chung an toàn để hiển thị */
+if (!result) {
+  logError("DrawCounterRepository.getNextDrawNoBatch", new Error("findOneAndUpdate trả về null"), {
+    drawDate,
+    count,
+  });
+  throw AppException.internal("Không thể sinh số kỳ quay, vui lòng thử lại.");
+}
+```
+
+```typescript
+/** ĐÚNG — bắt lỗi từ external call, log full chi tiết, throw AppException message chung (tiền lệ trigger-settle.ts) */
+try {
+  await startExecution({ ... });
+} catch (err) {
+  logError("TriggerSettle", err, { drawId: input.drawId });
+  throw new AppException("SFN_START_FAILED", "Không thể khởi chạy settle worker");
+}
+```
+
+## Checklist trước khi throw lỗi trong repo/use-case
+
+- [ ] Lỗi throw ra là `AppException` (không phải `Error`/`TypeError` trần)?
+- [ ] Message của `AppException` đọc được bởi người dùng cuối — không có tên class, tên method,
+      tên field code, đường dẫn file?
+- [ ] Nếu có chi tiết kỹ thuật cần giữ để debug → đã `logError` trước khi throw chưa?
+- [ ] `details` của `AppException` (nếu có) không chứa gì nhạy cảm/kỹ thuật — nó cũng lộ ra client?

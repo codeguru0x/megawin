@@ -1,6 +1,12 @@
 "use client";
 
-import type { FinancialRates, Max3dproPrizeConfig, OpsConfig, PlayRules } from "@megawin/game-max3dpro/entities/types";
+import type {
+  FinancialRates,
+  Max3dproPrizeConfig,
+  OpsConfig,
+  PlayRules,
+  VietlottPeriodAnchor,
+} from "@megawin/game-max3dpro/entities";
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,6 +20,11 @@ interface GameConfig {
   play: PlayRules;
   /** Cấu hình vận hành — doc cũ chưa save lần nào có thể thiếu (fallback default ở UI). */
   ops?: OpsConfig;
+  /**
+   * Neo suy mã kỳ Vietlott — `undefined` khi chưa cấu hình (chưa bật gợi ý).
+   * Xem `.cursor/plans/vietlott-period-suggestion/00-overview.md`.
+   */
+  vietlott?: VietlottPeriodAnchor;
   version: number;
   createdAt: string;
   updatedAt: string;

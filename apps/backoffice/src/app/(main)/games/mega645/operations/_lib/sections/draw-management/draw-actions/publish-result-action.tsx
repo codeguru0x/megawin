@@ -2,10 +2,28 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MAX, MEGA645_NUMBER_MIN } from "@megawin/game-mega645/entities";
-import { todayVN } from "@megawin/shared/utils";
-import { AlertCircle, CalendarDays, Check, ClipboardCheck, Dice5, ExternalLink, Hash, Loader2 } from "lucide-react";
+import Link from "next/link";
 
+import { GameProduct } from "@megawin/game-core/entities";
+import { VietlottSuggestionUnavailableReason } from "@megawin/game-core/utils";
+import { MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MAX, MEGA645_NUMBER_MIN } from "@megawin/game-mega645/entities";
+import { displayVNDate } from "@megawin/shared/utils";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CalendarDays,
+  Check,
+  ClipboardCheck,
+  Dice5,
+  ExternalLink,
+  Hash,
+  Loader2,
+} from "lucide-react";
+
+import { formatResultDialogTitle } from "@/app/(main)/games/_lib/operations/result-dialog-title";
+import { vietlottConfigHref } from "@/app/(main)/games/_lib/operations/vietlott-config-link";
+import { VietlottReminderNote } from "@/app/(main)/games/_lib/operations/vietlott-reminder-note";
+import { VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES } from "@/app/(main)/games/_lib/operations/vietlott-suggestion-messages";
 import { generateUniqueRandomNumbers, RandomFillButton } from "@/components/draws";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,9 +39,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import type { DrawSelectorItem } from "../../../use-operations";
-import { usePublishResult } from "../../../use-operations";
+import { usePublishResult, useVietlottSuggestion } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/** Href tĩnh — build 1 lần ở module scope, dùng lại cho cả 2 nhắc nhở trong dialog. */
+const vietlottConfigLink = vietlottConfigHref(GameProduct.Mega645);
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -114,11 +135,23 @@ export function PublishResultAction({
   const publishResult = usePublishResult();
   const isRepublish = draw.status === "published" || draw.status === "settled";
 
+  // Ngày Vietlott mặc định PHẢI là ngày quay của CHÍNH kỳ này (`draw.scheduledDrawAt`,
+  // giờ VN) — KHÔNG phải ngày hôm nay lúc thao tác. Staff hoàn toàn có thể nhập/sửa kết
+  // quả một kỳ của NGÀY HÔM QUA (vào sáng sớm hôm sau) → `todayVN()` sẽ prefill sai ngày,
+  // dễ tạo `vietlottRef.drawDate` lệch 1 ngày mà không ai để ý (đã xảy ra thực tế — P0.1).
+  const defaultVietlotDate = displayVNDate(draw.scheduledDrawAt);
+
   const [numbers, setNumbers] = useState<string[]>(Array(MEGA645_NUMBER_COUNT).fill(""));
-  const [vietlotDate, setVietlotDate] = useState(todayVN());
+  const [vietlotDate, setVietlotDate] = useState(defaultVietlotDate);
   const [vietlotPeriod, setVietlotPeriod] = useState("");
+  const [periodTouched, setPeriodTouched] = useState(false);
   const [validation, setValidation] = useState<ValidationResult>(VALID);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Gợi ý mã kỳ Vietlott — chỉ fetch khi dialog mở (P4). Đọc neo + lịch từ config
+  // DB phía server, không tính gì ở client.
+  const suggestion = useVietlottSuggestion(draw.drawId, isOpen);
+  const suggestedPeriod = suggestion.data?.suggestedPeriod ?? null;
 
   useEffect(() => {
     if (isOpen && currentResult) {
@@ -127,15 +160,31 @@ export function PublishResultAction({
           ? currentResult.winningNumbers.map((n) => n.padStart(2, "0"))
           : Array(MEGA645_NUMBER_COUNT).fill(""),
       );
-      setVietlotDate(currentResult.vietlottRef?.drawDate ?? todayVN());
+      setVietlotDate(currentResult.vietlottRef?.drawDate ?? defaultVietlotDate);
       setVietlotPeriod(currentResult.vietlottRef?.drawPeriod ?? "");
+      setPeriodTouched(!!currentResult.vietlottRef?.drawPeriod);
     } else if (!isOpen) {
       setNumbers(Array(MEGA645_NUMBER_COUNT).fill(""));
-      setVietlotDate(todayVN());
+      setVietlotDate(defaultVietlotDate);
       setVietlotPeriod("");
+      setPeriodTouched(false);
       setValidation(VALID);
     }
-  }, [isOpen, currentResult]);
+  }, [isOpen, currentResult, defaultVietlotDate]);
+
+  // Prefill mã kỳ từ gợi ý — CHỈ khi kỳ chưa có ref đã publish trước đó (`currentResult`) và
+  // staff chưa tự gõ gì vào ô. Suy được sau khi dialog mở (round-trip async) nên tách effect
+  // riêng, không gộp vào effect reset ở trên (chạy đồng bộ lúc mở dialog, trước khi có data).
+  useEffect(() => {
+    if (isOpen && !periodTouched && suggestedPeriod) {
+      setVietlotPeriod(suggestedPeriod);
+    }
+  }, [isOpen, periodTouched, suggestedPeriod]);
+
+  // Cảnh báo lệch — hiện ở MỌI kỳ (overview §4.3/§7): staff nhập khác gợi ý là detector
+  // duy nhất phát hiện neo đã cũ. Cảnh báo MỀM, không chặn submit.
+  const trimmedPeriod = vietlotPeriod.trim();
+  const periodMismatch = !!suggestedPeriod && !!trimmedPeriod && trimmedPeriod !== suggestedPeriod;
 
   function handleNumberChange(index: number, raw: string) {
     const cleaned = raw.replace(/\D/g, "").slice(0, 2);
@@ -180,7 +229,7 @@ export function PublishResultAction({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardCheck className="size-4.5 text-teal-500" />
-            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawDate}
+            {formatResultDialogTitle(draw.drawId, draw.drawTime)}
           </DialogTitle>
           <DialogDescription>
             Nhập {MEGA645_NUMBER_COUNT} số chính ({pad2(MEGA645_NUMBER_MIN)}–{pad2(MEGA645_NUMBER_MAX)}).
@@ -217,7 +266,6 @@ export function PublishResultAction({
                         value={numbers[i]}
                         onChange={(e) => handleNumberChange(i, e.target.value)}
                         className={`w-full text-center font-mono text-sm font-semibold tabular-nums ${validation.fieldErrors.has(i) ? "border-destructive" : ""}`}
-                        placeholder={pad2(i + 1)}
                       />
                     </div>
                   ))}
@@ -244,9 +292,6 @@ export function PublishResultAction({
                   <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Tùy chọn
-                </span>
               </div>
               <div className="rounded-lg border bg-muted/30 p-4">
                 <p className="mb-3 text-xs text-muted-foreground">
@@ -273,10 +318,59 @@ export function PublishResultAction({
                       placeholder="VD: 00123"
                       className="font-mono text-sm"
                       value={vietlotPeriod}
-                      onChange={(e) => setVietlotPeriod(e.target.value)}
+                      onChange={(e) => {
+                        setPeriodTouched(true);
+                        setVietlotPeriod(e.target.value);
+                      }}
                     />
                   </div>
                 </div>
+
+                {/* 4 trường hợp không suy được — mỗi trường hợp 1 thông báo riêng (overview §7.1). */}
+                {!suggestion.isFetching && !suggestedPeriod && !trimmedPeriod && suggestion.data?.reason && (
+                  <div className="mt-3 rounded-lg border border-blue-300/50 bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="size-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm leading-relaxed text-blue-800 dark:text-blue-300">
+                          {VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES[suggestion.data.reason]}
+                        </p>
+                        {suggestion.data.reason === VietlottSuggestionUnavailableReason.NoAnchor && (
+                          <Link
+                            href={vietlottConfigLink}
+                            className="text-xs font-medium text-blue-700 underline dark:text-blue-400"
+                          >
+                            Cấu hình mã kỳ Vietlott →
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cảnh báo lệch — MỌI kỳ, không chỉ kỳ đầu (overview §4.3). Mềm, không chặn lưu. */}
+                {periodMismatch && (
+                  <div className="mt-3 rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm text-amber-800 dark:text-amber-300">
+                          Mã kỳ vừa nhập (<span className="font-mono font-semibold">{trimmedPeriod}</span>) khác gợi ý
+                          hệ thống (<span className="font-mono font-semibold">{suggestedPeriod}</span>).
+                        </p>
+                        <p className="text-xs text-amber-700 dark:text-amber-400">
+                          Nếu giá trị vừa nhập đúng với trang Vietlott, hãy{" "}
+                          <Link href={vietlottConfigLink} className="font-medium underline">
+                            cập nhật lại mã kỳ Vietlott
+                          </Link>{" "}
+                          ở cấu hình game để các kỳ sau tự tính đúng.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <VietlottReminderNote />
               </div>
             </div>
           </div>

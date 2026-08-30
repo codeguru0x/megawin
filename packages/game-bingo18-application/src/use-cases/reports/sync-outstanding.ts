@@ -57,7 +57,7 @@ export class SyncOutstandingUseCase extends UseCase<void, SyncOutstandingResult>
 
   protected async execute(_input: void): Promise<SyncOutstandingResult> {
     // ── Bước 1: Lấy drawIds active để tăng selectivity cho entry queries ────
-    // Bingo 18 có ~160 kỳ/ngày. getUnfinishedDraws (KHÔNG lookback ngày) — không bỏ sót kỳ kẹt
+    // Bingo 18 có ~158 kỳ/ngày. getUnfinishedDraws (KHÔNG lookback ngày) — không bỏ sót kỳ kẹt
     // cũ hơn lookbackDays trước đây (status là equality prefix của idx_status_drawId_desc,
     // IXSCAN chỉ chạm vài chục kỳ unfinished dù collection có hàng triệu doc Settled).
     // Thêm drawId vào $match giúp MongoDB dùng index { drawId: 1, status: 1 }

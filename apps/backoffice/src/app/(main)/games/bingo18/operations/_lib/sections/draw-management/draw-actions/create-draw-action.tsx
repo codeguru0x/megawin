@@ -5,16 +5,26 @@
  *
  * Tạo nhiều kỳ quay Bingo 18 liên tiếp.
  * Bingo18 khác Lotto:
- * - DrawNo: 001-~160 (mỗi ngày), nhập trực tiếp vào ô input thay vì dropdown
+ * - DrawNo: 001-~160 (mỗi ngày) — server tự sinh từ atomic counter, KHÔNG nhận từ client
+ *   (giống Keno — xem plan "fix drawno server-side"). Cột "Số kỳ" chỉ hiển thị số dự kiến
+ *   (đọc từ API preview) để staff tham khảo, không phải input.
  * - Giờ quay: cố định theo chu kỳ 6 phút (06:00, 06:06, ..., 21:54)
- * - Preview từ API gợi ý drawNo + drawTime
- * - Staff có thể tự điền nếu preview lỗi hoặc muốn sửa
- * - Validate: drawId không trùng (date + drawNo phải unique)
+ * - Preview từ API gợi ý drawTime (+ drawNo dự kiến, chỉ mang tính hiển thị)
+ * - Staff có thể tự điền ngày/giờ nếu preview lỗi hoặc muốn sửa
+ * - Validate: không được trùng (date + giờ quay) trong cùng batch
  */
 
 import { useEffect, useRef, useState } from "react";
 
-import { formatVNDate, formatVNTime, parseYMDToLocalDate, YMD_PATTERN } from "@megawin/shared/utils";
+import { BINGO18_CREATE_DRAW_BATCH_MAX } from "@megawin/game-bingo18/schemas";
+import {
+  displayVNDate,
+  displayVNTime,
+  parseYMDToLocalDate,
+  todayVNAsLocalDate,
+  toVNIsoString,
+  YMD_PATTERN,
+} from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
@@ -43,8 +53,11 @@ import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 interface DrawRow {
   /** Ngày quay, format "YYYY-MM-DD". */
   date: string;
-  /** Số thứ tự kỳ trong ngày (1-~160). 0 = chưa xác định. */
-  drawNo: number;
+  /**
+   * Số thứ tự kỳ trong ngày — CHỈ để hiển thị preview (từ API gợi ý), server tự sinh thật
+   * lúc tạo. 0 = chưa có gợi ý. KHÔNG gửi field này lên server (xem `handleCreate`).
+   */
+  previewDrawNo: number;
   /** Giờ quay, format "HH:mm". */
   drawTime: string;
   /** Mở bán ngay khi tạo. */
@@ -52,40 +65,30 @@ interface DrawRow {
 }
 
 function emptyRow(): DrawRow {
-  return { date: "", drawNo: 0, drawTime: "", isOpen: false };
+  return { date: "", previewDrawNo: 0, drawTime: "", isOpen: true };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function fmtDisplayTime(iso: string): string {
-  return formatVNTime(new Date(iso));
-}
-
-function fmtStoreDate(iso: string): string {
-  return formatVNDate(new Date(iso));
-}
-
-function buildIso(date: string, time: string): string {
-  return `${date}T${time}:00+07:00`;
-}
-
 function isRowComplete(row: DrawRow): boolean {
-  return (
-    YMD_PATTERN.test(row.date) && row.drawNo >= 1 && Number.isInteger(row.drawNo) && /^\d{2}:\d{2}$/.test(row.drawTime)
-  );
+  return YMD_PATTERN.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
 }
 
 /**
- * Validate duplicate drawId trong batch.
- * drawId = "YYYY-MM-DD.NNN" → trùng nếu (date + drawNo) giống nhau.
+ * Validate duplicate slot trong batch — trùng nếu cùng ngày + cùng giờ quay.
+ * drawNo do server tự sinh nên không còn là tiêu chí trùng lặp; (date, time) là khoá thật.
  */
 function findDuplicateKey(rows: DrawRow[]): number | null {
   const seen = new Map<string, number>();
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i]!;
-    if (!r.date || !r.drawNo) continue;
-    const key = `${r.date}.${String(r.drawNo).padStart(3, "0")}`;
-    if (seen.has(key)) return i;
+    if (!r.date || !r.drawTime) {
+      continue;
+    }
+    const key = `${r.date}T${r.drawTime}`;
+    if (seen.has(key)) {
+      return i;
+    }
     seen.set(key, i);
   }
   return null;
@@ -138,7 +141,10 @@ function DatePickerCell({
           locale={vi}
           startMonth={new Date(2025, 0)}
           endMonth={new Date(2030, 11)}
-          initialFocus
+          // Chặn ngày quá khứ: ngày đã qua theo nghiệp vụ đã có kết quả, tạo kỳ mới là vô nghĩa
+          // (server cũng chặn — đây chỉ là lớp UX để staff không phải thử-rồi-lỗi).
+          disabled={{ before: todayVNAsLocalDate() }}
+          autoFocus
         />
       </PopoverContent>
     </Popover>
@@ -210,9 +216,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const isEmpty = row.date === "" && row.drawTime === "";
         if (!isEmpty) return row;
         return {
-          date: p.drawDate ?? fmtStoreDate(p.drawTime),
-          drawNo: p.drawNo,
-          drawTime: fmtDisplayTime(p.drawTime),
+          date: p.drawDate ?? displayVNDate(p.drawTime),
+          previewDrawNo: p.drawNo,
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -249,9 +255,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const p = preview.data!.draws[i];
         if (!p) return emptyRow();
         return {
-          date: p.drawDate ?? fmtStoreDate(p.drawTime),
-          drawNo: p.drawNo,
-          drawTime: fmtDisplayTime(p.drawTime),
+          date: p.drawDate ?? displayVNDate(p.drawTime),
+          previewDrawNo: p.drawNo,
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -271,8 +277,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       {
         draws: rows.map((row) => ({
           drawDate: row.date,
-          drawNo: row.drawNo,
-          drawTime: buildIso(row.date, row.drawTime),
+          drawTime: toVNIsoString(row.date, row.drawTime),
           openNow: row.isOpen,
         })),
       },
@@ -294,8 +299,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             Tạo kỳ quay Bingo 18
           </DialogTitle>
           <DialogDescription>
-            Tạo nhiều kỳ liên tiếp. Lịch gợi ý tự động tính theo chu kỳ 6 phút — staff có thể chỉnh sửa bất kỳ ô nào. Số
-            kỳ (drawNo) phải duy nhất trong ngày.
+            Tạo nhiều kỳ liên tiếp. Lịch gợi ý tự động tính theo chu kỳ 6 phút — staff có thể sửa ngày/giờ quay. Số kỳ
+            do hệ thống tự sinh khi tạo, không thể chỉnh sửa.
           </DialogDescription>
         </DialogHeader>
 
@@ -307,11 +312,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <Input
                 type="number"
                 min={1}
-                max={30}
+                max={BINGO18_CREATE_DRAW_BATCH_MAX}
                 value={count}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= 30) setCount(v);
+                  if (!isNaN(v) && v >= 1 && v <= BINGO18_CREATE_DRAW_BATCH_MAX) setCount(v);
                 }}
                 className="w-24 tabular-nums"
               />
@@ -383,7 +388,6 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               {rows.map((row, i) => {
                 const complete = isRowComplete(row);
                 const dateErr = !row.date;
-                const drawNoErr = row.drawNo === 0;
                 const timeErr = !row.drawTime;
                 const isDuplicate = duplicateIdx === i;
 
@@ -417,22 +421,19 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
 
                     <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
 
-                    {/* DrawNo: số thứ tự kỳ trong ngày (1-~160) */}
-                    <Input
-                      type="number"
-                      min={1}
-                      max={999}
-                      value={row.drawNo === 0 ? "" : row.drawNo}
-                      onChange={(e) => {
-                        const v = parseInt(e.target.value, 10);
-                        updateRow(i, { drawNo: isNaN(v) ? 0 : v });
-                      }}
-                      placeholder="001"
+                    {/*
+                      Số kỳ: server tự sinh từ atomic counter lúc tạo — đây CHỈ là preview
+                      tham khảo (không phải input). Staff không thể chỉnh sửa số kỳ.
+                    */}
+                    <span
                       className={cn(
-                        "h-8 text-center font-mono text-xs tabular-nums",
-                        (drawNoErr || isDuplicate) && "border-dashed border-amber-400 text-amber-600",
+                        "flex h-8 items-center justify-center rounded-md border border-dashed bg-muted/30 font-mono text-xs tabular-nums text-muted-foreground",
+                        isDuplicate && "border-amber-400 text-amber-600",
                       )}
-                    />
+                      title="Số kỳ do server tự sinh — chỉ hiển thị dự kiến"
+                    >
+                      {row.previewDrawNo > 0 ? String(row.previewDrawNo).padStart(3, "0") : "—"}
+                    </span>
 
                     <TimePickerCell
                       value={row.drawTime}
@@ -473,13 +474,12 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
 
           {duplicateIdx !== null && (
             <p className="text-xs text-red-600 dark:text-red-400">
-              Kỳ #{duplicateIdx + 1}: Số kỳ và ngày trùng với kỳ khác trong danh sách. Số kỳ phải duy nhất trong cùng
-              ngày.
+              Kỳ #{duplicateIdx + 1}: Ngày và giờ quay trùng với kỳ khác trong danh sách.
             </p>
           )}
           {duplicateIdx === null && completedRows.length < rows.length && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              {rows.length - completedRows.length} kỳ chưa đủ thông tin (ngày + số kỳ + giờ quay).
+              {rows.length - completedRows.length} kỳ chưa đủ thông tin (ngày + giờ quay).
             </p>
           )}
         </div>

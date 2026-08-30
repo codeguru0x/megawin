@@ -6,7 +6,7 @@
  * Wrapper game-specific: quản lý URL state (nuqs) cho filter + page,
  * fetch data, inject render props vào DrawHistoryTable chung.
  *
- * Bingo 18 ~160 kỳ/ngày — mặc định filter hôm nay.
+ * Bingo 18 ~158 kỳ/ngày — mặc định filter hôm nay.
  * Bingo 18 không có Jackpot: companyTake = profit.
  * Kết quả: 3 xúc xắc (1-6) dùng DiceDisplay.
  */

@@ -14,7 +14,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { formatVNDate, formatVNTime, parseYMDToLocalDate, YMD_PATTERN } from "@megawin/shared/utils";
+import { KENO_CREATE_DRAW_BATCH_MAX } from "@megawin/game-keno/schemas";
+import {
+  displayVNDate,
+  displayVNTime,
+  parseYMDToLocalDate,
+  todayVNAsLocalDate,
+  toVNIsoString,
+  YMD_PATTERN,
+} from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
@@ -52,22 +60,10 @@ interface DrawRow {
 }
 
 function emptyRow(): DrawRow {
-  return { date: "", drawNo: 0, drawTime: "", isOpen: false };
+  return { date: "", drawNo: 0, drawTime: "", isOpen: true };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function fmtDisplayTime(iso: string): string {
-  return formatVNTime(new Date(iso));
-}
-
-function fmtStoreDate(iso: string): string {
-  return formatVNDate(new Date(iso));
-}
-
-function buildIso(date: string, time: string): string {
-  return `${date}T${time}:00+07:00`;
-}
 
 function isRowComplete(row: DrawRow): boolean {
   return (
@@ -138,7 +134,10 @@ function DatePickerCell({
           locale={vi}
           startMonth={new Date(2025, 0)}
           endMonth={new Date(2030, 11)}
-          initialFocus
+          // Chặn ngày quá khứ: ngày đã qua theo nghiệp vụ đã có kết quả, tạo kỳ mới là vô nghĩa
+          // (server cũng chặn — đây chỉ là lớp UX để staff không phải thử-rồi-lỗi).
+          disabled={{ before: todayVNAsLocalDate() }}
+          autoFocus
         />
       </PopoverContent>
     </Popover>
@@ -210,9 +209,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const isEmpty = row.date === "" && row.drawTime === "";
         if (!isEmpty) return row;
         return {
-          date: p.drawDate ?? fmtStoreDate(p.drawTime),
+          date: p.drawDate ?? displayVNDate(p.drawTime),
           drawNo: p.drawNo,
-          drawTime: fmtDisplayTime(p.drawTime),
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -249,9 +248,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const p = preview.data!.draws[i];
         if (!p) return emptyRow();
         return {
-          date: p.drawDate ?? fmtStoreDate(p.drawTime),
+          date: p.drawDate ?? displayVNDate(p.drawTime),
           drawNo: p.drawNo,
-          drawTime: fmtDisplayTime(p.drawTime),
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -272,7 +271,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         draws: rows.map((row) => ({
           drawDate: row.date,
           drawNo: row.drawNo,
-          drawTime: buildIso(row.date, row.drawTime),
+          drawTime: toVNIsoString(row.date, row.drawTime),
           openNow: row.isOpen,
         })),
       },
@@ -307,11 +306,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <Input
                 type="number"
                 min={1}
-                max={30}
+                max={KENO_CREATE_DRAW_BATCH_MAX}
                 value={count}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= 30) setCount(v);
+                  if (!isNaN(v) && v >= 1 && v <= KENO_CREATE_DRAW_BATCH_MAX) setCount(v);
                 }}
                 className="w-24 tabular-nums"
               />

@@ -6,13 +6,14 @@ import Link from "next/link";
 
 import { calcRelativeTime, formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { CalendarClock, CheckCircle2, Clock3, ExternalLink, Play, Zap } from "lucide-react";
+import type { Route } from "next";
 
-import type { DrawTimelineEvent, GetDashboardDrawsOutput } from "@/server/use-cases/draws/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGameColors } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
+import type { DrawTimelineEvent, GetDashboardDrawsOutput } from "@/server/use-cases/draws/types";
 
 import { getGameLabel } from "../_lib/compute";
 
@@ -36,8 +37,8 @@ function useRelativeTime(isoDate: string): string {
 }
 
 /** Tạo URL đến trang vận hành của game với draw được chọn sẵn. */
-function opsUrl(gameProduct: string, drawId: string) {
-  return `/games/${gameProduct}/operations?drawId=${encodeURIComponent(drawId)}`;
+function opsUrl(gameProduct: string, drawId: string): Route {
+  return `/games/${gameProduct}/operations?drawId=${encodeURIComponent(drawId)}` as Route;
 }
 
 /**

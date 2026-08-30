@@ -158,15 +158,6 @@ export interface PlayRules {
 }
 
 // ─────────────────────────────────────────────
-// Board No
-// ─────────────────────────────────────────────
-
-/**
- * Mega 6/45 cho phép tối đa 6 boards (A-F) trên vé.
- */
-export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;
-
-// ─────────────────────────────────────────────
 // Bao Combinations lookup
 // ─────────────────────────────────────────────
 

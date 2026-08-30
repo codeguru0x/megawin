@@ -210,9 +210,9 @@ export interface PlayRules {
   maxDrawCount: number;
   /** Đóng bán trước giờ quay bao nhiêu giây. Default: 60 */
   salesCloseBeforeSeconds: number;
-  /** Khoảng cách giữa các kỳ quay (phút). Default: 10 */
+  /** Khoảng cách giữa các kỳ quay (phút). Default: 8 */
   drawIntervalMinutes: number;
-  /** Giờ bắt đầu quay trong ngày. Default: "06:00" */
+  /** Giờ bắt đầu quay trong ngày. Default: "06:08" (kỳ đầu quay sau khi cửa sổ bán vé đầu tiên đóng) */
   firstDrawTime: string;
   /** Giờ kết thúc quay trong ngày (kỳ cuối). Default: "21:52" */
   lastDrawTime: string;

@@ -1,4 +1,5 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
+import type { VietlottPeriodAnchor } from "@megawin/game-core/types";
 import type {
   BasicPrizes,
   BigSmallPrizes,
@@ -44,6 +45,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
       payoutCaps: PayoutCaps;
       play: PlayRules;
       ops: OpsConfig;
+      vietlott: VietlottPeriodAnchor;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -56,6 +58,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     if (config.payoutCaps) $set.payoutCaps = config.payoutCaps;
     if (config.play) $set.play = config.play;
     if (config.ops) $set.ops = config.ops;
+    if (config.vietlott) $set.vietlott = config.vietlott;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

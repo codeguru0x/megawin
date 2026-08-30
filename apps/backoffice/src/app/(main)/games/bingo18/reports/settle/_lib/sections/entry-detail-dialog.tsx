@@ -27,6 +27,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import type { Route } from "next";
 
 import { Bingo18MatchDie } from "@/components/games/bingo18/dice-display";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
@@ -102,7 +103,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
   const accountId = (entry as any).accountId ?? "";
   const tenantUsername = toTenantUsername(entry.username ?? accountId);
-  const playerLink = `/accounts/players/${accountId}`;
+  const playerLink = `/accounts/players/${accountId}` as Route;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
     tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;

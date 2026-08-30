@@ -1,5 +1,6 @@
 import type { AuditActor } from "@megawin/audit/logger";
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { VietlottSuggestionUnavailableReason } from "@megawin/game-core/utils";
 import type { DrawEntity, Max3dDrawResult } from "@megawin/game-max3d/entities";
 import type { WireType } from "@megawin/shared/types";
 
@@ -106,6 +107,23 @@ export interface DrawTransitionOutput {
   previousStatus: string;
   /** Trạng thái sau khi chuyển đổi. */
   currentStatus: string;
+}
+
+// ─────────────────────────────────────────────
+// GetVietlottSuggestion — gợi ý mã kỳ Vietlott cho dialog publish (P4)
+// ─────────────────────────────────────────────
+
+export interface GetVietlottSuggestionInput {
+  drawId: string;
+}
+
+export interface GetVietlottSuggestionOutput {
+  /** Mã kỳ Vietlott suy được, giữ zero-pad. `null` nếu không suy được — xem `reason`. */
+  suggestedPeriod: string | null;
+  /** Lý do `suggestedPeriod` là `null` — dùng để UI hiện đúng thông báo (overview §7.1). `null` khi suy được. */
+  reason: VietlottSuggestionUnavailableReason | null;
+  /** `drawDate` của CHÍNH kỳ đang publish — dùng để prefill ô ngày Vietlott, độc lập có neo hay không. */
+  suggestedDrawDate: string;
 }
 
 // ─────────────────────────────────────────────

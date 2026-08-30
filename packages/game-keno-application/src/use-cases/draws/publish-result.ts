@@ -32,7 +32,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawResultSource, DrawStatus } from "@megawin/game-core/entities";
 import { computeDrawStats } from "@megawin/game-keno/helpers";
 import { isSameKenoResult } from "@megawin/game-keno/rules";
 import { AppException } from "@megawin/shared/errors";
@@ -59,6 +59,14 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
         "DRAW_INVALID_TRANSITION",
         `Không thể publish kết quả – draw ở trạng thái "${draw.status}".`,
       );
+    }
+
+    // Invariant server-side: chỉ chạy khi input CÓ vietlottRef (giữ optional — `undefined`
+    // nghĩa là "chỉ sửa số, giữ ref cũ", KHÔNG được validate như đang xoá ref).
+    // Bắt trùng mã kỳ giữa 2 kỳ — KHÔNG bắt được typo ra mã kỳ chưa ai dùng, cũng KHÔNG bắt
+    // được lệch neo cấu hình (xem 00-overview.md §6).
+    if (input.vietlottRef) {
+      await this.validateVietlottPeriodUnique(input.drawId, input.vietlottRef.drawPeriod);
     }
 
     const publishedAt = nowVN();
@@ -102,7 +110,10 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
 
     // winningNumbers CÓ đổi sau settle.
     const stats = computeDrawStats(input.winningNumbers);
-    const resultData = { winningNumbers: input.winningNumbers, ...stats, publishedAt };
+    // `source: Manual` — form này chỉ dùng cho staff nhập tay qua backoffice (0 caller
+    // tự động hiện tại). Auto-import (chưa triển khai) sẽ set `Import`/`Vietlott` qua
+    // use-case riêng, KHÔNG đi qua đường này.
+    const resultData = { winningNumbers: input.winningNumbers, ...stats, publishedAt, source: DrawResultSource.Manual };
 
     if (draw.status === DrawStatus.Settled) {
       // settled → published + $unset data settle cũ → mở luồng resettle.
@@ -135,7 +146,8 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
   /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult`, → `Published`. */
   private async publish(input: PublishResultInput, publishedAt: Date): Promise<PublishResultOutput> {
     const stats = computeDrawStats(input.winningNumbers);
-    const resultData = { winningNumbers: input.winningNumbers, ...stats, publishedAt };
+    // `source: Manual` — xem giải thích ở nhánh republish phía trên.
+    const resultData = { winningNumbers: input.winningNumbers, ...stats, publishedAt, source: DrawResultSource.Manual };
 
     const updated = await this.drawRepo.publishResult(input.drawId, resultData, input.vietlottRef);
 
@@ -165,5 +177,24 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
         publishedAt: publishedAt.toISOString(),
       },
     };
+  }
+
+  /**
+   * Invariant server-side cho `vietlottRef.drawPeriod`: KHÔNG kỳ nào khác được dùng cùng mã kỳ.
+   * Query qua index sparse `idx_vietlott_drawPeriod`, loại trừ chính kỳ đang publish/sửa nên sửa
+   * lại `vietlottRef` của chính nó không tự báo trùng.
+   *
+   * Chốt 30/08: BỎ check "`drawPeriod` đơn điệu tăng theo `drawTime`" của P0.2 (2 query neighbor,
+   * lại cần thêm partial index `{drawTime}` mỗi game vì không index nào có `drawTime` dẫn đầu) —
+   * dialog publish ĐÃ cảnh báo khi staff nhập lệch `suggestedPeriod`, nên check đó gần như chỉ
+   * lặp lại việc UI làm. Đánh đổi: typo ra mã kỳ CHƯA ai dùng giờ lưu được, detector còn lại là
+   * staff đối chiếu trang Vietlott (`00-overview.md` §6).
+   */
+  private async validateVietlottPeriodUnique(drawId: string, drawPeriod: string): Promise<void> {
+    const duplicate = await this.drawRepo.findDrawByVietlottPeriod(drawPeriod, drawId);
+
+    if (duplicate) {
+      throw AppException.badRequest(`Mã kỳ Vietlott "${drawPeriod}" đã được dùng cho kỳ ${duplicate.drawId}.`);
+    }
   }
 }

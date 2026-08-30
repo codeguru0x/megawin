@@ -5,6 +5,7 @@ import { type ComponentPropsWithoutRef, type ReactNode, useState } from "react";
 import Link from "next/link";
 
 import { Check, Copy } from "lucide-react";
+import type { Route } from "next";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -144,7 +145,7 @@ export function MarkdownRenderer({ content, basePath }: { content: string; baseP
         );
       }
       return (
-        <Link href={resolved} className="text-primary font-medium underline underline-offset-4">
+        <Link href={resolved as Route} className="text-primary font-medium underline underline-offset-4">
           {children}
         </Link>
       );

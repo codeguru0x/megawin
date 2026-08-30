@@ -6,20 +6,14 @@
  * Khoá 3 hành vi mà UI config/operations game dựa vào:
  * - `parseHHMMToMinutes` trả `null` (KHÔNG phải `NaN`) cho input xấu — form đang gõ dở
  *   không được hiện số rác.
- * - `computeDrawsPerDay` tính đúng số kỳ/ngày, kể cả biên (kỳ đầu = kỳ cuối → 1 kỳ).
+ * - `dayOfWeek` tính đúng thứ trong tuần THUẦN theo lịch, không lệ thuộc timezone máy.
  * - `parseYMDToLocalDate` trả `undefined` (KHÔNG phải `Invalid Date`) cho ngày sai —
  *   calendar picker hiện "chưa chọn" thay vì crash khi format.
  */
 
 import { describe, expect, it } from "vitest";
 
-import {
-  computeDrawsPerDay,
-  HHMM_PATTERN,
-  parseHHMMToMinutes,
-  parseYMDToLocalDate,
-  YMD_PATTERN,
-} from "../src/utils/date";
+import { dayOfWeek, HHMM_PATTERN, parseHHMMToMinutes, parseYMDToLocalDate, YMD_PATTERN } from "../src/utils/date";
 
 describe("HHMM_PATTERN", () => {
   it("Đúng nghiệp vụ — chấp nhận 00:00 đến 23:59 zero-padded", () => {
@@ -55,25 +49,6 @@ describe("parseHHMMToMinutes", () => {
     for (const t of ["24:00", "6:05", "", "abc"]) {
       expect(parseHHMMToMinutes(t), t).toBeNull();
     }
-  });
-});
-
-describe("computeDrawsPerDay", () => {
-  it("Đúng số học — floor((cuối − đầu) ÷ interval) + 1, kỳ đầu tính là 1 kỳ", () => {
-    // Keno mặc định: 06:00 → 21:55, mỗi 5 phút.
-    expect(computeDrawsPerDay("06:00", "21:55", 5)).toBe(192);
-    // Kỳ đầu = kỳ cuối → đúng 1 kỳ.
-    expect(computeDrawsPerDay("18:00", "18:00", 5)).toBe(1);
-    // Khoảng lẻ không chia hết → floor, không làm tròn lên.
-    expect(computeDrawsPerDay("06:00", "06:12", 5)).toBe(3);
-  });
-
-  it("Logic ngược — trả null khi input chưa hợp lệ", () => {
-    expect(computeDrawsPerDay("6:00", "21:55", 5), "giờ đầu sai format").toBeNull();
-    expect(computeDrawsPerDay("06:00", "24:00", 5), "giờ cuối sai format").toBeNull();
-    expect(computeDrawsPerDay("06:00", "21:55", 0), "interval = 0").toBeNull();
-    expect(computeDrawsPerDay("06:00", "21:55", -5), "interval âm").toBeNull();
-    expect(computeDrawsPerDay("21:55", "06:00", 5), "kỳ cuối sớm hơn kỳ đầu").toBeNull();
   });
 });
 
@@ -121,5 +96,22 @@ describe("parseYMDToLocalDate", () => {
     const d = parseYMDToLocalDate("2026-02-31");
     expect(d).toBeInstanceOf(Date);
     expect(d?.getMonth()).toBe(2);
+  });
+});
+
+describe("dayOfWeek", () => {
+  it("Đúng nghiệp vụ — trả đúng thứ trong tuần, 0=Chủ Nhật … 6=Thứ Bảy", () => {
+    // 2026-03-07 là Thứ Bảy (verify chéo với dataset Vietlott ở game-core).
+    expect(dayOfWeek("2026-03-07")).toBe(6);
+    // 2026-08-30 là Chủ Nhật.
+    expect(dayOfWeek("2026-08-30")).toBe(0);
+    // 2026-08-24 là Thứ Hai.
+    expect(dayOfWeek("2026-08-24")).toBe(1);
+  });
+
+  it("Đúng nghiệp vụ — tính THUẦN theo lịch (Date.UTC), không lệ thuộc timezone hệ thống chạy test", () => {
+    // Cùng 1 ngày phải luôn ra cùng 1 thứ dù server chạy ở timezone nào — dùng Date.UTC
+    // nội bộ nên không bị lệch dù TZ env khác VN.
+    expect(dayOfWeek("2026-01-01")).toBe(4); // Thứ Năm.
   });
 });

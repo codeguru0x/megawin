@@ -42,6 +42,9 @@ export const lotto535Keys = {
   /** Chi tiết 1 kỳ quay (full entity gồm result, financial, jackpot, stats) */
   drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
 
+  /** Gợi ý mã kỳ Vietlott cho dialog công bố kết quả (on-demand khi dialog mở) */
+  vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
+
   /**
    * Snapshot vận hành gộp (stats + top-K + alert count + exposure) — p0-03.
    * Timer 1 duy nhất; thay opsSummary/tenant/numberFrequency/playtypeDistribution/topCombos.

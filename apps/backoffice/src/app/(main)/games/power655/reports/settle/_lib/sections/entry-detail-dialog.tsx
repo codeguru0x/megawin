@@ -23,6 +23,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import type { Route } from "next";
 
 import { PowerMatchBall } from "@/components/games/power655/power-number-ball";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
@@ -100,7 +101,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const bonusNumber = entry.result?.bonusNumber;
 
   const tenantUsername = toTenantUsername(entry.username);
-  const playerLink = `/accounts/players/${entry.accountId}`;
+  const playerLink = `/accounts/players/${entry.accountId}` as Route;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
     tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;

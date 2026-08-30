@@ -12,8 +12,6 @@ import { PlayMode, PlayType } from "../entities/enums";
 import type { BoardSelection } from "../entities/types";
 import { getPermutationCount } from "./prize-tiers";
 
-export const VALID_BOARD_NOS = ["A", "B", "C", "D"] as const;
-
 /**
  * Tính số line (lần tham gia dự thưởng) cho 1 board.
  *

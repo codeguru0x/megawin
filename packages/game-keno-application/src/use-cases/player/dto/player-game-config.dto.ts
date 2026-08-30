@@ -20,7 +20,7 @@ export interface PlayerGameRules {
   maxDrawCount: number;
   /** Khoảng cách giữa các kỳ quay (phút). */
   drawIntervalMinutes: number;
-  /** Giờ bắt đầu quay trong ngày. VD: "06:00". */
+  /** Giờ bắt đầu quay trong ngày. VD: "06:08". */
   firstDrawTime: string;
   /** Giờ kết thúc quay trong ngày. VD: "21:52". */
   lastDrawTime: string;

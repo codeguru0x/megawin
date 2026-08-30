@@ -3,7 +3,7 @@ import { UseCase } from "@megawin/app-core/use-cases";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import type { ListSettleDrawReportsInput, ListSettleDrawReportsOutput } from "./types";
 
-/** Lấy danh sách settle draw reports. Bingo 18 ~160 kỳ/ngày — pagination BẮT BUỘC. */
+/** Lấy danh sách settle draw reports. Bingo 18 ~158 kỳ/ngày — pagination BẮT BUỘC. */
 export class ListSettleDrawReportsUseCase extends UseCase<ListSettleDrawReportsInput, ListSettleDrawReportsOutput> {
   private readonly repo = new SettleDrawReportRepository();
   protected async execute(input: ListSettleDrawReportsInput): Promise<ListSettleDrawReportsOutput> {

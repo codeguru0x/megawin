@@ -23,7 +23,7 @@ function Bingo18FinancialContent() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Bingo 18 — Báo cáo tài chính</h1>
-            <p className="text-xs text-muted-foreground">Doanh thu, trả thưởng, hoa hồng · ~160 kỳ/ngày</p>
+            <p className="text-xs text-muted-foreground">Doanh thu, trả thưởng, hoa hồng · ~158 kỳ/ngày</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

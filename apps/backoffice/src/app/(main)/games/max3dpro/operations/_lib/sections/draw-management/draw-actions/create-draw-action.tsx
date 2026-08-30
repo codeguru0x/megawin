@@ -13,7 +13,16 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { formatVNDate, formatVNTime, parseYMDToLocalDate, YMD_PATTERN } from "@megawin/shared/utils";
+import { MAX3D_PRO_CREATE_DRAW_BATCH_MAX } from "@megawin/game-max3dpro/schemas";
+import {
+  displayVNDate,
+  displayVNTime,
+  parseYMDToLocalDate,
+  todayVNAsLocalDate,
+  toVNIsoString,
+  WEEKDAY_LABELS_ABBR,
+  YMD_PATTERN,
+} from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
@@ -54,37 +63,15 @@ function emptyRow(): DrawRow {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function fmtDisplayTime(iso: string): string {
-  return formatVNTime(new Date(iso));
-}
-
-function fmtStoreDate(iso: string): string {
-  return formatVNDate(new Date(iso));
-}
-
-function buildIso(date: string, time: string): string {
-  return `${date}T${time}:00+07:00`;
-}
-
 function isRowComplete(row: DrawRow): boolean {
   return YMD_PATTERN.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
 }
-
-const DAY_LABELS: Record<number, string> = {
-  0: "CN",
-  1: "T2",
-  2: "T3",
-  3: "T4",
-  4: "T5",
-  5: "T6",
-  6: "T7",
-};
 
 /** T3/T5/T7 — thứ trong tuần viết tắt theo lịch Max 3D Pro. */
 function getWeekdayLabel(dateStr: string): string {
   const dt = parseYMDToLocalDate(dateStr);
   if (!dt) return "—";
-  return DAY_LABELS[dt.getDay()] ?? "";
+  return WEEKDAY_LABELS_ABBR[dt.getDay()] ?? "";
 }
 
 // ─── DatePicker ───────────────────────────────────────────────────────────────
@@ -134,7 +121,10 @@ function DatePickerCell({
           locale={vi}
           startMonth={new Date(2025, 0)}
           endMonth={new Date(2030, 11)}
-          initialFocus
+          // Chặn ngày quá khứ: ngày đã qua theo nghiệp vụ đã có kết quả, tạo kỳ mới là vô nghĩa
+          // (server cũng chặn — đây chỉ là lớp UX để staff không phải thử-rồi-lỗi).
+          disabled={{ before: todayVNAsLocalDate() }}
+          autoFocus
         />
       </PopoverContent>
     </Popover>
@@ -206,8 +196,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const isEmpty = row.date === "" && row.drawTime === "";
         if (!isEmpty) return row;
         return {
-          date: p.drawDate ?? fmtStoreDate(p.drawTime),
-          drawTime: fmtDisplayTime(p.drawTime),
+          date: p.drawDate ?? displayVNDate(p.drawTime),
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -244,8 +234,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const p = preview.data!.draws[i];
         if (!p) return emptyRow();
         return {
-          date: p.drawDate ?? fmtStoreDate(p.drawTime),
-          drawTime: fmtDisplayTime(p.drawTime),
+          date: p.drawDate ?? displayVNDate(p.drawTime),
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -264,7 +254,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       {
         draws: rows.map((row) => ({
           drawDate: row.date,
-          drawTime: buildIso(row.date, row.drawTime),
+          drawTime: toVNIsoString(row.date, row.drawTime),
           openNow: row.isOpen,
         })),
       },
@@ -298,11 +288,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <Input
                 type="number"
                 min={1}
-                max={12}
+                max={MAX3D_PRO_CREATE_DRAW_BATCH_MAX}
                 value={count}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= 12) setCount(v);
+                  if (!isNaN(v) && v >= 1 && v <= MAX3D_PRO_CREATE_DRAW_BATCH_MAX) setCount(v);
                 }}
                 className="w-24 tabular-nums"
               />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { ChevronLeft } from "lucide-react";
+import type { Route } from "next";
 
 import { usePlayerProfile } from "../_shared/queries";
 
@@ -20,7 +21,7 @@ interface PlayerBackLinkProps {
 export function PlayerBackLink({ accountId }: PlayerBackLinkProps) {
   const { data: profile } = usePlayerProfile(accountId);
   // Nếu profile chưa load → link không có tenant param, vẫn hoạt động
-  const href = profile?.tenantId ? `/accounts/players?tenantId=${profile.tenantId}` : "/accounts/players";
+  const href = (profile?.tenantId ? `/accounts/players?tenantId=${profile.tenantId}` : "/accounts/players") as Route;
 
   return (
     <Link

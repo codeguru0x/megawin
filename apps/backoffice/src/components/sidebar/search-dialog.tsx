@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { defaultFilter, useCommandState } from "cmdk";
 import type { LucideIcon } from "lucide-react";
 import { BookOpenIcon, LayoutDashboardIcon, Search, SparklesIcon } from "lucide-react";
+import type { Route } from "next";
 
 import { STAFF_GUIDE_MANIFEST } from "@/app/(main)/guides/_lib/staff-manifest";
 import { useAiPanel } from "@/components/ai-panel/ai-panel-provider";
@@ -321,7 +322,9 @@ export function SearchDialog() {
   const handleSelect = React.useCallback(
     (url: string) => {
       handleOpenChange(false);
-      router.push(url);
+      // `url` gộp từ nhiều nguồn (nav-registry, sidebar items, guides manifest) — đã validate
+      // ở nguồn, cast an toàn qua `Route`.
+      router.push(url as Route);
     },
     [handleOpenChange, router],
   );

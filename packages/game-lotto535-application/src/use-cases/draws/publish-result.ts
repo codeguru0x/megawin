@@ -34,6 +34,14 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
       );
     }
 
+    // Invariant server-side: chỉ chạy khi input CÓ vietlottRef (giữ optional — `undefined`
+    // nghĩa là "chỉ sửa số, giữ ref cũ", KHÔNG được validate như đang xoá ref).
+    // Bắt trùng mã kỳ giữa 2 kỳ — KHÔNG bắt được typo ra mã kỳ chưa ai dùng, cũng KHÔNG bắt
+    // được lệch neo cấu hình (xem 00-overview.md §6).
+    if (input.vietlottRef) {
+      await this.validateVietlottPeriodUnique(input.drawId, input.vietlottRef.drawPeriod);
+    }
+
     const winningMain = [...input.winningMain];
     const winningSpecial = input.winningSpecial;
     const publishedAt = nowVN();
@@ -181,5 +189,24 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
         publishedAt: publishedAt.toISOString(),
       },
     };
+  }
+
+  /**
+   * Invariant server-side cho `vietlottRef.drawPeriod`: KHÔNG kỳ nào khác được dùng cùng mã kỳ.
+   * Query qua index sparse `idx_vietlott_drawPeriod`, loại trừ chính kỳ đang publish/sửa nên sửa
+   * lại `vietlottRef` của chính nó không tự báo trùng.
+   *
+   * Chốt 30/08: BỎ check "`drawPeriod` đơn điệu tăng theo `drawTime`" của P0.2 (2 query neighbor,
+   * lại cần thêm partial index `{drawTime}` mỗi game vì không index nào có `drawTime` dẫn đầu) —
+   * dialog publish ĐÃ cảnh báo khi staff nhập lệch `suggestedPeriod`, nên check đó gần như chỉ
+   * lặp lại việc UI làm. Đánh đổi: typo ra mã kỳ CHƯA ai dùng giờ lưu được, detector còn lại là
+   * staff đối chiếu trang Vietlott (`00-overview.md` §6).
+   */
+  private async validateVietlottPeriodUnique(drawId: string, drawPeriod: string): Promise<void> {
+    const duplicate = await this.drawRepo.findDrawByVietlottPeriod(drawPeriod, drawId);
+
+    if (duplicate) {
+      throw AppException.badRequest(`Mã kỳ Vietlott "${drawPeriod}" đã được dùng cho kỳ ${duplicate.drawId}.`);
+    }
   }
 }

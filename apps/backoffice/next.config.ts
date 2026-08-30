@@ -5,6 +5,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // Statically Typed Links (stable từ Next 15) — compiler tự sinh union tất cả route thật từ
+  // `src/app/**` vào `.next/types`, ép mọi `<Link href>`/`router.push()` khớp cấu trúc file
+  // THẬT. Đổi/xoá 1 folder route → build đỏ ngay tại chỗ gọi, không phải 404 lặng lẽ lúc runtime.
+  // Không thay được cho `nav-registry.ts` (chỉ validate PATH, không validate query string/enum
+  // tab) — 2 lớp bổ sung nhau, không lớp nào dư.
+  typedRoutes: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },

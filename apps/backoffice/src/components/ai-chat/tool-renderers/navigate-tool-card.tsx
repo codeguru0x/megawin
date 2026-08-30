@@ -47,6 +47,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import type { EveDynamicToolPart } from "eve/react";
 import { ArrowUpRightIcon, PencilLineIcon } from "lucide-react";
+import type { Route } from "next";
 
 import { AI_FULL_PAGE_PATH } from "@/config/app-config";
 import { collectAiPageContext } from "@/lib/ai-page-context";
@@ -117,7 +118,7 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
       return;
     }
     navigatedRef.current = toolCallId;
-    router.push(output.href);
+    router.push(output.href as Route);
   }, [isPageVariant, hrefIsSafe, shouldAutoNavigate, toolCallId, output.href, router]);
 
   if (!hrefIsSafe) {
@@ -133,7 +134,7 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
       // `not-prose`: thẻ nằm giữa văn xuôi markdown của trợ lý (`.chat-md`) — không để style
       // anchor/paragraph của prose đè lên (cùng lý do `ToolResultLine` khai `not-prose`).
       className="not-prose group flex w-full items-start gap-2.5 rounded-lg border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-accent/40"
-      href={output.href}
+      href={output.href as Route}
       // Nhãn bị `truncate` khi dài hơn panel ⇒ giữ đường thoát đọc trọn ngữ cảnh bằng hover.
       title={output.label}
     >

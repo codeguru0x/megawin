@@ -12,8 +12,9 @@ import type {
   DrawVoidSummary,
 } from "@megawin/game-lotto535/entities";
 import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
-import { formatVNDate } from "@megawin/shared/utils";
-import type { FindOptions } from "mongodb";
+import { AppException } from "@megawin/shared/errors";
+import { formatVNDate, logError } from "@megawin/shared/utils";
+import type { AnyBulkWriteOperation, Document, FindOptions } from "mongodb";
 
 import { DrawMapper } from "../mappers/draw-mapper";
 import { BaseRepo } from "./base-repo";
@@ -49,10 +50,59 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     });
   }
 
+  /**
+   * Tạo N kỳ quay trong **1 MongoDB transaction** — all-or-nothing.
+   *
+   * Vì sao KHÔNG `insertMany` như trước: `insertMany` không atomic (kỳ trước lỗi thì kỳ sau vẫn
+   * có thể đã ghi), và gặp drawId trùng thì raise duplicate key (11000) thô. Transaction đảm
+   * bảo fail là rollback sạch — staff bấm lại từ đầu, không phải dò xem kỳ nào đã tạo.
+   *
+   * Vì sao `updateOne` + `$setOnInsert` + `upsert: true`:
+   * - **Không bao giờ ghi đè** kỳ đã tồn tại (không đụng vé/kết quả của kỳ cũ).
+   * - Không raise 11000; kỳ đã tồn tại chỉ no-op → phát hiện qua `upsertedCount` rồi báo lỗi
+   *   nghiệp vụ rõ ràng thay vì lỗi driver.
+   *
+   * Guard `upsertedCount !== docs.length` → **throw để abort transaction**: đây là lớp phòng
+   * thủ cuối cho race giữa `getDrawsByIds` (guard ở use case) và lệnh ghi này.
+   *
+   * Yêu cầu hạ tầng: MongoDB Atlas M10+ / Replica Set (transaction) — cùng điều kiện với
+   * `PlaceBetStore` vốn đã chạy production.
+   *
+   * @param docs - Danh sách doc kỳ quay đã build đủ field (drawId unique trong lô)
+   * @returns Số kỳ thực sự được insert (luôn `= docs.length` khi không throw)
+   * @throws `AppException.conflict` khi có drawId đã tồn tại trong DB (đã rollback toàn lô)
+   */
   async createDraws(docs: Omit<DrawDoc, "_id">[]): Promise<number> {
-    if (docs.length === 0) return 0;
-    const result = await this.insertMany(docs as any[]);
-    return result.insertedCount;
+    if (docs.length === 0) {
+      return 0;
+    }
+
+    const ops: AnyBulkWriteOperation<Document>[] = docs.map((doc) => ({
+      updateOne: {
+        filter: { drawId: doc.drawId },
+        update: { $setOnInsert: doc as Document },
+        upsert: true,
+      },
+    }));
+
+    return await this.withTransaction(async (session) => {
+      // `ordered: true` (default) — trong transaction không cần chạy tiếp sau lỗi đầu tiên.
+      const result = await this.bulkWrite(ops, { session });
+
+      if (result.upsertedCount !== docs.length) {
+        // `upsertedIds` là object keyed theo INDEX của op → doc thứ i được insert ⟺ có key i.
+        const existed = docs.filter((_, i) => result.upsertedIds[i] === undefined).map((d) => d.drawId);
+        // Log đầy đủ drawId trùng để audit/debug — KHÔNG đưa vào message/details của
+        // AppException vì đó bị trả NGUYÊN VĂN cho client (client không tự xử lý được danh
+        // sách drawId, chỉ cần biết để bấm tạo lại — xem error-handling-conventions.mdc).
+        logError("DrawRepository.createDraws", new Error("upsertedCount lệch docs.length khi tạo lô kỳ quay"), {
+          existed,
+        });
+        throw AppException.conflict("Một số kỳ trong lô đã tồn tại, vui lòng tải lại và tạo lô mới.");
+      }
+
+      return result.upsertedCount;
+    });
   }
 
   async getDrawById(drawId: string): Promise<DrawEntity | null> {
@@ -154,6 +204,17 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       // Chỉ cần drawId + status cho thông báo lỗi → projection giảm payload:
       // deserialize/transfer 3 field nhỏ (kèm _id mapper cần) thay vì nguyên doc.
       { sort: { drawId: -1 }, projection: { drawId: 1, status: 1 } },
+    );
+  }
+
+  /**
+   * Tìm kỳ KHÁC (loại trừ `excludeDrawId`) đang dùng đúng `drawPeriod` này — validate invariant
+   * "không trùng `drawPeriod`" (xem `PublishResultUseCase`). Dùng index sparse `idx_vietlott_drawPeriod`.
+   */
+  async findDrawByVietlottPeriod(drawPeriod: string, excludeDrawId: string): Promise<DrawEntity | null> {
+    return await this.findOne(
+      { "vietlottRef.drawPeriod": drawPeriod, drawId: { $ne: excludeDrawId } },
+      { projection: { drawId: 1, vietlottRef: 1 } },
     );
   }
 

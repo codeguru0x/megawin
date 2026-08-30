@@ -7,6 +7,7 @@ import type {
   OpsStatsConfig,
   PlayRules,
   PrizeAmounts,
+  VietlottPeriodAnchor,
 } from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
@@ -55,6 +56,10 @@ export interface UpdateGameConfigInput {
    * per sub-section (alerts/stats), `enabled` merge shallow ở use-case.
    */
   ops?: UpdateOpsInput;
+  /**
+   * Neo suy mã kỳ Vietlott (tuỳ chọn cập nhật một phần) — xem `GlobalConfigDoc.vietlott`.
+   */
+  vietlott?: Partial<VietlottPeriodAnchor>;
   /** Chủ thể thực hiện (staff BO) — dùng cho audit. */
   actor: AuditActor;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { DollarSign, Percent, Settings2, ShieldAlert, Trophy } from "lucide-react";
+import { DollarSign, ExternalLink, Percent, Settings2, ShieldAlert, Trophy } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +13,7 @@ import { PlayRulesSection } from "./_lib/play-rules-section";
 import { PrizesSection } from "./_lib/prizes-section";
 import { RatesSection } from "./_lib/rates-section";
 import { useGameConfig, useUpdateGameConfig } from "./_lib/use-game-config";
+import { VietlottAnchorSection } from "./_lib/vietlott-anchor-section";
 
 function ConfigSkeleton() {
   return (
@@ -29,7 +30,7 @@ export default function Lotto535ConfigPage() {
 
   const [tab, setTab] = useQueryState(
     "tab",
-    parseAsStringEnum(["jackpot", "prizes", "rates", "play", "ops"]).withDefault("jackpot"),
+    parseAsStringEnum(["jackpot", "prizes", "rates", "play", "ops", "vietlott"]).withDefault("jackpot"),
   );
 
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
@@ -83,6 +84,10 @@ export default function Lotto535ConfigPage() {
               <ShieldAlert className="size-4 text-amber-500" />
               Vận hành
             </TabsTrigger>
+            <TabsTrigger value="vietlott" className="gap-1.5">
+              <ExternalLink className="size-4 text-blue-500" />
+              Vietlott
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jackpot" className="mt-2">
@@ -103,6 +108,10 @@ export default function Lotto535ConfigPage() {
 
           <TabsContent value="ops" className="mt-2">
             <OpsSection config={config} onSave={handleSave} isPending={mutation.isPending} />
+          </TabsContent>
+
+          <TabsContent value="vietlott" className="mt-2">
+            <VietlottAnchorSection config={config} onSave={handleSave} isPending={mutation.isPending} />
           </TabsContent>
         </Tabs>
       )}
