@@ -8,7 +8,7 @@ import type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selecto
 /**
  * Dropdown chọn kỳ quay cho Bingo 18 Operations Dashboard.
  *
- * Bingo 18 có ~160 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải:
+ * Bingo 18 có ~158 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải:
  *   - active: unfinished còn lại (salesOpen/salesClosed/published/settling/voiding, và cả
  *     scheduled đã tới hạn/quá khứ — coi như cần xử lý).
  *   - future: scheduled sắp tới, chỉ lấy 10 kỳ gần nhất (sort drawId asc).

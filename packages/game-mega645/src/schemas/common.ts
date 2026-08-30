@@ -10,8 +10,16 @@ import { z } from "zod";
 
 import { MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MAX, MEGA645_NUMBER_MIN } from "../entities/types";
 
-/** Board nos hợp lệ cho Mega 6/45: tối đa 6 boards, ký hiệu A-F. */
-export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;
+/**
+ * Trần rộng (sanity ceiling) cho số kỳ tối đa trong 1 lần tạo — dùng chung giữa Zod schema
+ * route (`createDrawSchema.draws`, `previewDrawsSchema.count`) và input UI
+ * (`create-draw-action.tsx`) để tránh lệch giá trị giữa 2 nơi.
+ *
+ * Mega 6/45 quay 1 kỳ/ngày nên trần đủ cho ~2 tuần/lần tạo. KHÔNG phải giới hạn nghiệp vụ
+ * thật — giới hạn thật do use-case tính lại theo GlobalConfig tại thời điểm tạo. Hằng số
+ * này chỉ chặn input vô lý (batch quá khổ).
+ */
+export const MEGA645_CREATE_DRAW_BATCH_MAX = 12;
 
 /**
  * Schema validate 1 số chính Mega 6/45.

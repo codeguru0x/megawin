@@ -6,7 +6,7 @@
  * Wrapper game-specific: quản lý URL state (nuqs) cho filter + page,
  * fetch data, inject render props vào DrawHistoryTable chung.
  *
- * Keno ~120 kỳ/ngày — mặc định filter 1 ngày gần nhất thay vì 7 ngày.
+ * Keno ~119 kỳ/ngày — mặc định filter 1 ngày gần nhất thay vì 7 ngày.
  * Keno không có Jackpot: companyTake = profit.
  * Kết quả: 20 số (01-80) dùng KenoNumberBall.
  */

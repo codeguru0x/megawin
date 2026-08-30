@@ -37,6 +37,7 @@ import {
   SquarePenIcon,
   X,
 } from "lucide-react";
+import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -65,7 +66,8 @@ export function PanelChatHeader({ onClose }: { onClose: () => void }) {
     actions: { newChat },
   } = useAiPanel();
 
-  const fullPageHref = activeThreadId ? `${AI_FULL_PAGE_PATH}?thread=${activeThreadId}` : AI_FULL_PAGE_PATH;
+  // `AI_FULL_PAGE_PATH` là hằng số nội bộ (route `/ai` cố định) — an toàn cast, không qua nav-registry.
+  const fullPageHref = (activeThreadId ? `${AI_FULL_PAGE_PATH}?thread=${activeThreadId}` : AI_FULL_PAGE_PATH) as Route;
 
   // `isPending` bật trong suốt lúc Next tải RSC payload của `/ai` — nút đổi sang spinner để staff
   // biết cú bấm ĐÃ được nhận. Bản trước không có tín hiệu nào ở đây: panel biến mất tức thì rồi màn

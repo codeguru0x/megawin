@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent } from "react";
 
 import type {
   GetDrawDetailOutput,
+  GetVietlottSuggestionOutput,
   PreviewDrawsOutput,
   ResettlePreflightOutput,
 } from "@megawin/game-lotto535-application/use-cases/draws";
@@ -87,6 +88,24 @@ export function useDrawDetail(drawId: string | undefined) {
     enabled: !!drawId,
     // Sau khi settled thì không thay đổi → staleTime cao
     staleTime: 5 * 60_000,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Vietlott Period Suggestion — gợi ý mã kỳ cho dialog publish (P3)
+// ─────────────────────────────────────────────
+
+/**
+ * Gợi ý mã kỳ Vietlott (`vietlottRef.drawPeriod`) — chỉ fetch khi dialog công bố kết
+ * quả đang mở (`enabled`). Đọc neo + lịch quay từ config DB phía server, không tính
+ * gì ở client (overview §4.4).
+ */
+export function useVietlottSuggestion(drawId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: lotto535Keys.vietlottSuggestion(drawId ?? ""),
+    queryFn: () => apiClient.get<GetVietlottSuggestionOutput>(`/lotto535/draws/${drawId}/vietlott-suggestion`),
+    enabled: !!drawId && enabled,
+    staleTime: 60_000,
   });
 }
 
@@ -447,7 +466,6 @@ export function useCreateDraw() {
     mutationFn: (data: {
       draws: Array<{
         drawDate: string;
-        drawNo: 1 | 2;
         drawTime: string;
         openNow: boolean;
       }>;

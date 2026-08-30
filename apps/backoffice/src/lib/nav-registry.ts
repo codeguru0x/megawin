@@ -120,9 +120,9 @@ export type BuildNavHrefResult =
 // Enum giá trị dùng lại cho nhiều entry
 // ─────────────────────────────────────────────────────────────────────────────
 
-const KENO_CONFIG_TABS = ["prizes", "sidebets", "caps", "rates", "play", "ops"] as const;
-const JACKPOT_GAME_CONFIG_TABS = ["jackpot", "prizes", "rates", "play", "ops"] as const;
-const PLAIN_GAME_CONFIG_TABS = ["prizes", "rates", "play", "ops"] as const;
+const KENO_CONFIG_TABS = ["prizes", "sidebets", "caps", "rates", "play", "ops", "vietlott"] as const;
+const JACKPOT_GAME_CONFIG_TABS = ["jackpot", "prizes", "rates", "play", "ops", "vietlott"] as const;
+const PLAIN_GAME_CONFIG_TABS = ["prizes", "rates", "play", "ops", "vietlott"] as const;
 
 const ALL_GAME_KEYS = Object.values(GameProduct);
 const JACKPOT_GAME_KEYS = Object.values(JackpotGameProduct);

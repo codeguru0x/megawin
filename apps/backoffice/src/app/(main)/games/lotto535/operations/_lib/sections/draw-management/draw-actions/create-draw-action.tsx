@@ -2,11 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { formatVNDate, formatVNTime, parseYMDToLocalDate, YMD_PATTERN } from "@megawin/shared/utils";
+import { LOTTO535_CREATE_DRAW_BATCH_MAX } from "@megawin/game-lotto535/schemas";
+import {
+  displayVNDate,
+  displayVNTime,
+  parseYMDToLocalDate,
+  todayVNAsLocalDate,
+  toVNIsoString,
+  YMD_PATTERN,
+} from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
 
+import { useGameConfig } from "@/app/(main)/games/lotto535/config/game/_lib/use-game-config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,8 +40,6 @@ import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 interface DrawRow {
   /** Ngày quay, format "YYYY-MM-DD". Trống nếu chưa chọn. */
   date: string;
-  /** Số thứ tự kỳ trong ngày: 1 = sáng (13h), 2 = tối (21h). 0 nếu chưa xác định. */
-  drawNo: 1 | 2 | 0;
   /** Giờ quay, format "HH:mm". */
   drawTime: string;
   /** Mở bán ngay khi tạo. */
@@ -40,30 +47,28 @@ interface DrawRow {
 }
 
 function emptyRow(): DrawRow {
-  return { date: "", drawNo: 0, drawTime: "", isOpen: false };
+  return { date: "", drawTime: "", isOpen: true };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** "HH:mm" từ ISO string, theo giờ VN. */
-function fmtDisplayTime(iso: string): string {
-  return formatVNTime(new Date(iso));
-}
-
-/** "YYYY-MM-DD" từ ISO string, theo giờ VN. */
-function fmtStoreDate(iso: string): string {
-  return formatVNDate(new Date(iso));
-}
-
-/** Tạo ISO string từ date "YYYY-MM-DD" + time "HH:mm" (giờ VN). */
-function buildIso(date: string, time: string): string {
-  // Dùng trực tiếp format ISO với offset +07:00 để đúng timezone VN.
-  return `${date}T${time}:00+07:00`;
-}
-
 /** Kiểm tra row đã có đủ thông tin để submit. */
 function isRowComplete(row: DrawRow): boolean {
-  return YMD_PATTERN.test(row.date) && (row.drawNo === 1 || row.drawNo === 2) && /^\d{2}:\d{2}$/.test(row.drawTime);
+  return YMD_PATTERN.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
+}
+
+/**
+ * Nhãn kỳ CHỈ để hiển thị — suy ra bằng cách tìm vị trí `drawTime` trong `play.drawTimes` của
+ * game config (KHÔNG hardcode giờ ở đây, tránh lệch khi đổi lịch quay). KHÔNG gửi lên server —
+ * server tự tính lại drawNo từ `play.drawTimes` khi tạo kỳ; label này chỉ giúp staff xác nhận
+ * giờ đã nhập đúng lịch trước khi submit.
+ */
+function inferSlotLabel(drawTime: string, drawTimes: string[]): string {
+  const idx = drawTimes.indexOf(drawTime);
+  if (idx === -1) {
+    return drawTime ? "—" : "";
+  }
+  return `Kỳ ${idx + 1}`;
 }
 
 // ─── DatePicker (calendar popover) ───────────────────────────────────────────
@@ -113,7 +118,10 @@ function DatePickerCell({
           locale={vi}
           startMonth={new Date(2025, 0)}
           endMonth={new Date(2030, 11)}
-          initialFocus
+          // Chặn ngày quá khứ: ngày đã qua theo nghiệp vụ đã có kết quả, tạo kỳ mới là vô nghĩa
+          // (server cũng chặn — đây chỉ là lớp UX để staff không phải thử-rồi-lỗi).
+          disabled={{ before: todayVNAsLocalDate() }}
+          autoFocus
         />
       </PopoverContent>
     </Popover>
@@ -167,6 +175,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
 
   const preview = usePreviewDraws(open ? count : 0);
   const createDraw = useCreateDraw();
+  // Lấy drawTimes từ game config để suy nhãn "Kỳ N" — không hardcode giờ trong UI.
+  const { data: gameConfig } = useGameConfig();
+  const drawTimes = gameConfig?.play.drawTimes ?? [];
 
   // Khi count thay đổi → resize rows, giữ lại dữ liệu cũ.
   useEffect(() => {
@@ -194,9 +205,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const isEmpty = row.date === "" && row.drawTime === "";
         if (!isEmpty) return row;
         return {
-          date: fmtStoreDate(p.drawTime),
-          drawNo: p.drawNo as 1 | 2,
-          drawTime: fmtDisplayTime(p.drawTime),
+          date: displayVNDate(p.drawTime),
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -237,9 +247,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const p = preview.data!.draws[i];
         if (!p) return emptyRow();
         return {
-          date: fmtStoreDate(p.drawTime),
-          drawNo: p.drawNo as 1 | 2,
-          drawTime: fmtDisplayTime(p.drawTime),
+          date: displayVNDate(p.drawTime),
+          drawTime: displayVNTime(p.drawTime),
           isOpen: row.isOpen,
         };
       }),
@@ -261,8 +270,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       {
         draws: rows.map((row) => ({
           drawDate: row.date,
-          drawNo: row.drawNo as 1 | 2,
-          drawTime: buildIso(row.date, row.drawTime),
+          drawTime: toVNIsoString(row.date, row.drawTime),
           openNow: row.isOpen,
         })),
       },
@@ -303,11 +311,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <Input
                 type="number"
                 min={1}
-                max={12}
+                max={LOTTO535_CREATE_DRAW_BATCH_MAX}
                 value={count}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= 12) setCount(v);
+                  if (!isNaN(v) && v >= 1 && v <= LOTTO535_CREATE_DRAW_BATCH_MAX) setCount(v);
                 }}
                 className="w-24 tabular-nums"
               />
@@ -382,7 +390,6 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               {rows.map((row, i) => {
                 const complete = isRowComplete(row);
                 const dateErr = !row.date;
-                const drawNoErr = row.drawNo === 0;
                 const timeErr = !row.drawTime;
 
                 return (
@@ -411,24 +418,10 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     {/* Ngày — date picker */}
                     <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
 
-                    {/* DrawNo: 1 = K1 (13h), 2 = K2 (21h) */}
-                    <div className="relative">
-                      <select
-                        value={row.drawNo}
-                        onChange={(e) => updateRow(i, { drawNo: Number(e.target.value) as 1 | 2 | 0 })}
-                        className={cn(
-                          "h-8 w-full rounded-md border bg-background px-2.5 text-xs font-mono tabular-nums",
-                          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors",
-                          drawNoErr ? "border-dashed border-amber-400 text-amber-500" : "border-input text-foreground",
-                        )}
-                      >
-                        <option value={0} disabled>
-                          Chọn
-                        </option>
-                        <option value={1}>Kỳ 1 · 13h</option>
-                        <option value={2}>Kỳ 2 · 21h</option>
-                      </select>
-                    </div>
+                    {/* Kỳ — CHỈ hiển thị, suy ra từ giờ quay khớp play.drawTimes. Server tự tính lại drawNo, không nhận từ đây. */}
+                    <span className="flex h-8 items-center justify-center rounded-md border border-input bg-muted/30 px-2.5 text-xs font-mono tabular-nums text-muted-foreground">
+                      {inferSlotLabel(row.drawTime, drawTimes)}
+                    </span>
 
                     {/* Giờ quay — time picker */}
                     <TimePickerCell
@@ -472,7 +465,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           {/* Hint khi có ô chưa điền */}
           {completedRows.length < rows.length && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              {rows.length - completedRows.length} kỳ chưa có đủ thông tin (ngày + kỳ + giờ quay).
+              {rows.length - completedRows.length} kỳ chưa có đủ thông tin (ngày + giờ quay).
             </p>
           )}
         </div>

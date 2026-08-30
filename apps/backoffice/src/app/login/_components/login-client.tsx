@@ -11,6 +11,7 @@ import { Crown, Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_CONFIG } from "@/config/app-config";
+import { saveAuthCallbackUrl } from "@/lib/auth/callback-url-storage";
 import { signIn } from "@/lib/auth-client";
 
 const AUTO_REDIRECT_SECONDS = 1;
@@ -20,8 +21,23 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(AUTO_REDIRECT_SECONDS);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Chống double-invoke handleSignIn (click tay trùng thời điểm auto-redirect effect
+  // fire, do AUTO_REDIRECT_SECONDS=1 rất ngắn). `isLoading` (state) không đủ vì cập
+  // nhật bất đồng bộ qua re-render — 2 lời gọi gần như đồng thời vẫn có thể lọt qua
+  // trước khi re-render tới. Ref đọc/ghi đồng bộ ngay trong cùng tick, chặn được lời
+  // gọi thứ 2. Double-invoke khiến 2 request generateState() chạy song song, mỗi
+  // request set lại cookie `oauth_state` (đè lên nhau) nhưng browser chỉ redirect
+  // theo URL (chứa `state` query param) của MỘT trong hai request — nếu cookie cuối
+  // cùng không khớp `state` trên URL đó → Cognito callback báo `state_mismatch` NGAY,
+  // không cần chờ hết hạn 10 phút.
+  const hasStartedRef = useRef(false);
 
   const handleSignIn = useCallback(async () => {
+    if (hasStartedRef.current) {
+      return;
+    }
+    hasStartedRef.current = true;
+
     // Dừng timer khi user click hoặc tự động redirect
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -31,6 +47,12 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
     setIsLoading(true);
     setError(null);
 
+    // Lưu callbackUrl TRƯỚC khi rời trang — OAuth state của better-auth hết hạn
+    // cứng sau 10 phút (không config được), nếu user để trang Cognito mở quá lâu
+    // callback sẽ báo state_mismatch và mất luôn callbackUrl gốc. auth/error đọc
+    // lại giá trị này để đưa user về đúng trang đích khi thử đăng nhập lại.
+    saveAuthCallbackUrl(callbackUrl ?? "/");
+
     try {
       await signIn.social({
         provider: "cognito",
@@ -39,6 +61,7 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
     } catch (err) {
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
       setIsLoading(false);
+      hasStartedRef.current = false;
       // Reset countdown khi lỗi
       setCountdown(AUTO_REDIRECT_SECONDS);
     }

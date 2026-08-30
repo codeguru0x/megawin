@@ -6,6 +6,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
+import { MAX3D_PRO_CREATE_DRAW_BATCH_MAX } from "@megawin/game-max3dpro/schemas";
 import { AppException } from "@megawin/shared/errors";
 
 import { calcMax3dproDrawSlots } from "../../helpers/calc-draw-slots";
@@ -22,8 +23,10 @@ export class PreviewDrawsUseCase extends UseCase<PreviewDrawsInput, PreviewDraws
 
     const globalConfig = await this.getGlobalConfig.run();
 
-    if (count < 1 || count > 12) {
-      throw AppException.badRequest("Số kỳ xem trước phải từ 1 đến 12.");
+    // Zod route (previewDrawsSchema) đã chặn count qua MAX3D_PRO_CREATE_DRAW_BATCH_MAX — check lại
+    // ở đây để tham chiếu ĐÚNG 1 hằng số duy nhất, không hardcode số lặp lại (dễ lệch khi đổi limit).
+    if (count < 1 || count > MAX3D_PRO_CREATE_DRAW_BATCH_MAX) {
+      throw AppException.badRequest(`Số kỳ xem trước phải từ 1 đến ${MAX3D_PRO_CREATE_DRAW_BATCH_MAX}.`);
     }
 
     // getUnfinishedDraws() default = TOÀN BỘ status chưa hoàn thành (KHÔNG lookback ngày) — không

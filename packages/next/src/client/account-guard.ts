@@ -28,6 +28,8 @@ import { useEffect, useMemo } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 
+import type { Route } from "next";
+
 export interface AccountGuardSession {
   user?: {
     accountStatus?: string;
@@ -112,17 +114,17 @@ export function createAccountGuard(config: CreateAccountGuardOptions) {
         const url = target.includes("?")
           ? `${target}&callbackUrl=${encodeURIComponent(pathname)}`
           : `${target}?callbackUrl=${encodeURIComponent(pathname)}`;
-        router.replace(url);
+        router.replace(url as Route);
         return;
       }
 
       if (result.isSuspended) {
-        router.replace(redirectTo ?? suspendedRedirect);
+        router.replace((redirectTo ?? suspendedRedirect) as Route);
         return;
       }
 
       if (requireActive && result.isReadOnly) {
-        router.replace(redirectTo ?? "/unauthorized");
+        router.replace((redirectTo ?? "/unauthorized") as Route);
       }
     }, [
       skip,

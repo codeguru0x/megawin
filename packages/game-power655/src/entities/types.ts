@@ -74,10 +74,6 @@ export interface BoardSelection {
   mainNumbers: string[];
 }
 
-/** Ký hiệu bảng trên thẻ chọn số: A, B, C, D, E (tối đa 5 bảng/vé). */
-export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E"] as const;
-export type BoardNo = (typeof VALID_BOARD_NOS)[number];
-
 /**
  * Giá trị giải thưởng cố định (không tích luỹ).
  * Áp dụng cho Giải Nhất, Nhì, Ba.

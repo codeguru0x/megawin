@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 
 import type { AccountRole } from "@megawin/identity/entities";
 import { ChevronRight } from "lucide-react";
+import type { Route } from "next";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -62,7 +63,7 @@ const NavItemExpanded = ({
     return (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild aria-disabled={item.comingSoon} isActive={isActive(item.url)} tooltip={item.title}>
-          <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
+          <Link prefetch={false} href={item.url as Route} target={item.newTab ? "_blank" : undefined}>
             {item.icon && <item.icon />}
             <span>{item.title}</span>
             {item.comingSoon && <IsComingSoon />}
@@ -97,7 +98,7 @@ const NavItemExpanded = ({
                   </p>
                 )}
                 <SidebarMenuSubButton aria-disabled={subItem.comingSoon} isActive={isActive(subItem.url)} asChild>
-                  <Link prefetch={false} href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
+                  <Link prefetch={false} href={subItem.url as Route} target={subItem.newTab ? "_blank" : undefined}>
                     {subItem.icon && <subItem.icon />}
                     <span>{subItem.title}</span>
                     {subItem.comingSoon && <IsComingSoon />}
@@ -150,7 +151,7 @@ const NavItemCollapsed = ({
                   aria-disabled={subItem.comingSoon}
                   isActive={isActive(subItem.url)}
                 >
-                  <Link prefetch={false} href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
+                  <Link prefetch={false} href={subItem.url as Route} target={subItem.newTab ? "_blank" : undefined}>
                     {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
                     <span>{subItem.title}</span>
                     {subItem.comingSoon && <IsComingSoon />}
@@ -220,7 +221,7 @@ export function NavMain({ items, userRoles }: NavMainProps) {
                           tooltip={item.title}
                           isActive={isItemActive(item.url)}
                         >
-                          <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
+                          <Link prefetch={false} href={item.url as Route} target={item.newTab ? "_blank" : undefined}>
                             {item.icon && <item.icon />}
                             <span>{item.title}</span>
                           </Link>

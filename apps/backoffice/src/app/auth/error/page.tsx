@@ -6,9 +6,22 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
+import type { Route } from "next";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { readAuthCallbackUrl } from "@/lib/auth/callback-url-storage";
+
+/**
+ * `state_mismatch`/`state_invalid`/`state_not_found` xảy ra khi OAuth `state` (cookie/DB
+ * record) đã hết hạn hoặc không khớp — better-auth giới hạn CỨNG 10 phút, không config
+ * được (xem `saveAuthCallbackUrl` JSDoc). Trường hợp phổ biến nhất: user bị timeout
+ * session → tự động chuyển sang `/login` → tự động sang Cognito Hosted UI, nhưng để
+ * trang đó mở quá lâu mới nhập thông tin. Đây KHÔNG phải lỗi hệ thống — chỉ cần đăng
+ * nhập lại — nên dùng message thân thiện hơn thay vì "lỗi không xác định".
+ */
+const STATE_EXPIRED_MESSAGE =
+  "Phiên đăng nhập đã hết hạn do trang đăng nhập được mở quá lâu (quá 10 phút). Vui lòng đăng nhập lại.";
 
 const ERROR_MESSAGES: Record<string, string> = {
   please_restart_the_process: "Phiên xác thực đã hết hạn hoặc bị gián đoạn. Vui lòng thử đăng nhập lại.",
@@ -17,6 +30,10 @@ const ERROR_MESSAGES: Record<string, string> = {
   access_denied: "Truy cập bị từ chối. Bạn không có quyền truy cập tài nguyên này.",
   server_error: "Lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.",
   temporarily_unavailable: "Hệ thống tạm thời không khả dụng. Vui lòng thử lại sau.",
+  state_mismatch: STATE_EXPIRED_MESSAGE,
+  state_invalid: STATE_EXPIRED_MESSAGE,
+  state_not_found: STATE_EXPIRED_MESSAGE,
+  state_generation_error: STATE_EXPIRED_MESSAGE,
 };
 
 const FALLBACK_MESSAGE = "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.";
@@ -35,8 +52,16 @@ function AuthErrorContent() {
   const errorCode = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
 
-  const displayMessage = errorDescription || getErrorMessage(errorCode);
+  // errorDescription từ better-auth (vd "State not found in OAuth callback") là tiếng Anh,
+  // kỹ thuật, không thân thiện với người dùng cuối — ưu tiên message tiếng Việt đã map sẵn
+  // hơn errorDescription (khác với hành vi cũ: errorDescription luôn được ưu tiên trước).
+  const displayMessage =
+    errorCode && ERROR_MESSAGES[errorCode] ? ERROR_MESSAGES[errorCode] : errorDescription || getErrorMessage(errorCode);
   const displayCode = errorCode || "UNKNOWN";
+
+  // Đưa user quay lại đúng trang đích ban đầu (đã lưu trước khi rời /login sang Cognito)
+  // thay vì luôn về "/" — nếu chưa từng lưu, readAuthCallbackUrl() fallback về "/".
+  const retryHref = `/login?callbackUrl=${encodeURIComponent(readAuthCallbackUrl())}` as Route;
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
@@ -57,7 +82,7 @@ function AuthErrorContent() {
         </CardContent>
 
         <CardFooter className="flex justify-center gap-3">
-          <Link href="/login" prefetch={false}>
+          <Link href={retryHref} prefetch={false}>
             <Button variant="default" size="sm">
               <ArrowLeft />
               Đăng nhập lại

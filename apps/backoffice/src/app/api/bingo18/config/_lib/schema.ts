@@ -1,6 +1,6 @@
 import { Bingo18OpsAlertType } from "@megawin/game-bingo18/entities";
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
-import { HHMM_PATTERN } from "@megawin/shared/utils";
+import { HHMM_PATTERN, YMD_PATTERN } from "@megawin/shared/utils";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -68,7 +68,7 @@ const playSchema = z
       `Số board tối đa không được vượt ${BINGO18_MAX_BOARDS}.`,
     ),
     maxDrawCount: positiveInt,
-    salesCloseBeforeSeconds: positiveInt,
+    salesCloseBeforeSeconds: nonNegativeInt,
     drawIntervalMinutes: positiveInt,
     firstDrawTime: z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm"),
     lastDrawTime: z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm"),
@@ -126,6 +126,25 @@ const opsSchema = z
   })
   .partial();
 
+// ─────── Vietlott Period Anchor ───────
+
+/**
+ * Neo suy mã kỳ Vietlott cho dialog công bố kết quả.
+ *
+ * Zod ở đây CHỈ validate format (`YYYY-MM-DD`, `HH:mm`, chuỗi số giữ zero-pad) — KHÔNG
+ * refine khớp lưới quay (`firstDrawTime`/`drawIntervalMinutes`/`lastDrawTime`) ở tầng route,
+ * vì lịch đó phải lấy từ `GlobalConfigDoc` THẬT trong DB (có thể khác `DEFAULT_BINGO18_CONFIG`
+ * trong code — xem `vietlott-period-suggestion/p0-shared.plan.md` §P0.0.1). Việc khớp lưới
+ * được kiểm ở use-case `update-game-config.ts` — nơi có config hiện hành từ DB.
+ */
+const vietlottSchema = z
+  .object({
+    anchorDrawDate: z.string().regex(YMD_PATTERN, "Ngày phải có format YYYY-MM-DD"),
+    anchorDrawTime: z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm"),
+    anchorPeriod: z.string().regex(/^\d+$/, "Mã kỳ phải là chuỗi số"),
+  })
+  .partial();
+
 // ─────── Root schema ───────
 
 export const updateBingo18GameConfigSchema = z
@@ -138,6 +157,7 @@ export const updateBingo18GameConfigSchema = z
     bigSmallDrawPrizes: bigSmallDrawPrizesSchema.optional(),
     play: playSchema.optional(),
     ops: opsSchema.optional(),
+    vietlott: vietlottSchema.optional(),
   })
   .refine(
     (data) =>
@@ -148,6 +168,7 @@ export const updateBingo18GameConfigSchema = z
       data.sumTotalPrizes ||
       data.bigSmallDrawPrizes ||
       data.play ||
-      data.ops,
+      data.ops ||
+      data.vietlott,
     { message: "Phải cung cấp ít nhất một section để cập nhật." },
   );

@@ -8,8 +8,12 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+import type { VietlottPeriodAnchor } from "@megawin/game-core/types";
 
 import type { FinancialRates, JackpotConfig, Lotto535OpsConfig, PlayRules, PrizeAmounts } from "./types";
+
+/** Re-export type chung — cho phép import từ `@megawin/game-lotto535/entities` như các type khác. */
+export type { VietlottPeriodAnchor };
 
 /**
  * Cấu hình game toàn cục – staff MegaWin quản lý trên backoffice.
@@ -61,6 +65,17 @@ export interface GlobalConfigDoc {
 
   /** Quy tắc chơi – hiển thị mục "Cấu hình luật chơi" trên UI. */
   play: PlayRules;
+
+  // ───── Vietlott Period Suggestion ─────
+
+  /**
+   * Neo suy mã kỳ Vietlott (`drawPeriod`) cho dialog công bố kết quả — gợi ý dựa TRỰC TIẾP vào
+   * `play` (lịch quay) + `vietlott` (neo), KHÔNG dùng dữ liệu vận hành (`vietlottRef` kỳ khác)
+   * để tránh lan truyền sai số (xem `vietlott-period-suggestion/00-overview.md` §4.4).
+   *
+   * `undefined` = chưa cấu hình = chưa bật gợi ý (KHÔNG có giá trị mặc định hardcode).
+   */
+  vietlott?: VietlottPeriodAnchor;
 
   // ───── Ops Config (vận hành & kiểm soát rủi ro) ─────
 

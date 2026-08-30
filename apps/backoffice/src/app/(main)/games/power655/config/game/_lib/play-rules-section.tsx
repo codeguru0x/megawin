@@ -2,8 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
+import { WEEKDAY_LABELS_SHORT } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { HelpCircle, Save } from "lucide-react";
+import { AlertTriangle, HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -18,16 +19,6 @@ import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
-const DAY_LABELS: Record<number, string> = {
-  0: "Chủ nhật",
-  1: "Thứ 2",
-  2: "Thứ 3",
-  3: "Thứ 4",
-  4: "Thứ 5",
-  5: "Thứ 6",
-  6: "Thứ 7",
-};
-
 const playFormSchema = z
   .object({
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
@@ -39,7 +30,8 @@ const playFormSchema = z
       .positive("Phải > 0")
       .max(POWER655_MAX_BOARDS, `Tối đa ${POWER655_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-    salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
+    // 0 = đóng bán ĐÚNG giờ quay (không buffer) — giá trị nghiệp vụ hợp lệ, khớp `nonNegativeInt` ở API schema.
+    salesCloseBeforeMinutes: z.coerce.number().int().nonnegative("Phải ≥ 0"),
     drawTime1: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "HH:mm"),
     drawDaysOfWeek: z.array(z.number()).min(1, "Cần ít nhất 1 ngày quay"),
   })
@@ -90,6 +82,17 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
   useAiFormDirty("play-rules", form.formState.isDirty);
 
   const drawDays = form.watch("drawDaysOfWeek");
+
+  // Đổi giờ quay hoặc ngày quay trong tuần làm mã kỳ Vietlott (nếu đã cấu hình) mất
+  // hiệu lực — mọi phép gợi ý dựa trên mã kỳ cũ sẽ sai kể từ đây. Chỉ cảnh báo khi ĐÃ có
+  // mã kỳ (config.vietlott) — chưa cấu hình thì đổi lịch quay không ảnh hưởng gì.
+  const currentDrawDaysSorted = [...(config.play.drawDaysOfWeek ?? [])].sort();
+  const watchedDrawDaysSorted = [...drawDays].sort();
+  const drawDaysChanged =
+    currentDrawDaysSorted.length !== watchedDrawDaysSorted.length ||
+    currentDrawDaysSorted.some((d, i) => d !== watchedDrawDaysSorted[i]);
+  const scheduleChanged =
+    Boolean(config.vietlott) && (form.watch("drawTime1") !== config.play.drawTimes[0] || drawDaysChanged);
 
   function toggleDay(day: number) {
     const current = form.getValues("drawDaysOfWeek");
@@ -302,7 +305,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     1 kỳ quay mỗi ngày quay — {drawDays.length} lần/tuần
-                    {drawDays.length > 0 ? ` (${drawDays.map((d) => DAY_LABELS[d]).join(", ")})` : ""}.
+                    {drawDays.length > 0 ? ` (${drawDays.map((d) => WEEKDAY_LABELS_SHORT[d]).join(", ")})` : ""}.
                   </p>
                 </div>
 
@@ -347,13 +350,24 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                               : "border-border bg-background text-muted-foreground hover:bg-muted"
                           }`}
                         >
-                          {DAY_LABELS[day]}
+                          {WEEKDAY_LABELS_SHORT[day]}
                         </button>
                       ))}
                     </div>
                     <FormField control={form.control} name="drawDaysOfWeek" render={() => <FormMessage />} />
                   </div>
                 </div>
+
+                {scheduleChanged && (
+                  <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2.5 dark:bg-amber-900/20">
+                    <AlertTriangle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                      Đổi lịch quay (giờ quay hoặc ngày quay trong tuần) sẽ làm{" "}
+                      <strong>mã kỳ Vietlott hiện tại vô hiệu</strong> — sau khi lưu, hãy vào mục "Mã kỳ Vietlott" bên
+                      dưới để cập nhật lại, nếu không các kỳ sau sẽ được gợi ý mã kỳ sai.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

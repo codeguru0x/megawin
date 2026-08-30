@@ -1,9 +1,14 @@
 import { Max3dOpsAlertType } from "@megawin/game-max3d/entities";
 import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
-import { HHMM_PATTERN } from "@megawin/shared/utils";
+import { HHMM_PATTERN, YMD_PATTERN } from "@megawin/shared/utils";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
+/**
+ * Số nguyên ≥ 0 — dùng cho field mà 0 là giá trị nghiệp vụ HỢP LỆ, không phải "chưa cấu hình".
+ * VD `salesCloseBeforeMinutes = 0` = đóng bán ĐÚNG giờ quay (không có buffer).
+ */
+const nonNegativeInt = z.number().int().nonnegative();
 const rate = z.number().min(0).max(1);
 
 const ratesSchema = z
@@ -55,7 +60,7 @@ const playSchema = z
     maxBetCount: positiveInt,
     maxBoardsPerTicket: positiveInt.max(MAX3D_MAX_BOARDS, `Số board tối đa không được vượt ${MAX3D_MAX_BOARDS}.`),
     maxDrawCount: positiveInt,
-    salesCloseBeforeMinutes: positiveInt,
+    salesCloseBeforeMinutes: nonNegativeInt,
     drawsPerDay: positiveInt,
     drawTimes: z.array(z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm")).min(1),
     drawDaysOfWeek: z.array(z.number().int().min(0).max(6)).min(1, "Phải chọn ít nhất 1 ngày quay.").max(7),
@@ -113,13 +118,24 @@ const opsSchema = z
   })
   .partial();
 
+// ─────── Vietlott Period Suggestion ───────
+
+const vietlottSchema = z
+  .object({
+    anchorDrawDate: z.string().regex(YMD_PATTERN, "Ngày phải có format YYYY-MM-DD"),
+    anchorDrawTime: z.string().regex(HHMM_PATTERN, "Giờ phải có format HH:mm"),
+    anchorPeriod: z.string().regex(/^\d+$/, "Mã kỳ phải là chuỗi số"),
+  })
+  .partial();
+
 export const updateGameConfigSchema = z
   .object({
     rates: ratesSchema.optional(),
     defaultPrizes: defaultPrizesSchema.optional(),
     play: playSchema.optional(),
     ops: opsSchema.optional(),
+    vietlott: vietlottSchema.optional(),
   })
-  .refine((data) => data.rates || data.defaultPrizes || data.play || data.ops, {
+  .refine((data) => data.rates || data.defaultPrizes || data.play || data.ops || data.vietlott, {
     message: "Phải cung cấp ít nhất một section để cập nhật.",
   });

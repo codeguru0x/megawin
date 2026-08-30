@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent } from "react";
 import type {
   CreateDrawsOutput,
   GetDrawDetailOutput,
+  GetVietlottSuggestionOutput,
   PreviewDrawsOutput,
 } from "@megawin/game-max3d-application/use-cases/draws";
 import type {
@@ -22,7 +23,7 @@ import { toast } from "sonner";
 
 import { max3dKeys } from "@/lib/query-keys";
 
-export type { GetDrawDetailOutput } from "@megawin/game-max3d-application/use-cases/draws";
+export type { GetDrawDetailOutput, GetVietlottSuggestionOutput } from "@megawin/game-max3d-application/use-cases/draws";
 export type {
   AlertGroup,
   DrawSelectorItem,
@@ -116,6 +117,23 @@ export function useDrawDetail(drawId: string | undefined) {
     enabled: !!drawId,
     // Sau khi settled thì không thay đổi → staleTime cao
     staleTime: 5 * 60_000,
+  });
+}
+
+// ─────────────────────────────────────────────
+// Vietlott Suggestion — gợi ý mã kỳ cho dialog publish (P4)
+// ─────────────────────────────────────────────
+
+/**
+ * Gợi ý mã kỳ Vietlott cho dialog công bố kết quả — dùng để prefill + hiện thông báo
+ * khi không suy được. Chỉ fetch khi dialog mở (`enabled`).
+ */
+export function useVietlottSuggestion(drawId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: max3dKeys.vietlottSuggestion(drawId ?? ""),
+    queryFn: () => apiClient.get<GetVietlottSuggestionOutput>(`/max3d/draws/${drawId}/vietlott-suggestion`),
+    enabled: !!drawId && enabled,
+    staleTime: 60_000,
   });
 }
 

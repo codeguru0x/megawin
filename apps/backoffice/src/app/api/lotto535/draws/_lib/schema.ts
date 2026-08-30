@@ -1,6 +1,10 @@
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 import { LOTTO535_MAIN_COUNT } from "@megawin/game-lotto535/entities";
-import { lotto535MainNumberSchema, lotto535SpecialNumberSchema } from "@megawin/game-lotto535/schemas";
+import {
+  LOTTO535_CREATE_DRAW_BATCH_MAX,
+  lotto535MainNumberSchema,
+  lotto535SpecialNumberSchema,
+} from "@megawin/game-lotto535/schemas";
 import { z } from "zod";
 
 /** Mảng số chính Lotto 5/35 — đúng LOTTO535_MAIN_COUNT phần tử. */
@@ -45,11 +49,11 @@ export const reopenForCascadeSchema = z.object({
 
 const createDrawSlotSchema = z.object({
   /** Ngày quay, format YYYY-MM-DD (theo giờ VN). */
-  drawDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "drawDate phải là YYYY-MM-DD."),
-  /** Số thứ tự kỳ trong ngày: 1 = sáng 13h, 2 = tối 21h. */
-  drawNo: z.union([z.literal(1), z.literal(2)]),
+  drawDate: z.iso.date("drawDate phải là YYYY-MM-DD."),
   /**
    * Giờ quay, ISO 8601 có timezone offset (ví dụ: "2026-03-20T21:00:00+07:00").
+   * Server tự suy ra drawNo (1 = sáng 13h, 2 = tối 21h) bằng cách khớp giờ với
+   * `play.drawTimes` — không nhận drawNo từ client (client có thể sửa, gây lệch drawId).
    * closeAt tính tự động phía server: drawTime − play.salesCloseBeforeMinutes.
    */
   drawTime: z.iso.datetime({ offset: true }),
@@ -61,17 +65,18 @@ export const createDrawSchema = z.object({
   draws: z
     .array(createDrawSlotSchema)
     .min(1, "Cần ít nhất 1 kỳ.")
-    .max(12, "Tối đa 12 kỳ mỗi lần tạo.")
+    .max(LOTTO535_CREATE_DRAW_BATCH_MAX, `Tối đa ${LOTTO535_CREATE_DRAW_BATCH_MAX} kỳ mỗi lần tạo.`)
     .superRefine((draws, ctx) => {
-      // Kiểm tra trùng (drawDate + drawNo) trong chính input.
+      // Kiểm tra trùng (drawDate + drawTime) trong chính input — drawNo suy ra từ
+      // drawTime nên 2 slot cùng ngày + cùng giờ chắc chắn sinh cùng drawId.
       const seen = new Set<string>();
       draws.forEach((slot, i) => {
-        const key = `${slot.drawDate}-${slot.drawNo}`;
+        const key = `${slot.drawDate}-${slot.drawTime}`;
         if (seen.has(key)) {
           ctx.addIssue({
             code: "custom",
-            path: [i, "drawNo"],
-            message: `Kỳ ${slot.drawDate} drawNo=${slot.drawNo} bị trùng trong danh sách.`,
+            path: [i, "drawTime"],
+            message: `Kỳ ${slot.drawDate} giờ ${slot.drawTime} bị trùng trong danh sách.`,
           });
         }
         seen.add(key);
@@ -80,19 +85,13 @@ export const createDrawSchema = z.object({
 });
 
 export const previewDrawsSchema = z.object({
-  count: z.coerce.number().int().min(1).max(12).default(2),
+  count: z.coerce.number().int().min(1).max(LOTTO535_CREATE_DRAW_BATCH_MAX).default(2),
 });
 
 export const listDrawsQuerySchema = z.object({
   status: z.enum(DRAW_STATUS_VALUES as [string, ...string[]]).optional(),
-  fromDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "fromDate phải là YYYY-MM-DD.")
-    .optional(),
-  toDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "toDate phải là YYYY-MM-DD.")
-    .optional(),
+  fromDate: z.iso.date("fromDate phải là YYYY-MM-DD.").optional(),
+  toDate: z.iso.date("toDate phải là YYYY-MM-DD.").optional(),
   cursor: z.string().optional(),
   size: z.coerce.number().int().min(1).max(100).default(20),
 });

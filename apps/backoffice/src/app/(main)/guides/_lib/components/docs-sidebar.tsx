@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ChevronRight } from "lucide-react";
+import type { Route } from "next";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -50,7 +51,7 @@ export function DocsSidebar({ onNavigate }: { onNavigate?: () => void }) {
             <CollapsibleContent className="mt-1 ml-3 flex flex-col gap-0.5 border-l pl-3">
               {game.topics.map((topic) =>
                 topic.docs.map((doc) => {
-                  const href = `/guides/${game.gameKey}/${topic.key}/${doc.slug}`;
+                  const href = `/guides/${game.gameKey}/${topic.key}/${doc.slug}` as Route;
                   const active = pathname === href;
                   return (
                     <Link

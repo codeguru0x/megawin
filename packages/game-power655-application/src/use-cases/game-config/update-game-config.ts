@@ -1,7 +1,8 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Power655OpsConfig } from "@megawin/game-power655/entities";
+import type { PlayRules, Power655OpsConfig, VietlottPeriodAnchor } from "@megawin/game-power655/entities";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
 import { AppException } from "@megawin/shared/errors";
+import { dayOfWeek } from "@megawin/shared/utils";
 
 import { globalConfigCache } from "../../caches/global-config.cache";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
@@ -49,7 +50,12 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
         : undefined,
       play: input.play ? { ...(existing?.play ?? DEFAULT_POWER655_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
+      vietlott: input.vietlott ? { ...existing?.vietlott, ...input.vietlott } : undefined,
     };
+
+    if (merged.vietlott) {
+      this.validateVietlottAnchor(merged.vietlott, merged.play ?? existing?.play ?? DEFAULT_POWER655_CONFIG.play);
+    }
 
     const cleanMerged: Record<string, unknown> = {};
     if (merged.jackpot) cleanMerged.jackpot = merged.jackpot;
@@ -57,6 +63,7 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
     if (merged.play) cleanMerged.play = merged.play;
     if (merged.ops) cleanMerged.ops = merged.ops;
+    if (merged.vietlott) cleanMerged.vietlott = merged.vietlott;
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
@@ -104,5 +111,28 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     const stats = input.stats ? { ...base.stats, ...input.stats } : base.stats;
 
     return { alerts, stats };
+  }
+
+  /**
+   * Validate neo Vietlott khớp lịch quay hiện tại (Type C — weekly, nhiều giờ quay/tuần).
+   * `anchorDrawTime` phải nằm trong `play.drawTimes`, `anchorDrawDate` phải rơi vào 1 trong
+   * các `play.drawDaysOfWeek` — nếu không, suy mã kỳ sau này sẽ SAI mà không ai biết.
+   */
+  private validateVietlottAnchor(vietlott: Partial<VietlottPeriodAnchor>, play: PlayRules): void {
+    if (!vietlott.anchorDrawDate || !vietlott.anchorDrawTime || !vietlott.anchorPeriod) {
+      throw AppException.badRequest("Mã kỳ Vietlott phải nhập đủ 3 trường: ngày quay, giờ quay, mã kỳ.");
+    }
+
+    if (!play.drawTimes.includes(vietlott.anchorDrawTime)) {
+      throw AppException.badRequest(
+        `Giờ quay neo (${vietlott.anchorDrawTime}) không khớp các giờ quay hiện tại (${play.drawTimes.join(", ")}).`,
+      );
+    }
+
+    if (!play.drawDaysOfWeek.includes(dayOfWeek(vietlott.anchorDrawDate))) {
+      throw AppException.badRequest(
+        `Ngày neo (${vietlott.anchorDrawDate}) không phải ngày quay theo lịch hiện tại (thứ: ${play.drawDaysOfWeek.join(", ")}).`,
+      );
+    }
   }
 }

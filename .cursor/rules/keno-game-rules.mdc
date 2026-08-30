@@ -17,8 +17,8 @@ Keno là game xổ số tự chọn quay số nhanh của Vietlott, ra mắt 23/
 
 - **Tập số**: 01 - 80 (80 số)
 - **Kết quả quay**: Hệ thống quay ngẫu nhiên **20 số** từ tập 01-80 mỗi kỳ
-- **Tần suất quay**: **8 phút/kỳ**, ~120 kỳ/ngày
-- **Phát hành**: 06h00 - 21h55, Thứ Hai - Chủ Nhật
+- **Tần suất quay**: **8 phút/kỳ**, ~119 kỳ/ngày
+- **Phát hành**: 06h08 - 21h52, Thứ Hai - Chủ Nhật (kỳ đầu quay lúc 06:08, KHÔNG phải 06:00 — verify với dữ liệu Vietlott 2026-08)
 - **Mệnh giá**: 10.000 VND / lần tham gia dự thưởng (`unitPrice`)
 - **betCount** (per board): Số lần tham gia dự thưởng nhân bội (≥ `minBetCount`, ≤ `maxBetCount`). Mặc định 1. Tiền cược board = `1 × betCount × unitPrice`. Tiền thắng = `matchWinAmount × betCount`
 - **Kỳ liên tiếp**: Tối đa 20 kỳ liên tiếp (`maxDrawCount`)
@@ -216,7 +216,7 @@ prepare-void → void-entries → dispatch-refunds → finalize-void
 
 | Đặc điểm | Keno | Lotto 5/35 |
 |-----------|------|-----------|
-| Tần suất quay | 8 phút/kỳ (~120 kỳ/ngày) | 2 kỳ/ngày |
+| Tần suất quay | 8 phút/kỳ (~119 kỳ/ngày) | 2 kỳ/ngày |
 | Jackpot | KHÔNG | Có (tích lũy) |
 | Split cycle | KHÔNG | Có (khi JP >= 12 tỷ) |
 | Tập số | 01-80 (quay 20 số) | 01-35 chính + 01-12 ĐB |

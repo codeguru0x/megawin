@@ -27,6 +27,9 @@ export const bingo18Keys = {
   /** Chi tiết 1 kỳ quay (full entity: result, financial, stats) */
   drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
 
+  /** Gợi ý mã kỳ Vietlott cho dialog công bố kết quả — on-demand khi dialog mở. */
+  vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
+
   /**
    * Operations dashboard – snapshot gộp (stats + exposure + alertCounts + drawStatus).
    * Timer 1 duy nhất; thay opsSummary/tenant/diceFreq/playtype/topCombos cũ.

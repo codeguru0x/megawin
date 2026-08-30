@@ -5,6 +5,7 @@
  */
 
 import type { GlobalConfigEntity } from "@megawin/game-mega645-application/use-cases/game-config";
+import { WEEKDAY_LABELS_FULL } from "@megawin/shared/utils";
 
 import { type ConfigItem, item } from "../../payload";
 import { GameConfigSection } from "../types";
@@ -16,16 +17,6 @@ export const APPLICABLE_SECTIONS: readonly GameConfigSection[] = [
   GameConfigSection.Jackpot,
   GameConfigSection.Ops,
 ];
-
-const DAY_OF_WEEK_LABEL: Record<number, string> = {
-  0: "Chủ nhật",
-  1: "Thứ Hai",
-  2: "Thứ Ba",
-  3: "Thứ Tư",
-  4: "Thứ Năm",
-  5: "Thứ Sáu",
-  6: "Thứ Bảy",
-};
 
 function describePlay(c: GlobalConfigEntity): ConfigItem[] {
   const { play } = c;
@@ -46,7 +37,7 @@ function describePlay(c: GlobalConfigEntity): ConfigItem[] {
     item(
       "play.drawDaysOfWeek",
       "Các ngày quay trong tuần",
-      play.drawDaysOfWeek.map((d) => DAY_OF_WEEK_LABEL[d] ?? String(d)).join(", "),
+      play.drawDaysOfWeek.map((d) => WEEKDAY_LABELS_FULL[d] ?? String(d)).join(", "),
       "text",
     ),
     item("play.drawTime", "Giờ quay", play.drawTime, "time"),

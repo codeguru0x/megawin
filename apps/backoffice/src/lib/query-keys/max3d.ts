@@ -25,6 +25,9 @@ export const max3dKeys = {
   /** Chi tiết 1 kỳ quay (full entity gồm result, financial, stats) */
   drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
 
+  /** Gợi ý mã kỳ Vietlott cho dialog công bố kết quả (P4) */
+  vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
+
   /** Operations dashboard – draw selector dropdown */
   opsDrawSelector: [MODULE, "ops-draw-selector"] as const,
 

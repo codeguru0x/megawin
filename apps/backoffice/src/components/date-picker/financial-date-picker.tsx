@@ -118,7 +118,7 @@ export function FinancialDatePicker({
               selected={selectedDate}
               onSelect={handleDaySelect}
               disabled={{ after: new Date() }}
-              initialFocus
+              autoFocus
             />
 
             {/* ── Cột phải: Preset nhanh ── */}

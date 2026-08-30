@@ -10,7 +10,7 @@
  *
  * Bingo 18 (Vietlott):
  * - Quay 3 số từ tập {1, 2, 3, 4, 5, 6}, mỗi 6 phút 1 kỳ
- * - Phát hành từ 06:00 đến 21:53 hàng ngày
+ * - Phát hành từ 06:06 đến 21:53 hàng ngày
  * - Cách chơi cơ bản: Một số, Hai số trùng nhau, Ba số trùng nhau
  * - Cách chơi bổ sung: Cộng tổng, Lớn Hòa Nhỏ
  */

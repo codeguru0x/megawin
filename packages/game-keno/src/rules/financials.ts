@@ -230,7 +230,10 @@ export const DEFAULT_KENO_CONFIG: Pick<
     maxDrawCount: 20,
     salesCloseBeforeSeconds: 60,
     drawIntervalMinutes: 8,
-    firstDrawTime: "06:00",
+    // Kỳ 1 quay lúc 06:08 (KHÔNG phải 06:00) — kỳ đầu tiên diễn ra sau khi cửa sổ bán vé
+    // đầu tiên (8 phút) đóng lại, đã verify với dữ liệu thực tế Vietlott (2026-08). Với
+    // lastDrawTime 21:52 giữ nguyên → (21:52-06:08)/8 + 1 = 119 kỳ/ngày (KHÔNG phải 120).
+    firstDrawTime: "06:08",
     lastDrawTime: "21:52",
     timezone: "Asia/Ho_Chi_Minh",
   },

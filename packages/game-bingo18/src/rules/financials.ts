@@ -127,7 +127,11 @@ export const DEFAULT_BINGO18_CONFIG: Pick<
     maxDrawCount: 20,
     salesCloseBeforeSeconds: 30,
     drawIntervalMinutes: 6,
-    firstDrawTime: "06:00",
+    // Kỳ 1 quay lúc 06:06 (KHÔNG phải 06:00) — cùng cơ chế với Keno: kỳ đầu tiên diễn ra
+    // sau khi cửa sổ bán vé đầu tiên (6 phút) đóng lại. Suy ra từ dữ liệu thực tế Vietlott
+    // (2026-08): kỳ đầu ngày → kỳ cuối ngày chỉ có 158 kỳ (không phải 159). Với lastDrawTime
+    // giữ nguyên 21:53 → floor((21:53-06:06)/6) + 1 = 158 kỳ/ngày, kỳ cuối thực tế 21:48.
+    firstDrawTime: "06:06",
     lastDrawTime: "21:53",
     timezone: "Asia/Ho_Chi_Minh",
   },

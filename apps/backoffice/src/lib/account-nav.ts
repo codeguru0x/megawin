@@ -1,11 +1,12 @@
 import { CircleUser, History, KeyRound, type LucideIcon, ShieldCheck } from "lucide-react";
+import type { Route } from "next";
 
 /** 1 mục điều hướng trong khu vực tài khoản cá nhân (`/me/*`). */
 export interface AccountNavItem {
   /** Nhãn hiển thị (tiếng Việt). */
   title: string;
   /** Đường dẫn tuyệt đối trong `/me`. */
-  href: string;
+  href: Route;
   /** Icon lucide đi kèm. */
   icon: LucideIcon;
 }

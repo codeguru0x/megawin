@@ -12,10 +12,12 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc, DrawNo } from "@megawin/game-mega645/entities";
+import type { DrawDoc } from "@megawin/game-mega645/entities";
+import { DrawNo } from "@megawin/game-mega645/entities";
 import { generateDrawId } from "@megawin/game-mega645/helpers";
+import { MEGA645_CREATE_DRAW_BATCH_MAX } from "@megawin/game-mega645/schemas";
 import { AppException } from "@megawin/shared/errors";
-import { getFinancialDate, subtractMinutes } from "@megawin/shared/utils";
+import { getFinancialDate, subtractMinutes, todayVN } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -30,20 +32,34 @@ export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOut
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
     const { draws: slots } = input;
 
-    if (slots.length < 1 || slots.length > 12) {
-      throw AppException.badRequest("Số kỳ tạo phải từ 1 đến 12.");
+    // Trần lô = hằng số dùng chung với Zod schema route + UI (một nguồn chân lý).
+    if (slots.length < 1 || slots.length > MEGA645_CREATE_DRAW_BATCH_MAX) {
+      throw AppException.badRequest(`Số kỳ tạo phải từ 1 đến ${MEGA645_CREATE_DRAW_BATCH_MAX}.`);
+    }
+
+    // Chặn tạo kỳ cho ngày đã qua — ngày đó theo nghiệp vụ đã có kết quả, tạo mới là vô nghĩa
+    // và làm lệch báo cáo (kỳ "quá khứ" mở bán được).
+    const today = todayVN();
+    for (const slot of slots) {
+      if (slot.drawDate < today) {
+        throw AppException.badRequest(`Không thể tạo kỳ quay cho ngày đã qua: ${slot.drawDate} (hôm nay ${today}).`);
+      }
     }
 
     const { jackpot: jackpotConfig, play } = await this.getGlobalConfig.run();
 
     // Tính drawId và closeAt cho từng slot, kiểm tra tất cả trước khi insert.
+    // drawNo Mega 6/45 LUÔN = 1 (DrawNo.Single) — không lấy từ client. Trước đây use case
+    // tin thẳng `slot.drawNo` do client gửi, nên request có thể set drawNo khác 1, sinh
+    // drawId sai lệch với nghiệp vụ thực (chỉ 1 kỳ/ngày).
     const slotsWithIds = slots.map((slot) => {
       const drawTimeDate = new Date(slot.drawTime);
       // closeAt tính theo game config: drawTime − salesCloseBeforeMinutes.
       const closeAtDate = subtractMinutes(drawTimeDate, play.salesCloseBeforeMinutes);
       return {
         ...slot,
-        drawId: generateDrawId(slot.drawDate, slot.drawNo as any),
+        drawNo: DrawNo.Single,
+        drawId: generateDrawId(slot.drawDate, DrawNo.Single),
         drawTimeDate,
         closeAtDate,
       };
@@ -72,12 +88,14 @@ export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOut
 
     for (const slot of slotsWithIds) {
       const status = slot.openNow ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
+      // Tính 1 LẦN/kỳ rồi dùng lại cho cả doc lưu DB và output — trước đây gọi 2 lần/kỳ.
+      const financialDate = getFinancialDate(slot.drawTimeDate);
 
       drawDocs.push({
         drawId: slot.drawId,
         drawDate: slot.drawDate,
-        financialDate: getFinancialDate(slot.drawTimeDate),
-        drawNo: slot.drawNo as DrawNo,
+        financialDate,
+        drawNo: slot.drawNo,
         drawTime: slot.drawTimeDate,
         status,
         sales: slot.openNow ? { closeAt: slot.closeAtDate, openAt: now } : { closeAt: slot.closeAtDate },
@@ -91,7 +109,7 @@ export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOut
         drawNo: slot.drawNo,
         drawTime: slot.drawTimeDate.toISOString(),
         closeAt: slot.closeAtDate.toISOString(),
-        financialDate: getFinancialDate(slot.drawTimeDate),
+        financialDate,
         status,
       });
     }

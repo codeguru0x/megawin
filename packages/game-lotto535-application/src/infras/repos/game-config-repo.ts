@@ -6,6 +6,7 @@ import type {
   Lotto535OpsConfig,
   PlayRules,
   PrizeAmounts,
+  VietlottPeriodAnchor,
 } from "@megawin/game-lotto535/entities";
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 
@@ -37,6 +38,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
       defaultPrizes: PrizeAmounts;
       play: PlayRules;
       ops: Lotto535OpsConfig;
+      vietlott: VietlottPeriodAnchor;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -47,6 +49,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
     if (config.play) $set.play = config.play;
     if (config.ops) $set.ops = config.ops;
+    if (config.vietlott) $set.vietlott = config.vietlott;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

@@ -1,4 +1,5 @@
 import type { RunbookDoc, RunbookGame, RunbookTopic } from "@megawin/ops-docs/manifest";
+import type { Route } from "next";
 
 import { STAFF_GUIDE_MANIFEST } from "./staff-manifest";
 
@@ -8,7 +9,7 @@ export interface FlatDoc {
   topic: RunbookTopic;
   doc: RunbookDoc;
   /** Route đầy đủ `/guides/{gameKey}/{topicKey}/{slug}`. */
-  href: string;
+  href: Route;
 }
 
 /**
@@ -26,7 +27,7 @@ export function flattenDocs(): FlatDoc[] {
           game,
           topic,
           doc,
-          href: `/guides/${game.gameKey}/${topic.key}/${doc.slug}`,
+          href: `/guides/${game.gameKey}/${topic.key}/${doc.slug}` as Route,
         });
       }
     }
@@ -60,7 +61,7 @@ export function getAdjacentDocs(
     game,
     topic,
     doc,
-    href: `/guides/${game.gameKey}/${topic.key}/${doc.slug}`,
+    href: `/guides/${game.gameKey}/${topic.key}/${doc.slug}` as Route,
   });
 
   const prevDoc = idx > 0 ? topic.docs[idx - 1] : undefined;

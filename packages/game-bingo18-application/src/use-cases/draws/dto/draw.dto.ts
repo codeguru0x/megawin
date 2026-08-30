@@ -1,6 +1,7 @@
 import type { AuditActor } from "@megawin/audit/logger";
 import type { DrawEntity } from "@megawin/game-bingo18/entities";
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { VietlottSuggestionUnavailableReason } from "@megawin/game-core/utils";
 import type { WireType } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────
@@ -10,8 +11,6 @@ import type { WireType } from "@megawin/shared/types";
 export interface CreateDrawInputItem {
   /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
-  /** Số thứ tự kỳ trong ngày (1-~160). */
-  drawNo: number;
   /** Thời điểm quay (ISO 8601, timezone +07:00). */
   drawTime: string;
   /** Mở bán ngay sau khi tạo. */
@@ -259,4 +258,21 @@ export interface GetDrawDetailInput {
 export interface GetDrawDetailOutput {
   /** Toàn bộ thông tin kỳ quay — Date fields đã serialize thành ISO string qua JSON response. */
   draw: WireType<DrawEntity>;
+}
+
+// ─────────────────────────────────────────────
+// GetVietlottSuggestion — gợi ý mã kỳ Vietlott cho dialog publish (P2 mirror P1.3)
+// ─────────────────────────────────────────────
+
+export interface GetVietlottSuggestionInput {
+  drawId: string;
+}
+
+export interface GetVietlottSuggestionOutput {
+  /** Mã kỳ Vietlott suy được, giữ zero-pad. `null` nếu không suy được — xem `reason`. */
+  suggestedPeriod: string | null;
+  /** Lý do `suggestedPeriod` là `null` — dùng để UI hiện đúng thông báo (overview §7.1). `null` khi suy được. */
+  reason: VietlottSuggestionUnavailableReason | null;
+  /** `drawDate` của CHÍNH kỳ đang publish — dùng để prefill ô ngày Vietlott, độc lập có neo hay không. */
+  suggestedDrawDate: string;
 }

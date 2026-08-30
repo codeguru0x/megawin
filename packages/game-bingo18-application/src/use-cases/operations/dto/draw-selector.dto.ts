@@ -2,7 +2,7 @@
  * Bingo 18 – Draw Selector DTO
  *
  * Dropdown chọn kỳ quay trên dashboard vận hành.
- * Bingo 18 có ~160 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải.
+ * Bingo 18 có ~158 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải.
  */
 
 import type { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";

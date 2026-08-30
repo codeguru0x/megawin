@@ -4,12 +4,12 @@
  * Collection: kenoDraws
  *
  * 1 document = 1 kỳ quay Keno.
- * Keno quay mỗi 8 phút, ~120 kỳ/ngày (06:00-21:52).
+ * Keno quay mỗi 8 phút, ~119 kỳ/ngày (06:08-21:52).
  *
  * Kết quả: 20 số ngẫu nhiên từ 01-80.
  */
 
-import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawResultSource, DrawStatus } from "@megawin/game-core/entities";
 import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
 
 import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
@@ -19,7 +19,7 @@ import type { ISODateString } from "./types";
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-export type { DrawSales, DrawVietlottRef };
+export type { DrawResultSource, DrawSales, DrawVietlottRef };
 
 /**
  * Kết quả kỳ quay: 20 số từ 01-80.
@@ -38,6 +38,14 @@ export interface DrawResult {
   evenCount: number;
   /** Số lượng số lẻ trong 20 số quay. */
   oddCount: number;
+  /**
+   * Nguồn ghi kết quả — `Manual` (staff nhập tay qua backoffice) hiện là nguồn
+   * DUY NHẤT. Field chuẩn bị cho auto-import (`Import`/`Vietlott`) — PHẢI phân
+   * biệt được nguồn trước khi bất kỳ luồng nào dùng `vietlottRef` làm ground
+   * truth đối chiếu, tránh so kết quả tự suy với chính nó (an toàn giả — xem
+   * `vietlott-period-suggestion/00-overview.md` §9).
+   */
+  source: DrawResultSource;
 }
 
 /** Phân tích tài chính kỳ quay, tính sau settle. */
@@ -138,7 +146,7 @@ export interface DrawDoc {
 
   /**
    * ID kỳ quay, unique + stable.
-   * Format: "YYYY-MM-DD.NNN" (NNN = draw sequence 001-120).
+   * Format: "YYYY-MM-DD.NNN" (NNN = draw sequence 001-119).
    */
   drawId: string;
 
@@ -146,8 +154,8 @@ export interface DrawDoc {
   drawDate: ISODateString;
 
   /**
-   * Số thứ tự kỳ quay trong ngày (1-120).
-   * Kỳ 1 = 06:00, kỳ 2 = 06:10, ...
+   * Số thứ tự kỳ quay trong ngày (1-119).
+   * Kỳ 1 = 06:08, kỳ 2 = 06:16, ...
    */
   drawNo: number;
 

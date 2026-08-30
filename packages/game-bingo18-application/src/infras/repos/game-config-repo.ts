@@ -8,6 +8,7 @@ import type {
   SingleNumPrizes,
   SumTotalPrizes,
   TripleMatchPrizes,
+  VietlottPeriodAnchor,
 } from "@megawin/game-bingo18/entities";
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
@@ -46,6 +47,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
       bigSmallDrawPrizes: BigSmallDrawPrizes;
       play: PlayRules;
       ops: OpsConfig;
+      vietlott: VietlottPeriodAnchor;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -59,6 +61,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     if (config.bigSmallDrawPrizes) $set.bigSmallDrawPrizes = config.bigSmallDrawPrizes;
     if (config.play) $set.play = config.play;
     if (config.ops) $set.ops = config.ops;
+    if (config.vietlott) $set.vietlott = config.vietlott;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

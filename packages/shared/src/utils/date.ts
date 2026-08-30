@@ -58,6 +58,20 @@ export function toVNDate(dateStr: string, timeStr: string): Date {
 }
 
 /**
+ * Ghép "YYYY-MM-DD" + "HH:mm" thành ISO string có offset `+07:00` tường minh (giờ VN).
+ *
+ * Dùng khi cần GIỮ NGUYÊN dạng string (không cần `Date` object) để gửi lên API/lưu vào
+ * form state — VD field `drawTime` trong form tạo kỳ quay (backoffice). Cùng công thức với
+ * {@link toVNDate}, chỉ khác kiểu trả về; tách riêng vì gọi `.toISOString()` trên `Date` sẽ
+ * đổi sang giờ UTC (`Z`), không còn giữ nguyên literal string theo giờ VN.
+ *
+ * Ví dụ: toVNIsoString("2026-02-15", "13:00") → "2026-02-15T13:00:00+07:00"
+ */
+export function toVNIsoString(dateStr: string, timeStr: string): string {
+  return `${dateStr}T${timeStr}:00${VN_UTC_OFFSET}`;
+}
+
+/**
  * Tạo Date từ "YYYY-MM-DD" + "HH:mm:ss" theo giờ VN.
  *
  * Dùng cho game có chu kỳ ngắn (Keno, Bingo18) — cần độ chính xác đến giây.
@@ -110,6 +124,24 @@ export function formatVNTime(date: Date): string {
  */
 export function formatVNTimeWithSeconds(date: Date): string {
   return format(new TZDate(date, VN_TIMEZONE), "HH:mm:ss");
+}
+
+/**
+ * Format ISO string hoặc Date thành "YYYY-MM-DD" theo giờ VN.
+ * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
+ *
+ * Dùng khi cần trích ngày (theo giờ VN) từ 1 timestamp ISO để bind vào field ngày
+ * dạng string trong form — VD field `date` trong form tạo kỳ quay (backoffice).
+ */
+export function displayVNDate(value: string | Date | undefined | null): string {
+  if (!value) {
+    return "—";
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) {
+    return "—";
+  }
+  return format(new TZDate(d, VN_TIMEZONE), "yyyy-MM-dd");
 }
 
 /**
@@ -293,35 +325,6 @@ export function parseHHMMToMinutes(time: string): number | null {
   return Number(hours) * 60 + Number(minutes);
 }
 
-/**
- * Số kỳ quay/ngày suy ra từ khung giờ + khoảng cách giữa 2 kỳ liên tiếp.
- *
- * Công thức: `floor((kỳ cuối − kỳ đầu) ÷ khoảng cách) + 1` — kỳ đầu tính là 1 kỳ.
- * Dùng cho game quay nhanh (Keno, Bingo 18) để hiển thị số kỳ derive từ config
- * thật, KHÔNG hardcode.
- *
- * Trả `null` khi input chưa hợp lệ (giờ sai format, interval ≤ 0, hoặc kỳ cuối
- * sớm hơn kỳ đầu) để UI không hiện số rác trong lúc staff đang gõ.
- *
- * @example
- *   computeDrawsPerDay("06:00", "21:55", 5) → 192
- *   computeDrawsPerDay("06:00", "05:00", 5) → null (kỳ cuối < kỳ đầu)
- */
-export function computeDrawsPerDay(
-  firstDrawTime: string,
-  lastDrawTime: string,
-  intervalMinutes: number,
-): number | null {
-  const first = parseHHMMToMinutes(firstDrawTime);
-  const last = parseHHMMToMinutes(lastDrawTime);
-
-  if (first === null || last === null || intervalMinutes <= 0 || last < first) {
-    return null;
-  }
-
-  return Math.floor((last - first) / intervalMinutes) + 1;
-}
-
 // ─────────────────────────────────────────────
 // Ngày `YYYY-MM-DD` (chuỗi thuần, không timezone)
 // ─────────────────────────────────────────────
@@ -353,6 +356,91 @@ export function parseYMDToLocalDate(dateStr: string): Date | undefined {
   const [year, month, day] = dateStr.split("-") as [string, string, string];
   const date = new Date(Number(year), Number(month) - 1, Number(day));
   return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+/**
+ * Thứ trong tuần của 1 ngày "YYYY-MM-DD" — `0`=Chủ Nhật … `6`=Thứ Bảy.
+ *
+ * Thứ trong tuần của 1 ngày lịch KHÔNG phụ thuộc timezone (ngày 2026-03-07 luôn là thứ 7
+ * dù xem ở timezone nào) — tính thuần bằng `Date.UTC` để không lệ thuộc system timezone
+ * của server, KHÔNG dùng `toVNDate`/`TZDate` (không cần thiết cho phép tính này).
+ *
+ * @example
+ *   dayOfWeek("2026-03-07") → 6 (Thứ Bảy)
+ */
+export function dayOfWeek(dateStr: string): number {
+  const [y, m, d] = dateStr.split("-").map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
+
+/**
+ * Nhãn thứ trong tuần (tiếng Việt) — dạng ĐẦY ĐỦ, dùng cho text mô tả dài (VD tool AI đọc
+ * lịch quay `drawDaysOfWeek` thành câu tiếng Việt).
+ *
+ * Key cùng convention với {@link dayOfWeek} / `Date.getDay()`: `0`=Chủ nhật … `6`=Thứ Bảy.
+ */
+export const WEEKDAY_LABELS_FULL: Record<number, string> = {
+  0: "Chủ nhật",
+  1: "Thứ Hai",
+  2: "Thứ Ba",
+  3: "Thứ Tư",
+  4: "Thứ Năm",
+  5: "Thứ Sáu",
+  6: "Thứ Bảy",
+};
+
+/**
+ * Nhãn thứ trong tuần (tiếng Việt) — dạng NGẮN, dùng cho nút chọn ngày quay trong form
+ * cấu hình game (`play-rules-section.tsx`).
+ *
+ * Key cùng convention với {@link WEEKDAY_LABELS_FULL}.
+ */
+export const WEEKDAY_LABELS_SHORT: Record<number, string> = {
+  0: "Chủ nhật",
+  1: "Thứ 2",
+  2: "Thứ 3",
+  3: "Thứ 4",
+  4: "Thứ 5",
+  5: "Thứ 6",
+  6: "Thứ 7",
+};
+
+/**
+ * Nhãn thứ trong tuần (tiếng Việt) — dạng VIẾT TẮT, dùng cho cột "Thứ" hẹp trong bảng tạo
+ * nhiều kỳ quay (`create-draw-action.tsx`).
+ *
+ * Key cùng convention với {@link WEEKDAY_LABELS_FULL}.
+ */
+export const WEEKDAY_LABELS_ABBR: Record<number, string> = {
+  0: "CN",
+  1: "T2",
+  2: "T3",
+  3: "T4",
+  4: "T5",
+  5: "T6",
+  6: "T7",
+};
+
+/**
+ * Ngày HÔM NAY **theo giờ VN**, trả về `Date` ở 00:00 GIỜ MÁY (local) — dùng làm mốc cho
+ * matcher của calendar picker, VD `disabled={{ before: todayVNAsLocalDate() }}` để chặn chọn
+ * ngày quá khứ.
+ *
+ * Vì sao KHÔNG dùng `toVNStartOfDay(todayVN())`: hàm đó trả **instant** 00:00 giờ VN — máy
+ * client ở timezone khác sẽ thấy nó rơi vào ngày local khác, lệch mốc so với `selected` (vốn
+ * dựng bằng {@link parseYMDToLocalDate}). react-day-picker so sánh theo **local date parts**,
+ * nên mốc chặn phải cùng hệ quy chiếu local với `selected`.
+ *
+ * Vì sao KHÔNG dùng `new Date()`: giá trị đó mang cả giờ/phút hiện tại → matcher `before` có
+ * thể loại luôn chính ngày hôm nay.
+ *
+ * Luôn trả `Date` hợp lệ (không optional như `parseYMDToLocalDate`) vì `todayVN()` bảo đảm
+ * format `YYYY-MM-DD` đúng — caller không phải xử lý `undefined`.
+ */
+export function todayVNAsLocalDate(): Date {
+  const today = parseYMDToLocalDate(todayVN());
+  // Không thể undefined (todayVN luôn đúng format) — fallback chỉ để thoả type, không phải path thật.
+  return today ?? new Date();
 }
 
 // ─────────────────────────────────────────────

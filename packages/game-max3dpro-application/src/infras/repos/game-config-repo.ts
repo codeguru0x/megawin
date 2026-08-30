@@ -5,6 +5,7 @@ import type {
   Max3dproPrizeConfig,
   OpsConfig,
   PlayRules,
+  VietlottPeriodAnchor,
 } from "@megawin/game-max3dpro/entities";
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 
@@ -45,6 +46,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
       defaultPrizes: Max3dproPrizeConfig;
       play: PlayRules;
       ops: OpsConfig;
+      vietlott: VietlottPeriodAnchor;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -54,6 +56,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
     if (config.play) $set.play = config.play;
     if (config.ops) $set.ops = config.ops;
+    if (config.vietlott) $set.vietlott = config.vietlott;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

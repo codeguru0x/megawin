@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import { HHMM_PATTERN, parseHHMMToMinutes } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { HelpCircle, Save } from "lucide-react";
+import { AlertTriangle, HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -29,7 +29,8 @@ const playFormSchema = z
       .positive("Phải > 0")
       .max(LOTTO535_MAX_BOARDS, `Tối đa ${LOTTO535_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-    salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
+    // 0 = đóng bán ĐÚNG giờ quay (không buffer) — giá trị nghiệp vụ hợp lệ, khớp `nonNegativeInt` ở API schema.
+    salesCloseBeforeMinutes: z.coerce.number().int().nonnegative("Phải ≥ 0"),
     drawTime1: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
     drawTime2: z.string().regex(HHMM_PATTERN, "Format HH:mm (00:00 – 23:59)"),
   })
@@ -115,6 +116,13 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
       },
     });
   }
+
+  // Đổi giờ quay (Kỳ 1/Kỳ 2) làm mã kỳ Vietlott (nếu đã cấu hình) mất hiệu lực —
+  // mọi phép gợi ý dựa trên mã kỳ cũ sẽ sai kể từ đây. Chỉ cảnh báo khi ĐÃ có mã kỳ
+  // (config.vietlott) — chưa cấu hình thì đổi giờ quay không ảnh hưởng gì.
+  const scheduleChanged =
+    Boolean(config.vietlott) &&
+    (form.watch("drawTime1") !== config.play.drawTimes[0] || form.watch("drawTime2") !== config.play.drawTimes[1]);
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -358,6 +366,16 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     />
                   </div>
                 </div>
+
+                {scheduleChanged && (
+                  <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2.5 dark:bg-amber-900/20">
+                    <AlertTriangle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                      Đổi giờ quay sẽ làm <strong>mã kỳ Vietlott hiện tại vô hiệu</strong> — sau khi lưu, hãy vào mục
+                      "Mã kỳ Vietlott" bên dưới để cập nhật lại, nếu không các kỳ sau sẽ được gợi ý mã kỳ sai.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

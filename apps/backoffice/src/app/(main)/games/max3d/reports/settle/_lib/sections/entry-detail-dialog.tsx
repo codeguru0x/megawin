@@ -21,6 +21,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import type { Route } from "next";
 
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
@@ -124,7 +125,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
     : new Set<string>();
 
   const tenantUsername = toTenantUsername(entry.username);
-  const playerLink = `/accounts/players/${entry.accountId}`;
+  const playerLink = `/accounts/players/${entry.accountId}` as Route;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
     tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;

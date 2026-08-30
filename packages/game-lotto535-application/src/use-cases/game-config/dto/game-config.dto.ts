@@ -7,6 +7,7 @@ import type {
   OpsStatsConfig,
   PlayRules,
   PrizeAmounts,
+  VietlottPeriodAnchor,
 } from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
@@ -45,6 +46,11 @@ export interface UpdateGameConfigInput {
    * per sub-section (alerts/stats), `enabled` merge shallow ở use-case.
    */
   ops?: UpdateOpsInput;
+  /**
+   * Neo suy mã kỳ Vietlott (`drawPeriod`) cho dialog công bố kết quả. Partial: cho phép
+   * staff sửa từng field lẻ (VD chỉ đổi `anchorPeriod`), merge với neo hiện có ở use-case.
+   */
+  vietlott?: Partial<VietlottPeriodAnchor>;
   /** Chủ thể thực hiện — dùng cho audit. */
   actor: AuditActor;
 }

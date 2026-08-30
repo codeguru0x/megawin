@@ -1,7 +1,9 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { OpsConfig } from "@megawin/game-keno/entities";
+import { computeDrawsPerDay } from "@megawin/game-core/utils";
+import type { OpsConfig, PlayRules, VietlottPeriodAnchor } from "@megawin/game-keno/entities";
 import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import { AppException } from "@megawin/shared/errors";
+import { parseHHMMToMinutes } from "@megawin/shared/utils";
 
 import { globalConfigCache } from "../../caches/global-config.cache";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
@@ -50,16 +52,38 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
         : undefined,
       play: input.play ? { ...(existing?.play ?? DEFAULT_KENO_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
+      vietlott: input.vietlott ? { ...existing?.vietlott, ...input.vietlott } : undefined,
     };
 
+    if (merged.vietlott) {
+      this.validateVietlottAnchor(merged.vietlott, merged.play ?? existing?.play ?? DEFAULT_KENO_CONFIG.play);
+    }
+
     const cleanMerged: Record<string, unknown> = {};
-    if (merged.rates) cleanMerged.rates = merged.rates;
-    if (merged.basicPrizes) cleanMerged.basicPrizes = merged.basicPrizes;
-    if (merged.bigSmallPrizes) cleanMerged.bigSmallPrizes = merged.bigSmallPrizes;
-    if (merged.evenOddPrizes) cleanMerged.evenOddPrizes = merged.evenOddPrizes;
-    if (merged.payoutCaps) cleanMerged.payoutCaps = merged.payoutCaps;
-    if (merged.play) cleanMerged.play = merged.play;
-    if (merged.ops) cleanMerged.ops = merged.ops;
+    if (merged.rates) {
+      cleanMerged.rates = merged.rates;
+    }
+    if (merged.basicPrizes) {
+      cleanMerged.basicPrizes = merged.basicPrizes;
+    }
+    if (merged.bigSmallPrizes) {
+      cleanMerged.bigSmallPrizes = merged.bigSmallPrizes;
+    }
+    if (merged.evenOddPrizes) {
+      cleanMerged.evenOddPrizes = merged.evenOddPrizes;
+    }
+    if (merged.payoutCaps) {
+      cleanMerged.payoutCaps = merged.payoutCaps;
+    }
+    if (merged.play) {
+      cleanMerged.play = merged.play;
+    }
+    if (merged.ops) {
+      cleanMerged.ops = merged.ops;
+    }
+    if (merged.vietlott) {
+      cleanMerged.vietlott = merged.vietlott;
+    }
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
@@ -112,5 +136,43 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     const stats = input.stats ? { ...base.stats, ...input.stats } : base.stats;
 
     return { alerts, stats };
+  }
+
+  /**
+   * Kiểm neo Vietlott trước khi lưu:
+   * 1. Đủ cả 3 field (`anchorDrawDate`/`anchorDrawTime`/`anchorPeriod`) — DB lưu neo dạng
+   *    toàn vẹn (`VietlottPeriodAnchor`), không cho phép neo thiếu field.
+   * 2. `anchorDrawTime` khớp lưới quay ĐANG ÁP DỤNG (đọc từ `play` vừa merge — ưu tiên giá
+   *    trị mới nếu staff đổi cùng lúc — không phải `DEFAULT_KENO_CONFIG`, xem P0.0.1).
+   *
+   * Không dùng helper `calcSlotIndex` ở đây vì helper đó nhận `VietlottDrawSchedule`
+   * (interface trung gian) — validate tại đây chỉ cần kiểm chia hết, không cần build
+   * schedule object cho một phép chia hết đơn giản.
+   */
+  private validateVietlottAnchor(vietlott: Partial<VietlottPeriodAnchor>, play: PlayRules): void {
+    if (!vietlott.anchorDrawDate || !vietlott.anchorDrawTime || !vietlott.anchorPeriod) {
+      throw AppException.badRequest("Mã kỳ Vietlott phải nhập đủ 3 trường: ngày quay, giờ quay, mã kỳ.");
+    }
+
+    const anchorMinutes = parseHHMMToMinutes(vietlott.anchorDrawTime);
+    const firstMinutes = parseHHMMToMinutes(play.firstDrawTime);
+    const lastMinutes = parseHHMMToMinutes(play.lastDrawTime);
+
+    if (anchorMinutes === null || firstMinutes === null || lastMinutes === null) {
+      throw AppException.badRequest("Giờ quay neo hoặc lịch quay hiện tại không hợp lệ.");
+    }
+
+    const drawsPerDay = computeDrawsPerDay(play.firstDrawTime, play.lastDrawTime, play.drawIntervalMinutes);
+    const onGrid =
+      drawsPerDay !== null &&
+      anchorMinutes >= firstMinutes &&
+      anchorMinutes <= lastMinutes &&
+      (anchorMinutes - firstMinutes) % play.drawIntervalMinutes === 0;
+
+    if (!onGrid) {
+      throw AppException.badRequest(
+        `Giờ quay neo (${vietlott.anchorDrawTime}) không nằm trên lưới quay hiện tại (${play.firstDrawTime} → ${play.lastDrawTime}, mỗi ${play.drawIntervalMinutes} phút).`,
+      );
+    }
   }
 }

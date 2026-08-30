@@ -17,8 +17,8 @@ Bingo 18 là game xổ số nhanh dạng xúc xắc của Vietlott. **ĐƠN GI�
 
 - **Cơ chế**: Quay 3 số từ tập {1, 2, 3, 4, 5, 6} (3 viên xúc xắc)
 - **Không gian mẫu**: 6³ = 216 trường hợp
-- **Tần suất**: Mỗi **6 phút** 1 kỳ (~160 kỳ/ngày)
-- **Giờ hoạt động**: 06:00 đến 21:53, hàng ngày (T2-CN)
+- **Tần suất**: Mỗi **6 phút** 1 kỳ (~158 kỳ/ngày)
+- **Giờ hoạt động**: 06:06 đến 21:53, hàng ngày (T2-CN) — kỳ đầu quay lúc 06:06 (KHÔNG phải 06:00), verify với dữ liệu Vietlott 2026-08
 - **Giá vé**: 10.000 VND / cách chơi / kỳ
 - **Kỳ liên tiếp**: Tối đa 20 kỳ
 - **Jackpot**: **KHÔNG CÓ** — giải thưởng hoàn toàn CỐ ĐỊNH
@@ -167,8 +167,8 @@ Revenue = 100% doanh thu tiền cược
 
 ### 7.1 Lịch quay
 
-- Kỳ đầu: 06:00, kỳ cuối: 21:53, mỗi 6 phút
-- ~160 kỳ/ngày, 7 ngày/tuần = ~1.120 kỳ/tuần
+- Kỳ đầu: 06:06, kỳ cuối: 21:48 (kỳ cuối thực tế nằm dưới `lastDrawTime` config 21:53), mỗi 6 phút
+- ~158 kỳ/ngày, 7 ngày/tuần = ~1.106 kỳ/tuần
 
 ### 7.2 Settle pipeline
 
@@ -321,7 +321,7 @@ Request body: `{ drawIds, boards }` — KHÔNG CÒN `sideBets`.
 13. **KHÔNG CÓ TicketLines**: Bingo 18 không expand lines — match trực tiếp trên boards
 14. **Max 20 kỳ liên tiếp**: Cao hơn tất cả game khác (thường max 6)
 15. **Profit có thể âm**: Giải cố định, không percentage-based → cần monitor
-16. **7 ngày/tuần**: Hoạt động mỗi ngày, ~160 kỳ/ngày — volume cao nhất hệ thống
+16. **7 ngày/tuần**: Hoạt động mỗi ngày, ~158 kỳ/ngày — volume cao nhất hệ thống
 17. **Số nguyên 1-6**: KHÔNG zero-padded (khác Lotto/Mega/Power dùng string "01"-"55")
 18. **Commission snapshot**: commissionRate snapshot lúc place-bet
 19. **Zod validation**: Place-bet handler dùng `z.union()` — mỗi playType có schema riêng, type-safe

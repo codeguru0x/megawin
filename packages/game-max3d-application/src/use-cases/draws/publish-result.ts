@@ -60,6 +60,10 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
       );
     }
 
+    if (input.vietlottRef) {
+      await this.validateVietlottPeriodUnique(input.drawId, input.vietlottRef.drawPeriod);
+    }
+
     const publishedAt = nowVN();
     // `settledAt` là high-water mark — set lần đầu khi FinalizeSettle chạy, KHÔNG
     // bị $unset khi republish. Dùng nó (KHÔNG dùng status) để biết đã từng settle.
@@ -168,5 +172,23 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
         publishedAt: publishedAt.toISOString(),
       },
     };
+  }
+
+  /**
+   * Invariant server-side cho `vietlottRef.drawPeriod`: KHÔNG kỳ nào khác được dùng cùng mã kỳ.
+   * CHỈ chạy khi `input.vietlottRef` được truyền, tránh chặn publish result cho kỳ không cần
+   * đối soát Vietlott. Loại trừ chính kỳ đang publish/sửa nên sửa lại ref của nó không tự báo trùng.
+   *
+   * Chốt 30/08: BỎ check "đơn điệu tăng theo `drawTime`" của P0.2 (2 query neighbor + cần thêm
+   * partial index `{drawTime}` mỗi game) — dialog publish ĐÃ cảnh báo khi staff nhập lệch
+   * `suggestedPeriod`. Đánh đổi: typo ra mã kỳ CHƯA ai dùng giờ lưu được, detector còn lại là
+   * staff đối chiếu trang Vietlott (`00-overview.md` §6).
+   */
+  private async validateVietlottPeriodUnique(drawId: string, drawPeriod: string): Promise<void> {
+    const duplicate = await this.drawRepo.findDrawByVietlottPeriod(drawPeriod, drawId);
+
+    if (duplicate) {
+      throw AppException.badRequest(`Mã kỳ Vietlott "${drawPeriod}" đã được dùng cho kỳ ${duplicate.drawId}.`);
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Lotto535OpsConfig } from "@megawin/game-lotto535/entities";
+import type { Lotto535OpsConfig, PlayRules, VietlottPeriodAnchor } from "@megawin/game-lotto535/entities";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { AppException } from "@megawin/shared/errors";
 
@@ -48,7 +48,12 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
         : undefined,
       play: input.play ? { ...(existing?.play ?? DEFAULT_LOTTO535_CONFIG.play), ...input.play } : undefined,
       ops: input.ops ? this.mergeOps(existing?.ops, input.ops) : undefined,
+      vietlott: input.vietlott ? { ...existing?.vietlott, ...input.vietlott } : undefined,
     };
+
+    if (merged.vietlott) {
+      this.validateVietlottAnchor(merged.vietlott, merged.play ?? existing?.play ?? DEFAULT_LOTTO535_CONFIG.play);
+    }
 
     const cleanMerged: Record<string, unknown> = {};
     if (merged.jackpot) cleanMerged.jackpot = merged.jackpot;
@@ -56,6 +61,7 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
     if (merged.play) cleanMerged.play = merged.play;
     if (merged.ops) cleanMerged.ops = merged.ops;
+    if (merged.vietlott) cleanMerged.vietlott = merged.vietlott;
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
@@ -103,5 +109,28 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     const stats = input.stats ? { ...base.stats, ...input.stats } : base.stats;
 
     return { alerts, stats };
+  }
+
+  /**
+   * Kiểm neo Vietlott trước khi lưu:
+   * 1. Đủ cả 3 field (`anchorDrawDate`/`anchorDrawTime`/`anchorPeriod`) — DB lưu neo dạng
+   *    toàn vẹn (`VietlottPeriodAnchor`), không cho phép neo thiếu field.
+   * 2. `anchorDrawTime` phải nằm trong `play.drawTimes` ĐANG ÁP DỤNG (đọc từ `play` vừa
+   *    merge — ưu tiên giá trị mới nếu staff đổi cùng lúc — không phải `DEFAULT_LOTTO535_CONFIG`).
+   *
+   * Khác Keno (lưới đều `firstDrawTime`→`lastDrawTime`/`drawIntervalMinutes`), Lotto 5/35
+   * dùng schedule Type B — `drawTimes` là danh sách giờ quay cố định trong ngày, kiểm bằng
+   * membership check thay vì phép chia hết.
+   */
+  private validateVietlottAnchor(vietlott: Partial<VietlottPeriodAnchor>, play: PlayRules): void {
+    if (!vietlott.anchorDrawDate || !vietlott.anchorDrawTime || !vietlott.anchorPeriod) {
+      throw AppException.badRequest("Mã kỳ Vietlott phải nhập đủ 3 trường: ngày quay, giờ quay, mã kỳ.");
+    }
+
+    if (!play.drawTimes.includes(vietlott.anchorDrawTime)) {
+      throw AppException.badRequest(
+        `Giờ quay neo (${vietlott.anchorDrawTime}) không nằm trong lịch quay hiện tại (${play.drawTimes.join(", ")}).`,
+      );
+    }
   }
 }

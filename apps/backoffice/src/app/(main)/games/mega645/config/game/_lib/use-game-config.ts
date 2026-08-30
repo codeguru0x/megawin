@@ -50,6 +50,15 @@ interface GameConfig {
       topCombosK: number;
     };
   };
+  /**
+   * Neo suy mã kỳ Vietlott — `undefined` khi chưa cấu hình (chưa bật gợi ý).
+   * Xem `.cursor/plans/vietlott-period-suggestion/00-overview.md`.
+   */
+  vietlott?: {
+    anchorDrawDate: string;
+    anchorDrawTime: string;
+    anchorPeriod: string;
+  };
   version: number;
   createdAt: string;
   updatedAt: string;

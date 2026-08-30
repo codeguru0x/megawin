@@ -24,6 +24,7 @@ import Link from "next/link";
 
 import { isAppError } from "@megawin/shared/errors";
 import { AlertTriangleIcon, ArrowRightIcon, ChevronRightIcon } from "lucide-react";
+import type { Route } from "next";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -134,7 +135,9 @@ export function KpiTile({ label, value, valueClassName }: { label: string; value
  */
 export function DeepLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link className="inline-flex items-center gap-1 text-primary text-xs hover:underline" href={href}>
+    // `href` dựng động từ `DeepLinkSpec.href(rows)` — không qua nav-registry (khác `navigateTo`
+    // tool card), nhưng luôn trỏ về path tĩnh đã biết trong `app/`. Cast an toàn.
+    <Link className="inline-flex items-center gap-1 text-primary text-xs hover:underline" href={href as Route}>
       {label}
       <ArrowRightIcon className="size-3" />
     </Link>

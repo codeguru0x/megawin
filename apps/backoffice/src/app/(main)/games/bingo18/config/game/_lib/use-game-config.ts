@@ -9,6 +9,7 @@ import type {
   SingleNumPrizes,
   SumTotalPrizes,
   TripleMatchPrizes,
+  VietlottPeriodAnchor,
 } from "@megawin/game-bingo18/entities";
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,8 @@ export interface Bingo18GameConfig {
   play: PlayRules;
   /** Cấu hình vận hành — optional vì doc cũ chưa có section (fallback default ở OpsSection). */
   ops?: OpsConfig;
+  /** Neo suy mã kỳ Vietlott — optional, `undefined` = chưa cấu hình. */
+  vietlott?: VietlottPeriodAnchor;
 }
 
 interface UpdateGameConfigOutput {

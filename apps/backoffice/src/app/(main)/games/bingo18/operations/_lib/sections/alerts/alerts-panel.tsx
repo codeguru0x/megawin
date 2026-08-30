@@ -10,7 +10,7 @@
  * **Hành vi Ack (UI v6 Keno 30/07 — guideline §4):** alert đã ack KHÔNG biến mất
  * (mất audit trail — ack ≠ hết rủi ro) nhưng cũng KHÔNG lẫn cùng cấp với alert cần
  * xử lý — đẩy vào disclosure "Xem N đã xử lý ▾" cuối mỗi nhóm (toggle per-group).
- * Đặc biệt quan trọng với Bingo 18: ngưỡng nhạy + 160 kỳ/ngày dễ sinh nhiều alert
+ * Đặc biệt quan trọng với Bingo 18: ngưỡng nhạy + 158 kỳ/ngày dễ sinh nhiều alert
  * `bucket_concentration` per-bucket.
  *
  * Fetch on-demand: `useAlerts` chỉ chạy khi panel active (tab Giám sát mở). Không

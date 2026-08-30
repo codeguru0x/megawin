@@ -5,7 +5,7 @@
  *   - YYYY-MM-DD: ngày quay
  *   - NNN: số thứ tự kỳ quay trong ngày
  *
- * Bingo 18 quay mỗi 6 phút, từ 06:00 đến 21:53.
+ * Bingo 18 quay mỗi 6 phút, từ 06:06 đến 21:53.
  *
  * Lịch kỳ quay do `calcDrawSlots` (`@megawin/game-bingo18-application/helpers`) sinh —
  * file này CHỈ lo format drawId từ (drawDate, drawNo) đã biết.

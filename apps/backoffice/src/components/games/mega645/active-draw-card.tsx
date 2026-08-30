@@ -16,6 +16,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import type { CurrentDrawInfo } from "@megawin/game-mega645-application/use-cases/draws";
 import { displayVNDateTime, displayVNTime, formatVND, formatVNTime } from "@megawin/shared/utils";
 import { Ban, CalendarCheck, CircleDollarSign, Clock, Loader2, Lock, Radio, Ticket, Unlock } from "lucide-react";
+import type { Route } from "next";
 
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -127,8 +128,8 @@ const DEFAULT_VISUAL: (typeof STATUS_VISUALS)[string] = {
 
 const OPS_BASE = "/games/mega645/operations";
 
-function opsLink(drawId?: string) {
-  return drawId ? `${OPS_BASE}?drawId=${drawId}` : OPS_BASE;
+function opsLink(drawId?: string): Route {
+  return (drawId ? `${OPS_BASE}?drawId=${drawId}` : OPS_BASE) as Route;
 }
 
 const SHOW_PING = new Set([

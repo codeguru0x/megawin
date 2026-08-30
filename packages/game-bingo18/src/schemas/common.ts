@@ -4,6 +4,18 @@
 
 import { z } from "zod";
 
+/**
+ * Trần rộng (sanity ceiling) cho số kỳ tối đa trong 1 lần tạo — dùng chung giữa Zod schema
+ * route (`createDrawSchema.draws`, `previewDrawsSchema.count`) và input UI
+ * (`create-draw-action.tsx`) để tránh lệch giá trị giữa 2 nơi.
+ *
+ * Bingo 18 quay nhanh (~158 kỳ/ngày, 6 phút/kỳ) nên trần phải đủ rộng cho 1 ngày + 1 ngày
+ * kế tiếp trong cùng batch. KHÔNG phải giới hạn nghiệp vụ thật — giới hạn thật
+ * (drawsPerDay × 2 ngày) do use-case tính lại theo GlobalConfig tại thời điểm tạo. Hằng số
+ * này chỉ chặn input vô lý (batch quá khổ).
+ */
+export const BINGO18_CREATE_DRAW_BATCH_MAX = 400;
+
 export const bingo18NumberSchema = z.number().int().min(1).max(6, "Số Bingo 18 phải từ 1 đến 6");
 
 export const bingo18SumSchema = z.number().int().min(3).max(18, "Tổng phải từ 3 đến 18");
@@ -40,7 +52,7 @@ export const editScheduleSchema = z
     // Client chỉ đảm bảo thứ tự cơ bản — server validate buffer chính xác
     if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs <= closeMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["drawTime"],
         message: "Giờ quay số phải sau giờ đóng bán",
       });

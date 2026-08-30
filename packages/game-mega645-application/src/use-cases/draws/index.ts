@@ -16,6 +16,8 @@ export type {
   DrawTransitionOutput,
   GetDrawDetailInput,
   GetDrawDetailOutput,
+  GetVietlottSuggestionInput,
+  GetVietlottSuggestionOutput,
   ListDrawsInput,
   ListDrawsOutput,
   PreviewDrawItem,
@@ -34,6 +36,7 @@ export type {
 } from "./dto/draw.dto";
 export { GetCurrentDrawUseCase } from "./get-current-draw";
 export { GetDrawDetailUseCase } from "./get-draw-detail";
+export { GetVietlottSuggestionUseCase } from "./get-vietlott-suggestion";
 export { ListDrawsUseCase } from "./list-draws";
 export { OpenSalesUseCase } from "./open-sales";
 export { PreviewDrawsUseCase } from "./preview-draws";

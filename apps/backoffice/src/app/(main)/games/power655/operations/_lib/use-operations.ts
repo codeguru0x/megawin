@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent } from "react";
 
 import type {
   GetDrawDetailOutput,
+  GetVietlottSuggestionOutput,
   PreviewDrawsOutput,
   ResettlePreflightOutput,
 } from "@megawin/game-power655-application/use-cases/draws";
@@ -25,6 +26,7 @@ import { power655Keys } from "@/lib/query-keys";
 
 export type {
   GetDrawDetailOutput,
+  GetVietlottSuggestionOutput,
   ResettlePreflightOutput,
 } from "@megawin/game-power655-application/use-cases/draws";
 export type {
@@ -311,6 +313,23 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
 }
 
 // ─────────────────────────────────────────────
+// Vietlott Suggestion — gợi ý mã kỳ cho dialog publish (P4)
+// ─────────────────────────────────────────────
+
+/**
+ * Gợi ý mã kỳ Vietlott cho dialog công bố kết quả — dùng để prefill + hiện thông báo
+ * khi không suy được. Chỉ fetch khi dialog mở (`enabled`).
+ */
+export function useVietlottSuggestion(drawId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: power655Keys.vietlottSuggestion(drawId ?? ""),
+    queryFn: () => apiClient.get<GetVietlottSuggestionOutput>(`/power655/draws/${drawId}/vietlott-suggestion`),
+    enabled: !!drawId && enabled,
+    staleTime: 60_000,
+  });
+}
+
+// ─────────────────────────────────────────────
 // Mutations (draw management)
 // ─────────────────────────────────────────────
 
@@ -448,7 +467,6 @@ export function useCreateDraw() {
     mutationFn: (data: {
       draws: Array<{
         drawDate: string;
-        drawNo: number;
         drawTime: string;
         openNow: boolean;
       }>;

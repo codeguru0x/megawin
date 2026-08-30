@@ -9,6 +9,7 @@
 
 import type { DrawCounterEntity } from "@megawin/game-bingo18/entities";
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+import { AppException } from "@megawin/shared/errors";
 
 import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
 import { BaseRepo } from "./base-repo";
@@ -25,17 +26,26 @@ export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCount
    * Atomic increment drawNo cho 1 ngày.
    * Nếu chưa có counter cho ngày đó → tạo mới với lastDrawNo = 1.
    * Trả về drawNo mới (giá trị sau khi tăng).
+   *
+   * Dùng `findOneAndUpdate` kế thừa từ `MongoRepository` (KHÔNG đụng `_collection`
+   * trực tiếp) — base method tự lo `initBeforeUse()` + map document qua `_dataMapper`.
+   *
+   * `result` chỉ `null` khi driver/DB có sự cố bất thường (`upsert: true` về lý thuyết luôn
+   * trả document) — log kỹ thuật để audit, throw `AppException` với message chung, KHÔNG lộ
+   * tên class/method ra client (xem `error-handling-conventions.mdc`).
    */
   async getNextDrawNo(drawDate: string): Promise<number> {
-    await this.initBeforeUse();
-
-    const result = await this._collection.findOneAndUpdate(
+    const result = await this.findOneAndUpdate(
       { drawDate },
       { $inc: { lastDrawNo: 1 } },
       { upsert: true, returnDocument: "after" },
     );
 
-    return result!.lastDrawNo as number;
+    if (!result) {
+      throw AppException.internal("Không thể sinh số kỳ quay, vui lòng thử lại.");
+    }
+
+    return result.lastDrawNo;
   }
 
   /**
@@ -45,29 +55,25 @@ export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCount
    * VD: lastDrawNo hiện tại = 5, count = 10
    *   → $inc: 10 → lastDrawNo = 15
    *   → first drawNo = 15 - 10 + 1 = 6
+   *
+   * Dùng `findOneAndUpdate` kế thừa từ `MongoRepository` (KHÔNG đụng `_collection`
+   * trực tiếp) — base method tự lo `initBeforeUse()` + map document qua `_dataMapper`.
+   *
+   * `result` chỉ `null` khi driver/DB có sự cố bất thường (`upsert: true` về lý thuyết luôn
+   * trả document) — log kỹ thuật để audit, throw `AppException` với message chung, KHÔNG lộ
+   * tên class/method ra client (xem `error-handling-conventions.mdc`).
    */
   async getNextDrawNoBatch(drawDate: string, count: number): Promise<number> {
-    await this.initBeforeUse();
-
-    const result = await this._collection.findOneAndUpdate(
+    const result = await this.findOneAndUpdate(
       { drawDate },
       { $inc: { lastDrawNo: count } },
       { upsert: true, returnDocument: "after" },
     );
 
-    const lastDrawNo = result!.lastDrawNo as number;
-    return lastDrawNo - count + 1;
-  }
+    if (!result) {
+      throw AppException.internal("Không thể sinh số kỳ quay, vui lòng thử lại.");
+    }
 
-  /**
-   * Upsert lastDrawNo nếu drawNo truyền vào lớn hơn giá trị hiện tại.
-   *
-   * Dùng khi staff tạo kỳ với drawNo cụ thể (không tự động tăng).
-   * $max đảm bảo idempotent — chạy lại nhiều lần an toàn.
-   */
-  async upsertLastDrawNo(drawDate: string, drawNo: number): Promise<void> {
-    await this.initBeforeUse();
-
-    await this._collection.updateOne({ drawDate }, { $max: { lastDrawNo: drawNo } }, { upsert: true });
+    return result.lastDrawNo - count + 1;
   }
 }

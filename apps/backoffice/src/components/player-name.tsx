@@ -20,6 +20,7 @@ import Link from "next/link";
 
 import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { splitBackofficeUsername } from "@megawin/shared/utils";
+import type { Route } from "next";
 
 import { cn } from "@/lib/utils";
 
@@ -68,7 +69,7 @@ export function buildOutstandingHref(
   drawId: string,
   accountId: string,
   username: string,
-): string | null {
+): Route | null {
   const { primary, tenantId } = splitBackofficeUsername(username);
   if (!tenantId) return null;
   const params = new URLSearchParams({
@@ -77,7 +78,7 @@ export function buildOutstandingHref(
     accountId,
     playerName: primary,
   });
-  return `/games/${gameProduct}/reports/outstanding?${params.toString()}`;
+  return `/games/${gameProduct}/reports/outstanding?${params.toString()}` as Route;
 }
 
 /**

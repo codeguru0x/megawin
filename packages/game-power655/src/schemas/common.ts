@@ -16,10 +16,15 @@ import { z } from "zod";
 import { POWER655_MAIN_COUNT, POWER655_MAIN_MAX, POWER655_MAIN_MIN } from "../entities/types";
 
 /**
- * Board labels hợp lệ cho Power 6/55.
- * Tối đa 5 boards: A, B, C, D, E (khác Mega 6/45 có 6 boards A-F).
+ * Trần rộng (sanity ceiling) cho số kỳ tối đa trong 1 lần tạo — dùng chung giữa Zod schema
+ * route (`createDrawSchema.draws`, `previewDrawsSchema.count`) và input UI
+ * (`create-draw-action.tsx`) để tránh lệch giá trị giữa 2 nơi.
+ *
+ * Power 6/55 quay 1 kỳ/ngày nên trần đủ cho ~2 tuần/lần tạo. KHÔNG phải giới hạn nghiệp vụ
+ * thật — giới hạn thật do use-case tính lại theo GlobalConfig tại thời điểm tạo. Hằng số
+ * này chỉ chặn input vô lý (batch quá khổ).
  */
-export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E"] as const;
+export const POWER655_CREATE_DRAW_BATCH_MAX = 12;
 
 /**
  * Schema validate số chính Power 6/55.
@@ -88,7 +93,7 @@ export const publishResultSchema = z
     const bonus = Number(data.bonusNumber);
     if (!isNaN(bonus) && mainSet.has(bonus)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["bonusNumber"],
         message: "Số thưởng phải khác tất cả 6 số chính",
       });
@@ -127,7 +132,7 @@ export const editScheduleSchema = z
 
     if (!isNaN(openMs) && !isNaN(closeMs) && closeMs <= openMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["salesCloseTime"],
         message: "Giờ đóng bán phải sau giờ mở bán",
       });
@@ -136,7 +141,7 @@ export const editScheduleSchema = z
     // Power 6/55: buffer tối thiểu 5 phút giữa đóng bán và quay số
     if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs - closeMs < 5 * 60_000) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["drawTime"],
         message: "Giờ quay số phải sau giờ đóng bán ít nhất 5 phút",
       });

@@ -8,6 +8,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import type { Route } from "next";
+
 import { auth } from "@/lib/auth";
 
 import { LoginClient } from "./_components/login-client";
@@ -21,7 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { callbackUrl } = await searchParams;
 
   if (session) {
-    redirect(callbackUrl ?? "/");
+    redirect((callbackUrl ?? "/") as Route);
   }
 
   return <LoginClient callbackUrl={callbackUrl} />;

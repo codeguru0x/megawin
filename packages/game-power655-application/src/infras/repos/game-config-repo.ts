@@ -6,6 +6,7 @@ import type {
   PlayRules,
   Power655OpsConfig,
   PrizeAmounts,
+  VietlottPeriodAnchor,
 } from "@megawin/game-power655/entities";
 import { Power655Collections } from "@megawin/game-power655/entities";
 
@@ -33,6 +34,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GlobalCon
       defaultPrizes: PrizeAmounts;
       play: PlayRules;
       ops: Power655OpsConfig;
+      vietlott: VietlottPeriodAnchor;
     }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -43,6 +45,7 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GlobalCon
     if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
     if (config.play) $set.play = config.play;
     if (config.ops) $set.ops = config.ops;
+    if (config.vietlott) $set.vietlott = config.vietlott;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

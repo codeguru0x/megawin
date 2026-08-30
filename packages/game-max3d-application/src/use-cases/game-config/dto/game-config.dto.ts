@@ -6,6 +6,7 @@ import type {
   Max3dPrizeConfig,
   OpsStatsConfig,
   PlayRules,
+  VietlottPeriodAnchor,
 } from "@megawin/game-max3d/entities";
 
 type DeepPartial<T> = {
@@ -44,6 +45,10 @@ export interface UpdateGameConfigInput {
    * (alerts/stats), `enabled` merge shallow ở use-case.
    */
   ops?: UpdateOpsInput;
+  /**
+   * Neo suy mã kỳ Vietlott (tuỳ chọn cập nhật một phần) — xem `GlobalConfigDoc.vietlott`.
+   */
+  vietlott?: Partial<VietlottPeriodAnchor>;
   /** Chủ thể thực hiện — dùng cho audit. */
   actor: AuditActor;
 }

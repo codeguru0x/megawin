@@ -22,6 +22,9 @@ export const power655Keys = {
   /** Chi tiết 1 kỳ quay (dùng cho operations dashboard) */
   drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
 
+  /** Gợi ý mã kỳ Vietlott cho dialog công bố kết quả (P4) */
+  vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
+
   /** Jackpot hiện tại */
   jackpotCurrent: [MODULE, "jackpot-current"] as const,
 

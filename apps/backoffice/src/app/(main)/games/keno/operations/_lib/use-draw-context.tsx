@@ -4,7 +4,7 @@
  * Keno Operations — Draw Selection Context
  *
  * Cung cấp draw đang được chọn và opsParams cho toàn trang operations.
- * Keno khác Mega 6/45: nhiều kỳ/ngày (~120) → group active/future/recent.
+ * Keno khác Mega 6/45: nhiều kỳ/ngày (~119) → group active/future/recent.
  * drawNo có ý nghĩa (001-120) — dùng kết hợp với drawDate để hiển thị.
  *
  * Auto-select: ưu tiên kỳ đang active, fallback kỳ future đầu tiên.

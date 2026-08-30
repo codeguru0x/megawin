@@ -44,6 +44,9 @@ export const kenoKeys = {
   /** Chi tiết 1 kỳ quay (full entity gồm result, financial, stats) */
   drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
 
+  /** Gợi ý mã kỳ Vietlott cho dialog công bố kết quả (on-demand khi dialog mở) */
+  vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
+
   /** Operations dashboard – winning entries của 1 kỳ quay (cursor-based) */
   opsWinningEntries: (drawId: string) => [MODULE, "ops-winning-entries", drawId] as const,
 

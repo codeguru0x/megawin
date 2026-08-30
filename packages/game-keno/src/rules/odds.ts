@@ -9,9 +9,9 @@
  *   Ngoài ra có cách chơi bổ sung: Lớn/Nhỏ, Chẵn/Lẻ.
  *
  *   Giá vé mặc định: 10,000 VND / lượt (staff cấu hình được qua `play.unitPrice`).
- *   Lịch quay mặc định: mỗi 8 phút, 06:00 – 21:52 → 120 kỳ/ngày. Cả 3 tham số
+ *   Lịch quay mặc định: mỗi 8 phút, 06:08 – 21:52 → 119 kỳ/ngày. Cả 3 tham số
  *   (`drawIntervalMinutes`, `firstDrawTime`, `lastDrawTime`) đều cấu hình được nên
- *   số kỳ/ngày phải tính lại theo config, KHÔNG coi 120 là hằng số.
+ *   số kỳ/ngày phải tính lại theo config, KHÔNG coi 119 là hằng số.
  *
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * II. KHÔNG GIAN MẪU (Sample Space)

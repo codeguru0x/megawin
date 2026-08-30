@@ -12,8 +12,12 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
+import type { VietlottPeriodAnchor } from "@megawin/game-core/types";
 
 import type { FinancialRates, JackpotConfig, PlayRules, Power655OpsConfig, PrizeAmounts } from "./types";
+
+/** Re-export type chung — cho phép import từ `@megawin/game-power655/entities` như các type khác. */
+export type { VietlottPeriodAnchor };
 
 /**
  * MongoDB document cho global config.
@@ -33,6 +37,18 @@ export interface GlobalConfigDoc {
   defaultPrizes: PrizeAmounts;
   /** Luật chơi: giá vé, max boards, max draws, lịch quay. */
   play: PlayRules;
+
+  // ───── Vietlott Period Suggestion ─────
+
+  /**
+   * Neo suy mã kỳ Vietlott (`drawPeriod`) cho dialog công bố kết quả — gợi ý dựa TRỰC TIẾP vào
+   * `play` (lịch quay) + `vietlott` (neo), KHÔNG dùng dữ liệu vận hành (`vietlottRef` kỳ khác)
+   * để tránh lan truyền sai số (xem `vietlott-period-suggestion/00-overview.md` §4.4).
+   *
+   * `undefined` = chưa cấu hình = chưa bật gợi ý (KHÔNG có giá trị mặc định hardcode).
+   */
+  vietlott?: VietlottPeriodAnchor;
+
   /**
    * Cấu hình vận hành & kiểm soát rủi ro — ngưỡng alert + nhịp/top-K stats.
    * Staff sửa trên tab "Vận hành". KHÔNG expose cho player.
