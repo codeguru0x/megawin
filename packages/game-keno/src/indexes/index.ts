@@ -205,6 +205,14 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.Draws,
+    key: { drawDate: 1, drawTime: 1 },
+    options: { name: "idx_drawDate_drawTime" },
+    purpose:
+      "listDrawTimesByDate: COVERED query (projection chỉ drawTime, _id:0) cho preview/validate tạo kỳ — " +
+      "idx_drawDate_drawNo chỉ khớp prefix drawDate rồi phải FETCH ~119 doc/ngày để đọc drawTime",
+  },
+  {
+    collection: KenoCollections.Draws,
     key: { drawDate: -1, drawNo: -1 },
     options: { name: "idx_drawDate_drawNo_desc" },
     purpose: "getLatestDraw: O(1) lookup kỳ mới nhất (đọc entry đầu tiên index B-tree)",

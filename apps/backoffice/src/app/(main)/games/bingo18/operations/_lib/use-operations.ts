@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent } from "react";
 import type {
   GetDrawDetailOutput,
   GetVietlottSuggestionOutput,
+  PreviewDrawsOutput,
 } from "@megawin/game-bingo18-application/use-cases/draws";
 import type {
   GetDrawSelectorOutput,
@@ -343,26 +344,27 @@ export function useUpdateSchedule() {
   );
 }
 
-export function usePreviewDraws(count: number) {
+/**
+ * Danh sách kỳ **còn tạo được** của một ngày — nguồn dữ liệu cho bảng gợi ý dialog tạo kỳ.
+ *
+ * @param drawDate - Ngày cần tạo kỳ `"YYYY-MM-DD"`. Rỗng ⇒ query tắt (dialog chưa mở).
+ *
+ * Query key theo `drawDate` (KHÔNG theo số kỳ staff muốn tạo): tập slot khả dụng không phụ
+ * thuộc số lượng, nên đổi số kỳ trên UI chỉ cắt mảng đã có ở client, không refetch.
+ */
+export function usePreviewDraws(drawDate: string) {
   return useQuery({
-    queryKey: [...bingo18Keys.all, "preview", count] as const,
-    queryFn: () =>
-      apiClient.get<{
-        draws: Array<{
-          drawNo: number;
-          drawDate: string;
-          drawTime: string;
-          closeAt: string;
-          status: string;
-        }>;
-      }>("/bingo18/draws/preview", { params: { count } }),
-    enabled: count > 0,
+    queryKey: [...bingo18Keys.all, "preview", drawDate] as const,
+    queryFn: () => apiClient.get<PreviewDrawsOutput>("/bingo18/draws/preview", { params: { drawDate } }),
+    enabled: drawDate.length > 0,
   });
 }
 
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
+    // KHÔNG gửi `drawNo`: server cấp lại từ atomic counter theo ngày. Gửi lên chỉ tạo ảo giác
+    // client kiểm soát được số kỳ, trong khi giá trị đó bị bỏ qua hoàn toàn.
     mutationFn: (data: {
       draws: Array<{
         drawDate: string;

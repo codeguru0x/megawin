@@ -8,8 +8,9 @@
  * Keno quay mỗi 8 phút, từ 06:08 đến 21:52 = 119 kỳ/ngày.
  * drawNo tối đa 119 nên padStart(3) là đủ.
  *
- * Lịch kỳ quay do `calcDrawSlots` (`@megawin/game-keno-application/helpers`) sinh —
- * file này CHỈ lo format drawId từ (drawDate, drawNo) đã biết.
+ * Lịch kỳ quay do `listDrawSlotMinutes` / `computeDrawDayCapacity`
+ * (`@megawin/game-core/utils`) sinh — file này CHỈ lo format drawId từ (drawDate, drawNo)
+ * đã biết.
  */
 
 import type { ISODateString } from "../entities/types";

@@ -7,7 +7,6 @@ import type {
   DrawSummary,
   GetCurrentDrawOutput,
   ListDrawsOutput,
-  PreviewDrawsOutput,
 } from "@megawin/game-keno-application/use-cases/draws";
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,17 +49,6 @@ export function useKenoDrawsList(params: ListDrawsParams) {
           size: params.size,
         },
       }),
-  });
-}
-
-export function useKenoPreviewDraws(drawDate: string, count: number) {
-  return useQuery({
-    queryKey: [...kenoKeys.all, "preview", drawDate, count] as const,
-    queryFn: () =>
-      apiClient.get<PreviewDrawsOutput>("/keno/draws/preview", {
-        params: { drawDate, count },
-      }),
-    enabled: !!drawDate && count > 0,
   });
 }
 

@@ -5,8 +5,9 @@
  * redirect sang Cognito Hosted UI.
  *
  * LÝ DO CẦN FILE NÀY: better-auth giới hạn CỨNG thời gian sống của OAuth state ở
- * 10 phút (`expiresAt: Date.now() + 10 * 60 * 1000`, hardcode trong
- * `oauth2/state.ts`, KHÔNG có config nào override được — xem
+ * 10 phút (`maxAge: 600` cho cookie `oauth_state` + `expiresAt: Date.now() + 600 * 1e3`
+ * trong payload, hardcode ở `dist/state.mjs` và `dist/oauth2/state.mjs`, KHÔNG có
+ * config nào override được — xem
  * https://github.com/better-auth/better-auth/issues/11012). Nếu user bị timeout
  * session → tự động redirect `/login` → tự động sang Cognito Hosted UI, rồi để
  * trang Cognito mở quá 10 phút mới nhập thông tin, `oauth_state` cookie đã hết hạn
@@ -20,11 +21,36 @@ import { getLocalStorageValue, setLocalStorageValue } from "@/lib/local-storage.
 
 const AUTH_CALLBACK_URL_STORAGE_KEY = "megawin.backoffice.auth-callback-url";
 
-export function saveAuthCallbackUrl(callbackUrl: string): void {
-  setLocalStorageValue(AUTH_CALLBACK_URL_STORAGE_KEY, callbackUrl);
+const DEFAULT_CALLBACK_URL = "/";
+
+/**
+ * Chỉ chấp nhận path nội bộ dạng `/games/keno/draws?tab=x`.
+ *
+ * Giá trị này đến từ localStorage — tức có thể bị sửa tay hoặc bị ghi bởi script
+ * khác cùng origin — rồi được nhúng vào `href` của link "Đăng nhập lại" và cuối
+ * cùng thành `callbackURL` của OAuth flow. Không lọc = mở đường open-redirect.
+ *
+ * Chặn cả `//evil.com` (protocol-relative URL: browser hiểu là host khác) và mọi
+ * dạng có scheme (`https:`, `javascript:`).
+ */
+function sanitizeCallbackUrl(value: string | null): string {
+  if (!value?.startsWith("/") || value.startsWith("//")) {
+    return DEFAULT_CALLBACK_URL;
+  }
+
+  // `\` bị một số browser normalize thành `/` → `/\evil.com` có thể thoát origin.
+  if (value.includes("\\")) {
+    return DEFAULT_CALLBACK_URL;
+  }
+
+  return value;
 }
 
-/** Trả về callbackUrl đã lưu, hoặc `"/"` nếu chưa từng lưu (fallback an toàn). */
+export function saveAuthCallbackUrl(callbackUrl: string): void {
+  setLocalStorageValue(AUTH_CALLBACK_URL_STORAGE_KEY, sanitizeCallbackUrl(callbackUrl));
+}
+
+/** Trả về callbackUrl đã lưu, hoặc `"/"` nếu chưa từng lưu / giá trị không an toàn. */
 export function readAuthCallbackUrl(): string {
-  return getLocalStorageValue(AUTH_CALLBACK_URL_STORAGE_KEY) ?? "/";
+  return sanitizeCallbackUrl(getLocalStorageValue(AUTH_CALLBACK_URL_STORAGE_KEY));
 }

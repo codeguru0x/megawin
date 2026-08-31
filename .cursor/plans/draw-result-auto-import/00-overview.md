@@ -1,5 +1,22 @@
 # Draw Result Auto-Import — Overview
 
+> ## 🔴 SUPERSEDED (31/08/2026) — ĐỌC PLAN MỚI: [`../drawfeed/`](../drawfeed/)
+>
+> Thư mục này **không còn là hướng thực thi**. Giữ lại để tra cứu lý do các quyết định cũ.
+>
+> | Quyết định cũ ở đây | Thay bằng | Vì sao |
+> | --- | --- | --- |
+> | Chrome extension MV3 (`p2-extension.plan.md`, 40KB) | **Bright Data Web Unlocker API** | Không cần máy chuyên dụng, không cần CRX self-hosted, không cần lo `cf_clearance`/nonce. Analysis §14.2–14.3 |
+> | Proxy zone cho nguồn "không có Cloudflare" | **Chỉ Unlocker cho MỌI nguồn** | Site bật Cloudflare/CAPTCHA sau này không phải viết lại transport. drawfeed `00-overview.md` D1 |
+> | `packages/result-collector` | **`packages/drawfeed`** | `result` va chạm với `DrawResultSource`/`draw_results` của core |
+> | App Next.js riêng `apps/result-collector` | Vận hành **trong `apps/backoffice`**, DB vẫn tách | Cùng nhóm staff, cùng session — app riêng chỉ thêm auth surface |
+> | Dedupe theo `sha256(raw)` vì extension không parse | `sha256` **vẫn dùng** để dedupe submission, nhưng nay có `(sourceId, gameKey, drawPeriod, parserVersion)` unique cho observation | Ta parse phía server nên biết mã kỳ |
+> | Poll để phát hiện kỳ mới | **Dự đoán `id` tuần tự** (`lastConfirmedPeriod + 1`) | Tiết kiệm ~60% request và phát hiện được kỳ bị nhảy số. Analysis §13.4 |
+>
+> **Vẫn còn giá trị, đã mang sang plan mới:** MegaWin PULL (không PUSH), multi-source + so sánh chéo,
+> shadow mode trước khi nối tiền, staff duyệt là chốt chặn cuối.
+
+
 Hệ thống tự động thu thập kết quả xổ số (Keno, Bingo18) từ nhiều nguồn, đối chiếu chéo, cho staff duyệt hàng loạt, rồi cung cấp kết quả đã duyệt cho MegaWin PULL về publish.
 
 ## Bối cảnh

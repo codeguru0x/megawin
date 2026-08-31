@@ -21,7 +21,16 @@ export interface CreateDrawSlotInput {
 }
 
 export interface CreateDrawInput {
-  /** Danh sách kỳ cần tạo (trần suy ra từ config: đủ 2 ngày theo lịch play). */
+  /**
+   * Danh sách kỳ cần tạo — **toàn bộ phải cùng một `drawDate`** (use-case reject nếu lệch).
+   *
+   * Vì sao chỉ 1 ngày: `drawNo` cấp từ counter theo từng ngày và mọi guard sức chứa
+   * (`computeDrawDayCapacity`) đều tính trên phạm vi 1 ngày. Cho lô trải nhiều ngày thì
+   * thông báo lỗi trở nên vô nghĩa ("còn 3 kỳ" — của ngày nào?) và staff không kiểm soát
+   * được mình vừa tạo gì. Cần nhiều ngày ⇒ bấm tạo nhiều lần.
+   *
+   * Trần số lượng: `KENO_CREATE_DRAW_BATCH_MAX` (dùng chung với Zod schema route + UI).
+   */
   draws: CreateDrawSlotInput[];
 }
 
@@ -44,21 +53,52 @@ export interface CreateDrawOutput {
 // ─────────────────────────────────────────────
 
 export interface PreviewDrawsInput {
-  /** Số kỳ muốn preview. */
-  count: number;
+  /**
+   * Ngày cần tạo kỳ, `"YYYY-MM-DD"` (giờ VN). Bỏ trống = hôm nay.
+   *
+   * Preview luôn thuộc **đúng một ngày** — không còn cross-day rollover như bản cũ. Lý do:
+   * lô tạo kỳ giờ chỉ nhắm 1 ngày (staff chọn ngày tường minh), nên nếu tự nhảy sang ngày kế
+   * tiếp thì `drawNo` được cấp từ counter của ngày khác mà UI vẫn hiển thị chung một bảng —
+   * staff không nhận ra mình đang tạo kỳ cho 2 ngày.
+   */
+  drawDate?: string;
 }
 
+/** Một kỳ quay **gợi ý** (chưa tồn tại trong DB) — output của `PreviewDrawsUseCase`. */
 export interface PreviewDrawItem {
+  /**
+   * Số kỳ **dự kiến** trong ngày. CHỈ để hiển thị: khi tạo thật, server cấp lại từ atomic
+   * counter (`getNextDrawNoBatch`) nên số cuối cùng có thể lệch nếu người khác vừa tạo kỳ
+   * cho cùng ngày. Client KHÔNG được gửi giá trị này lên khi tạo.
+   */
   drawNo: number;
-  /** Ngày quay (YYYY-MM-DD) — có thể khác nhau khi cross-day rollover. */
+  /** Ngày quay `"YYYY-MM-DD"` — mọi item trong một response đều CÙNG một ngày. */
   drawDate: string;
+  /** Giờ quay, ISO 8601 có offset `+07:00` (VD `"2026-08-31T06:08:00+07:00"`). */
   drawTime: string;
+  /** Thời điểm đóng bán = `drawTime − play.salesCloseBeforeSeconds`, ISO 8601. */
   closeAt: string;
-  /** salesOpen nếu trong [firstDrawTime, lastDrawTime], scheduled nếu ngoài. */
-  status: string;
 }
 
 export interface PreviewDrawsOutput {
+  /** Ngày đã dùng để tính preview (echo lại input sau khi default về hôm nay). */
+  drawDate: string;
+  /**
+   * Số kỳ tối đa/ngày theo lịch quay trong game config — mẫu số của "còn N/M kỳ" trên UI.
+   *
+   * Chỉ để hiển thị bối cảnh. Số kỳ staff thực sự tạo được là `draws.length`.
+   */
+  maxPerDay: number;
+  /**
+   * Các kỳ **còn tạo được**, sort theo giờ quay tăng dần. Rỗng ⇒ ngày này không còn slot nào.
+   *
+   * Đây là output DUY NHẤT staff cần: `draws.length` = số kỳ còn tạo được. KHÔNG trả về chi
+   * tiết "vì sao hết" (đã qua giờ / đã tạo đủ) — cách xử lý của staff giống nhau trong cả 2
+   * trường hợp là chọn ngày khác, nên tách ra chỉ thêm field mà không thêm quyết định nào.
+   *
+   * Client hiển thị TOÀN BỘ mảng này rồi cắt theo số kỳ staff muốn tạo (client-side slice) —
+   * KHÔNG gọi lại API khi staff đổi số lượng, vì tập slot khả dụng không phụ thuộc số lượng.
+   */
   draws: PreviewDrawItem[];
 }
 

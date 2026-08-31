@@ -1,24 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+/**
+ * Lotto 5/35 – Create Draw Action Dialog
+ *
+ * Tạo nhiều kỳ quay Lotto 5/35 liên tiếp.
+ * - `rows` derive trực tiếp từ preview (server tính ngày/giờ/mã kỳ theo game config) — KHÔNG
+ *   phải state riêng, staff KHÔNG sửa được ngày/giờ. Sai lịch thì phải sửa ở game config, sửa
+ *   tay từng kỳ dễ tạo lệch lưới và sẽ bị server từ chối khi tạo thật.
+ * - Staff chỉ chọn SỐ KỲ muốn tạo (`count`) và bật/tắt "Mở bán" từng kỳ (`isOpen`).
+ */
 
+import { useMemo, useState } from "react";
+
+import type { DrawNo } from "@megawin/game-lotto535/entities";
+import { generateDrawId } from "@megawin/game-lotto535/helpers";
 import { LOTTO535_CREATE_DRAW_BATCH_MAX } from "@megawin/game-lotto535/schemas";
-import {
-  displayVNDate,
-  displayVNTime,
-  parseYMDToLocalDate,
-  todayVNAsLocalDate,
-  toVNIsoString,
-  YMD_PATTERN,
-} from "@megawin/shared/utils";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
+import { displayVNTime, parseYMDToLocalDate, WEEKDAY_LABELS_ABBR } from "@megawin/shared/utils";
+import { CalendarPlus, Check, Loader2, Lock, Unlock } from "lucide-react";
 
-import { useGameConfig } from "@/app/(main)/games/lotto535/config/game/_lib/use-game-config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
@@ -37,127 +37,27 @@ import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/**
+ * Một dòng trong bảng tạo kỳ — derive từ slot preview, KHÔNG phải state.
+ * Mọi field read-only với staff trừ `isOpen`: ngày/giờ do game config quyết định.
+ */
 interface DrawRow {
-  /** Ngày quay, format "YYYY-MM-DD". Trống nếu chưa chọn. */
-  date: string;
-  /** Giờ quay, format "HH:mm". */
+  /** Mã kỳ dự kiến "YYYY-MM-DD.NNN". */
+  previewDrawId: string;
+  /** Ngày quay "YYYY-MM-DD". */
+  drawDate: string;
+  /** Thứ trong tuần viết tắt (T2..CN), suy từ drawDate. */
+  weekday: string;
+  /** Giờ quay hiển thị "HH:mm" (giờ VN). */
   drawTime: string;
+  /** Giờ quay ISO gốc từ preview — gửi thẳng lên server khi tạo, không round-trip qua form. */
+  rawDrawTime: string;
   /** Mở bán ngay khi tạo. */
   isOpen: boolean;
 }
 
-function emptyRow(): DrawRow {
-  return { date: "", drawTime: "", isOpen: true };
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Kiểm tra row đã có đủ thông tin để submit. */
-function isRowComplete(row: DrawRow): boolean {
-  return YMD_PATTERN.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
-}
-
-/**
- * Nhãn kỳ CHỈ để hiển thị — suy ra bằng cách tìm vị trí `drawTime` trong `play.drawTimes` của
- * game config (KHÔNG hardcode giờ ở đây, tránh lệch khi đổi lịch quay). KHÔNG gửi lên server —
- * server tự tính lại drawNo từ `play.drawTimes` khi tạo kỳ; label này chỉ giúp staff xác nhận
- * giờ đã nhập đúng lịch trước khi submit.
- */
-function inferSlotLabel(drawTime: string, drawTimes: string[]): string {
-  const idx = drawTimes.indexOf(drawTime);
-  if (idx === -1) {
-    return drawTime ? "—" : "";
-  }
-  return `Kỳ ${idx + 1}`;
-}
-
-// ─── DatePicker (calendar popover) ───────────────────────────────────────────
-
-function DatePickerCell({
-  value,
-  onChange,
-  hasError,
-}: {
-  value: string;
-  onChange: (date: string) => void;
-  hasError: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const selected = parseYMDToLocalDate(value);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            "flex h-8 w-full items-center gap-1.5 rounded-md border bg-background px-2.5 text-xs tabular-nums transition-colors",
-            "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-            hasError
-              ? "border-dashed border-amber-400 text-amber-600 dark:border-amber-500 dark:text-amber-400"
-              : "border-input text-foreground",
-          )}
-        >
-          <CalendarIcon className={cn("size-3.5 shrink-0", hasError ? "text-amber-400" : "text-muted-foreground")} />
-          <span className={cn("flex-1 text-left font-mono", !value && "text-muted-foreground/60")}>
-            {value || "Chọn ngày"}
-          </span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start" sideOffset={6}>
-        <Calendar
-          mode="single"
-          selected={selected}
-          onSelect={(day) => {
-            if (day) {
-              onChange(format(day, "yyyy-MM-dd"));
-              setOpen(false);
-            }
-          }}
-          captionLayout="dropdown"
-          locale={vi}
-          startMonth={new Date(2025, 0)}
-          endMonth={new Date(2030, 11)}
-          // Chặn ngày quá khứ: ngày đã qua theo nghiệp vụ đã có kết quả, tạo kỳ mới là vô nghĩa
-          // (server cũng chặn — đây chỉ là lớp UX để staff không phải thử-rồi-lỗi).
-          disabled={{ before: todayVNAsLocalDate() }}
-          autoFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// ─── TimePicker ───────────────────────────────────────────────────────────────
-
-/**
- * Input time native HTML5 — trình duyệt xử lý picker chính xác từng phút.
- * Giá trị format "HH:mm", tương thích trực tiếp với input[type="time"].
- */
-function TimePickerCell({
-  value,
-  onChange,
-  hasError,
-}: {
-  value: string;
-  onChange: (time: string) => void;
-  hasError: boolean;
-}) {
-  return (
-    <input
-      type="time"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(
-        "h-8 w-full rounded-md border bg-background px-2.5 text-xs font-mono tabular-nums",
-        "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors",
-        hasError
-          ? "border-dashed border-amber-400 text-amber-600 dark:border-amber-500 dark:text-amber-400"
-          : "border-input text-foreground",
-      )}
-    />
-  );
-}
+/** Số kỳ mặc định mỗi lần mở dialog — Lotto 5/35 quay 2 kỳ/ngày, 3 ngày ≈ 6 kỳ. */
+const DEFAULT_COUNT = 6;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -167,110 +67,78 @@ interface CreateDrawActionProps {
 }
 
 export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) {
-  const [count, setCount] = useState(2);
-  const [rows, setRows] = useState<DrawRow[]>(() => Array.from({ length: 2 }, emptyRow));
-
-  // Ref theo dõi lần preview load gần nhất để tránh overwrite khi user đang sửa.
-  const lastPreviewCountRef = useRef<number>(0);
+  const [count, setCount] = useState(DEFAULT_COUNT);
+  /**
+   * Index (theo mảng slot preview) của những kỳ staff chuyển sang "chờ lịch".
+   * Lưu tập NGHỊCH ĐẢO vì mặc định mở bán hết — không cần khởi tạo lại khi count đổi.
+   */
+  const [closedIndexes, setClosedIndexes] = useState<ReadonlySet<number>>(() => new Set());
 
   const preview = usePreviewDraws(open ? count : 0);
   const createDraw = useCreateDraw();
-  // Lấy drawTimes từ game config để suy nhãn "Kỳ N" — không hardcode giờ trong UI.
-  const { data: gameConfig } = useGameConfig();
-  const drawTimes = gameConfig?.play.drawTimes ?? [];
 
-  // Khi count thay đổi → resize rows, giữ lại dữ liệu cũ.
-  useEffect(() => {
-    setRows((prev) => {
-      if (prev.length === count) return prev;
-      return Array.from({ length: count }, (_, i) => prev[i] ?? emptyRow());
-    });
-  }, [count]);
+  const availableDraws = preview.data?.draws ?? [];
 
-  // Khi preview data về → fill vào rows như gợi ý (không overwrite nếu user đã sửa).
-  useEffect(() => {
-    if (!preview.data) return;
-    const previewDraws = preview.data.draws;
-    if (previewDraws.length === 0) return;
-
-    // Chỉ fill một lần cho count này để không reset lại khi user đang sửa.
-    if (lastPreviewCountRef.current === count) return;
-    lastPreviewCountRef.current = count;
-
-    setRows((prev) =>
-      prev.map((row, i) => {
-        const p = previewDraws[i];
-        if (!p) return row;
-        // Chỉ fill nếu row chưa có dữ liệu (user chưa nhập gì).
-        const isEmpty = row.date === "" && row.drawTime === "";
-        if (!isEmpty) return row;
+  const rows = useMemo<DrawRow[]>(
+    () =>
+      availableDraws.map((slot, i) => {
+        const dt = parseYMDToLocalDate(slot.drawDate);
         return {
-          date: displayVNDate(p.drawTime),
-          drawTime: displayVNTime(p.drawTime),
-          isOpen: row.isOpen,
+          previewDrawId: generateDrawId(slot.drawDate, slot.drawNo as DrawNo),
+          drawDate: slot.drawDate,
+          weekday: dt ? (WEEKDAY_LABELS_ABBR[dt.getDay()] ?? "—") : "—",
+          drawTime: displayVNTime(slot.drawTime),
+          rawDrawTime: slot.drawTime,
+          isOpen: !closedIndexes.has(i),
         };
       }),
-    );
-  }, [preview.data, count]);
+    [availableDraws, closedIndexes],
+  );
 
-  // Khi dialog đóng → reset về count=2, rows trống.
+  const openCount = rows.filter((r) => r.isOpen).length;
+  const scheduledCount = rows.length - openCount;
+  const allOpen = rows.length > 0 && openCount === rows.length;
+  const canSubmit = rows.length > 0 && !createDraw.isPending;
+  // Preview tìm slot trong 30 ngày tới nên hầu như luôn đủ `count` — badge này chỉ hiện
+  // khi thật sự thiếu (VD cấu hình lịch quá thưa), không phải trạng thái bình thường.
+  const hasFewerPreviewSlots = !!preview.data && rows.length < count;
+
   function handleOpenChange(v: boolean) {
     if (!v) {
-      setCount(2);
-      setRows(Array.from({ length: 2 }, emptyRow));
-      lastPreviewCountRef.current = 0;
+      setCount(DEFAULT_COUNT);
+      setClosedIndexes(new Set());
     }
     onOpenChange(v);
   }
 
-  // ─── Row helpers ────────────────────────────────────────────────────────────
-
-  function updateRow(i: number, patch: Partial<DrawRow>) {
-    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  }
-
   function toggleSlot(i: number) {
-    updateRow(i, { isOpen: !rows[i]!.isOpen });
+    setClosedIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+      }
+      return next;
+    });
   }
 
   function toggleAll() {
-    const allOpen = rows.every((r) => r.isOpen);
-    setRows((prev) => prev.map((r) => ({ ...r, isOpen: !allOpen })));
+    setClosedIndexes(allOpen ? new Set(rows.map((_, i) => i)) : new Set());
   }
-
-  /** Fill lại toàn bộ rows từ preview (cho phép re-apply khi user muốn reset). */
-  function applyPreview() {
-    if (!preview.data) return;
-    lastPreviewCountRef.current = 0;
-    setRows((prev) =>
-      prev.map((row, i) => {
-        const p = preview.data!.draws[i];
-        if (!p) return emptyRow();
-        return {
-          date: displayVNDate(p.drawTime),
-          drawTime: displayVNTime(p.drawTime),
-          isOpen: row.isOpen,
-        };
-      }),
-    );
-    lastPreviewCountRef.current = count;
-  }
-
-  // ─── Submit ─────────────────────────────────────────────────────────────────
-
-  const openCount = rows.filter((r) => r.isOpen).length;
-  const scheduledCount = rows.length - openCount;
-  const completedRows = rows.filter(isRowComplete);
-  const canSubmit = completedRows.length === rows.length && !createDraw.isPending;
 
   function handleCreate() {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
 
     createDraw.mutate(
       {
+        // KHÔNG round-trip qua form: `rawDrawTime` lấy trực tiếp từ preview (server tính từ
+        // game config), gửi thẳng lên — tránh sai lệch khi parse/format lại giờ ở client.
         draws: rows.map((row) => ({
-          drawDate: row.date,
-          drawTime: toVNIsoString(row.date, row.drawTime),
+          drawDate: row.drawDate,
+          drawTime: row.rawDrawTime,
           openNow: row.isOpen,
         })),
       },
@@ -282,13 +150,6 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
     );
   }
 
-  // ─── Derived display ─────────────────────────────────────────────────────────
-
-  const allOpen = rows.length > 0 && rows.every((r) => r.isOpen);
-  const someOpen = rows.some((r) => r.isOpen);
-  const previewCount = preview.data?.draws.length ?? 0;
-  const hasFewerPreviewSlots = !preview.isLoading && open && previewCount < count;
-
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -298,13 +159,14 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             Tạo kỳ quay Lotto 5/35
           </DialogTitle>
           <DialogDescription>
-            Tạo nhiều kỳ liên tiếp. Lịch gợi ý tự động tính theo cấu hình game — staff có thể chỉnh sửa bất kỳ ô nào
-            trước khi xác nhận.
+            Tạo nhiều kỳ quay liên tiếp theo số kỳ lựa chọn, lịch quay và mã kỳ do hệ thống tự tính.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
-          {/* Row 1: Số kỳ + summary badges */}
+          {/* Row 1: Số kỳ + summary badges — invisible label ở cột badge để `items-end` canh
+              đáy khớp input, rồi `items-center` + `h-9` bên trong canh giữa badge theo đúng
+              chiều cao input. */}
           <div className="flex items-end gap-4 flex-wrap">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Số kỳ tạo</Label>
@@ -315,66 +177,66 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 value={count}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= LOTTO535_CREATE_DRAW_BATCH_MAX) setCount(v);
+                  if (!isNaN(v) && v >= 1 && v <= LOTTO535_CREATE_DRAW_BATCH_MAX) {
+                    setCount(v);
+                  }
                 }}
                 className="w-24 tabular-nums"
               />
             </div>
 
-            <div className="flex flex-wrap gap-1.5 pb-0.5 items-center">
-              {preview.isLoading && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" />
-                  Đang lấy gợi ý...
-                </span>
-              )}
-              {openCount > 0 && (
-                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-xs">{openCount} mở bán</Badge>
-              )}
-              {scheduledCount > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {scheduledCount} chờ lịch
-                </Badge>
-              )}
-              {preview.data && preview.data.draws.length > 0 && (
-                <button
-                  type="button"
-                  onClick={applyPreview}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  title="Áp lại gợi ý từ preview"
-                >
-                  <RefreshCw className="size-3" />
-                </button>
-              )}
-              {hasFewerPreviewSlots && (
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                  Gợi ý chỉ có {previewCount}/{count} kỳ — tự điền các ô trống
-                </Badge>
-              )}
-              {preview.isError && (
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                  Lỗi tải gợi ý — tự điền các ô bên dưới
-                </Badge>
-              )}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider invisible">
+                Trạng thái
+              </Label>
+              <div className="flex h-9 flex-wrap items-center gap-1.5">
+                {preview.isLoading && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Loader2 className="size-3 animate-spin" />
+                    Đang lấy gợi ý...
+                  </span>
+                )}
+                {openCount > 0 && (
+                  <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-xs">{openCount} mở bán</Badge>
+                )}
+                {scheduledCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {scheduledCount} chờ lịch
+                  </Badge>
+                )}
+                {hasFewerPreviewSlots && (
+                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                    Chỉ tạo được {rows.length}/{count} kỳ
+                  </Badge>
+                )}
+                {preview.isError && (
+                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                    Lỗi tải gợi ý — thử lại
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Bảng nhập liệu */}
+          {/* Bảng preview — read-only, chỉ toggle mở bán/chờ lịch */}
           <div className="rounded-xl border overflow-hidden">
             {/* Table header */}
             <div
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
-              style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 6.5rem 9rem" }}
+              style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
             >
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">#</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ngày quay</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Kỳ</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">#</span>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-center">
+                Thứ
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Mã kỳ</span>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
               <div className="flex items-center justify-end">
                 <button
                   type="button"
                   onClick={toggleAll}
-                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={rows.length === 0}
+                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
                   title={allOpen ? "Tắt tất cả" : "Mở bán tất cả"}
                 >
                   {allOpen ? <Unlock className="size-3 text-emerald-600" /> : <Lock className="size-3" />}
@@ -387,87 +249,87 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
 
             {/* Rows */}
             <div className="divide-y divide-border/50 max-h-80 overflow-y-auto">
-              {rows.map((row, i) => {
-                const complete = isRowComplete(row);
-                const dateErr = !row.date;
-                const timeErr = !row.drawTime;
-
-                return (
-                  <div
-                    key={i}
+              {rows.length === 0 && (
+                <p className="px-4 py-6 text-center text-xs text-muted-foreground">
+                  {preview.isLoading ? "Đang lấy gợi ý lịch quay..." : "Không có gợi ý — kiểm tra lại cấu hình game."}
+                </p>
+              )}
+              {rows.map((row, i) => (
+                <div
+                  key={row.previewDrawId}
+                  className={cn(
+                    "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
+                    row.isOpen ? "bg-emerald-50/50 dark:bg-emerald-950/15" : "hover:bg-muted/20",
+                  )}
+                  style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
+                >
+                  {/* Số thứ tự */}
+                  <span
                     className={cn(
-                      "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
-                      row.isOpen ? "bg-emerald-50/50 dark:bg-emerald-950/15" : "hover:bg-muted/20",
+                      "tabular-nums text-xs font-semibold",
+                      row.isOpen ? "text-emerald-700 dark:text-emerald-300" : "text-foreground",
                     )}
-                    style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 6.5rem 9rem" }}
                   >
-                    {/* Số thứ tự */}
+                    {i + 1}
+                  </span>
+
+                  {/* Thứ */}
+                  <span
+                    className={cn(
+                      "text-xs font-semibold tabular-nums text-center",
+                      row.isOpen ? "text-emerald-700 dark:text-emerald-300" : "text-foreground",
+                    )}
+                  >
+                    {row.weekday}
+                  </span>
+
+                  {/* Mã kỳ: read-only. Sinh từ drawDate + drawNo theo game config — sai thì
+                      sửa ở game config, không sửa tay từng kỳ ở đây. */}
+                  <span
+                    title="Mã kỳ tính từ game config — không thể chỉnh sửa"
+                    className="flex h-8 items-center rounded-md border border-dashed border-input bg-muted/30 px-2.5 font-mono text-xs tabular-nums text-muted-foreground"
+                  >
+                    {row.previewDrawId}
+                  </span>
+
+                  {/* Giờ quay: read-only, lấy từ lưới giờ trong game config. */}
+                  <span
+                    title="Giờ quay theo cấu hình game — không thể chỉnh sửa"
+                    className="flex h-8 items-center rounded-md border border-dashed border-input bg-muted/30 px-2.5 font-mono text-xs tabular-nums text-foreground"
+                  >
+                    {row.drawTime}
+                  </span>
+
+                  {/* Per-row open switch */}
+                  {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
+                  <label
+                    htmlFor={`lotto535-slot-toggle-${i}`}
+                    className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
+                  >
+                    {row.isOpen ? (
+                      <Unlock className="size-3 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Lock className="size-3 text-muted-foreground/40 shrink-0" />
+                    )}
+                    <Switch
+                      id={`lotto535-slot-toggle-${i}`}
+                      checked={row.isOpen}
+                      onCheckedChange={() => toggleSlot(i)}
+                      className="scale-75 origin-right pointer-events-none"
+                    />
                     <span
                       className={cn(
-                        "tabular-nums text-xs font-semibold",
-                        row.isOpen
-                          ? "text-emerald-700 dark:text-emerald-300"
-                          : complete
-                            ? "text-foreground"
-                            : "text-muted-foreground",
+                        "text-[11px] font-medium min-w-12 text-left",
+                        row.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
                       )}
                     >
-                      {i + 1}
+                      {row.isOpen ? "Mở bán" : "Chờ lịch"}
                     </span>
-
-                    {/* Ngày — date picker */}
-                    <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
-
-                    {/* Kỳ — CHỈ hiển thị, suy ra từ giờ quay khớp play.drawTimes. Server tự tính lại drawNo, không nhận từ đây. */}
-                    <span className="flex h-8 items-center justify-center rounded-md border border-input bg-muted/30 px-2.5 text-xs font-mono tabular-nums text-muted-foreground">
-                      {inferSlotLabel(row.drawTime, drawTimes)}
-                    </span>
-
-                    {/* Giờ quay — time picker */}
-                    <TimePickerCell
-                      value={row.drawTime}
-                      onChange={(drawTime) => updateRow(i, { drawTime })}
-                      hasError={timeErr}
-                    />
-
-                    {/* Per-row open switch */}
-                    {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
-                    <label
-                      htmlFor={`lotto535-slot-toggle-${i}`}
-                      className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
-                    >
-                      {row.isOpen ? (
-                        <Unlock className="size-3 text-emerald-500 shrink-0" />
-                      ) : (
-                        <Lock className="size-3 text-muted-foreground/40 shrink-0" />
-                      )}
-                      <Switch
-                        id={`lotto535-slot-toggle-${i}`}
-                        checked={row.isOpen}
-                        onCheckedChange={() => toggleSlot(i)}
-                        className="scale-75 origin-right pointer-events-none"
-                      />
-                      <span
-                        className={cn(
-                          "text-[11px] font-medium min-w-12 text-left",
-                          row.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
-                        )}
-                      >
-                        {row.isOpen ? "Mở bán" : "Chờ lịch"}
-                      </span>
-                    </label>
-                  </div>
-                );
-              })}
+                  </label>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Hint khi có ô chưa điền */}
-          {completedRows.length < rows.length && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {rows.length - completedRows.length} kỳ chưa có đủ thông tin (ngày + giờ quay).
-            </p>
-          )}
         </div>
 
         <DialogFooter>
@@ -477,10 +339,10 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <Button
             onClick={handleCreate}
             disabled={!canSubmit}
-            className={cn(someOpen && "bg-emerald-600 hover:bg-emerald-700 text-white")}
+            className={cn(openCount > 0 && "bg-emerald-600 hover:bg-emerald-700 text-white")}
           >
             {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-            Tạo {count} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}
+            Tạo {rows.length} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}
           </Button>
         </DialogFooter>
       </DialogContent>
