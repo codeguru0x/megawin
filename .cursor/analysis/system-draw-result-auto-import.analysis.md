@@ -49,6 +49,18 @@ loại lỗi âm thầm như S1: `200` + selector khớp tạo cảm giác ngu�
 → **Probe nguồn dữ liệu phải kiểm 3 thứ, không phải 1:** (a) HTTP status, (b) selector khớp,
 (c) **timestamp/id bản ghi mới nhất so với kỳ thật hiện tại**. Thiếu (c) thì kết luận vô giá trị.
 
+**Bài học phương pháp thứ ba — `301` trên MỘT URL không có nghĩa cả NGUỒN đã chết.** Probe 24/08 gọi
+đúng **một** URL của minhchinh (`/ket-qua-keno.html`), gặp `301` → homepage, rồi ghi *"URL đã chết"*
+và tính nó vào kết luận *"KHÔNG có mirror nào còn sống"* (§2.3, S3). Probe lại 30/08 phát hiện site
+**đang sống rất tốt**: URL đúng là `/xo-so-dien-toan-keno.html`, và tốt hơn nữa là có **endpoint feed
+JSON công khai** `/livekqxs/xstt/KN.php` không hề dính Cloudflare. Một URL sai đã che mất nguồn dữ
+liệu tốt nhất trong toàn bộ nghiên cứu, suốt 6 ngày.
+
+→ **Trước khi kết luận một nguồn đã chết, phải: (1) tải homepage và grep link thật thay vì đoán URL,
+(2) đọc JS của trang xem dữ liệu tới từ endpoint nào — nhiều site render client-side từ 1 JSON
+endpoint dễ dùng hơn HTML nhiều, (3) chỉ tuyên bố "chết" khi đã kiểm cả 2 việc trên.** Cùng họ lỗi
+với S1 và bài học #2: kết luận âm tính rút ra từ phép đo quá hẹp.
+
 
 ## 1. Bối cảnh & mục tiêu
 
@@ -157,6 +169,29 @@ Hợp lý về kinh tế — 279 kỳ/ngày quá tốn để mirror crawl, còn 
 
 → **Nguồn realtime duy nhất cho 2 game này là chính `vietlott.vn`.** Không có nguồn nào để "đổi
 sang cho khỏi gặp Cloudflare". Mọi thiết kế phải chấp nhận điều này (§3.4, §4.6).
+
+> 🔴 **SỬA 30/08/2026 — §2.3 SAI VỚI KENO. ĐỌC
+> [`draw-result-brightdata-sources.analysis.md`](./draw-result-brightdata-sources.analysis.md) TRƯỚC
+> KHI DÙNG SECTION NÀY.**
+>
+> Probe 24/08 gọi `minhchinh.com/ket-qua-keno.html` → `301` rồi kết luận **cả site** chết. **URL đó
+> chết, site thì không.** Probe lại 30/08 từ cùng loại IP datacenter Singapore:
+>
+> | Đo được 30/08 | Kết quả |
+> | --- | --- |
+> | `GET www.minhchinh.com/livekqxs/xstt/KN.php` | **`200`, KHÔNG Cloudflare.** JSON có `ky` (mã kỳ Vietlott), `date` (**giờ quay**), 20 số zero-padded, **5 checksum** (`chan/le/lon/nho/total`), `next_ky`+`next_date` |
+> | Độ mới | Lag **≤ 1 kỳ**. Probe cách nhau 6' thấy `293943 → 293944` |
+> | `www.minhchinh.com/` (homepage) | `200`, server-rendered Keno kỳ mới nhất + XSMN/XSMT/XSMB + Mega/Power/Max3D/Lotto |
+> | `/ket-qua-xo-so/DD-MM-YYYY.html` | `200`, archive lịch sử **cho game quay ngày** (không có Keno/Bingo18) |
+> | **Bingo18 trên minhchinh** | **CHẾT THẬT** — mới nhất `#169215` ngày **29/05/2026**, chậm ~3 tháng. `BINGO.php` không có `lastResult` |
+>
+> **Hệ quả:** (a) câu *"nguồn realtime duy nhất là chính vietlott.vn"* chỉ còn đúng với **Bingo18**;
+> (b) *"quorum không gian không có gì để bầu"* (§3.4) **sai với Keno** — dựng được **lớp verify thứ 4
+> (cross-source veto)**; (c) bài toán match kỳ ở §4.3 (kể cả lỗ hổng `drawNo` phát hiện 29/08) **giải
+> trực tiếp** được vì nguồn này trả thẳng giờ quay.
+>
+> **KHÔNG xoá nội dung §2.3 gốc phía trên** — giữ để thấy chính xác lỗi phương pháp đã xảy ra:
+> probe URL sai → kết luận sai về cả nguồn. Đây là **bài học phương pháp thứ ba**, xem ngay dưới.
 
 Ghi chú: `az24.vn` cũng nằm sau Cloudflare nhưng trả `200` — ở đó CF chỉ làm CDN, không bật
 challenge. Xác nhận CF là **cấu hình per-site**, không phải rào chặn tự động.

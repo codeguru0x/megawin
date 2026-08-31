@@ -13,7 +13,7 @@
 
 Nhân rộng hệ thống **alert-driven ops đọc pre-aggregated data** (đã chứng minh ở Keno) sang trang Vận hành Bingo 18 (`/games/bingo18/operations`). Ràng buộc vận hành Bingo 18 còn CHẶT hơn Keno:
 
-- **Tần suất cao nhất hệ thống: 6 phút/kỳ, ~160 kỳ/ngày, 7 ngày/tuần** (Keno 8 phút/~120 kỳ). Thời gian phản ứng của staff mỗi kỳ chỉ vài phút.
+- **Tần suất cao nhất hệ thống: 6 phút/kỳ, ~160 kỳ/ngày, 7 ngày/tuần** (Keno 8 phút/~119 kỳ). Thời gian phản ứng của staff mỗi kỳ chỉ vài phút.
 - **Đóng bán 30 GIÂY trước quay** (`salesCloseBeforeSeconds: 30`) — cửa sổ quan sát cuối cùng cực ngắn.
 - Không được làm chậm hot path place-bet; staff tối thiểu → alert-driven; backoffice render mượt (nguyên tắc bất biến Keno §3.1 giữ nguyên).
 

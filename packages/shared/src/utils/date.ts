@@ -325,6 +325,60 @@ export function parseHHMMToMinutes(time: string): number | null {
   return Number(hours) * 60 + Number(minutes);
 }
 
+/**
+ * Hàm NGHỊCH ĐẢO của {@link parseHHMMToMinutes}: đổi số phút kể từ 00:00 thành `"HH:mm"`.
+ *
+ * Luôn zero-padded 2 chữ số cả giờ và phút, để chuỗi trả về dùng được ngay với
+ * {@link toVNDate}, {@link HHMM_PATTERN} và mọi Zod schema giờ trong ngày.
+ *
+ * KHÔNG tự wrap về trong ngày: `1440` → `"24:00"`, `1500` → `"25:00"`. Caller chịu trách
+ * nhiệm truyền phút trong `[0, 1439]` — wrap ngầm sẽ che mất bug tính lịch quay tràn ngày.
+ *
+ * @example
+ *   minutesToHHmm(0)    → "00:00"
+ *   minutesToHHmm(366)  → "06:06"
+ *   minutesToHHmm(1110) → "18:30"
+ */
+export function minutesToHHmm(minutes: number): string {
+  const hh = String(Math.floor(minutes / 60)).padStart(2, "0");
+  const mm = String(minutes % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+/**
+ * Số phút kể từ 00:00 **theo giờ VN** của một mốc thời gian (0–1439).
+ *
+ * Dùng để đối chiếu một `Date` (UTC instant lấy từ DB hoặc từ input ISO) với lưới giờ quay
+ * trong game config — vốn khai báo bằng `"HH:mm"` giờ VN.
+ *
+ * ⚠️ KHÔNG dùng `date.getHours()` cho việc này: nó trả giờ theo timezone của **process**.
+ * Lambda/worker chạy UTC nên sẽ lệch đúng 7 tiếng, và bug đó chỉ lộ ra ở ranh giới ngày.
+ *
+ * @example
+ *   minutesOfDayVN(new Date("2026-08-30T06:06:00+07:00")) → 366
+ *   minutesOfDayVN(new Date("2026-08-29T23:06:00Z"))      → 366 (06:06 giờ VN ngày kế tiếp)
+ */
+export function minutesOfDayVN(at: Date): number {
+  // Default 0 chỉ để thoả type — `formatVN(…, "HH:mm")` luôn trả đúng 2 phần số.
+  const [h = 0, m = 0] = formatVN(at, "HH:mm").split(":").map(Number);
+  return h * 60 + m;
+}
+
+/**
+ * Số giây kể từ 00:00 **theo giờ VN** của một mốc thời gian (0–86399).
+ *
+ * Bản phân giải giây của {@link minutesOfDayVN}, dành cho so sánh cần độ chính xác dưới phút —
+ * VD kiểm tra một kỳ quay còn đủ cửa sổ bán hay không, khi `salesCloseBeforeSeconds` cấu hình
+ * theo giây.
+ *
+ * @param at - Mốc cần quy đổi. Bỏ trống = thời điểm hiện tại.
+ */
+export function secondsOfDayVN(at: Date = new Date()): number {
+  // Default 0 chỉ để thoả type — `formatVN(…, "HH:mm:ss")` luôn trả đúng 3 phần số.
+  const [h = 0, m = 0, s = 0] = formatVN(at, "HH:mm:ss").split(":").map(Number);
+  return h * 3600 + m * 60 + s;
+}
+
 // ─────────────────────────────────────────────
 // Ngày `YYYY-MM-DD` (chuỗi thuần, không timezone)
 // ─────────────────────────────────────────────

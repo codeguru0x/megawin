@@ -9,7 +9,7 @@
  *   kenoTickets, kenoTicketEntries, kenoDraws, kenoGameConfigs
  *
  * Keno Vietlott:
- * - Quay 20 số từ tập 01-80, mỗi 8 phút 1 kỳ, ~120 kỳ/ngày
+ * - Quay 20 số từ tập 01-80, mỗi 8 phút 1 kỳ, ~119 kỳ/ngày
  * - Cách chơi cơ bản: chọn 1-10 số
  * - Cách chơi bổ sung: Lớn/Nhỏ, Chẵn/Lẻ
  */

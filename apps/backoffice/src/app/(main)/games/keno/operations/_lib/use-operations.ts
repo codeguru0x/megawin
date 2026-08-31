@@ -389,24 +389,33 @@ export function useUpdateSchedule() {
   );
 }
 
-export function usePreviewDraws(count: number) {
+/**
+ * Danh sách kỳ **còn tạo được** của một ngày — nguồn dữ liệu cho bảng gợi ý dialog tạo kỳ.
+ *
+ * @param drawDate - Ngày cần tạo kỳ `"YYYY-MM-DD"`. Rỗng ⇒ query tắt (dialog chưa mở).
+ *
+ * Query key theo `drawDate` (KHÔNG theo số kỳ staff muốn tạo): tập slot khả dụng không phụ
+ * thuộc số lượng, nên đổi số kỳ trên UI chỉ cắt mảng đã có ở client, không refetch.
+ */
+export function usePreviewDraws(drawDate: string) {
   return useQuery({
-    queryKey: [...kenoKeys.all, "preview", count] as const,
+    queryKey: [...kenoKeys.all, "preview", drawDate] as const,
     queryFn: () =>
       apiClient.get<PreviewDrawsOutput>("/keno/draws/preview", {
-        params: { count },
+        params: { drawDate },
       }),
-    enabled: count > 0,
+    enabled: drawDate.length > 0,
   });
 }
 
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
+    // KHÔNG gửi `drawNo`: server cấp lại từ atomic counter theo ngày. Gửi lên chỉ tạo ảo giác
+    // client kiểm soát được số kỳ, trong khi giá trị đó bị bỏ qua hoàn toàn.
     mutationFn: (data: {
       draws: Array<{
         drawDate: string;
-        drawNo: number;
         drawTime: string;
         openNow: boolean;
       }>;

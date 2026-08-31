@@ -176,6 +176,14 @@ export const BINGO18_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Bingo18Collections.Draws,
+    key: { drawDate: 1, drawTime: 1 },
+    options: { name: "idx_drawDate_drawTime" },
+    purpose:
+      "listDrawTimesByDate: COVERED query (projection chỉ drawTime, _id:0) cho preview/validate tạo kỳ — " +
+      "idx_drawDate_drawNo chỉ khớp prefix drawDate rồi phải FETCH ~158 doc/ngày để đọc drawTime",
+  },
+  {
+    collection: Bingo18Collections.Draws,
     key: { drawDate: -1, drawNo: -1 },
     options: { name: "idx_drawDate_drawNo_desc" },
     purpose: "getLatestDraw: O(1) lookup kỳ mới nhất",

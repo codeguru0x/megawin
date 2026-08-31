@@ -58,7 +58,7 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
         provider: "cognito",
         callbackURL: callbackUrl ?? "/",
       });
-    } catch (err) {
+    } catch {
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
       setIsLoading(false);
       hasStartedRef.current = false;
@@ -84,12 +84,51 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
     };
   }, []);
 
-  // Tự động redirect khi countdown về 0
+  // ── Chặn NGUYÊN NHÂN GỐC của state_mismatch: không mở OAuth flow ở tab ẩn ─────
+  // OAuth state của better-auth sống đúng 10 phút (hardcode, không config được) và
+  // được lưu trong MỘT cookie `oauth_state` dùng chung cho cả origin. Hai hệ quả:
+  //   1. Tab ẩn tự redirect sang Cognito rồi "ngủ" ở đó → khi user quay lại (thường
+  //      sau nhiều giờ) mới nhập mật khẩu thì state đã hết hạn → state_mismatch.
+  //   2. Nhiều tab cùng bị đẩy sang /login (session hết hạn) sẽ sinh state song song
+  //      và GHI ĐÈ cookie của nhau → tab thua cuộc chắc chắn state_mismatch.
+  // Chỉ khởi động flow khi tab đang hiển thị: cửa sổ 10 phút bắt đầu đếm đúng lúc
+  // user có mặt, và tại mỗi thời điểm chỉ một tab đang visible nên không còn đua cookie.
   useEffect(() => {
-    if (countdown === 0 && !isLoading) {
-      void handleSignIn();
+    if (countdown !== 0 || isLoading || hasStartedRef.current) {
+      return;
     }
+
+    if (document.visibilityState === "visible") {
+      void handleSignIn();
+      return;
+    }
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void handleSignIn();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
   }, [countdown, isLoading, handleSignIn]);
+
+  // Back/forward cache: user bấm Back từ Cognito về đây, trang được restore nguyên
+  // trạng (hasStartedRef=true, isLoading=true) → màn hình treo ở "Đang chuyển hướng..."
+  // vĩnh viễn. Reset để user bấm lại được, và để auto-redirect chạy lại từ đầu.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) {
+        return;
+      }
+      hasStartedRef.current = false;
+      setIsLoading(false);
+      setCountdown(AUTO_REDIRECT_SECONDS);
+    };
+
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background p-4">

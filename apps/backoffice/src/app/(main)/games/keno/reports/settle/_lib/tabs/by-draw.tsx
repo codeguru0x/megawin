@@ -46,7 +46,7 @@ function DrawList() {
 
   return (
     <div className="space-y-4">
-      {summary && <GameDrawKpiStrip data={summary} drawCountSub="kỳ đã settle · ~120 kỳ/ngày" />}
+      {summary && <GameDrawKpiStrip data={summary} drawCountSub="kỳ đã settle · ~119 kỳ/ngày" />}
       <GameDrawReportTable
         rows={data.data}
         onRowClick={navigateToDraw}

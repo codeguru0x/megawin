@@ -4,7 +4,7 @@
  * Keno — Trang Vận hành
  *
  * Trang tổng hợp quản lý và giám sát kỳ quay Keno.
- * Keno: ~120 kỳ/ngày, 8 phút/kỳ, không có Jackpot, side bets.
+ * Keno: ~119 kỳ/ngày, 8 phút/kỳ, không có Jackpot, side bets.
  *
  * Zones:
  *   1. Draw Management (command center + dialogs)
@@ -113,7 +113,7 @@ function OperationsContent() {
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Vận hành</h1>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay (~120 kỳ/ngày)</p>
+              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay (~119 kỳ/ngày)</p>
               {isActiveForRefresh ? <LastUpdatedBadge drawId={effectiveDrawId} /> : null}
             </div>
           </div>

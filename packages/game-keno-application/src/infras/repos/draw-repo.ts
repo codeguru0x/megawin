@@ -27,7 +27,7 @@ import type {
 import { KenoCollections } from "@megawin/game-keno/entities";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
-import type { AnyBulkWriteOperation, Document, FindOptions } from "mongodb";
+import type { AnyBulkWriteOperation, Document, Filter, FindOptions } from "mongodb";
 
 import { DrawMapper } from "../mappers/draw-mapper";
 import { BaseRepo } from "./base-repo";
@@ -190,6 +190,52 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
 
     return docs.map((d) => d.drawId as string);
+  }
+
+  /**
+   * Giờ quay (`drawTime`) của các kỳ đã tồn tại trong MỘT ngày — thin query, chỉ 1 field.
+   *
+   * Dùng để trả lời "mốc giờ nào trong ngày đã bị chiếm" cho:
+   * - `PreviewDrawsUseCase`: loại slot đã có kỳ khỏi danh sách gợi ý.
+   * - `CreateDrawUseCase`: chặn tạo trùng mốc giờ với kỳ đã có trong DB.
+   *
+   * Vì sao KHÔNG dùng `listDraws`/`findMany`: cả 2 map full `DrawEntity` (có `financial`,
+   * `settleSummary`, `result`…) — với Keno là **119 doc/ngày** chỉ để đọc 1 field `Date`.
+   * `findManyAsDocuments` + projection cắt phần lớn chi phí network + BSON deserialize.
+   *
+   * Vì sao có `fromDrawTime`: buổi tối, phần lớn kỳ trong ngày đã quay xong và **không thể**
+   * trùng với kỳ đang định tạo (kỳ mới luôn ở tương lai). Caller truyền mốc cắt = kỳ đầu
+   * tiên còn tạo được (xem `isDrawSlotCreatable`) để DB chỉ trả về vài chục doc cuối ngày
+   * thay vì cả 119.
+   *
+   * Index BẮT BUỘC: `idx_drawDate_drawTime` = `{ drawDate: 1, drawTime: 1 }` (khai báo tại
+   * `packages/game-keno/src/indexes/index.ts`). Với index này query là **COVERED**: `drawDate`
+   * là equality prefix, `fromDrawTime` thành range bound trên key thứ 2, và projection
+   * `{ _id: 0, drawTime: 1 }` đọc trọn vẹn từ index → 0 lần FETCH document.
+   *
+   * KHÔNG dựa vào `idx_drawDate_drawNo`: nó chỉ khớp prefix `drawDate`, `drawTime` không có
+   * trong key nên phải FETCH toàn bộ ~119 doc/ngày rồi mới lọc `fromDrawTime` — đúng phần
+   * chi phí mà `fromDrawTime` sinh ra để tránh.
+   *
+   * @param drawDate - Ngày quay `"YYYY-MM-DD"` (giờ VN — cùng nghĩa với `DrawDoc.drawDate`)
+   * @param fromDrawTime - Chỉ lấy kỳ có `drawTime >= fromDrawTime`. Bỏ trống = cả ngày.
+   * @returns Mảng `drawTime` **không sort** — caller chỉ dùng làm tập hợp (set) để đối chiếu,
+   *   không phụ thuộc thứ tự. Tránh bắt DB sort vô ích.
+   */
+  async listDrawTimesByDate(drawDate: string, fromDrawTime?: Date): Promise<Date[]> {
+    const filter: Filter<Document> = { drawDate };
+    if (fromDrawTime) {
+      filter.drawTime = { $gte: fromDrawTime };
+    }
+
+    const docs = await this.findManyAsDocuments(filter, {
+      projection: { _id: 0, drawTime: 1 },
+      // Trần cứng theo số kỳ/ngày lớn nhất có thể của game quay nhanh. `findManyAsDocuments`
+      // mặc định cắt 500 và IM LẶNG — nêu tường minh để không ai phải đoán giới hạn ở đâu.
+      limit: 500,
+    });
+
+    return docs.map((d) => d.drawTime as Date);
   }
 
   /** Paginate danh sách kỳ quay theo filter status và/hoặc date range. Sort drawDate desc. */

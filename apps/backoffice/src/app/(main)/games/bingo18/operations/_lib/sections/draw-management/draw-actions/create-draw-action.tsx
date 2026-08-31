@@ -3,31 +3,31 @@
 /**
  * Bingo 18 – Create Draw Action Dialog
  *
- * Tạo nhiều kỳ quay Bingo 18 liên tiếp.
- * Bingo18 khác Lotto:
- * - DrawNo: 001-~160 (mỗi ngày) — server tự sinh từ atomic counter, KHÔNG nhận từ client
- *   (giống Keno — xem plan "fix drawno server-side"). Cột "Số kỳ" chỉ hiển thị số dự kiến
- *   (đọc từ API preview) để staff tham khảo, không phải input.
- * - Giờ quay: cố định theo chu kỳ 6 phút (06:00, 06:06, ..., 21:54)
- * - Preview từ API gợi ý drawTime (+ drawNo dự kiến, chỉ mang tính hiển thị)
- * - Staff có thể tự điền ngày/giờ nếu preview lỗi hoặc muốn sửa
- * - Validate: không được trùng (date + giờ quay) trong cùng batch
+ * Tạo nhiều kỳ quay Bingo 18 cho MỘT ngày chỉ định.
+ *
+ * Mô hình dữ liệu (khác bản cũ — đọc trước khi sửa):
+ * - Server (`/bingo18/draws/preview?drawDate=…`) trả về TOÀN BỘ slot còn tạo được của ngày đó.
+ *   Tập này KHÔNG phụ thuộc số kỳ staff muốn tạo ⇒ đổi số kỳ chỉ cắt mảng ở client, không
+ *   refetch (query key theo `drawDate`).
+ * - `rows` **derive** từ `preview.data` + `limitInput`, KHÔNG phải state riêng. Nhờ vậy không
+ *   còn `useEffect` đồng bộ rows↔preview (nguồn bug "ô trống", "gợi ý không áp" ở bản cũ).
+ *   State duy nhất staff sửa được là `drawDate`, `limitInput` và `closedIndexes` (mở/chờ lịch).
+ * - `drawNo` do server cấp từ atomic counter lúc tạo ⇒ cột MÃ KỲ read-only, chỉ hiển thị
+ *   `YYYY-MM-DD.NNN` **dự kiến**. Client KHÔNG gửi `drawNo` lên API.
+ * - Giờ quay cũng read-only: mọi slot đều lấy từ lưới giờ trong game config, sửa tay sẽ bị
+ *   server từ chối (guard "lệch lưới").
+ *
+ * Giữ đối xứng 1:1 với bản Keno — sửa một bên thì cân nhắc sửa bên còn lại.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { generateBingo18DrawId } from "@megawin/game-bingo18/helpers";
 import { BINGO18_CREATE_DRAW_BATCH_MAX } from "@megawin/game-bingo18/schemas";
-import {
-  displayVNDate,
-  displayVNTime,
-  parseYMDToLocalDate,
-  todayVNAsLocalDate,
-  toVNIsoString,
-  YMD_PATTERN,
-} from "@megawin/shared/utils";
+import { addDays, displayVNTime, todayVN, todayVNAsLocalDate, toVNIsoString } from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
+import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, TriangleAlert, Unlock } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,63 +50,29 @@ import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface DrawRow {
-  /** Ngày quay, format "YYYY-MM-DD". */
-  date: string;
-  /**
-   * Số thứ tự kỳ trong ngày — CHỈ để hiển thị preview (từ API gợi ý), server tự sinh thật
-   * lúc tạo. 0 = chưa có gợi ý. KHÔNG gửi field này lên server (xem `handleCreate`).
-   */
-  previewDrawNo: number;
-  /** Giờ quay, format "HH:mm". */
-  drawTime: string;
-  /** Mở bán ngay khi tạo. */
-  isOpen: boolean;
-}
-
-function emptyRow(): DrawRow {
-  return { date: "", previewDrawNo: 0, drawTime: "", isOpen: true };
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function isRowComplete(row: DrawRow): boolean {
-  return YMD_PATTERN.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
-}
-
 /**
- * Validate duplicate slot trong batch — trùng nếu cùng ngày + cùng giờ quay.
- * drawNo do server tự sinh nên không còn là tiêu chí trùng lặp; (date, time) là khoá thật.
+ * Một dòng trong bảng tạo kỳ — **derive** từ slot preview, KHÔNG phải state.
+ *
+ * Mọi field đều read-only với staff trừ `isOpen`. Đây là điểm khác then chốt so với bản cũ
+ * (staff sửa được ngày/giờ quay): số kỳ do counter server cấp, giờ quay do lưới config quyết
+ * định — cho sửa chỉ tạo ra kỳ mà server sẽ từ chối.
  */
-function findDuplicateKey(rows: DrawRow[]): number | null {
-  const seen = new Map<string, number>();
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i]!;
-    if (!r.date || !r.drawTime) {
-      continue;
-    }
-    const key = `${r.date}T${r.drawTime}`;
-    if (seen.has(key)) {
-      return i;
-    }
-    seen.set(key, i);
-  }
-  return null;
+interface DrawRow {
+  /** Mã kỳ **dự kiến** `"YYYY-MM-DD.NNN"`. Server cấp lại `NNN` khi tạo thật. */
+  previewDrawId: string;
+  /** Ngày quay `"YYYY-MM-DD"` — mọi dòng trong lô đều cùng giá trị này. */
+  drawDate: string;
+  /** Giờ quay hiển thị `"HH:mm"` (giờ VN). */
+  drawTime: string;
+  /** Mở bán ngay khi tạo (`true`) hay để trạng thái chờ lịch (`false`). */
+  isOpen: boolean;
 }
 
 // ─── DatePicker ───────────────────────────────────────────────────────────────
 
-function DatePickerCell({
-  value,
-  onChange,
-  hasError,
-}: {
-  value: string;
-  onChange: (date: string) => void;
-  hasError: boolean;
-}) {
+/** Ô chọn ngày cho CẢ lô — không còn per-row như bản cũ (lô chỉ thuộc 1 ngày). */
+function DatePickerField({ value, onChange }: { value: string; onChange: (date: string) => void }) {
   const [open, setOpen] = useState(false);
-  const selected = parseYMDToLocalDate(value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -114,23 +80,18 @@ function DatePickerCell({
         <button
           type="button"
           className={cn(
-            "flex h-8 w-full items-center gap-1.5 rounded-md border bg-background px-2.5 text-xs tabular-nums transition-colors",
+            "flex h-9 w-40 items-center gap-1.5 rounded-md border border-input bg-background px-2.5 text-sm tabular-nums transition-colors",
             "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-            hasError
-              ? "border-dashed border-amber-400 text-amber-600 dark:border-amber-500 dark:text-amber-400"
-              : "border-input text-foreground",
           )}
         >
-          <CalendarIcon className={cn("size-3.5 shrink-0", hasError ? "text-amber-400" : "text-muted-foreground")} />
-          <span className={cn("flex-1 text-left font-mono", !value && "text-muted-foreground/60")}>
-            {value || "Chọn ngày"}
-          </span>
+          <CalendarIcon className="size-3.5 shrink-0 text-muted-foreground" />
+          <span className="flex-1 text-left font-mono">{value}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start" sideOffset={6}>
         <Calendar
           mode="single"
-          selected={selected}
+          selected={new Date(`${value}T00:00:00`)}
           onSelect={(day) => {
             if (day) {
               onChange(format(day, "yyyy-MM-dd"));
@@ -151,33 +112,6 @@ function DatePickerCell({
   );
 }
 
-// ─── TimePicker ───────────────────────────────────────────────────────────────
-
-function TimePickerCell({
-  value,
-  onChange,
-  hasError,
-}: {
-  value: string;
-  onChange: (time: string) => void;
-  hasError: boolean;
-}) {
-  return (
-    <input
-      type="time"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(
-        "h-8 w-full rounded-md border bg-background px-2.5 text-xs font-mono tabular-nums",
-        "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors",
-        hasError
-          ? "border-dashed border-amber-400 text-amber-600 dark:border-amber-500 dark:text-amber-400"
-          : "border-input text-foreground",
-      )}
-    />
-  );
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface CreateDrawActionProps {
@@ -186,98 +120,130 @@ interface CreateDrawActionProps {
 }
 
 export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) {
-  const [count, setCount] = useState(10);
-  const [rows, setRows] = useState<DrawRow[]>(() => Array.from({ length: 10 }, emptyRow));
-  const lastPreviewCountRef = useRef<number>(0);
+  /** Ngày cần tạo kỳ. Mặc định hôm nay (giờ VN) — tự nhảy sang ngày mai nếu hôm nay đã hết kỳ
+   * (xem effect `autoAdjustedRef` bên dưới). */
+  const [drawDate, setDrawDate] = useState(() => todayVN());
+  /**
+   * Số kỳ staff muốn tạo, giữ dạng **string** để phân biệt "chưa gõ gì" với số 0.
+   * Rỗng = tạo TẤT CẢ slot còn lại (mặc định, đúng thói quen vận hành: tạo trọn ngày).
+   */
+  const [limitInput, setLimitInput] = useState("");
+  /**
+   * Index (theo mảng slot khả dụng) của những kỳ staff chuyển sang "chờ lịch".
+   *
+   * Lưu tập NGHỊCH ĐẢO (ai bị đóng) thay vì trạng thái từng dòng, vì mặc định là mở bán hết —
+   * cách này không cần khởi tạo lại khi số dòng đổi theo `limitInput`.
+   */
+  const [closedIndexes, setClosedIndexes] = useState<ReadonlySet<number>>(() => new Set());
 
-  const preview = usePreviewDraws(open ? count : 0);
+  /** `"YYYY-MM-DD"` của ngày mai — dùng làm target khi hôm nay hết kỳ (auto-jump + gợi ý). */
+  const tomorrow = format(addDays(todayVNAsLocalDate(), 1), "yyyy-MM-dd");
+
+  const preview = usePreviewDraws(open ? drawDate : "");
   const createDraw = useCreateDraw();
 
-  // Resize rows khi count thay đổi
-  useEffect(() => {
-    setRows((prev) => {
-      if (prev.length === count) return prev;
-      return Array.from({ length: count }, (_, i) => prev[i] ?? emptyRow());
-    });
-  }, [count]);
+  const availableDraws = preview.data?.draws ?? [];
 
-  // Fill từ preview (gợi ý) vào rows trống
-  useEffect(() => {
-    if (!preview.data) return;
-    const previewDraws = preview.data.draws;
-    if (previewDraws.length === 0) return;
-    if (lastPreviewCountRef.current === count) return;
-    lastPreviewCountRef.current = count;
+  /**
+   * Tự nhảy sang NGÀY MAI khi mở dialog mà hôm nay đã hết kỳ (qua giờ quay kỳ cuối, hoặc đã
+   * tạo đủ) — staff mở dialog gần cuối ngày không cần tự tay đổi ngày mỗi lần.
+   *
+   * `autoAdjustedRef` đảm bảo chỉ nhảy ĐÚNG 1 LẦN mỗi phiên mở dialog: nếu sau đó staff tự bấm
+   * quay lại hôm nay (vẫn hết kỳ), effect không được nhảy lại — phải tôn trọng lựa chọn thủ công.
+   */
+  const autoAdjustedRef = useRef(false);
 
-    setRows((prev) =>
-      prev.map((row, i) => {
-        const p = previewDraws[i];
-        if (!p) return row;
-        const isEmpty = row.date === "" && row.drawTime === "";
-        if (!isEmpty) return row;
-        return {
-          date: p.drawDate ?? displayVNDate(p.drawTime),
-          previewDrawNo: p.drawNo,
-          drawTime: displayVNTime(p.drawTime),
-          isOpen: row.isOpen,
-        };
-      }),
-    );
-  }, [preview.data, count]);
+  useEffect(() => {
+    if (open) {
+      autoAdjustedRef.current = false;
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || autoAdjustedRef.current || drawDate !== todayVN() || !preview.isSuccess) {
+      return;
+    }
+    if (availableDraws.length > 0) {
+      return;
+    }
+    autoAdjustedRef.current = true;
+    setDrawDate(tomorrow);
+    setClosedIndexes(new Set());
+  }, [open, drawDate, preview.isSuccess, availableDraws.length, tomorrow]);
+
+  /** Số kỳ sẽ tạo: rỗng ⇒ tất cả; có nhập ⇒ clamp về [1, số slot còn lại]. */
+  const effectiveCount = useMemo(() => {
+    if (availableDraws.length === 0) {
+      return 0;
+    }
+    if (limitInput.trim() === "") {
+      return availableDraws.length;
+    }
+    const parsed = Number.parseInt(limitInput, 10);
+    if (Number.isNaN(parsed) || parsed < 1) {
+      return 0;
+    }
+    return Math.min(parsed, availableDraws.length);
+  }, [limitInput, availableDraws.length]);
+
+  const rows = useMemo<DrawRow[]>(
+    () =>
+      availableDraws.slice(0, effectiveCount).map((slot, i) => ({
+        previewDrawId: generateBingo18DrawId(slot.drawDate, slot.drawNo),
+        drawDate: slot.drawDate,
+        drawTime: displayVNTime(slot.drawTime),
+        isOpen: !closedIndexes.has(i),
+      })),
+    [availableDraws, effectiveCount, closedIndexes],
+  );
+
+  const openCount = rows.filter((r) => r.isOpen).length;
+  const scheduledCount = rows.length - openCount;
+  const allOpen = rows.length > 0 && openCount === rows.length;
+  const canSubmit = rows.length > 0 && !createDraw.isPending;
 
   function handleOpenChange(v: boolean) {
     if (!v) {
-      setCount(10);
-      setRows(Array.from({ length: 10 }, emptyRow));
-      lastPreviewCountRef.current = 0;
+      setDrawDate(todayVN());
+      setLimitInput("");
+      setClosedIndexes(new Set());
     }
     onOpenChange(v);
   }
 
-  function updateRow(i: number, patch: Partial<DrawRow>) {
-    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  /** Đổi ngày ⇒ reset trạng thái mở/đóng: index của bản cũ không còn ý nghĩa với slot mới. */
+  function handleDateChange(date: string) {
+    setDrawDate(date);
+    setClosedIndexes(new Set());
   }
 
   function toggleSlot(i: number) {
-    updateRow(i, { isOpen: !rows[i]!.isOpen });
+    setClosedIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+      }
+      return next;
+    });
   }
 
   function toggleAll() {
-    const allOpen = rows.every((r) => r.isOpen);
-    setRows((prev) => prev.map((r) => ({ ...r, isOpen: !allOpen })));
+    setClosedIndexes(allOpen ? new Set(rows.map((_, i) => i)) : new Set());
   }
-
-  function applyPreview() {
-    if (!preview.data) return;
-    lastPreviewCountRef.current = 0;
-    setRows((prev) =>
-      prev.map((row, i) => {
-        const p = preview.data!.draws[i];
-        if (!p) return emptyRow();
-        return {
-          date: p.drawDate ?? displayVNDate(p.drawTime),
-          previewDrawNo: p.drawNo,
-          drawTime: displayVNTime(p.drawTime),
-          isOpen: row.isOpen,
-        };
-      }),
-    );
-    lastPreviewCountRef.current = count;
-  }
-
-  const openCount = rows.filter((r) => r.isOpen).length;
-  const scheduledCount = rows.length - openCount;
-  const completedRows = rows.filter(isRowComplete);
-  const duplicateIdx = findDuplicateKey(rows);
-  const canSubmit = completedRows.length === rows.length && duplicateIdx === null && !createDraw.isPending;
 
   function handleCreate() {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      return;
+    }
     createDraw.mutate(
       {
+        // KHÔNG gửi `drawNo` — server cấp từ atomic counter. `drawTime` gửi dạng ISO có offset
+        // `+07:00` để server không phải đoán timezone của client.
         draws: rows.map((row) => ({
-          drawDate: row.date,
-          drawTime: toVNIsoString(row.date, row.drawTime),
+          drawDate: row.drawDate,
+          drawTime: toVNIsoString(row.drawDate, row.drawTime),
           openNow: row.isOpen,
         })),
       },
@@ -285,10 +251,12 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
     );
   }
 
-  const allOpen = rows.length > 0 && rows.every((r) => r.isOpen);
-  const someOpen = rows.some((r) => r.isOpen);
-  const previewCount = preview.data?.draws.length ?? 0;
-  const hasFewerPreviewSlots = !preview.isLoading && open && previewCount < count;
+  /**
+   * Ngày này không còn slot nào tạo được — hoặc đã qua giờ quay kỳ cuối (nếu là hôm nay),
+   * hoặc đã tạo đủ kỳ. KHÔNG phân biệt 2 nguyên nhân: cách xử lý của staff giống nhau
+   * (chọn ngày khác), nên tách thông điệp chỉ thêm chữ mà không thêm hành động.
+   */
+  const isDayFull = preview.isSuccess && availableDraws.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -299,147 +267,168 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             Tạo kỳ quay Bingo 18
           </DialogTitle>
           <DialogDescription>
-            Tạo nhiều kỳ liên tiếp. Lịch gợi ý tự động tính theo chu kỳ 6 phút — staff có thể sửa ngày/giờ quay. Số kỳ
-            do hệ thống tự sinh khi tạo, không thể chỉnh sửa.
+            Tạo nhiều kỳ quay liên tiếp cho một ngày chỉ định theo số kỳ lựa chọn, lịch quay và mã kỳ do hệ thống tự
+            tính.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
-          {/* Row 1: Số kỳ + badges */}
+          {/* Row 1: ngày + số kỳ + badges — 3 cột cùng chiều cao (label ẩn ở cột badge để
+              `items-end` canh đáy khớp input, rồi `items-center` bên trong canh giữa badge). */}
           <div className="flex items-end gap-4 flex-wrap">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ngày tạo kỳ</Label>
+              <DatePickerField value={drawDate} onChange={handleDateChange} />
+            </div>
+
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Số kỳ tạo</Label>
               <Input
                 type="number"
                 min={1}
                 max={BINGO18_CREATE_DRAW_BATCH_MAX}
-                value={count}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= BINGO18_CREATE_DRAW_BATCH_MAX) setCount(v);
-                }}
-                className="w-24 tabular-nums"
+                value={limitInput}
+                // Lưu nguyên chuỗi, KHÔNG parse/clamp tại đây: clamp khi gõ sẽ nhảy số ngay dưới
+                // con trỏ (gõ "12" thành "1" rồi bị kẹp về max). Clamp làm ở `effectiveCount`.
+                onChange={(e) => setLimitInput(e.target.value)}
+                placeholder={availableDraws.length > 0 ? `Tất cả (${availableDraws.length})` : "—"}
+                disabled={availableDraws.length === 0}
+                className="w-32 tabular-nums"
               />
             </div>
 
-            <div className="flex flex-wrap gap-1.5 pb-0.5 items-center">
-              {preview.isLoading && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Loader2 className="size-3 animate-spin" />
-                  Đang lấy gợi ý...
-                </span>
-              )}
-              {openCount > 0 && (
-                <Badge className="bg-amber-600 hover:bg-amber-600 text-white text-xs">{openCount} mở bán</Badge>
-              )}
-              {scheduledCount > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {scheduledCount} chờ lịch
-                </Badge>
-              )}
-              {preview.data && preview.data.draws.length > 0 && (
-                <button
-                  type="button"
-                  onClick={applyPreview}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  title="Áp lại gợi ý từ preview"
-                >
-                  <RefreshCw className="size-3" />
-                </button>
-              )}
-              {hasFewerPreviewSlots && (
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                  Gợi ý chỉ có {previewCount}/{count} kỳ — tự điền các ô trống
-                </Badge>
-              )}
-              {preview.isError && (
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                  Lỗi tải gợi ý — tự điền các ô bên dưới
-                </Badge>
-              )}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider invisible">
+                Trạng thái
+              </Label>
+              <div className="flex h-9 flex-wrap items-center gap-1.5">
+                {preview.isLoading && (
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Loader2 className="size-3 animate-spin" />
+                    Đang lấy gợi ý...
+                  </span>
+                )}
+                {openCount > 0 && (
+                  <Badge className="bg-amber-600 hover:bg-amber-600 text-white text-xs">{openCount} mở bán</Badge>
+                )}
+                {scheduledCount > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {scheduledCount} chờ lịch
+                  </Badge>
+                )}
+                {preview.data && (
+                  <Badge variant="outline" className="text-xs">
+                    Còn {availableDraws.length}/{preview.data.maxPerDay} kỳ
+                  </Badge>
+                )}
+                {preview.isError && (
+                  <Badge variant="outline" className="text-xs text-red-600 border-red-300">
+                    Lỗi tải gợi ý — thử chọn lại ngày
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Bảng nhập liệu */}
-          <div className="rounded-xl border overflow-hidden">
-            {/* Header */}
-            <div
-              className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
-              style={{ gridTemplateColumns: "1.5rem 1fr 6rem 6.5rem 9rem" }}
-            >
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">#</span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Ngày quay</span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Số kỳ</span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
-              <div className="flex items-center justify-end">
+          {/* Ngày đã hết slot: không render bảng, chỉ hướng staff sang ngày khác */}
+          {isDayFull ? (
+            <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50/60 px-4 py-3.5 dark:border-amber-500/40 dark:bg-amber-950/20">
+              <TriangleAlert className="size-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <div className="space-y-1.5 text-sm">
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  Ngày {drawDate} không còn kỳ nào có thể tạo.
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  {drawDate === todayVN()
+                    ? "Hôm nay đã qua giờ quay kỳ cuối hoặc đã tạo đủ kỳ."
+                    : `Đã tạo đủ ${preview.data?.maxPerDay ?? 0} kỳ cho ngày này.`}{" "}
+                  Vui lòng chọn ngày tiếp theo.
+                </p>
+                {drawDate !== tomorrow && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-1 h-7 text-xs"
+                    onClick={() => handleDateChange(tomorrow)}
+                  >
+                    Chuyển sang {tomorrow}
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border overflow-hidden">
+              {/* Header: ngày quay ghi 1 lần ở đây, không lặp trên từng dòng */}
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/40 border-b">
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                  Ngày quay: <span className="font-mono normal-case text-foreground">{drawDate}</span>
+                  {rows.length > 0 && ` · ${rows.length} kỳ`}
+                </span>
                 <button
                   type="button"
                   onClick={toggleAll}
-                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={rows.length === 0}
+                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
                 >
                   {allOpen ? <Unlock className="size-3 text-amber-600" /> : <Lock className="size-3" />}
-                  <span className={cn(allOpen && "text-amber-600 dark:text-amber-400")}>{allOpen ? "Đóng" : "Mở"}</span>
+                  <span className={cn(allOpen && "text-amber-600 dark:text-amber-400")}>
+                    {allOpen ? "Đóng tất cả" : "Mở tất cả"}
+                  </span>
                 </button>
               </div>
-            </div>
 
-            {/* Rows */}
-            <div className="divide-y divide-border/50 max-h-132 overflow-y-auto">
-              {rows.map((row, i) => {
-                const complete = isRowComplete(row);
-                const dateErr = !row.date;
-                const timeErr = !row.drawTime;
-                const isDuplicate = duplicateIdx === i;
+              {/* Cột: # | MÃ KỲ (drawId) | GIỜ QUAY | toggle. Ngày quay đã nằm trong mã kỳ. */}
+              <div
+                className="grid items-center gap-x-3 px-4 py-2 bg-muted/20 border-b"
+                style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
+              >
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">#</span>
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Mã kỳ</span>
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
+                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+                  Trạng thái
+                </span>
+              </div>
 
-                return (
+              <div className="divide-y divide-border/50 max-h-132 overflow-y-auto">
+                {rows.length === 0 && (
+                  <p className="px-4 py-6 text-center text-xs text-muted-foreground">
+                    Nhập số kỳ hợp lệ (1–{availableDraws.length}) hoặc để trống để tạo tất cả.
+                  </p>
+                )}
+                {rows.map((row, i) => (
                   <div
-                    key={i}
+                    key={row.previewDrawId}
                     className={cn(
                       "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
-                      isDuplicate
-                        ? "bg-red-50/50 dark:bg-red-950/15"
-                        : row.isOpen
-                          ? "bg-amber-50/50 dark:bg-amber-950/15"
-                          : "hover:bg-muted/20",
+                      row.isOpen ? "bg-amber-50/50 dark:bg-amber-950/15" : "hover:bg-muted/20",
                     )}
-                    style={{ gridTemplateColumns: "1.5rem 1fr 6rem 6.5rem 9rem" }}
+                    style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
                   >
                     <span
                       className={cn(
                         "tabular-nums text-xs font-semibold",
-                        isDuplicate
-                          ? "text-red-600"
-                          : row.isOpen
-                            ? "text-amber-700 dark:text-amber-300"
-                            : complete
-                              ? "text-foreground"
-                              : "text-muted-foreground",
+                        row.isOpen ? "text-amber-700 dark:text-amber-300" : "text-muted-foreground",
                       )}
                     >
                       {i + 1}
                     </span>
 
-                    <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
-
-                    {/*
-                      Số kỳ: server tự sinh từ atomic counter lúc tạo — đây CHỈ là preview
-                      tham khảo (không phải input). Staff không thể chỉnh sửa số kỳ.
-                    */}
+                    {/* Mã kỳ: read-only. `NNN` là số DỰ KIẾN — server cấp lại từ counter khi tạo. */}
                     <span
-                      className={cn(
-                        "flex h-8 items-center justify-center rounded-md border border-dashed bg-muted/30 font-mono text-xs tabular-nums text-muted-foreground",
-                        isDuplicate && "border-amber-400 text-amber-600",
-                      )}
-                      title="Số kỳ do server tự sinh — chỉ hiển thị dự kiến"
+                      title="Mã kỳ do hệ thống sinh khi tạo — không thể chỉnh sửa"
+                      className="flex h-8 items-center rounded-md border border-dashed border-input bg-muted/30 px-2.5 font-mono text-xs tabular-nums text-muted-foreground"
                     >
-                      {row.previewDrawNo > 0 ? String(row.previewDrawNo).padStart(3, "0") : "—"}
+                      {row.previewDrawId}
                     </span>
 
-                    <TimePickerCell
-                      value={row.drawTime}
-                      onChange={(drawTime) => updateRow(i, { drawTime })}
-                      hasError={timeErr}
-                    />
+                    {/* Giờ quay: read-only, lấy từ lưới giờ trong game config. */}
+                    <span
+                      title="Giờ quay theo chu kỳ cấu hình của game — không thể chỉnh sửa"
+                      className="flex h-8 items-center rounded-md border border-dashed border-input bg-muted/30 px-2.5 font-mono text-xs tabular-nums text-foreground"
+                    >
+                      {row.drawTime}
+                    </span>
 
                     {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
                     <label
@@ -467,20 +456,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       </span>
                     </label>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-
-          {duplicateIdx !== null && (
-            <p className="text-xs text-red-600 dark:text-red-400">
-              Kỳ #{duplicateIdx + 1}: Ngày và giờ quay trùng với kỳ khác trong danh sách.
-            </p>
-          )}
-          {duplicateIdx === null && completedRows.length < rows.length && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              {rows.length - completedRows.length} kỳ chưa đủ thông tin (ngày + giờ quay).
-            </p>
           )}
         </div>
 
@@ -491,10 +469,10 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <Button
             onClick={handleCreate}
             disabled={!canSubmit}
-            className={cn(someOpen && "bg-amber-600 hover:bg-amber-700 text-white")}
+            className={cn(openCount > 0 && "bg-amber-600 hover:bg-amber-700 text-white")}
           >
             {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-            Tạo {count} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}
+            Tạo {rows.length} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}
           </Button>
         </DialogFooter>
       </DialogContent>
