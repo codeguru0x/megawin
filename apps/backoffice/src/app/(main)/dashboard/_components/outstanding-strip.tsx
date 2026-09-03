@@ -121,6 +121,7 @@ function GameCard({
 
   return (
     <Link
+      prefetch={false}
       href={`/games/${gameProduct}/outstanding`}
       className="group relative flex gap-2 overflow-hidden rounded-lg border border-border/50 bg-background/80 p-2.5 transition-all hover:border-border hover:shadow-sm"
     >
@@ -255,6 +256,7 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
             return (
               <Link
                 key={g.gameProduct}
+                prefetch={false}
                 href={`/games/${g.gameProduct}/outstanding`}
                 className="relative h-full transition-opacity hover:opacity-80"
                 style={{

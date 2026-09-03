@@ -145,7 +145,7 @@ export function MarkdownRenderer({ content, basePath }: { content: string; baseP
         );
       }
       return (
-        <Link href={resolved as Route} className="text-primary font-medium underline underline-offset-4">
+        <Link prefetch={false} href={resolved as Route} className="text-primary font-medium underline underline-offset-4">
           {children}
         </Link>
       );

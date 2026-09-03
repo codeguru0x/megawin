@@ -15,6 +15,7 @@ export function AccountNav() {
         const isActive = pathname === item.href;
         return (
           <Link
+            prefetch={false}
             key={item.href}
             href={item.href}
             className={cn(

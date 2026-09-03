@@ -294,7 +294,7 @@ export function DrawCommandCenter({
                 <DropdownMenuLabel>Thao tác khác</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={`/games/bingo18/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
+                  <Link prefetch={false} href={`/games/bingo18/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
                     <FileText className="size-3.5" /> Xem báo cáo
                   </Link>
                 </DropdownMenuItem>

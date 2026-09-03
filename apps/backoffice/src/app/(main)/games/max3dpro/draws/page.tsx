@@ -71,7 +71,7 @@ export default function Max3dproDrawsPage() {
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Vào trang{" "}
-              <Link href="/games/max3dpro/operations" className="underline underline-offset-2 hover:text-foreground">
+              <Link prefetch={false} href="/games/max3dpro/operations" className="underline underline-offset-2 hover:text-foreground">
                 Vận hành
               </Link>{" "}
               để tạo kỳ mới.

@@ -53,7 +53,7 @@ export function AccountSwitcher({ user }: Readonly<{ user: AccountDisplayUser }>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/me">
+            <Link prefetch={false} href="/me">
               <BadgeCheck />
               Thông tin cá nhân
             </Link>

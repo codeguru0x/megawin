@@ -301,7 +301,7 @@ export function DrawCommandCenter({
                 <DropdownMenuSeparator />
                 {isSettled && (
                   <DropdownMenuItem asChild>
-                    <Link href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
+                    <Link prefetch={false} href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
                       <FileText className="size-3.5" /> Xem báo cáo
                     </Link>
                   </DropdownMenuItem>

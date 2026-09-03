@@ -43,6 +43,7 @@ export function PlayerDetailNav({ accountId }: PlayerDetailNavProps) {
         const isActive = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
+            prefetch={false}
             key={item.href}
             href={href}
             className={cn(

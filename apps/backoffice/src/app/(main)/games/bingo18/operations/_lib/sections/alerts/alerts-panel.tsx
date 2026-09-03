@@ -199,6 +199,7 @@ function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<
             )}
             {href && (
               <Link
+                prefetch={false}
                 href={href}
                 className="inline-flex items-center text-muted-foreground/60 hover:text-foreground shrink-0"
                 title="Xem outstanding player ở kỳ này"

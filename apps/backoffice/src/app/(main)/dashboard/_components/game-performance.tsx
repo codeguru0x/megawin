@@ -186,6 +186,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                   <TableRow key={row.gameProduct} className="h-9">
                     <TableCell className="py-0 pl-5">
                       <Link
+                        prefetch={false}
                         href={`/games/${row.gameProduct}/reports/settle`}
                         className="flex items-center gap-2 hover:underline"
                       >

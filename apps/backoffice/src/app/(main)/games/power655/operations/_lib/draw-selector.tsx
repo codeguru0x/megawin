@@ -133,6 +133,7 @@ export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }
         <SelectSeparator />
         <div className="px-2 py-1.5">
           <Link
+            prefetch={false}
             href="/games/power655/draws"
             className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           >

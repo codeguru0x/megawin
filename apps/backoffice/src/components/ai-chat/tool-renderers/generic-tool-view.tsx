@@ -137,7 +137,7 @@ export function DeepLink({ href, label }: { href: string; label: string }) {
   return (
     // `href` dựng động từ `DeepLinkSpec.href(rows)` — không qua nav-registry (khác `navigateTo`
     // tool card), nhưng luôn trỏ về path tĩnh đã biết trong `app/`. Cast an toàn.
-    <Link className="inline-flex items-center gap-1 text-primary text-xs hover:underline" href={href as Route}>
+    <Link prefetch={false} className="inline-flex items-center gap-1 text-primary text-xs hover:underline" href={href as Route}>
       {label}
       <ArrowRightIcon className="size-3" />
     </Link>

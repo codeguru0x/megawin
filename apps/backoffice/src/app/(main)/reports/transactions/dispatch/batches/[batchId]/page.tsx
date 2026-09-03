@@ -49,7 +49,7 @@ export default function DispatchBatchPage({ params }: { params: Promise<{ batchI
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-2">
         <Button asChild size="sm" variant="ghost" className="h-7 w-fit gap-1 px-2 text-xs">
-          <Link href="/reports/transactions/dispatch">
+          <Link prefetch={false} href="/reports/transactions/dispatch">
             <ArrowLeft className="size-3.5" />
             Quay về Nhật ký Dispatch
           </Link>

@@ -188,6 +188,7 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Mega 6/45: hiển thị ngày quay thay vì kỳ số */}
                 <Link
+                  prefetch={false}
                   href={opsLink(draw.drawId)}
                   className="text-sm font-semibold tracking-tight hover:underline underline-offset-2"
                 >
@@ -308,6 +309,7 @@ export function Mega645QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <Link
+                  prefetch={false}
                   href={opsLink(draw.drawId)}
                   className="text-sm font-semibold text-foreground hover:underline underline-offset-2"
                 >

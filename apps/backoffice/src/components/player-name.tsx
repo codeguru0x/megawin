@@ -103,6 +103,7 @@ export function PlayerOutstandingLink({
   if (!href) return <PlayerName username={username} accountId={accountId} className={className} />;
   return (
     <Link
+      prefetch={false}
       href={href}
       className={cn("hover:underline underline-offset-2 decoration-dotted", className)}
       title="Xem outstanding player ở kỳ này"
