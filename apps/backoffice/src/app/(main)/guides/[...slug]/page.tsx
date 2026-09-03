@@ -76,7 +76,7 @@ export default async function GuideDocPage({ params }: PageProps) {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link href="/guides">Hướng dẫn</Link>
+                <Link prefetch={false} href="/guides">Hướng dẫn</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

@@ -305,6 +305,7 @@ export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }
 
         <Separator className="mt-2 mb-1" />
         <Link
+          prefetch={false}
           href="/games/bingo18/draws"
           onClick={() => setOpen(false)}
           className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"

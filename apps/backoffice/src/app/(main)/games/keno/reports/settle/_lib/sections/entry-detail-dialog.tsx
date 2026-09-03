@@ -158,7 +158,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={playerLink} className="cursor-pointer font-semibold hover:underline">
+                      <Link prefetch={false} href={playerLink} className="cursor-pointer font-semibold hover:underline">
                         {displayUsername}
                       </Link>
                     </TooltipTrigger>
@@ -168,7 +168,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <Link href={playerLink} className="font-semibold hover:underline">
+                <Link prefetch={false} href={playerLink} className="font-semibold hover:underline">
                   {tenantUsername}
                 </Link>
               )}

@@ -178,6 +178,7 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
             <div className="min-w-0 space-y-0.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <Link
+                  prefetch={false}
                   href={opsLink(draw.drawId)}
                   className="text-sm font-semibold tracking-tight hover:underline underline-offset-2"
                 >
@@ -299,6 +300,7 @@ export function Bingo18QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
             <div>
               <div className="flex items-center gap-1.5">
                 <Link
+                  prefetch={false}
                   href={opsLink(draw.drawId)}
                   className="text-sm font-semibold text-foreground hover:underline underline-offset-2"
                 >

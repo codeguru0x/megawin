@@ -63,6 +63,7 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
 
   return (
     <Link
+      prefetch={false}
       href={href}
       className={cn(
         "group flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors",
@@ -218,6 +219,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
               return (
                 <Link
                   key={g.gameProduct}
+                  prefetch={false}
                   href={`/games/${g.gameProduct}/operations`}
                   className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/30 px-2 py-1 transition-colors hover:bg-muted/60"
                 >

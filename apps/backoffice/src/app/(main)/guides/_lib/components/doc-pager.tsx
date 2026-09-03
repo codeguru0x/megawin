@@ -17,6 +17,7 @@ export function DocPager({ prev, next }: { prev: FlatDoc | null; next: FlatDoc |
     <nav className="mt-10 grid grid-cols-2 gap-4 border-t pt-6">
       {prev ? (
         <Link
+          prefetch={false}
           href={prev.href}
           className="hover:bg-accent/50 group flex flex-col gap-1 rounded-lg border p-4 transition-colors"
         >
@@ -31,6 +32,7 @@ export function DocPager({ prev, next }: { prev: FlatDoc | null; next: FlatDoc |
       )}
       {next ? (
         <Link
+          prefetch={false}
           href={next.href}
           className="hover:bg-accent/50 group flex flex-col items-end gap-1 rounded-lg border p-4 text-right transition-colors"
         >

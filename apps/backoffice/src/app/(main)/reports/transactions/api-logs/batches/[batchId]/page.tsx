@@ -44,7 +44,7 @@ function BatchPageInner({ batchId }: { batchId: string }) {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/reports/transactions/api-logs">Nhật ký giao dịch</Link>
+              <Link prefetch={false} href="/reports/transactions/api-logs">Nhật ký giao dịch</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

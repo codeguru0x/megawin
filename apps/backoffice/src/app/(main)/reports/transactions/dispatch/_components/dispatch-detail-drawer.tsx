@@ -103,7 +103,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                     {order.batchKey}
                   </span>
                   <Button asChild size="sm" variant="link" className="h-6 shrink-0 px-1 text-xs">
-                    <Link href={`/reports/transactions/dispatch/batches/${encodeURIComponent(order.batchKey)}`}>
+                    <Link prefetch={false} href={`/reports/transactions/dispatch/batches/${encodeURIComponent(order.batchKey)}`}>
                       Xem batch
                     </Link>
                   </Button>

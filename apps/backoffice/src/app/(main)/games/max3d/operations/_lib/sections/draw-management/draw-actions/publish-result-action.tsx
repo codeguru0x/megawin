@@ -620,6 +620,7 @@ export function PublishResultAction({
                         </p>
                         {suggestion.data.reason === VietlottSuggestionUnavailableReason.NoAnchor && (
                           <Link
+                            prefetch={false}
                             href={vietlottConfigLink}
                             className="font-medium text-blue-700 text-xs underline dark:text-blue-400"
                           >
@@ -643,7 +644,7 @@ export function PublishResultAction({
                         </p>
                         <p className="text-amber-700 text-xs dark:text-amber-400">
                           Nếu giá trị vừa nhập đúng với trang Vietlott, hãy{" "}
-                          <Link href={vietlottConfigLink} className="font-medium underline">
+                          <Link prefetch={false} href={vietlottConfigLink} className="font-medium underline">
                             cập nhật lại mã kỳ Vietlott
                           </Link>{" "}
                           ở cấu hình game để các kỳ sau tự tính đúng.

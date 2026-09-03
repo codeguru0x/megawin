@@ -205,7 +205,7 @@ function DrawNotFound({
         </p>
         <div className="mt-5 flex items-center gap-3">
           <Button variant="outline" size="sm" asChild>
-            <Link href="/games/max3dpro/draws">Lịch sử kỳ quay</Link>
+            <Link prefetch={false} href="/games/max3dpro/draws">Lịch sử kỳ quay</Link>
           </Button>
           {noData ? (
             <Button size="sm" className="gap-2" onClick={onCreateOpen}>
@@ -214,7 +214,7 @@ function DrawNotFound({
             </Button>
           ) : (
             <Button size="sm" asChild>
-              <Link href="/games/max3dpro/operations">Về trang vận hành</Link>
+              <Link prefetch={false} href="/games/max3dpro/operations">Về trang vận hành</Link>
             </Button>
           )}
         </div>

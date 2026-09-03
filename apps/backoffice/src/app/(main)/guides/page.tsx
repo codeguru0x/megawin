@@ -44,6 +44,7 @@ export default function GuidesLandingPage() {
               </p>
             </div>
             <Link
+              prefetch={false}
               href="/guides/power655/resettle/type-a"
               className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium hover:underline"
             >
@@ -69,6 +70,7 @@ export default function GuidesLandingPage() {
 
             return (
               <Link
+                prefetch={false}
                 key={game.gameKey}
                 href={firstTopic && firstDoc ? `/guides/${game.gameKey}/${firstTopic.key}/${firstDoc.slug}` : "/guides"}
                 className="group"

@@ -81,14 +81,14 @@ export function NavUser({ user }: Readonly<{ user: AccountDisplayUser }>) {
             <DropdownMenuGroup>
               {ACCOUNT_NAV_ITEMS.map((item) => (
                 <DropdownMenuItem key={item.href} asChild>
-                  <Link href={item.href}>
+                  <Link prefetch={false} href={item.href}>
                     <item.icon />
                     {item.title}
                   </Link>
                 </DropdownMenuItem>
               ))}
               <DropdownMenuItem asChild>
-                <Link href="/guides">
+                <Link prefetch={false} href="/guides">
                   <BookOpen />
                   Hướng dẫn sử dụng
                 </Link>

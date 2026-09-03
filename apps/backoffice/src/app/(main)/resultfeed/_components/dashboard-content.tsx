@@ -171,7 +171,7 @@ export function DashboardContent() {
                       ))}
                       <TableCell className="pr-5 text-right">
                         {conflictCount > 0 && (
-                          <Link href={`/resultfeed/review?gameKey=${gameKey}`}>
+                          <Link prefetch={false} href={`/resultfeed/review?gameKey=${gameKey}`}>
                             <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
                               Xem
                             </Button>

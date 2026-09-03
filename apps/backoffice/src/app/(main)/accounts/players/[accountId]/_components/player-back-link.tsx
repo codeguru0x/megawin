@@ -25,6 +25,7 @@ export function PlayerBackLink({ accountId }: PlayerBackLinkProps) {
 
   return (
     <Link
+      prefetch={false}
       href={href}
       className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
     >

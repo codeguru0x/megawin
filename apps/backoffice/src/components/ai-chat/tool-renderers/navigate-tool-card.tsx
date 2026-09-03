@@ -131,6 +131,7 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
 
   return (
     <Link
+      prefetch={false}
       // `not-prose`: thẻ nằm giữa văn xuôi markdown của trợ lý (`.chat-md`) — không để style
       // anchor/paragraph của prose đè lên (cùng lý do `ToolResultLine` khai `not-prose`).
       className="not-prose group flex w-full items-start gap-2.5 rounded-lg border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-accent/40"

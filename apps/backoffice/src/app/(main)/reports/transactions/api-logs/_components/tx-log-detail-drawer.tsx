@@ -98,7 +98,7 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
                     <span className="break-all font-mono text-sm">{log.batchId}</span>
                     {log.eventType === TxLogEventType.BatchTransaction && (
                       <Button asChild size="sm" variant="link" className="h-6 px-1 text-xs">
-                        <Link href={`/reports/transactions/api-logs/batches/${log.batchId}`}>Xem batch</Link>
+                        <Link prefetch={false} href={`/reports/transactions/api-logs/batches/${log.batchId}`}>Xem batch</Link>
                       </Button>
                     )}
                   </div>

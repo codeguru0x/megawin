@@ -139,7 +139,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={playerLink} className="cursor-pointer font-semibold hover:underline">
+                      <Link prefetch={false} href={playerLink} className="cursor-pointer font-semibold hover:underline">
                         {truncatedUsername}
                       </Link>
                     </TooltipTrigger>
@@ -149,7 +149,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <Link href={playerLink} className="font-semibold hover:underline">
+                <Link prefetch={false} href={playerLink} className="font-semibold hover:underline">
                   {tenantUsername}
                 </Link>
               )}

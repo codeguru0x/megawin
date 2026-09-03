@@ -69,7 +69,11 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <Link href="/games/mega645/jackpot" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+          <Link
+            prefetch={false}
+            href="/games/mega645/jackpot"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+          >
             <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
@@ -160,6 +164,7 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
           <Link
+            prefetch={false}
             href="/games/power655/jackpot"
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
@@ -268,6 +273,7 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
           <Link
+            prefetch={false}
             href="/games/lotto535/jackpot"
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
