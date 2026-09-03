@@ -18,15 +18,22 @@
  * Ở header chỉ để icon + tooltip, KHÔNG kèm chữ: header cao 48px dùng chung với tên trợ lý, thêm
  * nhãn chữ làm hàng nút lấn sang phần thương hiệu.
  *
- * NÚT "MỞ RỘNG" — ba thứ phối hợp để cú chuyển sang `/ai` không còn hẫng (sửa 19/08): prefetch khi
- * hover/focus, `useTransition` để nút hiện spinner trong lúc chờ, và KHÔNG tự đóng panel tại chỗ
- * (để effect `pathname` của `AiPanelProvider` đóng sau khi trang mới đã lên). Chi tiết ở `onClick`.
+ * NÚT "MỞ RỘNG" — hai thứ phối hợp để cú chuyển sang `/ai` không còn hẫng (sửa 19/08):
+ * `useTransition` để nút hiện spinner trong lúc chờ, và KHÔNG tự đóng panel tại chỗ (để effect
+ * `pathname` của `AiPanelProvider` đóng sau khi trang mới đã lên). Chi tiết ở `onClick`.
+ *
+ * ⚠️ KHÔNG prefetch khi hover/focus (đã bỏ 04/09). Từng thêm `router.prefetch()` ở `onMouseEnter`/
+ * `onFocus` để warm cache trước khi bấm — nhưng `/ai` là route dynamic session-gated, không cache
+ * được (`DYNAMIC_STALETIME_MS` = 0 mặc định), nên MỌI lần gọi đều tạo 1 request RSC mới, hết hạn
+ * ngay. Production ghi nhận hàng trăm request `_rsc` lặp lại dù đã thêm guard dedupe-theo-href —
+ * lợi ích (giảm độ trễ khi bấm, đã có spinner `isNavigating` bù) không đáng với rủi ro loop. Xem
+ * lịch sử fix trong PR liên quan nếu cần khôi phục ý tưởng này bằng cơ chế khác an toàn hơn.
  */
 
 import type { ReactNode } from "react";
-import { useCallback, useRef, useTransition } from "react";
+import { useTransition } from "react";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import {
   ExpandIcon,
@@ -61,7 +68,6 @@ function ChatHeaderFrame({ children, className }: { children: ReactNode; classNa
 
 export function PanelChatHeader({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const pathname = usePathname();
   const {
     state: { activeThreadId },
     actions: { newChat },
@@ -74,28 +80,6 @@ export function PanelChatHeader({ onClose }: { onClose: () => void }) {
   // biết cú bấm ĐÃ được nhận. Bản trước không có tín hiệu nào ở đây: panel biến mất tức thì rồi màn
   // hình đứng im vài trăm ms tới vài giây, đọc ra thành "bấm xong web tự tắt panel rồi treo".
   const [isNavigating, startNavigation] = useTransition();
-
-  // ⚠️ FIX 04/09: `/ai` là route dynamic session-gated (không cache được, `DYNAMIC_STALETIME_MS` = 0
-  // theo mặc định Next) — mỗi lần gọi `router.prefetch()` đều tạo 1 request RSC MỚI, hết hạn ngay.
-  // Nút này có thể bị remount liên tục trong lúc AI panel streaming, khiến `onMouseEnter` bắn lại
-  // dưới con trỏ đang đứng yên → prefetch lặp vô hạn (network tab thấy hàng nghìn request `_rsc`).
-  // Chặn bằng 2 lớp: (1) không prefetch nếu đang đứng ngay trên `/ai`; (2) chỉ prefetch 1 lần cho
-  // mỗi `href`, dùng `useRef` set nội bộ — KHÔNG dùng state vì không cần re-render khi giá trị đổi.
-  const prefetchedHrefRef = useRef<string | null>(null);
-
-  // Warm RSC payload của `/ai` ngay khi con trỏ/tiêu điểm chạm nút — lúc staff thật sự bấm thì
-  // payload đã nằm trong router cache, navigation gần như tức thì (react-best-practices §2.5).
-  // KHÔNG prefetch lúc mount: panel mở ở mọi trang, đa số lượt mở panel không hề bấm expand.
-  const prefetchFullPage = useCallback(() => {
-    if (pathname === AI_FULL_PAGE_PATH) {
-      return;
-    }
-    if (prefetchedHrefRef.current === fullPageHref) {
-      return;
-    }
-    prefetchedHrefRef.current = fullPageHref;
-    router.prefetch(fullPageHref);
-  }, [router, fullPageHref, pathname]);
 
   return (
     <ChatHeaderFrame className="border-b px-4">
@@ -126,8 +110,6 @@ export function PanelChatHeader({ onClose }: { onClose: () => void }) {
                 router.push(fullPageHref);
               });
             }}
-            onFocus={prefetchFullPage}
-            onMouseEnter={prefetchFullPage}
             size="icon-sm"
             variant="ghost"
           >
