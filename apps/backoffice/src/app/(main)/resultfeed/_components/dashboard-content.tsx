@@ -3,7 +3,8 @@
 import Link from "next/link";
 
 import { ConsensusState } from "@megawin/resultfeed/entities";
-import { AlertCircle, AlertTriangle, RefreshCw } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils";
+import { AlertCircle, AlertTriangle, CheckCircle2, Clock, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,19 +24,65 @@ const STATE_COLUMNS = [
   ConsensusState.Rejected,
 ];
 
-function StatCard({ state, count }: { state: ConsensusState; count: number }) {
+/** Icon + màu + sub-text cho từng state — dùng cho KPI strip (mục 1.2a `frontend-dev.mdc`). */
+const STATE_KPI_STYLES: Record<
+  ConsensusState,
+  { icon: React.ComponentType<{ className?: string }>; iconBg: string; iconColor: string; sub: string }
+> = {
+  [ConsensusState.Conflict]: {
+    icon: AlertTriangle,
+    iconBg: "bg-rose-100 dark:bg-rose-900/50",
+    iconColor: "text-rose-600 dark:text-rose-400",
+    sub: "Cần xử lý ngay",
+  },
+  [ConsensusState.Pending]: {
+    icon: Clock,
+    iconBg: "bg-amber-100 dark:bg-amber-900/50",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    sub: "Đang chờ nguồn",
+  },
+  [ConsensusState.Agreed]: {
+    icon: CheckCircle2,
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    sub: "Các nguồn tự khớp",
+  },
+  [ConsensusState.HumanVerified]: {
+    icon: ShieldCheck,
+    iconBg: "bg-blue-100 dark:bg-blue-900/50",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    sub: "Người đã xác nhận",
+  },
+  [ConsensusState.Rejected]: {
+    icon: XCircle,
+    iconBg: "bg-slate-100 dark:bg-slate-800",
+    iconColor: "text-slate-600 dark:text-slate-400",
+    sub: "Không hợp lệ",
+  },
+};
+
+/** KPI card cho 1 consensus state — pattern icon horizontal chuẩn (mục 1.2a `frontend-dev.mdc`). */
+function StateKpiCard({ state, count }: { state: ConsensusState; count: number }) {
   const isConflict = state === ConsensusState.Conflict;
+  const { icon: Icon, iconBg, iconColor, sub } = STATE_KPI_STYLES[state];
   return (
-    <Card className={cn("gap-2 py-4", isConflict && count > 0 && "border-destructive/40 bg-destructive/5")}>
-      <CardHeader className="px-4">
-        <CardTitle className="font-medium text-muted-foreground text-xs">{CONSENSUS_STATE_LABELS[state]}</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4">
-        <span className={cn("font-semibold text-2xl tabular-nums", isConflict && count > 0 && "text-destructive")}>
-          {count}
-        </span>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
+        <Icon className={cn("size-5", iconColor)} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">{CONSENSUS_STATE_LABELS[state]}</p>
+        <p
+          className={cn(
+            "text-lg font-bold tabular-nums text-foreground",
+            isConflict && count > 0 && "text-rose-600 dark:text-rose-400",
+          )}
+        >
+          {formatNumber(count)}
+        </p>
+        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+      </div>
+    </div>
   );
 }
 
@@ -80,9 +127,9 @@ export function DashboardContent() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {STATE_COLUMNS.map((state) => (
-          <StatCard key={state} state={state} count={stats?.totalByState[state] ?? 0} />
+          <StateKpiCard key={state} state={state} count={stats?.totalByState[state] ?? 0} />
         ))}
       </div>
 
@@ -119,7 +166,7 @@ export function DashboardContent() {
                             state === ConsensusState.Conflict && (byGame?.[state] ?? 0) > 0 && "text-destructive",
                           )}
                         >
-                          {byGame?.[state] ?? 0}
+                          {formatNumber(byGame?.[state] ?? 0)}
                         </TableCell>
                       ))}
                       <TableCell className="pr-5 text-right">

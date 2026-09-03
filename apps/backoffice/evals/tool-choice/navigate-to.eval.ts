@@ -172,4 +172,35 @@ export default [
       turn.notCalledTool("navigateTo");
     },
   }),
+
+  // ─── 8. Đang ở ĐÚNG trang định gợi ý → KHÔNG gọi navigateTo, KHÔNG hỏi "có muốn vào trang X" ─
+  defineEval({
+    description:
+      "Đang ở đúng trang vận hành Keno rồi, hỏi kiểm tra/sửa kết quả kỳ này → KHÔNG tự gợi ý " +
+      "'vào trang vận hành' (case thật đã xảy ra, xem 40-tool-policy.md §Điều hướng trang), KHÔNG " +
+      "gọi lại navigateTo tới đúng route đang đứng.",
+    async test(t) {
+      const turn = await t.send(
+        "Kiểm tra lại kết quả kỳ này giúp tôi, nếu có sai lệch so với Vietlott thì cần làm gì tiếp?",
+        {
+          clientContext: {
+            route: "/games/keno/operations",
+            page: { operations: { drawId: "2026-08-17.030" } },
+          },
+        },
+      );
+      turn.succeeded();
+      // Route hiện tại ĐÃ là trang vận hành Keno — gọi lại navigateTo tới chính route đó là dư thừa.
+      turn.notCalledTool("navigateTo");
+      t.check(
+        turn.message,
+        satisfies(
+          (msg) =>
+            typeof msg === "string" &&
+            !/(bạn có muốn|có muốn|muốn vào|cần vào|nên vào)\s+trang\s+(vận hành|này)/i.test(msg),
+          "không tự hỏi 'bạn có muốn vào trang vận hành' khi đang đứng ngay trang đó",
+        ),
+      );
+    },
+  }),
 ];
