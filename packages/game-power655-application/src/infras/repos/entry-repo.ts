@@ -503,8 +503,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Batch aggregate summaries cho nhiều tickets cùng lúc.
    * Power655: $amount cho voidedAmount, $voidInfo.refundAmount cho refund.
+   *
+   * ticketId lưu dạng string (hex, xem place-bet.ts) — PHẢI nhận string[], KHÔNG convert sang
+   * ObjectId. Truyền ObjectId[] vào $in sẽ KHÔNG match field string, khiến aggregate luôn trả rỗng
+   * (im lặng, không lỗi) — bug thật đã xảy ra khiến ticket không bao giờ được sync status.
    */
-  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+  async aggregateTicketSummariesBatch(ticketIds: string[]): Promise<
     Map<
       string,
       {
@@ -564,7 +568,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     >();
 
     for (const r of result) {
-      map.set((r._id as ObjectId).toHexString(), {
+      // _id = group key $ticketId, đã là string (xem JSDoc method) — KHÔNG gọi .toHexString().
+      map.set(r._id as string, {
         settledCount: r.settledCount as number,
         voidedCount: r.voidedCount as number,
         totalWinAmount: r.totalWinAmount as number,

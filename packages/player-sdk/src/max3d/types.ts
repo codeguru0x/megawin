@@ -3,6 +3,7 @@
  * @module
  */
 
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
 import type { Max3dPlayMode, Max3dPlayType } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -46,7 +47,7 @@ export interface Max3dBoardInput {
  *     {
  *       boardNo: "A",
  *       playMode: "basic",
- *       playType: "standard",
+ *       playType: "straight",
  *       triplets: ["123"],
  *     },
  *   ],
@@ -168,8 +169,8 @@ export interface Max3dLineInfo {
   /**
    * Kiểu chơi.
    * - `"straight"` — so khớp đúng thứ tự
-   * - `"combo3"` — hoán vị 3 số khác nhau (6 cách)
-   * - `"combo6"` — hoán vị có 1 cặp trùng (3 cách)
+   * - `"combo3"` — có 1 cặp số trùng (2 chữ số giống nhau) — sinh 3 hoán vị
+   * - `"combo6"` — 3 chữ số khác nhau — sinh 6 hoán vị
    */
   playType: string;
   /**
@@ -178,6 +179,11 @@ export interface Max3dLineInfo {
    * VD: `["123"]` (basic) hoặc `["123", "456"]` (plus).
    */
   triplets: string[];
+  /**
+   * Số lần tham gia dự thưởng của line này (≥ 1). Snapshot từ `betCount` của board chứa line.
+   * `matchResult.winAmount` đã nhân theo betCount này. UI hiển thị "×N" khi betCount > 1.
+   */
+  betCount: number;
   /** Kết quả đối chiếu. Chỉ có sau khi kỳ quay đã settle và entry ở trạng thái `"settled"`. */
   matchResult: {
     /**
@@ -316,13 +322,13 @@ export interface Max3dDrawResultInfo {
   /**
    * Bảng trao giải cho cách chơi Cơ Bản (Basic).
    * 4 hạng: `special`, `first`, `second`, `third`.
-   * Chỉ chứa các hạng có người trúng (winnerCount > 0).
+   * Luôn đủ 4 phần tử, kể cả hạng không có người trúng (`winnerCount = 0`).
    */
   basicPrizes: Max3dDrawTierPrize[];
   /**
    * Bảng trao giải cho cách chơi Max 3D+ (Plus).
    * 7 hạng: `special`, `first`, `second`, `third`, `fourth`, `fifth`, `sixth`.
-   * Chỉ chứa các hạng có người trúng (winnerCount > 0).
+   * Luôn đủ 7 phần tử, kể cả hạng không có người trúng (`winnerCount = 0`).
    */
   plusPrizes: Max3dDrawTierPrize[];
   /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
@@ -341,8 +347,7 @@ export interface Max3dDrawResultInfo {
  * for (const ticket of tickets) {
  *   console.log(`${ticket.ticketNo}: ${ticket.progress.settledDraws}/${ticket.progress.totalDraws} kỳ`);
  *   if (ticket.voidSummary) {
- *     const type = ticket.voidSummary.isFullVoid ? "full void" : "partial void";
- *     console.log(`[${type}] boards: ${ticket.voidSummary.voidedBoards.join(", ")}, hoàn: ${ticket.voidSummary.refundAmount} VND`);
+ *     console.log(`Đã huỷ ${ticket.voidSummary.voidedDrawCount} kỳ, hoàn: ${ticket.voidSummary.totalRefundedAmount} VND`);
  *   }
  * }
  * ```
@@ -352,8 +357,16 @@ export interface Max3dTicketSummary {
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"M3D-20260307-00005"`. */
   ticketNo: string;
-  /** Trạng thái vé. */
-  status: string;
+  /**
+   * Trạng thái vé — dùng chung cho tất cả game, xem {@link TicketStatus}:
+   * - `"paid"` — Đã thanh toán, vé bị khoá (immutable), entries đã được tạo.
+   * - `"completed"` — Tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ
+   *   settled.
+   * - `"refunded"` — Đã hoàn tiền toàn bộ. Chỉ xảy ra khi TẤT CẢ kỳ quay trong vé đều bị huỷ
+   *   (không kỳ nào settled).
+   * - `"void"` — Vô hiệu hoá toàn bộ vé (gian lận, lỗi nghiêm trọng).
+   */
+  status: TicketStatus;
   /** Kế hoạch kỳ quay. */
   drawPlan: {
     drawIds: string[];
@@ -432,8 +445,8 @@ export interface Max3dEntryResult {
   id: string;
   /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Trạng thái entry. VD: `"pending"`, `"settled"`, `"voided"`. */
-  status: string;
+  /** Trạng thái entry — dùng chung cho tất cả game, xem {@link EntryStatus}: `"scheduled"` (chờ quay) | `"settled"` (đã tính thưởng) | `"void"` (kỳ bị huỷ, tiền cược đã hoàn). */
+  status: EntryStatus;
   /** Tiền cược kỳ này (VND) = betUnitCount × unitPrice. */
   amount: number;
   /** Đơn giá 1 lần tham gia dự thưởng (VND). */
@@ -442,6 +455,27 @@ export interface Max3dEntryResult {
   lineCount: number;
   /** Tổng đơn vị cược = Σ(board.lineCount × board.betCount). amount = betUnitCount × unitPrice. */
   betUnitCount: number;
+
+  /** Tóm tắt nội dung vé (ticketNo + boards) tại thời điểm đặt cược. */
+  entrySummary: {
+    /** Mã vé hiển thị cho người chơi. VD: `"M3D-20260307-00005"`. */
+    ticketNo: string;
+    /** Danh sách boards đã cược, snapshot tại thời điểm tạo entry. */
+    boards: Array<{
+      /** Ký hiệu board: `"A"`, `"B"`, `"C"`, `"D"`. */
+      boardNo: string;
+      /** Chế độ chơi: `"basic"` (1 bộ ba) hoặc `"plus"` (2 bộ ba). */
+      playMode: string;
+      /** Kiểu chơi: `"straight"` | `"combo3"` | `"combo6"`. */
+      playType: string;
+      /** Bộ ba số đã chọn (hoặc đã expand từ combo). */
+      triplets: string[];
+      /** Số lines phát sinh từ board này. `straight` = 1, `combo3` = 3, `combo6` = 6. */
+      lineCount: number;
+      /** Số lần cược nhân bội (≥ 1). Tiền cược board = lineCount × betCount × unitPrice. */
+      betCount: number;
+    }>;
+  };
 
   /** Kết quả quay. `undefined` nếu chưa quay. */
   result?: {
@@ -457,8 +491,15 @@ export interface Max3dEntryResult {
     publishedAt: string;
   };
 
-  /** Kết quả tổng của entry sau settle. `"win"` hoặc `"loss"`. `undefined` nếu chưa settle. */
-  outcome?: string;
+  /**
+   * Kết quả tổng của entry sau settle — dùng chung cho tất cả game, xem {@link EntryOutcome}:
+   * - `"win"` — Thắng, có ít nhất 1 giải trúng.
+   * - `"loss"` — Thua, không trúng giải nào.
+   * - `"void"` — Kỳ quay bị huỷ, entry vô hiệu, tiền cược được hoàn lại.
+   *
+   * `undefined` nếu entry chưa settle.
+   */
+  outcome?: EntryOutcome;
 
   /** Chi tiết trả thưởng. `undefined` nếu chưa settle hoặc không trúng. */
   payout?: {
@@ -509,8 +550,13 @@ export interface Max3dPlaceBetResponse {
   ticketId: string;
   /** Mã vé hiển thị cho người chơi. VD: `"M3D-20260307-00005"`. */
   ticketNo: string;
-  /** Trạng thái vé sau khi tạo. */
-  status: string;
+  /**
+   * Trạng thái vé sau khi tạo — dùng chung cho tất cả game, xem {@link TicketStatus}. Ngay sau
+   * khi đặt cược thành công luôn là `"paid"`; các giá trị khác (`"refunded"`, `"void"`,
+   * `"completed"`) chỉ xuất hiện sau đó khi tra cứu lại vé qua
+   * `listTickets`/`listPendingTickets`/`getTicketEntries`.
+   */
+  status: TicketStatus;
   /** Số dư ví player sau khi trừ tiền cược (VND). */
   balance: number;
 
@@ -671,13 +717,12 @@ export interface Max3dListTicketsResponse {
 }
 
 /**
- * Chi tiết vé và các lần tham gia kỳ quay của vé Max 3D.
+ * Danh sách entries (chi tiết theo từng kỳ quay) của một vé Max 3D.
  *
  * Trả về bởi `client.max3d.getTicketEntries()`.
+ * Để lấy thông tin tóm tắt vé, dùng `listTickets()` hoặc `listPendingTickets()`.
  */
 export interface Max3dTicketEntriesResponse {
-  /** Thông tin tóm tắt vé. */
-  ticket: Max3dTicketSummary;
   /** Danh sách entries (1 entry = 1 kỳ quay). */
   entries: Max3dEntryResult[];
 }

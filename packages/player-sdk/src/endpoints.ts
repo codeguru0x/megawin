@@ -1,7 +1,7 @@
 /**
  * API Endpoints Registry
  *
- * Tập trung quản lý tất cả URL paths của API Gateway.
+ * Tập trung quản lý tất cả URL paths của MegaWin API.
  * Khi thêm API mới, chỉ cần thêm entry vào đây.
  *
  * @internal
@@ -9,10 +9,6 @@
 export const ENDPOINTS = {
   auth: {
     refresh: "/auth/refresh-token",
-  },
-
-  player: {
-    balance: "/me/balance",
   },
 
   game: {

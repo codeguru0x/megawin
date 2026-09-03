@@ -43,6 +43,15 @@
  */
 
 import { AppException, type AppResult, isAppError } from "@megawin/shared/errors";
+import { logError } from "@megawin/shared/utils";
+
+/**
+ * Message chung trả cho client khi gặp lỗi KHÔNG kiểm soát (driver DB, AWS SDK, network...).
+ *
+ * Cố định 1 chuỗi duy nhất — KHÔNG được ghép thêm `err.message` gốc vào đây. Xem lý do ở
+ * `handleError` bên dưới và `.cursor/rules/error-handling-conventions.mdc`.
+ */
+const UNEXPECTED_ERROR_MESSAGE = "Lỗi xảy ra trên hệ thống, vui lòng liên hệ quản trị viên.";
 
 export abstract class UseCase<I = void, O = void> {
   protected abstract execute(input: I): Promise<O>;
@@ -83,6 +92,17 @@ export abstract class UseCase<I = void, O = void> {
         details: appErr.details,
       });
     }
-    return AppException.internal(err instanceof Error ? err.message : "Unknown error", err);
+
+    // Lỗi KHÔNG kiểm soát (MongoDB driver, AWS SDK, network, bug runtime...) — route Next.js/
+    // Lambda coi MỌI AppException là lỗi "đã kiểm soát" và trả `message`+`details` NGUYÊN VĂN
+    // cho client (xem `catchToApiResponse`/`appErrorToApiResponse`). Nếu giữ nguyên `err.message`
+    // và nhồi cả `err` vào `details` như trước đây, một lỗi Mongo "not authorized on <db> to
+    // execute command..." sẽ lộ thẳng tên database, tên collection, cluster signature ra client —
+    // đã xảy ra thật (2026-09, endpoint vietlott-result). Vì vậy: log đầy đủ err gốc server-side
+    // ở ĐÂY (nơi DUY NHẤT còn giữ được nó — sau khi bọc thành AppException, `catchToApiResponse`
+    // không còn cơ hội log vì nó tưởng đây là lỗi đã kiểm soát), rồi trả về message chung an toàn,
+    // KHÔNG kèm details.
+    logError(this.constructor.name, err);
+    return AppException.internal(UNEXPECTED_ERROR_MESSAGE);
   }
 }

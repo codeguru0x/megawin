@@ -27,7 +27,7 @@
  * | Value           | Mô tả                                                   |
  * |-----------------|---------------------------------------------------------|
  * | `"sumTotal"`    | Đoán tổng 3 xúc xắc bằng đúng 1 giá trị (3-18)         |
- * | `"bigSmallDraw"`| Đoán Tài (11-18) / Xỉu (3-8) / Hoà (9-10)              |
+ * | `"bigSmallDraw"`| Đoán Lớn (12-18) / Hòa (10-11) / Nhỏ (3-9)              |
  */
 export const Bingo18PlayType = {
   /** Đoán 1 số xuất hiện ×1, ×2, hoặc ×3 lần. */
@@ -38,7 +38,7 @@ export const Bingo18PlayType = {
   TripleMatch: "tripleMatch",
   /** Đoán tổng 3 xúc xắc bằng đúng 1 giá trị cụ thể (3-18). */
   SumTotal: "sumTotal",
-  /** Đoán Tài (tổng 11-18) / Xỉu (tổng 3-8) / Hoà (tổng 9-10). */
+  /** Đoán Lớn (tổng 12-18) / Hòa (tổng 10-11) / Nhỏ (tổng 3-9). */
   BigSmallDraw: "bigSmallDraw",
 } as const;
 
@@ -72,26 +72,26 @@ export type Bingo18TripleKind = (typeof Bingo18TripleKind)[keyof typeof Bingo18T
 // ─────────────────────────────────────────────
 
 /**
- * Lựa chọn cược Tài/Xỉu/Hoà trong Bingo 18.
+ * Lựa chọn cược Lớn/Hòa/Nhỏ trong Bingo 18.
  *
  * Dựa trên tổng 3 xúc xắc:
  * | Value     | Điều kiện         | Mô tả        |
  * |-----------|-------------------|--------------|
- * | `"big"`   | Tổng 11-18        | Tài          |
- * | `"draw"`  | Tổng 9-10         | Hoà          |
- * | `"small"` | Tổng 3-8          | Xỉu          |
+ * | `"big"`   | Tổng 12-18        | Lớn          |
+ * | `"draw"`  | Tổng 10-11        | Hòa          |
+ * | `"small"` | Tổng 3-9          | Nhỏ          |
  *
- * Lưu ý: Tổng 9 và 10 được coi là "Hoà" — đặc trưng riêng của Bingo 18,
+ * Lưu ý: Tổng 10 và 11 được coi là "Hòa" — đặc trưng riêng của Bingo 18,
  * khác với game Tài/Xỉu truyền thống.
  */
 export const Bingo18BigSmallBet = {
-  /** Tài — tổng 3 xúc xắc từ 11 đến 18. */
+  /** Lớn — tổng 3 xúc xắc từ 12 đến 18. */
   Big: "big",
-  /** Hoà — tổng 3 xúc xắc bằng 9 hoặc 10. */
+  /** Hòa — tổng 3 xúc xắc bằng 10 hoặc 11. */
   Draw: "draw",
-  /** Xỉu — tổng 3 xúc xắc từ 3 đến 8. */
+  /** Nhỏ — tổng 3 xúc xắc từ 3 đến 9. */
   Small: "small",
 } as const;
 
-/** Lựa chọn Tài/Xỉu/Hoà (union type). */
+/** Lựa chọn Lớn/Hòa/Nhỏ (union type). */
 export type Bingo18BigSmallBet = (typeof Bingo18BigSmallBet)[keyof typeof Bingo18BigSmallBet];

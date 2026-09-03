@@ -9,11 +9,8 @@ import type {
   Mega645ComboPopularityParams,
   Mega645ComboPopularityResponse,
   Mega645CurrentDrawResponse,
-  Mega645DrawInfo,
   Mega645DrawResultDetail,
-  Mega645DrawResultSummary,
   Mega645EntryLinesResponse,
-  Mega645EntryResult,
   Mega645GameConfigResponse,
   Mega645JackpotResponse,
   Mega645ListAllTicketsParams,
@@ -24,7 +21,6 @@ import type {
   Mega645PlaceBetResponse,
   Mega645TicketEntriesResponse,
   Mega645TicketPurchaseInput,
-  Mega645TicketSummary,
 } from "../mega645";
 
 /**
@@ -82,7 +78,7 @@ export interface Mega645Api {
    * @example
    * ```ts
    * const jackpot = await client.mega645.getJackpot();
-   * console.log(jackpot.jackpotAmount); // 8500000000
+   * console.log(jackpot.currentAmount); // 8500000000
    * ```
    */
   getJackpot(): Promise<Mega645JackpotResponse>;
@@ -92,12 +88,11 @@ export interface Mega645Api {
    *
    * **Endpoint:** `POST /games/mega645/bets`
    *
-   * @param input - Thông tin vé: drawId, drawCount, boards
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
+   * @param input - Thông tin vé: drawIds, boards
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, pricing, balance sau cược
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ (số sai range, thiếu field...)
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay đã đóng bán/không tồn tại, vượt số board/kỳ tối đa, không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema (số sai range, thiếu field...)
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -105,17 +100,16 @@ export interface Mega645Api {
    * import type { Mega645TicketPurchaseInput } from "@megawin/player-sdk/mega645";
    *
    * const result = await client.mega645.placeBet({
-   *   drawId: "2026-03-07.001",
-   *   drawCount: 1,
+   *   drawIds: ["2026-03-07.001"],
    *   boards: [{
    *     boardNo: "A",
    *     playType: "standard",
    *     selection: { numbers: ["05", "12", "22", "31", "40", "45"] },
    *   }],
    * });
-   * console.log(result.ticketNo);    // "M645-20260307-00003"
-   * console.log(result.totalAmount); // 10000
-   * console.log(result.balance);     // 990000
+   * console.log(result.ticketNo);              // "M645-20260307-00003"
+   * console.log(result.pricing.totalAmount);   // 10000
+   * console.log(result.balance);                // 990000
    * ```
    */
   placeBet(input: Mega645TicketPurchaseInput): Promise<Mega645PlaceBetResponse>;
@@ -171,7 +165,7 @@ export interface Mega645Api {
    * **Endpoint:** `GET /games/mega645/tickets/{ticketId}/entries`
    *
    * @param ticketId - ID vé (lấy từ `ticket.id` hoặc `placeBet` response)
-   * @returns Thông tin vé và danh sách entries kèm kết quả/thưởng
+   * @returns Danh sách entries kèm kết quả/thưởng của vé
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — ticketId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -179,8 +173,8 @@ export interface Mega645Api {
    * @example
    * ```ts
    * const data = await client.mega645.getTicketEntries("65abc123def456...");
-   * console.log(data.ticket.ticketNo); // "M645-20260307-00003"
-   * console.log(data.entries.length);   // 1 (mua 1 kỳ)
+   * console.log(data.entries.length);       // 1 (mua 1 kỳ)
+   * console.log(data.entries[0].drawId);    // "2026-03-07.001"
    * ```
    */
   getTicketEntries(ticketId: string): Promise<Mega645TicketEntriesResponse>;

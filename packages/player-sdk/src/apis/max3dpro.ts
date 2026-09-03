@@ -7,13 +7,10 @@ import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
   Max3dproCurrentDrawResponse,
-  Max3dproDrawInfo,
   Max3dproDrawResultInfo,
-  Max3dproDrawResultSummary,
   Max3dproEntryLinesParams,
   Max3dproEntryLinesResponse,
   Max3dproGameConfigResponse,
-  Max3dproLineInfo,
   Max3dproListAllTicketsParams,
   Max3dproListDrawResultsParams,
   Max3dproListDrawResultsResponse,
@@ -22,7 +19,6 @@ import type {
   Max3dproPlaceBetResponse,
   Max3dproTicketEntriesResponse,
   Max3dproTicketPurchaseInput,
-  Max3dproTicketSummary,
 } from "../max3dpro";
 
 /**
@@ -71,36 +67,35 @@ export interface Max3dproApi {
    * Đặt cược Max 3D Pro.
    *
    * Có 2 chế độ chơi:
-   * - `multiNumber` — chọn N bộ ba (N >= 3), hệ thống expand thành C(N,2) cặp
-   * - `multiDigit` — chọn 3 chữ số đầu + 3 chữ số cuối, hệ thống expand thành tổ hợp
+   * - `multiNumber` — chọn N bộ ba (3 ≤ N ≤ 20), hệ thống expand thành P(N,2) = N×(N-1) ordered pairs
+   * - `multiDigit` — chọn 3 chữ số đầu + 3 chữ số cuối, hệ thống expand thành tổ hợp hoán vị
    *
    * **Endpoint:** `POST /games/max3dpro/bets`
    *
-   * @param input - Thông tin vé: drawId, drawCount, boards (tối đa 4 boards)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
+   * @param input - Thông tin vé: drawIds, boards (số board tối đa mỗi vé do cấu hình game quyết định)
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, pricing.totalAmount, balance sau cược
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay đã đóng bán/không tồn tại, vượt số board/kỳ tối đa, không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
    * ```ts
    * import type { Max3dproTicketPurchaseInput } from "@megawin/player-sdk/max3dpro";
    *
-   * // multiNumber: 3 bộ ba → C(3,2) = 3 cặp
+   * // multiNumber: 3 bộ ba → P(3,2) = 3×2 = 6 ordered pairs
    * const result = await client.max3dpro.placeBet({
-   *   drawId: "2026-03-07.001",
-   *   drawCount: 1,
+   *   drawIds: ["2026-03-07.001"],
    *   boards: [{
    *     boardNo: "A",
    *     playMode: "multiNumber",
+   *     playType: "straight",
    *     triplets: ["123", "456", "789"],
    *   }],
    * });
    * console.log(result.ticketNo);    // "M3DP-20260307-00004"
-   * console.log(result.totalAmount); // 30000
-   * console.log(result.balance);     // 970000
+   * console.log(result.totalAmount); // 60000
+   * console.log(result.balance);     // 940000
    * ```
    */
   placeBet(input: Max3dproTicketPurchaseInput): Promise<Max3dproPlaceBetResponse>;
@@ -160,8 +155,8 @@ export interface Max3dproApi {
    * @example
    * ```ts
    * const data = await client.max3dpro.getTicketEntries("65abc123def456...");
-   * console.log(data.ticket.ticketNo); // "M3DP-20260307-00004"
    * for (const entry of data.entries) {
+   *   console.log(`Kỳ ${entry.drawId}: ${entry.status}`);
    *   if (entry.result) {
    *     // result.special, result.first, result.second, result.third đều là string[]
    *     console.log(`Đặc biệt: ${entry.result.special.join(", ")}`);
@@ -187,7 +182,9 @@ export interface Max3dproApi {
    * ```ts
    * const { lines } = await client.max3dpro.getEntryLines("entry-abc...", { size: 50 });
    * for (const line of lines) {
-   *   const tiers = line.matchResult?.tiers.map(t => t.tier).join(" + ") ?? "không trúng";
+   *   const tiers = line.matchResult.tiers.length > 0
+   *     ? line.matchResult.tiers.map(t => t.tier).join(" + ")
+   *     : "không trúng";
    *   console.log(`[${line.boardNo}][${line.playMode}]: ${line.triplets.join(" + ")} → giải: ${tiers}`);
    * }
    * ```

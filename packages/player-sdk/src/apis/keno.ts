@@ -48,7 +48,7 @@ import type {
  * // Đặt cược
  * const bet = await client.keno.placeBet({
  *   drawIds: [draw.currentDraw!.drawId],
- *   boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
+ *   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
  * });
  *
  * // Xem danh sách vé
@@ -131,12 +131,11 @@ export interface KenoApi {
    *
    * @param input - Thông tin đặt cược
    * @param input.drawIds - Danh sách drawId kỳ quay tham gia (1-30, không trùng)
-   * @param input.boards - Boards cược — bao gồm board chọn số (tối đa 2) và cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
+   * @param input.boards - Boards cược — bao gồm board chọn số và cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ). Số board tối đa mỗi vé do cấu hình game quyết định (mặc định hiện tại: 2)
    * @returns Thông tin vé vừa tạo gồm ticketId, pricing, balance sau cược, và counts
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay đã đóng bán/không tồn tại, vượt số board/kỳ tối đa, không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -145,21 +144,19 @@ export interface KenoApi {
    * const result = await client.keno.placeBet({
    *   drawIds: ["2026-02-25.001"],
    *   boards: [
-   *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
+   *     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
    *   ],
    * });
    * console.log(result.ticketNo);            // "KENO-20260307-00001"
    * console.log(result.pricing.totalAmount);  // 10000
    * console.log(result.balance);              // 990000
    *
-   * // Cược nhiều kỳ + cược bổ sung
+   * // Cược nhiều kỳ + board cược bổ sung
    * const result2 = await client.keno.placeBet({
    *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
    *   boards: [
-   *     { boardNo: "A", numbers: ["01", "15", "33"] },
-   *     { boardNo: "B", numbers: ["22", "44", "66", "77"] },
-   *     { playType: "bigSmall", bet: "big" },
-   *     { playType: "evenOdd", bet: "even" },
+   *     { boardNo: "A", playType: "pick3", numbers: ["22", "44", "66"] },
+   *     { boardNo: "B", playType: "bigSmall", bet: "big" },
    *   ],
    * });
    * console.log(result2.entryCount); // 3
@@ -170,12 +167,13 @@ export interface KenoApi {
   /**
    * Lấy danh sách vé Keno đang chờ xử lý.
    *
-   * Trả về các vé mà kỳ quay chưa kết thúc hoặc chưa settle xong.
-   * Hỗ trợ phân trang cursor-based và lọc theo ngày cược.
+   * Trả về TẤT CẢ các vé mà kỳ quay chưa kết thúc hoặc chưa settle xong, sắp xếp
+   * mới nhất trước. Hỗ trợ phân trang cursor-based. KHÔNG hỗ trợ lọc theo ngày
+   * (`from`/`to`) — dùng `listTickets()` nếu cần lọc theo khoảng ngày cược.
    *
    * **Endpoint:** `GET /games/keno/tickets/pending`
    *
-   * @param params - Tham số phân trang và lọc ngày (tùy chọn)
+   * @param params - Tham số phân trang (tùy chọn)
    * @returns Danh sách vé kèm cursor cho trang tiếp theo
    *
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -185,13 +183,6 @@ export interface KenoApi {
    * // Lấy trang đầu
    * const page1 = await client.keno.listPendingTickets({ size: 10 });
    * console.log(page1.tickets.length); // tối đa 10
-   *
-   * // Lọc theo ngày cược
-   * const filtered = await client.keno.listPendingTickets({
-   *   size: 10,
-   *   from: "2026-03-01",
-   *   to: "2026-03-05",
-   * });
    *
    * // Lấy trang tiếp theo
    * if (page1.nextCursor) {
@@ -245,7 +236,7 @@ export interface KenoApi {
    * **Endpoint:** `GET /games/keno/tickets/{ticketId}/entries`
    *
    * @param ticketId - ID vé Keno (lấy từ `ticket.id` hoặc `placeBet` response)
-   * @returns Thông tin vé kèm danh sách entries
+   * @returns Danh sách entries của vé (mỗi kỳ quay 1 entry) — KHÔNG kèm thông tin vé, dùng `listTickets()`/`listPendingTickets()` nếu cần thông tin vé
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — vé không tồn tại hoặc không thuộc player
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -254,8 +245,7 @@ export interface KenoApi {
    * ```ts
    * const data = await client.keno.getTicketEntries("65abc123def456...");
    *
-   * console.log(data.ticket.ticketNo); // "KENO-20260307-00001"
-   * console.log(data.entries.length);   // 5 (mua 5 kỳ = 5 entries)
+   * console.log(data.entries.length); // 5 (mua 5 kỳ = 5 entries)
    *
    * for (const entry of data.entries) {
    *   console.log(`Kỳ ${entry.drawId}: ${entry.status}`);
@@ -316,7 +306,7 @@ export interface KenoApi {
    * const draw = await client.keno.getDrawResult("2026-03-07.050");
    * console.log(draw.result.winningNumbers); // ["02", "10", ...]
    * for (const prize of draw.prizes) {
-   *   if (prize.pickCount !== undefined) {
+   *   if (prize.pickCount !== null) {
    *     console.log(`Pick${prize.pickCount} trúng ${prize.matchCount}: ${prize.winnerCount} bộ`);
    *   } else {
    *     console.log(`${prize.playType} ${prize.bet}: ${prize.winnerCount} bộ`);
@@ -342,7 +332,7 @@ export interface KenoApi {
    * @param params - Kỳ quay + bộ số cần kiểm tra (8–10 số distinct, zero-padded)
    * @returns `{ found: true, sets }` nếu bạn đã cược combo này; ngược lại `{ found: false }`
    *
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — số lượng số ngoài 8–10 hoặc số không hợp lệ
+   * @throws {@link ApiClientError} code `VALIDATION` — số lượng số ngoài 8–10 hoặc số không hợp lệ
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example

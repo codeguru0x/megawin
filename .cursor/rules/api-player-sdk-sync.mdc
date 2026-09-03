@@ -1,0 +1,81 @@
+---
+description: Sửa handler/DTO/enum của apps/api-player hoặc packages/game-*-application (player-facing) PHẢI đồng bộ tay sang packages/player-sdk trong CÙNG commit
+globs: apps/api-player/**/*.ts,packages/game-*-application/src/use-cases/player/**/*.ts,packages/game-*-application/src/use-cases/place-bet/**/*.ts,packages/game-*/src/entities/enums.ts
+alwaysApply: false
+---
+
+# api-player ↔ player-sdk — Sửa Bên Này BẮT BUỘC Sửa Bên Kia
+
+`@megawin/player-sdk` là artifact **public** (tenant cài qua npm/CDN, TypeDoc build ra docs công
+khai) mô tả contract HTTP của `apps/api-player`. Package này **không import** bất kỳ package
+backend nào (`@megawin/game-*`, `@megawin/app-core`, …) — xem `app-use-case-layering.mdc` §5. Hệ
+quả: **không có compile-time check nào** giữa response thật của handler và type SDK khai báo.
+`pnpm --filter @megawin/player-sdk check-types` PASS sạch dù response thật đã đổi hoàn toàn khác
+với type SDK — nó chỉ xác nhận SDK tự nhất quán với chính nó, không xác nhận đã đồng bộ đúng.
+
+**Sự cố đã xảy ra thật (2026-09):** audit toàn bộ 7 game phát hiện SDK lệch backend ở hàng chục
+điểm — field bịa hoàn toàn (`getTicketEntries()` khai `{ ticket, entries }` nhưng response thật
+chỉ có `{ entries }`), enum sai giá trị (`Bingo18BigSmallBet` range Tài/Xỉu/Hòa khai ngược với
+backend), và cả một public method (`client.player.getBalance()`) trỏ tới endpoint **chưa từng
+được implement**. Tất cả các lỗi này tồn tại nhiều tháng mà không ai phát hiện, vì không có gì tự
+động nhắc việc sync khi PR chỉ sửa phía `api-player`.
+
+## Bạn đang sửa file nào thì cần làm gì
+
+Bạn vừa mở/sửa một trong các nhóm file sau (khớp glob của rule này):
+
+| Bạn sửa gì | Ảnh hưởng SDK nào |
+|---|---|
+| `apps/api-player/src/handlers/{game}/*.ts` — Zod schema request/response | Input/Response type ở `packages/player-sdk/src/{game}/types.ts` |
+| `packages/game-{game}-application/src/use-cases/player/dto/*.dto.ts` | Field-by-field mirror ở `packages/player-sdk/src/{game}/types.ts` |
+| `packages/game-{game}-application/src/use-cases/player/mappers/*.ts` | Shape thật của field nested (VD `selection`, `entrySummary`, `payout.tiers`) — mapper là nơi field thật được build, DTO type có thể không đủ chi tiết |
+| `packages/game-{game}-application/src/use-cases/place-bet/dto/place-bet.dto.ts` | `{Game}TicketPurchaseInput`, `{Game}PlaceBetResponse` |
+| `packages/game-{game}/src/entities/enums.ts` (`PlayType`, `PrizeTier`, …) | `{Game}PlayType`, `{Game}PrizeTier`, … ở `packages/player-sdk/src/{game}/enums.ts` — cả **giá trị** lẫn **ý nghĩa JSDoc** (semantic, không chỉ tên) |
+| Thêm/xoá/đổi tên **endpoint** (route mới trong `*-endpoint.yml`, handler mới) | `packages/player-sdk/src/endpoints.ts` + method mới trên `{Game}Api` (`apis/{game}.ts`) |
+| `packages/game-core/src/entities/game-core.enums.ts` (`TicketStatus`, `EntryStatus`, `EntryOutcome`, `DrawStatus`) | Giá trị mirror ở `packages/player-sdk/src/common-types.ts` (`TicketStatus`, `EntryStatus`, `EntryOutcome` — export từ root `index.ts`, dùng chung cho field `status`/`outcome` ở **tất cả 7 game**). Đổi giá trị/thêm/xoá member ở game-core → PHẢI sửa `common-types.ts` cùng lúc; đổi ý nghĩa (không đổi giá trị) → chỉ cần sửa JSDoc `common-types.ts`, KHÔNG cần sửa từng game (đã tham chiếu type dùng chung). |
+
+## Việc BẮT BUỘC trước khi coi PR là xong
+
+1. Đọc lại DTO/mapper/handler VỪA SỬA bằng mắt — xác định chính xác field nào đổi (thêm/xoá/đổi
+   tên/đổi kiểu/đổi ý nghĩa).
+2. Mở `packages/player-sdk/src/{game}/types.ts` (và `enums.ts` nếu đổi enum) — sửa type tương ứng
+   field-by-field. KHÔNG đoán field nhìn tên giống — đọc đúng type/return value thật. Field
+   `status` (ticket/entry) và `outcome` (entry) dùng chung `TicketStatus`/`EntryStatus`/
+   `EntryOutcome` từ `packages/player-sdk/src/common-types.ts` — KHÔNG tự khai lại union string
+   riêng cho từng game.
+3. Nếu field đó cũng có mặt ở type aggregate cross-game (`packages/player-sdk/src/game/types.ts`,
+   VD `*JackpotDetails`) — cập nhật ở ĐÓ nữa. Không có gì tự lan truyền.
+4. Cập nhật JSDoc liên quan: mô tả field, `@example` (phải compile được với type mới — copy-paste
+   thật, không viết tay rồi quên field bắt buộc), và mọi chỗ liệt kê giá trị enum ví dụ (`VD:
+   "pending", "settled"...`) — soát lại đúng giá trị thật, không chỉ sửa 1 chỗ rồi bỏ sót ví dụ ở
+   type khác cùng field.
+5. Nếu là breaking change (đổi/xoá field hoặc method đang public) — ghi entry
+   `packages/player-sdk/CHANGELOG.md` kèm block **Migration**. Xem quy tắc đầy đủ (categories,
+   lời văn, breaking change là gì) tại `player-sdk-jsdoc.mdc` mục **Changelog**.
+6. Toàn bộ quy tắc viết JSDoc chi tiết (cấm leak backend, `/** */` vs `//`, format ticketNo/drawId,
+   anti-pattern) nằm ở `player-sdk-jsdoc.mdc` — đọc trước khi viết, không bịa convention mới.
+7. Verify: `pnpm --filter @megawin/player-sdk check-types` — chỉ xác nhận SDK tự nhất quán. Sau đó
+   **đọc lại bằng mắt** DTO backend đối chiếu type SDK — compiler không bắt được lệch hai phía.
+
+## Trường hợp không cần sửa SDK
+
+- Đổi tên biến/refactor nội bộ không đổi shape response ra ngoài.
+- Sửa logic tính toán nhưng field/type response giữ nguyên (đổi công thức tính `amount` nhưng vẫn
+  trả `amount: number` với cùng ý nghĩa — không cần sửa SDK, trừ khi JSDoc SDK có mô tả công thức
+  cũ, khi đó JSDoc mô tả công thức cũng phải sửa dù type không đổi, vì JSDoc sai công thức cũng là
+  lỗi đã từng xảy ra thật — xem `player-sdk-jsdoc.mdc`).
+- Sửa handler/use-case của app khác không phải `api-player` (VD `api-tenant`, `backoffice`).
+
+## Checklist nhanh trước khi merge
+
+- [ ] Đã grep `packages/player-sdk/src/{game}/` cho field/enum vừa đổi — còn field/JSDoc nào nhắc
+      giá trị hoặc shape cũ không?
+- [ ] `@example` trong SDK method/type liên quan còn compile được với field mới không?
+- [ ] Nếu đổi enum dùng chung (`game-core.enums.ts`) — đã grep cả 7 thư mục
+      `packages/player-sdk/src/{game}/types.ts` cho JSDoc ví dụ giá trị cũ chưa?
+- [ ] Breaking change đã có entry `CHANGELOG.md` kèm Migration?
+- [ ] Reviewer của PR sửa `api-player`/DTO **phải** tự hỏi: "PR này có cần sửa
+      `packages/player-sdk` không?" trước khi approve — không có compiler nhắc việc này.
+
+Xem đầy đủ quy tắc SDK (JSDoc, README, changelog, release checklist thêm game mới, game registry)
+tại `.cursor/rules/player-sdk-jsdoc.mdc`.

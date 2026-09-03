@@ -5,6 +5,60 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ---
 
+## [1.0.21] - 2026-09-01
+
+Cập nhật document và type của các API.
+
+---
+
+### Migration
+
+```ts
+// Trạng thái vé/entry — cập nhật theo union literal mới (Keno, Bingo18, Mega645, Lotto535, Power655)
+if (ticket.status === "voided") { ... }   // Trước
+if (ticket.status === "void") { ... }     // Sau
+
+// Trạng thái vé/entry giờ dùng type dùng chung — import trực tiếp từ root package, không cần
+// import lại theo từng game (Keno, Max3d, Max3dPro, Bingo18, Mega645, Lotto535, Power655)
+import { TicketStatus, EntryStatus, EntryOutcome } from "@megawin/player-sdk";
+
+if (ticket.status === TicketStatus.Completed) { ... }
+if (entry.outcome === EntryOutcome.Win) { ... }
+
+// Mega645/Power655/Max3dPro — outcome giờ đầy đủ "void" (kỳ quay bị huỷ), trước đây có thể
+// thiếu giá trị này (bị bỏ sót trong union hoặc khai `string` trần)
+if (entry.outcome === "void") { /* entry bị huỷ, tiền cược đã hoàn */ }
+
+// getTicketEntries() không còn trả `ticket` (Keno, Max3d, Bingo18, Mega645, Lotto535, Power655)
+const data = await client.<game>.getTicketEntries(ticketId);
+console.log(data.ticket.ticketNo);                    // Trước — lỗi, field không tồn tại
+console.log(data.entries[0]?.entrySummary.ticketNo);  // Sau
+
+// placeBet() — input dùng drawIds (Max3d, Mega645, Power655, Max3dPro)
+await client.<game>.placeBet({ drawId: "...", drawCount: 2, boards: [...] });   // Trước
+await client.<game>.placeBet({ drawIds: ["...", "..."], boards: [...] });        // Sau
+
+// placeBet() response — tổng tiền nằm trong pricing (Mega645, Power655)
+console.log(result.totalAmount);          // Trước
+console.log(result.pricing.totalAmount);  // Sau
+
+// Bingo 18 — range Lớn/Hòa/Nhỏ đổi hoàn toàn, RÀ SOÁT lại mọi logic hiển thị hardcode theo range cũ
+if (bet === "big") { /* Trước: hiểu là Tài 11-18. Sau: Lớn 12-18 */ }
+
+// Mega645/Power655 — jackpot không còn nằm trong getCurrentDraw()
+const draw = await client.mega645.getCurrentDraw();
+console.log(draw.currentDraw?.jackpotCurrentAmount);  // Trước — lỗi, field không tồn tại
+const jackpot = await client.mega645.getJackpot();    // Sau — gọi riêng
+console.log(jackpot.currentAmount);
+
+// client.player.getBalance() đã bị xoá hoàn toàn (không tồn tại backend)
+const balance = await client.player.getBalance();  // Trước — lỗi, client.player không tồn tại
+const result = await client.keno.placeBet({ ... }); // Sau — đọc balance từ response có ảnh hưởng ví
+console.log(result.balance);
+```
+
+---
+
 ## [1.0.20] - 2026-08-13
 
 ### Added — `client.game.jackpots.list()`

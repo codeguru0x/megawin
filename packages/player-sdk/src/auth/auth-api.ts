@@ -48,7 +48,7 @@ export interface AuthApi {
    * });
    *
    * // Mọi request sau đó tự gửi Bearer token
-   * const balance = await client.player.getBalance();
+   * const draw = await client.keno.getCurrentDraw();
    * ```
    */
   setTokens(tokens: AuthTokens): Promise<void>;
@@ -131,7 +131,7 @@ export function createAuthApi(deps: AuthApiDeps): AuthApi {
       if (!tokens.idToken) {
         console.warn(
           "[MegaWin SDK] setTokens: idToken is missing. " +
-            "API Gateway requires the ID Token for authorization (Bearer header). " +
+            "The server requires the ID Token for authorization (Bearer header). " +
             "Requests will fail with 401 until a valid idToken is provided.",
         );
       }

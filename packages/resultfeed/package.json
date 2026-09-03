@@ -1,0 +1,58 @@
+{
+  "name": "@megawin/resultfeed",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ResultFeed domain – entities, rules, indexes (internal only)",
+  "scripts": {
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "check-types": "tsc --noEmit",
+    "prebuild": "rm -rf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "exports": {
+    "./entities": {
+      "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
+      "default": "./dist/entities/index.js"
+    },
+    "./entities/*": {
+      "types": "./src/entities/*.ts",
+      "import": "./src/entities/*.ts",
+      "default": "./dist/entities/*.js"
+    },
+    "./rules": {
+      "types": "./src/rules/index.ts",
+      "import": "./src/rules/index.ts",
+      "default": "./dist/rules/index.js"
+    },
+    "./rules/*": {
+      "types": "./src/rules/*.ts",
+      "import": "./src/rules/*.ts",
+      "default": "./dist/rules/*.js"
+    },
+    "./indexes": {
+      "types": "./src/indexes/index.ts",
+      "import": "./src/indexes/index.ts",
+      "default": "./dist/indexes/index.js"
+    }
+  },
+  "keywords": ["megawin", "resultfeed", "domain"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@megawin/shared": "workspace:*",
+    "mongodb": "^7.5.0"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
+    "@types/node": "^25.9.4",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

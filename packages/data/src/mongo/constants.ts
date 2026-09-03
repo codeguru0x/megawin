@@ -26,6 +26,8 @@ export const Constants = {
     ReportDbName: "megawin-report",
     /** DB audit log — fire-and-forget, TTL. (Triển khai ở plan riêng.) */
     AuditDbName: "megawin-audit",
+    /** DB sản phẩm ResultFeed — thu thập/đồng thuận kết quả xổ số từ nhiều nguồn. Cùng cluster core. */
+    ResultFeedDbName: "megawin-resultfeed",
 
     Paging: {
       Size: Pagination.Default.Size,

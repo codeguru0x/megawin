@@ -1,6 +1,6 @@
 "use client";
 
-import { Shuffle } from "lucide-react";
+import { Dices } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { env } from "@/env";
@@ -27,7 +27,7 @@ function RandomFillButton({ onFill, className }: { onFill: () => void; className
 
   return (
     <Button type="button" variant="ghost" size="sm" onClick={onFill} className={className}>
-      <Shuffle className="mr-1.5 size-3.5" />
+      <Dices className="mr-1.5 size-3.5" />
       Ngẫu nhiên
     </Button>
   );

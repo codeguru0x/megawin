@@ -3,6 +3,8 @@
  * @module
  */
 
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
+
 // ─────────────────────────────────────────────
 // Input Types
 // ─────────────────────────────────────────────
@@ -223,7 +225,7 @@ export interface Max3dproDrawInfo {
  * Thông tin chi tiết 1 line trong entry Max 3D Pro.
  *
  * Mỗi line là 1 cặp bộ ba số expand từ multiNumber hoặc multiDigit input.
- * `matchResult` chỉ có sau khi kỳ quay đã settle.
+ * Endpoint chỉ trả lines sau khi kỳ quay đã settle — `matchResult` luôn có mặt.
  */
 export interface Max3dproLineInfo {
   /** Ký hiệu board chứa line này. VD: `"A"`, `"B"`. */
@@ -249,8 +251,11 @@ export interface Max3dproLineInfo {
    * `winAmount = unitPrize × betCount`. UI hiển thị "×N" khi betCount > 1.
    */
   betCount: number;
-  /** Kết quả đối chiếu. `undefined` nếu kỳ quay chưa kết thúc. */
-  matchResult?: {
+  /**
+   * Kết quả đối chiếu. Luôn có mặt — endpoint chỉ trả dữ liệu khi entry đã settled
+   * (trả lỗi 400 trước đó nếu chưa), nên field này KHÔNG optional per-line.
+   */
+  matchResult: {
     /**
      * Danh sách các giải trúng (gộp giải theo luật Vietlott Max 3D Pro).
      * Mảng rỗng nếu không trúng giải nào.
@@ -408,8 +413,16 @@ export interface Max3dproTicketSummary {
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"M3DP-20260307-00004"`. */
   ticketNo: string;
-  /** Trạng thái vé. */
-  status: string;
+  /**
+   * Trạng thái vé — dùng chung cho tất cả game, xem {@link TicketStatus}:
+   * - `"paid"` — Đã thanh toán, vé bị khoá (immutable), entries đã được tạo.
+   * - `"completed"` — Tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ
+   *   settled.
+   * - `"refunded"` — Đã hoàn tiền toàn bộ. Chỉ xảy ra khi TẤT CẢ kỳ quay trong vé đều bị huỷ
+   *   (không kỳ nào settled).
+   * - `"void"` — Vô hiệu hoá toàn bộ vé (gian lận, lỗi nghiêm trọng).
+   */
+  status: TicketStatus;
   /** Kế hoạch kỳ quay. */
   drawPlan: {
     drawIds: string[];
@@ -492,8 +505,8 @@ export interface Max3dproEntryResult {
   id: string;
   /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Trạng thái entry. */
-  status: string;
+  /** Trạng thái entry — dùng chung cho tất cả game, xem {@link EntryStatus}. */
+  status: EntryStatus;
   /** Tiền cược kỳ này (VND) = betUnitCount × unitPrice. */
   amount: number;
   /** Đơn giá 1 lần tham gia dự thưởng (VND). */
@@ -513,12 +526,14 @@ export interface Max3dproEntryResult {
   };
 
   /**
-   * Kết quả tổng của entry sau settle.
-   * - `"win"` — có ít nhất 1 hạng giải trúng
-   * - `"loss"` — không trúng giải nào
+   * Kết quả tổng của entry sau settle — dùng chung cho tất cả game, xem {@link EntryOutcome}:
+   * - `"win"` — có ít nhất 1 hạng giải trúng.
+   * - `"loss"` — không trúng giải nào.
+   * - `"void"` — kỳ quay bị huỷ, entry vô hiệu, tiền cược được hoàn lại.
+   *
    * `undefined` nếu chưa settle.
    */
-  outcome?: "win" | "loss";
+  outcome?: EntryOutcome;
 
   /** Chi tiết trả thưởng. `undefined` nếu chưa settle. */
   payout?: {
@@ -558,8 +573,13 @@ export interface Max3dproPlaceBetResponse {
   ticketId: string;
   /** Mã vé hiển thị cho người chơi. VD: `"M3DP-20260307-00004"`. */
   ticketNo: string;
-  /** Trạng thái vé sau khi tạo. */
-  status: string;
+  /**
+   * Trạng thái vé sau khi tạo — dùng chung cho tất cả game, xem {@link TicketStatus}. Ngay sau
+   * khi đặt cược thành công luôn là `"paid"`; các giá trị khác (`"refunded"`, `"void"`,
+   * `"completed"`) chỉ xuất hiện sau đó khi tra cứu lại vé qua
+   * `listTickets`/`listPendingTickets`/`getTicketEntries`.
+   */
+  status: TicketStatus;
   /** Số dư ví player sau khi trừ tiền cược (VND). */
   balance: number;
 
@@ -742,7 +762,7 @@ export interface Max3dproTicketEntriesResponse {
  * const { lines, nextCursor } = await client.max3dpro.getEntryLines("entry-abc...", { size: 50 });
  * for (const line of lines) {
  *   console.log(`[${line.boardNo}][${line.playMode}]: ${line.triplets.join(" + ")}`);
- *   if (line.matchResult && line.matchResult.tiers.length > 0) {
+ *   if (line.matchResult.tiers.length > 0) {
  *     const tierNames = line.matchResult.tiers.map(t => t.tier).join(" + ");
  *     console.log(`  Giải: ${tierNames}, tổng thưởng: ${line.matchResult.winAmount} VND`);
  *   } else {

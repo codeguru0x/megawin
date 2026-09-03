@@ -14,6 +14,9 @@ export interface ApiSuccessResponse<T = unknown> {
   meta?: ApiResponseMeta;
 }
 
+// Mọi endpoint hiện có nhúng cursor pagination (`nextCursor`, `size`) trực tiếp vào `data`,
+// không populate `meta`. Field này giữ lại cho tương lai (page-based pagination) — hiện tại
+// luôn `undefined` trên response thật.
 export interface ApiResponseMeta {
   total?: number;
   page?: number;

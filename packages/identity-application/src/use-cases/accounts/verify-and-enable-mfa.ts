@@ -3,6 +3,7 @@ import { UseCase } from "@megawin/app-core/use-cases";
 import type { AuditActor } from "@megawin/audit/logger";
 import { MfaStatus } from "@megawin/identity/entities";
 import { AppException } from "@megawin/shared/errors";
+import { logError } from "@megawin/shared/utils";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
 import { auditEnableMfa } from "../../services/audit-log";
@@ -44,7 +45,10 @@ export class VerifyAndEnableMfaUseCase extends UseCase<VerifyAndEnableMfaInput, 
         throw AppException.badRequest("Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.");
       }
 
-      throw AppException.internal(`Xác thực MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
+      // KHÔNG nhồi error.message (raw Cognito exception) vào AppException — đã là AppException
+      // nên UseCase.handleError() cho qua nguyên văn, lộ chi tiết hạ tầng cho client.
+      logError("VerifyAndEnableMfaUseCase.adminVerifySoftwareToken", error, { username: input.username });
+      throw AppException.internal("Không thể xác thực mã MFA, vui lòng thử lại sau.");
     }
 
     await adminUpdateMfa({

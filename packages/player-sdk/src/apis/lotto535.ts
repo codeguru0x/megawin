@@ -12,11 +12,8 @@ import type {
   Lotto535ComboPopularityParams,
   Lotto535ComboPopularityResponse,
   Lotto535CurrentDrawResponse,
-  Lotto535DrawInfo,
   Lotto535DrawResultDetail,
-  Lotto535DrawResultSummary,
   Lotto535EntryLinesResponse,
-  Lotto535EntryResult,
   Lotto535GameConfigResponse,
   Lotto535JackpotResponse,
   Lotto535ListAllTicketsParams,
@@ -27,7 +24,6 @@ import type {
   Lotto535PlaceBetResponse,
   Lotto535TicketEntriesResponse,
   Lotto535TicketPurchaseInput,
-  Lotto535TicketSummary,
 } from "../lotto535";
 
 /**
@@ -116,8 +112,7 @@ export interface Lotto535Api {
    *
    * if (data.currentDraw) {
    *   console.log("Kỳ hiện tại:", data.currentDraw.drawId);
-   *   console.log("Jackpot:", data.currentDraw.jackpotAmount);
-   *   console.log("Đóng bán lúc:", data.currentDraw.salesCloseAt);
+   *   console.log("Đóng bán lúc:", data.currentDraw.sales.closeAt);
    * }
    *
    * console.log("Số kỳ đang active:", data.activeDraws.length);
@@ -140,7 +135,7 @@ export interface Lotto535Api {
    * @example
    * ```ts
    * const data = await client.lotto535.getJackpot();
-   * console.log(`Jackpot: ${data.jackpotAmount.toLocaleString()} VND`);
+   * console.log(`Jackpot: ${data.currentAmount.toLocaleString()} VND`);
    * // "Jackpot: 12,000,000,000 VND"
    * ```
    */
@@ -156,12 +151,11 @@ export interface Lotto535Api {
    *
    * @param input - Thông tin đặt cược
    * @param input.drawIds - Danh sách drawId các kỳ tham gia. Format mỗi ID: `YYYY-MM-DD.NNN`
-   * @param input.boards - Danh sách boards (tối đa 5, không trùng boardNo)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
+   * @param input.boards - Danh sách boards, không trùng boardNo (số board tối đa do cấu hình game quyết định)
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, pricing.totalAmount, balance sau cược
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay đã đóng bán/không tồn tại, vượt số board hoặc số kỳ tối đa, không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -179,7 +173,7 @@ export interface Lotto535Api {
    *   }],
    * });
    * console.log(result.ticketNo);    // "L535-20260307-00008"
-   * console.log(result.totalAmount); // 30000
+   * console.log(result.pricing.totalAmount); // 30000
    * console.log(result.balance);     // 970000
    *
    * // Vé Bao (MainCover): 8 số chính + 1 số đặc biệt, 3 kỳ
@@ -204,7 +198,7 @@ export interface Lotto535Api {
    *     },
    *   ],
    * });
-   * console.log(result2.totalAmount); // 186000
+   * console.log(result2.pricing.totalAmount); // 186000
    * ```
    */
   placeBet(input: Lotto535TicketPurchaseInput): Promise<Lotto535PlaceBetResponse>;
@@ -262,7 +256,7 @@ export interface Lotto535Api {
    * });
    *
    * for (const ticket of march.tickets) {
-   *   const win = ticket.totalWinAmount ?? 0;
+   *   const win = ticket.settlement?.totalWinAmount ?? 0;
    *   console.log(`${ticket.ticketNo}: thắng ${win} VND`);
    * }
    * ```
@@ -287,7 +281,6 @@ export interface Lotto535Api {
    * ```ts
    * const data = await client.lotto535.getTicketEntries("TKT-L01...");
    *
-   * console.log(data.ticket.ticketNo); // "L535-20260307-00008"
    * console.log(data.entries.length);   // 3 (mua 3 kỳ = 3 entries)
    *
    * for (const entry of data.entries) {
@@ -300,7 +293,7 @@ export interface Lotto535Api {
    *   if (entry.payout) {
    *     console.log(`  Thắng: ${entry.payout.winAmount} VND`);
    *     for (const tier of entry.payout.tiers) {
-   *       console.log(`    ${tier.label}: ${tier.hitCount} line, ${tier.amount} VND`);
+   *       console.log(`    ${tier.tier}: ${tier.hitCount} line, ${tier.amount} VND`);
    *     }
    *   }
    * }
@@ -329,8 +322,8 @@ export interface Lotto535Api {
    * console.log(`${data.lines.length} lines`);
    *
    * for (const line of data.lines) {
-   *   const main = line.mainNumbers.join(", ");
-   *   console.log(`Chính: [${main}], ĐB: ${line.specialNumber}`);
+   *   const main = line.main.join(", ");
+   *   console.log(`Chính: [${main}], ĐB: ${line.special}`);
    * }
    * ```
    */
@@ -411,7 +404,7 @@ export interface Lotto535Api {
    * @param params - `drawId` + bộ số (`numbers` 4-15 số chính, `specials` 1-12 số ĐB)
    * @returns Độ đông (`sets`), và (nếu bộ chuẩn) mẫu số chia Jackpot + cờ split
    *
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — số lượng không khớp playType nào
+   * @throws {@link ApiClientError} code `VALIDATION` — số lượng không khớp playType nào
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example

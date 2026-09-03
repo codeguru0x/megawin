@@ -1,0 +1,6 @@
+get-results:
+  handler: src/handlers/results/get-results.handler
+  events:
+    - httpApi:
+        path: /results
+        method: get

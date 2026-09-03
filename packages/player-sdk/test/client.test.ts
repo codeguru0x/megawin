@@ -42,7 +42,6 @@ describe("createPlayerClient", () => {
     expect(client.auth).toBeDefined();
     expect(client.keno).toBeDefined();
     expect(client.lotto535).toBeDefined();
-    expect(client.player).toBeDefined();
     expect(client.api).toBeDefined();
   });
 

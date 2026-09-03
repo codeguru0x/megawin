@@ -41,6 +41,8 @@ export const AuditCategory = {
   Finance: "finance",
   System: "system",
   Worker: "worker",
+  /** Quyết định người verify/reject kết quả ResultFeed (`03-consensus.plan.md §5`). */
+  ResultFeed: "resultfeed",
 } as const;
 export type AuditCategory = (typeof AuditCategory)[keyof typeof AuditCategory];
 
@@ -65,6 +67,10 @@ export const AuditTargetType = {
   Account: "account",
   Tenant: "tenant",
   Worker: "worker",
+  /** 1 doc `consensus` ResultFeed (game × kỳ) — target của `AUDIT_ACTIONS.consensus.*`. */
+  ResultFeedConsensus: "resultfeed_consensus",
+  /** 1 doc `sources` ResultFeed (nguồn thu thập) — target của `AUDIT_ACTIONS.resultfeed.updateSource`. */
+  ResultFeedSource: "resultfeed_source",
 } as const;
 export type AuditTargetType = (typeof AuditTargetType)[keyof typeof AuditTargetType];
 
@@ -158,6 +164,19 @@ export const AUDIT_ACTIONS = {
    */
   worker: {
     setEnabled: "worker.set_enabled",
+  },
+  /**
+   * category=resultfeed, target=resultfeed_consensus|resultfeed_source. Quyết định NGƯỜI đưa
+   * ra trên kết quả tổng hợp từ nhiều nguồn (`03-consensus.plan.md §5`) và thay đổi cấu hình
+   * nguồn thu thập (`07-admin-management-page.plan.md §3.2`) — KHÁC quyết định MÁY
+   * (`applyMachineDecision`, không audit vì chạy tự động mọi tick, audit sẽ ngập log vô
+   * nghĩa). Chỉ audit hành động CON NGƯỜI bấm nút.
+   */
+  resultfeed: {
+    verifyConsensus: "resultfeed.verify_consensus",
+    rejectConsensus: "resultfeed.reject_consensus",
+    /** Sửa `role`/`trustWeight`/`isEnabled`/... của 1 nguồn thu thập (trang `/resultfeed/sources`). */
+    updateSource: "resultfeed.update_source",
   },
 } as const;
 

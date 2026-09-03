@@ -60,6 +60,7 @@ export { mega645Keys } from "./mega645";
 export { playerDetailKeys } from "./player-detail";
 export { power655Keys } from "./power655";
 export { reportsKeys } from "./reports";
+export { type ConsensusListFilters, resultfeedKeys } from "./resultfeed";
 export { tenantDispatchKeys } from "./tenant-dispatch";
 export { tenantsKeys } from "./tenants";
 export { txLogsKeys } from "./tx-logs";
@@ -78,6 +79,7 @@ import { mega645Keys } from "./mega645";
 import { playerDetailKeys } from "./player-detail";
 import { power655Keys } from "./power655";
 import { reportsKeys } from "./reports";
+import { resultfeedKeys } from "./resultfeed";
 import { tenantDispatchKeys } from "./tenant-dispatch";
 import { tenantsKeys } from "./tenants";
 import { txLogsKeys } from "./tx-logs";
@@ -97,6 +99,7 @@ export const queryKeys = {
   bingo18: bingo18Keys,
   reports: reportsKeys,
   dashboard: dashboardKeys,
+  resultfeed: resultfeedKeys,
   txLogs: txLogsKeys,
   tenantDispatch: tenantDispatchKeys,
   auditLogs: auditLogsKeys,

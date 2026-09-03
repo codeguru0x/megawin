@@ -15,7 +15,6 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import { ObjectId } from "mongodb";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
@@ -49,7 +48,7 @@ export class SyncTicketSummariesUseCase extends UseCase<DrawSyncInput, SyncTicke
         return { drawId, done: true };
       }
 
-      const ticketIds = tickets.map((t) => new ObjectId(t.ticketId));
+      const ticketIds = tickets.map((t) => t.ticketId);
       const totalDrawsMap = new Map(tickets.map((t) => [t.ticketId, t.totalDraws]));
 
       const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(ticketIds);

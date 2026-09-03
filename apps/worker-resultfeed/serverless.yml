@@ -1,0 +1,47 @@
+app: megawin
+service: mw-worker-resultfeed
+
+plugins:
+  - serverless-offline
+
+custom:
+  prune:
+    automatic: true
+    number: 3
+    includeLayers: true
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+  logRetentionInDays: 14
+  profile: sls_deploy_${opt:stage, self:provider.stage}
+  environment:
+    STAGE: ${opt:stage, self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
+    # Oxylabs Web Unblocker — API user/pass RIÊNG của Web Unblocker (Dashboard → Web
+    # Unblocker → Users), KHÔNG phải login dashboard. Xem 02-fetch-parse.plan.md §5.4.
+    OXYLABS_USERNAME: ${env:OXYLABS_USERNAME, ssm:/${opt:stage, self:provider.stage}/megawin/OXYLABS_USERNAME}
+    OXYLABS_PASSWORD: ${env:OXYLABS_PASSWORD, ssm:/${opt:stage, self:provider.stage}/megawin/OXYLABS_PASSWORD}
+    # context.dev — secondary provider (failover khi Oxylabs lỗi). Xem plan §5.1.
+    CONTEXT_DEV_API_KEY: ${env:CONTEXT_DEV_API_KEY, ssm:/${opt:stage, self:provider.stage}/megawin/CONTEXT_DEV_API_KEY}
+    # Testing-only override (03-consensus.plan.md §6.1) — mặc định "true" (an toàn,
+    # đúng hành vi production). CHỈ set "true" qua env riêng của stage thử nghiệm.
+    RESULTFEED_AUTO_PUBLISH_UNVERIFIED: ${env:RESULTFEED_AUTO_PUBLISH_UNVERIFIED, 'true'}
+
+  # KHÔNG khai báo IAM statements Kinesis/SQS/Step Functions ở đây — ResultFeed G2 chỉ
+  # fetch HTTP + ghi Mongo, không dùng queue/stream/state machine nào. Thêm lại khi
+  # component thật sự cần (VD: consensus-tick dùng SQS thì thêm statement lúc đó).
+
+stages:
+  default:
+    observability: false
+
+build:
+  esbuild:
+    configFile: ./esbuild.config.mjs
+
+functions:
+  - ${file(src/functions/fetch.yml)}
+  - ${file(src/functions/consensus.yml)}

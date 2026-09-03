@@ -25,6 +25,7 @@ export const MODULES = {
   tenantDispatch: "tenant-dispatch",
   auditLogs: "audit-logs",
   workers: "workers",
+  resultfeed: "resultfeed",
 } as const;
 
 /** Union type tất cả module ID hợp lệ */

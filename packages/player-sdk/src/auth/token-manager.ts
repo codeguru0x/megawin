@@ -131,7 +131,7 @@ export class TokenManager {
   }
 
   /**
-   * Lấy ID Token để gửi qua Bearer header cho API Gateway HTTP API v2.
+   * Lấy ID Token để gửi qua Bearer header cho mọi request API.
    * Tự động refresh nếu token sắp hết hạn (< 5 phút).
    */
   async getIdToken(): Promise<string | null> {
@@ -139,8 +139,8 @@ export class TokenManager {
     if (!tokens) return null;
 
     if (!this.isExpired(tokens)) {
-      // idToken là bắt buộc — không fallback sang accessToken vì API Gateway
-      // JWT authorizer yêu cầu aud claim chỉ có trên idToken.
+      // idToken là bắt buộc — không fallback sang accessToken vì access token
+      // không đủ thông tin định danh cần thiết cho authorization ở phía server.
       return tokens.idToken ?? null;
     }
 

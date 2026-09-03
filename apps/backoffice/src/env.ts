@@ -69,6 +69,18 @@ export const env = createEnv({
     POWER655_RESETTLE_SFN_ARN: z.string().min(1),
     LOTTO535_RESETTLE_SFN_ARN: z.string().min(1),
     MEGA645_RESETTLE_SFN_ARN: z.string().min(1),
+
+    /**
+     * ResultFeed client mode — "direct" (mặc định) = gọi `PullResultsUseCase`
+     * (`@megawin/resultfeed-application`) trong tiến trình, nhanh, cùng `MONGODB_URI`/cluster.
+     * "http" = luôn đi qua `apps/api-resultfeed` + API key (đúng contract HTTP thật, dùng khi 2
+     * hệ thống tách cluster/deploy độc lập).
+     */
+    RESULTFEED_CLIENT_MODE: z.enum(["direct", "http"]).default("direct"),
+    /** Chỉ cần khi `RESULTFEED_CLIENT_MODE="http"`. */
+    RESULTFEED_API_URL: z.url().optional(),
+    /** Chỉ cần khi `RESULTFEED_CLIENT_MODE="http"` — khớp `RESULTFEED_API_KEY` của `apps/api-resultfeed`. */
+    RESULTFEED_API_KEY: z.string().min(1).optional(),
   },
 
   client: {

@@ -7,6 +7,7 @@
  * @module
  */
 
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
 import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -200,19 +201,14 @@ export interface KenoTicketPurchaseInput {
  * Tham số phân trang cho danh sách vé Keno đang chờ.
  *
  * Cursor-based pagination — hiệu quả hơn offset pagination cho dataset lớn.
- * Hỗ trợ lọc theo khoảng ngày cược (giờ Việt Nam).
+ *
+ * KHÔNG hỗ trợ lọc theo ngày (`from`/`to`) — server luôn trả TẤT CẢ vé chưa
+ * settle/void, sắp xếp mới nhất trước. Cần lọc theo ngày? Dùng `listTickets()`.
  *
  * @example
  * ```ts
  * // Trang đầu tiên
  * const page1 = await client.keno.listPendingTickets({ size: 10 });
- *
- * // Lọc theo ngày cược
- * const filtered = await client.keno.listPendingTickets({
- *   size: 10,
- *   from: "2026-03-01",
- *   to: "2026-03-05",
- * });
  *
  * // Trang tiếp theo
  * const page2 = await client.keno.listPendingTickets({
@@ -226,10 +222,6 @@ export interface KenoListTicketsParams {
   size?: number;
   /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
   cursor?: string;
-  /** Lọc từ ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
-  from?: string;
-  /** Lọc đến ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
-  to?: string;
 }
 
 /**
@@ -337,8 +329,17 @@ export interface KenoTicketSummary {
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"KENO-20260307-00001"`. */
   ticketNo: string;
-  /** Trạng thái vé. */
-  status: string;
+  /**
+   * Trạng thái vé — dùng chung cho tất cả game, xem {@link TicketStatus}:
+   * - `"paid"` — Đã thanh toán, vé bị khoá (immutable), entries đã được tạo.
+   * - `"completed"` — Tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ
+   *   settled.
+   * - `"refunded"` — Đã hoàn tiền toàn bộ. Chỉ xảy ra khi TẤT CẢ kỳ quay trong vé đều bị huỷ
+   *   (không kỳ nào settled).
+   * - `"void"` — Vô hiệu hoá toàn bộ vé (gian lận, lỗi nghiêm trọng). Khác `"refunded"`: không
+   *   phải kết quả tự nhiên của việc một phần kỳ bị huỷ, mà là can thiệp trên toàn bộ vé.
+   */
+  status: TicketStatus;
 
   /** Kế hoạch kỳ quay. */
   drawPlan: {
@@ -465,8 +466,8 @@ export interface KenoListTicketsResponse {
  * Kết quả kỳ quay trong entry Keno.
  */
 export interface KenoDrawResult {
-  /** 20 số trúng thưởng (1-80). */
-  winningNumbers: number[];
+  /** 20 số trúng thưởng, dạng zero-padded string `"01"`–`"80"`. */
+  winningNumbers: string[];
   /** Thời điểm công bố (ISO 8601). */
   publishedAt: string;
   /** Số lượng số lớn (41-80) trong kết quả. */
@@ -542,8 +543,8 @@ export interface KenoEntryInfo {
   id: string;
   /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Trạng thái entry. */
-  status: string;
+  /** Trạng thái entry — dùng chung cho tất cả game, xem {@link EntryStatus}. */
+  status: EntryStatus;
   /** Tiền cược kỳ này (VND) = betUnitCount × unitPrice. */
   amount: number;
   /** Mệnh giá 1 lần tham gia dự thưởng (VND). */
@@ -574,8 +575,16 @@ export interface KenoEntryInfo {
 
   /** Kết quả kỳ quay. `undefined` nếu chưa quay. */
   result?: KenoDrawResult;
-  /** Kết quả tổng: thắng/thua. `undefined` nếu chưa settle. */
-  outcome?: string;
+  /**
+   * Kết quả tổng của entry — dùng chung cho tất cả game, xem {@link EntryOutcome} (khác với
+   * `payout.boardPayouts[].outcome` — đó là kết quả riêng từng board cược bổ sung):
+   * - `"win"` — Thắng, có ít nhất 1 board trúng giải.
+   * - `"loss"` — Thua, không board nào trúng giải.
+   * - `"void"` — Kỳ quay bị huỷ, entry vô hiệu, tiền cược được hoàn lại.
+   *
+   * `undefined` nếu entry chưa settle.
+   */
+  outcome?: EntryOutcome;
   /** Chi tiết trả thưởng. `undefined` nếu chưa settle. */
   payout?: KenoEntryPayoutSummary;
 }
@@ -613,7 +622,7 @@ export interface KenoTicketEntriesResponse {
  * ```ts
  * const result = await client.keno.placeBet({
  *   drawIds: ["2026-02-25.001"],
- *   boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
+ *   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
  * });
  * console.log(result.ticketId);            // "65abc..."
  * console.log(result.ticketNo);            // "KENO-20260307-00001"
@@ -626,8 +635,13 @@ export interface KenoPlaceBetResponse {
   ticketId: string;
   /** Mã vé hiển thị cho người chơi. VD: `"KENO-20260307-00001"`. */
   ticketNo: string;
-  /** Trạng thái vé sau khi tạo. */
-  status: string;
+  /**
+   * Trạng thái vé sau khi tạo — dùng chung cho tất cả game, xem {@link TicketStatus}. Ngay sau
+   * khi đặt cược thành công luôn là `"paid"`; các giá trị khác (`"refunded"`, `"void"`,
+   * `"completed"`) chỉ xuất hiện sau đó khi tra cứu lại vé qua
+   * `listTickets`/`listPendingTickets`/`getTicketEntries`.
+   */
+  status: TicketStatus;
   /** Số dư ví player sau khi trừ tiền cược (VND). */
   balance: number;
 
@@ -669,13 +683,16 @@ export interface KenoPlaceBetResponse {
 export interface KenoGameRules {
   /** Mệnh giá 1 lần tham gia (VND). VD: 10000. */
   unitPrice: number;
-  /** Số panel tối đa / vé. VD: 3 (A, B, C). */
+  /**
+   * Số panel tối đa / vé. Default hiện tại: 2 (A, B) — giá trị vận hành cấu hình,
+   * có thể được thay đổi qua backoffice.
+   */
   maxBasicBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa. VD: 20. */
   maxDrawCount: number;
   /** Khoảng cách giữa các kỳ quay (phút). VD: 10. */
   drawIntervalMinutes: number;
-  /** Giờ bắt đầu quay. VD: "06:00". */
+  /** Giờ bắt đầu quay (kỳ đầu). Default hiện tại: "06:08". */
   firstDrawTime: string;
   /** Giờ kết thúc quay (kỳ cuối). VD: "21:52". */
   lastDrawTime: string;
@@ -825,46 +842,6 @@ export interface KenoGameConfigResponse {
   payoutCaps: KenoPayoutCapsConfig;
   /** Cấu hình theo tenant. */
   tenant: KenoTenantConfig;
-}
-
-/**
- * Bảng giải thưởng Keno (cho trang hướng dẫn chơi).
- *
- * @example
- * ```ts
- * // Giải thưởng cơ bản: pickCount → matchCount → prize (VND)
- * prizeTable.basicPrizes[5][3]; // 50000 (pick5, trùng 3 số)
- *
- * // Giải Lớn/Nhỏ
- * prizeTable.bigSmallPrizes[0].condition; // ">= 13 số lớn"
- * prizeTable.bigSmallPrizes[0].prize;     // 3400
- * ```
- */
-export interface KenoPrizeTableInfo {
-  /**
-   * Bảng giải cơ bản.
-   *
-   * Key cấp 1: `pickCount` (1-10).
-   * Key cấp 2: `matchCount` (0-pickCount).
-   * Value: tiền thưởng (VND).
-   */
-  basicPrizes: Record<number, Record<number, number>>;
-
-  /** Bảng giải Lớn/Nhỏ. */
-  bigSmallPrizes: Array<{
-    /** Điều kiện trúng. */
-    condition: string;
-    /** Tiền thưởng (VND). */
-    prize: number;
-  }>;
-
-  /** Bảng giải Chẵn/Lẻ. */
-  evenOddPrizes: Array<{
-    /** Điều kiện trúng. */
-    condition: string;
-    /** Tiền thưởng (VND). */
-    prize: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────

@@ -4,6 +4,7 @@
  * @module
  */
 
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
 import type { Mega645PlayType, Mega645PrizeTier } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -124,12 +125,11 @@ export interface Mega645PrizeAmounts {
 
 /**
  * Cấu hình Jackpot Mega 6/45.
+ *
  */
 export interface Mega645JackpotConfigInfo {
   /** Số tiền khởi điểm mỗi chu kỳ Jackpot (VND). */
   seedAmount: number;
-  /** Ngưỡng kích hoạt chia Jackpot (VND). */
-  splitThreshold: number;
 }
 
 /**
@@ -158,7 +158,7 @@ export interface Mega645GameConfigResponse {
   game: Mega645GameRules;
   /** Giá trị các giải thưởng cố định. */
   prizes: Mega645PrizeAmounts;
-  /** Cấu hình jackpot (seed, split threshold). */
+  /** Cấu hình jackpot (seed amount). */
   jackpot: Mega645JackpotConfigInfo;
   /** Cấu hình tenant cho game này. */
   tenant: Mega645TenantConfig;
@@ -173,11 +173,13 @@ export interface Mega645GameConfigResponse {
  *
  * Trả về bởi `GET /games/mega645/draws/current`.
  *
+ * Không có thông tin Jackpot — gọi {@link Mega645Api.getJackpot} riêng để lấy giá trị hiện tại.
+ *
  * @example
  * ```ts
  * const draw = await client.mega645.getCurrentDraw();
- * console.log(draw.drawId);              // "2026-03-07.001"
- * console.log(draw.jackpotCurrentAmount); // 8500000000
+ * console.log(draw.drawId); // "2026-03-07.001"
+ * console.log(draw.status); // "salesOpen"
  * ```
  */
 export interface Mega645DrawInfo {
@@ -189,8 +191,8 @@ export interface Mega645DrawInfo {
   drawNo: number;
   /** Giờ quay (ISO 8601). */
   drawTime: string;
-  /** Trạng thái kỳ quay. VD: `"open"`, `"closed"`, `"settled"`. */
-  status: string;
+  /** Trạng thái kỳ quay: đang mở bán hoặc đã đóng bán chờ quay. */
+  status: "salesOpen" | "salesClosed";
   /** Khung giờ bán vé. */
   sales: {
     /** Thời điểm mở bán (ISO 8601). `undefined` nếu đã mở sẵn. */
@@ -198,10 +200,6 @@ export interface Mega645DrawInfo {
     /** Thời điểm đóng bán (ISO 8601). */
     closeAt: string;
   };
-  /** Giá trị Jackpot hiện tại (VND). */
-  jackpotCurrentAmount: number;
-  /** `true` nếu kỳ này đang trong chu kỳ chia Jackpot. */
-  isSplitCycle?: boolean;
 }
 
 /**
@@ -226,8 +224,15 @@ export interface Mega645TicketSummary {
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"M645-20260307-00003"`. */
   ticketNo: string;
-  /** Trạng thái vé. VD: `"pending"`, `"partial"`, `"settled"`, `"voided"`. */
-  status: string;
+  /**
+   * Trạng thái vé — dùng chung cho tất cả game, xem {@link TicketStatus}:
+   * - `"paid"` — đã thanh toán, đang chờ xử lý các kỳ quay.
+   * - `"completed"` — tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ
+   *   settled.
+   * - `"refunded"` — đã hoàn tiền toàn bộ (TẤT CẢ kỳ quay trong vé đều bị void).
+   * - `"void"` — vé bị vô hiệu hoá toàn bộ (gian lận, lỗi nghiêm trọng).
+   */
+  status: TicketStatus;
   /** Kế hoạch kỳ quay của vé. */
   drawPlan: {
     /** Danh sách drawId trong vé. Format mỗi ID: `YYYY-MM-DD.NNN`. */
@@ -313,8 +318,13 @@ export interface Mega645TicketSummary {
 export interface Mega645EntryResult {
   /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Trạng thái entry. VD: `"pending"`, `"settled"`, `"voided"`. */
-  status: string;
+  /**
+   * Trạng thái entry — dùng chung cho tất cả game, xem {@link EntryStatus}:
+   * - `"scheduled"` — đã lên lịch tham gia kỳ quay, chờ settle.
+   * - `"settled"` — đã tính thưởng xong (terminal).
+   * - `"void"` — bị vô hiệu (kỳ quay bị void), tiền cược đã hoàn.
+   */
+  status: EntryStatus;
   /** Tiền cược kỳ này (VND). */
   amount: number;
   /** Đơn giá 1 line (VND). */
@@ -330,22 +340,34 @@ export interface Mega645EntryResult {
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
+  /**
+   * Kết quả tổng của entry sau settle — dùng chung cho tất cả game, xem {@link EntryOutcome}:
+   * - `"win"` — Thắng, có ít nhất 1 giải trúng.
+   * - `"loss"` — Thua, không trúng giải nào.
+   * - `"void"` — Kỳ quay bị huỷ, entry vô hiệu, tiền cược được hoàn lại.
+   *
+   * `undefined` nếu entry chưa settle.
+   */
+  outcome?: EntryOutcome;
   /** Thông tin trả thưởng. `undefined` nếu chưa settle. */
   payout?: {
     /** Tổng tiền thắng (VND). `0` nếu không trúng. */
     winAmount: number;
+    /** Số tiền thực trả cho người chơi (VND). Thường bằng `winAmount`. */
+    payoutAmount: number;
     /** Chi tiết từng giải thưởng trúng. */
     tiers: Array<{
       /** Hạng giải. */
       tier: Mega645PrizeTier;
-      /** Tên giải hiển thị. VD: `"Jackpot"`, `"Giải nhất"`. */
-      label: string;
-      /** Số lần trúng giải này. */
+      /** Số lượt trúng giải này. */
       hitCount: number;
-      /** Tổng tiền thưởng giải này (VND). */
+      /**
+       * Tiền thưởng cho 1 đơn vị tham gia dự thưởng (VND).
+       * Với Jackpot: giá trị chính xác chỉ có sau khi hệ thống biết số người trúng.
+       */
+      unitAmount: number;
+      /** Tổng tiền thưởng giải này (VND). Đã nhân theo betCount. */
       amount: number;
-      /** Tiền bonus từ chia Jackpot (VND). `undefined` nếu không có. */
-      splitBonus?: number;
     }>;
   };
 }
@@ -518,8 +540,13 @@ export interface Mega645PlaceBetResponse {
   ticketId: string;
   /** Mã vé hiển thị cho người chơi. VD: `"M645-20260307-00003"`. */
   ticketNo: string;
-  /** Trạng thái vé sau khi tạo. */
-  status: string;
+  /**
+   * Trạng thái vé sau khi tạo — dùng chung cho tất cả game, xem {@link TicketStatus}. Ngay sau
+   * khi đặt cược thành công luôn là `"paid"`; các giá trị khác (`"refunded"`, `"void"`,
+   * `"completed"`) chỉ xuất hiện sau đó khi tra cứu lại vé qua
+   * `listTickets`/`listPendingTickets`/`getTicketEntries`.
+   */
+  status: TicketStatus;
   /** Số dư ví player sau khi trừ tiền cược (VND). */
   balance: number;
 
@@ -704,13 +731,11 @@ export interface Mega645ListTicketsResponse {
 }
 
 /**
- * Chi tiết vé và các lần tham gia kỳ quay của vé Mega 6/45.
+ * Chi tiết các lần tham gia kỳ quay của vé Mega 6/45.
  *
  * Trả về bởi `client.mega645.getTicketEntries()`.
  */
 export interface Mega645TicketEntriesResponse {
-  /** Thông tin tóm tắt vé. */
-  ticket: Mega645TicketSummary;
   /** Danh sách entries (1 entry = 1 kỳ quay). */
   entries: Mega645EntryResult[];
 }

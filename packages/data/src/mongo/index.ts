@@ -5,6 +5,7 @@ export {
   IdentityRepo,
   ReportReadRepo,
   ReportRepo,
+  ResultFeedRepo,
   SharedRepo,
   TenantRepo,
 } from "./base-repos";

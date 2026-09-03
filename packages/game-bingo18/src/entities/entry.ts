@@ -260,7 +260,7 @@ export interface TicketEntryDoc {
 
   // ───── Outcome ─────
 
-  /** Kết quả thắng/thua tổng hợp: "win" | "lose" | "partial_win". Set sau settle. */
+  /** Kết quả tổng hợp: "win" | "loss" | "void" (kỳ quay bị huỷ). Set sau settle. */
   outcome?: EntryOutcome;
 
   // ───── Payout ─────
