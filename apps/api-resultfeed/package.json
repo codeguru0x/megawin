@@ -1,0 +1,37 @@
+{
+  "name": "@megawin/api-resultfeed",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ResultFeed public API – cho backoffice (và tương lai: consumer khác) PULL kết quả đã publish",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo run build --filter=@megawin/api-resultfeed^...",
+    "pretest": "pnpm build:deps",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
+    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/resultfeed": "workspace:*",
+    "@megawin/resultfeed-application": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@middy/core": "^7.7.3",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
+    "@types/aws-lambda": "^8.10.161",
+    "@types/node": "^25.9.5",
+    "serverless-offline": "^14.7.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

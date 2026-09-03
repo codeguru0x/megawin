@@ -2,6 +2,7 @@ import type { AccountRole } from "@megawin/identity/entities";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
   Activity,
+  AlertTriangle,
   Ban,
   BarChart3,
   Briefcase,
@@ -17,7 +18,9 @@ import {
   Clock,
   FileSearch,
   History,
+  LayoutDashboard,
   type LucideIcon,
+  Radar,
   Send,
   Settings2,
   Sparkles,
@@ -98,6 +101,37 @@ export const operatorSidebarItems: NavGroup[] = [
         title: "Workers",
         url: "/system/workers",
         icon: Activity,
+        /** Chỉ Admin xem được — kill-switch worker ảnh hưởng toàn hệ thống. */
+        roles: [CompanyRole.Admin],
+      },
+      {
+        title: "Kết quả",
+        url: "/resultfeed",
+        icon: Radar,
+        /** Chỉ Admin xem được — vận hành thu thập/đồng thuận kết quả Vietlott (07-admin-management-page.plan.md). */
+        roles: [CompanyRole.Admin],
+        subItems: [
+          {
+            title: "Dashboard",
+            url: "/resultfeed",
+            icon: LayoutDashboard,
+          },
+          {
+            title: "Hàng đợi duyệt",
+            url: "/resultfeed/review",
+            icon: AlertTriangle,
+          },
+          {
+            title: "Tra cứu kỳ",
+            url: "/resultfeed/periods",
+            icon: FileSearch,
+          },
+          {
+            title: "Nguồn dữ liệu",
+            url: "/resultfeed/sources",
+            icon: Settings2,
+          },
+        ],
       },
     ],
   },

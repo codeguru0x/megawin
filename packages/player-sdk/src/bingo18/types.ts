@@ -6,7 +6,8 @@
  * @module
  */
 
-import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./enums";
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
+import type { Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 
 // ─────────────────────────────────────────────
 // Input Types
@@ -26,14 +27,15 @@ import type { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "./e
  * // Board cược bổ sung: đoán tổng bằng 14
  * const b2: Bingo18BoardInput = { boardNo: "B", playType: "sumTotal", sum: 14 };
  *
- * // Board cược bổ sung: đoán Tài
+ * // Board cược bổ sung: đoán Lớn
  * const b3: Bingo18BoardInput = { boardNo: "C", playType: "bigSmallDraw", bet: "big" };
  * ```
  */
 export interface Bingo18BoardInput {
   /**
-   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
-   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
+   * Ký hiệu board trong vé — client PHẢI tự cung cấp, theo thứ tự chữ cái liên tục
+   * từ `"A"`: `"A"`, `"B"`, ..., `"Z"`, rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính.
+   * Server không tự sinh giá trị này; server chỉ VALIDATE thứ tự liên tục.
    *
    * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
    * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
@@ -50,7 +52,7 @@ export interface Bingo18BoardInput {
    *
    * Board cược bổ sung:
    * - `"sumTotal"` — đoán tổng 3 xúc xắc bằng đúng 1 giá trị (3-18)
-   * - `"bigSmallDraw"` — đoán Tài (11-18) / Xỉu (3-8) / Hoà (9-10)
+   * - `"bigSmallDraw"` — đoán Lớn (12-18) / Hòa (10-11) / Nhỏ (3-9)
    */
   playType: "singleNum" | "doubleMatch" | "tripleMatch" | "sumTotal" | "bigSmallDraw";
   /**
@@ -72,11 +74,11 @@ export interface Bingo18BoardInput {
    */
   sum?: number;
   /**
-   * Lựa chọn Tài/Xỉu/Hoà.
+   * Lựa chọn Lớn/Hòa/Nhỏ.
    * Bắt buộc khi `playType = "bigSmallDraw"`, bỏ qua với các loại khác.
-   * - `"big"` — Tài (tổng 11-18)
-   * - `"small"` — Xỉu (tổng 3-8)
-   * - `"draw"` — Hoà (tổng 9-10)
+   * - `"big"` — Lớn (tổng 12-18)
+   * - `"small"` — Nhỏ (tổng 3-9)
+   * - `"draw"` — Hòa (tổng 10-11)
    */
   bet?: Bingo18BigSmallBet;
   /**
@@ -133,7 +135,7 @@ export interface Bingo18TicketPurchaseInput {
    * Danh sách boards cược — bao gồm cả cơ bản và cược bổ sung.
    *
    * - Tối thiểu 1 board; số tối đa theo cấu hình game (`maxBasicBoardsPerTicket`)
-   * - `boardNo` sinh tự động, liên tục từ `"A"` (A, B, C... Z, AA...), không trùng
+   * - `boardNo` client PHẢI tự cung cấp, liên tục từ `"A"` (A, B, C... Z, AA...), không trùng
    */
   boards: Bingo18BoardInput[];
 }
@@ -156,9 +158,9 @@ export interface Bingo18GameRules {
   maxDrawCount: number;
   /** Khoảng cách giữa 2 kỳ quay liên tiếp (phút). */
   drawIntervalMinutes: number;
-  /** Giờ quay đầu tiên trong ngày. VD: `"06:00"`. */
+  /** Giờ quay đầu tiên trong ngày. VD (mặc định): `"06:06"`. */
   firstDrawTime: string;
-  /** Giờ quay cuối cùng trong ngày. VD: `"23:54"`. */
+  /** Giờ quay cuối cùng trong ngày. VD (mặc định): `"21:53"`. */
   lastDrawTime: string;
   /** Số lần cược tối thiểu cho 1 board/side bet. */
   minBetCount: number;
@@ -208,14 +210,14 @@ export type Bingo18SumTotalPrizesConfig = Record<string, number>;
 /**
  * Cơ cấu giải thưởng loại side bet `bigSmallDraw`.
  *
- * Dựa trên tổng 3 xúc xắc: Tài (11-18), Hoà (9-10), Xỉu (3-8).
+ * Dựa trên tổng 3 xúc xắc: Lớn (12-18), Hòa (10-11), Nhỏ (3-9).
  */
 export interface Bingo18BigSmallDrawPrizesConfig {
-  /** Thưởng khi đoán đúng Tài (tổng 11-18) (VND). */
+  /** Thưởng khi đoán đúng Lớn (tổng 12-18) (VND). */
   big: number;
-  /** Thưởng khi đoán đúng Hoà (tổng 9-10) (VND). */
+  /** Thưởng khi đoán đúng Hòa (tổng 10-11) (VND). */
   draw: number;
-  /** Thưởng khi đoán đúng Xỉu (tổng 3-8) (VND). */
+  /** Thưởng khi đoán đúng Nhỏ (tổng 3-9) (VND). */
   small: number;
 }
 
@@ -233,7 +235,7 @@ export interface Bingo18PrizesConfig {
   tripleMatch: Bingo18TripleMatchPrizesConfig;
   /** Giải thưởng cho loại side bet đoán tổng (key: giá trị tổng 3-18). */
   sumTotal: Bingo18SumTotalPrizesConfig;
-  /** Giải thưởng cho loại side bet Tài/Xỉu/Hoà. */
+  /** Giải thưởng cho loại side bet Lớn/Hòa/Nhỏ. */
   bigSmallDraw: Bingo18BigSmallDrawPrizesConfig;
 }
 
@@ -258,7 +260,7 @@ export interface Bingo18TenantConfig {
  * console.log(config.game.unitPrice);             // 10000
  * console.log(config.game.drawIntervalMinutes);   // 6
  * console.log(config.prizes.singleNum.match3);    // tiền thưởng ×3
- * console.log(config.prizes.bigSmallDraw.draw);   // tiền thưởng Hoà
+ * console.log(config.prizes.bigSmallDraw.draw);   // tiền thưởng Hòa
  * ```
  */
 export interface Bingo18GameConfigResponse {
@@ -284,17 +286,16 @@ export interface Bingo18DrawInfo {
   drawId: string;
   /** Ngày quay (YYYY-MM-DD). VD: `"2026-03-07"`. */
   drawDate: string;
-  /** Số thứ tự kỳ quay trong ngày (1-based). Bingo 18 có ~240 kỳ/ngày. */
+  /** Số thứ tự kỳ quay trong ngày (1-based). Mặc định ~158 kỳ/ngày (có thể thay đổi theo cấu hình vận hành). */
   drawNo: number;
   /** Giờ quay. VD: `"10:06"`. */
   drawTime: string;
   /**
-   * Trạng thái kỳ quay.
-   * - `"openSales"` — đang mở bán
-   * - `"closedSales"` — đã đóng bán, chờ quay
-   * - `"published"` — đã công bố kết quả
+   * Trạng thái kỳ quay. Endpoint này chỉ trả về kỳ đang hoạt động — không bao giờ trả kỳ đã công bố kết quả.
+   * - `"salesOpen"` — đang mở bán
+   * - `"salesClosed"` — đã đóng bán, chờ quay
    */
-  status: string;
+  status: "salesOpen" | "salesClosed";
   /** Thông tin thời gian mở/đóng bán vé. */
   sales: {
     /** Thời điểm mở bán (ISO 8601). `undefined` nếu chưa mở. */
@@ -346,10 +347,10 @@ export interface Bingo18DrawPrize {
    */
   sum?: number;
   /**
-   * Loại cược Tài/Xỉu/Hoà trúng (chỉ có khi `playType = "bigSmallDraw"`).
-   * - `"big"` — Tài (tổng 11-18)
-   * - `"small"` — Xỉu (tổng 3-8)
-   * - `"draw"` — Hoà (tổng 9-10)
+   * Loại cược Lớn/Hòa/Nhỏ trúng (chỉ có khi `playType = "bigSmallDraw"`).
+   * - `"big"` — Lớn (tổng 12-18)
+   * - `"small"` — Nhỏ (tổng 3-9)
+   * - `"draw"` — Hòa (tổng 10-11)
    */
   bet?: Bingo18BigSmallBet;
   /** Tổng số lượt cược trúng loại này trong kỳ. */
@@ -376,7 +377,7 @@ export interface Bingo18DrawResultSummary {
   drawId: string;
   /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
-  /** Số thứ tự trong ngày (1-based, tối đa ~240 kỳ/ngày). */
+  /** Số thứ tự trong ngày (1-based). Mặc định ~158 kỳ/ngày (có thể thay đổi theo cấu hình vận hành). */
   drawNo: number;
   /** Giờ quay. VD: `"10:06"`. */
   drawTime: string;
@@ -484,12 +485,14 @@ export interface Bingo18TicketSummary {
   /** Mã vé hiển thị cho người chơi. VD: `"B18-20260307-00007"`. */
   ticketNo: string;
   /**
-   * Trạng thái vé.
-   * - `"pending"` — đang chờ kết quả
-   * - `"completed"` — đã hoàn tất tất cả kỳ
-   * - `"voided"` — một hoặc nhiều kỳ đã bị huỷ
+   * Trạng thái vé — dùng chung cho tất cả game, xem {@link TicketStatus}:
+   * - `"paid"` — đã thanh toán, đang chờ kết quả.
+   * - `"completed"` — tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ
+   *   settled.
+   * - `"refunded"` — đã hoàn tiền toàn bộ (TẤT CẢ kỳ quay trong vé đều bị void).
+   * - `"void"` — vé bị vô hiệu hoá toàn bộ (gian lận, lỗi nghiêm trọng, admin huỷ).
    */
-  status: string;
+  status: TicketStatus;
   /** Kế hoạch kỳ quay. */
   drawPlan: {
     /** Danh sách drawId các kỳ quay. Format `YYYY-MM-DD.NNN`. */
@@ -530,7 +533,7 @@ export interface Bingo18TicketSummary {
     /** Giá trị tổng đặt cược (3-18). Chỉ có khi `playType = "sumTotal"`. */
     sum?: number;
     /**
-     * Lựa chọn Tài/Xỉu/Hoà. Chỉ có khi `playType = "bigSmallDraw"`.
+     * Lựa chọn Lớn/Hòa/Nhỏ. Chỉ có khi `playType = "bigSmallDraw"`.
      * - `"big"` | `"small"` | `"draw"`
      */
     bet?: string;
@@ -598,8 +601,8 @@ export interface Bingo18EntryInfo {
   id: string;
   /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Trạng thái entry. */
-  status: string;
+  /** Trạng thái entry — dùng chung cho tất cả game, xem {@link EntryStatus}. */
+  status: EntryStatus;
   /** Tổng tiền đặt cược của entry (VND) = betUnitCount × unitPrice. */
   amount: number;
   /** Mệnh giá 1 lần tham gia dự thưởng (VND). */
@@ -625,7 +628,7 @@ export interface Bingo18EntryInfo {
       tripleKind?: string;
       /** Giá trị tổng đặt cược (3-18). Chỉ có khi `playType = "sumTotal"`. */
       sum?: number;
-      /** Lựa chọn Tài/Xỉu/Hoà. Chỉ có khi `playType = "bigSmallDraw"`. */
+      /** Lựa chọn Lớn/Hòa/Nhỏ. Chỉ có khi `playType = "bigSmallDraw"`. */
       bet?: string;
       /** Số lần cược nhân bội cho board này. Tiền = betCount × unitPrice. */
       betCount: number;
@@ -641,8 +644,16 @@ export interface Bingo18EntryInfo {
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   };
-  /** Kết quả thắng/thua. `undefined` nếu chưa settle. */
-  outcome?: string;
+  /**
+   * Kết quả tổng của entry — dùng chung cho tất cả game, xem {@link EntryOutcome} (khác với
+   * `payout.boardPayouts[].outcome` — đó là kết quả riêng từng board cược bổ sung):
+   * - `"win"` — Thắng, có ít nhất 1 board trúng giải.
+   * - `"loss"` — Thua, không board nào trúng giải.
+   * - `"void"` — Kỳ quay bị huỷ, entry vô hiệu, tiền cược được hoàn lại.
+   *
+   * `undefined` nếu entry chưa settle.
+   */
+  outcome?: EntryOutcome;
   /** Chi tiết trả thưởng. `undefined` nếu chưa settle. */
   payout?: {
     /** Tổng tiền thắng kỳ này (VND). */
@@ -710,8 +721,13 @@ export interface Bingo18PlaceBetResponse {
   ticketId: string;
   /** Mã vé hiển thị cho người chơi. VD: `"B18-20260307-00001"`. */
   ticketNo: string;
-  /** Trạng thái vé sau khi tạo. */
-  status: string;
+  /**
+   * Trạng thái vé sau khi tạo — dùng chung cho tất cả game, xem {@link TicketStatus}. Ngay sau
+   * khi đặt cược thành công luôn là `"paid"`; các giá trị khác (`"refunded"`, `"void"`,
+   * `"completed"`) chỉ xuất hiện sau đó khi tra cứu lại vé qua
+   * `listTickets`/`listPendingTickets`/`getTicketEntries`.
+   */
+  status: TicketStatus;
   /** Số dư ví player sau khi trừ tiền cược (VND). */
   balance: number;
 
@@ -746,20 +762,6 @@ export interface Bingo18PlaceBetResponse {
 // ─────────────────────────────────────────────
 // Response Types — List Tickets
 // ─────────────────────────────────────────────
-
-/**
- * Tham số phân trang cho danh sách vé Bingo 18 đang chờ.
- */
-export interface Bingo18ListTicketsParams {
-  /** Số lượng vé mỗi trang (mặc định 20). */
-  size?: number;
-  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
-  cursor?: string;
-  /** Lọc từ ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
-  from?: string;
-  /** Lọc đến ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
-  to?: string;
-}
 
 /**
  * Response phân trang danh sách vé Bingo 18.

@@ -81,23 +81,3 @@ export const KenoEvenOddBet = {
 
 /** Lựa chọn Chẵn/Lẻ (union type). */
 export type KenoEvenOddBet = (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet];
-
-// ─────────────────────────────────────────────
-// Ticket Display Status
-// ─────────────────────────────────────────────
-
-/**
- * Trạng thái vé Keno hiển thị cho người chơi.
- *
- * - `"pending"` — Đang chờ xử lý
- * - `"active"` — Đang tham gia kỳ quay
- * - `"completed"` — Đã hoàn tất
- */
-export const KenoTicketDisplayStatus = {
-  Pending: "pending",
-  Active: "active",
-  Completed: "completed",
-} as const;
-
-/** Trạng thái vé Keno (union type). */
-export type KenoTicketDisplayStatus = (typeof KenoTicketDisplayStatus)[keyof typeof KenoTicketDisplayStatus];

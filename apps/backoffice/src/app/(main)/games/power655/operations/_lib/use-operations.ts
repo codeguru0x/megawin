@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent } from "react";
 
 import type {
   GetDrawDetailOutput,
+  GetVietlottResultOutput,
   GetVietlottSuggestionOutput,
   PreviewDrawsOutput,
   ResettlePreflightOutput,
@@ -326,6 +327,23 @@ export function useVietlottSuggestion(drawId: string | undefined, enabled: boole
     queryFn: () => apiClient.get<GetVietlottSuggestionOutput>(`/power655/draws/${drawId}/vietlott-suggestion`),
     enabled: !!drawId && enabled,
     staleTime: 60_000,
+  });
+}
+
+/**
+ * Tự lấy kết quả Vietlott đã publish (ResultFeed) theo `drawPeriod` — dùng để tự điền form
+ * công bố/sửa kết quả. `queryKey` gồm `drawPeriod`: đổi mã kỳ (user tự sửa ô input) tự động
+ * tạo query khác, tự refetch.
+ */
+export function useVietlottResult(drawId: string | undefined, drawPeriod: string, enabled: boolean) {
+  return useQuery({
+    queryKey: power655Keys.vietlottResult(drawId ?? "", drawPeriod),
+    queryFn: () =>
+      apiClient.get<GetVietlottResultOutput>(`/power655/draws/${drawId}/vietlott-result`, {
+        params: { drawPeriod },
+      }),
+    enabled: !!drawId && !!drawPeriod && enabled,
+    staleTime: 30_000,
   });
 }
 

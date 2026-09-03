@@ -5,9 +5,7 @@
 
 import type {
   Bingo18CurrentDrawResponse,
-  Bingo18DrawInfo,
   Bingo18DrawResultInfo,
-  Bingo18DrawResultSummary,
   Bingo18GameConfigResponse,
   Bingo18ListAllTicketsParams,
   Bingo18ListDrawResultsParams,
@@ -17,7 +15,6 @@ import type {
   Bingo18PlaceBetResponse,
   Bingo18TicketEntriesResponse,
   Bingo18TicketPurchaseInput,
-  Bingo18TicketSummary,
 } from "../bingo18";
 import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
@@ -35,6 +32,7 @@ export interface Bingo18Api {
    *
    * @returns Cấu hình game và tenant hiện tại
    *
+   * @throws {@link ApiClientError} code `NOT_FOUND` — chưa có cấu hình game
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -77,9 +75,9 @@ export interface Bingo18Api {
    * @param input - Thông tin vé: drawIds, boards
    * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay không tồn tại, đã đóng bán, hết
+   * thời gian nhận cược, vượt số board tối đa, betCount ngoài khoảng cho phép, hoặc không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input sai schema (thiếu field, kiểu dữ liệu sai)
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -89,9 +87,9 @@ export interface Bingo18Api {
    * const result = await client.bingo18.placeBet({
    *   drawIds: ["2026-03-07.001", "2026-03-07.002"],
    *   boards: [
-   *     { playType: "singleNum", number: 5 },
-   *     { playType: "tripleMatch", tripleKind: "any" },
-   *     { playType: "bigSmallDraw", bet: "big" },
+   *     { boardNo: "A", playType: "singleNum", number: 5 },
+   *     { boardNo: "B", playType: "tripleMatch", tripleKind: "any" },
+   *     { boardNo: "C", playType: "bigSmallDraw", bet: "big" },
    *   ],
    * });
    * console.log(result.ticketNo);    // "B18-20260307-00007"
@@ -148,16 +146,16 @@ export interface Bingo18Api {
    * **Endpoint:** `GET /games/bingo18/tickets/{ticketId}/entries`
    *
    * @param ticketId - ID vé (lấy từ `ticket.id` hoặc `placeBet` response)
-   * @returns Thông tin vé và danh sách entries kèm kết quả/thưởng
+   * @returns Danh sách entries thuộc vé, mỗi entry ứng với 1 kỳ quay (kèm kết quả/thưởng nếu đã có)
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — ticketId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
    * ```ts
-   * const data = await client.bingo18.getTicketEntries("65abc123def456...");
-   * console.log(data.ticket.ticketNo); // "B18-20260307-00007"
-   * for (const entry of data.entries) {
+   * const { entries } = await client.bingo18.getTicketEntries("65abc123def456...");
+   * console.log(entries[0]?.entrySummary.ticketNo); // "B18-20260307-00007"
+   * for (const entry of entries) {
    *   if (entry.result) {
    *     console.log(`Số: ${entry.result.numbers.join(", ")} — Tổng: ${entry.result.sum}`);
    *   }
@@ -169,7 +167,7 @@ export interface Bingo18Api {
   /**
    * Lấy danh sách kết quả kỳ quay Bingo 18 đã công bố.
    *
-   * Bingo 18 có ~240 kỳ/ngày, mỗi 6 phút quay 1 lần.
+   * Mặc định mỗi 6 phút quay 1 lần (~158 kỳ/ngày) — tần suất thực tế có thể khác theo cấu hình vận hành.
    *
    * **Endpoint:** `GET /games/bingo18/draw-results`
    *

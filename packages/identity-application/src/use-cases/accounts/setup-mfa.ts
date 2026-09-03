@@ -6,6 +6,7 @@ import {
 } from "@megawin/app-core/aws/cognito";
 import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
+import { logError } from "@megawin/shared/utils";
 
 export interface SetupMfaInput {
   username: string;
@@ -44,7 +45,10 @@ export class SetupMfaUseCase extends UseCase<SetupMfaInput, SetupMfaOutput> {
         throw AppException.badRequest("Mật khẩu không đúng");
       }
 
-      throw AppException.internal(`Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
+      // KHÔNG nhồi error.message (raw Cognito exception) vào AppException — đã là AppException
+      // nên UseCase.handleError() cho qua nguyên văn, lộ chi tiết hạ tầng cho client.
+      logError("SetupMfaUseCase.adminInitiateAuth", error, { username: input.username });
+      throw AppException.internal("Không thể xác thực với hệ thống, vui lòng thử lại sau.");
     }
 
     try {
@@ -60,7 +64,8 @@ export class SetupMfaUseCase extends UseCase<SetupMfaInput, SetupMfaOutput> {
         accessToken,
       };
     } catch (error: unknown) {
-      throw AppException.internal(`Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`);
+      logError("SetupMfaUseCase.adminAssociateSoftwareToken", error, { username: input.username });
+      throw AppException.internal("Không thể khởi tạo MFA, vui lòng thử lại sau.");
     }
   }
 }

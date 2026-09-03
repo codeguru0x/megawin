@@ -9,15 +9,11 @@ import type {
   Power655ComboPopularityParams,
   Power655ComboPopularityResponse,
   Power655CurrentDrawResponse,
-  Power655DrawInfo,
   Power655DrawResultInfo,
-  Power655DrawResultSummary,
   Power655EntryLinesParams,
   Power655EntryLinesResponse,
-  Power655EntryResult,
   Power655GameConfigResponse,
   Power655JackpotResponse,
-  Power655LineInfo,
   Power655ListAllTicketsParams,
   Power655ListDrawResultsParams,
   Power655ListDrawResultsResponse,
@@ -26,7 +22,6 @@ import type {
   Power655PlaceBetResponse,
   Power655TicketEntriesResponse,
   Power655TicketPurchaseInput,
-  Power655TicketSummary,
 } from "../power655";
 
 /**
@@ -84,8 +79,8 @@ export interface Power655Api {
    * @example
    * ```ts
    * const jackpot = await client.power655.getJackpot();
-   * console.log(jackpot.jackpot1Amount); // 45000000000
-   * console.log(jackpot.jackpot2Amount); // 2000000000
+   * console.log(jackpot.jackpot1CurrentAmount); // 45000000000
+   * console.log(jackpot.jackpot2CurrentAmount); // 2000000000
    * ```
    */
   getJackpot(): Promise<Power655JackpotResponse>;
@@ -98,12 +93,11 @@ export interface Power655Api {
    *
    * **Endpoint:** `POST /games/power655/bets`
    *
-   * @param input - Thông tin vé: drawId, drawCount, boards (tối đa 5 boards)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
+   * @param input - Thông tin vé: drawIds (kỳ quay), boards (số board tối đa theo cấu hình game)
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, pricing.totalAmount, balance sau cược
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ (số sai range, thiếu field, playType không được chấp nhận...)
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay đã đóng bán/không tồn tại, vượt số board/kỳ tối đa, không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema (số sai range, thiếu field, playType không được chấp nhận...)
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -111,8 +105,7 @@ export interface Power655Api {
    * import type { Power655TicketPurchaseInput } from "@megawin/player-sdk/power655";
    *
    * const result = await client.power655.placeBet({
-   *   drawId: "2026-03-07.001",
-   *   drawCount: 1,
+   *   drawIds: ["2026-03-07.001"],
    *   boards: [{
    *     boardNo: "A",
    *     playType: "standard",
@@ -120,7 +113,7 @@ export interface Power655Api {
    *   }],
    * });
    * console.log(result.ticketNo);    // "P655-20260307-00002"
-   * console.log(result.totalAmount); // 10000
+   * console.log(result.pricing.totalAmount); // 10000
    * console.log(result.balance);     // 990000
    * ```
    */
@@ -140,7 +133,7 @@ export interface Power655Api {
    * ```ts
    * const { tickets } = await client.power655.listPendingTickets({ size: 20 });
    * for (const ticket of tickets) {
-   *   console.log(`${ticket.ticketNo}: ${ticket.progress.settledDrawCount}/${ticket.drawPlan.drawCount} kỳ`);
+   *   console.log(`${ticket.ticketNo}: ${ticket.progress.settledDraws}/${ticket.drawPlan.drawCount} kỳ`);
    * }
    * ```
    */
@@ -173,7 +166,7 @@ export interface Power655Api {
    * **Endpoint:** `GET /games/power655/tickets/{ticketId}/entries`
    *
    * @param ticketId - ID vé (lấy từ `ticket.id` hoặc `placeBet` response)
-   * @returns Thông tin vé và danh sách entries kèm kết quả/thưởng
+   * @returns Danh sách entries của vé kèm kết quả/thưởng
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — ticketId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -181,7 +174,6 @@ export interface Power655Api {
    * @example
    * ```ts
    * const data = await client.power655.getTicketEntries("65abc123def456...");
-   * console.log(data.ticket.ticketNo); // "P655-20260307-00002"
    * console.log(data.entries.length);  // 1
    * for (const entry of data.entries) {
    *   if (entry.result) {

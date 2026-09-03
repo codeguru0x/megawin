@@ -162,7 +162,6 @@ packages/player-sdk/
     apis/                 # Game API modules
       keno.ts             # client.keno
       lotto535.ts         # client.lotto535
-      player.ts           # client.player
     keno/                 # Subpath: @megawin/player-sdk/keno
       index.ts, enums.ts, types.ts
     lotto535/             # Subpath: @megawin/player-sdk/lotto535

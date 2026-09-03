@@ -28,6 +28,9 @@ export const max3dproKeys = {
   /** Gợi ý mã kỳ Vietlott cho dialog publish (P4 vietlott-period-suggestion) */
   vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
 
+  /** Kết quả Vietlott tự lấy (ResultFeed) cho dialog công bố/sửa kết quả — theo `drawId` + `drawPeriod` */
+  vietlottResult: (drawId: string, drawPeriod: string) => [MODULE, "vietlott-result", drawId, drawPeriod] as const,
+
   /** Operations dashboard – draw selector dropdown */
   opsDrawSelector: [MODULE, "ops-draw-selector"] as const,
 

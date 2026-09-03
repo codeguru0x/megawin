@@ -620,8 +620,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate ticket summaries cho nhiều tickets trong 1 query.
    * Trả về Map<ticketId (string), summary>.
+   *
+   * ticketId lưu dạng string (hex, xem place-bet.ts) — PHẢI nhận string[], KHÔNG convert sang
+   * ObjectId. Truyền ObjectId[] vào $in sẽ KHÔNG match field string, khiến aggregate luôn trả rỗng
+   * (im lặng, không lỗi) — bug thật đã xảy ra khiến ticket không bao giờ được sync status.
    */
-  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+  async aggregateTicketSummariesBatch(ticketIds: string[]): Promise<
     Map<
       string,
       {

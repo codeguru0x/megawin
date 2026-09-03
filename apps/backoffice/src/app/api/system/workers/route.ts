@@ -6,5 +6,5 @@ import { withApi } from "@/lib/api";
 const useCase = new ListWorkersHealthUseCase();
 
 export const GET = withApi()
-  .auth({ roles: [CompanyRole.Staff] })
+  .auth({ roles: [CompanyRole.Admin] })
   .handler(async () => useCase.run());

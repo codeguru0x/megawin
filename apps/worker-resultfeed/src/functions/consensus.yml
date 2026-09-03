@@ -1,0 +1,8 @@
+consensus-tick:
+  handler: src/handlers/consensus/tick.handler
+  # Timeout PHẢI khớp ttlSeconds trong ConsensusTickUseCase (60s).
+  timeout: 60
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true

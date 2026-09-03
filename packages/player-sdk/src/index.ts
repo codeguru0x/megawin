@@ -14,7 +14,6 @@
  *   tokens: tokensFromServer,
  * });
  *
- * const balance = await client.player.getBalance();
  * const kenoResult = await client.keno.placeBet({ ... });
  * ```
  *
@@ -39,14 +38,13 @@ export type { Lotto535Api } from "./apis/lotto535";
 export type { Max3dApi } from "./apis/max3d";
 export type { Max3dproApi } from "./apis/max3dpro";
 export type { Mega645Api } from "./apis/mega645";
-export type { PlayerApi, PlayerBalance } from "./apis/player";
 export type { Power655Api } from "./apis/power655";
 // ---- API module interfaces ----
 export type { AuthApi } from "./auth/auth-api";
 // ---- Token management ----
 export { MemoryTokenStorage, SessionStorageTokenStorage, TokenManager } from "./auth/token-manager";
 // ---- Auth types ----
-export type { AuthenticateInput, AuthResult, AuthTokens, TokenStorage } from "./auth/types";
+export type { AuthResult, AuthTokens, TokenStorage } from "./auth/types";
 // ---- Game sub-types (referenced by API responses, needed for docs) ----
 export type {
   Bingo18BigSmallDrawPrizesConfig,
@@ -77,6 +75,8 @@ export type {
 export { Bingo18BigSmallBet, Bingo18TripleKind } from "./bingo18";
 // ---- Client ----
 export { createPlayerClient, type PlayerClient, type PlayerSdkConfig } from "./client";
+// ---- Ticket/Entry status & outcome (dùng chung cho tất cả game) ----
+export { EntryOutcome, EntryStatus, TicketStatus } from "./common-types";
 // ---- Game aggregate types (cross-game) ----
 export type {
   JackpotDetails,

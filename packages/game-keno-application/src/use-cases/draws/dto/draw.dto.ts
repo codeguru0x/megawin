@@ -265,3 +265,27 @@ export interface GetVietlottSuggestionOutput {
   /** `drawDate` của CHÍNH kỳ đang publish — dùng để prefill ô ngày Vietlott, độc lập có neo hay không. */
   suggestedDrawDate: string;
 }
+
+// ─────────────────────────────────────────────
+// GetVietlottResult — tự lấy kết quả Vietlott đã publish (ResultFeed) điền form publish
+// ─────────────────────────────────────────────
+
+export interface GetVietlottResultInput {
+  /** Mã kỳ Vietlott — khớp `vietlottRef.drawPeriod` đang nhập ở dialog publish. */
+  drawPeriod: string;
+}
+
+export interface GetVietlottResultOutput {
+  /** `false` ⇒ ResultFeed chưa có kết quả cho kỳ này — KHÔNG phải lỗi, chỉ chưa sẵn sàng. */
+  found: boolean;
+  /** Dàn số trúng thưởng dạng flat — mapping sang field form (Keno: gán thẳng) do frontend tự làm. `null` khi `found = false`. */
+  numbers: string[] | null;
+  /** Ngày quay theo nguồn Vietlott, format `"YYYY-MM-DD"`. `null` khi `found = false`. */
+  drawDateSource: string | null;
+  /** Thời điểm ResultFeed publish kết quả này, ISO 8601. `null` khi `found = false`. */
+  publishedAt: string | null;
+  /** `true` khi 1 người đã xác nhận kết quả. `false` = máy tự chốt theo consensus nguồn. `null` khi `found = false`. */
+  verifiedByHuman: boolean | null;
+  /** Số nguồn đã đồng ý với kết quả này. `null` khi `found = false`. */
+  sourceCount: number | null;
+}

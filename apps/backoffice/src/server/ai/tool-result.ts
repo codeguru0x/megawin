@@ -46,12 +46,15 @@ const ERROR_GUIDANCE =
 /**
  * Message thay thế khi lỗi là sự cố hệ thống — model KHÔNG được thấy chuỗi kỹ thuật.
  *
- * VÌ SAO CHỈ CHẶN `INTERNAL`: mọi exception KHÔNG phải `AppException` bị `UseCase.handleError` bọc
- * thành `AppException.internal(err.message, err)`, nên `message` lúc đó là nguyên văn lỗi runtime
- * (`loaded.updatedAt.toISOString is not a function`, `ECONNREFUSED`, `MongoServerError: …`). Đó là
- * NGUỒN DUY NHẤT của chuỗi kỹ thuật trong `message`. Các mã khác (`NOT_FOUND`, `BAD_REQUEST`,
- * `BUSINESS_RULE_VIOLATION`…) chỉ phát sinh khi dev tự `throw` với câu tiếng Việt nghiệp vụ — giữ
- * nguyên message để model trả lời chính xác ("kỳ quay không tồn tại" khác hẳn "hệ thống lỗi").
+ * VÌ SAO CHỈ CHẶN `INTERNAL`: từ 02/09/2026, `UseCase.handleError()` (`@megawin/app-core`) đã tự
+ * chặn leak ở nguồn — mọi exception KHÔNG phải `AppException`/`AppError` bị log server-side qua
+ * `logError` rồi bọc thành `AppException.internal(UNEXPECTED_ERROR_MESSAGE)` (message chung, KHÔNG
+ * còn giữ nguyên `err.message`/`details` gốc). Guard ở đây vẫn giữ lại làm **defense-in-depth**:
+ * phòng trường hợp lỗi đến từ nguồn không đi qua `UseCase.run()` (VD throw `AppException.internal`
+ * trực tiếp kèm message kỹ thuật, hoặc code cũ trước khi fix này được áp dụng). Các mã khác
+ * (`NOT_FOUND`, `BAD_REQUEST`, `BUSINESS_RULE_VIOLATION`…) chỉ phát sinh khi dev tự `throw` với câu
+ * tiếng Việt nghiệp vụ — giữ nguyên message để model trả lời chính xác ("kỳ quay không tồn tại"
+ * khác hẳn "hệ thống lỗi").
  *
  * Đánh đổi đã chấp nhận: dev tự `AppException.internal("Không đọc được cấu hình game keno.")` cũng bị
  * thay bằng câu chung. Không mất gì đáng kể — model biết nó vừa hỏi gì, và staff chỉ cần biết là chưa

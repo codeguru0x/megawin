@@ -1,0 +1,73 @@
+fetch-vietlott-keno:
+  handler: src/handlers/fetch/vietlott-keno.handler
+  # Timeout = ttlSeconds truyền vào FetchAndParseUseCase (lock TTL). 1 lượt fetch + parse
+  # + vài DB write — dư giờ cho retry nội bộ của FetchProvider (xem http-client retry).
+  timeout: 120
+  events:
+    - schedule:
+        # Cron 1 phút — KHÔNG phải nhịp quay thật. `nextFetchAt` trong SourceCursor mới
+        # là thứ điều khiển nhịp fetch thật (đọc + sửa qua data, không redeploy). Tick
+        # không đến hạn thì thoát ngay ở bước 1 của use-case, gần như không tốn gì.
+        # Xem 02-fetch-parse.plan.md §4.
+        rate: cron(* * * * ? *)
+        enabled: true
+
+fetch-vietlott-bingo18:
+  handler: src/handlers/fetch/vietlott-bingo18.handler
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+fetch-vietlott-lotto535:
+  handler: src/handlers/fetch/vietlott-lotto535.handler
+  # Timeout giống các source khác — dù Lotto535 chỉ quay 2 kỳ/ngày, cron vẫn chạy mỗi
+  # phút để bắt kịp NGAY khi site publish trễ hơn giờ quay lý thuyết (13:00/21:00).
+  # `nextFetchAt` (schedule-aware, xem schedule.ts) mới là thứ quyết định tick nào thực
+  # sự gọi fetch — các tick còn lại thoát sớm ở bước 1 use-case, gần như không tốn gì.
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+fetch-vietlott-power655:
+  handler: src/handlers/fetch/vietlott-power655.handler
+  # Power 6/55 chỉ quay 3 kỳ/tuần (18:00 Thứ 3/5/7) — cron vẫn mỗi phút, `nextFetchAt`
+  # schedule-aware quyết định tick nào thực sự fetch (xem fetch-vietlott-lotto535 ở trên).
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+fetch-vietlott-mega645:
+  handler: src/handlers/fetch/vietlott-mega645.handler
+  # Mega 6/45 chỉ quay 3 kỳ/tuần (18:00 Thứ 4/6/CN) — cron vẫn mỗi phút, `nextFetchAt`
+  # schedule-aware quyết định tick nào thực sự fetch (xem fetch-vietlott-lotto535 ở trên).
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+fetch-vietlott-max3d:
+  handler: src/handlers/fetch/vietlott-max3d.handler
+  # Max3D chỉ quay 3 kỳ/tuần (18:00 Thứ 2/4/6) — cron vẫn mỗi phút, `nextFetchAt`
+  # schedule-aware quyết định tick nào thực sự fetch (xem fetch-vietlott-lotto535 ở trên).
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true
+
+fetch-vietlott-max3dpro:
+  handler: src/handlers/fetch/vietlott-max3dpro.handler
+  # Max3D Pro chỉ quay 3 kỳ/tuần (18:00 Thứ 3/5/7) — cron vẫn mỗi phút, `nextFetchAt`
+  # schedule-aware quyết định tick nào thực sự fetch (xem fetch-vietlott-lotto535 ở trên).
+  timeout: 120
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true

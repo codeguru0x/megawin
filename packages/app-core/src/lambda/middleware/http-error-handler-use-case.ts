@@ -5,6 +5,7 @@
 
 import type { ApiErrorResponse } from "@megawin/shared/api-types";
 import { APP_ERROR_CODES, type AppError, AppException, appErrorToStatusCode, isAppError } from "@megawin/shared/errors";
+import { logError } from "@megawin/shared/utils";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -48,10 +49,10 @@ export function httpErrorHandlerUseCaseFormat() {
           statusCode >= 500 ? UNEXPECTED_ERROR_MESSAGE : (httpErr.message ?? "Error"),
         );
         if (statusCode >= 500) {
-          console.error("[UNEXPECTED_ERROR]", err);
+          logError("LambdaHttpErrorHandler", err);
         }
       } else {
-        console.error("[UNEXPECTED_ERROR]", err);
+        logError("LambdaHttpErrorHandler", err);
         body = toErrorBody(APP_ERROR_CODES.INTERNAL, UNEXPECTED_ERROR_MESSAGE);
       }
 

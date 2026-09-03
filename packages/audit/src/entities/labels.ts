@@ -57,6 +57,11 @@ export const AuditActionLabel: Record<AuditAction, string> = {
 
   // worker
   [AUDIT_ACTIONS.worker.setEnabled]: "Bật/tắt worker",
+
+  // resultfeed
+  [AUDIT_ACTIONS.resultfeed.verifyConsensus]: "Xác nhận kết quả ResultFeed",
+  [AUDIT_ACTIONS.resultfeed.rejectConsensus]: "Từ chối kết quả ResultFeed",
+  [AUDIT_ACTIONS.resultfeed.updateSource]: "Cập nhật nguồn ResultFeed",
 };
 
 /** Nhãn tiếng Việt cho từng nhóm action. */
@@ -69,6 +74,7 @@ export const AuditCategoryLabel: Record<AuditCategory, string> = {
   [AuditCategory.Finance]: "Tài chính",
   [AuditCategory.System]: "Hệ thống",
   [AuditCategory.Worker]: "Worker",
+  [AuditCategory.ResultFeed]: "ResultFeed",
 };
 
 /** Nhãn tiếng Việt cho kết quả hành động. */
@@ -86,4 +92,6 @@ export const AuditTargetTypeLabel: Record<AuditTargetType, string> = {
   [AuditTargetType.Account]: "Tài khoản",
   [AuditTargetType.Tenant]: "Tenant",
   [AuditTargetType.Worker]: "Worker",
+  [AuditTargetType.ResultFeedConsensus]: "Kết quả ResultFeed",
+  [AuditTargetType.ResultFeedSource]: "Nguồn ResultFeed",
 };

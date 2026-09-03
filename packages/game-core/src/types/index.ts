@@ -11,3 +11,4 @@ export * from "./common";
 export * from "./draw";
 export * from "./ops-alert";
 export * from "./vietlott";
+export * from "./vietlott-result-client";

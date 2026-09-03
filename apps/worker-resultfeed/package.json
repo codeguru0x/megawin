@@ -1,0 +1,32 @@
+{
+  "name": "@megawin/worker-resultfeed",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ResultFeed workers – fetch + parse kết quả xổ số từ nhiều nguồn (Lambda)",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo run build --filter=@megawin/worker-resultfeed^...",
+    "pretest": "pnpm build:deps",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
+    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
+  },
+  "dependencies": {
+    "@megawin/resultfeed": "workspace:*",
+    "@megawin/resultfeed-application": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
+    "@types/node": "^25.9.5",
+    "serverless-offline": "^14.7.3",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

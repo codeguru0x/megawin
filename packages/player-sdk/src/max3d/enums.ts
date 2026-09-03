@@ -22,8 +22,8 @@ export type Max3dPlayMode = (typeof Max3dPlayMode)[keyof typeof Max3dPlayMode];
  * | Value      | Mô tả                                       | Áp dụng    |
  * |------------|---------------------------------------------|------------|
  * | `"straight"` | So khớp đúng thứ tự (VD: "123" = "123")   | Basic + Plus |
- * | `"combo3"` | 3 số khác nhau — sinh 6 hoán vị              | Basic only |
- * | `"combo6"` | Có 1 cặp số trùng — sinh 3 hoán vị          | Basic only |
+ * | `"combo3"` | Có 1 cặp số trùng (2 chữ số giống nhau) — sinh 3 hoán vị | Basic only |
+ * | `"combo6"` | 3 chữ số khác nhau — sinh 6 hoán vị          | Basic only |
  *
  * Lưu ý: Plus chỉ dùng `straight`. Combo không áp dụng cho Plus.
  */

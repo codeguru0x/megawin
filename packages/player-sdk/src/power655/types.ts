@@ -3,6 +3,7 @@
  * @module
  */
 
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
 import type { Power655PlayType, Power655PrizeTier } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -131,7 +132,7 @@ export interface Power655JackpotConfigInfo {
    * Ngưỡng tràn Jackpot 1 (VND).
    * Khi Jackpot 1 vượt ngưỡng và có JP2 winner, phần vượt chuyển sang Jackpot 2.
    */
-  splitThreshold: number;
+  jp1OverflowThreshold: number;
 }
 
 /**
@@ -178,8 +179,8 @@ export interface Power655GameConfigResponse {
  * @example
  * ```ts
  * const draw = await client.power655.getCurrentDraw();
- * console.log(draw.currentDraw?.drawId);              // "2026-03-07.001"
- * console.log(draw.currentDraw?.jackpot1CurrentAmount); // 45000000000
+ * console.log(draw.currentDraw?.drawId);        // "2026-03-07.001"
+ * console.log(draw.currentDraw?.sales.closeAt); // "2026-03-07T11:00:00.000Z"
  * ```
  */
 export interface Power655DrawInfo {
@@ -191,8 +192,8 @@ export interface Power655DrawInfo {
   drawNo: number;
   /** Giờ quay. VD: `"18:00"`. */
   drawTime: string;
-  /** Trạng thái kỳ quay. VD: `"open"`, `"closed"`, `"settled"`. */
-  status: string;
+  /** Trạng thái kỳ quay — `"salesOpen"` (đang mở bán) hoặc `"salesClosed"` (đã đóng bán, chờ quay). */
+  status: "salesOpen" | "salesClosed";
   /** Khung giờ bán vé. */
   sales: {
     /** Thời điểm mở bán (ISO 8601). `undefined` nếu đã mở sẵn. */
@@ -200,10 +201,6 @@ export interface Power655DrawInfo {
     /** Thời điểm đóng bán (ISO 8601). */
     closeAt: string;
   };
-  /** Giá trị Jackpot 1 hiện tại (VND) — giải trùng 6/6 số chính. */
-  jackpot1CurrentAmount: number;
-  /** Giá trị Jackpot 2 hiện tại (VND) — giải trùng 5/6 + bonus. */
-  jackpot2CurrentAmount: number;
 }
 
 /**
@@ -228,8 +225,15 @@ export interface Power655TicketSummary {
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"P655-20260307-00002"`. */
   ticketNo: string;
-  /** Trạng thái vé. VD: `"pending"`, `"partial"`, `"settled"`, `"voided"`. */
-  status: string;
+  /**
+   * Trạng thái vé — dùng chung cho tất cả game, xem {@link TicketStatus}:
+   * - `"paid"` — đã thanh toán, đang chờ xử lý.
+   * - `"completed"` — tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ
+   *   settled.
+   * - `"refunded"` — đã hoàn tiền toàn bộ (TẤT CẢ kỳ quay trong vé đều bị void).
+   * - `"void"` — vé bị vô hiệu hoá toàn bộ (gian lận, lỗi nghiêm trọng).
+   */
+  status: TicketStatus;
   /** Kế hoạch kỳ quay của vé. */
   drawPlan: {
     /** Danh sách drawId trong vé. Format mỗi ID: `YYYY-MM-DD.NNN`. */
@@ -318,8 +322,13 @@ export interface Power655EntryResult {
   id: string;
   /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Trạng thái entry. VD: `"pending"`, `"settled"`, `"voided"`. */
-  status: string;
+  /**
+   * Trạng thái entry — dùng chung cho tất cả game, xem {@link EntryStatus}:
+   * - `"scheduled"` — đã lên lịch tham gia kỳ quay, tiền cược đã trừ, chờ settle.
+   * - `"settled"` — đã tính thưởng xong (terminal).
+   * - `"void"` — bị vô hiệu (kỳ quay bị huỷ), tiền cược được hoàn.
+   */
+  status: EntryStatus;
   /** Tiền cược kỳ này (VND). */
   amount: number;
   /** Đơn giá 1 line (VND). */
@@ -340,8 +349,15 @@ export interface Power655EntryResult {
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
-  /** Kết quả tổng của entry sau settle. `"win"` hoặc `"loss"`. `undefined` nếu chưa settle. */
-  outcome?: string;
+  /**
+   * Kết quả tổng của entry sau settle — dùng chung cho tất cả game, xem {@link EntryOutcome}:
+   * - `"win"` — Thắng, có ít nhất 1 giải trúng.
+   * - `"loss"` — Thua, không trúng giải nào.
+   * - `"void"` — Kỳ quay bị huỷ, entry vô hiệu, tiền cược được hoàn lại.
+   *
+   * `undefined` nếu entry chưa settle.
+   */
+  outcome?: EntryOutcome;
   /** Thông tin trả thưởng. `undefined` nếu chưa settle hoặc không trúng. */
   payout?: {
     /** Tổng tiền thắng trước khi trả thưởng (VND). */
@@ -352,14 +368,16 @@ export interface Power655EntryResult {
     tiers: Array<{
       /** Hạng giải. */
       tier: Power655PrizeTier;
-      /** Tên giải hiển thị. VD: `"Jackpot 1"`, `"Giải nhất"`. */
-      label: string;
       /** Số lần trúng giải này. */
       hitCount: number;
+      /**
+       * Tiền thưởng cho 01 lần tham gia dự thưởng (VND) — đơn giá theo luật Vietlott.
+       * Giải Nhất/Nhì/Ba: hằng số theo bảng giải. Jackpot 1/2: đơn giá chia mỗi phần
+       * khi đã biết pool và tổng số lần tham gia của tất cả người trúng.
+       */
+      unitAmount: number;
       /** Tổng tiền thưởng giải này (VND). */
       amount: number;
-      /** Tiền bonus từ chia Jackpot (VND). `undefined` nếu không có. */
-      splitBonus?: number;
     }>;
   };
 }
@@ -486,11 +504,20 @@ export interface Power655DrawResultSummary {
   jackpot: {
     /** Jackpot 1 mở đầu kỳ (VND). */
     openingJackpot1: number;
-    /** Jackpot 1 kết thúc kỳ — 0 nếu có người trúng (cycle mới bắt đầu) (VND). */
+    /**
+     * Jackpot 1 kết thúc kỳ (VND) = openingJackpot1 + phần tích luỹ kỳ này.
+     * Nếu có JP1 winner: đây là TOÀN BỘ pool mà winner nhận (không bị cap bởi ngưỡng
+     * tràn) — giá trị 0 chỉ xuất hiện ở `openingJackpot1` của kỳ TIẾP THEO sau khi
+     * cycle mới được seed lại, không phải ở đây.
+     */
     closingJackpot1: number;
     /** Jackpot 2 mở đầu kỳ (VND). */
     openingJackpot2: number;
-    /** Jackpot 2 kết thúc kỳ — 0 nếu có người trúng (cycle mới bắt đầu) (VND). */
+    /**
+     * Jackpot 2 kết thúc kỳ (VND) = openingJackpot2 + phần tích luỹ kỳ này.
+     * Nếu có JP2 winner: đây là TOÀN BỘ pool mà winner nhận (có thể gồm cả phần tràn
+     * từ Jackpot 1 nếu overflow kích hoạt) — không phải 0.
+     */
     closingJackpot2: number;
   };
   /** Tham chiếu kỳ quay Vietlott tương ứng. `undefined` nếu không liên kết. */
@@ -573,8 +600,13 @@ export interface Power655PlaceBetResponse {
   ticketId: string;
   /** Mã vé hiển thị cho người chơi. VD: `"P655-20260307-00002"`. */
   ticketNo: string;
-  /** Trạng thái vé sau khi tạo. */
-  status: string;
+  /**
+   * Trạng thái vé sau khi tạo — dùng chung cho tất cả game, xem {@link TicketStatus}. Ngay sau
+   * khi đặt cược thành công luôn là `"paid"`; các giá trị khác (`"refunded"`, `"void"`,
+   * `"completed"`) chỉ xuất hiện sau đó khi tra cứu lại vé qua
+   * `listTickets`/`listPendingTickets`/`getTicketEntries`.
+   */
+  status: TicketStatus;
   /** Số dư ví player sau khi trừ tiền cược (VND). */
   balance: number;
 
@@ -772,8 +804,6 @@ export interface Power655ListTicketsResponse {
  * Trả về bởi `client.power655.getTicketEntries()`.
  */
 export interface Power655TicketEntriesResponse {
-  /** Thông tin tóm tắt vé. */
-  ticket: Power655TicketSummary;
   /** Danh sách entries (1 entry = 1 kỳ quay). */
   entries: Power655EntryResult[];
 }

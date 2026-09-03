@@ -1,6 +1,6 @@
 {
   "name": "@megawin/player-sdk",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",

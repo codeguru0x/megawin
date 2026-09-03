@@ -1,0 +1,68 @@
+app: megawin
+service: mw-api-resultfeed
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 4030
+    lambdaPort: 4031
+    noPrependStageInUrl: true
+  prune:
+    automatic: true
+    number: 3
+    includeLayers: true
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+  timeout: 29
+  logRetentionInDays: 14
+  profile: sls_deploy_${opt:stage, self:provider.stage}
+
+  environment:
+    STAGE: ${opt:stage, self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
+    # API key duy nhất cho mọi consumer hiện tại (chỉ apps/backoffice khi
+    # RESULTFEED_CLIENT_MODE="http"). Xem 08-vietlott-result-autofill.plan.md §4.
+    RESULTFEED_API_KEY: ${env:RESULTFEED_API_KEY, ssm:/${opt:stage, self:provider.stage}/megawin/RESULTFEED_API_KEY}
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${env:CORS_ALLOWED_ORIGIN, '*'}
+      allowedMethods:
+        - GET
+      allowedHeaders:
+        - Content-Type
+        - x-resultfeed-api-key
+      maxAge: 86400
+
+  # KHÔNG khai báo IAM statements Kinesis/SQS/Step Functions — app này chỉ đọc Mongo qua
+  # HTTP GET, không dùng queue/stream/state machine nào (mirror worker-resultfeed).
+
+stages:
+  dev:
+    observability:
+      provider: axiom
+      dataset: megawin-internal-dev
+    params:
+      provisionedConcurrency: 0
+
+  prod:
+    observability:
+      provider: axiom
+      dataset: megawin-internal-prod
+
+  default:
+    observability: false
+
+build:
+  esbuild:
+    configFile: ./esbuild.config.mjs
+
+functions:
+  - ${file(src/functions/results.yml)}

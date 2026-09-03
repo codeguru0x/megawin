@@ -277,6 +277,8 @@ packages/player-sdk/src/
 ├── endpoints.ts              ← URL path registry
 ├── index.ts                  ← Main barrel — tất cả public exports
 ├── client.ts                 ← createPlayerClient factory
+├── common-types.ts           ← TicketStatus, EntryStatus, EntryOutcome — dùng chung cho field
+│                                status/outcome ở TẤT CẢ 7 game, import từ đây thay vì khai lại
 ├── apis/{game}.ts            ← CHỈ chứa {Game}Api interface + create{Game}Api factory (không định nghĩa type ở đây)
 └── {game}/
     ├── enums.ts              ← PlayType, PrizeTier, …

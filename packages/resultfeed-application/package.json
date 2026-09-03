@@ -1,0 +1,100 @@
+{
+  "name": "@megawin/resultfeed-application",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ResultFeed application layer – repos, mappers",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo build --filter=@megawin/resultfeed-application^...",
+    "pretest": "pnpm build:deps",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "clean": "rm -rf dist",
+    "import:historical": "tsx src/scripts/import-historical-results.ts",
+    "seed:cursors": "tsx src/scripts/seed-cursors-from-latest.ts"
+  },
+  "exports": {
+    "./repos": {
+      "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
+      "default": "./dist/infras/repos/index.js"
+    },
+    "./mappers": {
+      "types": "./src/infras/mappers/index.ts",
+      "import": "./src/infras/mappers/index.ts",
+      "default": "./dist/infras/mappers/index.js"
+    },
+    "./providers": {
+      "types": "./src/infras/providers/index.ts",
+      "import": "./src/infras/providers/index.ts",
+      "default": "./dist/infras/providers/index.js"
+    },
+    "./sources": {
+      "types": "./src/sources/index.ts",
+      "import": "./src/sources/index.ts",
+      "default": "./dist/sources/index.js"
+    },
+    "./use-cases/fetch": {
+      "types": "./src/use-cases/fetch/index.ts",
+      "import": "./src/use-cases/fetch/index.ts",
+      "default": "./dist/use-cases/fetch/index.js"
+    },
+    "./use-cases/consensus": {
+      "types": "./src/use-cases/consensus/index.ts",
+      "import": "./src/use-cases/consensus/index.ts",
+      "default": "./dist/use-cases/consensus/index.js"
+    },
+    "./use-cases/results": {
+      "types": "./src/use-cases/results/index.ts",
+      "import": "./src/use-cases/results/index.ts",
+      "default": "./dist/use-cases/results/index.js"
+    },
+    "./use-cases/sources": {
+      "types": "./src/use-cases/sources/index.ts",
+      "import": "./src/use-cases/sources/index.ts",
+      "default": "./dist/use-cases/sources/index.js"
+    },
+    "./use-cases/observations": {
+      "types": "./src/use-cases/observations/index.ts",
+      "import": "./src/use-cases/observations/index.ts",
+      "default": "./dist/use-cases/observations/index.js"
+    },
+    "./use-cases/dashboard": {
+      "types": "./src/use-cases/dashboard/index.ts",
+      "import": "./src/use-cases/dashboard/index.ts",
+      "default": "./dist/use-cases/dashboard/index.js"
+    },
+    "./use-cases/alerts": {
+      "types": "./src/use-cases/alerts/index.ts",
+      "import": "./src/use-cases/alerts/index.ts",
+      "default": "./dist/use-cases/alerts/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/audit": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/http-client": "workspace:*",
+    "@megawin/resultfeed": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/worker-core": "workspace:*",
+    "cheerio": "^1.2.0",
+    "domhandler": "^5.0.3",
+    "mongodb": "^7.5.0",
+    "undici": "^7.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
+    "@types/node": "^25.9.5",
+    "tsx": "^4.23.11",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  }
+}

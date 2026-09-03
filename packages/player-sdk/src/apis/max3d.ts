@@ -7,13 +7,10 @@ import { ENDPOINTS } from "../endpoints";
 import type { HttpClient } from "../http-client";
 import type {
   Max3dCurrentDrawResponse,
-  Max3dDrawInfo,
   Max3dDrawResultInfo,
-  Max3dDrawResultSummary,
   Max3dEntryLinesParams,
   Max3dEntryLinesResponse,
   Max3dGameConfigResponse,
-  Max3dLineInfo,
   Max3dListAllTicketsParams,
   Max3dListDrawResultsParams,
   Max3dListDrawResultsResponse,
@@ -22,7 +19,6 @@ import type {
   Max3dPlaceBetResponse,
   Max3dTicketEntriesResponse,
   Max3dTicketPurchaseInput,
-  Max3dTicketSummary,
 } from "../max3d";
 
 /**
@@ -76,12 +72,11 @@ export interface Max3dApi {
    *
    * **Endpoint:** `POST /games/max3d/bets`
    *
-   * @param input - Thông tin vé: drawId, drawCount, boards (tối đa 4 boards)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
+   * @param input - Thông tin vé: drawIds, boards (tối đa theo cấu hình game)
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, pricing.totalAmount, balance sau cược
    *
-   * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
-   * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — kỳ quay đã đóng bán/không tồn tại, vượt số board/kỳ tối đa, không đủ số dư
+   * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -89,15 +84,14 @@ export interface Max3dApi {
    * import type { Max3dTicketPurchaseInput } from "@megawin/player-sdk/max3d";
    *
    * const result = await client.max3d.placeBet({
-   *   drawId: "2026-03-07.001",
-   *   drawCount: 2,
+   *   drawIds: ["2026-03-07.001", "2026-03-10.001"],
    *   boards: [
    *     { boardNo: "A", playMode: "basic", playType: "straight", triplets: ["123"] },
    *     { boardNo: "B", playMode: "plus",  playType: "straight", triplets: ["456", "789"] },
    *   ],
    * });
    * console.log(result.ticketNo);    // "M3D-20260307-00005"
-   * console.log(result.totalAmount); // 40000
+   * console.log(result.pricing.totalAmount); // 40000
    * console.log(result.balance);     // 960000
    * ```
    */
@@ -150,16 +144,16 @@ export interface Max3dApi {
    * **Endpoint:** `GET /games/max3d/tickets/{ticketId}/entries`
    *
    * @param ticketId - ID vé (lấy từ `ticket.id` hoặc `placeBet` response)
-   * @returns Thông tin vé và danh sách entries kèm kết quả/thưởng
+   * @returns Danh sách entries (1 entry = 1 kỳ quay) kèm kết quả/thưởng
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — ticketId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
    * ```ts
-   * const data = await client.max3d.getTicketEntries("65abc123def456...");
-   * console.log(data.ticket.ticketNo); // "M3D-20260307-00005"
-   * for (const entry of data.entries) {
+   * const { entries } = await client.max3d.getTicketEntries("65abc123def456...");
+   * console.log(entries[0]?.entrySummary.ticketNo); // "M3D-20260307-00005"
+   * for (const entry of entries) {
    *   if (entry.result) {
    *     // result.special, result.first, result.second, result.third đều là string[]
    *     console.log(`Đặc biệt: ${entry.result.special.join(", ")}`);
@@ -218,7 +212,7 @@ export interface Max3dApi {
    * **Endpoint:** `GET /games/max3d/draw-results/{drawId}`
    *
    * @param drawId - ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`.
-   * @returns Chi tiết kỳ quay gồm 20 bộ ba chia 4 hạng, và bảng giải (Basic + Plus gộp chung)
+   * @returns Chi tiết kỳ quay gồm 20 bộ ba chia 4 hạng, và 2 bảng giải tách riêng (Basic + Plus)
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — kỳ quay chưa settle hoặc drawId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -228,7 +222,7 @@ export interface Max3dApi {
    * const draw = await client.max3d.getDrawResult("2026-03-07.001");
    * console.log(`Đặc biệt: ${draw.result.special.join(", ")}`);
    * console.log(`Nhất:     ${draw.result.first.join(", ")}`);
-   * for (const prize of draw.prizes) {
+   * for (const prize of draw.basicPrizes) {
    *   if (prize.winnerCount > 0) {
    *     console.log(`  ${prize.tier}: ${prize.winnerCount} người, ${prize.prizeAmount.toLocaleString()} VND`);
    *   }

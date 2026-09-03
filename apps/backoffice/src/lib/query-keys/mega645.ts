@@ -57,6 +57,9 @@ export const mega645Keys = {
   /** Gợi ý mã kỳ Vietlott cho dialog công bố kết quả (P4) */
   vietlottSuggestion: (drawId: string) => [MODULE, "vietlott-suggestion", drawId] as const,
 
+  /** Kết quả Vietlott tự lấy (ResultFeed) cho dialog công bố/sửa kết quả — theo `drawId` + `drawPeriod` */
+  vietlottResult: (drawId: string, drawPeriod: string) => [MODULE, "vietlott-result", drawId, drawPeriod] as const,
+
   /** Operations dashboard – winning entries của 1 kỳ quay (cursor-based) */
   opsWinningEntries: (drawId: string) => [MODULE, "ops-winning-entries", drawId] as const,
 

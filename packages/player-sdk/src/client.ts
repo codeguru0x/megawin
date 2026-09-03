@@ -8,7 +8,7 @@
  * 2. Tenant server trả tokens về cho client app
  * 3. Client truyền tokens vào `createPlayerClient({ tokens })` hoặc `client.auth.setTokens()`
  * 4. SDK tự động refresh accessToken trước khi hết hạn 5 phút
- * 5. SDK gửi ID token (Bearer) mỗi request, API Gateway HTTP API v2 JWT authorizer verify
+ * 5. SDK gửi ID token qua Bearer header cho mọi request
  *
  * @module
  */
@@ -21,7 +21,6 @@ import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
 import { createMax3dApi, type Max3dApi } from "./apis/max3d";
 import { createMax3dproApi, type Max3dproApi } from "./apis/max3dpro";
 import { createMega645Api, type Mega645Api } from "./apis/mega645";
-import { createPlayerApi, type PlayerApi } from "./apis/player";
 import { createPower655Api, type Power655Api } from "./apis/power655";
 import { type AuthApi, createAuthApi } from "./auth/auth-api";
 import { SessionStorageTokenStorage, TokenManager } from "./auth/token-manager";
@@ -56,7 +55,7 @@ import { createHttpClient, type HttpClient, type RequestConfig } from "./http-cl
  */
 export interface PlayerSdkConfig {
   /**
-   * Base URL của API Gateway.
+   * Base URL của MegaWin API.
    *
    * @example "https://api.domain.com"
    */
@@ -186,7 +185,6 @@ export interface PlayerSdkConfig {
  * });
  *
  * // 2. Gọi API
- * const balance = await client.player.getBalance();
  * const kenoResult = await client.keno.placeBet({ ... });
  * const lottoResult = await client.lotto535.placeBet({ ... });
  *
@@ -226,11 +224,6 @@ export interface PlayerClient {
 
   /** Game API — thao tác gộp cross-game (jackpot tổng hợp, ...). */
   readonly game: GameApi;
-
-  /**
-   * Player API — số dư, lịch sử cược, kết quả game.
-   */
-  readonly player: PlayerApi;
 }
 
 // ============ Factory ============
@@ -257,7 +250,7 @@ export interface PlayerClient {
  * });
  *
  * // Sẵn sàng gọi API
- * const balance = await client.player.getBalance();
+ * const kenoResult = await client.keno.placeBet({ ... });
  * ```
  */
 export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
@@ -334,7 +327,6 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
   const max3dpro = createMax3dproApi(authedClient);
   const bingo18 = createBingo18Api(authedClient);
   const game = createGameApi(authedClient);
-  const player = createPlayerApi(authedClient);
 
   // ---- Set initial tokens if provided ----
 
@@ -353,6 +345,5 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
     max3dpro,
     bingo18,
     game,
-    player,
   };
 }

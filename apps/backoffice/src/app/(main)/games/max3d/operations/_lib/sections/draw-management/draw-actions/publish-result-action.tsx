@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 
@@ -26,9 +26,12 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { MagicFetchResultButton } from "@/app/(main)/games/_lib/operations/magic-fetch-result-button";
 import { formatResultDialogTitle } from "@/app/(main)/games/_lib/operations/result-dialog-title";
+import { diffResultNumbers, type ResultNumbersDiff } from "@/app/(main)/games/_lib/operations/result-numbers-diff";
 import { vietlottConfigHref } from "@/app/(main)/games/_lib/operations/vietlott-config-link";
 import { VietlottReminderNote } from "@/app/(main)/games/_lib/operations/vietlott-reminder-note";
+import { VietlottResultPanel } from "@/app/(main)/games/_lib/operations/vietlott-result-panel";
 import { VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES } from "@/app/(main)/games/_lib/operations/vietlott-suggestion-messages";
 import { RandomFillButton } from "@/components/draws";
 import { TIER_DOT_STYLES, type TierVariant } from "@/components/games/max3d/triplet-display";
@@ -46,9 +49,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 import type { DrawSelectorItem } from "../../../use-operations";
-import { usePublishResult, useVietlottSuggestion } from "../../../use-operations";
+import { usePublishResult, useVietlottResult, useVietlottSuggestion } from "../../../use-operations";
 
 /** Href tĩnh — build 1 lần ở module scope, dùng lại cho cả 2 nhắc nhở trong dialog. */
 const vietlottConfigLink = vietlottConfigHref(GameProduct.Max3d);
@@ -185,6 +189,12 @@ export function PublishResultAction({
   const [periodTouched, setPeriodTouched] = useState(false);
   const [validation, setValidation] = useState<ValidationResult>(VALID);
   const [pasteNotice, setPasteNotice] = useState<string | null>(null);
+  const [hasAppliedAutoResult, setHasAppliedAutoResult] = useState(false);
+  // Chỉ hiện panel trạng thái (loading/not-found/conflict...) SAU KHI staff chủ động bấm nút
+  // "Kết quả" — tránh thông báo "Chưa có kết quả cho kỳ này" xuất hiện ngay lúc mở dialog (query
+  // vẫn tự fetch ngầm để phục vụ autofill Rule A, chỉ ẨN kết quả fetch khỏi UI cho tới khi user
+  // yêu cầu). Ngoại lệ: `found = true` luôn hiện ngay (autofill tự động cũng cần xác nhận đã điền).
+  const [hasManualFetch, setHasManualFetch] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Gợi ý mã kỳ Vietlott — chỉ fetch khi dialog mở (P4). Đọc neo + lịch từ config
@@ -211,6 +221,8 @@ export function PublishResultAction({
       setPeriodTouched(false);
       setValidation(VALID);
       setPasteNotice(null);
+      setHasAppliedAutoResult(false);
+      setHasManualFetch(false);
     }
   }, [isOpen, currentResult, defaultVietlotDate]);
 
@@ -227,6 +239,83 @@ export function PublishResultAction({
   // duy nhất phát hiện neo đã cũ. Cảnh báo MỀM, không chặn submit.
   const trimmedPeriod = vietlotPeriod.trim();
   const periodMismatch = !!suggestedPeriod && !!trimmedPeriod && trimmedPeriod !== suggestedPeriod;
+
+  // Tự lấy kết quả Vietlott đã publish (ResultFeed) theo mã kỳ đang nhập — chỉ fetch khi
+  // dialog mở và đã có mã kỳ. Đổi mã kỳ (user tự sửa ô input) tự động tạo query khác, tự refetch.
+  const vietlottResultQuery = useVietlottResult(draw.drawId, trimmedPeriod, isOpen);
+
+  // numbers[] (flat, 20 phần tử): thứ tự cố định ĐB(2) → Nhất(4) → Nhì(6) → Ba(8) — khớp
+  // đúng thứ tự flat index của form (§9 plan 08).
+  function applyIncomingNumbers() {
+    const data = vietlottResultQuery.data;
+    if (!data?.found || !data.numbers || data.numbers.length < MAX3D_DRAW_TOTAL) {
+      return;
+    }
+    setTriplets(data.numbers.slice(0, MAX3D_DRAW_TOTAL));
+    setValidation(VALID);
+    setHasAppliedAutoResult(true);
+  }
+
+  // Tự động điền — CHỈ khi TẤT CẢ ô đang rỗng — KHÔNG tự điền phần thiếu khi form đã có bất
+  // kỳ số nào ở BẤT KỲ hạng giải nào (quy tắc bất biến §5.0/§11.0 quy tắc A — autofill luôn
+  // là hành động toàn-form, không autofill riêng từng hạng).
+  useEffect(() => {
+    const data = vietlottResultQuery.data;
+    if (
+      data?.found &&
+      data.numbers &&
+      data.numbers.length >= MAX3D_DRAW_TOTAL &&
+      triplets.every((v) => v.trim() === "") &&
+      !hasAppliedAutoResult
+    ) {
+      setTriplets(data.numbers.slice(0, MAX3D_DRAW_TOTAL));
+      setValidation(VALID);
+      setHasAppliedAutoResult(true);
+    }
+  }, [vietlottResultQuery.data, triplets, hasAppliedAutoResult]);
+
+  function handleMagicFetch() {
+    // Reset cờ đã-áp-dụng để effect autofill (chỉ chạy khi form rỗng) có thể chạy lại, và để
+    // khối trạng thái quay về mode "vừa lấy xong" nếu form đang rỗng.
+    setHasAppliedAutoResult(false);
+    setHasManualFetch(true);
+    void vietlottResultQuery.refetch();
+  }
+
+  // So sánh số đang nhập với số ResultFeed — gọi `diffResultNumbers` 4 LẦN, mỗi hạng giải 1
+  // lần (plan §11.0 quy tắc B + §11.3 bảng cắt lát: ĐB slice(0,2), Nhất slice(2,6), Nhì
+  // slice(6,12), Ba slice(12,20)). Không gộp thành 1 mảng phẳng rồi so 1 lần.
+  const incomingNumbers = vietlottResultQuery.data?.found ? vietlottResultQuery.data.numbers : null;
+  const tierDiffs = useMemo(() => {
+    if (!incomingNumbers) {
+      return null;
+    }
+    const map = new Map<TierVariant, ResultNumbersDiff>();
+    for (const tier of TIER_CONFIG) {
+      const currentSlice = triplets.slice(tier.offset, tier.offset + tier.count);
+      const incomingSlice = incomingNumbers.slice(tier.offset, tier.offset + tier.count);
+      map.set(tier.key, diffResultNumbers(currentSlice, incomingSlice));
+    }
+    return map;
+  }, [triplets, incomingNumbers]);
+  const hasAnyNumber = triplets.some((v) => v.trim() !== "");
+  // showDiff tổng = OR của mọi hạng — dùng để bật/tắt legend chung (plan §11 bước 5 — chỉ
+  // 1 legend cho toàn dialog, không lặp theo từng hạng giải).
+  const showDiff = !!tierDiffs && hasAnyNumber && [...tierDiffs.values()].some((d) => !d.isIdentical);
+  // Diff tổng hợp cho VietlottResultPanel — cộng diffCount mọi hạng, isIdentical khi tất cả khớp.
+  const combinedDiff: ResultNumbersDiff | null = tierDiffs
+    ? {
+        diffIndices: new Set(
+          TIER_CONFIG.flatMap((tier) => [...(tierDiffs.get(tier.key)?.diffIndices ?? [])].map((i) => tier.offset + i)),
+        ),
+        diffCount: [...tierDiffs.values()].reduce((sum, d) => sum + d.diffCount, 0),
+        isIdentical: [...tierDiffs.values()].every((d) => d.isIdentical),
+        sameSetDifferentOrder: false,
+      }
+    : null;
+
+  const displayFound =
+    hasManualFetch || vietlottResultQuery.data?.found === true ? vietlottResultQuery.data?.found : undefined;
 
   function handleTripletChange(flatIndex: number, raw: string) {
     const cleaned = raw.replace(/\D/g, "").slice(0, 3);
@@ -330,7 +419,7 @@ export function PublishResultAction({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Dice3 className="size-4.5 text-blue-500" />
@@ -359,58 +448,119 @@ export function PublishResultAction({
               <Badge variant="secondary" className="tabular-nums">
                 {filledCount}/{MAX3D_DRAW_TOTAL} bộ số
               </Badge>
-              <RandomFillButton onFill={fillRandom} />
+              <div className="flex items-center gap-1">
+                <RandomFillButton onFill={fillRandom} />
+                <MagicFetchResultButton
+                  onFetch={handleMagicFetch}
+                  isFetching={hasManualFetch && vietlottResultQuery.isFetching}
+                  disabled={!trimmedPeriod}
+                />
+              </div>
             </div>
 
+            {/* Legend chung cho CẢ 4 khối lưới (ĐB/Nhất/Nhì/Ba) — chỉ 1 lần, không lặp theo
+                từng hạng giải (plan §11 bước 5). */}
+            {showDiff && (
+              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-4 rounded-full bg-muted ring-1 ring-border" />
+                  Thứ tự
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="size-4 rounded-full bg-amber-100 ring-1 ring-amber-300 dark:bg-amber-900/50 dark:ring-amber-700" />
+                  Gợi ý Vietlott (ô lệch)
+                </span>
+              </div>
+            )}
+
             <div onPaste={handleGridPaste}>
-              {TIER_CONFIG.map((tier) => (
-                <div key={tier.key} className="space-y-2.5 mb-3.5 last:mb-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`size-2.5 rounded-full shrink-0 ${TIER_DOT_STYLES[tier.key]}`} />
-                    <Label className="text-sm font-semibold">{tier.label}</Label>
-                  </div>
-                  <div className="rounded-lg border bg-muted/20 p-3">
-                    <div className="grid grid-cols-6 gap-2">
-                      {Array.from({ length: tier.count }, (_, i) => {
-                        const flatIndex = tier.offset + i;
-                        return (
-                          <div key={i} className="flex flex-col gap-1">
-                            <span className="text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
-                            <Input
-                              ref={(el) => {
-                                inputRefs.current[flatIndex] = el;
-                              }}
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={3}
-                              value={triplets[flatIndex]}
-                              onChange={(e) => handleTripletChange(flatIndex, e.target.value)}
-                              className={`w-full text-center font-mono text-sm font-bold tabular-nums ${validation.fieldErrors.has(flatIndex) ? "border-destructive" : ""}`}
-                            />
-                          </div>
-                        );
-                      })}
+              {TIER_CONFIG.map((tier) => {
+                const tierDiff = tierDiffs?.get(tier.key) ?? null;
+                const showTierDiff = showDiff && !!tierDiff && !tierDiff.isIdentical;
+                return (
+                  <div key={tier.key} className="mb-3.5 space-y-2.5 last:mb-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`size-2.5 shrink-0 rounded-full ${TIER_DOT_STYLES[tier.key]}`} />
+                      <Label className="font-semibold text-sm">{tier.label}</Label>
+                    </div>
+                    <div className="rounded-lg border bg-muted/20 p-3">
+                      <div className="grid grid-cols-6 gap-x-2 gap-y-3">
+                        {Array.from({ length: tier.count }, (_, i) => {
+                          const flatIndex = tier.offset + i;
+                          const isDiff = showTierDiff && tierDiff?.diffIndices.has(i);
+                          return (
+                            <div key={i} className="flex flex-col items-center gap-1">
+                              <div className="relative w-full">
+                                <span className="absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full bg-muted font-semibold text-[9px] text-muted-foreground ring-2 ring-background">
+                                  {i + 1}
+                                </span>
+                                <Input
+                                  ref={(el) => {
+                                    inputRefs.current[flatIndex] = el;
+                                  }}
+                                  type="text"
+                                  inputMode="numeric"
+                                  maxLength={3}
+                                  value={triplets[flatIndex]}
+                                  onChange={(e) => handleTripletChange(flatIndex, e.target.value)}
+                                  className={cn(
+                                    "w-full text-center font-bold font-mono text-sm tabular-nums",
+                                    validation.fieldErrors.has(flatIndex) && "border-destructive",
+                                    !validation.fieldErrors.has(flatIndex) &&
+                                      isDiff &&
+                                      "border-amber-400 bg-amber-50/50 dark:bg-amber-900/20",
+                                  )}
+                                />
+                              </div>
+                              {showTierDiff && (
+                                <span
+                                  className={cn(
+                                    "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono font-semibold text-[10px] tabular-nums",
+                                    isDiff
+                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+                                      : "invisible",
+                                  )}
+                                >
+                                  {incomingNumbers?.[flatIndex] ?? "000"}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            <VietlottResultPanel
+              isLoading={hasManualFetch && vietlottResultQuery.isLoading}
+              found={displayFound}
+              hasAnyNumber={hasAnyNumber}
+              alreadyApplied={hasAppliedAutoResult}
+              diff={combinedDiff}
+              totalCount={MAX3D_DRAW_TOTAL}
+              verifiedByHuman={vietlottResultQuery.data?.verifiedByHuman ?? null}
+              sourceCount={vietlottResultQuery.data?.sourceCount ?? null}
+              onApply={applyIncomingNumbers}
+            />
 
             {pasteNotice && (
               <div className="rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-800 dark:text-amber-300">{pasteNotice}</p>
+                  <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <p className="text-amber-800 text-sm dark:text-amber-300">{pasteNotice}</p>
                 </div>
               </div>
             )}
 
             {validation.messages.length > 0 && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-1">
+              <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
                 {validation.messages.map((msg, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <AlertCircle className="size-3.5 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-sm text-destructive">{msg}</p>
+                    <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+                    <p className="text-destructive text-sm">{msg}</p>
                   </div>
                 ))}
               </div>
@@ -423,16 +573,16 @@ export function PublishResultAction({
                 <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
                   <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
+                <Label className="font-semibold text-sm">Tham chiếu Vietlott</Label>
               </div>
               <div className="rounded-lg border bg-muted/30 p-4">
-                <p className="mb-3 text-xs text-muted-foreground">
+                <p className="mb-3 text-muted-foreground text-xs">
                   Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát. Chỉ sửa tham chiếu (giữ nguyên kết quả)
                   sẽ KHÔNG kích hoạt kết sổ lại.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
                       <CalendarDays className="size-3" /> Ngày Vietlott
                     </Label>
                     <Input
@@ -443,7 +593,7 @@ export function PublishResultAction({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
                       <Hash className="size-3" /> Mã kỳ Vietlott
                     </Label>
                     <Input
@@ -463,15 +613,15 @@ export function PublishResultAction({
                 {!suggestion.isFetching && !suggestedPeriod && !trimmedPeriod && suggestion.data?.reason && (
                   <div className="mt-3 rounded-lg border border-blue-300/50 bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="size-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                      <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                       <div className="space-y-1">
-                        <p className="text-sm leading-relaxed text-blue-800 dark:text-blue-300">
+                        <p className="text-blue-800 text-sm leading-relaxed dark:text-blue-300">
                           {VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES[suggestion.data.reason]}
                         </p>
                         {suggestion.data.reason === VietlottSuggestionUnavailableReason.NoAnchor && (
                           <Link
                             href={vietlottConfigLink}
-                            className="text-xs font-medium text-blue-700 underline dark:text-blue-400"
+                            className="font-medium text-blue-700 text-xs underline dark:text-blue-400"
                           >
                             Cấu hình mã kỳ Vietlott →
                           </Link>
@@ -485,13 +635,13 @@ export function PublishResultAction({
                 {periodMismatch && (
                   <div className="mt-3 rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
                       <div className="space-y-1">
-                        <p className="text-sm text-amber-800 dark:text-amber-300">
+                        <p className="text-amber-800 text-sm dark:text-amber-300">
                           Mã kỳ vừa nhập (<span className="font-mono font-semibold">{trimmedPeriod}</span>) khác gợi ý
                           hệ thống (<span className="font-mono font-semibold">{suggestedPeriod}</span>).
                         </p>
-                        <p className="text-xs text-amber-700 dark:text-amber-400">
+                        <p className="text-amber-700 text-xs dark:text-amber-400">
                           Nếu giá trị vừa nhập đúng với trang Vietlott, hãy{" "}
                           <Link href={vietlottConfigLink} className="font-medium underline">
                             cập nhật lại mã kỳ Vietlott

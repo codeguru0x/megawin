@@ -97,19 +97,35 @@ export type JackpotGameProduct = (typeof JackpotGameProduct)[keyof typeof Jackpo
 /**
  * Vòng đời trạng thái của vé (ticket) – dùng chung cho mọi game.
  *
- * Flow: paid → completed
- *         ↘ refunded / void
+ * Flow tự động (set bởi `bulkSyncSummaries` khi settle/void draw):
+ *   paid → completed        (còn ≥ 1 kỳ settled sau khi xử lý xong tất cả kỳ)
+ *   paid → refunded          (TẤT CẢ kỳ đều bị void, không kỳ nào settled)
  *
- * Hệ thống **không cho phép huỷ vé** (không có "cancelled").
+ * `void` KHÔNG nằm trong flow tự động trên – đây là trạng thái riêng biệt, dành cho can thiệp
+ * thủ công trên toàn bộ vé (gian lận, lỗi nghiêm trọng). Hệ thống hiện **chưa có use-case nào**
+ * chủ động set trạng thái này (không có tính năng "huỷ vé" qua backoffice) – enum value giữ lại
+ * làm điểm mở rộng cho tương lai. Không nhầm với việc MỘT PHẦN kỳ trong vé nhiều kỳ bị void: vé
+ * vẫn giữ `paid`/`completed`, phần bị void chỉ ghi nhận ở `TicketVoidSummary` (field `voidSummary`
+ * trên `TicketDoc`), không đổi status cấp vé.
  */
 export const TicketStatus = {
-  /** Đã thanh toán – vé bị khoá (immutable), entries được tạo. */
+  /** Đã thanh toán – vé bị khoá (immutable), entries được tạo cho mọi kỳ đã chọn. */
   Paid: "paid",
-  /** Đã hoàn tiền – chỉ xảy ra khi có lỗi hệ thống hoặc kỳ quay bị void. */
+  /**
+   * Đã hoàn tiền toàn bộ – set khi TẤT CẢ kỳ quay trong vé đều bị void (không kỳ nào settled).
+   * 100% tiền cược được hoàn. Nếu vé nhiều kỳ chỉ MỘT PHẦN kỳ bị void (còn lại settled), vé giữ
+   * `paid`/`completed`, KHÔNG chuyển sang `refunded` – xem `voidSummary` cho phần đó.
+   */
   Refunded: "refunded",
-  /** Vô hiệu – gian lận, lỗi nghiêm trọng, admin void. */
+  /**
+   * Vô hiệu hoá toàn bộ vé – gian lận, lỗi nghiêm trọng, can thiệp thủ công. Khác `refunded`: đây
+   * không phải kết quả tự nhiên của flow settle/void draw (xem chú thích flow phía trên).
+   */
   Void: "void",
-  /** Tất cả kỳ quay đã settle xong. */
+  /**
+   * Tất cả kỳ quay trong vé đã xử lý xong (settled hoặc void), có ít nhất 1 kỳ settled. Có thể
+   * vẫn có một phần kỳ bị void kèm theo – xem `voidSummary`.
+   */
   Completed: "completed",
 } as const;
 

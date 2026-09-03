@@ -128,3 +128,21 @@ export abstract class AuditRepo<
     super({ collName, dbName: Constants.Default.AuditDbName, dataMapper });
   }
 }
+
+/**
+ * Base cho mọi repo ResultFeed — DB `megawin-resultfeed` (primary), **cùng cluster** với
+ * `megawin`/`megawin-game`/… — không có `mongoEnvKey` riêng, giống `AuditRepo`.
+ *
+ * Không tách cluster từ đầu: khối lượng ghi rất nhỏ (~440 request/ngày), không có lý do kỹ
+ * thuật để trả thêm một connection string. Nếu sau này ResultFeed phục vụ API public với tải
+ * đọc lớn và cần cách ly khỏi OLTP game — thêm `mongoEnvKey` riêng NGAY tại đây (một tham số,
+ * không phải refactor gọi nơi khác — xem tiền lệ comment ở {@link ReportReadRepo}).
+ */
+export abstract class ResultFeedRepo<
+  TEntity extends BaseEntity,
+  TMapper extends MongoMapper<Document, TEntity> | undefined = undefined,
+> extends MongoRepository<TEntity, TMapper> {
+  constructor({ collName, dataMapper }: BaseRepoArgs<TMapper>) {
+    super({ collName, dbName: Constants.Default.ResultFeedDbName, dataMapper });
+  }
+}

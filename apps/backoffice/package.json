@@ -52,6 +52,8 @@
     "@megawin/identity-application": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/ops-docs": "workspace:*",
+    "@megawin/resultfeed": "workspace:*",
+    "@megawin/resultfeed-application": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-dispatch": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
