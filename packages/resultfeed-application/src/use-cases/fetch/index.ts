@@ -3,4 +3,9 @@ export {
   type FetchAndParseOutcome,
   FetchAndParseUseCase,
 } from "./fetch-and-parse";
-export { computeNextFetchAt, computeNextFetchAtAfterConfirm, type GameFetchSchedule } from "./schedule";
+export {
+  computeNextFetchAt,
+  computeNextFetchAtAfterConfirm,
+  computeNextFetchAtOnUnavailable,
+  type GameFetchSchedule,
+} from "./schedule";

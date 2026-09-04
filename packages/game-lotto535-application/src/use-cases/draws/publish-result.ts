@@ -128,6 +128,9 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
       };
     }
 
+    // Ghi đè result khi đang Published (chưa settle lần đầu, hoặc chờ kết sổ lại).
+    // publishResult cũng $unset snapshot settle cũ (financial/jackpot/…) — no-op
+    // nếu chưa từng settle.
     const updated = await this.drawRepo.publishResult(
       input.drawId,
       { winningMain, winningSpecial, publishedAt },
@@ -138,8 +141,7 @@ export class PublishResultUseCase extends UseCase<PublishResultInput, PublishRes
       throw AppException.internal(`Publish kết quả kỳ ${input.drawId} thất bại.`);
     }
 
-    // Ghi đè result mới khi đang chờ resettle (status Published, đã settle ≥ 1
-    // lần): publish thường, không mở resettle mới. Fire-and-forget.
+    // Fire-and-forget.
     auditPublishResult({
       actor: input.actor,
       drawId: input.drawId,

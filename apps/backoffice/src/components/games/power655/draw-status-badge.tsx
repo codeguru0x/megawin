@@ -42,16 +42,30 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   },
 };
 
+/** Published sau khi đã từng settle (republish / reopen cascade) — chờ kết sổ lại. */
+const AWAITING_RESETTLE = {
+  label: "Chờ kết sổ lại",
+  className: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300",
+} as const;
+
 interface DrawStatusBadgeProps {
   status: string;
+  /**
+   * true khi status = published nhưng `settledAt` còn tồn tại (đã từng settle,
+   * đang chờ kết sổ lại). Đổi label để staff không nhầm với publish lần đầu.
+   */
+  awaitingResettle?: boolean;
   className?: string;
 }
 
-export function Power655DrawStatusBadge({ status, className }: DrawStatusBadgeProps) {
-  const config = STATUS_MAP[status] ?? {
-    label: status,
-    className: "bg-muted text-muted-foreground",
-  };
+export function Power655DrawStatusBadge({ status, awaitingResettle = false, className }: DrawStatusBadgeProps) {
+  const config =
+    awaitingResettle && status === "published"
+      ? AWAITING_RESETTLE
+      : (STATUS_MAP[status] ?? {
+          label: status,
+          className: "bg-muted text-muted-foreground",
+        });
 
   return (
     <Badge variant="outline" className={cn("border-0", config.className, className)}>

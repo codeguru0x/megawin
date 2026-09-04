@@ -6,8 +6,12 @@
  * Hiển thị kết quả quay số và tổng hợp tài chính sau khi draw published/settled.
  * Power 6/55 khác Mega 6/45:
  * - Có bonusNumber trong kết quả
- * - 6 tiers (JP1, JP2, tier1-4)
+ * - 5 tiers (JP1, JP2, tier1-3)
  * - Jackpot kép: JP1 pool + JP2 pool
+ *
+ * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish/
+ * reopen, financial (+ jackpot) bị $unset — không render ledger toàn 0 / biến
+ * động Jackpot lệch (trước ≠ sau khi đóng góp hiện 0).
  */
 
 import { useMemo } from "react";
@@ -39,7 +43,9 @@ export function ResultSection() {
 
   const result: DrawResult | undefined = useMemo(() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier as PrizeTier, t]));
     const tiers = TIER_ORDER.map((tier) => {
@@ -55,47 +61,59 @@ export function ResultSection() {
       };
     });
 
-    // Winner detection từ settleSummary. Pool đã trao = prizeAmount tier JP (đã patch
-    // = opening + contribution bởi PatchJackpotPrize).
-    const jp1Tier = tierMap.get(PrizeTier.Jackpot1);
-    const jp2Tier = tierMap.get(PrizeTier.Jackpot2);
-    const hasJackpot1Winner = (jp1Tier?.winnerCount ?? 0) > 0;
-    const hasJackpot2Winner = (jp2Tier?.winnerCount ?? 0) > 0;
+    // Chỉ build ledger khi đã có financial sau settle — tránh ?? 0 giả tạo.
+    const financial = d.financial
+      ? (() => {
+          // Winner detection từ settleSummary. Pool đã trao = prizeAmount tier JP
+          // (đã patch = opening + contribution bởi PatchJackpotPrize).
+          const jp1Tier = tierMap.get(PrizeTier.Jackpot1);
+          const jp2Tier = tierMap.get(PrizeTier.Jackpot2);
+          const hasJackpot1Winner = (jp1Tier?.winnerCount ?? 0) > 0;
+          const hasJackpot2Winner = (jp2Tier?.winnerCount ?? 0) > 0;
+
+          return {
+            totalRevenue: d.financial.totalRevenue,
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+            actualCompanyTake: d.financial.actualCompanyTake,
+            jackpot1Contribution: d.financial.jackpot1Contribution,
+            jackpot2Contribution: d.financial.jackpot2Contribution,
+            jp1Overflow: d.financial.jp1Overflow,
+            jackpot1Before: d.jackpot?.openingJackpot1 ?? 0,
+            jackpot1After: d.jackpot?.closingJackpot1 ?? 0,
+            jackpot2Before: d.jackpot?.openingJackpot2 ?? 0,
+            jackpot2After: d.jackpot?.closingJackpot2 ?? 0,
+            hasJackpot1Winner,
+            hasJackpot2Winner,
+            jackpot1PrizeAwarded: hasJackpot1Winner ? (jp1Tier?.prizeAmount ?? 0) : 0,
+            jackpot2PrizeAwarded: hasJackpot2Winner ? (jp2Tier?.prizeAmount ?? 0) : 0,
+          };
+        })()
+      : undefined;
 
     return {
       winningMain: d.result.winningMain,
       bonusNumber: d.result.bonusNumber,
       settledAt: d.result.publishedAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
-        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
-        jackpot1Contribution: d.financial?.jackpot1Contribution ?? 0,
-        jackpot2Contribution: d.financial?.jackpot2Contribution ?? 0,
-        jp1Overflow: d.financial?.jp1Overflow ?? 0,
-        jackpot1Before: d.jackpot?.openingJackpot1 ?? 0,
-        jackpot1After: d.jackpot?.closingJackpot1 ?? 0,
-        jackpot2Before: d.jackpot?.openingJackpot2 ?? 0,
-        jackpot2After: d.jackpot?.closingJackpot2 ?? 0,
-        hasJackpot1Winner,
-        hasJackpot2Winner,
-        jackpot1PrizeAwarded: hasJackpot1Winner ? (jp1Tier?.prizeAmount ?? 0) : 0,
-        jackpot2PrizeAwarded: hasJackpot2Winner ? (jp2Tier?.prizeAmount ?? 0) : 0,
-      },
+      financial,
     };
   }, [drawDetailData]);
 
-  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) return null;
+  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) {
+    return null;
+  }
+
+  // Published + đã từng settle → chờ kết sổ lại; Published lần đầu → chờ kết sổ.
+  const awaitingResettle = draw.status === DrawStatus.Published && !!draw.settledAt;
 
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
-        <FinancialSummary financial={result.financial} />
+        <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />
       </div>
     </section>
   );

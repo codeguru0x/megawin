@@ -264,7 +264,10 @@ export function DrawCommandCenter({
                 <h2 className="text-sm font-semibold tracking-tight">
                   Keno — {draw.drawDate} · Kỳ {String(draw.drawNo).padStart(3, "0")}
                 </h2>
-                <KenoDrawStatusBadge status={status} />
+                <KenoDrawStatusBadge
+                  status={status}
+                  awaitingResettle={status === DrawStatus.Published && !!draw.settledAt}
+                />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <p className="text-[11px] text-muted-foreground font-mono shrink-0">{draw.drawId}</p>

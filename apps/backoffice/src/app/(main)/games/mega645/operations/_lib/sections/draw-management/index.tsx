@@ -94,27 +94,30 @@ export function DrawManagementSection() {
       };
     });
 
-    const jackpotTier = tierMap.get(PrizeTier.Jackpot);
-    const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
-    const jackpotPrizeAwarded = hasJackpotWinner ? (jackpotTier?.prizeAmount ?? 0) : 0;
-
     return {
       // Mega 6/45: 6 số chính (01-45), cast cứng vì luôn đúng từ DB
       winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
       settledAt: d.result.publishedAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
-        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
-        jackpotContribution: d.financial?.jackpotContribution ?? 0,
-        jackpotBefore: d.jackpot?.openingAmount ?? 0,
-        jackpotAfter: d.jackpot?.closingAmount ?? 0,
-        hasJackpotWinner,
-        jackpotPrizeAwarded,
-      },
+      // Chỉ map khi đã settle — tránh ledger giả toàn 0 sau republish/reopen.
+      financial: d.financial
+        ? (() => {
+            const jackpotTier = tierMap.get(PrizeTier.Jackpot);
+            const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
+            return {
+              totalRevenue: d.financial.totalRevenue,
+              totalFixedPrizes: d.financial.totalFixedPrizes,
+              totalAgentCommission: d.financial.totalAgentCommission,
+              companyTake: d.financial.companyTake,
+              actualCompanyTake: d.financial.actualCompanyTake,
+              jackpotContribution: d.financial.jackpotContribution,
+              jackpotBefore: d.jackpot?.openingAmount ?? 0,
+              jackpotAfter: d.jackpot?.closingAmount ?? 0,
+              hasJackpotWinner,
+              jackpotPrizeAwarded: hasJackpotWinner ? (jackpotTier?.prizeAmount ?? 0) : 0,
+            };
+          })()
+        : undefined,
     };
   })();
 

@@ -13,8 +13,16 @@ const useCase = new FetchAndParseUseCase({
   sourceId: vietlottDetailAdapter.sourceId,
   gameKey: ResultFeedGameKey.Bingo18,
   adapter: vietlottDetailAdapter,
-  // Bingo18 quay liên tục (vài phút/kỳ) — không có giờ quay cố định để nhảy thẳng tới.
-  schedule: { type: "continuous" },
+  // Bingo18 quay liên tục trong giờ hoạt động Vietlott (06:06-21:53, chu kỳ 6 phút/kỳ) —
+  // dùng `continuous-daily-window` để night-mode tự giãn nhịp sau giờ đóng cửa tới trước
+  // giờ mở ngày mới (xem `schedule.ts` mục "GIÃN NHỊP QUA ĐÊM"). KHÔNG dùng `fixed` — quay
+  // liên tục suốt ngày, không có slot rời rạc để nhảy thẳng tới như Lotto535.
+  schedule: {
+    type: "continuous-daily-window",
+    firstDrawVn: "06:06",
+    lastDrawVn: "21:53",
+    drawIntervalMs: 6 * 60 * 1000,
+  },
   // = timeout Lambda ở `functions/fetch.yml` — lock TTL phải bao trùm hết burst catch-up
   // (nhiều tick/invocation, xem `FetchAndParseUseCase.budgetMs`), không chỉ 1 lượt fetch.
   ttlSeconds: 120,

@@ -237,7 +237,10 @@ export function DrawCommandCenter({
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-sm font-semibold tracking-tight">Max 3D — {draw.drawDate}</h2>
-                <DrawStatusBadge status={status} />
+                <DrawStatusBadge
+                  status={status}
+                  awaitingResettle={status === DrawStatus.Published && !!draw.settledAt}
+                />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <p className="text-xs text-muted-foreground font-mono shrink-0">{draw.drawId}</p>

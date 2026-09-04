@@ -271,7 +271,10 @@ export function DrawCommandCenter({
                 <h2 className="text-sm font-semibold tracking-tight">
                   Kỳ {draw.drawNo} — {draw.drawDate}
                 </h2>
-                <DrawStatusBadge status={status} />
+                <DrawStatusBadge
+                  status={status}
+                  awaitingResettle={status === DrawStatus.Published && !!draw.settledAt}
+                />
               </div>
               {/* Line 2: draw ID + schedule chips + countdown — cùng hàng */}
               <div className="flex items-center gap-3 flex-wrap">
@@ -301,7 +304,10 @@ export function DrawCommandCenter({
                 <DropdownMenuSeparator />
                 {isSettled && (
                   <DropdownMenuItem asChild>
-                    <Link prefetch={false} href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
+                    <Link
+                      prefetch={false}
+                      href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                    >
                       <FileText className="size-3.5" /> Xem báo cáo
                     </Link>
                   </DropdownMenuItem>

@@ -244,10 +244,15 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Publish hoặc cập nhật kết quả quay. Chấp nhận draw ở salesClosed hoặc published.
    *
    * - salesClosed → published (lần đầu publish)
-   * - published → published (sửa kết quả trước khi settle)
+   * - published → published (sửa kết quả trước settle, hoặc đang chờ kết sổ lại)
    *
    * Caller truyền publishedAt sẵn trong result.
    * Ghi vietlottRef nếu được truyền vào.
+   *
+   * `$unset financial/stats/settleSummary` — no-op khi publish lần đầu. Khi kỳ đã
+   * từng settle rồi quay lại Published (chờ resettle), xoá snapshot settle cũ để
+   * UI không đọc ledger lỗi thời. Max 3D Pro không có field jackpot trên draw.
+   * Nhánh Settled → Published dùng `republishResultAfterSettled` (cùng bộ unset).
    */
   async publishResult(
     drawId: string,
@@ -259,7 +264,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       result,
       updatedAt: new Date(),
     };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
+    }
 
     return await this.findOneAndUpdate(
       {
@@ -268,7 +275,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           $in: [DrawStatus.SalesClosed, DrawStatus.Published],
         },
       },
-      { $set },
+      {
+        $set,
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+        },
+      },
       {
         returnDocument: "after",
       },

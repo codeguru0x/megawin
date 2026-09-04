@@ -20,8 +20,16 @@ const useCase = new FetchAndParseUseCase({
   sourceId: vietlottDetailAdapter.sourceId,
   gameKey: ResultFeedGameKey.Keno,
   adapter: vietlottDetailAdapter,
-  // Keno quay liên tục (vài phút/kỳ) — không có giờ quay cố định để nhảy thẳng tới.
-  schedule: { type: "continuous" },
+  // Keno quay liên tục trong giờ hoạt động Vietlott (06:08-21:52, chu kỳ 8 phút/kỳ) — dùng
+  // `continuous-daily-window` để night-mode tự giãn nhịp sau giờ đóng cửa tới trước giờ mở
+  // ngày mới (xem `schedule.ts` mục "GIÃN NHỊP QUA ĐÊM"). KHÔNG dùng `fixed` — quay liên
+  // tục suốt ngày, không có slot rời rạc để nhảy thẳng tới như Lotto535.
+  schedule: {
+    type: "continuous-daily-window",
+    firstDrawVn: "06:08",
+    lastDrawVn: "21:52",
+    drawIntervalMs: 8 * 60 * 1000,
+  },
   ttlSeconds: 120,
 });
 

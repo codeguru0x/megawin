@@ -112,12 +112,15 @@ export function DrawManagementSection() {
       // Lấy từ d.settledAt, KHÔNG phải result.publishedAt (đó là thời điểm công bố KQ).
       settledAt: d.settledAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
-      },
+      // Chỉ map khi đã settle — tránh ledger giả toàn 0 sau republish ($unset financial).
+      financial: d.financial
+        ? {
+            totalRevenue: d.financial.totalRevenue,
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+          }
+        : undefined,
     };
   })();
 

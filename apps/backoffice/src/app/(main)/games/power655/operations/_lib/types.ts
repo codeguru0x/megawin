@@ -116,7 +116,8 @@ export interface DrawResult {
     prizeAmount: number;
     totalPrize: number;
   }[];
-  financial: DrawFinancialDisplay;
+  /** Chỉ có sau settle; undefined khi Published chờ kết sổ / chờ kết sổ lại. */
+  financial?: DrawFinancialDisplay;
 }
 
 export interface DrawFinancialDisplay {

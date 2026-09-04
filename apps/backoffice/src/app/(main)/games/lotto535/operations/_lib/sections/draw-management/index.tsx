@@ -104,22 +104,25 @@ export function DrawManagementSection() {
       winningSpecial: d.result.winningSpecial,
       settledAt: d.result.publishedAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
-        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
-        jackpotContribution: d.financial?.jackpotContribution ?? 0,
-        jackpotBefore: d.jackpot?.openingAmount ?? 0,
-        jackpotAfter: d.jackpot?.closingAmount ?? 0,
-        hasJackpotWinner: (tierMap.get(PrizeTier.Jackpot)?.winnerCount ?? 0) > 0,
-        isSplitCycle: d.jackpot?.isSplitCycle ?? false,
-        jackpotPrizeAwarded:
-          (tierMap.get(PrizeTier.Jackpot)?.winnerCount ?? 0) > 0 || d.jackpot?.isSplitCycle
-            ? (d.jackpot?.openingAmount ?? 0) + (d.financial?.jackpotContribution ?? 0)
-            : 0,
-      },
+      // Chỉ map khi đã settle — tránh ledger giả toàn 0 sau republish/reopen.
+      financial: d.financial
+        ? {
+            totalRevenue: d.financial.totalRevenue,
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+            actualCompanyTake: d.financial.actualCompanyTake,
+            jackpotContribution: d.financial.jackpotContribution,
+            jackpotBefore: d.jackpot?.openingAmount ?? 0,
+            jackpotAfter: d.jackpot?.closingAmount ?? 0,
+            hasJackpotWinner: (tierMap.get(PrizeTier.Jackpot)?.winnerCount ?? 0) > 0,
+            isSplitCycle: d.jackpot?.isSplitCycle ?? false,
+            jackpotPrizeAwarded:
+              (tierMap.get(PrizeTier.Jackpot)?.winnerCount ?? 0) > 0 || d.jackpot?.isSplitCycle
+                ? (d.jackpot?.openingAmount ?? 0) + d.financial.jackpotContribution
+                : 0,
+          }
+        : undefined,
     };
   })();
 

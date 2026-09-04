@@ -13,9 +13,10 @@
  *      - Result KHÔNG đổi → chỉ cập nhật vietlottRef (nếu có). KHÔNG mở resettle.
  *      - Result CÓ đổi:
  *        · status `Settled`  → `republishResultAfterSettled` (settled→published,
- *          GIỮ settledAt, $unset financial/stats/settleSummary, ghi result +
- *          vietlottRef) → mở luồng resettle.
- *        · status `Published` (đang chờ resettle) → ghi đè result + vietlottRef.
+ *          GIỮ settledAt, $unset financial/stats/settleSummary/jackpot, ghi
+ *          result + vietlottRef) → mở luồng resettle.
+ *        · status `Published` (đang chờ resettle) → `publishResult` (cùng bộ
+ *          $unset + ghi đè result + vietlottRef).
  *
  * `Settling` → reject (đang kết sổ, không cho sửa).
  *

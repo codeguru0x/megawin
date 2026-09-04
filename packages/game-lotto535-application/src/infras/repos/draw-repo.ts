@@ -330,10 +330,15 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Publish hoặc cập nhật kết quả quay. Chấp nhận draw ở salesClosed hoặc published.
    *
    * - salesClosed → published (lần đầu publish)
-   * - published → published (sửa kết quả trước khi settle)
+   * - published → published (sửa kết quả trước settle, hoặc đang chờ kết sổ lại)
    *
    * Caller truyền đầy đủ result (kể cả publishedAt).
    * Luôn set status = published bất kể trạng thái trước đó.
+   *
+   * `$unset financial/stats/settleSummary/jackpot` — no-op khi publish lần đầu
+   * (field chưa tồn tại). Khi kỳ đã từng settle rồi quay lại Published (chờ
+   * resettle), xoá snapshot settle cũ để UI/API không đọc số lỗi thời. Nhánh
+   * Settled → Published dùng `republishResultAfterSettled` (cùng bộ unset).
    */
   async publishResult(drawId: string, result: DrawResult, vietlottRef?: DrawVietlottRef): Promise<DrawEntity | null> {
     const $set: Record<string, unknown> = {
@@ -341,7 +346,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       result,
       updatedAt: new Date(),
     };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
+    }
 
     return await this.findOneAndUpdate(
       {
@@ -350,7 +357,15 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           $in: [DrawStatus.SalesClosed, DrawStatus.Published],
         },
       },
-      { $set },
+      {
+        $set,
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+          jackpot: "",
+        },
+      },
       {
         returnDocument: "after",
       },
@@ -654,7 +669,15 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /**
    * Republish kết quả kỳ đã settle — `Settled → Published`, GIỮ `settledAt`.
-   * Chỉ `$unset financial, stats, settleSummary` (KHÔNG unset jackpot).
+   *
+   * `$unset financial, stats, settleSummary, jackpot` — dữ liệu lần settle CŨ.
+   * Trong giai đoạn Published-chờ-resettle, draw KHÔNG được mang snapshot tài chính/
+   * jackpot lỗi thời (API/UI đọc lúc này sẽ sai lệch: đóng góp = 0 nhưng trước/sau
+   * kỳ vẫn còn số cũ). Re-settle ghi lại đầy đủ qua `updateSettleResult` +
+   * `settleComplete`.
+   *
+   * KHÔNG `$unset settledAt` — high-water mark lịch sử settle (token resettle,
+   * detect kỳ đã từng settle). FinalizeSettle re-stamp ở cuối phiên.
    */
   async republishResultAfterSettled(
     drawId: string,
@@ -678,6 +701,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           financial: "",
           stats: "",
           settleSummary: "",
+          jackpot: "",
         },
       },
       { returnDocument: "after" },
@@ -694,8 +718,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * vào được luồng resettle (`DRAW_NO_NEW_RESULT`). Method này là entry point riêng
    * cho cascade: re-stamp `result.publishedAt = now` (để `publishedAt > settledAt`,
    * mở cổng trigger), GIỮ NGUYÊN `result.winningMain` + `result.winningSpecial`,
-   * chuyển `Settled → Published`, $unset data settle cũ. KHÔNG đụng `settledAt`
-   * (high-water mark).
+   * chuyển `Settled → Published`, $unset data settle cũ (financial/stats/
+   * settleSummary/jackpot). KHÔNG đụng `settledAt` (high-water mark).
    *
    * Idempotent theo status: filter `status = Settled` → gọi lại trên kỳ đã
    * Published trả null (no-op). Caller (`ReopenForCascadeUseCase`) đã guard chỉ
@@ -719,11 +743,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           "result.publishedAt": publishedAt,
           updatedAt: new Date(),
         },
-        // Xoá data settle CŨ — re-settle sẽ tính lại (giống republishResultAfterSettled).
+        // Xoá data settle CŨ (kể cả jackpot snapshot) — re-settle ghi lại đầy đủ
+        // (giống republishResultAfterSettled). Không unset settledAt.
         $unset: {
           financial: "",
           stats: "",
           settleSummary: "",
+          jackpot: "",
         },
       },
       {

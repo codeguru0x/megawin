@@ -37,6 +37,13 @@ export interface DrawResult {
 /**
  * Snapshot Jackpot tại kỳ quay, được ghi khi settle.
  * Mega 6/45: Jackpot chỉ tích luỹ hoặc trao cho winner, không có split.
+ *
+ * KHÔNG ghi khi tạo draw — chỉ ghi lúc settle (finalize-settle).
+ * Kỳ đang active / Published-chờ-kết-sổ: UI đọc jackpot từ cycle collection.
+ * Kỳ đã settle: đọc từ đây (bản ghi lịch sử).
+ *
+ * Republish / reopen cascade `$unset jackpot` cùng financial — tránh snapshot
+ * lỗi thời khi chờ kết sổ lại.
  */
 export interface DrawJackpotSnapshot {
   /** Giá trị Jackpot đầu kỳ (VND). */

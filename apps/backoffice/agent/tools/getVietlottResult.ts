@@ -7,7 +7,9 @@
  * `GetCurrentDrawUseCase` (giống `getDrawDetail`) + `GetVietlottSuggestionUseCase`/
  * `GetVietlottResultUseCase` của từng game (đã có sẵn cho autofill form publish-result).
  *
- * `safeRun()` KHÔNG BAO GIỜ throw. `toToolResult` lo biên Date→ISO + log lỗi.
+ * `safeRun()` KHÔNG BAO GIỜ throw. `toToolResult` lo biên Date→ISO(VN) + log lỗi. Output có field
+ * `guidance` (build động theo state, thay file instructions `45-vietlott-result.md` đã xoá — xem
+ * `40-tool-policy.md`) hướng dẫn model cách phrasing đúng cho từng trường hợp.
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
@@ -27,13 +29,12 @@ export default defineTool({
     "Dùng cho câu hỏi 'kết quả kỳ X là gì', 'kết quả kỳ này đúng chưa', 'so kết quả với Vietlott'. " +
     "Bỏ trống `drawId` để lấy KỲ HIỆN HÀNH — ưu tiên lấy từ `clientContext.page.operations.drawId` " +
     "nếu người dùng đang xem 1 kỳ cụ thể trên trang vận hành. LUÔN trả về CẢ 2 nguồn (draw + " +
-    "resultFeed) dù khớp hay không — không tự chọn 1 nguồn để trả lời. KHÔNG dùng chữ 'ResultFeed' " +
-    "hay bất kỳ thuật ngữ kỹ thuật nào khi trả lời user — chỉ gọi 2 nguồn này là 'kết quả đang có " +
-    "trong draw' và 'kết quả tham khảo từ Vietlott' (xem `45-vietlott-result.md`). Nguồn tham khảo " +
-    "Vietlott chưa có dữ liệu cho kỳ này (`resultFeed.found=false`) là BÌNH THƯỜNG với kỳ vừa " +
-    "đóng/gần mép hiện tại — worker cập nhật nền chưa tới lượt, KHÔNG phải lỗi tool (đã phủ đủ cả 7 " +
-    "game). Chỉ cần xem chi tiết 1 kỳ (không cần đối chiếu Vietlott) → dùng `getDrawDetail` (rẻ hơn, " +
-    "không tra nguồn tham khảo).",
+    "resultFeed) dù khớp hay không — không tự chọn 1 nguồn để trả lời. Đọc `guidance` trong output " +
+    "để biết CHÍNH XÁC cách phrasing cho state hiện tại (khớp/khác/chưa có dữ liệu) — output đã build " +
+    "sẵn theo từng trường hợp, không cần tự suy luận cách nói. KHÔNG dùng chữ 'ResultFeed'/'draw' hay " +
+    "bất kỳ thuật ngữ kỹ thuật nào khi trả lời user. CHỈ tính toán mã kỳ Vietlott, chưa cần xem/so " +
+    "kết quả → dùng `getVietlottSuggestion` (rẻ hơn, không tra ResultFeed). Chỉ cần xem chi tiết 1 " +
+    "kỳ (không cần đối chiếu Vietlott) → dùng `getDrawDetail` (rẻ hơn, không tra nguồn tham khảo).",
   inputSchema: z.object({
     game: z.enum(GAME_VALUES).describe("Game cần xem (keno, lotto535, mega645, power655, max3d, max3dpro, bingo18)."),
     drawId: z.string().optional().describe("Mã kỳ quay MegaWin, format YYYY-MM-DD.NNN. Bỏ trống → kỳ hiện hành."),

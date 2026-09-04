@@ -210,6 +210,8 @@ export class GetVietlottResultComparisonUseCase extends UseCase<
     const drawNumbers = flattenDrawResult(game, draw.result);
     const feedNumbers = feedResult?.found ? feedResult.numbers : null;
     const comparison = compareVietlottNumbers(game, drawNumbers, feedNumbers);
+    const hasResult = drawNumbers !== null;
+    const resultFeedFound = feedResult?.found ?? false;
 
     return {
       meta: { game, gameLabel: GAME_LABELS[game], fetchedAt: new Date().toISOString(), isCurrent },
@@ -217,14 +219,14 @@ export class GetVietlottResultComparisonUseCase extends UseCase<
         drawId: draw.drawId,
         drawDate: draw.drawDate,
         status: draw.status,
-        hasResult: drawNumbers !== null,
+        hasResult,
         numbers: drawNumbers,
         raw: draw,
       },
       vietlott: { drawPeriod, source, unavailableReason },
       resultFeed: {
         queried: drawPeriod !== null,
-        found: feedResult?.found ?? false,
+        found: resultFeedFound,
         numbers: feedNumbers,
         drawDateSource: feedResult?.drawDateSource ?? null,
         publishedAt: feedResult?.publishedAt ?? null,
@@ -232,8 +234,79 @@ export class GetVietlottResultComparisonUseCase extends UseCase<
         sourceCount: feedResult?.sourceCount ?? null,
       },
       comparison,
+      guidance: buildResultGuidance({
+        draw: { drawId: draw.drawId, hasResult },
+        drawPeriod,
+        resultFeedQueried: drawPeriod !== null,
+        resultFeedFound,
+        comparisonIdentical: comparison.identical,
+      }),
     };
   }
+}
+
+/**
+ * Hướng dẫn phrasing cho model — thay `45-vietlott-result.md` (đã xoá, xem `40-tool-policy.md`
+ * cho lý do). Build ĐỘNG theo state của response này, chỉ tốn token khi tool THẬT SỰ được gọi —
+ * khác instructions file cũ (`system`-role, luôn nằm trong context MỌI lượt dù không liên quan).
+ *
+ * Nội dung giữ đúng các quy tắc gốc: KHÔNG lộ từ kỹ thuật "draw"/"ResultFeed" ra câu trả lời (gọi
+ * "kết quả nội bộ" / "kết quả tham khảo từ Vietlott"), chỉ nói về so sánh khi CẢ 2 nguồn đã có số,
+ * và câu mẫu khi chưa có kết quả tham khảo.
+ */
+function buildResultGuidance(state: {
+  draw: { drawId: string; hasResult: boolean } | null;
+  drawPeriod: string | null;
+  resultFeedQueried: boolean;
+  resultFeedFound: boolean;
+  comparisonIdentical: boolean | null;
+}): string {
+  const base =
+    "Với user: gọi draw.numbers là 'kết quả nội bộ', resultFeed.numbers là 'kết quả tham khảo từ " +
+    "Vietlott'. KHÔNG dùng chữ 'draw'/'ResultFeed' hay thuật ngữ kỹ thuật nào (adapter, consensus, " +
+    "cursor...) trong câu trả lời. Mỗi ý chỉ nói 1 lần, không lặp lại 'chưa có' ở nhiều câu.";
+
+  if (state.draw === null) {
+    return `${base} Game hiện KHÔNG có kỳ nào đang mở/sắp mở — nói rõ điều đó, không suy diễn thêm.`;
+  }
+
+  if (!state.draw.hasResult) {
+    return (
+      `${base} Kỳ ${state.draw.drawId} chưa có kết quả nội bộ — nói đúng 1 câu, KHÔNG tự giải ` +
+      "thích thêm lý do chưa so sánh được (chỉ nhắc so sánh khi cả 2 nguồn đã có số)."
+    );
+  }
+
+  if (!state.resultFeedQueried) {
+    return (
+      `${base} Kỳ ${state.draw.drawId} đã có kết quả nội bộ, nhưng KHÔNG xác định được mã kỳ ` +
+      "Vietlott để tra kết quả tham khảo — nói rõ chưa xác định được mã kỳ Vietlott, KHÔNG bịa mã " +
+      "kỳ, KHÔNG tự đề xuất đổi game config chỉ để có gợi ý (chỉ đổi khi có xác nhận THẬT từ " +
+      "Vietlott)."
+    );
+  }
+
+  if (!state.resultFeedFound) {
+    return (
+      `${base} Trả đúng câu mẫu: Hiện chưa có kết quả của kỳ "${state.draw.drawId}" - Kỳ Vietlott ` +
+      `"${state.drawPeriod}". Đây là BÌNH THƯỜNG với kỳ vừa đóng/gần mép hiện tại (worker cập ` +
+      "nhật nền chưa tới lượt), KHÔNG phải lỗi — không cần giải thích gì thêm."
+    );
+  }
+
+  if (state.comparisonIdentical === true) {
+    return (
+      `${base} 2 nguồn khớp nhau — xác nhận ngắn, KHÔNG liệt lại từng số (đã hiển thị sẵn qua thẻ ` +
+      "kết quả). KHÔNG thêm cụm gây hoang mang kiểu 'chưa xác minh' — verifiedByHuman=false không " +
+      "có nghĩa kết quả không đáng tin."
+    );
+  }
+
+  return (
+    `${base} 2 nguồn KHÁC NHAU — nêu cả hai và điểm khác biệt theo vị trí (comparison.detail.` +
+    "positionsDiffer) NGẮN GỌN. Nếu độ dài lệch (drawLength ≠ resultFeedLength so expectedLength), " +
+    "nói rõ bên nào đang THIẾU số so với chuẩn."
+  );
 }
 
 /**
@@ -363,5 +436,12 @@ function buildNoActiveDrawOutput(game: GameProduct, isCurrent: boolean): GetViet
       sourceCount: null,
     },
     comparison: { identical: null, detail: null },
+    guidance: buildResultGuidance({
+      draw: null,
+      drawPeriod: null,
+      resultFeedQueried: false,
+      resultFeedFound: false,
+      comparisonIdentical: null,
+    }),
   };
 }
