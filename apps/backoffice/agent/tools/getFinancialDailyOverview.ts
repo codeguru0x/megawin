@@ -5,7 +5,7 @@
  * `safeRun()` KHÔNG BAO GIỜ throw, trả nguyên `AppResult<GetDailyOverviewOutput>` cho model
  * tự đọc — KHÔNG map lại shape để p0-03 render card đúng DTO gốc.
  *
- * `toToolResult` bọc `serializeDates` (đổi `Date` → ISO string, không đổi shape) + xử lý lỗi ở biên.
+ * `toToolResult` bọc `serializeDatesVN` (Date/ISO → giờ VN) + xử lý lỗi ở biên.
  * Nhánh aggregate hiện tại toàn primitive nên serialize là no-op, nhưng use-case CÓ nhánh trả raw doc
  * (`input.date`) mang `createdAt`/`updatedAt` kiểu Date — eve reject Date ở biên tool và giết cả turn.
  * Giữ lớp chặn ở đây để lúc mở `date` ra inputSchema không tái diễn lỗi 16/08 của

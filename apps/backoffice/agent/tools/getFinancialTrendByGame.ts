@@ -11,7 +11,7 @@
  *
  * KHÔNG chạm repo/DB trực tiếp — chỉ gọi qua use-case (`app-use-case-layering.mdc` §3).
  * `safeRun()` KHÔNG BAO GIỜ throw, trả nguyên `AppResult<GetGamePeriodTrendByGameOutput>` cho
- * model tự đọc. `toToolResult` bọc `serializeDates` + xử lý lỗi ở biên.
+ * model tự đọc. `toToolResult` bọc `serializeDatesVN` + xử lý lỗi ở biên.
  */
 
 import { GameProduct } from "@megawin/game-core/entities";

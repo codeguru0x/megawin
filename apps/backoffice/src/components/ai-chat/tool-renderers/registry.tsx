@@ -90,15 +90,21 @@ export type AiToolName = (typeof AiToolName)[keyof typeof AiToolName];
 
 /**
  * Ngữ cảnh kèm theo mỗi lần gọi renderer — hiện chỉ cần cho `renderChart` (dò part tool dữ liệu
- * GẦN NHẤT phía trước nó trong CÙNG message, xem {@link renderChartTool}). Truyền tay thay vì đọc
- * qua React context vì renderer là HÀM thuần (không phải component con nằm trong tree), không có
- * Provider nào bọc quanh nó.
+ * GẦN NHẤT phía trước nó, xem {@link renderChartTool}). Truyền tay thay vì đọc qua React context
+ * vì renderer là HÀM thuần (không phải component con nằm trong tree), không có Provider nào bọc
+ * quanh nó.
  */
 export interface ToolRenderContext {
   /** Snapshot toàn bộ part của message đang chứa `part` này (`EveMessage.parts`). */
   messageParts: readonly EveMessagePart[];
   /** Vị trí của CHÍNH part đang render trong `messageParts` — dùng để dò lùi (`i < partIndex`). */
   partIndex: number;
+  /**
+   * Part của mọi message assistant TRƯỚC message hiện tại (thứ tự thời gian, cũ → mới).
+   * Cho phép `renderChart` follow-up ("vẽ biểu đồ đi") ghép với bảng đã tra ở lượt trước — bug
+   * 04/09: chỉ dò trong CÙNG message ⇒ ok:true + text "đã vẽ" nhưng UI hiện "Chưa vẽ được…".
+   */
+  earlierAssistantParts?: readonly EveMessagePart[];
 }
 
 /**
@@ -205,41 +211,73 @@ function financialTrendByGameChartOverride(part: EveDynamicToolPart): ChartOverr
   return { seriesType: (key) => (games.has(key) ? ChartFieldType.Currency : undefined) };
 }
 
+type ChartableSource = {
+  output: unknown;
+  title: string;
+  sourceNote?: string;
+  override?: ChartOverride<ChartRow>;
+};
+
+/** Thử một part — trả source nếu là tool dữ liệu thành công + chartable; ngược lại `null`. */
+function tryChartableSource(candidate: EveMessagePart): ChartableSource | null {
+  if (candidate.type !== "dynamic-tool") {
+    return null;
+  }
+  if (candidate.toolName === AiToolName.RenderChart) {
+    return null;
+  }
+  if (candidate.state !== "output-available" || candidate.partial) {
+    return null;
+  }
+  const unwrapped = unwrapChartSourceOutput(candidate.output);
+  if (extractRows(unwrapped) === null) {
+    return null;
+  }
+  const dynamicOverride =
+    candidate.toolName === AiToolName.FinancialTrendByGame ? financialTrendByGameChartOverride(candidate) : undefined;
+  return {
+    output: unwrapped,
+    title: getToolLabel(candidate.toolName),
+    sourceNote: chartSourceNote(candidate),
+    override: dynamicOverride ?? toolChartOverrides[candidate.toolName as AiToolName],
+  };
+}
+
 /**
- * Dò LÙI từ ngay trước `beforeIndex` (không gồm chính part đang xét) tìm tool part GẦN NHẤT đã
- * có output THÀNH CÔNG và chartable (`extractRows` khác `null`) — đây là "dữ liệu của
- * `renderChart`" theo thiết kế signal-only (xem JSDoc `agent/tools/renderChart.ts`: tool này
- * KHÔNG chở dữ liệu, hệ thống tự ghép với tool dữ liệu vừa gọi trước đó trong CÙNG message).
+ * Dò LÙI tìm tool part GẦN NHẤT đã có output THÀNH CÔNG và chartable (`extractRows` khác `null`) —
+ * đây là "dữ liệu của `renderChart`" theo thiết kế signal-only (xem JSDoc
+ * `agent/tools/renderChart.ts`: tool này KHÔNG chở dữ liệu, FE tự ghép).
  *
- * Bỏ qua chính tool `renderChart` (model lỡ gọi liên tiếp 2 lần) để không tự tham chiếu vào nhau.
+ * Thứ tự ưu tiên:
+ * 1. Part phía trước trong CÙNG message (`i < beforeIndex`) — cùng lượt vừa tra vừa vẽ.
+ * 2. Part của message assistant TRƯỚC ĐÓ (mới → cũ) — follow-up "vẽ biểu đồ" sau bảng đã hiện.
+ *
+ * Bỏ qua chính tool `renderChart` để không tự tham chiếu khi model lỡ gọi liên tiếp.
  */
 function findChartableSource(
   messageParts: readonly EveMessagePart[],
   beforeIndex: number,
-): { output: unknown; title: string; sourceNote?: string; override?: ChartOverride<ChartRow> } | null {
+  earlierAssistantParts: readonly EveMessagePart[] = [],
+): ChartableSource | null {
   for (let i = beforeIndex - 1; i >= 0; i--) {
     const candidate = messageParts[i];
-    if (candidate === undefined || candidate.type !== "dynamic-tool") {
+    if (candidate === undefined) {
       continue;
     }
-    if (candidate.toolName === AiToolName.RenderChart) {
+    const source = tryChartableSource(candidate);
+    if (source !== null) {
+      return source;
+    }
+  }
+  for (let i = earlierAssistantParts.length - 1; i >= 0; i--) {
+    const candidate = earlierAssistantParts[i];
+    if (candidate === undefined) {
       continue;
     }
-    if (candidate.state !== "output-available" || candidate.partial) {
-      continue;
+    const source = tryChartableSource(candidate);
+    if (source !== null) {
+      return source;
     }
-    const unwrapped = unwrapChartSourceOutput(candidate.output);
-    if (extractRows(unwrapped) === null) {
-      continue;
-    }
-    const dynamicOverride =
-      candidate.toolName === AiToolName.FinancialTrendByGame ? financialTrendByGameChartOverride(candidate) : undefined;
-    return {
-      output: unwrapped,
-      title: getToolLabel(candidate.toolName),
-      sourceNote: chartSourceNote(candidate),
-      override: dynamicOverride ?? toolChartOverrides[candidate.toolName as AiToolName],
-    };
   }
   return null;
 }
@@ -297,7 +335,7 @@ function ChartUnavailableNote({ reason }: { reason: "noSourceTool" | "notChartab
   return (
     <p className="text-muted-foreground text-xs">
       {reason === "noSourceTool"
-        ? "Chưa vẽ được biểu đồ: bước tra cứu trước đó không trả về dữ liệu dạng bảng để vẽ."
+        ? "Chưa vẽ được biểu đồ: trong hội thoại chưa có bước tra cứu dạng bảng để vẽ (cùng lượt hoặc lượt trước)."
         : "Chưa vẽ được biểu đồ: dữ liệu cần tối thiểu 2 dòng, một cột làm trục (ngày/tháng, nhóm, hoặc mốc số) và một cột số để đo."}
     </p>
   );
@@ -322,7 +360,7 @@ const CHART_REPORT_LABELS: Readonly<Record<string, string>> = { ...REPORT_COLUMN
  * HAI CHẾ ĐỘ theo `part.input.rows` (xem JSDoc `agent/tools/renderChart.ts`):
  *
  * 1. `rows` bỏ trống — chế độ thường: tự dò tool dữ liệu GẦN NHẤT phía trước qua
- *    `context.messageParts`/`context.partIndex` ({@link findChartableSource}).
+ *    `context.messageParts`/`context.partIndex`, rồi `earlierAssistantParts` ({@link findChartableSource}).
  * 2. `rows` có điền — chế độ dữ liệu tự nhập: model đã tự phân loại dữ liệu staff dán/mô tả thành
  *    mảng object phẳng, dùng THẲNG mảng đó, KHÔNG dò lùi tool nào (không có override per-tool vì
  *    không gắn với 1 tool cụ thể).
@@ -359,8 +397,8 @@ function renderChartTool(part: EveDynamicToolPart, context: ToolRenderContext): 
     return <ChartToolView model={model} reportLabels={CHART_REPORT_LABELS} />;
   }
 
-  // Chế độ (1): dò lùi tool dữ liệu gần nhất như cũ.
-  const source = findChartableSource(context.messageParts, context.partIndex);
+  // Chế độ (1): dò lùi tool dữ liệu gần nhất (cùng message, rồi lượt assistant trước).
+  const source = findChartableSource(context.messageParts, context.partIndex, context.earlierAssistantParts ?? []);
   if (source === null) {
     return <ChartUnavailableNote reason="noSourceTool" />;
   }
@@ -543,7 +581,7 @@ export type ToolCardPlacement = (typeof ToolCardPlacement)[keyof typeof ToolCard
  * Gộp `renderChart` vào mục đóng thì khi debug tắt (mặc định, CHỐT LẦN 3 ở `internal-steps.tsx`)
  * toàn bộ part nội thất bị bỏ qua khỏi cây render ⇒ biểu đồ mà staff vừa yêu cầu KHÔNG BAO GIỜ
  * hiện ra — ngược hẳn mục đích của tính năng. Cùng một lý lẽ với việc `isInternalPart` luôn cho
- * HITL (`web_fetch` chờ duyệt, `ask_question`) hiện thẳng: **cần staff THẤY KẾT QUẢ ⇒ phải thấy**.
+ * HITL (`ask_question`, tool chờ duyệt) hiện thẳng: **cần staff THẤY KẾT QUẢ ⇒ phải thấy**.
  *
  * Vì vậy tiêu chí giờ là: part này có cần staff BẤM/QUYẾT ĐỊNH, hoặc mang UI THẬT không nằm trong
  * `part.output` của chính nó, không? Có ⇒ `Primary`. Chỉ để đọc số ⇒ `Reference`. Thêm tool mới
@@ -597,7 +635,7 @@ const loggedUnlabeledTools = new Set<string>();
  * Nhãn tiếng Việt của tool.
  *
  * Tool chưa map thì trả nhãn chung, KHÔNG trả `toolName` thô: tên kỹ thuật không giúp gì cho nhân
- * viên vận hành nhưng lại phơi bề mặt công cụ của agent ra UI (`bash`, `web_fetch`,
+ * viên vận hành nhưng lại phơi bề mặt công cụ của agent ra UI (`bash`,
  * `getSystemOutstanding`…) — vừa nhiễu, vừa mời người tò mò thử điều khiển agent gọi thẳng chúng.
  * Chi tiết kỹ thuật thuộc log, không thuộc hội thoại của staff.
  *

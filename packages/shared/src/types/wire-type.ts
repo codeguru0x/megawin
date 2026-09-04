@@ -40,8 +40,8 @@
  * }
  * ```
  *
- * @see {@link serializeDates} (`@megawin/shared/utils`) — hàm runtime chuyển
- * Date → string thật khớp type này, dùng ở nơi return để tránh cast `as unknown as`.
+ * @see {@link serializeDates} / {@link serializeDatesVN} (`@megawin/shared/utils`) — hàm runtime
+ * chuyển Date → string thật khớp type này (UTC ISO hoặc giờ VN tùy biên).
  */
 export type WireType<T> = T extends Date
   ? string

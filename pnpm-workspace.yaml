@@ -11,11 +11,11 @@ packages:
 # `EveMessageInputRequest["kind"]` mất union → `switch` exhaustive trong
 # `apps/backoffice/src/components/ai-chat/render-message.tsx` báo TS2366 làm đỏ build Vercel trong
 # khi `check-types` local xanh. Khai báo zod thành dependency thật của eve để type resolve giống nhau
-# ở mọi môi trường. Version bám theo zod của monorepo (`^4.4.3`) — đổi zod thì đổi luôn ở đây.
+# ở mọi môi trường. Version bám theo zod của monorepo (`^4.5.4`) — đổi zod thì đổi luôn ở đây.
 packageExtensions:
   eve:
     dependencies:
-      zod: ^4.4.3
+      zod: ^4.5.4
 
 overrides:
   "@types/node": ^25.9.4
@@ -40,4 +40,6 @@ minimumReleaseAgeExclude:
   - better-auth@1.6.20
   - react-hook-form@7.80.0
   - postcss@8.5.23
-  - eve@0.38.3
+  - eve@0.51.1
+  - "@ai-sdk/gateway@4.0.74"
+  - ai@7.0.92

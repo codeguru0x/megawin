@@ -272,11 +272,10 @@ export const MessageBranchPage = ({ className, ...props }: MessageBranchPageProp
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
-// KHÔNG dùng plugin `math`: `katex` là dep transitive của @streamdown/math nên CSS của nó không
-// resolve được từ app (công thức render vỡ), và `remark-math` biến mọi `$…$` thành math span —
-// text tài chính có `$` sẽ bị mangle. Ops chat không cần LaTeX (p0-04 §4.13).
-// `@streamdown/math` vẫn nằm trong package.json (chưa xoá vì store pnpm hiện lệch, xoá tay sẽ
-// làm lockfile mismatch). Muốn bật lại: thêm dep `katex`, import `katex/dist/katex.min.css`.
+// KHÔNG dùng plugin `math`: `katex` (dep của `@streamdown/math`) không resolve CSS từ app, và
+// `remark-math` biến mọi `$…$` thành math span — text tài chính có `$` bị mangle. Ops chat không
+// cần LaTeX (p0-04 §4.13). Muốn bật lại: thêm `@streamdown/math` + `katex`, import
+// `katex/dist/katex.min.css`, rồi đưa `math` vào object plugins bên dưới.
 const streamdownPlugins = { cjk, code, mermaid };
 
 export const MessageResponse = memo(

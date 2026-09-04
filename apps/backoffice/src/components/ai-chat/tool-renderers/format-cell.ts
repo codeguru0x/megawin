@@ -13,7 +13,7 @@ import { formatNumber, formatPercent, formatVND, formatVNDCompact } from "@megaw
  * kiện theo dữ liệu thì đó là dấu hiệu phải viết renderer bespoke, không nới DSL này.
  */
 export const CellFormat = {
-  /** Ngày `YYYY-MM-DD` hoặc ISO string — cắt lấy phần ngày, hiển thị mono. */
+  /** Ngày `YYYY-MM-DD`, ISO, hoặc `yyyy-MM-dd HH:mm:ss` giờ VN — cắt lấy phần ngày. */
   Date: "date",
   /** Số nguyên có phân cách nghìn: `1,234,567`. */
   Number: "number",
@@ -28,9 +28,12 @@ export const CellFormat = {
 } as const;
 export type CellFormat = (typeof CellFormat)[keyof typeof CellFormat];
 
-/** `"2026-08-16T07:12:00.000Z"` → `"2026-08-16"`. Giá trị đã là `YYYY-MM-DD` thì giữ nguyên. */
+/** `"2026-08-16T07:12:00.000Z"` hoặc `2026-08-16 14:12:00` (giờ VN) → `"2026-08-16"`. */
 function formatDateCell(value: string): string {
-  return value.length > 10 && value.includes("T") ? value.slice(0, 10) : value;
+  if (value.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    return value.slice(0, 10);
+  }
+  return value;
 }
 
 /**

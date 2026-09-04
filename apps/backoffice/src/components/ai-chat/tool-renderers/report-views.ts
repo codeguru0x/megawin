@@ -7,9 +7,9 @@
  * `toolViewSpecs` trong `registry.tsx`. KHÔNG viết component mới trừ khi cần chart/interaction
  * đặc thù (lúc đó dùng tầng 2 — `toolRenderers`).
  *
- * ⚠️ TYPE PHẢI LÀ `WireType<...>`, KHÔNG phải DTO gốc: output đi qua `serializeDates()` ở biên
- * tool (`@megawin/shared/utils`) nên mọi `Date` đã thành ISO string lúc tới client. Khai DTO gốc
- * sẽ nói `snapshotAt: Date` trong khi runtime là `string` — type đúng nhưng SAI thực tế.
+ * ⚠️ TYPE PHẢI LÀ `WireType<...>`, KHÔNG phải DTO gốc: output đi qua `serializeDatesVN()` ở
+ * biên tool nên mọi `Date`/ISO datetime đã thành `yyyy-MM-dd HH:mm:ss` giờ VN lúc tới client.
+ * Khai DTO gốc sẽ nói `snapshotAt: Date` trong khi runtime là `string` — type đúng nhưng SAI thực tế.
  */
 
 import type { GameProduct } from "@megawin/game-core/entities";
@@ -185,7 +185,7 @@ export const financialTrendView = defineToolView<WireType<GetGamePeriodTrendOutp
 
 /**
  * `getSystemOutstanding` — kỳ quay chờ settle. Row type là `WireType<...>` vì entity gốc có
- * `snapshotAt`/`updatedAt` kiểu `Date` (đã thành ISO string sau `serializeDates`).
+ * `snapshotAt`/`updatedAt` kiểu `Date` (đã thành giờ VN string sau `serializeDatesVN`).
  */
 export const systemOutstandingView = defineToolView<
   WireType<GetSystemOutstandingOutput>,

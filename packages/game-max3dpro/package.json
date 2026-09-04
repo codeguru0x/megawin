@@ -65,7 +65,12 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": ["megawin", "max3dpro", "game", "domain"],
+  "keywords": [
+    "megawin",
+    "max3dpro",
+    "game",
+    "domain"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -79,6 +84,6 @@
   "dependencies": {
     "@megawin/game-core": "workspace:*",
     "@megawin/shared": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   }
 }

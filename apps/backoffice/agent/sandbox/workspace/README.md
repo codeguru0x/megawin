@@ -56,4 +56,5 @@ giản — không có `enum`, không `namespace`).
 - **Lấy ngày/giờ** — `date` trong đây là UTC, sai so với giờ VN. Mốc thời gian đã có trong
   `clientContext` (`now`, `today`, `financialDate`).
 - **Truy vấn số liệu MegaWin** — không có kết nối database. Dùng tool báo cáo.
-- **Tải nội dung web** — mọi egress bị chặn, kể cả DNS. Dùng `web_fetch`.
+- **Tải nội dung web** — mọi egress bị chặn, kể cả DNS. Không có tool fetch URL; dùng tool báo cáo /
+  `getVietlottResult` khi cần đối chiếu kết quả.

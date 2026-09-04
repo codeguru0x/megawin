@@ -81,7 +81,7 @@ function isFailedToolOutput(output: unknown): boolean {
  * HIỆN THẲNG:
  * - `text` — chính là câu trả lời.
  * - `file`, `authorization` — do staff cần bấm/mở, hoặc là kết quả họ yêu cầu.
- * - tool CÓ `inputRequest` (HITL: duyệt `web_fetch`, `ask_question`) — gộp vào mục đóng thì câu hỏi
+ * - tool CÓ `inputRequest` (HITL: `ask_question`, duyệt tool) — gộp vào mục đóng thì câu hỏi
  *   biến thành nút không ai bấm, agent treo tới hết timeout. Đây là ngoại lệ tuyệt đối, và xét theo
  *   `inputRequest` chứ không theo `state` vì `ask_question` chờ trả lời ở `input-available` —
  *   trùng state với "tool đang chạy" mà ta ẩn.

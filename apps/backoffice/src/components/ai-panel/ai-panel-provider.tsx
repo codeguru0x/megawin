@@ -36,8 +36,8 @@ import { useEveAgent } from "eve/react";
 
 import { AI_FULL_PAGE_PATH } from "@/config/app-config";
 import { collectAiPageContext } from "@/lib/ai-page-context";
+import { setClientCookie } from "@/lib/cookie.client";
 import { AI_PANEL_MAX_WIDTH, AI_PANEL_MIN_WIDTH } from "@/lib/preferences/ai-panel";
-import { setValueToCookie } from "@/server/server-actions";
 import { useAiThreadsStore, useAiThreadsStoreApi } from "@/stores/ai-threads/ai-threads-provider";
 import type { AiThreadsState } from "@/stores/ai-threads/ai-threads-store";
 import { deriveThreadTitle, threadNeedsCursorResync } from "@/stores/ai-threads/thread-storage";
@@ -534,7 +534,12 @@ export function AiPanelProvider({
 
   const setOpen = useCallback((next: boolean) => {
     setOpenState(next);
-    void setValueToCookie("ai_panel_state", next ? "open" : "closed");
+    // Cookie ghi thẳng trên browser (mục 2 phân tích loop, 2026-09) — trước đây gọi
+    // `setValueToCookie` (Server Action) ở đây khiến Next.js re-render lại CẢ layout `(main)`
+    // trên server mỗi lần mở/đóng panel. Cookie vẫn là cookie thật, request tiếp theo lên
+    // server (`layout.tsx` đọc qua `getPreference`) nhận giá trị mới bình thường — chỉ khác
+    // chỗ AI VIẾT, không đổi cách server ĐỌC.
+    setClientCookie("ai_panel_state", next ? "open" : "closed");
   }, []);
 
   const toggle = useCallback(() => {
@@ -551,7 +556,8 @@ export function AiPanelProvider({
     setWidthState(clamped);
     clearTimeout(widthCookieTimeoutRef.current);
     widthCookieTimeoutRef.current = setTimeout(() => {
-      void setValueToCookie("ai_panel_width", String(clamped));
+      // Client-side cookie write — cùng lý do như `setOpen` phía trên.
+      setClientCookie("ai_panel_width", String(clamped));
     }, WIDTH_COOKIE_DEBOUNCE_MS);
   }, []);
 

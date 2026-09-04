@@ -51,8 +51,10 @@ màn hình.
   đã xảy ra thật khi so sánh Keno và Power 6/55: biểu đồ chỉ vẽ được Power 6/55, thiếu Keno).
   `getFinancialTrendByGame` trả sẵn 1 dòng/kỳ với mỗi game là 1 cột số riêng, nên `renderChart` vẽ
   đúng cả các game trong một lần.
-- Yêu cầu vẽ **sau khi** đã có số từ lượt trước ("giờ vẽ biểu đồ đi") → không cần gọi lại tool dữ
-  liệu, gọi `renderChart` ngay nếu dữ liệu đó vẫn còn hiện trong hội thoại.
+- Yêu cầu vẽ **sau khi** đã có số từ lượt trước ("giờ vẽ biểu đồ đi") → gọi `renderChart` ngay
+  (bỏ trống `rows`), KHÔNG cần gọi lại tool dữ liệu nếu bảng đó vẫn còn trong hội thoại. Hệ thống
+  tự lấy output tool dữ liệu gần nhất — kể cả ở lượt assistant trước. Chỉ gọi lại tool dữ liệu khi
+  phạm vi/kỳ cần vẽ **khác** số đang hiện, hoặc trong hội thoại chưa có lần tra nào dạng bảng.
 
 ## Vẽ từ dữ liệu người hỏi tự cung cấp (`rows`)
 

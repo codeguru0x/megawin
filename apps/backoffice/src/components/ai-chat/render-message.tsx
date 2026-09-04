@@ -208,10 +208,11 @@ function AuthorizationPromptPart({ part }: { part: EveAuthorizationPart }) {
 
 /**
  * `kind === "tool-approval"` là HITL do FRAMEWORK eve tự phát sinh cho tool có
- * `approval: always()`/`once()` (hiện chỉ `web_fetch` — xem `agent/tools/web_fetch.ts`) — prompt
+ * `approval: always()`/`once()` (lịch sử: `web_fetch` — tool đó đã `disableTool()`; giữ map dịch
+ * vì thread cũ / tool khác sau này vẫn có thể phát sinh approval) — prompt
  * `"Approve tool call: <toolName>"` và 2 option `"Approve"`/`"Cancel"` đều là văn bản CỨNG trong
  * `eve` (`dist/src/harness/input-extraction.js`), KHÔNG đi qua model nên KHÔNG sửa được bằng
- * system prompt. Phơi tên tool kỹ thuật (`web_fetch`) + tiếng Anh cho staff không rành kỹ thuật là
+ * system prompt. Phơi tên tool kỹ thuật + tiếng Anh cho staff không rành kỹ thuật là
  * bug thật đã thấy trên UI — phải dịch tay ở tầng render.
  *
  * `id` "approve"/"cancel" do framework đặt CỐ ĐỊNH nên map theo id an toàn — KHÔNG áp dụng cho
@@ -463,7 +464,7 @@ function DefaultToolView({
   // Mở sẵn CHỈ khi user cần hành động (duyệt) hoặc cần thấy lỗi. Còn lại đóng cho gọn.
   const shouldOpen = needsApproval || part.state === "output-error";
   // Tham số thô ĐƯỢC PHÉP hiện ở ĐÚNG MỘT tình huống: chờ duyệt một hành động (`tool-approval`) —
-  // duyệt mà không thấy duyệt cái gì thì việc duyệt vô nghĩa và thành lỗ hổng (`web_fetch` phải cho
+  // duyệt mà không thấy duyệt cái gì thì việc duyệt vô nghĩa và thành lỗ hổng (HITL phải cho
   // thấy URL). Ngoài ra chỉ hiện khi bật debug.
   //
   // ĐÃ CẮT (24/08, feedback ảnh 3): khi Mira HỎI LẠI (`ask_question`, `inputRequest.kind` là
@@ -513,6 +514,7 @@ function DefaultToolView({
 
 function DynamicToolPartView({
   canRespond,
+  earlierAssistantParts,
   messageParts,
   onInputResponses,
   part,
@@ -520,6 +522,8 @@ function DynamicToolPartView({
   turnEnded,
 }: {
   canRespond: boolean;
+  /** Part assistant trước message hiện tại — xem {@link ToolRenderContext.earlierAssistantParts}. */
+  earlierAssistantParts?: readonly EveMessagePart[];
   /** Toàn bộ part của message đang chứa `part` — cần cho renderer dò part LIỀN TRƯỚC (`renderChart`). */
   messageParts: readonly EveMessagePart[];
   onInputResponses: (responses: readonly AgentInputResponseInput[]) => void;
@@ -545,11 +549,12 @@ function DynamicToolPartView({
 
   // Renderer trả `null` ⇒ output ở dạng spec/card không mô tả được. Fallback về JSON gập lại
   // để staff vẫn xem được dữ liệu thô, thay vì thấy khoảng trắng (p0-04 §4.11).
-  return render(part, { messageParts, partIndex }) ?? fallback;
+  return render(part, { earlierAssistantParts, messageParts, partIndex }) ?? fallback;
 }
 
 function AgentMessagePart({
   canRespond,
+  earlierAssistantParts,
   isStreamingText,
   messageParts,
   onInputResponses,
@@ -558,6 +563,7 @@ function AgentMessagePart({
   turnEnded,
 }: {
   canRespond: boolean;
+  earlierAssistantParts?: readonly EveMessagePart[];
   /**
    * Part text này là ĐUÔI của message assistant đang stream ⇒ bật fade-in từng từ.
    * Chỉ đúng một part trong cả hội thoại có giá trị `true` tại một thời điểm (xem {@link AgentMessage}).
@@ -602,6 +608,7 @@ function AgentMessagePart({
       return (
         <DynamicToolPartView
           canRespond={canRespond}
+          earlierAssistantParts={earlierAssistantParts}
           messageParts={messageParts}
           onInputResponses={onInputResponses}
           part={part}
@@ -664,6 +671,7 @@ function CopyMessageAction({ label, text }: { label: string; text: string }) {
  */
 export function AgentMessage({
   canRespond,
+  earlierAssistantParts,
   isActive,
   isStreaming,
   message,
@@ -673,6 +681,11 @@ export function AgentMessage({
   turnStartedAt,
 }: {
   canRespond: boolean;
+  /**
+   * Part của message assistant trước message này — dùng `renderChart` follow-up ghép bảng lượt cũ
+   * (xem {@link ToolRenderContext.earlierAssistantParts}).
+   */
+  earlierAssistantParts?: readonly EveMessagePart[];
   /**
    * Lượt này đang chạy (`submitted`/`streaming`) — bật `LiveDot` cuối hàng tên trợ lý. Rộng hơn
    * `isStreaming`: bao cả pha `submitted` khi message đã tạo nhưng chưa có part nào.
@@ -734,6 +747,7 @@ export function AgentMessage({
           segment.kind === "visible" ? (
             <AgentMessagePart
               canRespond={canRespond}
+              earlierAssistantParts={earlierAssistantParts}
               isStreamingText={isStreaming && isAssistant && segment.item.index === lastTextIndex}
               key={partKey(segment.item.part, segment.item.index)}
               messageParts={message.parts}
@@ -747,6 +761,7 @@ export function AgentMessage({
               {segment.items.map((item) => (
                 <AgentMessagePart
                   canRespond={canRespond}
+                  earlierAssistantParts={earlierAssistantParts}
                   isStreamingText={false}
                   key={partKey(item.part, item.index)}
                   messageParts={message.parts}

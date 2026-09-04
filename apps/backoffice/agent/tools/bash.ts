@@ -11,8 +11,7 @@
  * được vì bash bị bao bởi HAI lớp:
  *
  * 1. **VM isolation** — chạy trong sandbox, KHÔNG thấy `process.env` của app (không có
- *    `MONGODB_URI`, không có AWS credential). Khác hoàn toàn `web_fetch` (chạy ở app runtime,
- *    thấy đủ secret) nên `web_fetch` phải `always()` còn bash thì không.
+ *    `MONGODB_URI`, không có AWS credential).
  * 2. **`networkPolicy: "deny-all"`** — sandbox không có egress, kể cả DNS.
  *
  * Cả hai lớp KHÔNG dựa vào niềm tin: `bootstrap` ở `agent/sandbox/sandbox.ts` **assert** chúng mỗi
@@ -21,11 +20,16 @@
  * có dấu hiệu gì trong log; nếu không có assertion thì `never()` đã mất cơ sở trong im lặng. Trên
  * Vercel Sandbox, assertion egress đã chạy thật và PASS ở build 18/08 ⇒ lớp (2) có hiệu lực ở
  * production, không chỉ ở local.
+ *
+ * API (eve ≥ 0.45): `defineBashTool` đã bị xoá — override bằng `defineTool({ ...bash, … })`
+ * từ `eve/tools/bash`.
  */
 
-import { defineBashTool } from "eve/tools";
+import { defineTool } from "eve/tools";
+import { bash } from "eve/tools/bash";
 
-export default defineBashTool({
+export default defineTool({
+  ...bash,
   description: [
     "Chạy lệnh shell trong sandbox Linux cô lập (cwd `/workspace`), KHÔNG có mạng.",
     "",
@@ -46,6 +50,6 @@ export default defineBashTool({
     "- Lấy ngày/giờ hiện tại — đã có sẵn trong `clientContext` (`now`, `today`, `financialDate`)",
     "  theo giờ Việt Nam; giờ trong sandbox là UTC nên `date` sẽ trả sai.",
     "- Truy vấn số liệu MegaWin — sandbox KHÔNG kết nối được database. Dùng các tool báo cáo.",
-    "- Tải nội dung web hoặc `pip install` — sandbox chặn toàn bộ egress. Dùng `web_fetch`.",
+    "- Tải nội dung web hoặc `pip install` — sandbox chặn toàn bộ egress.",
   ].join("\n"),
 });

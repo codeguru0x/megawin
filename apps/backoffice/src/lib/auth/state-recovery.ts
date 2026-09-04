@@ -3,7 +3,7 @@
 /**
  * Tự động khôi phục luồng đăng nhập khi OAuth `state` không còn hợp lệ.
  *
- * NGUYÊN NHÂN GỐC (đã verify trong `better-auth@1.6.26`): TTL của OAuth state bị
+ * NGUYÊN NHÂN GỐC (đã verify lại trong `better-auth@1.7.2`): TTL của OAuth state bị
  * hardcode 600 giây ở CẢ HAI lớp và KHÔNG có option nào override —
  * `dist/state.mjs` set cookie `oauth_state` với `maxAge: 600`, còn
  * `dist/oauth2/state.mjs` nhúng `expiresAt: Date.now() + 600 * 1e3` vào payload

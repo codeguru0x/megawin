@@ -121,7 +121,7 @@
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
-    "next": "^16.3.0",
+    "next": "^16.3.4",
     "typescript": "^6.0.3",
     "vite": "^8.2.1",
     "vitest": "^4.1.10"
