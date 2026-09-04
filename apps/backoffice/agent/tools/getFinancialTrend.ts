@@ -12,7 +12,7 @@
  * KHÔNG chạm repo/DB trực tiếp — chỉ gọi qua use-case (`app-use-case-layering.mdc` §3).
  * `safeRun()` KHÔNG BAO GIỜ throw, trả nguyên `AppResult<GetGamePeriodTrendOutput>` cho model tự
  * đọc — KHÔNG map lại shape để renderer dựng card đúng DTO gốc. `toToolResult` bọc
- * `serializeDates` + xử lý lỗi ở biên (output hiện toàn primitive nên serialize là no-op).
+ * `serializeDatesVN` + xử lý lỗi ở biên (output hiện toàn primitive nên serialize là no-op).
  */
 
 import { GameProduct } from "@megawin/game-core/entities";

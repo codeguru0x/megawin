@@ -45,7 +45,11 @@ interface AiThreadsRegistry {
   activeThreadId: string | undefined;
 }
 
-const STORAGE_KEY = "ai_threads:v1";
+/**
+ * Bump khi wire format event stream đổi (vd eve 0.50 delta-only appends) — key cũ bị bỏ,
+ * registry hydrate lại rỗng thay vì replay event cumulative bằng reducer delta.
+ */
+const STORAGE_KEY = "ai_threads:v2";
 
 /** Cap event log/thread khi ghi — tránh phình localStorage cho hội thoại rất dài (kế thừa p0-03). */
 const MAX_STORED_EVENTS_PER_THREAD = 500;

@@ -7,7 +7,7 @@
  *
  * VÌ SAO `deny-all` CHỨ KHÔNG PHẢI ALLOWLIST: `bash` ở đây chỉ để tính toán/biến đổi dữ liệu đã
  * có trong hội thoại. Nó KHÔNG cần internet — model call đi từ app runtime, không từ trong VM;
- * `web_fetch` cũng chạy ở app runtime với allowlist riêng. Đo thực tế 16/08 còn cho thấy dạng
+ * `getVietlottResult` / tool báo cáo chạy ở app runtime (có DB). Đo thực tế 16/08 còn cho thấy dạng
  * allowlist theo domain **không được enforce** trên microsandbox 0.6.9 local (xem
  * `ALLOWLIST_NOTE`), nên allowlist ở local là cảm giác an toàn giả.
  *

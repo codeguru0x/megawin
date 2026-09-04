@@ -21,6 +21,7 @@
 import type { Ref } from "react";
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 
+import type { ChatStatus } from "ai";
 import type { UseEveAgentStatus } from "eve/react";
 import { AlertCircleIcon } from "lucide-react";
 
@@ -92,7 +93,11 @@ export function AiComposer({
 }) {
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // eve 0.45+: `"resuming"` = đang catch-up session cũ — chặn gửi, KHÔNG hiện nút Dừng.
+  const isResuming = status === "resuming";
   const isGenerating = status === "submitted" || status === "streaming";
+  // `PromptInputSubmit` nhận `ChatStatus` của AI SDK — không có `"resuming"`.
+  const submitStatus: ChatStatus | undefined = isResuming ? undefined : status;
   // Chuẩn hoá lỗi thô thành câu staff đọc được + ghi log chi tiết (xem `agent-error.ts`). Chỉ tính
   // khi thật sự đang ở trạng thái lỗi — tránh log lại error cũ mỗi lần component render vì lý do khác.
   const errorDisplay = describeAgentError(status === "error" ? error : undefined);
@@ -125,14 +130,14 @@ export function AiComposer({
   const handleSubmit = useCallback(
     (message: PromptInputMessage) => {
       const text = message.text.trim();
-      if (!text || isGenerating) {
+      if (!text || isGenerating || isResuming) {
         return;
       }
       lastSentTextRef.current = text;
       onSend(text);
       setInput("");
     },
-    [onSend, isGenerating],
+    [onSend, isGenerating, isResuming],
   );
 
   const handleRetry = useCallback(() => {
@@ -209,9 +214,9 @@ export function AiComposer({
             <InputGroupAddon align="inline-end" className="self-end pb-2">
               <PromptInputSubmit
                 className="rounded-full"
-                disabled={!isGenerating && input.trim().length === 0}
+                disabled={isResuming || (!isGenerating && input.trim().length === 0)}
                 onStop={onStop}
-                status={status}
+                status={submitStatus}
               />
             </InputGroupAddon>
           </PromptInput>

@@ -13,6 +13,7 @@
  */
 
 import { GAME_LABELS } from "@megawin/game-core/labels";
+import { formatVN } from "@megawin/shared/utils";
 
 import type { GetDashboardDrawsOutput } from "@/server/use-cases/draws/types";
 
@@ -31,12 +32,18 @@ const EVENT_STATUS_LABELS: Record<GetDashboardDrawsOutput["events"][number]["sta
   scheduled: "Sắp diễn ra",
 };
 
-/** `"2026-08-17T09:30:00.000Z"` → `"17/08 09:30"` — ngắn hơn ISO đầy đủ cho 1 ô bảng hẹp. */
-function formatWhenLabel(iso: string): string {
-  if (iso.length < 16 || !iso.includes("T")) {
-    return iso;
+/**
+ * Nhãn giờ ngắn cho ô bảng — luôn theo giờ VN.
+ *
+ * Nhận ISO UTC (`…Z`), ISO có offset, hoặc `yyyy-MM-dd HH:mm:ss` đã format sẵn ở biên tool.
+ * Cấm slice chuỗi ISO thô: `T07:43` trong UTC sẽ hiện sai so với dashboard (14:43 VN).
+ */
+function formatWhenLabel(value: string): string {
+  const parsed = new Date(value.includes("T") ? value : `${value.replace(" ", "T")}+07:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
   }
-  return `${iso.slice(8, 10)}/${iso.slice(5, 7)} ${iso.slice(11, 16)}`;
+  return formatVN(parsed, "dd/MM HH:mm");
 }
 
 /** 1 dòng hiển thị của `getDrawsOverview` — gộp `events` (lottery) và `highFreqGames` (keno/bingo18). */

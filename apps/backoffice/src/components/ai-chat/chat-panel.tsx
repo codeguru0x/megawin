@@ -143,7 +143,8 @@ export function ChatPanel({ header }: { header: ReactNode }) {
     setHydrated(true);
   }, []);
 
-  const canRespond = status !== "submitted" && status !== "streaming";
+  // eve 0.45+: `"resuming"` = catch-up session — chặn respond/input như lúc busy, nhưng chưa là active turn.
+  const canRespond = status === "ready" || status === "error";
   const isStreaming = status === "streaming";
   const isActiveTurn = status === "submitted" || status === "streaming";
   // Turn đã kết thúc ⇒ mọi tool part chưa có output là MỒ CÔI, không thể chạy tiếp (p0-04 §3.2).
@@ -249,19 +250,28 @@ export function ChatPanel({ header }: { header: ReactNode }) {
         <Conversation>
           <ConversationContent className="pb-32">
             {showMessages ? (
-              messages.map((message, index) => (
-                <AgentMessage
-                  canRespond={canRespond}
-                  isActive={message.id === activeAssistantId}
-                  isStreaming={isStreaming && message.id === activeAssistantId}
-                  key={message.id}
-                  message={message}
-                  onInputResponses={handleInputResponses}
-                  onReuseQuestion={message.role === "assistant" ? makeReuseQuestionHandler(index) : undefined}
-                  turnEnded={turnEnded}
-                  turnStartedAt={turnStartedAt}
-                />
-              ))
+              messages.map((message, index) => {
+                // Flatten part assistant trước message này — `renderChart` follow-up cần dò bảng
+                // đã tra ở lượt cũ (cùng hội thoại, không cùng message).
+                const earlierAssistantParts = messages
+                  .slice(0, index)
+                  .filter((prior) => prior.role === "assistant")
+                  .flatMap((prior) => prior.parts);
+                return (
+                  <AgentMessage
+                    canRespond={canRespond}
+                    earlierAssistantParts={earlierAssistantParts}
+                    isActive={message.id === activeAssistantId}
+                    isStreaming={isStreaming && message.id === activeAssistantId}
+                    key={message.id}
+                    message={message}
+                    onInputResponses={handleInputResponses}
+                    onReuseQuestion={message.role === "assistant" ? makeReuseQuestionHandler(index) : undefined}
+                    turnEnded={turnEnded}
+                    turnStartedAt={turnStartedAt}
+                  />
+                );
+              })
             ) : (
               <AiEmptyState onSelectSuggestion={send} />
             )}

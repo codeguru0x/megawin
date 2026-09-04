@@ -5,7 +5,7 @@
  * `safeRun()` KHÔNG BAO GIỜ throw, trả nguyên `AppResult<GetGameSummaryOutput>` cho model
  * tự đọc — KHÔNG map lại shape để p0-03 render card đúng DTO gốc.
  *
- * `serializeDates` chỉ đổi `Date` → ISO string (không đổi shape). `GameSummaryRow` hiện toàn
+ * `serializeDatesVN` đổi `Date`/ISO → giờ VN (không đổi shape). `GameSummaryRow` hiện toàn
  * primitive nên là no-op — giữ để DTO có thêm field `Date` sau này không giết turn ở biên
  * serialize của eve (xem `@megawin/shared/utils/serialize`). Bọc trong `toToolResult` để lỗi cũng
  * được log server-side và trả payload sạch cho model (xem `server/ai/tool-result.ts`).

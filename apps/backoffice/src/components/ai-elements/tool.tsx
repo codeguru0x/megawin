@@ -34,7 +34,7 @@ export type ToolPart = ToolUIPart | DynamicToolUIPart;
 export type ToolHeaderProps = {
   /**
    * Nhãn nghiệp vụ hiển thị cho staff. **LUÔN truyền** — bỏ trống thì header fallback về tên
-   * tool kỹ thuật (`getFinancialByGame`, `web_fetch`), phơi bề mặt công cụ của agent ra UI.
+   * tool kỹ thuật (`getFinancialByGame`, `bash`), phơi bề mặt công cụ của agent ra UI.
    * Lấy từ `getToolLabel()` (`tool-renderers/registry.tsx`), nơi đã lo cả nhãn mặc định.
    */
   title?: string;

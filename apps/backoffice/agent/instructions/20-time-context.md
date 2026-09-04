@@ -32,6 +32,17 @@
 
    Chỉ hỏi lại khi câu hỏi mơ hồ đến mức không suy được khoảng ngày nào hợp lý.
 
+10. **Timestamp trong kết quả tool ĐÃ LÀ giờ Việt Nam** (`Asia/Ho_Chi_Minh`), dạng
+    `yyyy-MM-dd HH:mm:ss` — cùng format với `clientContext.now`. Hệ thống đã đổi sẵn ở biên tool;
+    bạn KHÔNG được tự trừ/cộng 7 tiếng, KHÔNG được đọc lại như UTC/ISO.
+
+    Khi nhắc giờ cho nhân viên: dùng đúng số trong payload. Ví dụ payload có
+    `2026-09-04 14:43:28` → nói _"14:43:28 ngày 04/09/2026"_ (hoặc _"lúc 14:43"_). CẤM nhắc
+    `07:43` hay bất kỳ giờ nào suy từ chuỗi ISO/`Z` cũ — dashboard staff cũng đang hiện giờ VN.
+
+    Ngày lịch thuần (`YYYY-MM-DD`: `drawDate`, `from`/`to`, `financialDate`) vẫn là ngày, không
+    phải timestamp — giữ nguyên, không gắn thêm giờ.
+
 ### Cụm thời gian thông dụng — TỰ SUY, TUYỆT ĐỐI KHÔNG HỎI LẠI
 
 Các cụm dưới đây có nghĩa DUY NHẤT trong tiếng Việt nghiệp vụ. Hỏi lại "bạn muốn từ ngày nào đến ngày

@@ -21,8 +21,8 @@ import { ChatPanel } from "@/components/ai-chat/chat-panel";
 import { ThreadSidebar } from "@/components/ai-chat/thread-sidebar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { setClientCookie } from "@/lib/cookie.client";
 import { AI_THREADS_PANEL_COOKIE } from "@/lib/preferences/ai-panel";
-import { setValueToCookie } from "@/server/server-actions";
 
 import { ThreadUrlSync } from "./thread-url-sync";
 
@@ -50,12 +50,14 @@ export function AiWorkspace({
       setMobileThreadsOpen((prev) => !prev);
       return;
     }
-    // Side-effect (server action ghi cookie) PHẢI nằm ngoài updater của setState — React gọi
-    // updater trong lúc render, gọi server action ở đó gây "Cannot update a component while
-    // rendering a different component" (cùng lý do như `toggle` trong `ai-panel-provider.tsx`).
+    // Side-effect (ghi cookie) PHẢI nằm ngoài updater của setState — React gọi updater trong
+    // lúc render, gọi side-effect ở đó gây "Cannot update a component while rendering a
+    // different component" (cùng lý do như `toggle` trong `ai-panel-provider.tsx`). Cookie
+    // ghi thẳng trên browser (mục 2 phân tích loop, 2026-09) — KHÔNG qua Server Action, tránh
+    // Next.js re-render lại cả layout `(main)` mỗi lần thu/mở panel lịch sử.
     const next = !threadsOpenRef.current;
     setThreadsOpen(next);
-    void setValueToCookie(AI_THREADS_PANEL_COOKIE, next ? "open" : "closed");
+    setClientCookie(AI_THREADS_PANEL_COOKIE, next ? "open" : "closed");
   }, [isMobile]);
 
   return (

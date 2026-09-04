@@ -3,8 +3,8 @@
  *
  * KHÔNG chạm repo/DB trực tiếp — chỉ gọi qua use-case (`app-use-case-layering.mdc` §3).
  *
- * `toToolResult` (thay cho `serializeDates` trước đây) lo cả 2 việc ở biên: đổi `Date` còn sót thành
- * ISO string, và khi lỗi thì log server-side rồi trả payload SẠCH cho model (không stack, không tên
+ * `toToolResult` (thay cho `serializeDates` trước đây) lo cả 2 việc ở biên: đổi `Date`/ISO thành
+ * giờ VN (`yyyy-MM-dd HH:mm:ss`), và khi lỗi thì log server-side rồi trả payload SẠCH cho model (không stack, không tên
  * tool, không message kỹ thuật). Xem `server/ai/tool-result.ts` cho ca lỗi thật đã bắt được ở chính
  * tool này.
  *

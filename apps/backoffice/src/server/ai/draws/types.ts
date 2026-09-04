@@ -16,7 +16,7 @@ export interface DrawDispatchMeta {
   game: GameProduct;
   /** Từ `GAME_LABELS`, KHÔNG tự map lại. */
   gameLabel: string;
-  /** Thời điểm tool đọc (ISO). */
+  /** Thời điểm tool đọc — giờ VN `yyyy-MM-dd HH:mm:ss` sau biên `toToolResult`. */
   fetchedAt: string;
 }
 

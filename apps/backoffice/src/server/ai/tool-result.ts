@@ -24,7 +24,7 @@
 
 import { APP_ERROR_CODES, type AppResult } from "@megawin/shared/errors";
 import type { WireType } from "@megawin/shared/types";
-import { logError, serializeDates } from "@megawin/shared/utils";
+import { logError, serializeDatesVN } from "@megawin/shared/utils";
 
 /** Label log cho mọi lỗi bị chặn ở biên tool. */
 const SCOPE = "AiTool";
@@ -90,7 +90,9 @@ function newIncidentId(): string {
 /**
  * Chuẩn hoá kết quả `safeRun()` cho biên tool eve.
  *
- * - Thành công: `serializeDates` đổi mọi `Date` còn sót thành ISO string (eve KHÔNG gọi `toJSON()`).
+ * - Thành công: `serializeDatesVN` đổi mọi `Date` + chuỗi ISO datetime thành
+ *   `yyyy-MM-dd HH:mm:ss` giờ VN (`Asia/Ho_Chi_Minh`) — model đọc/nhắc đúng giờ staff đang xem
+ *   trên dashboard (không còn lệch UTC −7h). Eve cũng cần string thuần (KHÔNG gọi `toJSON()`).
  * - Thất bại: log toàn bộ lỗi thật server-side, trả cho model payload sạch + chỉ dẫn cách nói.
  *
  * @param result   - Giá trị `await useCase.safeRun(...)`.
@@ -103,7 +105,7 @@ function newIncidentId(): string {
  */
 export function toToolResult<T>(result: AppResult<T>, toolName: string): ToolResult<T> {
   if (result.success) {
-    return { success: true, data: serializeDates(result.data) };
+    return { success: true, data: serializeDatesVN(result.data) };
   }
 
   const incidentId = newIncidentId();

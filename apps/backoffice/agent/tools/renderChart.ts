@@ -3,22 +3,28 @@
  *
  * HAI CHẾ ĐỘ, phân biệt bằng field `rows` có điền hay không:
  *
- * 1. **Chế độ thường (`rows` bỏ trống)** — KHÔNG chở dữ liệu. Gọi SAU một tool dữ liệu, trong
- *    CÙNG message. `execute` không truy vấn gì — tool tồn tại THUẦN để tạo ra một tool part trong
- *    message stream. FE (`registry.tsx`) bắt part này, tìm tool part dữ liệu GẦN NHẤT phía trước
- *    có output chartable (`extractRows` khác `null` — xem `chart-inference.ts`), rồi tự suy luận
- *    trục/series/kind và vẽ. Model KHÔNG chép số, KHÔNG chọn field hay trục X/Y — đúng nguyên tắc
- *    "model không quyết layout" (`view-spec.ts` ranh giới cứng). Áp dụng cho MỌI số liệu lấy từ hệ
- *    thống (DB) — số tiền phải đi thẳng từ DB tới UI, không qua model.
+ * 1. **Chế độ thường (`rows` bỏ trống)** — KHÔNG chở dữ liệu. Gọi SAU một tool dữ liệu (cùng lượt
+ *    hoặc follow-up sau bảng đã hiện ở lượt trước). `execute` không truy vấn gì — tool tồn tại
+ *    THUẦN để tạo ra một tool part trong message stream. FE (`registry.tsx`) bắt part này, tìm tool
+ *    part dữ liệu GẦN NHẤT phía trước trong CÙNG message rồi (nếu chưa thấy) trong message assistant
+ *    trước đó — chỉ nhận output chartable (`extractRows` khác `null` — xem `chart-inference.ts`),
+ *    rồi tự suy luận trục/series/kind và vẽ. Model KHÔNG chép số, KHÔNG chọn field hay trục X/Y —
+ *    đúng nguyên tắc "model không quyết layout" (`view-spec.ts` ranh giới cứng). Áp dụng cho MỌI số
+ *    liệu lấy từ hệ thống (DB) — số tiền phải đi thẳng từ DB tới UI, không qua model.
  *
- *    ⚠️ GIỚI HẠN CỨNG: vẽ NGUYÊN output của MỘT lần gọi — không lọc dòng, không ghép nhiều lần gọi.
- *    Nên biểu đồ nào cần một tập con (1 game trong báo cáo 7 game) hoặc một chuỗi ghép từ N lần gọi
- *    (mỗi tháng 1 lần) thì chế độ này KHÔNG làm được, và cái nó vẽ ra là dữ liệu KHÁC — sai im lặng.
+ *    ⚠️ GIỚI HẠN CỨNG: vẽ NGUYÊN output của MỘT lần gọi — không lọc dòng, không ghép nhiều lần gọi
+ *    trong CÙNG lượt (chỉ lấy lần gần nhất). Nên biểu đồ nào cần một tập con (1 game trong báo cáo 7
+ *    game) hoặc một chuỗi ghép từ N lần gọi (mỗi tháng 1 lần) trong cùng lượt thì chế độ này KHÔNG
+ *    làm được, và cái nó vẽ ra là dữ liệu KHÁC — sai im lặng.
  *    Lỗi thật 24/08: hỏi "doanh thu 6 tháng đầu năm của Keno" → model tra `getFinancialByGame` 6 lần
  *    rồi gọi tool này ⇒ biểu đồ hiện tài chính tháng 6 của cả 6 game, trong khi nhận xét ngay dưới
  *    nói về chuỗi Keno theo tháng. Hàng rào hiện tại là instruction (`55-charts.md` §"Khi nào gọi":
  *    không khớp trọn 1 output thì CẤM gọi) — hàng rào MỀM. Muốn chặn cứng thì tool dữ liệu phải bóc
  *    sẵn theo mốc cần vẽ (thêm `groupBy` tháng / lọc `game`) để 1 lần gọi ra đúng chuỗi cần vẽ.
+ *
+ *    Vá 04/09: trước đây FE chỉ dò trong CÙNG message → follow-up "vẽ biểu đồ" (chỉ gọi tool này,
+ *    không gọi lại báo cáo) luôn hiện "Chưa vẽ được…" trong khi `execute` trả `{ ok: true }` nên
+ *    model vẫn viết "Đã vẽ…". FE giờ dò thêm message assistant trước.
  * 2. **Chế độ dữ liệu tự nhập (`rows` có điền)** — CHỈ dùng khi người dùng dán/mô tả dữ liệu KHÔNG có
  *    sẵn trong hệ thống (CSV, JSON, hay liệt kê field/giá trị trong tin nhắn) và muốn vẽ trực tiếp
  *    từ đó. Ở chế độ này, model TỰ đọc + phân loại dữ liệu thô thành `rows`, hệ thống dùng ĐÚNG
@@ -48,14 +54,16 @@ export default defineTool({
     "Vẽ biểu đồ. CHỈ gọi khi người dùng yêu cầu vẽ biểu đồ/chart/đồ thị/vẽ hình — KHÔNG tự gọi khi " +
     "họ chỉ hỏi số (số liệu vẫn hiện bảng như bình thường, không cần tool này). HAI CÁCH DÙNG:\n" +
     "(1) Vẽ từ số liệu HỆ THỐNG: gọi tool dữ liệu TRƯỚC để có số trong tay, rồi gọi tool này NGAY " +
-    "SAU, BỎ TRỐNG `rows` — hệ thống tự lấy dữ liệu từ output tool dữ liệu gần nhất, bạn không cần " +
-    "(và không được) chép số vào `rows` ở trường hợp này. QUAN TRỌNG: hệ thống vẽ NGUYÊN output của " +
-    "MỘT lần gọi gần nhất — KHÔNG lọc bớt dòng, KHÔNG ghép nhiều lần gọi lại với nhau. Nếu bạn đã " +
-    "gọi tool dữ liệu nhiều lần (vd mỗi tháng 1 lần) thì chỉ lần CUỐI được vẽ; nếu output có nhiều " +
-    "nhóm hơn câu hỏi (hỏi 1 game, báo cáo trả cả 7 game) thì biểu đồ hiện đủ cả 7. Vì vậy CHỈ gọi " +
-    "khi biểu đồ cần vẽ đúng bằng TOÀN BỘ output của MỘT lần gọi; không đúng như vậy thì ĐỪNG gọi " +
-    "tool này — nói rõ chưa vẽ được biểu đồ đúng ý và vì sao, rồi trả lời bằng số/bảng. Vẽ ra một " +
-    "biểu đồ chứa dữ liệu khác điều được hỏi là lỗi NGHIÊM TRỌNG hơn việc không có biểu đồ.\n" +
+    "SAU, BỎ TRỐNG `rows` — hệ thống tự lấy dữ liệu từ output tool dữ liệu gần nhất (cùng lượt hoặc " +
+    "lượt trước trong hội thoại nếu bạn đang vẽ lại bảng đã tra). Bạn không cần (và không được) " +
+    "chép số vào `rows` ở trường hợp này. QUAN TRỌNG: hệ thống vẽ NGUYÊN output của MỘT lần gọi gần " +
+    "nhất — KHÔNG lọc bớt dòng, KHÔNG ghép nhiều lần gọi trong cùng lượt lại với nhau. Nếu bạn đã " +
+    "gọi tool dữ liệu nhiều lần trong CÙNG lượt (vd mỗi tháng 1 lần) thì chỉ lần CUỐI được vẽ; nếu " +
+    "output có nhiều nhóm hơn câu hỏi (hỏi 1 game, báo cáo trả cả 7 game) thì biểu đồ hiện đủ cả 7. " +
+    "Vì vậy CHỈ gọi khi biểu đồ cần vẽ đúng bằng TOÀN BỘ output của MỘT lần gọi; không đúng như vậy " +
+    "thì ĐỪNG gọi tool này — nói rõ chưa vẽ được biểu đồ đúng ý và vì sao, rồi trả lời bằng số/" +
+    "bảng. Vẽ ra một biểu đồ chứa dữ liệu khác điều được hỏi là lỗi NGHIÊM TRỌNG hơn việc không có " +
+    "biểu đồ.\n" +
     "(2) Vẽ từ dữ liệu NGƯỜI DÙNG TỰ CUNG CẤP (dán CSV, JSON, hoặc liệt kê field/giá trị ngay trong " +
     "tin nhắn, KHÔNG phải kết quả tra cứu hệ thống): tự đọc và phân loại dữ liệu đó thành `rows`, " +
     "điền vào tool này, KHÔNG gọi tool dữ liệu nào cả.\n" +
@@ -108,10 +116,19 @@ export default defineTool({
       ),
   }),
   execute: async ({ chartType, rows, title }) => {
-    // Chế độ (1) — `rows` trống: dữ liệu nằm ở output tool TRƯỚC ĐÓ, tool này không thấy được nên
-    // không kiểm chứng gì ở đây; FE tự dò và báo nếu không tìm được (xem `ChartUnavailableNote`).
+    // Chế độ (1) — `rows` trống: dữ liệu nằm ở output tool TRƯỚC ĐÓ (cùng lượt hoặc lượt trước).
+    // Tool này không thấy được output đó nên không kiểm chứng ở đây; FE tự dò và báo nếu không tìm
+    // được (xem `ChartUnavailableNote`). Trả `ok: true` ≠ chart đã hiện — model CHỈ viết "đã vẽ" /
+    // nhận xét số liệu khi biết chắc đã có bảng chartable trong hội thoại (cùng lượt hoặc lượt trước).
     if (rows === undefined || rows.length === 0) {
-      return { ok: true, mode: "fromPreviousTool" as const };
+      return {
+        ok: true,
+        mode: "fromPreviousTool" as const,
+        reminder:
+          "UI tự ghép biểu đồ từ tool dữ liệu gần nhất trong hội thoại. Nếu không có bảng nào để vẽ, " +
+          "người dùng sẽ thấy ghi chú 'Chưa vẽ được biểu đồ' — khi đó CẤM viết 'đã vẽ' hay nhận xét như " +
+          "thể biểu đồ đã hiện; nói chưa vẽ được và vì sao.",
+      };
     }
 
     // Chế độ (2) — `rows` do model tự trích từ dữ liệu người dùng dán: kiểm chứng NGAY tại đây bằng CHÍNH

@@ -5,6 +5,7 @@
 import { useEffect, useRef } from "react";
 
 import { parseAsString, useQueryState } from "nuqs";
+import { useShallow } from "zustand/react/shallow";
 
 import { useAiThreadsStore } from "@/stores/ai-threads/ai-threads-provider";
 
@@ -32,12 +33,22 @@ import { useAiThreadsStore } from "@/stores/ai-threads/ai-threads-provider";
  * lúc đó đổi từ `undefined` → id thật (registry vừa đọc xong `localStorage`) — nếu áp cùng luật
  * "store vừa đổi → ghi URL" sẽ ghi đè mất `threadParam` của deep-link. Ở mốc này, URL (nếu có id
  * hợp lệ) PHẢI thắng — đó là ý định của người dùng khi mở/dán link `?thread=<id>`.
+ *
+ * ỔN ĐỊNH DEPS (mục 6 phân tích loop, 2026-09) — 2 nguồn khiến effect bị NHẮC LẠI DƯ (không phải
+ * loop, chỉ chạy thừa) đã được giảm, KHÔNG đổi logic phân biệt "ai vừa đổi" ở trên:
+ * 1. `setThreadParam` (nuqs) đổi reference MỖI LẦN RENDER — đưa qua ref, đọc `.current` trong
+ *    effect, bỏ khỏi dependency array.
+ * 2. `threads` (toàn bộ `AiThread[]`, đổi reference mỗi lần `AgentBridge` mirror stream — vài
+ *    lần/giây lúc đang chat) → narrow xuống CHỈ danh sách id qua `useShallow`, effect chỉ cần
+ *    biết "id trong URL có tồn tại trong registry không", không cần nội dung thread.
  */
 export function ThreadUrlSync() {
   const [threadParam, setThreadParam] = useQueryState("thread", parseAsString);
   const activeThreadId = useAiThreadsStore((s) => s.activeThreadId);
   const hydrated = useAiThreadsStore((s) => s.hydrated);
-  const threads = useAiThreadsStore((s) => s.threads);
+  // `useShallow` giữ nguyên reference của mảng id khi TẬP id không đổi (thêm/xoá thread) — nội
+  // dung 1 thread đổi (title/events/session lúc mirror stream) KHÔNG làm effect bị nhắc lại.
+  const threadIds = useAiThreadsStore(useShallow((s) => s.threads.map((thread) => thread.id)));
   const setActiveThread = useAiThreadsStore((s) => s.setActiveThread);
 
   const prevActiveThreadIdRef = useRef<string | undefined>(undefined);
@@ -45,6 +56,11 @@ export function ThreadUrlSync() {
   // Giá trị vừa ghi vào URL nhưng `threadParam` CHƯA phản ánh (nuqs cập nhật URL bất đồng bộ, có
   // throttle). Xem nhánh "cửa sổ chờ" trong effect.
   const pendingUrlValueRef = useRef<string | undefined>(undefined);
+  // `setThreadParam` đổi reference mỗi render (hành vi nuqs) — đọc bản MỚI NHẤT qua ref thay vì
+  // đưa vào dependency array, tránh effect bị nhắc lại chỉ vì nuqs cấp hàm mới mà chẳng có giá
+  // trị nào khác (threadParam/activeThreadId/threadIds) thực sự đổi.
+  const setThreadParamRef = useRef(setThreadParam);
+  setThreadParamRef.current = setThreadParam;
 
   useEffect(() => {
     if (!hydrated) {
@@ -55,11 +71,11 @@ export function ThreadUrlSync() {
     if (!didInitialSyncRef.current) {
       didInitialSyncRef.current = true;
       prevActiveThreadIdRef.current = activeThreadId;
-      if (threadParam && threadParam !== activeThreadId && threads.some((thread) => thread.id === threadParam)) {
+      if (threadParam && threadParam !== activeThreadId && threadIds.includes(threadParam)) {
         setActiveThread(threadParam);
       } else if (threadParam !== activeThreadId) {
         pendingUrlValueRef.current = activeThreadId;
-        void setThreadParam(activeThreadId ?? null, { history: "replace" });
+        void setThreadParamRef.current(activeThreadId ?? null, { history: "replace" });
       }
       return;
     }
@@ -75,7 +91,7 @@ export function ThreadUrlSync() {
     // Store đổi (createThread/setActiveThread từ UI) → URL đi theo.
     if (activeThreadId !== prevActiveThreadId) {
       pendingUrlValueRef.current = activeThreadId;
-      void setThreadParam(activeThreadId ?? null, { history: "replace" });
+      void setThreadParamRef.current(activeThreadId ?? null, { history: "replace" });
       return;
     }
 
@@ -91,11 +107,11 @@ export function ThreadUrlSync() {
 
     // Còn lại — URL đổi từ bên ngoài (back/forward, dán link) → store đi theo, chỉ khi id hợp lệ
     // (tồn tại trong registry) để tránh set active sang thread không có thật.
-    if (threadParam && threads.some((thread) => thread.id === threadParam)) {
+    if (threadParam && threadIds.includes(threadParam)) {
       pendingUrlValueRef.current = undefined;
       setActiveThread(threadParam);
     }
-  }, [hydrated, threadParam, activeThreadId, threads, setActiveThread, setThreadParam]);
+  }, [hydrated, threadParam, activeThreadId, threadIds, setActiveThread]);
 
   return null;
 }

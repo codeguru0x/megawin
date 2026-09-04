@@ -72,6 +72,6 @@
     "@aws-sdk/client-sqs": "*",
     "@megawin/shared": "workspace:*",
     "@middy/core": "^7.7.3",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   }
 }

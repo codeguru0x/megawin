@@ -65,7 +65,12 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": ["megawin", "keno", "game", "domain"],
+  "keywords": [
+    "megawin",
+    "keno",
+    "game",
+    "domain"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -78,6 +83,6 @@
   },
   "dependencies": {
     "@megawin/game-core": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   }
 }
