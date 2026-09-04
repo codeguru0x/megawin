@@ -7,6 +7,10 @@
  * Tự fetch draw detail và render ResultAndPrize + FinancialSummary.
  *
  * Visibility logic: chỉ render khi draw ở trạng thái Published/Settling/Settled.
+ *
+ * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish/
+ * reopen, financial (+ jackpot) bị $unset — không render ledger toàn 0 / biến
+ * động Jackpot lệch (trước ≠ sau khi đóng góp hiện 0).
  */
 
 import { useMemo } from "react";
@@ -40,7 +44,9 @@ export function ResultSection() {
 
   const result: DrawResult | undefined = useMemo(() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     // prizeAmounts từ API: unit prize per winning line theo config (không bao gồm Jackpot biến động)
     const configPricePerLine: Record<string, number> = drawDetailData?.prizeAmounts ?? {};
@@ -61,44 +67,56 @@ export function ResultSection() {
       };
     });
 
-    const jackpotTier = tierMap.get(PrizeTier.Jackpot);
-    const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
-    const isSplitCycle = d.jackpot?.isSplitCycle ?? false;
-    const jackpotBefore = d.jackpot?.openingAmount ?? 0;
-    const jackpotContribution = d.financial?.jackpotContribution ?? 0;
-    // Pool xử lý kỳ này = opening + contribution.
-    // Winner: trao winner. Split: chia tier1-5. Roll-over: 0 (không "trao" gì).
-    const jackpotPrizeAwarded = hasJackpotWinner || isSplitCycle ? jackpotBefore + jackpotContribution : 0;
+    // Chỉ build ledger khi đã có financial sau settle — tránh ?? 0 giả tạo.
+    const financial = d.financial
+      ? (() => {
+          const jackpotTier = tierMap.get(PrizeTier.Jackpot);
+          const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
+          const isSplitCycle = d.jackpot?.isSplitCycle ?? false;
+          const jackpotBefore = d.jackpot?.openingAmount ?? 0;
+          const jackpotContribution = d.financial.jackpotContribution;
+          // Pool xử lý kỳ này = opening + contribution.
+          // Winner: trao winner. Split: chia tier1-5. Roll-over: 0 (không "trao" gì).
+          const jackpotPrizeAwarded = hasJackpotWinner || isSplitCycle ? jackpotBefore + jackpotContribution : 0;
+
+          return {
+            totalRevenue: d.financial.totalRevenue,
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+            actualCompanyTake: d.financial.actualCompanyTake,
+            jackpotContribution,
+            jackpotBefore,
+            jackpotAfter: d.jackpot?.closingAmount ?? 0,
+            hasJackpotWinner,
+            isSplitCycle,
+            jackpotPrizeAwarded,
+          };
+        })()
+      : undefined;
 
     return {
       winningMain: d.result.winningMain,
       winningSpecial: d.result.winningSpecial,
       settledAt: d.result.publishedAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
-        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
-        jackpotContribution,
-        jackpotBefore,
-        jackpotAfter: d.jackpot?.closingAmount ?? 0,
-        hasJackpotWinner,
-        isSplitCycle,
-        jackpotPrizeAwarded,
-      },
+      financial,
     };
   }, [drawDetailData]);
 
-  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) return null;
+  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) {
+    return null;
+  }
+
+  // Published + đã từng settle → chờ kết sổ lại; Published lần đầu → chờ kết sổ.
+  const awaitingResettle = draw.status === DrawStatus.Published && !!draw.settledAt;
 
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
-        <FinancialSummary financial={result.financial} />
+        <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />
       </div>
     </section>
   );

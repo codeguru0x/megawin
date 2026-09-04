@@ -6,8 +6,11 @@
  * Hiển thị kết quả 20 bộ ba số và tổng hợp tài chính sau khi draw published/settled.
  * Chỉ render khi draw ở trạng thái Published/Settling/Settled.
  *
- * Max 3D Pro: 8 PrizeTier (bao gồm specialSub), không có Jackpot.
- * Tier specialSub = Giải phụ Đặc Biệt (đảo thứ tự bộ đôi ĐB).
+ * Max 3D Pro: 8 PrizeTier (bao gồm specialSub), không có Jackpot / snapshot
+ * jackpot trên draw. Tier specialSub = Giải phụ Đặc Biệt (đảo thứ tự bộ đôi ĐB).
+ *
+ * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish,
+ * financial bị $unset — không render ledger toàn 0 giả tạo.
  */
 
 import { useMemo, useState } from "react";
@@ -221,9 +224,49 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
   );
 }
 
-// ─── Financial Summary ────────────────────────────────────────────────────────
+// ─── Financial Summary (Max 3D Pro — không có Jackpot) ───────────────────────
 
-function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay }) {
+function FinancialSummary({
+  financial: f,
+  awaitingResettle = false,
+}: {
+  financial?: DrawFinancialDisplay;
+  /** true khi Published sau khi đã từng settle (republish). */
+  awaitingResettle?: boolean;
+}) {
+  // Chưa có financial (publish lần đầu hoặc sau republish $unset) —
+  // KHÔNG render ledger toàn 0. Max 3D Pro không có snapshot Jackpot trên draw.
+  if (!f) {
+    return (
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                {awaitingResettle ? "Chờ kết sổ lại" : "Chờ kết sổ"}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-5 pb-4 pt-0">
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-5 space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              {awaitingResettle ? "Kỳ đang chờ kết sổ lại" : "Kỳ đang chờ kết sổ"}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Số liệu tài chính sẽ cập nhật sau khi kết sổ hoàn tất. KPI cược phía trên phản ánh số liệu live — không
+              phải báo cáo phân bổ doanh thu kỳ này.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Max 3D Pro KHÔNG có quỹ Jackpot và không có companyRate riêng → không có khoản trích quỹ:
   //   Doanh thu − Hoa hồng − Giải thưởng = Kết quả công ty (P&L kỳ) = f.profit.
   // Có thể ÂM khi chi trả giải vượt doanh thu (trúng nhiều Đặc Biệt/specialSub cùng lúc).
@@ -390,26 +433,31 @@ export function ResultSection() {
       third: r.third as [string, string, string, string, string, string, string, string],
       settledAt: r.publishedAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        profit:
-          (d.financial?.totalRevenue ?? 0) -
-          (d.financial?.totalFixedPrizes ?? 0) -
-          (d.financial?.totalAgentCommission ?? 0),
-      },
+      // Chỉ map khi đã settle — tránh ledger giả toàn 0 sau republish ($unset financial).
+      financial: d.financial
+        ? {
+            totalRevenue: d.financial.totalRevenue,
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            profit: d.financial.totalRevenue - d.financial.totalFixedPrizes - d.financial.totalAgentCommission,
+          }
+        : undefined,
     };
   }, [drawDetailData]);
 
-  if (!draw || !RESULT_SHOW.has(draw.status) || !result) return null;
+  if (!draw || !RESULT_SHOW.has(draw.status) || !result) {
+    return null;
+  }
+
+  // Published + đã từng settle → chờ kết sổ lại; Published lần đầu → chờ kết sổ.
+  const awaitingResettle = draw.status === DrawStatus.Published && !!draw.settledAt;
 
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultCard result={result} drawId={effectiveDrawId} />
-        <FinancialSummary financial={result.financial} />
+        <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />
       </div>
     </section>
   );

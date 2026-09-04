@@ -454,7 +454,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    *
    * Chấp nhận draw ở salesClosed (lần đầu publish) hoặc published (sửa lại result).
    * Cả hai trường hợp đều set `status: published` + ghi `result` + optional `vietlottRef`.
-   * Atomic — trả về null nếu draw không ở trạng thái hợp lệ.
+   *
+   * `$unset financial/stats/settleSummary` — no-op khi publish lần đầu. Khi kỳ đã
+   * từng settle rồi quay lại Published (chờ resettle), xoá snapshot settle cũ để
+   * UI không đọc ledger lỗi thời. Bingo 18 không có field jackpot trên draw.
+   * Nhánh Settled → Published dùng `republishResultAfterSettled` (cùng bộ unset).
    */
   async publishResult(drawId: string, result: DrawResult, vietlottRef?: DrawVietlottRef): Promise<DrawEntity | null> {
     const $set: Record<string, unknown> = {
@@ -462,14 +466,23 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       result,
       updatedAt: new Date(),
     };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
+    }
 
     return await this.findOneAndUpdate(
       {
         drawId,
         status: { $in: [DrawStatus.SalesClosed, DrawStatus.Published] },
       },
-      { $set },
+      {
+        $set,
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+        },
+      },
       {
         returnDocument: "after",
       },

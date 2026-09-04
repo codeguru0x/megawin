@@ -50,8 +50,12 @@ export interface DrawResult {
  * Snapshot Jackpot cho kỳ quay.
  *
  * KHÔNG ghi khi tạo draw — chỉ ghi lúc settle (finalize-settle).
- * Kỳ đang active: UI đọc jackpot từ `lotto535_jackpot_cycles.currentAmount`.
+ * Kỳ đang active / Published-chờ-kết-sổ: UI đọc jackpot từ
+ * `lotto535_jackpot_cycles.currentAmount` (field này không có trên draw).
  * Kỳ đã settle: đọc từ đây (bản ghi lịch sử).
+ *
+ * Republish / reopen cascade `$unset jackpot` cùng financial — tránh snapshot
+ * lỗi thời khi chờ kết sổ lại.
  */
 export interface DrawJackpotSnapshot {
   /** Jackpot đầu kỳ (VND). Ghi lúc settle. */

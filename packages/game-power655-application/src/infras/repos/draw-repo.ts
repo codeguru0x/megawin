@@ -330,8 +330,16 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Publish hoặc cập nhật kết quả quay.
    * Chấp nhận draw ở salesClosed hoặc published.
    *
+   * - salesClosed → published (lần đầu publish)
+   * - published → published (sửa kết quả trước settle, hoặc đang chờ kết sổ lại)
+   *
    * Ghi result gồm winningMain (6 số chính) + bonusNumber (số bonus) + publishedAt.
    * Luôn set status = published (idempotent nếu đã published).
+   *
+   * `$unset financial/stats/settleSummary/jackpot` — no-op khi publish lần đầu
+   * (field chưa tồn tại). Khi kỳ đã từng settle rồi quay lại Published (chờ
+   * resettle), xoá snapshot settle cũ để UI/API không đọc số lỗi thời. Nhánh
+   * Settled → Published dùng `republishResultAfterSettled` (cùng bộ unset).
    *
    * @param result - Kết quả quay: 6 số chính + bonus number + thời điểm publish
    * @param vietlottRef - Tham chiếu Vietlott chính thức (optional)
@@ -342,7 +350,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       result,
       updatedAt: new Date(),
     };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
+    }
 
     return await this.findOneAndUpdate(
       {
@@ -351,7 +361,15 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           $in: [DrawStatus.SalesClosed, DrawStatus.Published],
         },
       },
-      { $set },
+      {
+        $set,
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+          jackpot: "",
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -644,9 +662,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    *
    * Side effects:
    * - $set: `status = published`, `result`, `updatedAt`, (+ `vietlottRef` nếu có).
-   * - $unset: `financial`, `stats`, `settleSummary` — dữ liệu lần settle CŨ. Trong
-   *   giai đoạn Published-chờ-resettle, draw KHÔNG được mang số liệu tài chính lỗi
-   *   thời (API/UI đọc lúc này sẽ sai). Re-settle sẽ ghi lại đầy đủ qua
+   * - $unset: `financial`, `stats`, `settleSummary`, `jackpot` — dữ liệu lần settle
+   *   CŨ. Trong giai đoạn Published-chờ-resettle, draw KHÔNG được mang snapshot
+   *   tài chính/jackpot lỗi thời (API/UI đọc lúc này sẽ sai lệch: đóng góp = 0
+   *   nhưng trước/sau kỳ vẫn còn số cũ). Re-settle ghi lại đầy đủ qua
    *   `updateSettleResult` ($set overwrite).
    *
    * KHÔNG $unset `settledAt` — đây là high-water mark lịch sử settle:
@@ -672,15 +691,22 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       result,
       updatedAt: new Date(),
     };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
+    }
 
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settled },
       {
         $set,
-        // Xoá data settle CŨ — re-settle sẽ tính lại. KHÔNG đụng `settledAt`
-        // (high-water mark, cần cho resettle token + phân biệt đã-từng-settle).
-        $unset: { financial: "", stats: "", settleSummary: "" },
+        // Xoá data settle CŨ (kể cả jackpot snapshot) — re-settle ghi lại đầy đủ.
+        // KHÔNG đụng `settledAt` (high-water mark).
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+          jackpot: "",
+        },
       },
       { returnDocument: "after" },
     );
@@ -696,7 +722,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * (`DRAW_NO_NEW_RESULT`). Method này là entry point riêng cho cascade: re-stamp
    * `result.publishedAt = now` (để `publishedAt > settledAt`, mở cổng trigger),
    * GIỮ NGUYÊN `result.winningMain` + `result.bonusNumber`, chuyển `Settled →
-   * Published`, $unset data settle cũ. KHÔNG đụng `settledAt` (high-water mark).
+   * Published`, $unset data settle cũ (financial/stats/settleSummary/jackpot).
+   * KHÔNG đụng `settledAt` (high-water mark).
    *
    * Idempotent theo status: filter `status = Settled` → gọi lại trên kỳ đã
    * Published trả null (no-op). Caller (`ReopenForCascadeUseCase`) đã guard chỉ
@@ -720,11 +747,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           "result.publishedAt": publishedAt,
           updatedAt: new Date(),
         },
-        // Xoá data settle CŨ — re-settle sẽ tính lại (giống republishResultAfterSettled).
+        // Xoá data settle CŨ (kể cả jackpot snapshot) — re-settle ghi lại đầy đủ
+        // (giống republishResultAfterSettled). Không unset settledAt.
         $unset: {
           financial: "",
           stats: "",
           settleSummary: "",
+          jackpot: "",
         },
       },
       {

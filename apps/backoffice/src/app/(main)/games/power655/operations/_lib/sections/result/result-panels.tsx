@@ -410,7 +410,47 @@ function AccountRow({ row }: { row: LedgerRow }) {
   );
 }
 
-export function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay }) {
+export function FinancialSummary({
+  financial: f,
+  awaitingResettle = false,
+}: {
+  financial?: DrawFinancialDisplay;
+  /** true khi Published sau khi đã từng settle (republish / reopen cascade). */
+  awaitingResettle?: boolean;
+}) {
+  // Chưa có financial (publish lần đầu hoặc sau republish/reopen $unset) —
+  // KHÔNG render ledger toàn 0 / Biến động Jackpot lệch.
+  if (!f) {
+    return (
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                {awaitingResettle ? "Chờ kết sổ lại" : "Chờ kết sổ"}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-5 pb-4 pt-0">
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-5 space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              {awaitingResettle ? "Kỳ đang chờ kết sổ lại" : "Kỳ đang chờ kết sổ"}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Số liệu tài chính và biến động Jackpot sẽ cập nhật sau khi kết sổ hoàn tất. KPI cược phía trên phản ánh số
+              liệu live — không phải báo cáo phân bổ doanh thu kỳ này.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Cấu trúc "báo cáo phân bổ doanh thu" — số học liền mạch từ trên xuống:
   //   Doanh thu − Hoa hồng − Giải cố định = Số dư sau giải & HH
   //   Số dư − Trích quỹ Jackpot (JP1+JP2) = Kết quả công ty (P&L kỳ)

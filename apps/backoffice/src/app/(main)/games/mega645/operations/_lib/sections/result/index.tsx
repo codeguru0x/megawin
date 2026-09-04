@@ -5,6 +5,10 @@
  *
  * Hiển thị kết quả quay số và tổng hợp tài chính sau khi draw published/settled.
  * Mega 6/45: 6 số chính, 4 tiers, không có winningSpecial.
+ *
+ * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish/
+ * reopen, financial (+ jackpot) bị $unset — không render ledger toàn 0 / biến
+ * động Jackpot lệch (trước ≠ sau khi đóng góp hiện 0).
  */
 
 import { useMemo } from "react";
@@ -30,7 +34,9 @@ export function ResultSection() {
 
   const result: DrawResult | undefined = useMemo(() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier as PrizeTier, t]));
     const tiers = TIER_ORDER.map((tier) => {
@@ -46,40 +52,52 @@ export function ResultSection() {
       };
     });
 
-    // Jackpot winner: winnerCount > 0 ở tier jackpot. Pool đã trao = totalPrize tier đó
-    // (đã patch = jackpotBefore + contribution bởi PatchJackpotPrize).
-    const jackpotTier = tierMap.get(PrizeTier.Jackpot);
-    const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
-    const jackpotPrizeAwarded = hasJackpotWinner ? (jackpotTier?.prizeAmount ?? 0) : 0;
+    // Chỉ build ledger khi đã có financial sau settle — tránh ?? 0 giả tạo.
+    const financial = d.financial
+      ? (() => {
+          // Jackpot winner: winnerCount > 0 ở tier jackpot. Pool đã trao = totalPrize
+          // tier đó (đã patch = jackpotBefore + contribution bởi PatchJackpotPrize).
+          const jackpotTier = tierMap.get(PrizeTier.Jackpot);
+          const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
+          const jackpotPrizeAwarded = hasJackpotWinner ? (jackpotTier?.prizeAmount ?? 0) : 0;
+
+          return {
+            totalRevenue: d.financial.totalRevenue,
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+            actualCompanyTake: d.financial.actualCompanyTake,
+            jackpotContribution: d.financial.jackpotContribution,
+            jackpotBefore: d.jackpot?.openingAmount ?? 0,
+            jackpotAfter: d.jackpot?.closingAmount ?? 0,
+            hasJackpotWinner,
+            jackpotPrizeAwarded,
+          };
+        })()
+      : undefined;
 
     return {
       // Mega 6/45: 6 số chính (01-45), không có winningSpecial
       winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
       settledAt: d.result.publishedAt,
       tiers,
-      financial: {
-        totalRevenue: d.financial?.totalRevenue ?? 0,
-        totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
-        totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
-        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
-        jackpotContribution: d.financial?.jackpotContribution ?? 0,
-        jackpotBefore: d.jackpot?.openingAmount ?? 0,
-        jackpotAfter: d.jackpot?.closingAmount ?? 0,
-        hasJackpotWinner,
-        jackpotPrizeAwarded,
-      },
+      financial,
     };
   }, [drawDetailData]);
 
-  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) return null;
+  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) {
+    return null;
+  }
+
+  // Published + đã từng settle → chờ kết sổ lại; Published lần đầu → chờ kết sổ.
+  const awaitingResettle = draw.status === DrawStatus.Published && !!draw.settledAt;
 
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
-        <FinancialSummary financial={result.financial} />
+        <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />
       </div>
     </section>
   );

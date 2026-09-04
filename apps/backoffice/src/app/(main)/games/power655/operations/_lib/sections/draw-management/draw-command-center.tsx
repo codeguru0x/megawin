@@ -265,7 +265,10 @@ export function DrawCommandCenter({
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Power 6/55: 1 kỳ/ngày nên hiển thị ngày */}
                 <h2 className="text-sm font-semibold tracking-tight">Power 6/55 — {draw.drawDate}</h2>
-                <DrawStatusBadge status={status} />
+                <DrawStatusBadge
+                  status={status}
+                  awaitingResettle={status === DrawStatus.Published && !!draw.settledAt}
+                />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <p className="text-xs text-muted-foreground font-mono shrink-0">{draw.drawId}</p>

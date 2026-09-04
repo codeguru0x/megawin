@@ -112,7 +112,7 @@ export interface DrawResult {
     prizeAmount: number;
     totalPrize: number;
   }[];
-  financial: DrawFinancialDisplay;
+  financial?: DrawFinancialDisplay;
 }
 
 export interface DrawFinancialDisplay {

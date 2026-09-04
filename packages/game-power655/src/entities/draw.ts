@@ -50,6 +50,10 @@ export interface DrawResult {
  * closingJackpot1/2 = openingJackpot1/2 + jackpot1/2Contribution.
  * jackpot1Contribution đã trừ jp1Overflow nếu overflow kích hoạt (JP1 cap tại threshold).
  * jackpot2Contribution đã cộng jp1Overflow nếu overflow kích hoạt VÀ có JP2 winner kỳ đó.
+ *
+ * KHÔNG ghi khi tạo draw — chỉ ghi lúc settle (finalize-settle).
+ * Republish / reopen cascade `$unset jackpot` cùng financial — tránh snapshot
+ * lỗi thời khi chờ kết sổ lại.
  */
 export interface DrawJackpot {
   /** Giá trị JP1 đầu kỳ (trước khi cộng tích luỹ kỳ này). */

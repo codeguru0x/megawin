@@ -42,16 +42,30 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   },
 };
 
+/** Published sau khi đã từng settle (republish) — chờ kết sổ lại. Keno không có Jackpot. */
+const AWAITING_RESETTLE = {
+  label: "Chờ kết sổ lại",
+  className: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300",
+} as const;
+
 interface KenoDrawStatusBadgeProps {
   status: string;
+  /**
+   * true khi status = published nhưng `settledAt` còn tồn tại (đã từng settle,
+   * đang chờ kết sổ lại). Đổi label để staff không nhầm với publish lần đầu.
+   */
+  awaitingResettle?: boolean;
   className?: string;
 }
 
-export function KenoDrawStatusBadge({ status, className }: KenoDrawStatusBadgeProps) {
-  const config = STATUS_MAP[status] ?? {
-    label: status,
-    className: "bg-muted text-muted-foreground",
-  };
+export function KenoDrawStatusBadge({ status, awaitingResettle = false, className }: KenoDrawStatusBadgeProps) {
+  const config =
+    awaitingResettle && status === "published"
+      ? AWAITING_RESETTLE
+      : (STATUS_MAP[status] ?? {
+          label: status,
+          className: "bg-muted text-muted-foreground",
+        });
 
   return (
     <Badge variant="outline" className={cn("border-0", config.className, className)}>

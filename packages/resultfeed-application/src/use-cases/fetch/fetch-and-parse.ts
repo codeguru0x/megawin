@@ -162,7 +162,7 @@ import { SubmissionRepository } from "../../infras/repos/submission-repo";
 import type { SourceAdapter } from "../../sources/types";
 import { ResultUnavailableError } from "../../sources/types";
 import type { GameFetchSchedule } from "./schedule";
-import { computeNextFetchAtAfterConfirm } from "./schedule";
+import { computeNextFetchAtAfterConfirm, computeNextFetchAtOnUnavailable } from "./schedule";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 
@@ -514,8 +514,16 @@ export class FetchAndParseUseCase extends TickLoopWorker<void, FetchAndParseRunR
         // backfill sát tới hiện tại. KHÔNG alert, KHÔNG backoff (`recordUnavailable` reset
         // `consecutiveFailures` về 0) — nếu tính vào backoff, hiện tượng lặp lại liên tục
         // này sẽ bị hiểu nhầm thành sự cố và trì hoãn lịch fetch oan.
+        //
+        // `computeNextFetchAtOnUnavailable` (không phải `scheduleWithJitter` thẳng
+        // `minIntervalMs` như trước) — cho game `continuous-daily-window` (Keno, Bingo18),
+        // hàm này TỰ giãn nhịp qua đêm sau khi qua giờ đóng cửa (xem `schedule.ts` mục "GIÃN
+        // NHỊP QUA ĐÊM"); `continuous`/`fixed` giữ nguyên hành vi cũ.
         await this.submissionRepo.markUnavailable(submissionId, err.message);
-        await this.cursorRepo.recordUnavailable(cursor.id, scheduleWithJitter(source.minIntervalMs));
+        await this.cursorRepo.recordUnavailable(
+          cursor.id,
+          computeNextFetchAtOnUnavailable(this.deps.schedule, new Date(), source.minIntervalMs),
+        );
         return { status: "result_unavailable", submissionId };
       }
       const reason = err instanceof Error ? err.message : String(err);

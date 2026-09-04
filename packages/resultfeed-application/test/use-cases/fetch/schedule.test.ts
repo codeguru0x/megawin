@@ -15,7 +15,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import { computeNextFetchAt, computeNextFetchAtAfterConfirm } from "../../../src/use-cases/fetch/schedule";
+import {
+  computeNextFetchAt,
+  computeNextFetchAtAfterConfirm,
+  computeNextFetchAtOnUnavailable,
+} from "../../../src/use-cases/fetch/schedule";
 
 /** Lịch Max3D Pro thật (`apps/worker-resultfeed/src/handlers/fetch/vietlott-max3dpro.ts`). */
 const MAX3DPRO_SCHEDULE = {
@@ -102,5 +106,120 @@ describe("computeNextFetchAtAfterConfirm", () => {
     const diffMs = result.getTime() - now.getTime();
     expect(diffMs).toBeGreaterThanOrEqual(0);
     expect(diffMs).toBeLessThanOrEqual(1.2 * minIntervalMs);
+  });
+});
+
+describe("computeNextFetchAtOnUnavailable", () => {
+  /** Lịch Bingo18 thật (`apps/worker-resultfeed/src/handlers/fetch/vietlott-bingo18.ts`). */
+  const BINGO18_SCHEDULE = {
+    type: "continuous-daily-window" as const,
+    firstDrawVn: "06:06",
+    lastDrawVn: "21:53",
+    drawIntervalMs: 6 * ONE_MINUTE_MS,
+  };
+  const MIN_INTERVAL_MS = 2 * ONE_MINUTE_MS;
+
+  it("continuous (thuần): giống computeNextFetchAt — now + minIntervalMs", () => {
+    const now = new Date("2026-09-02T12:00:00+07:00");
+    const result = computeNextFetchAtOnUnavailable({ type: "continuous" }, now, 5 * ONE_MINUTE_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(4 * ONE_MINUTE_MS);
+    expect(diffMs).toBeLessThanOrEqual(6 * ONE_MINUTE_MS);
+  });
+
+  it("Giai đoạn 1 — giữa ngày (trong vùng hoạt động): nhịp minIntervalMs như cũ", () => {
+    const now = new Date("2026-09-02T12:00:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * MIN_INTERVAL_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * MIN_INTERVAL_MS);
+  });
+
+  it("Giai đoạn 1 — biên nới rộng: 21:55 (SAU lastDrawVn 21:53 nhưng TRƯỚC 21:59 = lastDrawVn + drawIntervalMs) vẫn nhịp minIntervalMs, KHÔNG giãn", () => {
+    const now = new Date("2026-09-02T21:55:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * MIN_INTERVAL_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * MIN_INTERVAL_MS);
+  });
+
+  it("Giai đoạn 1 — biên nới rộng buổi sáng: 06:02 (TRƯỚC firstDrawVn 06:06 nhưng SAU 06:00 = firstDrawVn - drawIntervalMs) vẫn nhịp minIntervalMs", () => {
+    const now = new Date("2026-09-02T06:02:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * MIN_INTERVAL_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * MIN_INTERVAL_MS);
+  });
+
+  it("Giai đoạn 2 — vừa qua vùng hoạt động (22:05, trong 30 phút đệm chờ sau 21:59): nhịp bufferIntervalMs (mặc định 3 phút)", () => {
+    const now = new Date("2026-09-02T22:05:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * 3 * ONE_MINUTE_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * 3 * ONE_MINUTE_MS);
+  });
+
+  it("Giai đoạn 2 — vẫn còn đệm chờ ở đúng ranh giới 22:29 (= 21:59 + 30 phút, inclusive)", () => {
+    const now = new Date("2026-09-02T22:29:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * 3 * ONE_MINUTE_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * 3 * ONE_MINUTE_MS);
+  });
+
+  it("Giai đoạn 3 — hết đệm chờ (22:35, sau 21:59 + 30 phút đệm = 22:29): nhịp nightIntervalMs (mặc định 30 phút)", () => {
+    const now = new Date("2026-09-02T22:35:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * 30 * ONE_MINUTE_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * 30 * ONE_MINUTE_MS);
+  });
+
+  it("Giai đoạn 4 — CUTOFF: 05:50 (nightIntervalMs 30 phút sẽ vượt 06:00 = firstDrawVn - drawIntervalMs ngày ĐÓ) → chặn trần đúng 06:00, không jitter, không vượt", () => {
+    const now = new Date("2026-09-02T05:50:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    expect(result.getTime()).toBe(new Date("2026-09-02T06:00:00+07:00").getTime());
+  });
+
+  it("Giai đoạn 4 — CUTOFF ngay sát: 05:59 → chặn trần đúng 06:00 NGAY (không đợi thêm 1 nightIntervalMs)", () => {
+    const now = new Date("2026-09-02T05:59:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    expect(result.getTime()).toBe(new Date("2026-09-02T06:00:00+07:00").getTime());
+  });
+
+  it("REGRESSION — kỳ cuối trễ: 21:57 (SAU lastDrawVn 21:53, còn TRONG biên nới 21:59) vẫn nhịp minIntervalMs — đảm bảo lấy xong kỳ cuối mới giãn nhịp", () => {
+    const now = new Date("2026-09-02T21:57:00+07:00");
+    const result = computeNextFetchAtOnUnavailable(BINGO18_SCHEDULE, now, MIN_INTERVAL_MS);
+    const diffMs = result.getTime() - now.getTime();
+    expect(diffMs).toBeGreaterThanOrEqual(0.8 * MIN_INTERVAL_MS);
+    expect(diffMs).toBeLessThanOrEqual(1.2 * MIN_INTERVAL_MS);
+  });
+
+  it("tuỳ chỉnh bufferIntervalMs/bufferDurationMs/nightIntervalMs qua config — 10 phút đệm/1 giờ/1 giờ nghỉ đêm", () => {
+    const customSchedule = {
+      ...BINGO18_SCHEDULE,
+      bufferIntervalMs: 10 * ONE_MINUTE_MS,
+      bufferDurationMs: 60 * ONE_MINUTE_MS,
+      nightIntervalMs: 60 * ONE_MINUTE_MS,
+    };
+    // 22:30 — trong 60 phút đệm chờ sau 21:59 → nhịp 10 phút.
+    const bufferResult = computeNextFetchAtOnUnavailable(
+      customSchedule,
+      new Date("2026-09-02T22:30:00+07:00"),
+      MIN_INTERVAL_MS,
+    );
+    const bufferDiffMs = bufferResult.getTime() - new Date("2026-09-02T22:30:00+07:00").getTime();
+    expect(bufferDiffMs).toBeGreaterThanOrEqual(0.8 * 10 * ONE_MINUTE_MS);
+    expect(bufferDiffMs).toBeLessThanOrEqual(1.2 * 10 * ONE_MINUTE_MS);
+
+    // 23:30 — hết 60 phút đệm (21:59 + 60 phút = 22:59) → nhịp nghỉ đêm 60 phút.
+    const nightResult = computeNextFetchAtOnUnavailable(
+      customSchedule,
+      new Date("2026-09-02T23:30:00+07:00"),
+      MIN_INTERVAL_MS,
+    );
+    const nightDiffMs = nightResult.getTime() - new Date("2026-09-02T23:30:00+07:00").getTime();
+    expect(nightDiffMs).toBeGreaterThanOrEqual(0.8 * 60 * ONE_MINUTE_MS);
+    expect(nightDiffMs).toBeLessThanOrEqual(1.2 * 60 * ONE_MINUTE_MS);
   });
 });

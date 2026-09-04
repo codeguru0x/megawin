@@ -8,8 +8,11 @@
  * - Kết quả: 3 xúc xắc (1-6) + tổng 3-18
  * - Không có PrizeTier enum riêng → dùng playType + matchConfig
  * - settleSummary.prizes[]: cả cơ bản và bổ sung, UI filter theo playType
- * - Không có jackpot, không có payout caps
+ * - Không có Jackpot / snapshot jackpot trên draw, không có payout caps
  * - profit = totalRevenue - totalPrizes - totalAgentCommission
+ *
+ * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish,
+ * financial bị $unset — không render ledger toàn 0 giả tạo.
  */
 
 import { useMemo, useState } from "react";
@@ -59,7 +62,8 @@ interface Bingo18ResultData {
   sum: number;
   boardPrizes: BoardPrizeRow[];
   sideBetPrizes: SideBetPrizeRow[];
-  financial: {
+  /** Chỉ có sau settle; undefined khi Published chờ kết sổ / chờ kết sổ lại. */
+  financial?: {
     totalRevenue: number;
     totalPrizes: number;
     totalAgentCommission: number;
@@ -149,6 +153,12 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
   const totalWinners =
     result.boardPrizes.reduce((a, r) => a + r.winnerCount, 0) +
     result.sideBetPrizes.reduce((a, r) => a + r.winnerCount, 0);
+  // Ưu tiên financial.totalPrizes sau settle; khi chờ kết sổ lại (financial $unset)
+  // cộng từ prize rows (settleSummary cũng empty → 0).
+  const totalPrize =
+    result.financial?.totalPrizes ??
+    result.boardPrizes.reduce((a, r) => a + r.totalPrize, 0) +
+      result.sideBetPrizes.reduce((a, r) => a + r.totalPrize, 0);
 
   return (
     <>
@@ -163,9 +173,7 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
               <CardDescription className="text-xs mt-0.5">
                 <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinners)}</span> người
                 trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(result.financial.totalPrizes)}
-                </span>
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
@@ -370,9 +378,49 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
   );
 }
 
-// ─── Financial Summary ───────────────────────────────────────────────────────────
+// ─── Financial Summary (Bingo 18 — không có Jackpot) ─────────────────────────
 
-function FinancialSummary({ financial: f }: { financial: Bingo18ResultData["financial"] }) {
+function FinancialSummary({
+  financial: f,
+  awaitingResettle = false,
+}: {
+  financial?: Bingo18ResultData["financial"];
+  /** true khi Published sau khi đã từng settle (republish). */
+  awaitingResettle?: boolean;
+}) {
+  // Chưa có financial (publish lần đầu hoặc sau republish $unset) —
+  // KHÔNG render ledger toàn 0. Bingo 18 không có snapshot Jackpot trên draw.
+  if (!f) {
+    return (
+      <Card className="shadow-sm">
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
+              <CardDescription className="text-xs mt-0.5">
+                {awaitingResettle ? "Chờ kết sổ lại" : "Chờ kết sổ"}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-5 pb-4 pt-0">
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-5 space-y-2">
+            <p className="text-sm font-medium text-foreground">
+              {awaitingResettle ? "Kỳ đang chờ kết sổ lại" : "Kỳ đang chờ kết sổ"}
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Số liệu tài chính sẽ cập nhật sau khi kết sổ hoàn tất. KPI cược phía trên phản ánh số liệu live — không
+              phải báo cáo phân bổ doanh thu kỳ này.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Bingo 18 KHÔNG có quỹ Jackpot và không có companyRate riêng → không có khoản trích quỹ:
   //   Doanh thu − Hoa hồng − Giải thưởng = Kết quả công ty (P&L kỳ).
   // Có thể ÂM khi chi trả giải vượt doanh thu (trúng Ba giống nhau / nhiều side bets cùng lúc).
@@ -561,22 +609,30 @@ export function ResultSection() {
       sum: r.sum ?? 0,
       boardPrizes,
       sideBetPrizes,
-      financial: {
-        totalRevenue: (d.financial as any)?.totalRevenue ?? 0,
-        totalPrizes: (d.financial as any)?.totalPrizes ?? 0,
-        totalAgentCommission: (d.financial as any)?.totalAgentCommission ?? 0,
-      },
+      // Chỉ map khi đã settle — tránh ledger giả toàn 0 sau republish ($unset financial).
+      financial: d.financial
+        ? {
+            totalRevenue: d.financial.totalRevenue,
+            totalPrizes: d.financial.totalPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+          }
+        : undefined,
     };
   }, [drawDetailData]);
 
-  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) return null;
+  if (!draw || !RESULT_SHOW.has(draw.status as any) || !result) {
+    return null;
+  }
+
+  // Published + đã từng settle → chờ kết sổ lại; Published lần đầu → chờ kết sổ.
+  const awaitingResettle = draw.status === DrawStatus.Published && !!draw.settledAt;
 
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
-        <FinancialSummary financial={result.financial} />
+        <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />
       </div>
     </section>
   );

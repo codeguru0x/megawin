@@ -71,7 +71,7 @@ export interface GetVietlottResultComparisonInput {
 export const VietlottPeriodSource = {
   /** Lấy từ `draw.vietlottRef.drawPeriod` — staff đã publish kèm mã kỳ Vietlott xác nhận. */
   Ref: "ref",
-  /** Suy từ neo + lịch quay qua `suggestVietlottPeriod` — CHƯA xác nhận, chỉ là gợi ý. */
+  /** Suy từ dữ liệu Vietlott tham chiếu + lịch quay qua `suggestVietlottPeriod` — CHƯA xác nhận, chỉ là gợi ý. */
   Suggested: "suggested",
 } as const;
 export type VietlottPeriodSource = (typeof VietlottPeriodSource)[keyof typeof VietlottPeriodSource];
@@ -138,4 +138,58 @@ export interface GetVietlottResultComparisonOutput {
       positionsDiffer: VietlottNumberPositionDiff[];
     } | null;
   };
+
+  /**
+   * Hướng dẫn diễn giải/phrasing cho MODEL — build động theo state của response này (thay
+   * `45-vietlott-result.md`, đã xoá — xem `40-tool-policy.md`). KHÔNG phải câu trả lời cho user,
+   * chỉ là chỉ dẫn nội bộ model đọc rồi tự diễn đạt lại bằng lời tự nhiên.
+   */
+  guidance: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getVietlottSuggestion — gợi ý mã kỳ Vietlott, CHƯA xác nhận (cho 1 kỳ MegaWin có sẵn HOẶC
+// 1 thời điểm quay tuỳ ý chưa gắn kỳ nào)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Nguồn thời điểm dùng để suy mã kỳ — quyết định field nào trong output được điền. */
+export const VietlottSuggestionMode = {
+  /** Suy từ 1 kỳ MegaWin đã tồn tại (`drawId`) — dùng thẳng `GetVietlottSuggestionUseCase` của game. */
+  Draw: "draw",
+  /** Suy từ 1 thời điểm tuỳ ý (`drawDate` + `drawTime`) CHƯA gắn với kỳ MegaWin nào. */
+  Time: "time",
+} as const;
+export type VietlottSuggestionMode = (typeof VietlottSuggestionMode)[keyof typeof VietlottSuggestionMode];
+
+export interface GetVietlottSuggestionDispatchInput {
+  game: GameProduct;
+  /** Mã kỳ MegaWin đã tồn tại — ưu tiên nếu có, bỏ qua `drawDate`/`drawTime` khi truyền kèm. */
+  drawId?: string;
+  /** Ngày quay tuỳ ý "YYYY-MM-DD" — CHỈ dùng khi không truyền `drawId`. */
+  drawDate?: string;
+  /** Giờ quay tuỳ ý "HH:mm" (giờ VN) — CHỈ dùng khi không truyền `drawId`. */
+  drawTime?: string;
+}
+
+export interface GetVietlottSuggestionDispatchOutput {
+  meta: DrawDispatchMeta & { mode: VietlottSuggestionMode };
+
+  /** Chỉ điền khi `meta.mode === "draw"`. */
+  draw: { drawId: string; drawDate: string } | null;
+  /** Chỉ điền khi `meta.mode === "time"` — thời điểm tuỳ ý được hỏi (đã chuẩn hoá "HH:mm"). */
+  target: { drawDate: string; drawTime: string } | null;
+
+  suggestion: {
+    /** Mã kỳ Vietlott suy được, giữ zero-pad. `null` nếu không suy được — xem `reason`. */
+    suggestedPeriod: string | null;
+    /** Lý do không suy được — `null` khi `suggestedPeriod` có giá trị. */
+    reason: VietlottSuggestionUnavailableReason | null;
+  };
+
+  /**
+   * Hướng dẫn diễn giải/phrasing cho MODEL — build động theo `suggestion.reason`/mode (xem
+   * `40-tool-policy.md`). Luôn nhắc: đây là gợi ý CHƯA XÁC NHẬN, và KHÔNG khuyến khích sửa
+   * game config chỉ để công thức chạy được, trừ khi có xác nhận THẬT từ Vietlott.
+   */
+  guidance: string;
 }
