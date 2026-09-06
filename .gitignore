@@ -49,3 +49,14 @@ yarn-error.log*
 .pnpm-store
 
 .agents
+
+# GitNexus — code knowledge graph (xem .cursor/rules/gitnexus-code-graph.mdc).
+# Index ~617MB, sinh lại được bằng `gitnexus analyze`; mỗi dev tự index máy mình.
+# Cũng chứa post-commit-sync.pid/.log của .husky/post-commit.
+.gitnexus/
+# Context + skills GitNexus tự sinh mỗi lần `analyze`. KHÔNG phải nguồn chân lý:
+# rule .cursor/rules/gitnexus-code-graph.mdc mới là, và nó ghi đè một số chỉ dẫn
+# sai trong các file này. Skill dùng thật đã commit ở .cursor/skills/gitnexus-*.
+AGENTS.md
+CLAUDE.md
+.claude/
