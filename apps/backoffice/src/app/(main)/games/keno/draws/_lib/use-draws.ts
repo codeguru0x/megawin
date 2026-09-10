@@ -56,18 +56,22 @@ export function useKenoDrawsList(params: ListDrawsParams) {
 // Mutations
 // ─────────────────────────────────────────────
 
+/** Toast thành công — string tĩnh hoặc hàm nhận `drawId`. */
+type KenoDrawActionSuccessMessage = string | ((vars: { drawId: string }) => string);
+
 function useKenoDrawAction<TBody = void>(
   actionPath: (drawId: string) => string,
   method: "post" | "patch",
-  successMessage: string,
+  successMessage: KenoDrawActionSuccessMessage,
 ) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: kenoKeys.all });
-      toast.success(successMessage);
+      const message = typeof successMessage === "function" ? successMessage(variables) : successMessage;
+      toast.success(message);
     },
     onError: (err) => {
       toast.error(err instanceof ApiClientError ? err.message : "Thao tác thất bại.");
@@ -87,7 +91,11 @@ export function useKenoPublishResult() {
   return useKenoDrawAction<{
     winningNumbers: string[];
     vietlottRef?: { drawPeriod: string; drawDate: string };
-  }>((id) => `/keno/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
+  }>(
+    (id) => `/keno/draws/${id}/publish-result`,
+    "post",
+    ({ drawId }) => `Đã công bố kết quả kỳ ${drawId}.`,
+  );
 }
 
 export function useKenoTriggerSettle() {

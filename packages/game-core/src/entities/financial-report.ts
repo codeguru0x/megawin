@@ -78,6 +78,25 @@ export interface SystemSettleGameDaily {
   /** Lợi nhuận ròng (VND). Công thức: ggr - totalCommission. Có thể ÂM. */
   netProfit: number;
 
+  /**
+   * Bộ đếm CAS (compare-and-swap) chống ghi đè bằng dữ liệu cũ — optimistic lock.
+   *
+   * Tăng 1 mỗi lần ghi thành công (`$inc`). Writer đọc giá trị hiện tại rồi CAS
+   * `$eq` khi ghi: khớp thì ghi và tăng, không khớp nghĩa là có writer khác đã
+   * ghi chen → writer này phải RE-AGGREGATE rồi thử lại (xem
+   * `SystemPublishSettleDailyUseCase`).
+   *
+   * KHÔNG mang ý nghĩa nghiệp vụ, KHÔNG expose ra DTO/API. Đây là trường DUY NHẤT
+   * trong doc này được phép `$inc` — mọi trường tiền luôn `$set` snapshot toàn phần.
+   *
+   * REQUIRED trên mọi doc trong DB (sau backfill + code equality):
+   *   - Doc cũ thiếu field: backfill `{ $exists: false }` → `0` trước deploy.
+   *   - Insert lần đầu: filter CAS mang `version: 0` (equality) + `$inc: 1` → doc
+   *     mới kết thúc với `version = 1` (không bao giờ thiếu field, không dừng ở 0).
+   *   - `0` chỉ còn trên doc đã backfill mà CHƯA từng CAS thắng sau deploy.
+   */
+  version: number;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -118,6 +137,26 @@ export interface SystemSettleTenantDaily {
   playerCount: number;
   /** Số kỳ quay tenant có entry trong ngày. */
   drawCount: number;
+
+  /**
+   * Stamp đơn điệu (monotonic) đánh dấu doc này thuộc lô rollup nào.
+   *
+   * Giá trị = `version` của `system_settle_game_daily` cùng `{financialDate, gameProduct}`
+   * SAU khi lô đó CAS thắng. Nhờ vậy thứ tự tenant-daily luôn nhất quán với game-daily,
+   * không cần nguồn version thứ hai.
+   *
+   * Hàng rào khi ghi là `$lte` (KHÔNG phải `$eq` như game-daily): chặn ghi từ lô CŨ hơn
+   * nhưng cho phép lô hiện tại ghi lại chính nó — cần thiết để SFN retry idempotent.
+   *
+   * REQUIRED trên mọi doc trong DB (sau backfill + code equality):
+   *   - Doc cũ thiếu field: backfill `{ $exists: false }` → `0` trước deploy.
+   *   - Insert lần đầu: `$set: { rollupVersion }` luôn ghi stamp của lô đang chạy
+   *     (thường ≥ 1 — bằng `version` game-daily vừa CAS thắng), không để thiếu field.
+   *   - `0` chỉ còn trên doc đã backfill mà CHƯA từng bị lô nào ghi đè sau deploy.
+   *
+   * KHÔNG expose ra DTO/API.
+   */
+  rollupVersion: number;
 
   createdAt: Date;
   updatedAt: Date;

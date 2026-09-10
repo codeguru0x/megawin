@@ -7,7 +7,8 @@ isProject: false
 
 # p0-02 — Bỏ guard settle/void tuần tự (Keno + Bingo18)
 
-> **Phase:** P0 · **Status:** ⏳ pending · **Phụ thuộc:** p0-01 (CHẶN CỨNG) · **Chặn:** p0-04
+> **Phase:** P0 · **Status:** ✅ code done (07/09) · review code 07/09 — đúng 4 block xoá, không sót
+> guard nào cho 5 game khác; test §6 vẫn CHƯA chạy · **Phụ thuộc:** p0-01 (CHẶN CỨNG) · **Chặn:** p0-04
 > **Nguồn:** [`sequential-settle-guard.analysis.md`](../../analysis/keno-bingo18-sequential-settle-guard.analysis.md)
 > **Scope:** `game-keno-application`, `game-bingo18-application` — **KHÔNG đụng 5 game còn lại**
 

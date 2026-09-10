@@ -12,7 +12,7 @@
  * Keno: không có jackpot — kết quả là 20 số (01-80) + side bet stats.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
 import { formatErrorToast } from "@megawin/next/client";
@@ -44,7 +44,7 @@ import { DrawCommandCenter } from "./draw-command-center";
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
 export function DrawManagementSection() {
-  const { draw, effectiveDrawId } = useDrawContext();
+  const { draw, effectiveDrawId, draws, onSelectDraw } = useDrawContext();
 
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
@@ -58,6 +58,41 @@ export function DrawManagementSection() {
   const closeSales = useCloseSales();
   const triggerSettle = useTriggerSettle();
   const triggerResettle = useTriggerResettle();
+
+  // Hàng đợi "nhập liên tiếp" (P1-06 §5, sửa 09/09 — bug thật đã gặp) — CHỈ tồn tại khi kỳ đang
+  // mở đúng là kỳ "Chưa có KQ" (status SalesClosed). Guard 2 lớp bắt buộc:
+  //   1. `draw.status !== SalesClosed` → undefined ngay — tránh gán nhầm hàng đợi cho luồng
+  //      "Sửa kết quả" (Republish, mở khi status Published/Settled, KHÔNG liên quan hàng đợi
+  //      này). Thiếu guard này, `currentDraw = queue?.[0] ?? draw` trong dialog có thể trỏ
+  //      SANG KỲ KHÁC nếu `queue` vô tình chứa phần tử mà `draw` không nằm trong đó.
+  //   2. `idx === -1` (draw không có trong list — lý thuyết không xảy ra vì đã lọc đúng status,
+  //      nhưng data có thể lệch 1 nhịp poll) → undefined, không đoán.
+  //
+  // BUG THẬT đã sửa (09/09, báo bởi user): bản trước ghép `[current, ...pending nguyên vẹn trừ
+  // current]` — TẤT CẢ kỳ `SalesClosed` khác, kể cả kỳ CŨ HƠN kỳ đang chọn theo `drawId`. Chọn
+  // #006 (không phải kỳ tồn đọng sớm nhất) → "Kỳ tiếp" lại nhảy về #002 (cũ hơn, đã tồn đọng từ
+  // trước) thay vì #007 (kỳ liền kề THEO THỜI GIAN của #006) — đúng như ảnh chụp UI thật cho
+  // thấy. Sửa: hàng đợi CHỈ gồm current + các kỳ ĐỨNG SAU current theo `drawId` (`> current`) —
+  // kỳ cũ hơn (backlog tồn từ trước) KHÔNG vào hàng đợi "nhập liên tiếp" của phiên này; staff mở
+  // đúng kỳ cũ đó riêng để xử lý theo đúng nhu cầu (khẩn cấp hơn, cần xử lý độc lập).
+  const pendingResultQueue = useMemo(() => {
+    if (!draw || draw.status !== DrawStatus.SalesClosed) {
+      return undefined;
+    }
+    // Sort theo `drawId` (KHÔNG `drawTime`) — `drawId` format `YYYY-MM-DD.NNN` so sánh lexical
+    // đúng thứ tự thời gian tăng dần CẢ KHI hàng đợi vắt qua nhiều ngày (kỳ tồn từ hôm qua chưa
+    // nhập KQ + kỳ hôm nay); `drawTime` chỉ là "HH:mm" nên không phân biệt được ngày.
+    const pending = draws
+      .filter((d) => d.status === DrawStatus.SalesClosed)
+      .toSorted((a, b) => a.drawId.localeCompare(b.drawId));
+    const current = pending.find((d) => d.drawId === draw.drawId);
+    if (!current) {
+      return undefined;
+    }
+    // CHỈ kỳ đứng SAU kỳ đang chọn ("kỳ tiếp" đúng nghĩa thời gian) — KHÔNG gộp kỳ cũ hơn.
+    const after = pending.filter((d) => d.drawId > current.drawId);
+    return [current, ...after];
+  }, [draws, draw]);
 
   const { data: drawDetailData } = useDrawDetail(
     draw && RESULT_SHOW.has(draw.status as any) ? effectiveDrawId : undefined,
@@ -128,6 +163,8 @@ export function DrawManagementSection() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
+        queue={pendingResultQueue}
+        onNext={(nextDraw) => onSelectDraw(nextDraw.drawId)}
       />
       <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />

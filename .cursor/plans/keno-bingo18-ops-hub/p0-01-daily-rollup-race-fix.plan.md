@@ -7,7 +7,8 @@ isProject: false
 
 # p0-01 — Vá race condition Daily Rollup bằng CAS trên `version` (điều kiện CHẶN toàn bộ feature)
 
-> **Phase:** P0 · **Status:** ⏳ pending · **Chặn:** p0-02, và gián tiếp toàn bộ P1/P2
+> **Phase:** P0 · **Status:** ✅ code done (07/09) · review code 07/09 — CAS/`version` đúng thiết kế,
+> không phát hiện rủi ro số liệu mới; test §6 (chạy thật race condition) vẫn CHƯA chạy · **Chặn:** p0-02, và gián tiếp toàn bộ P1/P2
 > **Nguồn:** [`sequential-settle-guard.analysis.md`](../../analysis/keno-bingo18-sequential-settle-guard.analysis.md) §"Rủi ro thật"
 > **Quyết định thiết kế:** [`keno-bingo18-daily-rollup-version-cas.analysis.md`](../../analysis/keno-bingo18-daily-rollup-version-cas.analysis.md)
 > **Scope file:** `packages/game-core-application/**` + `packages/game-core/**` (shared 7 game) — **behavior-compatible**

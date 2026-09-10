@@ -117,6 +117,14 @@ export const AUDIT_ACTIONS = {
     // Mở lại kỳ đã settled để chạy cascade jackpot (split cycle) — CHỈ game có
     // jackpot (lotto535/mega645/power655). Keno/max3d/max3dpro/bingo18 không có.
     reopenForCascade: "draw.reopen_for_cascade",
+    // Hành động BULK (Ops Hub) — 1 lần bấm chạm N kỳ cùng lúc. Ghi 1 record CẤP LÔ (không
+    // trùng audit per-draw mà 4 use-case đơn đã tự ghi) — metadata.extra mang drawIds +
+    // successCount/failureCount để tra soát "ai bấm chốt sổ lúc mấy giờ, lô gồm kỳ nào"
+    // (`p0-04-bulk-settle-void-api.plan.md` §3). targetId = "" vì không có 1 target đơn.
+    bulkSettle: "draw.bulk_settle",
+    bulkVoid: "draw.bulk_void",
+    bulkCloseSales: "draw.bulk_close_sales",
+    bulkOpenSales: "draw.bulk_open_sales",
   },
   /** category=player, target=player. Quản trị tài khoản người chơi. */
   player: {

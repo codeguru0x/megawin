@@ -6,6 +6,8 @@ import { env } from "@/env";
 import { withApi } from "@/lib/api";
 import { actorFromSession } from "@/lib/audit-actor";
 
+import { invalidateHubSnapshotCache } from "../../../operations/hub-snapshot/_lib/snapshot-cache";
+
 const voidSchema = z.object({
   reason: z.string().min(1, "Lý do huỷ không được để trống."),
 });
@@ -18,10 +20,12 @@ export const POST = withApi()
   .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
 
-    return voidDrawUseCase.run({
+    const result = await voidDrawUseCase.run({
       drawId,
       reason: body.reason,
       actor: actorFromSession(session!, request),
       KENO_VOID_SFN_ARN: env.KENO_VOID_SFN_ARN!,
     });
+    invalidateHubSnapshotCache();
+    return result;
   });

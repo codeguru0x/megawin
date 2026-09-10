@@ -12,7 +12,7 @@
  * Bingo 18: không có jackpot — kết quả là 3 xúc xắc (1-6) + sum.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
 
@@ -41,7 +41,7 @@ import { DrawCommandCenter } from "./draw-command-center";
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
 export function DrawManagementSection() {
-  const { draw, effectiveDrawId } = useDrawContext();
+  const { draw, effectiveDrawId, draws, onSelectDraw } = useDrawContext();
 
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
@@ -55,6 +55,27 @@ export function DrawManagementSection() {
   const closeSales = useCloseSales();
   const triggerSettle = useTriggerSettle();
   const triggerResettle = useTriggerResettle();
+
+  // Hàng đợi "nhập liên tiếp" (P1-06 §5, sửa 09/09 — bug thật đã gặp, xem giải thích đầy đủ ở
+  // bản Keno cùng pattern) — CHỈ tồn tại khi kỳ đang mở đúng là kỳ "Chưa có KQ" (status
+  // SalesClosed). Hàng đợi CHỈ gồm current + các kỳ ĐỨNG SAU current theo `drawId` — kỳ cũ hơn
+  // (backlog tồn từ trước) KHÔNG vào hàng đợi "nhập liên tiếp" của phiên này.
+  const pendingResultQueue = useMemo(() => {
+    if (!draw || draw.status !== DrawStatus.SalesClosed) {
+      return undefined;
+    }
+    // Sort theo `drawId` (KHÔNG `drawTime`) — xem giải thích đầy đủ ở bản Keno cùng pattern.
+    const pending = draws
+      .filter((d) => d.status === DrawStatus.SalesClosed)
+      .toSorted((a, b) => a.drawId.localeCompare(b.drawId));
+    const current = pending.find((d) => d.drawId === draw.drawId);
+    if (!current) {
+      return undefined;
+    }
+    // CHỈ kỳ đứng SAU kỳ đang chọn ("kỳ tiếp" đúng nghĩa thời gian) — KHÔNG gộp kỳ cũ hơn.
+    const after = pending.filter((d) => d.drawId > current.drawId);
+    return [current, ...after];
+  }, [draws, draw]);
 
   const { data: drawDetailData } = useDrawDetail(
     draw && RESULT_SHOW.has(draw.status as any) ? effectiveDrawId : undefined,
@@ -77,7 +98,9 @@ export function DrawManagementSection() {
     if (!d?.result) return undefined;
     const r = d.result as any;
     const nums = (r.numbers ?? r.diceNumbers) as number[] | undefined;
-    if (!nums || nums.length !== 3) return undefined;
+    if (nums?.length !== 3) {
+      return undefined;
+    }
     return {
       diceNumbers: [nums[0]!, nums[1]!, nums[2]!] as [number, number, number],
       vietlottRef: (d as any).vietlottRef
@@ -127,6 +150,8 @@ export function DrawManagementSection() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
+        queue={pendingResultQueue}
+        onNext={(nextDraw) => onSelectDraw(nextDraw.drawId)}
       />
       <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />

@@ -11,6 +11,7 @@
  *       Khi entity đổi field → chỉ sửa repo, compiler sẽ bắt lỗi ở use case.
  */
 
+import { docPath } from "@megawin/data/mongo";
 import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DRAW_COMPLETED_STATUSES, DRAW_UNFINISHED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
 import type {
@@ -18,6 +19,7 @@ import type {
   DrawEntity,
   DrawFinancial,
   DrawResult,
+  DrawSales,
   DrawSettleSummary,
   DrawStats,
   DrawVietlottRef,
@@ -31,6 +33,9 @@ import type { AnyBulkWriteOperation, Document, Filter, FindOptions } from "mongo
 
 import { DrawMapper } from "../mappers/draw-mapper";
 import { BaseRepo } from "./base-repo";
+import type { HubDrawRow } from "./types";
+
+const f = docPath<DrawDoc>();
 
 /**
  * Valid status transitions cho Keno Draw.
@@ -193,6 +198,132 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
+   * Danh sách kỳ chưa hoàn thành kèm các field Hub cần — thin query cho Ops Hub
+   * (`GetOpsHubSnapshotUseCase`).
+   *
+   * Vì sao KHÔNG dùng {@link getUnfinishedDraws}: nó map full `DrawEntity` (có `financial`,
+   * `settleSummary`, `result` đầy đủ, `vietlottRef`…). Hub hiển thị 120-160 dòng → kéo full
+   * doc là hàng MB mỗi lần poll. Ở đây chỉ lấy các field dựng được 1 dòng bảng + dẫn xuất
+   * trạng thái (dẫn xuất ở CLIENT — xem JSDoc `HubDrawRow`, KHÔNG derive ở đây).
+   *
+   * Vì sao KHÔNG dùng {@link listUnfinishedDrawIds}: nó chỉ trả `drawId`, Hub cần các
+   * timestamp để dẫn xuất chặng ở FE — gọi thêm query thứ 2 để lấy phần còn lại là vô nghĩa.
+   *
+   * Index `idx_status_drawId_desc` = `{ status: 1, drawId: -1 }`: `status $in` là equality
+   * prefix, sort `drawId` desc khớp chiều index → IXSCAN. KHÔNG covered (projection có
+   * `drawTime`, `sales.*`, `settledAt`… ngoài index) nên vẫn FETCH document — chấp nhận được
+   * vì projection cắt phần lớn payload so với map full `DrawEntity`.
+   *
+   * @param limit - Trần số kỳ. `findMany` mặc định cắt 500 và IM LẶNG — truyền tường minh.
+   *   Caller PHẢI so `rows.length >= limit` để biết có bị cắt (xem `truncated` ở DTO).
+   * @returns Có thể trả ÍT hơn số doc Mongo khớp filter: doc thiếu `sales.closeAt` bị lọc bỏ
+   *   (xem lý do trong thân method). Hệ quả đã cân nhắc và CHẤP NHẬN: nếu vừa chạm `limit`
+   *   vừa có doc dị dạng, `rows.length` tụt xuống dưới `limit` → `truncated` báo `false` dù
+   *   thật sự bị cắt. Đổi lấy việc KHÔNG sập cả trang; doc dị dạng đã có `logError` riêng.
+   */
+  async listUnfinishedDrawRows(limit: number): Promise<HubDrawRow[]> {
+    const docs = await this.findManyAsDocuments(
+      { status: { $in: [...DRAW_UNFINISHED_STATUSES] } },
+      {
+        projection: {
+          _id: 0,
+          [f("drawId")]: 1,
+          [f("drawNo")]: 1,
+          [f("status")]: 1,
+          [f("drawTime")]: 1,
+          [f("sales.closeAt")]: 1,
+          [f("sales.openAt")]: 1,
+          [f("result.publishedAt")]: 1,
+          [f("settledAt")]: 1,
+          [f("updatedAt")]: 1,
+        },
+        sort: { drawId: -1 },
+        limit,
+      },
+    );
+
+    // `sales.closeAt` là TRỤC CHÍNH của cả trang Hub (mọi dẫn xuất chặng ở FE đều so `now`
+    // với nó) và là field required trên `DrawDoc` — nhưng cast trần `as DrawSales` rồi đọc
+    // `.closeAt` sẽ throw `TypeError` làm SẬP TOÀN BỘ snapshot (~158 kỳ trắng trang) chỉ vì 1
+    // doc dị dạng. Đây đúng dạng bug đã nổ thật 2 lần trong cùng changelog này (`totals`/
+    // `exposure` ở `betting-stats-repo.getRowsByDrawIds`, `byPlayType` ở mapper).
+    //
+    // LỌC BỎ (không fallback): dòng thiếu `closeAt` không dựng được chặng nào có nghĩa, mà
+    // nới `HubDrawRow.closeAt` thành optional sẽ lan `null` khắp FE. `logError` để kỹ thuật
+    // thấy được doc dị dạng thay vì mất im lặng.
+    const rows: HubDrawRow[] = [];
+    for (const d of docs) {
+      const sales = d.sales as DrawSales | undefined;
+      if (!sales?.closeAt) {
+        logError("DrawRepository.listUnfinishedDrawRows", new Error("Draw thiếu sales.closeAt"), {
+          drawId: d.drawId as string,
+        });
+        continue;
+      }
+      const result = d.result as DrawResult | undefined;
+
+      rows.push({
+        drawId: d.drawId as string,
+        drawNo: d.drawNo as number,
+        status: d.status as DrawStatus,
+        drawTime: d.drawTime as Date,
+        closeAt: sales.closeAt,
+        openAt: sales.openAt,
+        publishedAt: result?.publishedAt,
+        settledAt: d.settledAt as Date | undefined,
+        updatedAt: d.updatedAt as Date,
+      });
+    }
+    return rows;
+  }
+
+  /**
+   * `sales.closeAt` cho nhiều kỳ trong 1 query — dùng cho `BulkOpenSalesUseCase` kiểm tra
+   * cửa sổ bán trước khi chuyển trạng thái (`p0-04-bulk-settle-void-api.plan.md` §2.5).
+   *
+   * KHÔNG dùng {@link listUnfinishedDrawRows}: nó filter theo `status ∈ DRAW_UNFINISHED_STATUSES`,
+   * không theo `drawIds` — kỳ đang `scheduled` quá hạn vẫn cần đọc được `closeAt` của chính nó.
+   *
+   * Projection chỉ `{ drawId, sales.closeAt }` — số query KHÔNG tỷ lệ với N kỳ (đúng 1 query
+   * cho cả lô, không phải N lần `getDrawById`).
+   *
+   * @param drawIds - Danh sách kỳ cần đọc `closeAt`.
+   * @returns Map `drawId → closeAt`. Kỳ không tồn tại trong DB KHÔNG có trong Map — caller
+   *   (`BulkOpenSalesUseCase`) trả `DRAW_NOT_FOUND` cho kỳ đó.
+   */
+  async getCloseAtByDrawIds(drawIds: string[]): Promise<Map<string, Date>> {
+    if (drawIds.length === 0) {
+      return new Map();
+    }
+
+    const docs = await this.findManyAsDocuments(
+      { drawId: { $in: drawIds } },
+      {
+        projection: {
+          _id: 0,
+          [f("drawId")]: 1,
+          [f("sales.closeAt")]: 1,
+        },
+        limit: drawIds.length,
+      },
+    );
+
+    // `sales` là field required trên `DrawDoc`, NHƯNG cast trần ở đây sẽ throw ra NGOÀI
+    // `try/catch` per-draw của `runBulkDrawAction` → mất kết quả CẢ LÔ (tới 50 kỳ) chỉ vì 1
+    // doc dị dạng (migration lỗi, ghi tay trong shell). Cùng dạng bug đã nổ thật với
+    // `totals`/`exposure` ở `betting-stats-repo.getRowsByDrawIds`. Kỳ thiếu `sales.closeAt`
+    // bị BỎ KHỎI Map → caller trả `DRAW_NOT_FOUND` cho đúng kỳ đó, các kỳ khác vẫn chạy.
+    const entries: Array<[string, Date]> = [];
+    for (const d of docs) {
+      const closeAt = (d.sales as DrawSales | undefined)?.closeAt;
+      if (closeAt) {
+        entries.push([d.drawId as string, closeAt]);
+      }
+    }
+    return new Map(entries);
+  }
+
+  /**
    * Giờ quay (`drawTime`) của các kỳ đã tồn tại trong MỘT ngày — thin query, chỉ 1 field.
    *
    * Dùng để trả lời "mốc giờ nào trong ngày đã bị chiếm" cho:
@@ -296,14 +427,21 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /**
    * Tìm kỳ quay CHƯA HOÀN THÀNH gần nhất TRƯỚC drawId (theo thứ tự thời gian).
    *
-   * Guard thứ tự kết sổ: phải settle TUẦN TỰ theo thời gian (drawId tăng dần).
-   * Không cho kết sổ kỳ T nếu còn kỳ trước đó (drawId < T) chưa "hoàn thành".
+   * KHÔNG còn caller trong `TriggerSettleUseCase`/`VoidDrawUseCase` (đã bỏ guard thứ tự
+   * settle/void tuần tự — xem JSDoc 2 use-case đó và `p0-02-remove-sequential-guard.plan.md`).
+   * Keno/Bingo18 không có jackpot rollover nên kết quả từng kỳ độc lập, không cần settle/void
+   * tuần tự; rollup daily re-aggregate lại từ đầu theo `financialDate` (CAS trên `version`).
+   *
+   * GIỮ LẠI method này cho Ops Hub KPI "kỳ backlog cũ nhất" (`pendingCloseStuckSec` /
+   * `awaitingSettleStuckSec`, xem `ops-hub-page-layout.guideline.md` §8.3, p1-01) — vẫn cần biết
+   * kỳ chưa hoàn thành cũ nhất để tính độ trễ xử lý, chỉ không dùng để CHẶN nữa.
+   *
    * "Hoàn thành" = đã kết sổ (settled) HOẶC đã huỷ (void) — xem
-   * {@link DRAW_COMPLETED_STATUSES}. Mọi status khác coi là chưa hoàn thành và chặn.
+   * {@link DRAW_COMPLETED_STATUSES}. Mọi status khác coi là chưa hoàn thành.
    *
    * FAIL-SAFE: tập status truy vấn là {@link DRAW_UNFINISHED_STATUSES} — derive tự
    * động = tất cả DrawStatus − completed. Thêm status mới trong tương lai → mặc định
-   * rơi vào nhóm "chưa hoàn thành" → guard vẫn chặn, không bị sót.
+   * rơi vào nhóm "chưa hoàn thành" → không bị sót.
    *
    * Tối ưu DB: dùng `$in` (KHÔNG dùng `$nin` vì negation không tạo được tight index
    * bound) → equality prefix trên index `{ status: 1, drawId: -1 }` (idx_status_drawId_desc).

@@ -7,7 +7,10 @@ isProject: false
 
 # p0-03 — Hub query foundation: repo batch + DTO raw + index
 
-> **Phase:** P0 · **Status:** ⏳ pending · **Phụ thuộc:** — (chạy song song p0-02 được) · **Chặn:** p1-01
+> **Phase:** P0 · **Status:** ✅ code done (07/09) · review + test UI trực tiếp 07/09 — đúng 4 query cố
+> định, đã verify bằng API call thật (phát hiện + fix 1 bug `TypeError` khi draw chưa có bets, xem
+> `betting-stats-repo.ts`); điểm 2-3 bảng "Câu hỏi mở" (index `explain()`) vẫn CHƯA đo ·
+> **Phụ thuộc:** — (chạy song song p0-02 được) · **Chặn:** p1-01
 > **Scope:** `game-keno-application` (Bingo18 làm ở p1-04)
 > **Guideline UI:** [`ops-hub-page-layout.guideline.md`](./ops-hub-page-layout.guideline.md) — §1.3 (dẫn xuất trạng thái), §11 (bảng việc phải sửa)
 > **Ràng buộc số 1:** số DB call **KHÔNG** tỷ lệ với số kỳ. 4 query cho 5 kỳ = 4 query cho 200 kỳ.

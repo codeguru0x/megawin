@@ -5,6 +5,8 @@ import { z } from "zod";
 import { withApi } from "@/lib/api";
 import { actorFromSession } from "@/lib/audit-actor";
 
+import { invalidateHubSnapshotCache } from "../../../operations/hub-snapshot/_lib/snapshot-cache";
+
 const scheduleSchema = z.object({
   salesOpenAt: z.iso.datetime({
     offset: true,
@@ -24,9 +26,11 @@ export const PATCH = withApi()
   .body(scheduleSchema)
   .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
-    return updateScheduleUseCase.run({
+    const result = await updateScheduleUseCase.run({
       drawId,
       ...body,
       actor: actorFromSession(session!, request),
     });
+    invalidateHubSnapshotCache();
+    return result;
   });

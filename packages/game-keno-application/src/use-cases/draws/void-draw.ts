@@ -8,8 +8,11 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { auditDrawVoid } from "../../services/audit-log";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
+import { isVoidable } from "./void-draw-rules";
 
-const VOIDABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published]);
+// `isVoidable` sống ở `void-draw-rules.ts` (client-safe, xem JSDoc ở đó) — re-export lại đây
+// để mọi caller server-side hiện tại (`resettle`, test…) không phải đổi import path.
+export { isVoidable } from "./void-draw-rules";
 
 export interface VoidDrawInput extends DrawIdInput {
   reason: string;
@@ -29,15 +32,19 @@ export interface VoidDrawOutput extends DrawTransitionOutput {
  *   1. Validate draw status (scheduled/salesClosed/published)
  *   2. CẤM void nếu draw đã từng kết sổ (`settledAt != null`) — kỳ đã kết sổ
  *      chỉ được kết sổ lại (resettle), không được huỷ.
- *   3. Guard thứ tự: chặn nếu còn kỳ trước (drawId nhỏ hơn) chưa hoàn thành
- *      (chưa settled và chưa void) — bắt buộc đóng kỳ cũ nhất trước.
- *   4. Transition draw → void (atomic)
+ *   3. Transition draw → void (atomic)
  *      - Nếu draw đã ở void (retry) → skip transition
- *   5. Start Void Step Function (deterministic name → idempotent)
+ *   4. Start Void Step Function (deterministic name → idempotent)
  *
  * Idempotent: staff nhấn lại bao nhiêu lần cũng an toàn.
  * Nếu SF đã đang chạy (cùng deterministic name), AWS ném `ExecutionAlreadyExists`
  * → use case bắt lỗi đó và coi như thành công.
+ *
+ * KHÔNG có guard thứ tự kỳ (khác Lotto535/Mega645/Power655): Keno không có
+ * jackpot rollover nên việc huỷ kỳ T không phụ thuộc kỳ T-1 — rollup daily
+ * re-aggregate toàn bộ theo financialDate (CAS trên `version`, xem
+ * `SystemPublishSettleDailyUseCase`). Nhiều kỳ void SONG SONG là hợp lệ. Chống
+ * double-trigger vẫn đủ qua CAS status + deterministic SFN execution name.
  */
 export class VoidDrawUseCase extends UseCase<VoidDrawInput, VoidDrawOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -63,21 +70,7 @@ export class VoidDrawUseCase extends UseCase<VoidDrawInput, VoidDrawOutput> {
         );
       }
 
-      // Guard thứ tự đóng kỳ: phải xử lý TUẦN TỰ theo thời gian. Nếu còn kỳ
-      // trước đó (drawId < kỳ này) CHƯA HOÀN THÀNH (chưa settled và chưa void)
-      // → chặn, bắt buộc đóng kỳ cũ nhất trước. Void là một cách "đóng kỳ" như
-      // settle, nên cũng phải theo thứ tự — không được huỷ kỳ chiều khi kỳ sáng
-      // còn dở. Không deadlock: operator luôn xử lý kỳ cũ nhất trước, kỳ trước
-      // nó chắc chắn đã hoàn thành.
-      const unfinishedPrior = await this.drawRepo.findUnfinishedDrawBefore(input.drawId);
-      if (unfinishedPrior) {
-        throw new AppException(
-          "DRAW_VOID_ORDER",
-          `Không thể huỷ – kỳ quay ${unfinishedPrior.drawId} trước đó chưa hoàn thành. Phải kết sổ hoặc huỷ các kỳ trước theo thứ tự.`,
-        );
-      }
-
-      if (!VOIDABLE_STATUSES.has(draw.status)) {
+      if (!isVoidable(draw.status)) {
         throw new AppException(
           "DRAW_INVALID_TRANSITION",
           `Không thể huỷ kỳ quay ở trạng thái "${draw.status}". ` +

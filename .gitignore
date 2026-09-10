@@ -60,3 +60,6 @@ yarn-error.log*
 AGENTS.md
 CLAUDE.md
 .claude/
+# Bytecode cache của 3 hook Python ở .cursor/hooks/ (Python tự sinh khi import module
+# dùng chung `_gitnexus_common.py`). Bản thân hook đã commit; cache thì không.
+.cursor/hooks/__pycache__/

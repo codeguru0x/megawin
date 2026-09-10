@@ -96,6 +96,49 @@ export function formatVNDCompact(amount: number | undefined | null): string {
 }
 
 /**
+ * Tiền viết tắt mật độ cao, **KHÔNG kèm đơn vị** (`850K` / `12,5tr` / `3,2tỷ`).
+ *
+ * Khác `formatVNDCompact` (có ` ₫`/` triệu`/` tỷ` kèm dấu cách): hàm này bỏ hẳn ký hiệu
+ * tiền và dấu cách để mỗi ô chỉ chiếm ~6 ký tự.
+ *
+ * **Ops Hub / báo cáo tài chính KHÔNG dùng hàm này** — KPI dùng `formatVNDCompact`, bảng
+ * dùng `formatNumber` (đồng bộ `financial-report-ui.mdc` §6). Giữ lại cho UI mật độ cực cao
+ * khác nếu cần.
+ *
+ * Ví dụ:
+ * - `formatMoneyCompact(0)`             → `"0"`
+ * - `formatMoneyCompact(850)`           → `"850"`
+ * - `formatMoneyCompact(850_000)`       → `"850K"`
+ * - `formatMoneyCompact(12_500_000)`    → `"12,5tr"`
+ * - `formatMoneyCompact(3_200_000_000)` → `"3,2tỷ"`
+ * - `formatMoneyCompact(-1_500_000)`    → `"-1,5tr"`
+ *
+ * Null-safe: `undefined`/`null` → `"0"`.
+ */
+export function formatMoneyCompact(amount: number | undefined | null): string {
+  const n = amount ?? 0;
+  if (!Number.isFinite(n)) {
+    return "—";
+  }
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+
+  // ≥ 1 tỷ → 1 chữ số thập phân ("3,2tỷ"). 2 chữ số ở thang này là nhiễu.
+  if (abs >= 1_000_000_000) {
+    return `${sign}${(abs / 1_000_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}tỷ`;
+  }
+  // ≥ 1 triệu → 1 chữ số thập phân ("12,5tr").
+  if (abs >= 1_000_000) {
+    return `${sign}${(abs / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}tr`;
+  }
+  // ≥ 1 nghìn → làm tròn về nghìn, KHÔNG thập phân ("850K"). Vận hành không cần lẻ trăm đồng.
+  if (abs >= 1_000) {
+    return `${sign}${Math.round(abs / 1_000).toLocaleString("vi-VN")}K`;
+  }
+  return `${sign}${Math.round(abs)}`;
+}
+
+/**
  * Định dạng phần trăm, 1 decimal mặc định. Null-safe.
  *
  * formatPercent(72.5)          → "72.5%"

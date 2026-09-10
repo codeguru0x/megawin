@@ -65,3 +65,45 @@ export function createEmptyByPlayType(): Bingo18ByPlayType {
     },
   };
 }
+
+/** 1 bucket thiếu field → zero-bucket (merge doc partial lên nền rỗng). */
+function normalizeBucket(raw: unknown): Bingo18BucketStat {
+  const r = (raw ?? {}) as Partial<Bingo18BucketStat>;
+  return { amount: r.amount ?? 0, sets: r.sets ?? 0, entries: r.entries ?? 0 };
+}
+
+/** Record đủ `keys`, merge bucket có sẵn trong doc lên nền zero. */
+function fillBucketRecord(raw: unknown, keys: readonly string[]): Record<string, Bingo18BucketStat> {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const out: Record<string, Bingo18BucketStat> = {};
+  for (const key of keys) {
+    out[key] = normalizeBucket(r[key]);
+  }
+  return out;
+}
+
+/**
+ * Chuẩn hoá `byPlayType` partial (doc Mongo chỉ có nhánh `$inc` đã chạm) → full 38 bucket.
+ *
+ * Nguồn chân lý DUY NHẤT cho normalize phía đọc — `BettingStatsMapper` và Ops Hub
+ * (`getRowsByDrawIds` bypass mapper) PHẢI dùng hàm này. Không chỉ `?? createEmptyByPlayType()`:
+ * object partial vẫn truthy nhưng thiếu `doubleMatch`/`bigSmallDraw` → `computeBingo18Exposure`
+ * nổ `Cannot read properties of undefined (reading '1')`.
+ */
+export function normalizeByPlayType(raw: unknown): Bingo18ByPlayType {
+  const r = (raw ?? {}) as Partial<Bingo18ByPlayType>;
+  return {
+    singleNum: fillBucketRecord(r.singleNum, NUMBER_KEYS),
+    doubleMatch: fillBucketRecord(r.doubleMatch, NUMBER_KEYS),
+    tripleMatch: {
+      specific: fillBucketRecord(r.tripleMatch?.specific, NUMBER_KEYS),
+      any: normalizeBucket(r.tripleMatch?.any),
+    },
+    sumTotal: fillBucketRecord(r.sumTotal, SUM_KEYS),
+    bigSmallDraw: {
+      big: normalizeBucket(r.bigSmallDraw?.big),
+      draw: normalizeBucket(r.bigSmallDraw?.draw),
+      small: normalizeBucket(r.bigSmallDraw?.small),
+    },
+  };
+}

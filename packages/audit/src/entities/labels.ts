@@ -29,6 +29,10 @@ export const AuditActionLabel: Record<AuditAction, string> = {
   [AUDIT_ACTIONS.draw.closeSales]: "Đóng bán kỳ",
   [AUDIT_ACTIONS.draw.updateSchedule]: "Cập nhật lịch kỳ",
   [AUDIT_ACTIONS.draw.reopenForCascade]: "Mở lại kỳ (cascade jackpot)",
+  [AUDIT_ACTIONS.draw.bulkSettle]: "Kết sổ hàng loạt",
+  [AUDIT_ACTIONS.draw.bulkVoid]: "Huỷ kỳ hàng loạt",
+  [AUDIT_ACTIONS.draw.bulkCloseSales]: "Đóng bán hàng loạt",
+  [AUDIT_ACTIONS.draw.bulkOpenSales]: "Mở bán hàng loạt",
 
   // player
   [AUDIT_ACTIONS.player.suspend]: "Khoá người chơi",

@@ -7,7 +7,10 @@ isProject: false
 
 # p1-01 — Hub shell: 1 query, derive client-side, Zone 2 hai khối, Day Flow
 
-> **Phase:** P1 · **Status:** ⏳ pending · **Phụ thuộc:** p0-03 · **Chặn:** p1-02
+> **Phase:** P1 · **Status:** ✅ code done (07/09) · review + test UI trực tiếp 07/09 — Zone 1-4 render
+> đúng, boundary scheduling/nuqs/zustand hoạt động; **1 bug tìm thấy**: PageHeader hardcode màu indigo
+> thay vì `GAME_COLORS[GameProduct.Keno]`, xem [`ui-review-2026-09-07.md`](./ui-review-2026-09-07.md) mục 3 ·
+> **Phụ thuộc:** p0-03 · **Chặn:** p1-02
 > **UI chuẩn:** [`ops-hub-page-layout.guideline.md`](./ops-hub-page-layout.guideline.md) §1.3–1.4, §2–4, §6–8
 > **Scope:** Keno only. Bingo18 ở [p1-04](./p1-04-bingo18-port.plan.md)
 > **Ràng buộc số 1:** đúng **1 query** cho toàn trang. Không zone nào tự fetch.

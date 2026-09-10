@@ -94,3 +94,36 @@ Index cũ → báo user, đừng tự sửa.
 
 Nói rõ **kết luận nào từ graph, kết luận nào từ đọc code**. Không trộn lẫn. Nếu index cũ hoặc kết quả
 graph rỗng, nêu tường minh thay vì im lặng.
+
+## 7. Hook tự động bù — 3 tầng đã cài, KHÔNG bỏ qua như trước
+
+`.cursor/hooks.json` + `.cursor/hooks/*.py` (đã commit) tự làm 3 việc mà rule không làm được:
+
+| Tầng | Khi nào chạy | Nó tự làm gì |
+|---|---|---|
+| 1 | sau **mọi** `Grep` có pattern là identifier sạch | Chạy `gitnexus augment`, đính kèm `Calls:`/`Called by:` vào kết quả Grep |
+| 2 | trước **mọi** `Task` (trừ browser-use/bugbot/security-review/cursor-guide/ci-investigator) | Chèn bảng routing GitNexus vào prompt subagent |
+| 3 | sau khi gọi `impact`/`cypher`/`context`/`trace`/`query`/`route_map`/`detect_changes` | Nhắc lower-bound + quy trình verify (throttle 15 phút) |
+
+**Hệ quả cho agent chính:**
+
+- **Không cần** tự chạy `impact`/`cypher` trước khi delegate cho subagent nữa — Tầng 2 đã chèn
+  routing. Vẫn **nên** nhúng kết quả graph vào prompt khi đã có sẵn (tiết kiệm 1 lượt cho subagent).
+- Thấy block `[GitNexus graph]` xuất hiện sau `Grep` → đó là **hook**, không phải kết quả Grep.
+  Nó là lower-bound (§3): danh sách symbol đó **không** thay được việc đọc kết quả Grep.
+- Thấy block `[GitNexus] Nhắc trước khi kết luận` → chưa Grep xác nhận thì chưa kết luận.
+
+**Bằng chứng vì sao 3 tầng này cần thiết (đo 2026-09-08):** Cursor lazy-load MCP tool schema —
+agent chỉ nhận *tên* tool GitNexus, description nằm trên disk; `Grep`/`Read` thì có full description
+sẵn trong system prompt → luôn rẻ hơn. GitNexus cũng **không** cấp `instructions` qua MCP
+(`initialize` response không có field đó; `INSTRUCTIONS.md` rỗng). Vì vậy rule đơn thuần không đủ:
+lỗi không phải "agent quên" mà là "agent **skip**". Chi tiết + bảng đo: notes §11.
+
+**Subagent vẫn KHÔNG kế thừa rule này** (kiểm chứng 2026-09-07: đọc transcript JSONL của 1 subagent
+`explore`, đếm `always_applied` / `AGENTS.md` / `CLAUDE.md` / `dynamic_tool_catalog` → **cả 4 = 0**).
+Tầng 2 vá lỗ đó ở tầng tool-call. Nếu cần giao việc graph nặng cho subagent, vẫn **chèn thẳng câu
+lệnh cụ thể** (namespace `project-0-megawin-gitnexus`, tên tool, `uid`, `repo: "megawin"`) —
+đừng viết mơ hồ "dùng GitNexus nếu cần".
+
+**Kiểm tra hook còn sống:** `GITNEXUS_HOOK_DEBUG=1` rồi xem stderr, hoặc chạy tay:
+`echo '{"tool_name":"Grep","tool_input":{"pattern":"upsertGameDaily"},"cwd":"'$PWD'"}' | .cursor/hooks/gitnexus-augment-grep.py`

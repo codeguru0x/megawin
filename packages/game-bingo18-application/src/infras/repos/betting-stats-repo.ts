@@ -39,7 +39,7 @@ import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
 import { BaseRepo } from "./base-repo";
-import type { DrawStatsCursor, DrawStatsDelta } from "./types";
+import type { DrawStatsCursor, DrawStatsDelta, HubStatsRow } from "./types";
 
 const f = docPath<Bingo18DrawBettingStatsDoc>();
 
@@ -88,6 +88,71 @@ export class BettingStatsRepository extends BaseRepo<Bingo18DrawBettingStatsEnti
       // giữ cho data cũ (nếu có doc thiếu field) vẫn về undefined = từ đầu.
       lastEntryId: typeof d.lastEntryId === "string" ? d.lastEntryId : undefined,
     }));
+  }
+
+  /**
+   * Stats mỏng cho nhiều kỳ — nguồn số liệu bảng Ops Hub (`GetOpsHubSnapshotUseCase`).
+   *
+   * Projection SIÊU MỎNG vì cùng lý do {@link findNotFinal}: doc stats có full-bucket
+   * `byPlayType` (38 bucket) + `topPotential`. Hub ~158 kỳ × full doc mỗi poll là quá nặng.
+   *
+   * KHÁC Keno: Bingo18 **KHÔNG** lưu `exposure.worstCaseTotal` — exposure tính lúc đọc qua
+   * `computeBingo18Exposure(byPlayType, prizes)` ở use-case. Vì vậy projection BẮT BUỘC lấy
+   * `byPlayType` (không thể chỉ lấy scalar totals). Hệ quả: **KHÔNG** đạt `PROJECTION_COVERED`
+   * dù có `idx_hub_row_covering` cho các field totals — index vẫn giúp IXSCAN `$in` drawId;
+   * FETCH document là bắt buộc để lấy `byPlayType`. Xem JSDoc index trong
+   * `packages/game-bingo18/src/indexes/index.ts`.
+   *
+   * `updatedAt` lớn nhất trong tập trả về là MỘT THÀNH PHẦN của ETag ở route — không phải
+   * toàn bộ (kỳ mới `Published` chưa có stats doc sẽ không đổi `updatedAt` này).
+   *
+   * @param drawIds - Lấy từ `listUnfinishedDrawRows`. Rỗng → trả `[]`, KHÔNG gọi DB.
+   */
+  async getRowsByDrawIds(drawIds: string[]): Promise<HubStatsRow[]> {
+    if (drawIds.length === 0) {
+      return [];
+    }
+
+    const docs = await this.findManyAsDocuments(
+      { drawId: { $in: drawIds } },
+      {
+        projection: {
+          _id: 0,
+          [f("drawId")]: 1,
+          [f("final")]: 1,
+          [f("updatedAt")]: 1,
+          [f("totals.revenue")]: 1,
+          [f("totals.entries")]: 1,
+          [f("totals.sets")]: 1,
+          [f("totals.commission")]: 1,
+          [f("totals.largeBetCount")]: 1,
+          [f("byPlayType")]: 1,
+        },
+        // `$in` đúng N id nên không thể vượt N — chặn trần 500 im lặng tường minh.
+        limit: drawIds.length,
+      },
+    );
+
+    return docs.map((d) => {
+      // `ensureDocs` CỐ Ý không seed `totals`/`byPlayType` đầy đủ — kỳ vừa seed chưa có tick
+      // `applyDelta` có doc thật nhưng sub-object có thể thiếu → projection trả `undefined`.
+      // Default 0 / undefined tại đây — cùng nguyên tắc "default 1 nơi duy nhất phía đọc".
+      const totals = d.totals as
+        | { revenue: number; entries: number; sets: number; commission: number; largeBetCount: number }
+        | undefined;
+
+      return {
+        drawId: d.drawId as string,
+        final: d.final as boolean,
+        updatedAt: d.updatedAt as Date,
+        revenue: totals?.revenue ?? 0,
+        entries: totals?.entries ?? 0,
+        sets: totals?.sets ?? 0,
+        commission: totals?.commission ?? 0,
+        largeBetCount: totals?.largeBetCount ?? 0,
+        byPlayType: d.byPlayType as HubStatsRow["byPlayType"],
+      };
+    });
   }
 
   /**

@@ -25,7 +25,7 @@ export class GetVietlottSuggestionUseCase extends UseCase<GetVietlottSuggestionI
 
   protected async execute(input: GetVietlottSuggestionInput): Promise<GetVietlottSuggestionOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
-    
+
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }

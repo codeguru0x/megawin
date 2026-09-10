@@ -7,7 +7,8 @@ isProject: false
 
 # p0-04 — Bulk draw actions API: settle / void / close-sales / open-sales
 
-> **Phase:** P0 · **Status:** ⏳ pending · **Phụ thuộc:** p0-02 · **Chặn:** p1-02
+> **Phase:** P0 · **Status:** ✅ code done (07/09) · review code 07/09 — 4 use-case bulk + `bulk-runner.ts`
+> đúng thiết kế partial-success/chunk-cap/dedupe; test §5 (bulk thật) vẫn CHƯA chạy · **Phụ thuộc:** p0-02 · **Chặn:** p1-02
 > **Scope:** `game-keno-application` + route `apps/backoffice` (Bingo18 ở p1-04)
 > **Guideline UI:** [`ops-hub-page-layout.guideline.md`](./ops-hub-page-layout.guideline.md) §5 (bảng + bulk bar), §1.5 (nhãn + action theo gate)
 > **Nguyên tắc:** partial success, concurrency cap, **gọi lại** use-case đơn — không copy logic

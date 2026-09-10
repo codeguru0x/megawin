@@ -41,6 +41,11 @@
       "import": "./src/use-cases/draws/index.ts",
       "default": "./dist/use-cases/draws/index.js"
     },
+    "./use-cases/draws/void-draw-rules": {
+      "types": "./src/use-cases/draws/void-draw-rules.ts",
+      "import": "./src/use-cases/draws/void-draw-rules.ts",
+      "default": "./dist/use-cases/draws/void-draw-rules.js"
+    },
     "./use-cases/resettle": {
       "types": "./src/use-cases/resettle/index.ts",
       "import": "./src/use-cases/resettle/index.ts",

@@ -329,3 +329,49 @@ export function auditUpdateTenantConfig(args: {
     metadata: { extra: { version: args.version } },
   });
 }
+
+/**
+ * Audit hành động BULK trên nhiều kỳ quay Keno từ Ops Hub — 1 record CẤP LÔ, KHÔNG trùng
+ * audit per-draw mà 4 use-case đơn đã tự ghi (`auditSettle`/`auditDrawVoid`/`auditCloseSales`/
+ * `auditOpenSales`).
+ *
+ * Trả lời đúng câu hỏi đầu tiên khi tra soát sự cố vận hành: "ai đã bấm chốt sổ lúc 14:00 và
+ * lô đó gồm những kỳ nào, kết quả ra sao" — audit per-draw không trả lời được vì rải rác
+ * thành N record độc lập, không có gì nối chúng lại thành "1 lần bấm".
+ *
+ * `targetId = ""` vì không có 1 target đơn (nhiều kỳ) — danh sách `drawIds` nằm trong
+ * `metadata.extra`. `reason` chỉ có ở bulk-void.
+ *
+ * @param args.action - 1 trong 4 action `AUDIT_ACTIONS.draw.bulk*`.
+ * @param args.actor - Chủ thể bấm nút bulk.
+ * @param args.drawIds - Toàn bộ kỳ trong request (trước khi lọc theo kết quả).
+ * @param args.successCount - Số kỳ xử lý thành công.
+ * @param args.failureCount - Số kỳ xử lý thất bại.
+ * @param args.reason - Lý do huỷ (chỉ bulk-void).
+ */
+export function auditBulkDrawAction(args: {
+  action: AuditAction;
+  actor: AuditActor;
+  drawIds: string[];
+  successCount: number;
+  failureCount: number;
+  reason?: string;
+}): void {
+  record({
+    ...actorFields(args.actor),
+    action: args.action,
+    category: AuditCategory.Draw,
+    game: GAME,
+    targetType: AuditTargetType.Draw,
+    targetId: "",
+    targetLabel: `${args.drawIds.length} kỳ`,
+    metadata: {
+      extra: dropUndefined({
+        drawIds: args.drawIds.join(","),
+        successCount: args.successCount,
+        failureCount: args.failureCount,
+        reason: args.reason,
+      }),
+    },
+  });
+}

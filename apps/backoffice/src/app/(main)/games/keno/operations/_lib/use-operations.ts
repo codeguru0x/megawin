@@ -327,11 +327,14 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
 // Mutations (draw management)
 // ─────────────────────────────────────────────
 
+/** Toast thành công — string tĩnh hoặc hàm nhận `drawId` (VD nhập KQ liên tiếp nhiều kỳ). */
+type DrawActionSuccessMessage = string | ((vars: { drawId: string }) => string);
+
 /** Helper dùng chung cho các draw action mutations. */
 function useDrawAction<TBody = void>(
   actionPath: (drawId: string) => string,
   method: "post" | "patch",
-  successMessage: string,
+  successMessage: DrawActionSuccessMessage,
   options?: {
     /**
      * Tắt toast lỗi mặc định. Dùng cho action hiển thị lỗi inline trong dialog
@@ -345,9 +348,11 @@ function useDrawAction<TBody = void>(
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: kenoKeys.all });
-      toast.success(successMessage);
+      // P1-06: nhập KQ liên tiếp → toast phải ghi rõ kỳ nào vừa xong, không chỉ "Đã công bố".
+      const message = typeof successMessage === "function" ? successMessage(variables) : successMessage;
+      toast.success(message);
     },
     onError: (err) => {
       if (options?.silentError) {
@@ -377,7 +382,12 @@ export function usePublishResult() {
   return useDrawAction<{
     winningNumbers: string[];
     vietlottRef?: { drawPeriod: string; drawDate: string };
-  }>((id) => `/keno/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
+  }>(
+    (id) => `/keno/draws/${id}/publish-result`,
+    "post",
+    // Full drawId (`YYYY-MM-DD.NNN`) — staff nhập nhiều kỳ tồn cùng số kỳ (#005) trong 1 phiên.
+    ({ drawId }) => `Đã công bố kết quả kỳ ${drawId}.`,
+  );
 }
 
 export function useTriggerSettle() {

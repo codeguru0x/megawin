@@ -565,6 +565,53 @@ export function formatDurationClock(ms: number): string {
 // ─────────────────────────────────────────────
 
 /**
+ * Format duration (giây) thành chuỗi ngắn nhất đọc được cho UI vận hành mật độ cao.
+ *
+ * Khác `formatDurationClock` (dạng đồng hồ `mm:ss`, dùng cho countdown còn ít giây):
+ * hàm này **tự chọn 2 đơn vị lớn nhất** và bỏ phần vụn — đọc được ở mọi thang từ giây
+ * tới nhiều ngày. Dùng cho cột "Thời gian", chuỗi lý do cảnh báo, timeline rail.
+ *
+ * Đơn vị **cố ý** trùng `calcRelativeTime` (`ph`/`h`/`ng`) để trên cùng một trang không
+ * xuất hiện 2 phương ngữ ("2h trước" cạnh "2g14p").
+ *
+ * Ví dụ:
+ * - `formatDurationCompact(0)`       → `"0s"`
+ * - `formatDurationCompact(45)`      → `"45s"`
+ * - `formatDurationCompact(750)`     → `"12ph30s"`
+ * - `formatDurationCompact(3600)`    → `"1h"`      (phút = 0 thì bỏ hẳn)
+ * - `formatDurationCompact(8040)`    → `"2h14ph"`
+ * - `formatDurationCompact(273_299)` → `"3ng3h"`   (thay vì `"75g54p"` khó đọc)
+ *
+ * Giá trị âm clamp về `"0s"`. `NaN`/`Infinity` → `"—"`.
+ */
+export function formatDurationCompact(seconds: number): string {
+  if (!Number.isFinite(seconds)) {
+    return "—";
+  }
+  const total = Math.max(0, Math.floor(seconds));
+
+  // ≥ 1 ngày: "3ng3h" — bỏ phút vì ở thang ngày phút là nhiễu.
+  if (total >= 86_400) {
+    const d = Math.floor(total / 86_400);
+    const h = Math.floor((total % 86_400) / 3600);
+    return h > 0 ? `${d}ng${h}h` : `${d}ng`;
+  }
+  // ≥ 1 giờ: "2h14ph" — bỏ giây.
+  if (total >= 3600) {
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    return m > 0 ? `${h}h${m}ph` : `${h}h`;
+  }
+  // ≥ 1 phút: "12ph30s" — giữ giây vì ở thang này giây còn có nghĩa vận hành.
+  if (total >= 60) {
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return s > 0 ? `${m}ph${s}s` : `${m}ph`;
+  }
+  return `${total}s`;
+}
+
+/**
  * Tính khoảng cách giữa 1 ISO timestamp và thời điểm hiện tại,
  * trả về chuỗi tiếng Việt dạng ngắn dùng cho timeline, countdown, v.v.
  *

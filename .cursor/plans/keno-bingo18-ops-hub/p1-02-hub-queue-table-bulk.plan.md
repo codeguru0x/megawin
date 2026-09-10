@@ -7,7 +7,10 @@ isProject: false
 
 # p1-02 — Bảng 5A/5B, Focus Rail, multi-select, 4 bulk action
 
-> **Phase:** P1 · **Status:** ⏳ pending · **Phụ thuộc:** p1-01, p0-04 · **Chặn:** p1-03
+> **Phase:** P1 · **Status:** ✅ code done (07/09) · review + test UI trực tiếp 07/09 — tab bar/sort/
+> selection/bulk-bar hoạt động đúng; **2 bug/deviation tìm thấy**: label `PendingClose` = "Chờ chốt sổ"
+> lệch guideline (đúng phải "Hết giờ cược"), thiếu cột Exposure + `pl-5`/`pr-5` + sticky header so với
+> plan này, xem [`ui-review-2026-09-07.md`](./ui-review-2026-09-07.md) mục 1-2 · **Phụ thuộc:** p1-01, p0-04 · **Chặn:** p1-03
 > **UI chuẩn:** [`ops-hub-page-layout.guideline.md`](./ops-hub-page-layout.guideline.md) §1.4.6, §5, §5B, §6, §10
 > **Đây là plan khó nhất của P1** — multi-select **không có tiền lệ** trong repo, và là nơi duy nhất
 > chạm tiền thật.

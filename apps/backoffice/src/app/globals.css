@@ -500,3 +500,36 @@ html {
     transform: translateX(200%);
   }
 }
+
+/* ── Ops Hub — Zone 5A/5B queue row (guideline §6.2/§6.3, p1-02) ────────────────────────────
+   `content-visibility: auto` cho trình duyệt bỏ layout/paint dòng ngoài viewport — thay
+   virtualization ở P1 (đo lại nếu render > 100ms với 300 dòng, xem p1-02 plan §6.3).
+   `contain-intrinsic-size` cho trình duyệt biết chiều cao ước lượng trước khi đo thật, tránh
+   scrollbar nhảy giật khi cuộn nhanh qua vùng chưa từng render. */
+.queue-row {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 40px;
+}
+
+/* Dòng đang focus bằng bàn phím `j`/`k` (p1-02 plan §10) — set/xoá qua DOM trực tiếp bằng
+   `data-focused`, KHÔNG React state (di chuyển qua 200 dòng bằng setState = 200 re-render). */
+.queue-row[data-focused="true"] {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* Highlight 2s khi Focus Rail điều hướng tới 1 dòng (p1-02 plan §9) — hiệu ứng thị giác thuần
+   CSS, class thêm/xoá qua DOM trực tiếp (KHÔNG React state, xem `focus-rail.tsx`). */
+.hub-row-highlight {
+  animation: hub-row-flash 2s ease-out;
+}
+
+@keyframes hub-row-flash {
+  0%,
+  40% {
+    background-color: color-mix(in oklch, var(--primary) 20%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}

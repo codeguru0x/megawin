@@ -262,6 +262,28 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
       "theo doc ĐÃ ĐỔI. Doc final không update lại → phần index 'nóng' luôn nhỏ. " +
       "(analysis keno-stats-worker-simplification §5.1)",
   },
+  {
+    collection: KenoCollections.BettingStats,
+    key: {
+      drawId: 1,
+      final: 1,
+      updatedAt: 1,
+      "totals.revenue": 1,
+      "totals.entries": 1,
+      "totals.sets": 1,
+      "totals.largeBetCount": 1,
+      "exposure.worstCaseTotal": 1,
+    },
+    options: { name: "idx_hub_row_covering" },
+    purpose:
+      "Ops Hub getRowsByDrawIds: COVERED query — doc stats ~33KB (numberFreq 80 số, byPlayType, " +
+      "topPotential) nên FETCH 200 doc = ~6.6MB đọc MỖI lần poll MỖI staff. 8 field trong " +
+      "projection đều nằm trong index này + `_id:0` → IXSCAN + PROJECTION_COVERED, " +
+      "totalDocsExamined = 0. Thứ tự key: drawId trước (equality $in), phần còn lại chỉ để phủ " +
+      "projection nên thứ tự không quan trọng (p1-01 §4.3(1)). CẢNH BÁO: thêm field vào " +
+      "projection của getRowsByDrawIds mà KHÔNG thêm vào index này = mất covered ÂM THẦM — verify " +
+      'lại bằng explain("executionStats") mỗi khi sửa projection đó.',
+  },
 
   // ─────────────────────────────────────────
   // kenoDrawComboStats

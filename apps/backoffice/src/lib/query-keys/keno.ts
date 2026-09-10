@@ -38,6 +38,13 @@ export const kenoKeys = {
   /** Operations dashboard – live feed entries cho 1 kỳ quay */
   opsLiveEntries: (drawId: string) => [MODULE, "ops-live-entries", drawId] as const,
 
+  /**
+   * Ops Hub — snapshot ĐA KỲ, 1 query duy nhất cho toàn trang `operations-hub`
+   * (`p1-01-hub-page-shell-kpi.plan.md` §4.4). KHÔNG tham số hoá theo filter/sort —
+   * mọi filter/sort là derive client-side trên cùng 1 response.
+   */
+  opsHub: () => [MODULE, "ops-hub"] as const,
+
   /** Draw selector – danh sách các kỳ active + scheduled + recent */
   opsDrawSelector: [MODULE, "ops-draw-selector"] as const,
 

@@ -232,6 +232,28 @@ export const BINGO18_INDEXES: readonly IndexSpec[] = [
     purpose:
       "Ops-alerts worker cursor: findChangedSince(updatedAt) — quét kỳ có stats đổi. Sort updatedAt ASC, IXSCAN.",
   },
+  {
+    collection: Bingo18Collections.BettingStats,
+    key: {
+      drawId: 1,
+      final: 1,
+      updatedAt: 1,
+      "totals.revenue": 1,
+      "totals.entries": 1,
+      "totals.sets": 1,
+      "totals.commission": 1,
+      "totals.largeBetCount": 1,
+    },
+    options: { name: "idx_hub_row_covering" },
+    purpose:
+      "Ops Hub getRowsByDrawIds: index hỗ trợ equality `$in` drawId + phủ các field totals scalar. " +
+      "KHÔNG đạt PROJECTION_COVERED vì Bingo18 BẮT BUỘC project `byPlayType` (38 bucket nested — " +
+      "input `computeBingo18Exposure`; KHÔNG lưu exposure trên doc như Keno). Covering full " +
+      "byPlayType vào index là quá lớn / không thực tế. Index này vẫn giúp IXSCAN theo drawId " +
+      'thay COLLSCAN; FETCH document là bắt buộc. Verify bằng explain("executionStats") — ' +
+      "expect stage FETCH (không phải PROJECTION_COVERED). Thêm field totals vào projection " +
+      "mà không thêm vào index này = mất cơ hội covered một phần cho scalar fields.",
+  },
 
   // ─────────────────────────────────────────
   // bingo18_draw_account_stats

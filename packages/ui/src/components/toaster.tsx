@@ -10,7 +10,8 @@ import { Toaster as Sonner, type ToasterProps } from "sonner";
  * - Uses sonner as base
  * - Colored left-border accent per type (success/error/warning/info)
  * - Tinted backgrounds with dark mode support
- * - Position: bottom-right (default)
+ * - Position: top-center — tránh đè Mira chat input (góc phải dưới) và bulk action
+ *   bar trên Ops Hub (góc dưới bảng). `props.position` vẫn override được nếu cần.
  *
  * Requires importing toast.css in the app's globals.css:
  *   @import "@megawin/ui/styles/toast.css";
@@ -22,15 +23,15 @@ function MegawinToaster(props: ToasterProps) {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
-      position="bottom-right"
+      position="top-center"
       richColors={false}
       gap={8}
       icons={{
-        success: <CircleCheckIcon className="size-[18px]" />,
-        info: <InfoIcon className="size-[18px]" />,
-        warning: <TriangleAlertIcon className="size-[18px]" />,
-        error: <CircleXIcon className="size-[18px]" />,
-        loading: <Loader2Icon className="size-[18px] animate-spin" />,
+        success: <CircleCheckIcon className="size-4.5" />,
+        info: <InfoIcon className="size-4.5" />,
+        warning: <TriangleAlertIcon className="size-4.5" />,
+        error: <CircleXIcon className="size-4.5" />,
+        loading: <Loader2Icon className="size-4.5 animate-spin" />,
       }}
       toastOptions={{
         classNames: {

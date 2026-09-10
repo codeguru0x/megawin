@@ -46,6 +46,13 @@ export const bingo18Keys = {
   /** Operations dashboard – live feed entries cho 1 kỳ quay */
   opsLiveEntries: (drawId: string) => [MODULE, "ops-live-entries", drawId] as const,
 
+  /**
+   * Ops Hub — snapshot ĐA KỲ, 1 query duy nhất cho toàn trang `operations-hub`
+   * (`p1-04-bingo18-port.plan.md`). KHÔNG tham số hoá theo filter/sort —
+   * mọi filter/sort là derive client-side trên cùng 1 response.
+   */
+  opsHub: () => [MODULE, "ops-hub"] as const,
+
   /** Operations dashboard – winning entries của 1 kỳ quay */
   opsWinningEntries: (drawId: string) => [MODULE, "ops-winning-entries", drawId] as const,
 

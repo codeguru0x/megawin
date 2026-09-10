@@ -7,7 +7,9 @@ isProject: false
 
 # p1-03 — Chi tiết kỳ: inline expand (0 query) + mở tab mới
 
-> **Phase:** P1 · **Status:** ⏳ pending · **Phụ thuộc:** p1-02 · **Chặn:** p1-04
+> **Phase:** P1 · **Status:** ✅ code done (07/09) · review code + test UI trực tiếp 07/09 — inline
+> expand đúng thiết kế (0 query, không Sheet, action buttons disable đúng theo trạng thái draw), xem
+> [`ui-review-2026-09-07.md`](./ui-review-2026-09-07.md) mục 5 · **Phụ thuộc:** p1-02 · **Chặn:** p1-04
 > **UI chuẩn:** [`ops-hub-page-layout.guideline.md`](./ops-hub-page-layout.guideline.md) §7
 > **Plan này ĐÃ VIẾT LẠI HOÀN TOÀN** — bản trước làm Detail Sheet + query snapshot lẻ theo kỳ; cả hai
 > đều bị bỏ.

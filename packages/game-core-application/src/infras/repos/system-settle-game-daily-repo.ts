@@ -7,7 +7,8 @@
  * Collection: system_settle_game_daily
  *
  * Chỉ làm việc với SYSTEM collection:
- *   - upsertGameDaily            — ghi per-game aggregate vào system
+ *   - findVersion                — đọc version hiện tại, đầu vào cho vòng CAS ở use-case
+ *   - upsertGameDaily            — ghi per-game aggregate vào system, CÓ optimistic lock (CAS)
  *   - aggregateByFinancialDate   — query tổng hợp theo ngày
  *   - aggregateByGameProduct     — query tổng hợp theo game
  *   - aggregateByPeriod          — chuỗi thời gian (ngày/tuần/tháng), lọc được 1 game
@@ -17,11 +18,13 @@
  * Per-game aggregate (từ per-game draw reports → system) nằm ở mỗi game package.
  * Game package thừa kế class này, thêm perGameColl + aggregateAndPublish().
  *
- * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
+ * IDEMPOTENT: write dùng upsert overwrite trường tiền ($set), CHỈ `version` dùng `$inc`.
+ * `upsertGameDaily` CÓ optimistic lock (CAS trên `version`) — xem
+ * `SystemPublishSettleDailyUseCase` cho vòng retry khi CAS thua.
  */
 
-import { ReportRepo } from "@megawin/data/mongo";
-import type { SystemSettleGameDaily, SystemSettleGameDailyEntity } from "@megawin/game-core/entities";
+import { isDuplicateKeyError, ReportRepo } from "@megawin/data/mongo";
+import type { GameProduct, SystemSettleGameDaily, SystemSettleGameDailyEntity } from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
 import type { FinancialPeriod } from "@megawin/shared/utils";
 import { financialPeriodKey } from "@megawin/shared/utils";
@@ -54,32 +57,110 @@ export class SystemSettleGameDailyRepository extends ReportRepo<
   }
 
   /**
-   * Upsert tổng hợp settle của 1 game trong 1 ngày tài chính.
+   * Đọc `version` hiện tại của 1 game × 1 ngày — đầu vào cho vòng CAS.
    *
-   * Re-aggregate từ per-game draw-level reports → overwrite toàn bộ.
-   * Filter: { financialDate, gameProduct }.
-   * IDEMPOTENT: chạy lại an toàn.
+   * Projection chỉ `{ version: 1 }`: doc rollup có ~13 trường số nhưng vòng CAS chỉ
+   * cần đúng 1 trường. Gọi SONG SONG với `aggregateDrawsFromPerGame` trong
+   * `Promise.all` ở use-case → không thêm latency vào đường settle.
+   *
+   * @returns `undefined` nếu doc chưa tồn tại — caller quy về `0` bằng `?? 0` rồi CAS
+   *   `{ version: 0 }` (upsert insert). Sau backfill, doc đã tồn tại luôn có `version`;
+   *   nếu vẫn thiếu field thì CAS equality không khớp → phải chạy lại migration, không
+   *   im lặng coi như 0 ở filter nữa.
    */
-  async upsertGameDaily(report: Omit<SystemSettleGameDaily, "createdAt" | "updatedAt">): Promise<void> {
+  async findVersion(financialDate: string, gameProduct: GameProduct): Promise<number | undefined> {
+    const doc = await this.findOne({ financialDate, gameProduct }, { projection: { version: 1 } });
+    return doc?.version;
+  }
+
+  /**
+   * Upsert tổng hợp settle của 1 game trong 1 ngày tài chính — CÓ optimistic lock.
+   *
+   * Re-aggregate từ per-game draw-level reports → overwrite toàn bộ trường tiền
+   * bằng `$set` (KHÔNG `$inc` — nguyên tắc P2 `financial-reporting-system.mdc`).
+   *
+   * CAS: chỉ ghi khi `version` trong DB CÒN ĐÚNG bằng `expectedVersion` mà caller đã
+   * đọc qua {@link findVersion}. Ai đó ghi chen vào giữa → `version` đã tăng → filter
+   * không khớp → trả `false`, và caller BẮT BUỘC phải re-aggregate rồi thử lại (không
+   * được ghi lại report cũ — report đó tính từ snapshot per-game đã lạc hậu).
+   *
+   * Filter dùng equality `version: expectedVersion` (KHÔNG `$expr`/`$ifNull`) để planner
+   * giữ được index bound trên unique `{ financialDate, gameProduct }` rồi so `version`
+   * như predicate thường — rẻ hơn `$expr` và tránh mất index hint khi filter phức tạp.
+   *
+   * TIỀN ĐỀ: mọi doc đã tồn tại PHẢI có field `version` (backfill `$exists: false` → `0`
+   * trước khi deploy bản này). Doc thiếu field không khớp `{ version: 0 }` trong Mongo
+   * (thiếu ≠ 0) → CAS không bao giờ update được doc đó. Doc MỚI: upsert insert mang
+   * `version: expectedVersion` từ filter rồi `$inc` → 1 khi `expectedVersion = 0`.
+   *
+   * `returnDocument: "after"` là BẮT BUỘC, không phải tuỳ chọn style: driver Node mặc
+   * định `"before"`, và khi upsert INSERT doc mới thì bản "before" không tồn tại →
+   * `findOneAndUpdate` trả `null` → CAS bị đọc thành THUA dù đã ghi thành công. Lỗi đó
+   * làm rollup ĐẦU TIÊN mỗi `(game, financialDate)` luôn mất 1 lượt CAS (và bỏ qua
+   * `publishTenantDaily` ở lượt đó), đồng thời ăn mòn quota `MAX_CAS_ATTEMPTS`.
+   *
+   * Filter: { financialDate, gameProduct, version: expectedVersion }.
+   *
+   * @param expectedVersion - Version đã đọc qua {@link findVersion}. Bỏ trống = 0
+   *   (doc chưa tồn tại). Optional để tương thích ngược cho caller cũ.
+   * @returns `version` SAU khi `$inc` (giá trị mới trong DB) nếu đã ghi; `null` nếu CAS
+   *   thua HOẶC E11000 (doc đã tồn tại mà `version` không khớp nên Mongo cố insert,
+   *   vướng unique index `{financialDate, gameProduct}`). Caller dùng số trả về làm
+   *   `rollupVersion` — KHÔNG tự `expectedVersion + 1` (tránh lệch nếu update pipeline
+   *   đổi cách tăng version).
+   */
+  async upsertGameDaily(
+    report: Omit<SystemSettleGameDaily, "createdAt" | "updatedAt" | "version">,
+    expectedVersion = 0,
+  ): Promise<number | null> {
     const now = new Date();
-    await this.findOneAndUpdate(
-      {
-        financialDate: report.financialDate,
-        gameProduct: report.gameProduct,
-      },
-      {
-        $set: {
-          ...report,
-          updatedAt: now,
+    try {
+      const result = await this.findOneAndUpdate(
+        {
+          financialDate: report.financialDate,
+          gameProduct: report.gameProduct,
+          version: expectedVersion,
         },
-        $setOnInsert: {
-          createdAt: now,
+        {
+          $set: {
+            ...report,
+            updatedAt: now,
+          },
+          $inc: { version: 1 },
+          $setOnInsert: {
+            createdAt: now,
+          },
         },
-      },
-      {
-        upsert: true,
-      },
-    );
+        {
+          upsert: true,
+          // Mặc định driver là "before" → upsert-insert trả null → CAS đọc thành THUA
+          // dù đã ghi. Xem JSDoc method.
+          returnDocument: "after",
+        },
+      );
+
+      if (result === null) {
+        return null;
+      }
+      
+      // Sau `$inc` field luôn có; thiếu = bug pipeline (không fallback cộng tay).
+      if (typeof result.version !== "number") {
+        throw new Error(
+          `[upsertGameDaily] CAS thắng nhưng thiếu version sau ghi: ` +
+            `financialDate=${report.financialDate} gameProduct=${report.gameProduct}`,
+        );
+      }
+      return result.version;
+    } catch (error) {
+      // E11000: doc đã tồn tại nhưng `version` không khớp → Mongo cố insert → vướng
+      // unique index { financialDate, gameProduct }. Cùng nghĩa với CAS thua (§3.5
+      // plan p0-01). Nhận diện bằng MÃ LỖI, không so chuỗi message.
+      if (isDuplicateKeyError(error)) {
+        return null;
+      }
+
+      throw error;
+    }
   }
 
   /**
