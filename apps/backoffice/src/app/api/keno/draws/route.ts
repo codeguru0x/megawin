@@ -7,6 +7,7 @@ import { CompanyRole } from "@megawin/identity/entities";
 
 import { withApi } from "@/lib/api";
 
+import { invalidateHubSnapshotCache } from "../operations/hub-snapshot/_lib/snapshot-cache";
 import { createDrawSchema, listDrawsQuerySchema } from "./_lib/schema";
 
 const createDrawUseCase = new CreateDrawUseCase();
@@ -16,7 +17,10 @@ export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(createDrawSchema)
   .handler(async ({ body }) => {
-    return createDrawUseCase.run(body);
+    const result = await createDrawUseCase.run(body);
+    // Kỳ mới tạo cũng hiện trên Ops Hub (xem JSDoc `invalidateHubSnapshotCache`).
+    invalidateHubSnapshotCache();
+    return result;
   });
 
 export const GET = withApi()

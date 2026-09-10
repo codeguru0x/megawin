@@ -339,3 +339,38 @@ export function auditUpdateTenantConfig(args: {
     },
   });
 }
+
+/**
+ * Audit CẤP LÔ cho bulk draw action (settle / close-sales / open-sales).
+ *
+ * 1 record cho cả lô (không N record per-draw) — `targetId` rỗng, `targetLabel` = "N kỳ",
+ * `extra.drawIds` CSV. Per-draw audit vẫn do use-case đơn ghi khi transition thật thành công.
+ *
+ * Bingo18 Hub KHÔNG có bulk-void — không truyền `reason` từ void flow.
+ */
+export function auditBulkDrawAction(args: {
+  action: AuditAction;
+  actor: AuditActor;
+  drawIds: string[];
+  successCount: number;
+  failureCount: number;
+  reason?: string;
+}): void {
+  record({
+    ...actorFields(args.actor),
+    action: args.action,
+    category: AuditCategory.Draw,
+    game: GAME,
+    targetType: AuditTargetType.Draw,
+    targetId: "",
+    targetLabel: `${args.drawIds.length} kỳ`,
+    metadata: {
+      extra: dropUndefined({
+        drawIds: args.drawIds.join(","),
+        successCount: args.successCount,
+        failureCount: args.failureCount,
+        reason: args.reason,
+      }),
+    },
+  });
+}

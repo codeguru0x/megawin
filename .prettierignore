@@ -12,6 +12,7 @@ release
 .cursorrules
 .vscode
 .cursor
+.gitnexus
 
 # Biome quản format cho các loại file này — Prettier chỉ lo .md/.yml/.yaml
 *.ts

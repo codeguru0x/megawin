@@ -17,6 +17,7 @@ import {
   CircleDollarSign,
   Clock,
   FileSearch,
+  Gauge,
   History,
   LayoutDashboard,
   type LucideIcon,
@@ -312,9 +313,8 @@ export const operatorSidebarItems: NavGroup[] = [
         subItems: [
           {
             title: "Vận hành",
-            url: "/games/keno/operations",
-            icon: Activity,
-            sectionLabel: "Vận hành",
+            url: "/games/keno/operations-hub",
+            icon: Gauge,
           },
           {
             title: "Kỳ quay",
@@ -357,9 +357,8 @@ export const operatorSidebarItems: NavGroup[] = [
         subItems: [
           {
             title: "Vận hành",
-            url: "/games/bingo18/operations",
-            icon: Activity,
-            sectionLabel: "Vận hành",
+            url: "/games/bingo18/operations-hub",
+            icon: Gauge,
           },
           {
             title: "Kỳ quay",

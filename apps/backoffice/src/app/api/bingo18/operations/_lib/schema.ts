@@ -29,6 +29,14 @@ export const snapshotQuerySchema = z.object({
 });
 
 /**
+ * Schema snapshot Ops Hub — ĐA kỳ, không cần drawId. `limit` optional (mặc định
+ * `DEFAULT_HUB_LIMIT` trong use-case) — chỉ staff debug/test cần override.
+ */
+export const hubSnapshotQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(1000).optional(),
+});
+
+/**
  * Schema list alert 1 kỳ (staff panel). `grouped` mặc định `true` (gộp theo type cho gọn),
  * `grouped=false` để drill-down raw. `status` lọc theo lifecycle alert.
  */

@@ -1,0 +1,33 @@
+#!/bin/sh
+# Đồng bộ GitNexus knowledge graph sau khi commit — xem .cursor/rules/gitnexus-code-graph.mdc
+#
+# THIẾT KẾ AN TOÀN (đọc trước khi sửa — mỗi điểm dưới đây là một bug đã gặp thật):
+# 1. Chạy nền + detached (nohup, stdin đóng): commit trả về ngay (~6ms), không chờ ~9s index.
+# 2. `exit 0` vô điều kiện: hook KHÔNG BAO GIỜ làm fail một commit đã thành công.
+# 3. Lock = file chứa PID, KHÔNG dùng lockdir + cleanup ở process con: `gitnexus analyze`
+#    force-exit khi kết thúc (nó bypass một segfault của ONNX runtime), nên mọi lệnh
+#    dọn dẹp đặt sau nó trong cùng shell sẽ KHÔNG BAO GIỜ chạy → lock kẹt vĩnh viễn và
+#    các lần sync sau bị bỏ qua âm thầm. Ở đây lock được kiểm tra bằng `kill -0 <pid>`
+#    nên không cần process con tự dọn.
+# 4. Log ghi ngoài lock, luôn ghi đè — không phình theo thời gian.
+# 5. Bỏ qua khi thiếu binary hoặc chưa index — không ép ai phải cài GitNexus.
+# 6. GITNEXUS_SKIP_SYNC=1 để tắt tạm thời.
+
+[ "$GITNEXUS_SKIP_SYNC" = "1" ] && exit 0
+
+command -v gitnexus >/dev/null 2>&1 || exit 0
+[ -d ".gitnexus" ] || exit 0
+
+LOCK=".gitnexus/post-commit-sync.pid"
+LOG=".gitnexus/post-commit-sync.log"
+
+# Đang có sync chạy thật (PID còn sống) → bỏ qua lần này. Commit kế tiếp hoặc
+# `pnpm graph:sync` tay sẽ bắt kịp. Lock mồ côi (PID đã chết) bị ghi đè bên dưới.
+if [ -f "$LOCK" ] && kill -0 "$(cat "$LOCK" 2>/dev/null)" 2>/dev/null; then
+  exit 0
+fi
+
+nohup gitnexus analyze </dev/null >"$LOG" 2>&1 &
+echo $! >"$LOCK"
+
+exit 0

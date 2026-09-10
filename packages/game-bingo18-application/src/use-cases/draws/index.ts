@@ -1,7 +1,16 @@
 export type { AutoEnrollInput, AutoEnrollOutput } from "./auto-enroll-entries";
 export { AutoEnrollEntriesUseCase } from "./auto-enroll-entries";
+export { BulkCloseSalesUseCase } from "./bulk-close-sales";
+export { BulkOpenSalesUseCase } from "./bulk-open-sales";
+export { BulkTriggerSettleUseCase } from "./bulk-trigger-settle";
 export { CloseSalesUseCase } from "./close-sales";
 export { CreateDrawUseCase } from "./create-draw";
+export type {
+  BulkDrawActionOutput,
+  BulkDrawActionResult,
+  BulkDrawIdsInput,
+  BulkTriggerSettleInput,
+} from "./dto/bulk-draw-action.dto";
 export type { CurrentDrawInfo, GetCurrentDrawOutput } from "./dto/current-draw.dto";
 export type {
   CreateDrawInput,
@@ -41,4 +50,4 @@ export { TriggerSettleUseCase } from "./trigger-settle";
 export type { UpdateScheduleInput, UpdateScheduleOutput } from "./update-schedule";
 export { UpdateScheduleUseCase } from "./update-schedule";
 export type { VoidDrawInput, VoidDrawOutput } from "./void-draw";
-export { VoidDrawUseCase } from "./void-draw";
+export { isVoidable, VoidDrawUseCase } from "./void-draw";

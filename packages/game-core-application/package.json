@@ -36,6 +36,16 @@
       "import": "./src/use-cases/reports/index.ts",
       "default": "./dist/use-cases/reports/index.js"
     },
+    "./use-cases/bulk-draw-action": {
+      "types": "./src/use-cases/bulk-draw-action/index.ts",
+      "import": "./src/use-cases/bulk-draw-action/index.ts",
+      "default": "./dist/use-cases/bulk-draw-action/index.js"
+    },
+    "./use-cases/bulk-draw-action/limits": {
+      "types": "./src/use-cases/bulk-draw-action/limits.ts",
+      "import": "./src/use-cases/bulk-draw-action/limits.ts",
+      "default": "./dist/use-cases/bulk-draw-action/limits.js"
+    },
     "./services": {
       "types": "./src/services/index.ts",
       "import": "./src/services/index.ts",

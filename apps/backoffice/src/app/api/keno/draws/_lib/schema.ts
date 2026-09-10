@@ -1,4 +1,5 @@
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
+import { BULK_MAX_DRAWS } from "@megawin/game-core-application/use-cases/bulk-draw-action/limits";
 import { KENO_CREATE_DRAW_BATCH_MAX } from "@megawin/game-keno/schemas";
 import { z } from "zod";
 
@@ -48,4 +49,26 @@ export const listDrawsQuerySchema = z.object({
   toDate: z.iso.date("toDate phải là YYYY-MM-DD.").optional(),
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+// ─────────────────────────────────────────────
+// Bulk draw actions — settle / void / close-sales / open-sales (Ops Hub)
+// ─────────────────────────────────────────────
+
+/**
+ * Dùng chung cho `bulk-settle`, `bulk-close-sales`, `bulk-open-sales` — chỉ cần danh sách kỳ.
+ *
+ * `.max(BULK_MAX_DRAWS)` chặn trần ở TẦNG NÀY → use-case KHÔNG check lại (chỉ import hằng
+ * số) — đúng tinh thần `code-quality-standards.mdc` §8, tin Zod ở route.
+ */
+export const bulkDrawIdsSchema = z.object({
+  drawIds: z
+    .array(z.string().min(1))
+    .min(1, "Cần ít nhất 1 kỳ.")
+    .max(BULK_MAX_DRAWS, `Tối đa ${BULK_MAX_DRAWS} kỳ mỗi lần bulk.`),
+});
+
+/** `bulk-void` — thêm `reason` bắt buộc, áp cho toàn lô (không nhập riêng từng kỳ). */
+export const bulkVoidSchema = bulkDrawIdsSchema.extend({
+  reason: z.string().min(1, "Lý do huỷ không được để trống.").max(500),
 });

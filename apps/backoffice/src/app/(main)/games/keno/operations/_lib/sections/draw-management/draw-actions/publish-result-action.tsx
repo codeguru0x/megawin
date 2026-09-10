@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   CalendarDays,
   Check,
+  ChevronRight,
   ClipboardCheck,
   Dice5,
   ExternalLink,
@@ -29,6 +30,7 @@ import { VietlottReminderNote } from "@/app/(main)/games/_lib/operations/vietlot
 import { VietlottResultPanel } from "@/app/(main)/games/_lib/operations/vietlott-result-panel";
 import { VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES } from "@/app/(main)/games/_lib/operations/vietlott-suggestion-messages";
 import { generateUniqueRandomNumbers, RandomFillButton } from "@/components/draws";
+import { parseDrawId } from "@/components/games/shared/draw-id-label";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -57,6 +59,14 @@ export interface PublishResultCurrentValues {
   winningNumbers: string[];
   vietlottRef?: { drawPeriod: string; drawDate: string };
 }
+
+/**
+ * Tập field tối thiểu dialog cần từ 1 kỳ quay — dùng cho cả `draw` (kỳ đang mở) và `queue`
+ * (P1-06 §6/§7: hàng đợi "nhập liên tiếp"). Tách hẹp từ `DrawSelectorItem` (thay vì dùng
+ * nguyên type đó) để nơi khác — VD Ops Hub, chỉ có `DerivedRow` — có thể tái dùng dialog này
+ * mà không phải fetch/ghép đủ toàn bộ field của `DrawSelectorItem`.
+ */
+export type PublishResultDraw = Pick<DrawSelectorItem, "drawId" | "scheduledDrawAt" | "drawTime">;
 
 interface ValidationResult {
   messages: string[];
@@ -154,23 +164,65 @@ export function PublishResultAction({
   open,
   onOpenChange,
   currentResult,
+  queue,
+  onNext,
 }: {
-  draw: DrawSelectorItem;
+  draw: PublishResultDraw;
   disabled?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   currentResult?: PublishResultCurrentValues;
+  /**
+   * Hàng đợi kỳ "Chưa có KQ" cho luồng nhập liên tiếp (P1-06) — GỒM CẢ kỳ hiện tại ở index 0.
+   * Bỏ trống hoặc truyền mảng ≤1 phần tử → dialog chạy Y NHƯ CŨ (1 nút "Xác nhận", không có
+   * nút "Kỳ tiếp") — 5 game còn lại (không gọi prop này) không đổi hành vi 1 dòng.
+   */
+  queue?: PublishResultDraw[];
+  /**
+   * Gọi SAU KHI "Xác nhận & Kỳ tiếp" submit thành công, TRƯỚC KHI dialog chuyển sang kỳ mới —
+   * cho caller đồng bộ state bên ngoài (VD `drawId` trên URL, breadcrumb) theo kỳ tiếp theo.
+   * Dialog tự quản lý vị trí trong `queue` bằng state nội bộ (`completedDrawIds`), KHÔNG phụ
+   * thuộc caller re-render lại `draw` prop — callback này chỉ để đồng bộ, không phải nguồn chân lý.
+   */
+  onNext?: (nextDraw: PublishResultDraw) => void;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
   const publishResult = usePublishResult();
 
-  // Ngày Vietlott mặc định PHẢI là ngày quay của CHÍNH kỳ này (`draw.scheduledDrawAt`,
+  // Các kỳ ĐÃ submit xong trong phiên "nhập liên tiếp" hiện tại — theo dõi bằng `drawId`
+  // (KHÔNG bằng index). `queue` là prop TỪ CALLER, có thể đổi identity/nội dung giữa các lần
+  // render (VD `useDrawSelectorList` poll lại mỗi 30s khi dialog đang mở lâu) — nếu dùng index
+  // cố định vào 1 mảng có thể đổi thứ tự/độ dài, "kỳ tiếp theo" sẽ trỏ sai (bug thật đã lường
+  // trước lúc thiết kế, không phải giả định). Lọc theo `drawId` luôn đúng bất kể `queue` prop
+  // đổi ra sao giữa các lần submit.
+  const [completedDrawIds, setCompletedDrawIds] = useState<ReadonlySet<string>>(() => new Set());
+  // Hàng đợi CÒN LẠI = `queue` prop mới nhất, trừ các kỳ đã submit trong phiên này. Luôn tính
+  // lại từ `queue` tươi nhất — không cache lại thứ tự cũ.
+  const remainingQueue = useMemo(
+    () => (queue ?? []).filter((d) => !completedDrawIds.has(d.drawId)),
+    [queue, completedDrawIds],
+  );
+  // Kỳ đang thao tác thực tế trong dialog — ưu tiên đầu hàng đợi CÒN LẠI, fallback `draw` khi
+  // không ở chế độ hàng đợi (giữ nguyên hành vi cũ cho 5 game/mọi nơi không truyền `queue`).
+  const currentDraw: PublishResultDraw = remainingQueue[0] ?? draw;
+  // Chế độ "nhập liên tiếp" chỉ bật khi hàng đợi (gốc, chưa trừ đã-xong) có >1 kỳ — 1 kỳ thì
+  // không có gì để "tiếp". Dùng `queue` gốc (không phải `remainingQueue`) để KHÔNG tự tắt chế
+  // độ 3-nút giữa phiên khi chỉ còn 1 kỳ cuối — dialog vẫn cần biết "đang ở phiên hàng đợi" để
+  // giữ đúng variant nút Huỷ (`ghost`), dù nút "Kỳ tiếp" đã ẩn do hết hàng đợi.
+  const inQueueMode = !!queue && queue.length > 1;
+  const remainingDraws = remainingQueue.slice(1);
+  const hasNext = remainingDraws.length > 0;
+  // Theo dõi RIÊNG nút nào đang submit — 2 nút dùng chung 1 mutation (`publishResult`), tách
+  // để chỉ nút vừa bấm hiện spinner, nút còn lại chỉ disabled (round P1-06).
+  const [pendingAction, setPendingAction] = useState<"confirm" | "confirmAndNext" | null>(null);
+
+  // Ngày Vietlott mặc định PHẢI là ngày quay của CHÍNH kỳ này (`currentDraw.scheduledDrawAt`,
   // giờ VN) — KHÔNG phải ngày hôm nay lúc thao tác. Staff hoàn toàn có thể nhập/sửa kết
   // quả một kỳ của NGÀY HÔM QUA (vào sáng sớm hôm sau) → `todayVN()` sẽ prefill sai ngày,
   // dễ tạo `vietlottRef.drawDate` lệch 1 ngày mà không ai để ý (đã xảy ra thực tế).
-  const defaultVietlotDate = displayVNDate(draw.scheduledDrawAt);
+  const defaultVietlotDate = displayVNDate(currentDraw.scheduledDrawAt);
 
   const [numbers, setNumbers] = useState<string[]>(Array(KENO_DRAW_COUNT).fill(""));
   const [vietlotDate, setVietlotDate] = useState(defaultVietlotDate);
@@ -188,7 +240,7 @@ export function PublishResultAction({
 
   // Gợi ý mã kỳ Vietlott — chỉ fetch khi dialog mở (P0.5). Đọc neo + lịch từ config
   // DB phía server, không tính gì ở client.
-  const suggestion = useVietlottSuggestion(draw.drawId, isOpen);
+  const suggestion = useVietlottSuggestion(currentDraw.drawId, isOpen);
   const suggestedPeriod = suggestion.data?.suggestedPeriod ?? null;
 
   useEffect(() => {
@@ -210,6 +262,10 @@ export function PublishResultAction({
       setPasteNotice(null);
       setHasAppliedAutoResult(false);
       setHasManualFetch(false);
+      // P1-06: về đầu hàng đợi — lần mở dialog SAU (VD 1 kỳ khác) phải bắt đầu sạch, không giữ
+      // lại tập "đã xong" của phiên trước.
+      setCompletedDrawIds(new Set());
+      setPendingAction(null);
     }
   }, [isOpen, currentResult, defaultVietlotDate]);
 
@@ -229,7 +285,7 @@ export function PublishResultAction({
 
   // Tự lấy kết quả Vietlott đã publish (ResultFeed) theo mã kỳ đang nhập — chỉ fetch khi
   // dialog mở và đã có mã kỳ. Đổi mã kỳ (user tự sửa ô input) tự động tạo query khác, tự refetch.
-  const vietlottResultQuery = useVietlottResult(draw.drawId, trimmedPeriod, isOpen);
+  const vietlottResultQuery = useVietlottResult(currentDraw.drawId, trimmedPeriod, isOpen);
 
   function applyIncomingNumbers() {
     const data = vietlottResultQuery.data;
@@ -353,6 +409,27 @@ export function PublishResultAction({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    submitCurrentDraw(false);
+  }
+
+  /**
+   * "Xác nhận & Kỳ tiếp" (P1-06) — nút `type="button"` riêng (KHÔNG dùng `form onSubmit`)
+   * để Enter/nút "Xác nhận" mặc định không vô tình nhảy kỳ khi staff chỉ muốn lưu 1 kỳ rồi
+   * tự đóng dialog. `type="button"` vẫn cho phép validate bằng cách gọi thẳng
+   * `submitCurrentDraw` — không cần `e.preventDefault()` vì không phải submit event.
+   */
+  function handleConfirmAndNext() {
+    submitCurrentDraw(true);
+  }
+
+  /**
+   * Validate + gửi mutation cho `currentDraw`. `advanceToNext=true` (nút "Xác nhận & Kỳ
+   * tiếp") chỉ chuyển kỳ SAU KHI mutation thành công (thất bại → giữ nguyên form + toast lỗi
+   * từ `useDrawAction`, không mất số đã nhập — P1-06 §4 điểm 1). Reset TOÀN BỘ state form
+   * (không chỉ `numbers`) để Rule A autofill của kỳ mới chạy đúng — effect autofill chỉ kích
+   * hoạt khi form rỗng HOÀN TOÀN (P1-06 §4 điểm 2-4).
+   */
+  function submitCurrentDraw(advanceToNext: boolean) {
     const result = validateKenoNumbers(numbers);
     setValidation(result);
     if (result.messages.length > 0) {
@@ -374,7 +451,36 @@ export function PublishResultAction({
       body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
     }
 
-    publishResult.mutate({ drawId: draw.drawId, body }, { onSuccess: () => setIsOpen(false) });
+    const submittedDrawId = currentDraw.drawId;
+    setPendingAction(advanceToNext ? "confirmAndNext" : "confirm");
+    publishResult.mutate(
+      { drawId: submittedDrawId, body },
+      {
+        onSuccess: () => {
+          setPendingAction(null);
+          // Đánh dấu kỳ vừa xong TRƯỚC khi tính `nextDraw` — `remainingQueue` sẽ tự loại kỳ này
+          // ở lần render kế, `remainingQueue[1]` (sau khi trừ) chính là kỳ tiếp theo cần mở.
+          const nextCompletedIds = new Set(completedDrawIds).add(submittedDrawId);
+          const nextDraw = advanceToNext ? (queue ?? []).filter((d) => !nextCompletedIds.has(d.drawId))[0] : undefined;
+          setCompletedDrawIds(nextCompletedIds);
+          if (!nextDraw) {
+            setIsOpen(false);
+            return;
+          }
+          setNumbers(Array(KENO_DRAW_COUNT).fill(""));
+          setVietlotDate(displayVNDate(nextDraw.scheduledDrawAt));
+          setVietlotPeriod("");
+          setPeriodTouched(false);
+          setValidation(VALID);
+          setPasteNotice(null);
+          setHasAppliedAutoResult(false);
+          setHasManualFetch(false);
+          onNext?.(nextDraw);
+          requestAnimationFrame(() => inputRefs.current[0]?.focus());
+        },
+        onError: () => setPendingAction(null),
+      },
+    );
   }
 
   return (
@@ -383,7 +489,16 @@ export function PublishResultAction({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardCheck className="size-4.5 text-orange-500" />
-            {formatResultDialogTitle(draw.drawId, draw.drawTime)}
+            {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
+            {/* Bộ đếm "kỳ X/N" (P1-06) — chỉ hiện khi đang chạy hàng đợi nhiều kỳ. Đặt NGAY SAU
+                tiêu đề (giờ quay), KHÔNG đẩy sát phải (`ml-auto`) — vị trí đó nằm cạnh nút đóng
+                (X) của dialog, dễ đọc nhầm badge là 1 phần điều khiển dialog thay vì thông tin
+                về kỳ đang nhập. `shrink-0` giữ badge không co lại khi tiêu đề dài. */}
+            {inQueueMode && (
+              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                kỳ {(queue?.length ?? 0) - remainingDraws.length}/{queue?.length}
+              </span>
+            )}
           </DialogTitle>
           <DialogDescription>
             Nhập {KENO_DRAW_COUNT} số trúng ({pad2(KENO_NUMBER_MIN)}–{pad2(KENO_NUMBER_MAX)}). Thứ tự nhập là thứ tự
@@ -620,18 +735,53 @@ export function PublishResultAction({
             </div>
           </div>
 
-          <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-              Huỷ bỏ
-            </Button>
-            <Button type="submit" disabled={publishResult.isPending || disabled}>
-              {publishResult.isPending ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <Check className="mr-2 size-4" />
+          <DialogFooter className="flex-col gap-2 pt-2 sm:flex-col">
+            {/* Còn N kỳ chưa có KQ (P1-06 §3 mockup) — chỉ hiện khi có kỳ tiếp theo, giúp staff
+                biết trước khối lượng còn lại thay vì bất ngờ khi bấm "Kỳ tiếp" liên tục. */}
+            {hasNext && (
+              <p className="w-full text-left text-muted-foreground text-xs">
+                Còn {remainingDraws.length} kỳ chưa có KQ:{" "}
+                <span className="font-mono">
+                  {remainingDraws
+                    .slice(0, 4)
+                    .map((d) => `#${parseDrawId(d.drawId)?.no ?? d.drawId}`)
+                    .join(" · ")}
+                </span>
+                {remainingDraws.length > 4 ? ` · +${remainingDraws.length - 4} kỳ khác` : ""}
+              </p>
+            )}
+            <div className="flex w-full justify-end gap-2">
+              {/* `ghost` khi đang chạy hàng đợi (3 nút, cần nút Huỷ nhạt nhất — P1-06 §3),
+                  giữ `outline` như cũ khi không có hàng đợi (2 nút, hành vi không đổi). */}
+              <Button type="button" variant={inQueueMode ? "ghost" : "outline"} onClick={() => setIsOpen(false)}>
+                Huỷ bỏ
+              </Button>
+              {/* Khi CÓ kỳ tiếp: "Xác nhận" lùi thành `outline` (ít chú ý hơn nút chính "Kỳ
+                  tiếp"). Khi KHÔNG (kỳ cuối hàng đợi hoặc không ở chế độ hàng đợi): trở lại
+                  `default` — không để dialog rơi vào trạng thái không có nút chính (P1-06 §3). */}
+              <Button
+                type="submit"
+                variant={hasNext ? "outline" : "default"}
+                disabled={publishResult.isPending || disabled}
+              >
+                {pendingAction === "confirm" ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <Check className="mr-2 size-4" />
+                )}
+                Xác nhận
+              </Button>
+              {hasNext && (
+                <Button type="button" onClick={handleConfirmAndNext} disabled={publishResult.isPending || disabled}>
+                  {pendingAction === "confirmAndNext" ? (
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  ) : (
+                    <ChevronRight className="mr-2 size-4" />
+                  )}
+                  Xác nhận & Kỳ tiếp
+                </Button>
               )}
-              Xác nhận
-            </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

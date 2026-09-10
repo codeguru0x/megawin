@@ -144,6 +144,11 @@ const SETTLE_SYSTEM_TABS = ["daily", "by-game", "by-tenant"] as const;
 const SETTLE_GAME_TABS = ["draws", "tenants"] as const;
 const SETTLE_GAME_LEVELS = ["list", "draw-tenants", "tenant-draws", "players", "entries"] as const;
 const OPERATIONS_TABS = ["monitor", "analysis"] as const;
+/**
+ * Tab lọc chặng của bảng 5A (p1-02) — 5 tab, mặc định `needs_action` (guideline §5.1).
+ * KHÔNG có tab "đã xong": `settled`/`void` không nằm trong query hub.
+ */
+const HUB_GATE_TABS = ["needs_action", "ended", "awaiting_result", "awaiting_settle", "all"] as const;
 
 /** Tab hợp lệ của `game-config` PHỤ THUỘC nhóm game — KHÔNG hợp cả 3 nhóm lại (§2.1 mục 2 plan). */
 function gameConfigTabsFor(gameKey: string): readonly string[] {
@@ -172,6 +177,7 @@ export const NavPage = {
   PlayerSettle: "player-settle",
   PlayerOutstanding: "player-outstanding",
   GameOperations: "game-operations",
+  GameOperationsHub: "game-operations-hub",
   GameDraws: "game-draws",
   GameSettleReport: "game-settle-report",
   GameOutstanding: "game-outstanding",
@@ -201,6 +207,17 @@ const JACKPOT_GAME_KEY_SEGMENT: NavSegmentDef = {
   kind: NavParamKind.Enum,
   values: JACKPOT_GAME_KEYS,
   hint: "Chỉ 3 game có Jackpot: lotto535, mega645, power655.",
+};
+
+/**
+ * Ops Hub (đa kỳ) — Keno (p1-01..p1-10) + Bingo18 (p1-04). `check-nav-registry.ts` probe
+ * đủ mọi giá trị enum trên đĩa; chỉ khai game khi trang `operations-hub/page.tsx` đã tồn tại.
+ */
+const HUB_GAME_KEY_SEGMENT: NavSegmentDef = {
+  name: "gameKey",
+  kind: NavParamKind.Enum,
+  values: [GameProduct.Keno, GameProduct.Bingo18],
+  hint: "Hỗ trợ keno và bingo18.",
 };
 
 const ACCOUNT_ID_SEGMENT: NavSegmentDef = {
@@ -427,6 +444,32 @@ export const NAV_REGISTRY: Record<NavPage, NavPageDefinition> = {
     intent:
       "Màn hình vận hành kỳ quay đang mở/vừa đóng của 1 game — theo dõi realtime, mở/đóng bán, công bố kết quả. " +
       "Lưu ý: URL tự xoá ?drawId= khi kỳ đang xem là kỳ active (giữ URL gọn) — KHÔNG phải bug, đừng ép giữ param.",
+  },
+
+  [NavPage.GameOperationsHub]: {
+    pathTemplate: "/games/:gameKey/operations-hub",
+    label: "Trung tâm vận hành",
+    group: NavGroupKey.Game,
+    segments: [HUB_GAME_KEY_SEGMENT],
+    params: {
+      // Tab lọc chặng bảng 5A (p1-02) + cửa sổ Focus Rail (guideline §1.4.9).
+      gate: {
+        urlKey: "gate",
+        kind: NavParamKind.Enum,
+        values: HUB_GATE_TABS,
+        hint: "Tab lọc chặng bảng vận hành: needs_action | ended | awaiting_result | awaiting_settle | all.",
+      },
+      // KHÔNG dùng `DRAW_ID_PARAM` — nó cố định `urlKey: "drawId"` nhưng trang Hub đọc query
+      // key "focus" (`useHubUrlParams`, `nuqs`), không phải "drawId". Khai riêng để tránh
+      // agent build URL `?drawId=` — trang không đọc, mất filter trong im lặng.
+      focus: { urlKey: "focus", kind: NavParamKind.DrawId, hint: "Kỳ quay đang focus, dạng YYYY-MM-DD.NNN." },
+      span: { urlKey: "span", kind: NavParamKind.Text, hint: "Số card Focus Rail hiển thị (7-21)." },
+    },
+    autoNavigate: true,
+    intent:
+      "Trung tâm vận hành ĐA KỲ — theo dõi ~119 kỳ Keno/ngày (Bingo18 ~158) cùng lúc, chốt sổ/kết sổ/huỷ theo lô. " +
+      "KHÁC `GameOperations` (1 kỳ, chi tiết sâu: heatmap/live feed): hub không có heatmap/live feed, chỉ giám sát " +
+      "+ hành động theo lô trên nhiều kỳ.",
   },
 
   [NavPage.GameDraws]: {

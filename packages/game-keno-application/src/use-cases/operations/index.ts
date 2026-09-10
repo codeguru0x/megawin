@@ -17,6 +17,12 @@ export type {
 } from "./dto/combo-lookup.dto";
 export type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selector.dto";
 export type {
+  OpsHubDrawRow,
+  OpsHubSnapshotInput,
+  OpsHubSnapshotOutput,
+  OpsHubThresholds,
+} from "./dto/hub-snapshot.dto";
+export type {
   GetLiveEntriesInput,
   GetLiveEntriesOutput,
   LiveEntryBoard,
@@ -38,6 +44,7 @@ export { type EvaluateOpsAlertsResult, EvaluateOpsAlertsUseCase } from "./evalua
 export { GetComboLookupUseCase } from "./get-combo-lookup";
 export { GetDrawSelectorUseCase } from "./get-draw-selector";
 export { GetLiveEntriesUseCase } from "./get-live-entries";
+export { DEFAULT_HUB_LIMIT, GetOpsHubSnapshotUseCase } from "./get-ops-hub-snapshot";
 export { GetOpsSnapshotUseCase } from "./get-ops-snapshot";
 export { GetWinningEntriesUseCase } from "./get-winning-entries";
 export { ListAlertsUseCase } from "./list-alerts";

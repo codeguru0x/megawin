@@ -6,7 +6,9 @@
     "**/dist": true,
     "**/.serverless": true,
     "**/.pnpm-store": true,
-    "**/.eve": true
+    "**/.eve": true,
+    "**/.output": true,
+    "**/.gitnexus": true
   },
   "editor.formatOnSaveMode": "file",
   "files.autoSave": "afterDelay",

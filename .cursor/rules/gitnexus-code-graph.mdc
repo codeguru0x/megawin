@@ -1,0 +1,129 @@
+---
+description: Khi nào dùng GitNexus code graph (MCP) vs Grep/Glob/semantic search của Cursor — routing theo loại câu hỏi và các vùng graph mù trên repo megawin
+alwaysApply: true
+---
+
+# GitNexus Code Graph — Routing, Không Thay Thế Grep
+
+MCP namespace: **`project-0-megawin-gitnexus`** (17 tool). Index `.gitnexus/` ~656MB, đã gitignore.
+Bằng chứng đo được, cách kiểm tra khi namespace mất, lịch sử quyết định:
+[`docs/tooling/gitnexus-notes.md`](../../docs/tooling/gitnexus-notes.md).
+
+> **Bỏ qua `AGENTS.md` / `CLAUDE.md` / `.claude/`** — do `gitnexus analyze` tự sinh (đã gitignore).
+> Chúng ra lệnh *"NEVER substitute grep for graph analysis"* và *"MUST run impact before editing"*;
+> trên repo này làm đúng theo đó sẽ dẫn tới **kết luận sai** (§3). Rule này thắng.
+
+## 1. Chọn công cụ: cần **quan hệ** hay cần **nội dung**?
+
+Graph trả lời *"cái gì nối với cái gì"*. Grep/Read trả lời *"trong đó viết gì"*.
+
+| Cần gì | Dùng |
+|---|---|
+| Đếm/liệt kê callers, ai implement interface, quan hệ CALLS | `cypher` — **mạnh nhất** |
+| Blast radius khi sửa symbol | `impact` → **rồi Grep xác nhận** (§3) |
+| Đường đi từ A tới B | `trace` |
+| Import vòng | `check` (`--cycles`) |
+| Commit này ảnh hưởng flow nào | `detect_changes` |
+| Ngữ cảnh 1 symbol cụ thể | `context` (dùng `uid`, §2) |
+| Tra tên/định nghĩa đơn lẻ, string literal, field DTO | **Grep / Glob** |
+| Nội dung logic (rule tính tiền, thuật toán) | **Read** |
+| Tìm theo ngữ nghĩa mơ hồ | **semantic search của Cursor** — `query` chỉ là BM25, không semantic |
+
+## 2. Ràng buộc khi gọi tool
+
+- **Luôn truyền `repo: "megawin"`** — registry là global toàn máy.
+- **Symbol trùng tên → dùng `uid` hoặc `file_path`.** Repo có 7 game song song nên mọi tên use-case
+  trùng 7 lần (`CalculateFinancialsUseCase`, `SettleDrawUseCase`, `PlaceBetUseCase`, …). Gọi bằng
+  `name` trần chỉ nhận `status: "ambiguous"` — mất một lượt tool call.
+  Format: `Class:packages/game-keno-application/src/use-cases/settle/calculate-financials.ts:CalculateFinancialsUseCase`
+- **`include_content` để TẮT.** Lấy `filePath` + `line` từ graph rồi Read đúng đoạn — rẻ hơn nhiều.
+- **Không gọi 5 tool này** (đã test, trả về rỗng trên repo này): `rename`, `shape_check`,
+  `api_impact`, `explain`, `pdg_query`.
+- **Nếu namespace không khả dụng → NÓI RÕ với user**, đừng lặng lẽ fallback sang Grep. User cần biết
+  kết luận đang thiếu tầng graph. Cách sửa: xem notes §1.
+
+## 3. Graph là **lower-bound** — bắt buộc xác nhận lại
+
+`impact` trả `"epistemic": "lower-bound"`: con số luôn là **sàn, không phải trần**.
+Kết quả rỗng / `risk: "UNKNOWN"` / `impactedCount: 0` **KHÔNG** nghĩa là "không ai dùng" — nghĩa là
+"graph không truy được".
+
+**Đọc `boundaries` và `causes` TRƯỚC khi đọc `risk`.** Repo này có `dispatchBoundary: 598` (pattern
+`extends UseCase<In, Out>` là pattern chủ đạo) → `risk: "LOW"` thường không đáng tin.
+
+**PHẢI chạy quy trình dưới đây trước khi sửa signature/behavior của bất kỳ symbol dùng chung**
+(export khỏi file, method public trong use-case/repo/entity, type dùng ≥2 nơi) — không chỉ khi đã
+chủ động gọi `impact`. Dừng ở "symbol nhỏ, chắc không ai dùng" mà không Grep là cách miss caller
+phổ biến nhất trên repo này, vì đúng những base-class/DI pattern phổ biến nhất lại là vùng graph mù.
+
+Quy trình: **graph thu hẹp ứng viên → Grep xác nhận → Read chốt logic.** Không kết luận ở bước 1.
+
+### Vùng graph MÙ — bỏ qua graph, dùng Grep luôn
+
+`extends UseCase<…>` gọi qua base class · field trong DTO/entity/`docPath` (177 property site không
+resolve) · Next.js App Router (`page.tsx`, `route.ts`, Server Action) · Zod schema ↔ handler ↔ DTO ·
+`player-sdk` ↔ backend DTO (2 phía không compile cùng nhau) · string literal / collection name /
+`as const` value · Mongo pipeline / dot-path.
+
+`route_map` liệt kê đúng 347 route nhưng `consumers`/`flows` **rỗng ở cả 347** — "component nào gọi
+route này" phải Grep. Nó cũng chỉ khớp path **backoffice** (`/api/…`), không có route `api-player`.
+
+## 4. Không dùng GitNexus thay các tool sẵn có
+
+| Việc | Dùng |
+|---|---|
+| Đổi tên symbol | **TypeScript rename của IDE** (`tsc` là nguồn chân lý) |
+| Tìm lỗi type | `pnpm check-types` |
+| Lint / format | `pnpm lint` (Biome) |
+| Enforce circular import | Biome `suspicious/noImportCycles` (`check --cycles` chỉ để khảo sát) |
+
+**Code tài chính** (`settle`, `payout`, `wallet`, `financial`, `commission`): **tuyệt đối không** dùng
+`impact` làm bằng chứng duy nhất. Đọc code + test.
+
+## 5. Index tươi
+
+`detect_changes` và `impact` map git diff vào graph — index cũ cho kết quả lệch âm thầm.
+
+`.husky/post-commit` tự sync sau mỗi commit → ngày thường **không cần làm gì**. Graph chỉ mù với code
+**chưa commit**; khi cần, bảo user chạy `pnpm graph:sync` (~9s).
+
+**Agent KHÔNG tự chạy `analyze`/`--watch`** (tiến trình thường trú ~2.25GB RAM, có thể chết âm thầm).
+Index cũ → báo user, đừng tự sửa.
+
+## 6. Báo cáo kết quả
+
+Nói rõ **kết luận nào từ graph, kết luận nào từ đọc code**. Không trộn lẫn. Nếu index cũ hoặc kết quả
+graph rỗng, nêu tường minh thay vì im lặng.
+
+## 7. Hook tự động bù — 3 tầng đã cài, KHÔNG bỏ qua như trước
+
+`.cursor/hooks.json` + `.cursor/hooks/*.py` (đã commit) tự làm 3 việc mà rule không làm được:
+
+| Tầng | Khi nào chạy | Nó tự làm gì |
+|---|---|---|
+| 1 | sau **mọi** `Grep` có pattern là identifier sạch | Chạy `gitnexus augment`, đính kèm `Calls:`/`Called by:` vào kết quả Grep |
+| 2 | trước **mọi** `Task` (trừ browser-use/bugbot/security-review/cursor-guide/ci-investigator) | Chèn bảng routing GitNexus vào prompt subagent |
+| 3 | sau khi gọi `impact`/`cypher`/`context`/`trace`/`query`/`route_map`/`detect_changes` | Nhắc lower-bound + quy trình verify (throttle 15 phút) |
+
+**Hệ quả cho agent chính:**
+
+- **Không cần** tự chạy `impact`/`cypher` trước khi delegate cho subagent nữa — Tầng 2 đã chèn
+  routing. Vẫn **nên** nhúng kết quả graph vào prompt khi đã có sẵn (tiết kiệm 1 lượt cho subagent).
+- Thấy block `[GitNexus graph]` xuất hiện sau `Grep` → đó là **hook**, không phải kết quả Grep.
+  Nó là lower-bound (§3): danh sách symbol đó **không** thay được việc đọc kết quả Grep.
+- Thấy block `[GitNexus] Nhắc trước khi kết luận` → chưa Grep xác nhận thì chưa kết luận.
+
+**Bằng chứng vì sao 3 tầng này cần thiết (đo 2026-09-08):** Cursor lazy-load MCP tool schema —
+agent chỉ nhận *tên* tool GitNexus, description nằm trên disk; `Grep`/`Read` thì có full description
+sẵn trong system prompt → luôn rẻ hơn. GitNexus cũng **không** cấp `instructions` qua MCP
+(`initialize` response không có field đó; `INSTRUCTIONS.md` rỗng). Vì vậy rule đơn thuần không đủ:
+lỗi không phải "agent quên" mà là "agent **skip**". Chi tiết + bảng đo: notes §11.
+
+**Subagent vẫn KHÔNG kế thừa rule này** (kiểm chứng 2026-09-07: đọc transcript JSONL của 1 subagent
+`explore`, đếm `always_applied` / `AGENTS.md` / `CLAUDE.md` / `dynamic_tool_catalog` → **cả 4 = 0**).
+Tầng 2 vá lỗ đó ở tầng tool-call. Nếu cần giao việc graph nặng cho subagent, vẫn **chèn thẳng câu
+lệnh cụ thể** (namespace `project-0-megawin-gitnexus`, tên tool, `uid`, `repo: "megawin"`) —
+đừng viết mơ hồ "dùng GitNexus nếu cần".
+
+**Kiểm tra hook còn sống:** `GITNEXUS_HOOK_DEBUG=1` rồi xem stderr, hoặc chạy tay:
+`echo '{"tool_name":"Grep","tool_input":{"pattern":"upsertGameDaily"},"cwd":"'$PWD'"}' | .cursor/hooks/gitnexus-augment-grep.py`

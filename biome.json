@@ -14,7 +14,16 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/dist", "!**/.next", "!**/.turbo", "!**/.serverless", "!**/coverage", "!**/*.tsbuildinfo"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.next",
+      "!**/.turbo",
+      "!**/.serverless",
+      "!**/coverage",
+      "!**/*.tsbuildinfo",
+      "!.cursor/skills/**"
+    ]
   },
   "assist": {
     "enabled": true,

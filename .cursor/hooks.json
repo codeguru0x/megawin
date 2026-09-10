@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "Grep",
+        "command": ".cursor/hooks/gitnexus-augment-grep.py",
+        "timeout": 12
+      },
+      {
+        "matcher": "CallDynamicTool|MCP:impact|MCP:cypher|MCP:context|MCP:trace|MCP:query|MCP:route_map|MCP:detect_changes",
+        "command": ".cursor/hooks/gitnexus-verify-reminder.py",
+        "timeout": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "matcher": "Task",
+        "command": ".cursor/hooks/gitnexus-task-routing.py",
+        "timeout": 5
+      }
+    ]
+  }
+}

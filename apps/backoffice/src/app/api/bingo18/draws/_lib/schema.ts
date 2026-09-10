@@ -1,5 +1,6 @@
 import { BINGO18_CREATE_DRAW_BATCH_MAX } from "@megawin/game-bingo18/schemas";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
+import { BULK_MAX_DRAWS } from "@megawin/game-core-application/use-cases/bulk-draw-action/limits";
 import { z } from "zod";
 
 export const createDrawSchema = z.object({
@@ -42,4 +43,21 @@ export const listDrawsQuerySchema = z.object({
   toDate: z.iso.date("toDate phải là YYYY-MM-DD.").optional(),
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+// ─────────────────────────────────────────────
+// Bulk draw actions — settle / close-sales / open-sales (Ops Hub)
+// ─────────────────────────────────────────────
+
+/**
+ * Dùng chung cho `bulk-settle`, `bulk-close-sales`, `bulk-open-sales` — chỉ cần danh sách kỳ.
+ *
+ * `.max(BULK_MAX_DRAWS)` chặn trần ở TẦNG NÀY → use-case KHÔNG check lại.
+ * KHÔNG có bulk-void cho Bingo18 Hub (plan p1-04 §6.4).
+ */
+export const bulkDrawIdsSchema = z.object({
+  drawIds: z
+    .array(z.string().min(1))
+    .min(1, "Cần ít nhất 1 kỳ.")
+    .max(BULK_MAX_DRAWS, `Tối đa ${BULK_MAX_DRAWS} kỳ mỗi lần bulk.`),
 });

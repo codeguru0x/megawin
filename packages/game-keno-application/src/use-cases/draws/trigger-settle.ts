@@ -26,6 +26,15 @@ import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
  * Idempotent: staff nhấn lại bao nhiêu lần cũng an toàn.
  * Nếu SF đã đang chạy (cùng deterministic name), AWS ném `ExecutionAlreadyExists`
  * → use case bắt lỗi đó và coi như thành công.
+ *
+ * KHÔNG có guard thứ tự kỳ (khác Lotto535/Mega645/Power655): Keno không có jackpot
+ * rollover nên giá trị kỳ T không phụ thuộc kỳ T-1 — prize table cố định, payout cap
+ * tính theo từng kỳ, rollup daily re-aggregate toàn bộ theo financialDate (CAS trên
+ * `version`, xem `SystemPublishSettleDailyUseCase`). Nhiều kỳ settle SONG SONG là hợp
+ * lệ và cần thiết (~119 kỳ/ngày với `drawIntervalMinutes = 8`; 1 kỳ tắc từng làm 112
+ * kỳ sau đó không settle được — xem `keno-bingo18-sequential-settle-guard.analysis.md`).
+ * Chống double-trigger vẫn đủ 3 lớp: CAS status published→settling, deterministic SFN
+ * execution name, và `settledAt` high-water mark.
  */
 export class TriggerSettleUseCase extends UseCase<TriggerSettleInput, TriggerSettleOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -45,18 +54,6 @@ export class TriggerSettleUseCase extends UseCase<TriggerSettleInput, TriggerSet
     // status về Published nhưng phải đi luồng resettle, không phải settle lần đầu.
     if (draw.settledAt) {
       throw new AppException("DRAW_ALREADY_SETTLED", `Không thể kết sổ – kỳ quay ${input.drawId} đã được kết sổ rồi.`);
-    }
-
-    // Guard thứ tự kết sổ: phải settle TUẦN TỰ theo thời gian. Nếu còn kỳ trước
-    // đó (drawId < kỳ này) CHƯA HOÀN THÀNH (chưa settled và chưa void) → chặn,
-    // bắt buộc hoàn tất kỳ trước rồi mới kết sổ kỳ này. Tránh trả thưởng/đối soát
-    // sai thứ tự thời gian (không thể kết sổ kỳ chiều khi kỳ sáng còn dở).
-    const unfinishedPrior = await this.drawRepo.findUnfinishedDrawBefore(input.drawId);
-    if (unfinishedPrior) {
-      throw new AppException(
-        "DRAW_SETTLE_ORDER",
-        `Không thể kết sổ – kỳ quay ${unfinishedPrior.drawId} trước đó chưa hoàn thành. Phải kết sổ hoặc huỷ kỳ trước theo thứ tự.`,
-      );
     }
 
     // Chỉ kết sổ được khi đang ở Published (lần đầu) hoặc Settling (retry
