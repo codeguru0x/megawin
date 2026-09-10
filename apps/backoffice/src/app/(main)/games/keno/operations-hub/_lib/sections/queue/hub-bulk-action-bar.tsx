@@ -3,9 +3,18 @@
 /**
  * Ops Hub — Bulk Action Bar (guideline §5.6, plan §8, p1-09 §12)
  *
- * `sticky bottom-0`, chỉ hiện khi `validSelection.size > 0` — 4 nút tương ứng 4 bulk action,
+ * `sticky bottom-0`, chỉ hiện khi `validSelection.size > 0` — 3 nút tương ứng 3 bulk action,
  * mỗi nút TỰ TÍNH số dòng THỰC SỰ sẽ bị tác động (không phải tổng số đã chọn — plan §8.1) và
  * disable khi 0 dòng đủ điều kiện, kèm tooltip nói rõ vì sao.
+ *
+ * Màu / icon nút khớp `getNextAction` (`draw-next-action.ts`) và expand panel: Đóng bán =
+ * amber filled; Kết sổ / Mở bán = Button default (primary). Thanh bar dùng `bg-card` + viền
+ * primary rõ hơn bản cũ `bg-background/95` (dễ lẫn đáy bảng).
+ *
+ * Layout: nút action + clear nằm TRÁI (sát cột checkbox — giảm quãng chuột sau khi chọn);
+ * mô tả "N kỳ đã chọn · doanh thu" nằm phải (chỉ đọc, không cần gần vùng chọn).
+ * Nút không áp dụng được cho selection hiện tại (`drawIds.length === 0`) → ẨN hẳn, không
+ * disable xám (gọn bar; tránh tooltip “vì sao disabled” khi staff đã biết context từ tab).
  *
  * KHÔNG còn trần chọn (p1-09 §12, đảo quyết định plan §8.3 cũ): trước đây vượt `BULK_MAX_DRAWS`
  * disable TOÀN BỘ nút — chặn staff xử lý > 50 kỳ dù nhu cầu thật (vd đóng bán 150 kỳ cuối
@@ -22,23 +31,27 @@ import { useMemo, useState } from "react";
 // vào Client Component này và vỡ build ("Can't resolve 'child_process'").
 import { BULK_MAX_DRAWS } from "@megawin/game-core-application/use-cases/bulk-draw-action/limits";
 import { formatNumber } from "@megawin/shared/utils";
-import { Ban, PlayCircle, RotateCcw, X } from "lucide-react";
+import { ChevronRight, Lock, Unlock, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 import type { DerivedRow } from "../../hub-types";
 import { useHubContext } from "../../use-hub-context";
 import { BulkConfirmDialog, type BulkDialogActionKind } from "./bulk-confirm-dialog";
-import { actionUnavailableReason, partitionByAction } from "./partition-by-action";
+import { partitionByAction } from "./partition-by-action";
 import { BulkActionKind } from "./queue-types";
 import { useBulkAction, useBulkBatchAction } from "./use-bulk-mutations";
 
 interface ActionButtonDef {
   kind: BulkDialogActionKind;
   label: string;
-  icon: typeof RotateCcw;
+  icon: typeof Lock;
   drawIds: string[];
+  /**
+   * Màu nút — khớp `getNextAction` / expand panel. Rỗng = `variant="default"` (primary).
+   */
+  className: string;
 }
 
 export function HubBulkActionBar() {
@@ -75,10 +88,29 @@ export function HubBulkActionBar() {
   // KHÔNG có nút "Huỷ" ở đây (plan §B5.2 — bạn yêu cầu bỏ khỏi thao tác nhanh). VOID chỉ còn
   // ở expand panel (`hub-expand-panel.tsx`), single-row, dialog xác nhận 2 lớp (gõ drawId +
   // checkbox) — hành động không thể hoàn tác không được đặt cạnh 3 nút bulk thường dùng.
+  // Icon + màu khớp `getNextAction` / expand panel (không dùng `variant="secondary"` xám nhạt).
   const buttons: ActionButtonDef[] = [
-    { kind: BulkActionKind.Settle, label: "Kết sổ", icon: RotateCcw, drawIds: partition.settlable },
-    { kind: BulkActionKind.CloseSales, label: "Đóng bán", icon: Ban, drawIds: partition.closable },
-    { kind: BulkActionKind.OpenSales, label: "Mở bán", icon: PlayCircle, drawIds: partition.openable },
+    {
+      kind: BulkActionKind.Settle,
+      label: "Kết sổ",
+      icon: ChevronRight,
+      drawIds: partition.settlable,
+      className: "",
+    },
+    {
+      kind: BulkActionKind.CloseSales,
+      label: "Đóng bán",
+      icon: Lock,
+      drawIds: partition.closable,
+      className: "bg-amber-600 text-white hover:bg-amber-700",
+    },
+    {
+      kind: BulkActionKind.OpenSales,
+      label: "Mở bán",
+      icon: Unlock,
+      drawIds: partition.openable,
+      className: "",
+    },
   ];
 
   function mutationForKind(kind: BulkDialogActionKind) {
@@ -154,50 +186,40 @@ export function HubBulkActionBar() {
 
   return (
     <>
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 border-t bg-background/95 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="size-7" onClick={actions.clearSelection} aria-label="Bỏ chọn">
+      {/* Thanh nổi rõ hơn `bg-background/95` cũ — card đặc + viền primary + bóng đậm hơn để
+          không lẫn với đáy bảng khi chọn hàng trăm kỳ. */}
+      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 border-primary/30 border-t-2 bg-card px-4 py-3 shadow-[0_-8px_28px_rgba(0,0,0,0.12)] dark:border-primary/40 dark:shadow-[0_-8px_28px_rgba(0,0,0,0.5)]">
+        {/* Trái: clear + action — sát cột checkbox để chọn xong bấm ngay, không kéo chuột ngang bảng. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <Button variant="ghost" size="icon" className="size-7 shrink-0" onClick={actions.clearSelection} aria-label="Bỏ chọn">
             <X className="size-4" />
           </Button>
-          <div className="text-sm">
-            <span className="font-semibold tabular-nums">{validSelection.size} kỳ</span>{" "}
-            <span className="text-muted-foreground">đã chọn</span>
-            {totalRevenue > 0 ? (
-              <span className="ml-1.5 text-muted-foreground tabular-nums">· {formatNumber(totalRevenue)}</span>
-            ) : null}
-          </div>
+          {buttons
+            .filter((btn) => btn.drawIds.length > 0)
+            .map((btn) => {
+              const chunkCount = Math.ceil(btn.drawIds.length / BULK_MAX_DRAWS);
+              return (
+                <Button
+                  key={btn.kind}
+                  size="sm"
+                  variant="default"
+                  className={cn("font-medium", btn.className)}
+                  onClick={() => handleOpenDialog(btn.kind)}
+                >
+                  <btn.icon className="mr-1.5 size-3.5" />
+                  {btn.label} ({btn.drawIds.length}
+                  {chunkCount > 1 ? ` · ${chunkCount} lô` : ""})
+                </Button>
+              );
+            })}
         </div>
 
-        <div className="flex items-center gap-2">
-          {buttons.map((btn) => {
-            const disabled = btn.drawIds.length === 0;
-            const sampleRow = selectedRows[0];
-            const tooltipReason =
-              btn.drawIds.length === 0 && sampleRow ? actionUnavailableReason(sampleRow, btn.kind, nowMs) : null;
-            const chunkCount = Math.ceil(btn.drawIds.length / BULK_MAX_DRAWS);
-            const button = (
-              <Button
-                key={btn.kind}
-                size="sm"
-                variant="secondary"
-                disabled={disabled}
-                onClick={() => handleOpenDialog(btn.kind)}
-              >
-                <btn.icon className="mr-1.5 size-3.5" />
-                {btn.label}
-                {btn.drawIds.length > 0 ? ` (${btn.drawIds.length}${chunkCount > 1 ? ` · ${chunkCount} lô` : ""})` : ""}
-              </Button>
-            );
-            if (!disabled || !tooltipReason) {
-              return button;
-            }
-            return (
-              <Tooltip key={btn.kind}>
-                <TooltipTrigger asChild>{button}</TooltipTrigger>
-                <TooltipContent>{tooltipReason}</TooltipContent>
-              </Tooltip>
-            );
-          })}
+        <div className="shrink-0 text-right text-sm">
+          <span className="font-semibold tabular-nums">{validSelection.size} kỳ</span>{" "}
+          <span className="text-muted-foreground">đã chọn</span>
+          {totalRevenue > 0 ? (
+            <span className="ml-1.5 text-muted-foreground tabular-nums">· {formatNumber(totalRevenue)}</span>
+          ) : null}
         </div>
       </div>
 
