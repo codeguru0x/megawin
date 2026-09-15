@@ -99,10 +99,7 @@
     },
     "./browser": "./dist/megawin-player-sdk-browser.global.js"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ],
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -118,19 +115,15 @@
     "upload:major": "bash scripts/upload-s3.sh major",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "megawin",
-    "sdk",
-    "player"
-  ],
+  "keywords": ["megawin", "sdk", "player"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.9.4",
+    "@types/node": "^25.9.6",
     "tsup": "^8.5.1",
     "typedoc": "^0.28.19",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   }
 }

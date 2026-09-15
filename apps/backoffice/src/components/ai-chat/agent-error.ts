@@ -43,6 +43,21 @@ const AgentErrorKind = {
    * - Log ở mức `warn` (không `error`) và chỉ một dòng — không dump stack cho một sự kiện dự kiến.
    */
   Session: "session",
+  /**
+   * Phiên hội thoại (eve session) phía máy chủ đã bị thu hồi — KHÁC với {@link Session} (đó là
+   * đăng nhập better-auth hết hạn).
+   *
+   * Xảy ra thật 15/09: staff mở lại panel AI sau một thời gian dài không dùng, gửi tiếp đúng thread
+   * cũ. Client vẫn giữ `sessionId` cũ trong `localStorage` (`thread-storage.ts`), nhưng phía server
+   * eve đã tự thu hồi session đó do quá lâu không hoạt động. `ClientSession.send()` tự retry 3 lần
+   * khi gặp mã `session_not_active` rồi mới throw `ClientError` với message nguyên văn tiếng Anh
+   * "The session is no longer active." (xem `eve/dist/src/client/session.js`).
+   *
+   * "Tải lại trang" (recovery của {@link Session}) KHÔNG sửa được ca này: registry trong
+   * `localStorage` vẫn trỏ về đúng `sessionId` đã bị thu hồi đó, reload xong gửi lại vẫn 409. Chỉ
+   * có "Bắt đầu chat mới" (`newChat()` — tạo thread mới, `sessionId` mới) mới thoát được.
+   */
+  SessionExpired: "session-expired",
   /** Không tới được dịch vụ AI (fetch failed, ECONNREFUSED…). */
   Network: "network",
   /** Quá thời gian chờ hoặc request bị abort. */
@@ -81,6 +96,13 @@ const ERROR_HINTS: readonly { kind: AgentErrorKind; match: readonly string[]; me
     message: "Không gửi được yêu cầu. Hãy tải lại trang rồi thử lại.",
   },
   {
+    kind: AgentErrorKind.SessionExpired,
+    // "session_not_active" là `code` của `ClientError` (409); "no longer active" là `message` thô —
+    // khớp cả hai vì tuỳ tầng ném lỗi mà field nào lọt vào `error.message` (xem JSDoc SessionExpired).
+    match: ["session_not_active", "no longer active"],
+    message: "Cuộc hội thoại này đã hết hiệu lực do không dùng trong thời gian dài. Hãy bắt đầu chat mới.",
+  },
+  {
     kind: AgentErrorKind.Overloaded,
     match: ["rate limit", "429", "quota", "overloaded"],
     message: "Hệ thống AI đang quá tải. Chờ một lát rồi thử lại.",
@@ -109,15 +131,21 @@ const loggedErrors = new WeakSet<Error>();
 export const AgentErrorRecovery = {
   /** Gửi lại đúng nội dung vừa gửi — hợp lý khi lỗi mang tính tạm thời. */
   Retry: "retry",
-  /** Tải lại trang — lối ra duy nhất khi phiên làm việc phía máy chủ đã hết (`Session`). */
+  /** Tải lại trang — lối ra duy nhất khi phiên đăng nhập better-auth đã hết (`Session`). */
   Reload: "reload",
+  /**
+   * Bắt đầu thread mới — lối ra duy nhất khi phiên hội thoại eve đã bị thu hồi (`SessionExpired`).
+   * "Tải lại trang" KHÔNG đủ ở đây: registry `localStorage` vẫn giữ đúng `sessionId` đã chết, phải
+   * tạo `sessionId` mới thật (xem JSDoc `AgentErrorKind.SessionExpired`).
+   */
+  NewChat: "new-chat",
 } as const;
 export type AgentErrorRecovery = (typeof AgentErrorRecovery)[keyof typeof AgentErrorRecovery];
 
 export interface AgentErrorDisplay {
   /** Câu tiếng Việt hiện cho staff — luôn có, không bao giờ là chuỗi kỹ thuật. */
   message: string;
-  /** Chi tiết kỹ thuật đã rút gọn — CHỈ ở `development`, và KHÔNG có với nhóm `Session`. */
+  /** Chi tiết kỹ thuật đã rút gọn — CHỈ ở `development`, và KHÔNG có với nhóm `Session`/`SessionExpired`. */
   devDetail: string | undefined;
   /** Nút nào hiện trên banner. */
   recovery: AgentErrorRecovery;
@@ -144,19 +172,32 @@ export function describeAgentError(error: Error | undefined): AgentErrorDisplay 
     if (kind === AgentErrorKind.Session) {
       // Sự kiện dự kiến, không phải bug: một dòng warn là đủ để dev hiểu vì sao chat dừng, không
       // dump message thô/stack của runtime.
-      logWarn("ai-chat", "phiên làm việc hết hiệu lực — staff cần tải lại trang và đăng nhập lại");
+      logWarn("ai-chat", "phiên làm việc hết hiệu lực — bạn cần tải lại trang và đăng nhập lại");
+    } else if (kind === AgentErrorKind.SessionExpired) {
+      // Cũng là vòng đời dự kiến (session eve tự thu hồi sau thời gian dài không dùng), không phải
+      // bug — cùng mức độ log như `Session`, chỉ khác hành động phục hồi.
+      logWarn("ai-chat", "phiên hội thoại eve đã bị thu hồi — bạn cần bắt đầu chat mới");
     } else {
       logError("ai-chat", error);
     }
   }
 
+  const recovery =
+    kind === AgentErrorKind.Session
+      ? AgentErrorRecovery.Reload
+      : kind === AgentErrorKind.SessionExpired
+        ? AgentErrorRecovery.NewChat
+        : AgentErrorRecovery.Retry;
+
   return {
     message: hint?.message ?? GENERIC_MESSAGE,
     devDetail:
-      kind !== AgentErrorKind.Session && env.NEXT_PUBLIC_APP_ENV === "development"
+      kind !== AgentErrorKind.Session &&
+      kind !== AgentErrorKind.SessionExpired &&
+      env.NEXT_PUBLIC_APP_ENV === "development"
         ? condenseDetail(error.message)
         : undefined,
-    recovery: kind === AgentErrorKind.Session ? AgentErrorRecovery.Reload : AgentErrorRecovery.Retry,
+    recovery,
   };
 }
 

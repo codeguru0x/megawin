@@ -27,6 +27,12 @@ import {
   HEATMAP_CELL_PT,
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
+import {
+  DATA_HOVER_SURFACE_CLASS,
+  NumberHeatmapCellDetail,
+  NumberHeatmapHoverLayer,
+  useNumberHeatmapHover,
+} from "@/components/games/shared/number-heatmap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -45,7 +51,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
@@ -163,29 +169,21 @@ export function NumbersWithTooltip({ numbers, variant = "soft" }: { numbers: str
         <NumberBadge key={n} num={n} variant={variant} />
       ))}
       {needsCollapse && (
-        <TooltipProvider delayDuration={100}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="inline-flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 text-muted-foreground text-xs font-semibold tabular-nums px-1.5 h-6 shrink-0 cursor-default transition-colors">
-                +{hidden.length}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              sideOffset={6}
-              showArrow={false}
-              avoidCollisions
-              className="bg-popover text-popover-foreground border border-border shadow-lg rounded-xl px-3 py-2.5"
-            >
-              <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
-              <div className="flex items-center gap-1 flex-wrap max-w-50">
-                {numbers.map((n) => (
-                  <NumberBadge key={n} num={n} variant={variant} />
-                ))}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <HoverCard openDelay={100} closeDelay={100}>
+          <HoverCardTrigger asChild>
+            <span className="inline-flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 text-muted-foreground text-xs font-semibold tabular-nums px-1.5 h-6 shrink-0 cursor-default transition-colors">
+              +{hidden.length}
+            </span>
+          </HoverCardTrigger>
+          <HoverCardContent side="top" sideOffset={6} className={cn(DATA_HOVER_SURFACE_CLASS, "w-auto p-3")}>
+            <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
+            <div className="flex items-center gap-1 flex-wrap max-w-50">
+              {numbers.map((n) => (
+                <NumberBadge key={n} num={n} variant={variant} />
+              ))}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       )}
     </div>
   );
@@ -202,6 +200,8 @@ function NumberCell({
   heatLevel,
   selected,
   onToggle,
+  onHoverEnter,
+  onHoverLeave,
 }: {
   n: NumberFreqItem;
   col: number;
@@ -212,6 +212,8 @@ function NumberCell({
   /** Đang được chọn — ô hiện ring red nổi bật. */
   selected: boolean;
   onToggle: (num: string) => void;
+  onHoverEnter: (el: HTMLElement, item: NumberFreqItem) => void;
+  onHoverLeave: () => void;
 }) {
   const isEmpty = n.sets === 0;
   const isLastCol = col === totalCols - 1;
@@ -231,59 +233,36 @@ function NumberCell({
   );
 
   return (
-    <TooltipProvider delayDuration={150}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {/* Bảng số LUÔN cho chọn → <button> (a11y: aria-pressed + keyboard native). */}
-          <button type="button" className={cellClass} onClick={() => onToggle(n.number)} aria-pressed={selected}>
-            <span className="absolute top-1 left-1">
-              <NumberBadge num={n.number} muted={isEmpty && !selected} heatLevel={heatLevel} selected={selected} />
+    // Bảng số LUÔN cho chọn → <button> (a11y: aria-pressed + keyboard native).
+    <button
+      type="button"
+      className={cellClass}
+      onClick={() => onToggle(n.number)}
+      aria-pressed={selected}
+      onPointerEnter={(e) => onHoverEnter(e.currentTarget, n)}
+      onPointerLeave={onHoverLeave}
+      onFocus={(e) => onHoverEnter(e.currentTarget, n)}
+      onBlur={onHoverLeave}
+    >
+      <span className="absolute top-1 left-1">
+        <NumberBadge num={n.number} muted={isEmpty && !selected} heatLevel={heatLevel} selected={selected} />
+      </span>
+      <div className="flex flex-col items-center gap-0.5">
+        {isEmpty ? (
+          <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
+        ) : (
+          <>
+            {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
+            <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
+              {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
             </span>
-            <div className="flex flex-col items-center gap-0.5">
-              {isEmpty ? (
-                <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
-              ) : (
-                <>
-                  {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
-                  <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
-                    {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
-                  </span>
-                  <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
-                    {formatNumber(n.sets)}x
-                  </span>
-                </>
-              )}
-            </div>
-          </button>
-        </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          sideOffset={6}
-          showArrow={false}
-          avoidCollisions
-          className="bg-popover text-popover-foreground border border-border shadow-lg rounded-xl px-3 py-2.5"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <NumberBadge num={n.number} muted={isEmpty} />
-            <span className="text-xs font-semibold">Số {n.number}</span>
-          </div>
-          {isEmpty ? (
-            <p className="text-xs text-muted-foreground">Chưa có cược</p>
-          ) : (
-            <div className="space-y-1 min-w-37">
-              <div className="flex justify-between gap-8">
-                <span className="text-xs text-muted-foreground">Số bộ cược chứa số</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.sets)}</span>
-              </div>
-              <div className="flex justify-between gap-8">
-                <span className="text-xs text-muted-foreground">Tổng cược</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.amount)}</span>
-              </div>
-            </div>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+            <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
+              {formatNumber(n.sets)}x
+            </span>
+          </>
+        )}
+      </div>
+    </button>
   );
 }
 
@@ -309,6 +288,7 @@ function MainGrid({
   selected: Set<string>;
   onToggle: (num: string) => void;
 }) {
+  const { hovered, onCellEnter, onCellLeave } = useNumberHeatmapHover<NumberFreqItem>();
   const byNum = new Map(numbers.map((n) => [n.number, n]));
   const totalSets = numbers.reduce((a, n) => a + n.sets, 0);
   const totalAmount = numbers.reduce((a, n) => a + n.amount, 0);
@@ -359,10 +339,17 @@ function MainGrid({
               heatLevel={getHeatLevel(n.amount, maxAmount)}
               selected={selected.has(num)}
               onToggle={onToggle}
+              onHoverEnter={onCellEnter}
+              onHoverLeave={onCellLeave}
             />
           );
         })}
       </div>
+      <NumberHeatmapHoverLayer hovered={hovered}>
+        {(item) => (
+          <NumberHeatmapCellDetail item={item} badge={<NumberBadge num={item.number} muted={item.sets === 0} />} />
+        )}
+      </NumberHeatmapHoverLayer>
       {isSparse && (
         <p className="text-[11px] text-muted-foreground/60 italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.

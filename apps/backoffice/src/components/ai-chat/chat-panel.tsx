@@ -294,7 +294,14 @@ export function ChatPanel({ header }: { header: ReactNode }) {
             </div>
           )}
           <div className="pointer-events-auto">
-            <AiComposer error={error} onSend={send} onStop={stop} ref={composerRef} status={status} />
+            <AiComposer
+              error={error}
+              onNewChat={newChat}
+              onSend={send}
+              onStop={stop}
+              ref={composerRef}
+              status={status}
+            />
           </div>
         </div>
       </div>

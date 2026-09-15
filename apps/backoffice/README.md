@@ -64,7 +64,6 @@ Quản trị viên hệ thống MegaWin — quản lý toàn bộ game, tài kho
 | Zustand               | Client state management                |
 | Recharts              | Charts, báo cáo                        |
 | better-auth           | Authentication                         |
-| @dnd-kit              | Drag and drop                          |
 | Sonner                | Toast notifications                    |
 | cmdk                  | Command palette                        |
 

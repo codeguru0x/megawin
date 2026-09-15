@@ -65,24 +65,19 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": [
-    "megawin",
-    "lotto535",
-    "game",
-    "domain"
-  ],
+  "keywords": ["megawin", "lotto535", "game", "domain"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.9.4",
+    "@types/node": "^25.9.6",
     "typescript": "^6.0.3",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
   },
   "dependencies": {
     "@megawin/game-core": "workspace:*",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   }
 }

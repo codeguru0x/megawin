@@ -36,7 +36,7 @@ import { useEffect, useRef, useState } from "react";
 import { SparklesIcon } from "lucide-react";
 
 import { LiveDot } from "@/components/ai-elements/live-indicator";
-import { AI_ASSISTANT_NAME } from "@/config/app-config";
+import { AI_ASSISTANT_NAME } from "@/config/ai-config";
 
 const MS_IN_S = 1000;
 

@@ -61,9 +61,9 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.9.4",
+    "@types/node": "^25.9.6",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "*",
@@ -72,6 +72,6 @@
     "@aws-sdk/client-sqs": "*",
     "@megawin/shared": "workspace:*",
     "@middy/core": "^7.7.3",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   }
 }

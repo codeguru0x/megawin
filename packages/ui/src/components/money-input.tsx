@@ -2,9 +2,8 @@
 
 import * as React from "react";
 
+import { cn } from "cn";
 import { type NumberFormatValues, NumericFormat, type NumericFormatProps } from "react-number-format";
-
-import { cn } from "../lib/cn";
 
 export interface MoneyInputProps
   extends Omit<NumericFormatProps, "value" | "defaultValue" | "onValueChange" | "customInput"> {

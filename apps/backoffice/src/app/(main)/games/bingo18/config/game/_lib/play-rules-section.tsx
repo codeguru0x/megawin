@@ -9,11 +9,11 @@ import { AlertTriangle, HelpCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { TimeInput } from "@/components/inputs/time-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
-import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 

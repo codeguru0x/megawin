@@ -12,6 +12,8 @@
 import type { ClientSessionState, MessageStreamEvent } from "eve/client";
 import { isCurrentTurnBoundaryEvent } from "eve/client";
 
+import { AI_SESSION_ABSOLUTE_LIFETIME_MS } from "@/config/ai-config";
+
 export interface AiThread {
   /** uuid sinh ở client (`crypto.randomUUID()`) — KHÔNG phải `sessionId` của eve. */
   id: string;
@@ -57,6 +59,18 @@ const MAX_STORED_EVENTS_PER_THREAD = 500;
 const MAX_THREADS = 30;
 /** Độ dài title tối đa — 60 ký tự đầu message user đầu tiên (p1-01 §2.4). */
 const TITLE_MAX_LENGTH = 60;
+
+/**
+ * Thread này CHẮC CHẮN đã quá tuổi sống của eve session (tính từ `createdAt`), không cần hỏi
+ * server. `false` cho thread chưa từng có session (`session === undefined` — chưa gửi lượt nào,
+ * chưa tồn tại session phía eve nên không có gì để hết hạn).
+ *
+ * Trần đời sống lấy từ {@link AI_SESSION_ABSOLUTE_LIFETIME_MS} — cùng hằng mà `agent/agent.ts`
+ * gắn vào `limits.sessionTimeoutMs`. Đổi số chỉ sửa 1 chỗ ở `src/config/ai-config.ts`.
+ */
+export function isThreadSessionExpired(thread: Pick<AiThread, "createdAt" | "session">): boolean {
+  return thread.session !== undefined && Date.now() - thread.createdAt >= AI_SESSION_ABSOLUTE_LIFETIME_MS;
+}
 
 function isAiThread(value: unknown): value is AiThread {
   if (typeof value !== "object" || value === null) {

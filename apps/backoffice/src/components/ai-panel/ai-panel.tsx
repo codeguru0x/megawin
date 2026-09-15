@@ -22,7 +22,7 @@ import { usePathname } from "next/navigation";
 import { PanelChatHeader } from "@/components/ai-chat/chat-header";
 import { ChatPanel } from "@/components/ai-chat/chat-panel";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/app-config";
+import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { AI_PANEL_MAX_WIDTH, AI_PANEL_MIN_WIDTH } from "@/lib/preferences/ai-panel";
 import { cn } from "@/lib/utils";
 

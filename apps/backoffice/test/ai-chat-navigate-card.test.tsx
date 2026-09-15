@@ -30,7 +30,7 @@ import type { EveDynamicToolPart } from "eve/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderNavigateTo } from "@/components/ai-chat/tool-renderers/navigate-tool-card";
-import { AI_FULL_PAGE_PATH } from "@/config/app-config";
+import { AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 import { collectAiPageContext, registerAiPageContext } from "@/lib/ai-page-context";
 import { buildNavHref, NavPage } from "@/lib/nav-registry";

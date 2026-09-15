@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRightIcon, SparklesIcon } from "lucide-react";
 
 import { ConversationEmptyState } from "@/components/ai-elements/conversation";
-import { AI_ASSISTANT_NAME } from "@/config/app-config";
+import { AI_ASSISTANT_NAME } from "@/config/ai-config";
 
 import { getRouteSuggestions } from "./route-registry";
 

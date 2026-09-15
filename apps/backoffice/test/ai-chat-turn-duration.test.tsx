@@ -32,7 +32,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AssistantHeader } from "@/components/ai-chat/assistant-header";
 import { ChatPanel } from "@/components/ai-chat/chat-panel";
-import { AI_ASSISTANT_NAME } from "@/config/app-config";
+import { AI_ASSISTANT_NAME } from "@/config/ai-config";
 
 /** Mốc bắt đầu lượt đầu tiên — số cố định để mọi phép trừ trong test là tường minh. */
 const TURN_1_STARTED_AT = 1_700_000_000_000;

@@ -13,20 +13,26 @@ import { STAFF_GUIDE_MANIFEST } from "@/app/(main)/guides/_lib/staff-manifest";
 import { useAiPanel } from "@/components/ai-panel/ai-panel-provider";
 import { Button } from "@/components/ui/button";
 import {
-  CommandDialog,
+  Command,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/app-config";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
 import { buildNavHref, NAV_REGISTRY, NavPage } from "@/lib/nav-registry";
 import { hasAnyRole } from "@/lib/roles";
+import { cn } from "@/lib/utils";
 import type { NavMainItem } from "@/navigation/sidebar/sidebar-items";
 import { operatorSidebarItems } from "@/navigation/sidebar/sidebar-items";
+
+/** Class list khớp `CommandDialog` registry — compose tay để truyền `filter` vào `Command`. */
+const COMMAND_PALETTE_CLASS =
+  "**:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5";
 
 interface SearchEntry {
   key: string;
@@ -361,45 +367,57 @@ export function SearchDialog() {
           <span className="text-xs">⌘</span>J
         </kbd>
       </Button>
-      <CommandDialog commandProps={{ filter: scorePaletteItem }} open={open} onOpenChange={handleOpenChange}>
-        <CommandInput onValueChange={setQuery} placeholder="Tìm trang, báo cáo, cấu hình…" value={query} />
-        <CommandList>
-          <NoPageMatchHint />
-          {/* Nhóm AI ĐẦU danh sách khi CHƯA gõ gì: lúc đó không có ý định tìm trang cụ thể, "Hỏi
-              Mira về trang này" là hành động hợp lý nhất để chọn sẵn (bấm ⌘J rồi Enter). */}
-          {askQuery === "" && askAiGroup}
-          {searchGroups.map((group, i) => (
-            <React.Fragment key={group.id}>
-              {i !== 0 && <CommandSeparator />}
-              <CommandGroup heading={group.label}>
-                {group.entries.map((entry) => (
-                  <CommandItem
-                    key={entry.key}
-                    className="py-1.5!"
-                    disabled={entry.comingSoon}
-                    onSelect={() => handleSelect(entry.url)}
-                  >
-                    {entry.icon && <entry.icon />}
-                    <span>{entry.title}</span>
-                    {entry.comingSoon && (
-                      <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">Soon</span>
-                    )}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </React.Fragment>
-          ))}
-          {/* Đang gõ ⇒ nhóm AI xuống CUỐI. Xem JSDoc `SearchDialog` mục "vị trí": cmdk 1.1.1 không
-              sort được group nên đây là cách duy nhất nhường quyền chọn mặc định cho trang khớp —
-              và khi không trang nào khớp, item AI là item duy nhất còn lại nên tự được chọn. */}
-          {askQuery !== "" && (
-            <>
-              <CommandSeparator />
-              {askAiGroup}
-            </>
-          )}
-        </CommandList>
-      </CommandDialog>
+      {/* Compose Dialog + Command (không dùng CommandDialog) để truyền `filter` — registry
+          CommandDialog không forward props xuống Command. Pattern: shadcn "Command inside Dialog". */}
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="overflow-hidden p-0" showCloseButton={false}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Tìm kiếm</DialogTitle>
+            <DialogDescription>Tìm trang, báo cáo, cấu hình…</DialogDescription>
+          </DialogHeader>
+          <Command filter={scorePaletteItem} className={cn(COMMAND_PALETTE_CLASS)}>
+            <CommandInput onValueChange={setQuery} placeholder="Tìm trang, báo cáo, cấu hình…" value={query} />
+            <CommandList>
+              <NoPageMatchHint />
+              {/* Nhóm AI ĐẦU danh sách khi CHƯA gõ gì: lúc đó không có ý định tìm trang cụ thể, "Hỏi
+                  Mira về trang này" là hành động hợp lý nhất để chọn sẵn (bấm ⌘J rồi Enter). */}
+              {askQuery === "" && askAiGroup}
+              {searchGroups.map((group, i) => (
+                <React.Fragment key={group.id}>
+                  {i !== 0 && <CommandSeparator />}
+                  <CommandGroup heading={group.label}>
+                    {group.entries.map((entry) => (
+                      <CommandItem
+                        key={entry.key}
+                        className="py-1.5!"
+                        disabled={entry.comingSoon}
+                        onSelect={() => handleSelect(entry.url)}
+                      >
+                        {entry.icon && <entry.icon />}
+                        <span>{entry.title}</span>
+                        {entry.comingSoon && (
+                          <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">
+                            Soon
+                          </span>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </React.Fragment>
+              ))}
+              {/* Đang gõ ⇒ nhóm AI xuống CUỐI. Xem JSDoc `SearchDialog` mục "vị trí": cmdk 1.1.1 không
+                  sort được group nên đây là cách duy nhất nhường quyền chọn mặc định cho trang khớp —
+                  và khi không trang nào khớp, item AI là item duy nhất còn lại nên tự được chọn. */}
+              {askQuery !== "" && (
+                <>
+                  <CommandSeparator />
+                  {askAiGroup}
+                </>
+              )}
+            </CommandList>
+          </Command>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

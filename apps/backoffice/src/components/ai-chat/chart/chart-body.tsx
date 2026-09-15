@@ -632,10 +632,11 @@ function PieChartBody({
         nameKey={model.x.dataKey}
         outerRadius={PIE_OUTER_RADIUS}
         paddingAngle={1}
-        shape={(shapeProps: PieSectorShapeProps, index: number) => (
+        // recharts ≥3.10: Pie `shape` callback nhận `index?: string | number` — không siết `number`.
+        shape={(shapeProps: PieSectorShapeProps, index?: string | number) => (
           <Sector
             {...shapeProps}
-            fill={rowFill(model, shapeProps.payload as ChartRow, index)}
+            fill={rowFill(model, shapeProps.payload as ChartRow, Number(index ?? 0))}
             stroke="var(--card)"
             strokeWidth={2}
           />

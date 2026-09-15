@@ -40,14 +40,14 @@
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
     "@middy/core": "^7.7.3",
-    "zod": "^4.5.4"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.9.4",
+    "@types/node": "^25.9.6",
     "serverless-offline": "^14.7.3",
     "typescript": "^6.0.3",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   }
 }

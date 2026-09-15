@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
+
+import { cn } from "cn";
 
 export interface TimeInputProps extends Omit<React.ComponentProps<"input">, "type" | "onChange"> {
   /** Giá trị dạng "HH:mm" */
@@ -10,7 +11,7 @@ export interface TimeInputProps extends Omit<React.ComponentProps<"input">, "typ
 }
 
 /**
- * Input chọn giờ dạng native `<input type="time">`.
+ * Input chọn giờ dạng native `<input type="time">` (local backoffice — **không** thuộc shadcn/ui).
  * Trả về giá trị theo format "HH:mm" — tương thích trực tiếp với Zod schema
  * và field data `drawTime` trên server.
  */

@@ -10,6 +10,8 @@
 
 import { defineAgent } from "eve";
 
+import { AI_SESSION_ABSOLUTE_LIFETIME_MS } from "@/config/ai-config";
+
 export default defineAgent({
   // `||` (không phải `??`): EVE_AGENT_MODEL có thể là chuỗi rỗng "" khi khai báo nhưng chưa
   // điền giá trị trong .env.local — `??` chỉ fallback với null/undefined, để lọt "" xuống
@@ -46,12 +48,14 @@ export default defineAgent({
     // thay vì hỏi người thật) — đỏ vì quota, không phải vì model chọn sai tool.
     maxInputTokensPerSession: 20_000_000,
     maxOutputTokensPerSession: 200_000,
+
+    // Trần tuyệt đối đời sống session — nguồn chân lý ở `AI_SESSION_ABSOLUTE_LIFETIME_MS`
+    // (`src/config/ai-config.ts`); client cùng import hằng đó để phát hiện hết hạn trước khi gửi.
+    sessionTimeoutMs: AI_SESSION_ABSOLUTE_LIFETIME_MS,
   },
 
   // System instructions nằm NGOÀI history nên compaction không cắt được phần đó, và eve còn cộng
   // envelope checkpoint vào ngưỡng kích hoạt. Hạ xuống 0.8 (default 0.9) để nén sớm hơn, tránh
   // turn điều tra nhiều bước bị cắt giữa chừng.
   compaction: { thresholdPercent: 0.8 },
-
-  
 });

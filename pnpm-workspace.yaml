@@ -11,16 +11,16 @@ packages:
 # `EveMessageInputRequest["kind"]` mất union → `switch` exhaustive trong
 # `apps/backoffice/src/components/ai-chat/render-message.tsx` báo TS2366 làm đỏ build Vercel trong
 # khi `check-types` local xanh. Khai báo zod thành dependency thật của eve để type resolve giống nhau
-# ở mọi môi trường. Version bám theo zod của monorepo (`^4.5.4`) — đổi zod thì đổi luôn ở đây.
+# ở mọi môi trường. Version bám theo zod của monorepo (`^4.6.5`) — đổi zod thì đổi luôn ở đây.
 packageExtensions:
   eve:
     dependencies:
-      zod: ^4.5.4
+      zod: ^4.6.5
 
 overrides:
-  "@types/node": ^25.9.4
-  "@types/react": ^19.2.15
-  "@types/react-dom": ^19.2.3
+  "@types/node": ^25.9.6
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
 
 allowBuilds:
   esbuild: true
@@ -30,16 +30,30 @@ allowBuilds:
   sharp: false
 
 minimumReleaseAgeExclude:
-  - "@better-auth/core@1.6.20"
-  - "@better-auth/drizzle-adapter@1.6.20"
-  - "@better-auth/kysely-adapter@1.6.20"
-  - "@better-auth/memory-adapter@1.6.20"
-  - "@better-auth/mongo-adapter@1.6.20"
-  - "@better-auth/prisma-adapter@1.6.20"
-  - "@better-auth/telemetry@1.6.20"
-  - better-auth@1.6.20
+  - "@better-auth/core@1.6.20 || 1.7.5"
+  - "@better-auth/drizzle-adapter@1.6.20 || 1.7.5"
+  - "@better-auth/kysely-adapter@1.6.20 || 1.7.5"
+  - "@better-auth/memory-adapter@1.6.20 || 1.7.5"
+  - "@better-auth/mongo-adapter@1.6.20 || 1.7.5"
+  - "@better-auth/prisma-adapter@1.6.20 || 1.7.5"
+  - "@better-auth/telemetry@1.6.20 || 1.7.5"
+  - better-auth@1.6.20 || 1.7.5
   - react-hook-form@7.80.0
   - postcss@8.5.23
-  - eve@0.51.1
-  - "@ai-sdk/gateway@4.0.74"
-  - ai@7.0.92
+  - eve@0.51.1 || 0.55.0
+  - "@ai-sdk/gateway@4.0.74 || 4.0.81"
+  - ai@7.0.92 || 7.0.101
+  - "@turbo/darwin-64@2.10.13"
+  - "@turbo/darwin-arm64@2.10.13"
+  - "@turbo/linux-64@2.10.13"
+  - "@turbo/linux-arm64@2.10.13"
+  - "@turbo/windows-64@2.10.13"
+  - "@turbo/windows-arm64@2.10.13"
+  - turbo@2.10.13
+  - "@vercel/config@0.7.1"
+  - "@vercel/routing-utils@6.6.0"
+  - framer-motion@13.3.0
+  - lucide-react@1.46.0
+  - motion-dom@13.3.0
+  - motion-utils@13.3.0
+  - motion@13.3.0

@@ -4,11 +4,11 @@
  *
  * `02-fetch-parse.plan.md §2.2` + `05-lotto535-and-schedule.plan.md §3` +
  * `09-power-mega-max3d-family.plan.md`. Dùng fixture HTML THẬT lấy qua Oxylabs (không phải
- * HTML tự viết tay) — `test/html/keno.html` (kỳ #0294026), `test/html/bingo18.html` (kỳ
- * #0184325), `test/html/lotto535.html` (kỳ #00860), `test/html/power655.html` (kỳ #01392),
- * `test/html/mega645.html` (kỳ #01557), `test/html/max3d.html` (kỳ #01127),
- * `test/html/max3d-pro.html` (kỳ #00773). Assert số + checksum khớp đúng dữ liệu hiển thị
- * trên trang thật (đối chiếu bằng ảnh chụp màn hình lúc viết parser).
+ * HTML tự viết tay) — `test/html/vietlott.vn-detail/keno.html` (kỳ #0294026),
+ * `…/bingo18.html` (kỳ #0184325), `…/lotto535.html` (kỳ #00860), `…/power655.html` (kỳ
+ * #01392), `…/mega645.html` (kỳ #01557), `…/max3d.html` (kỳ #01127), `…/max3d-pro.html`
+ * (kỳ #00773). Assert số + checksum khớp đúng dữ liệu hiển thị trên trang thật (đối chiếu
+ * bằng ảnh chụp màn hình lúc viết parser).
  *
  * `parse()` PHẢI pure — test không mock Date.now(), không I/O ngoài đọc fixture 1 lần ở
  * `beforeAll`.
@@ -25,7 +25,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const HTML_DIR = join(__dirname, "..", "..", "html");
+const HTML_DIR = join(__dirname, "..", "..", "html", "vietlott.vn-detail");
 
 describe("vietlottDetailAdapter — metadata", () => {
   it("khai báo đúng sourceId + gameKeys", () => {

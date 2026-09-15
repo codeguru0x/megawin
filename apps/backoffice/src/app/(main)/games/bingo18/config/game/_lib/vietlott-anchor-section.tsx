@@ -6,12 +6,12 @@ import { CalendarDays, ExternalLink, Hash, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { TimeInput } from "@/components/inputs/time-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { TimeInput } from "@/components/ui/time-input";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { Bingo18GameConfig } from "./use-game-config";

@@ -23,10 +23,10 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.9.5",
+    "@types/node": "^25.9.6",
     "serverless-offline": "^14.7.3",
     "typescript": "^6.0.3",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
   }
 }

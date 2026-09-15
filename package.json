@@ -23,16 +23,16 @@
     "*.{md,yml,yaml}": ["prettier --write"]
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.11",
+    "@biomejs/biome": "2.5.13",
     "husky": "^9.1.7",
-    "lint-staged": "^17.2.0",
+    "lint-staged": "^17.5.1",
     "prettier": "^3.9.6",
-    "turbo": "^2.10.12",
+    "turbo": "^2.10.13",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   },
   "engines": {
-    "node": ">=22",
+    "node": ">=22.12.0",
     "pnpm": ">=10"
   },
   "packageManager": "pnpm@11.20.0"

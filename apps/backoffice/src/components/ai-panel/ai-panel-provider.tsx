@@ -34,13 +34,13 @@ import { Client, defaultMessageReducer, isCurrentTurnBoundaryEvent } from "eve/c
 import type { EveMessage, EveMessageData, UseEveAgentHelpers, UseEveAgentStatus } from "eve/react";
 import { useEveAgent } from "eve/react";
 
-import { AI_FULL_PAGE_PATH } from "@/config/app-config";
+import { AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { collectAiPageContext } from "@/lib/ai-page-context";
 import { setClientCookie } from "@/lib/cookie.client";
 import { AI_PANEL_MAX_WIDTH, AI_PANEL_MIN_WIDTH } from "@/lib/preferences/ai-panel";
 import { useAiThreadsStore, useAiThreadsStoreApi } from "@/stores/ai-threads/ai-threads-provider";
 import type { AiThreadsState } from "@/stores/ai-threads/ai-threads-store";
-import { deriveThreadTitle, threadNeedsCursorResync } from "@/stores/ai-threads/thread-storage";
+import { deriveThreadTitle, isThreadSessionExpired, threadNeedsCursorResync } from "@/stores/ai-threads/thread-storage";
 
 import { AiPanelMode, useAiPanelMode } from "./use-ai-panel-mode";
 
@@ -214,8 +214,9 @@ function projectStoredMessages(events: readonly MessageStreamEvent[]): readonly 
 }
 
 /**
- * Tầng GATE — đảm bảo cursor cấp cho eve là ĐÚNG tail của server trước khi cho gửi lượt mới.
- * Remount bằng `key={threadId}` ở component cha (`AiPanelProvider`).
+ * Tầng GATE — đảm bảo cursor cấp cho eve là ĐÚNG tail của server trước khi cho gửi lượt mới, HOẶC
+ * báo lỗi thẳng nếu session đã chắc chắn hết hiệu lực. Remount bằng `key={threadId}` ở component
+ * cha (`AiPanelProvider`).
  *
  * BUG THẬT (23/08 — "prompt nhảy lung tung"): gõ prompt mới nhưng bubble hiện câu hỏi CŨ và trợ lý
  * trả lời đúng câu cũ đó. Nguyên nhân: eve mở stream của lượt mới tại `session.streamIndex` do app
@@ -230,6 +231,12 @@ function projectStoredMessages(events: readonly MessageStreamEvent[]): readonly 
  * Chỉ server biết tail thật ⇒ hỏi bằng `snapshot()` (trả prefix đầy đủ + cursor đúng ngay sau
  * prefix). Chỉ chạy khi {@link threadNeedsCursorResync} báo nghi vấn, nên đường bình thường (mở
  * app, đổi thread lúc rảnh) KHÔNG tốn thêm request.
+ *
+ * XỬ LÝ THÊM 15/09: KHÔNG gọi `snapshot()` khi {@link isThreadSessionExpired} đã trả `true` — biết
+ * chắc session chết (quá tuổi tuyệt đối, xem JSDoc hàm đó) thì hỏi server chỉ tốn 1 round-trip để
+ * xác nhận lại điều đã biết, và POST turn tiếp theo cũng sẽ 409 ngay. Bỏ qua thẳng, báo lỗi
+ * `SessionExpired` cho staff (`agent-error.ts`) — nút "Bắt đầu chat mới" xuất hiện ngay khi mở
+ * thread, không phải chờ staff gõ xong mới biết.
  */
 function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
   // Đọc registry NGAY LÚC MOUNT qua store API thô — KHÔNG subscribe. `AgentSession` ghi vào registry
@@ -238,14 +245,24 @@ function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
   // sang thread mới".
   const threadsApi = useAiThreadsStoreApi();
   const [stored] = useState(() => threadsApi.getState().threads.find((thread) => thread.id === threadId));
+
+  // Biết TRƯỚC — không cần hỏi server — rằng eve đã tự thu hồi session này (quá
+  // `AI_SESSION_ABSOLUTE_LIFETIME_MS` tính từ `createdAt`, xem JSDoc `isThreadSessionExpired`).
+  // Tính 1 lần lúc mount (khớp thời điểm đọc `stored`, không đổi trong đời component này).
+  const [sessionExpired] = useState(() => stored !== undefined && isThreadSessionExpired(stored));
+
   const [seed, setSeed] = useState<AgentSeed | undefined>(() =>
-    stored !== undefined && threadNeedsCursorResync(stored)
+    sessionExpired || (stored !== undefined && threadNeedsCursorResync(stored))
       ? undefined
       : { events: stored?.events ?? [], session: stored?.session },
   );
 
   useEffect(() => {
-    if (seed !== undefined) {
+    // Session đã chắc chắn chết (§sessionExpired) — KHÔNG gọi server: request đó chỉ để xác nhận
+    // lại điều đã biết, và POST turn tiếp theo sẽ 409 `session_not_active` ngay lập tức. `seed` ở
+    // đây CỐ Ý giữ `undefined` mãi ⇒ component không mount `useEveAgent` cho sessionId đã chết
+    // (nhánh `resolving` bên dưới tự phát tín hiệu lỗi thay vì gọi mạng).
+    if (seed !== undefined || sessionExpired) {
       return;
     }
     const sessionId = stored?.session?.sessionId;
@@ -280,11 +297,16 @@ function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
       }
     })();
     return () => controller.abort();
-  }, [seed, stored, threadId, threadsApi]);
+  }, [seed, sessionExpired, stored, threadId, threadsApi]);
 
-  // Đang resync: hội thoại hiện từ log đã lưu nhưng CHẶN gửi (`status: "submitted"` ⇒ composer tự
-  // disable) — gửi lúc này là gửi bằng cursor chưa xác thực, đúng thứ gây bug. Cửa sổ này chỉ dài
-  // bằng 1 request và chỉ mở khi lượt trước bị ngắt.
+  // Đang resync BÌNH THƯỜNG: hội thoại hiện từ log đã lưu nhưng CHẶN gửi (`status: "submitted"` ⇒
+  // composer tự disable) — gửi lúc này là gửi bằng cursor chưa xác thực, đúng thứ gây bug. Cửa sổ
+  // này chỉ dài bằng 1 request và chỉ mở khi lượt trước bị ngắt.
+  //
+  // KHÁC với `sessionExpired`: đã biết chắc session chết, KHÔNG "đang chờ" gì cả — báo lỗi thẳng,
+  // giữ nguyên `status: "error"` mãi (không tự hồi phục), để composer hiện banner "hết hiệu lực"
+  // + nút "Bắt đầu chat mới" (`agent-error.ts` §SessionExpired) — message khớp `ERROR_HINTS` ở đó
+  // (`match: ["session_not_active", ...]`) để tái dùng đúng 1 đường hiển thị lỗi duy nhất.
   const resolving = seed === undefined;
   useEffect(() => {
     if (!resolving) {
@@ -293,15 +315,17 @@ function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
     onSlice({
       activeThreadId: threadId,
       messages: projectStoredMessages(stored?.events ?? []),
-      status: "submitted",
-      error: undefined,
+      status: sessionExpired ? "error" : "submitted",
+      error: sessionExpired
+        ? new Error("session_not_active: cuộc hội thoại đã hết hiệu lực do không dùng trong thời gian dài.")
+        : undefined,
       cancelling: false,
       cancelStuck: false,
       send: () => {
-        // no-op: đang đồng bộ lại cursor với server — xem JSDoc component.
+        // no-op: đang đồng bộ lại cursor với server, HOẶC session đã hết hiệu lực — xem JSDoc component.
       },
       respond: async () => {
-        // no-op: đang đồng bộ lại cursor với server.
+        // no-op: xem comment trên.
       },
       stop: () => {
         // no-op: không có turn nào của client đang chạy để dừng.
@@ -310,7 +334,7 @@ function AgentBridge({ threadId, onSlice }: AgentBridgeProps) {
         threadsApi.getState().createThread();
       },
     });
-  }, [resolving, onSlice, threadId, stored, threadsApi]);
+  }, [resolving, sessionExpired, onSlice, threadId, stored, threadsApi]);
 
   if (seed === undefined) {
     return null;

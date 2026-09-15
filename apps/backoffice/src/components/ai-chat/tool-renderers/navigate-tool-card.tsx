@@ -49,7 +49,7 @@ import type { EveDynamicToolPart } from "eve/react";
 import { ArrowUpRightIcon, PencilLineIcon } from "lucide-react";
 import type { Route } from "next";
 
-import { AI_FULL_PAGE_PATH } from "@/config/app-config";
+import { AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { collectAiPageContext } from "@/lib/ai-page-context";
 import { isKnownNavHref, type NavBuildError } from "@/lib/nav-registry";
 import { cn } from "@/lib/utils";

@@ -82,12 +82,15 @@ export function AiComposer({
   error,
   onSend,
   onStop,
+  onNewChat,
   ref,
 }: {
   status: UseEveAgentStatus;
   error: Error | undefined;
   onSend: (text: string) => void;
   onStop: () => void;
+  /** Gọi khi banner lỗi hiện nút "Bắt đầu chat mới" (`AgentErrorRecovery.NewChat`) — xem `agent-error.ts`. */
+  onNewChat: () => void;
   /** Xem {@link AiComposerHandle}. React 19: `ref` là prop thường, không cần `forwardRef`. */
   ref?: Ref<AiComposerHandle>;
 }) {
@@ -156,6 +159,7 @@ export function AiComposer({
 
   const showRetry = errorDisplay.recovery === AgentErrorRecovery.Retry && lastSentTextRef.current !== undefined;
   const showReload = errorDisplay.recovery === AgentErrorRecovery.Reload;
+  const showNewChat = errorDisplay.recovery === AgentErrorRecovery.NewChat;
 
   return (
     <div className="relative">
@@ -167,8 +171,13 @@ export function AiComposer({
       <div className="space-y-2 bg-background px-3 pb-3">
         <div className="mx-auto w-full max-w-3xl space-y-2">
           {status === "error" && (
-            <div className="flex items-start justify-between gap-2 rounded-xl bg-destructive/10 px-3 py-2 text-destructive text-xs">
-              <span className="flex min-w-0 items-start gap-1.5">
+            // Layout XẾP DỌC (message trên, hành động thành dải riêng dưới) — theo đúng khối HITL
+            // (`render-message.tsx` — card viền + `Button size="sm"` cỡ chuẩn) và banner `cancelStuck`
+            // cạnh đây (`chat-panel.tsx`) cho CÙNG hành động "Bắt đầu chat mới". Bản cũ nhồi nút vào
+            // MỘT HÀNG với message rồi bóp `h-6 px-2 text-xs variant="ghost"` — ở cỡ đó nút chìm hẳn
+            // vào nền đỏ, staff không nhận ra đây là nút bấm được (feedback 15/09).
+            <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
+              <span className="flex min-w-0 items-start gap-1.5 text-destructive">
                 <AlertCircleIcon className="mt-px size-3.5 shrink-0" />
                 <span className="min-w-0">
                   {errorDisplay.message}
@@ -180,15 +189,29 @@ export function AiComposer({
                   )}
                 </span>
               </span>
-              {showRetry && (
-                <Button className="h-6 shrink-0 px-2 text-xs" onClick={handleRetry} size="sm" variant="ghost">
-                  Thử lại
-                </Button>
-              )}
-              {showReload && (
-                <Button className="h-6 shrink-0 px-2 text-xs" onClick={handleReload} size="sm" variant="ghost">
-                  Tải lại trang
-                </Button>
+              {(showRetry || showReload || showNewChat) && (
+                // `pl-5`: thẳng cột với chữ message (icon 14px + gap 6px ở trên ≈ 20px), không
+                // thẳng cột với icon — đúng cách HITL card canh nút theo text, không theo icon.
+                <div className="flex flex-wrap gap-2 pl-5">
+                  {showRetry && (
+                    <Button onClick={handleRetry} size="sm" variant="outline">
+                      Thử lại
+                    </Button>
+                  )}
+                  {showReload && (
+                    <Button onClick={handleReload} size="sm" variant="outline">
+                      Tải lại trang
+                    </Button>
+                  )}
+                  {showNewChat && (
+                    // `variant="default"` (primary, KHÔNG `outline` như Retry/Reload): đây là lối ra
+                    // DUY NHẤT — không có lựa chọn "gửi lại" nào đứng cạnh để cần tách bạch bằng màu
+                    // (khác `tool-approval` HITL, nơi 2 nút cùng hiện nên phải phân cấp bằng variant).
+                    <Button onClick={onNewChat} size="sm" variant="default">
+                      Bắt đầu chat mới
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           )}

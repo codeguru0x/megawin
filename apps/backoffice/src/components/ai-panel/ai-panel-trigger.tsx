@@ -20,7 +20,7 @@ import { Sparkles } from "lucide-react";
 
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/app-config";
+import { AI_ASSISTANT_NAME, AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { cn } from "@/lib/utils";
 
 import { useAiPanel } from "./ai-panel-provider";

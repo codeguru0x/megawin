@@ -18,7 +18,7 @@ import { useEffect } from "react";
 import { AlertTriangle, RotateCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { AI_ASSISTANT_NAME } from "@/config/app-config";
+import { AI_ASSISTANT_NAME } from "@/config/ai-config";
 
 export default function AiError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
