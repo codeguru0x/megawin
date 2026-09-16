@@ -4,14 +4,27 @@
 > **sau khi P1 ổn định** (theo `00-overview.md` §2). Không chặn, không bị chặn.
 > **Rủi ro dữ liệu: KHÔNG** — thuần CSS/UX, không đụng data/cache.
 >
-> **Điều tra 16/09/2026 — `startTime` KHÔNG phải bug của app (đã đóng):**
-> Uncaught `Cannot read properties of undefined (reading 'startTime')` khi soft-nav vào
-> `games/*/config/tenant`, settle… phát sinh từ **React DevTools extension**, không phải code app.
-> Bằng chứng: stack frame trỏ `installHook.js` (content script của extension) và đoạn code lỗi
-> đọc `window.devToolsReportSoftNavs` — cờ chỉ DevTools đặt — trong bộ đo `onINP`/`onCLS`
-> (`t.entries[0].startTime` với `entries` rỗng khi soft-nav). App **không** import `web-vitals`,
-> **không** dùng `useReportWebVitals`, Vercel Speed Insights đã tắt.
-> Cách xác nhận: mở lại trang trong tab ẩn danh (extension off) → lỗi biến mất.
+> **Điều tra 16/09/2026 — `startTime` là bug của Chrome DevTools, KHÔNG phải app (đã đóng):**
+> Uncaught `Cannot read properties of undefined (reading 'startTime')` khi soft-nav phát sinh từ
+> script **Live Metrics do chính Chrome DevTools inject**, không phải code app, không phải extension.
+> Chuỗi bằng chứng:
+> 1. HTML production (`curl https://www.mega68.xyz/login`) chỉ có `/_next/static/immutable/chunks/*` —
+>    không có `vercel.live`, `feedback.js`, `speed-insights`. App cũng không import `web-vitals`,
+>    không dùng `useReportWebVitals`; `rg 'web-vitals|SpeedInsights|onINP|onCLS' apps/backoffice` = 0 match.
+> 2. Dòng 1 của script lỗi (`window.devToolsReportSoftNavs = true;`) khớp đúng
+>    `devtools-frontend/front_end/models/live-metrics/LiveMetrics.ts:588`:
+>    `` const source = `window.devToolsReportSoftNavs = ${softNavsSettingValue};\n` + await InjectedScript.get(); ``
+> 3. Đoạn crash khớp `web-vitals-injected/spec/spec.ts` → `createInpChangeEvent`. Bản trong Chrome của
+>    máy đang test đọc `t.entries[0].startTime` (không optional-chaining); `main` hiện tại đã là
+>    `metric.entries?.[0]?.startTime` — tức đã vá.
+> 4. Commit vá: `6a47f93` "Live Metrics: Handle empty INP entries" (31/08/2026). Nguyên nhân gốc là
+>    commit "Enable soft navs for Live Metrics" (24/07/2026) bật `reportSoftNavs` → `onINP` fire với
+>    `entries` rỗng ở soft-nav.
+>
+> Script này inject qua `addScriptToEvaluateOnNewDocument` vào **isolated world**
+> (`LIVE_METRICS_WORLD_NAME`) → không thể ảnh hưởng JS của app, và **chỉ chạy khi DevTools mở** —
+> user thật không bao giờ thấy. Cách dứt lỗi: update Chrome, hoặc tắt DevTools setting
+> "Enable soft navigation performance monitoring" (`timeline-enable-soft-navigations`).
 > Kết luận: giữ `<ViewTransition>`; rollback trước đó đã hoàn tác.
 > **Nguồn API:** `next@16.3.5` guide `view-transitions.md` + `template.md` + `react@19.3.0`
 > (`ViewTransition` đã ổn định — xác nhận bằng `Object.keys(require('react'))`).

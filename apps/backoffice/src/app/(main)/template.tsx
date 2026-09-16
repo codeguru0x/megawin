@@ -10,9 +10,12 @@ import { ViewTransition } from "react";
  * Pattern: Suspense reveal + crossfade (`enter`/`exit` = auto). Không directional slide —
  * sidebar nav phẳng, không có hierarchy forward/back rõ (p2-02).
  *
- * Lưu ý debug: Uncaught `reading 'startTime'` từ `installHook.js` /
- * `window.devToolsReportSoftNavs` là **React DevTools extension** đo soft-nav (INP/CLS),
- * KHÔNG phải code app. Tắt/cập nhật extension hoặc mở tab ẩn danh để xác nhận.
+ * Lưu ý debug: Uncaught `reading 'startTime'` KHÔNG phải code app — là **bug của chính
+ * Chrome DevTools**. Panel Performance inject script Live Metrics (`window.devToolsReportSoftNavs`)
+ * vào isolated world; bản Chrome cũ đọc `metric.entries[0].startTime` không optional-chaining →
+ * crash khi INP soft-nav có `entries` rỗng. Vá upstream 31/08/2026 ("Live Metrics: Handle empty
+ * INP entries"). Cách dứt lỗi: update Chrome, hoặc tắt DevTools setting
+ * "Enable soft navigation performance monitoring". Chỉ hiện khi DevTools mở — user thật không thấy.
  */
 export default function MainTemplate({ children }: { children: ReactNode }) {
   return (
