@@ -14,17 +14,34 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import dynamic from "next/dynamic";
+
 import { GameProduct } from "@megawin/game-core/entities";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
+import { displayVNTimeWithSeconds, todayVN } from "@megawin/shared/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { Layers, Plus } from "lucide-react";
 
-import { CreateDrawAction } from "@/app/(main)/games/keno/operations/_lib/sections/draw-management/draw-actions";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { GAME_COLORS } from "@/lib/game-colors";
 
+import { prefetchPreviewDraws } from "../../operations/_lib/use-operations";
 import { HubGateTab } from "./sections/queue/queue-types";
 import { useHubContext } from "./use-hub-context";
+
+/**
+ * Dialog tạo kỳ — `next/dynamic` vì chỉ mount khi staff bấm "Tạo kỳ quay" (form + validate nặng,
+ * gần như không dùng trong phiên giám sát thường). Import trực tiếp file, KHÔNG qua barrel
+ * `draw-actions/index.ts` — barrel re-export cả 4 dialog (publish/create/edit-schedule/void),
+ * package không khai `sideEffects: false` nên bundler phải giữ cả cụm.
+ */
+const CreateDrawAction = dynamic(
+  () =>
+    import("@/app/(main)/games/keno/operations/_lib/sections/draw-management/draw-actions/create-draw-action").then(
+      (m) => m.CreateDrawAction,
+    ),
+  { loading: () => null },
+);
 
 /**
  * Chỉ báo "Live" — đọc DOM ref, KHÔNG setState (tiền lệ `LastUpdatedBadge`,
@@ -108,7 +125,12 @@ function RefreshButton() {
 
 export function HubPageHeader() {
   const { state } = useHubContext();
+  const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  // Chỉ bật, không bao giờ tắt — gate mount để `next/dynamic` hoãn tải chunk dialog tới lần bấm
+  // đầu tiên. Không dùng thẳng `createOpen` làm điều kiện mount: làm vậy sẽ unmount dialog ngay
+  // khi `open=false`, cắt animation đóng của Radix Dialog.
+  const [createEverOpened, setCreateEverOpened] = useState(false);
   const iconGradient = GAME_COLORS[GameProduct.Keno].iconGradient;
 
   const totalRows = state.rows.length;
@@ -144,13 +166,25 @@ export function HubPageHeader() {
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+        {/* Hover/focus = nạp trước chunk dialog LẪN dữ liệu preview của ngày mặc định (hôm nay,
+            khớp state khởi tạo trong `CreateDrawAction`). Mở ra là đã có bảng kỳ, không phải chờ.
+            `onFocus` để staff dùng bàn phím (Tab) cũng được hưởng, không chỉ chuột. */}
+        <Button
+          size="sm"
+          className="gap-2"
+          onMouseEnter={() => prefetchPreviewDraws(qc, todayVN())}
+          onFocus={() => prefetchPreviewDraws(qc, todayVN())}
+          onClick={() => {
+            setCreateEverOpened(true);
+            setCreateOpen(true);
+          }}
+        >
           <Plus className="size-4" />
           Tạo kỳ quay
         </Button>
       </div>
 
-      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+      {createEverOpened ? <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} /> : null}
     </div>
   );
 }

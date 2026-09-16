@@ -14,25 +14,37 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import dynamic from "next/dynamic";
+
 import { DrawStatus } from "@megawin/game-core/entities";
 import { type AlertTriangle, ArrowDown, ArrowUp, Calculator, List, Lock, Radio, Unlock } from "lucide-react";
 import { toast } from "sonner";
 
-import { PublishResultAction } from "@/app/(main)/games/keno/operations/_lib/sections/draw-management/draw-actions";
+import { PublishResultAction } from "@/app/(main)/games/keno/operations/_lib/sections/draw-management/draw-actions/publish-result-action";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 import { stageStartMs } from "../../derive-draw-state";
 import type { DerivedRow } from "../../hub-types";
 import { useHubContext } from "../../use-hub-context";
 import { useHubUrlParams } from "../../use-hub-url-params";
-import { HubExpandPanel } from "./hub-expand-panel";
 import { getRowAccent, hasAnyAction } from "./partition-by-action";
 import { QueueRow } from "./queue-row";
 import { HUB_GATE_TAB_LABELS, HUB_GATE_TAB_ORDER, HubGateTab, QueueSortDir, QueueSortKey } from "./queue-types";
 import { toPublishResultDraw } from "./to-publish-result-draw";
+
+/**
+ * Panel expand 1 dòng — `next/dynamic` vì CHỈ mount khi staff bấm mở 1 dòng (§ render site).
+ *
+ * Panel kéo theo `BulkConfirmDialog` + `use-bulk-mutations` + `use-batch-runner`; để import tĩnh
+ * thì cả cụm này nằm trong bundle first-load của Hub dù phần lớn phiên giám sát không mở dòng nào.
+ * `loading: () => null` — không skeleton: panel mở tức thời sau 1 click, skeleton nhấp nháy còn
+ * gây nhiễu hơn khoảng trắng ngắn.
+ */
+const HubExpandPanel = dynamic(() => import("./hub-expand-panel").then((m) => m.HubExpandPanel), {
+  loading: () => null,
+});
 
 /** Icon từng tab (bạn yêu cầu — plan §B5) — cùng icon dùng ở KPI strip (Zone 2) cho 4 tab
  * trùng khái niệm, tab "Tất cả" dùng `List` vì không có KPI tương ứng. `PendingOpen` (mới,
@@ -230,9 +242,14 @@ export function HubQueueTable() {
   // Kỳ được bấm để MỞ dialog — đặt lên ĐẦU hàng đợi dù không phải kỳ sớm nhất theo `drawId`
   // (staff bấm nút ở kỳ nào, dialog phải bắt đầu đúng kỳ đó, không tự nhảy sang kỳ khác).
   const [publishAnchorId, setPublishAnchorId] = useState<string | null>(null);
+  // Chỉ bật, không bao giờ tắt — gate mount dialog để `next/dynamic` không tải chunk
+  // `PublishResultAction` (~790 dòng + form nhập KQ) trong first-load của Hub. Xem comment tại
+  // render site cuối file để biết vì sao KHÔNG dùng `publishOpen` làm điều kiện mount.
+  const [publishEverOpened, setPublishEverOpened] = useState(false);
 
   const handleOpenPublish = useCallback((drawId: string) => {
     setPublishAnchorId(drawId);
+    setPublishEverOpened(true);
     setPublishOpen(true);
   }, []);
 
@@ -343,19 +360,11 @@ export function HubQueueTable() {
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-8 pl-2">
                   {canSelectRows.length > 0 ? (
-                    // Tooltip gợi ý Shift+Click chọn dải (round 4) — người dùng phải chọn hàng
-                    // chục kỳ để bulk settle/close, click từng ô rất chậm. Đặt tooltip ở checkbox
-                    // header vì đây là nơi mắt người dùng nhìn đầu tiên khi cần "chọn nhiều".
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Checkbox
-                          checked={isIndeterminate ? "indeterminate" : allSelectableSelected}
-                          onCheckedChange={handleToggleAll}
-                          aria-label="Chọn tất cả"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="top">Giữ Shift + click để chọn cả dải kỳ</TooltipContent>
-                    </Tooltip>
+                    <Checkbox
+                      checked={isIndeterminate ? "indeterminate" : allSelectableSelected}
+                      onCheckedChange={handleToggleAll}
+                      aria-label="Chọn tất cả"
+                    />
                   ) : null}
                 </TableHead>
                 <TableHead>Kỳ</TableHead>
@@ -452,8 +461,15 @@ export function HubQueueTable() {
           `publishOpen` giải thích vì sao KHÔNG mount trong `HubExpandPanel`. Không đóng `open`
           khi `publishQueue` rỗng (mọi kỳ trong hàng đợi đã publish xong) — để dialog TỰ đóng
           qua `submitCurrentDraw` (khi hết `nextDraw`) thay vì bị unmount đột ngột giữa lúc đang
-          chạy animation đóng của Radix Dialog. */}
-      {firstQueuedDraw && publishQueue ? (
+          chạy animation đóng của Radix Dialog.
+
+          `publishEverOpened` (perf, 16/09): thêm điều kiện mount để hoãn tải chunk dialog tới
+          lần bấm ĐẦU TIÊN. Trước đây điều kiện chỉ là `firstQueuedDraw && publishQueue` —
+          `publishQueue` KHÔNG null khi chưa bấm gì (nhánh `!publishAnchorId` vẫn trả `pending`),
+          nên dialog mount ngay khi tồn tại bất kỳ kỳ `SalesClosed`, tức gần như mọi phiên.
+          Cờ này CHỈ bật, KHÔNG BAO GIỜ tắt → sau lần mở đầu tiên hành vi mount y hệt bản cũ,
+          giữ nguyên fix 09/09 (dialog phải sống sót qua mọi refetch giữa các kỳ trong hàng đợi). */}
+      {publishEverOpened && firstQueuedDraw && publishQueue ? (
         <PublishResultAction
           draw={firstQueuedDraw}
           disabled={false}

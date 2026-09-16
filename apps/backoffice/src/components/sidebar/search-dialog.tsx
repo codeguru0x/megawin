@@ -377,7 +377,12 @@ export function SearchDialog() {
           </DialogHeader>
           <Command filter={scorePaletteItem} className={cn(COMMAND_PALETTE_CLASS)}>
             <CommandInput onValueChange={setQuery} placeholder="Tìm trang, báo cáo, cấu hình…" value={query} />
-            <CommandList>
+            {/* `h-[300px]` CỐ ĐỊNH (registry `CommandList` chỉ có `max-h-[300px]`): số item khớp
+                đổi theo từng ký tự nên chiều cao list — và cả dialog — co giãn liên tục. Đo
+                16/09/2026 khi gõ "Vận": dialog 350px → 186px ("Va", 1 item) → 350px ("Vận", 9
+                item), giật ±164px giữa hai lần nhấn phím. Khung cố định là chuẩn của command
+                palette (VS Code/Raycast): danh sách cuộn bên trong, khung không nhảy. */}
+            <CommandList className="h-[300px]">
               <NoPageMatchHint />
               {/* Nhóm AI ĐẦU danh sách khi CHƯA gõ gì: lúc đó không có ý định tìm trang cụ thể, "Hỏi
                   Mira về trang này" là hành động hợp lý nhất để chọn sẵn (bấm ⌘J rồi Enter). */}

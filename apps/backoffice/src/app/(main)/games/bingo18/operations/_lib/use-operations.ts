@@ -19,6 +19,7 @@ import type { GetEntryByIdOutput } from "@megawin/game-bingo18-application/use-c
 import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { bingo18Keys } from "@/lib/query-keys";
@@ -383,6 +384,14 @@ export function useUpdateSchedule() {
   );
 }
 
+/** Query key + fetcher của preview — dùng chung `usePreviewDraws` và {@link prefetchPreviewDraws}. */
+function previewDrawsQueryOptions(drawDate: string) {
+  return {
+    queryKey: [...bingo18Keys.all, "preview", drawDate] as const,
+    queryFn: () => apiClient.get<PreviewDrawsOutput>("/bingo18/draws/preview", { params: { drawDate } }),
+  };
+}
+
 /**
  * Danh sách kỳ **còn tạo được** của một ngày — nguồn dữ liệu cho bảng gợi ý dialog tạo kỳ.
  *
@@ -393,10 +402,24 @@ export function useUpdateSchedule() {
  */
 export function usePreviewDraws(drawDate: string) {
   return useQuery({
-    queryKey: [...bingo18Keys.all, "preview", drawDate] as const,
-    queryFn: () => apiClient.get<PreviewDrawsOutput>("/bingo18/draws/preview", { params: { drawDate } }),
+    ...previewDrawsQueryOptions(drawDate),
     enabled: drawDate.length > 0,
   });
+}
+
+/**
+ * Nạp trước preview cho `drawDate` — gọi khi staff **hover/focus** nút "Tạo kỳ quay", trước lúc
+ * dialog mount. Xem bản Keno (`keno/operations/_lib/use-operations.ts`) cho lý do đầy đủ:
+ * bỏ trạng thái chờ ở lần mở đầu, KHÔNG phải để chống layout shift (chiều cao đã khoá cứng).
+ */
+export function prefetchPreviewDraws(qc: QueryClient, drawDate: string): void {
+  void qc
+    .query({
+      ...previewDrawsQueryOptions(drawDate),
+      staleTime: 30_000,
+    })
+    // Best-effort: lỗi mạng ở đây không được nổi thành unhandled rejection.
+    .catch(() => undefined);
 }
 
 export function useCreateDraw() {

@@ -552,3 +552,33 @@ html {
     animation-delay: 0s !important;
   }
 }
+
+/* ── Overlay dialog/sheet/drawer: khớp duration với content ────────────────────
+   Registry shadcn KHÔNG khai `duration-*` cho overlay, nên tw-animate-css lấy mặc định 150ms
+   trong khi content dài hơn: Dialog/AlertDialog 200ms, Sheet 300ms (đóng) / 500ms (mở), Drawer
+   ~500ms (vaul tự điều khiển transform, content không có animate-in/out).
+
+   Hệ quả khi ĐÓNG: nền tối tắt xong mà content còn đang zoom-out/trượt thêm 50–150ms ⇒ hộp
+   thoại "nổi" trên trang đã hết tối = đúng cú nháy "mất màu nền trang" staff báo. Đo 16/09/2026
+   bằng `getComputedStyle` trên dialog Tạo kỳ: overlay `0.15s` vs content `0.2s`.
+
+   Sửa Ở ĐÂY, KHÔNG sửa `components/ui/*.tsx`: các file đó do `shadcn add` sinh ra — sửa vào sẽ
+   mất khi cập nhật registry. `data-slot` là thuộc tính công khai shadcn đặt sẵn cho mục đích
+   style từ ngoài, nên selector này bền. Khối này để NGOÀI `@layer` nên thắng utility
+   `duration-*` (ở `@layer utilities`) — cùng lý do đã ghi ở `.chat-md` phía trên. */
+[data-slot="dialog-overlay"],
+[data-slot="alert-dialog-overlay"] {
+  animation-duration: 200ms;
+}
+
+[data-slot="sheet-overlay"][data-state="open"] {
+  animation-duration: 500ms;
+}
+
+[data-slot="sheet-overlay"][data-state="closed"] {
+  animation-duration: 300ms;
+}
+
+[data-slot="drawer-overlay"] {
+  animation-duration: 500ms;
+}

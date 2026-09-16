@@ -4,6 +4,8 @@
  * Các function tiện ích để sử dụng trong Server Components và Server Actions.
  */
 
+import { cache } from "react";
+
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -16,13 +18,19 @@ import { hasAnyRole } from "@/lib/roles";
 /**
  * Lấy session hiện tại trong Server Component / Server Action.
  * Trả null nếu chưa đăng nhập.
+ *
+ * Bọc `React.cache` — dedupe TRONG 1 request. Mỗi render `(main)` có ít nhất 2 caller độc lập
+ * (`(main)/layout.tsx` qua `requireOperatorSession`, và page như `dashboard/page.tsx` gọi
+ * `requireSession` lần nữa); không cache thì `auth.api.getSession` chạy 2 lượt cho cùng 1 request.
+ * `cache` KHÔNG dùng đối số nên không có bẫy "inline object → luôn cache miss".
+ * Phạm vi cache = 1 request, không rò session giữa các user.
  */
-export async function getServerSession(): Promise<Session | null> {
+export const getServerSession = cache(async (): Promise<Session | null> => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
   return session;
-}
+});
 
 /**
  * Yêu cầu session – redirect sang /login nếu chưa đăng nhập.

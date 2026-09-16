@@ -246,10 +246,21 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-border/50 max-h-80 overflow-y-auto">
+            {/* Chiều cao CỐ ĐỊNH, KHÔNG `max-h-*`: lúc chờ preview `rows` rỗng nên vùng này chỉ cao
+                bằng 1 dòng placeholder, data về là bung ra ⇒ dialog nhảy kích thước ngay trước mắt
+                staff (đo 16/09/2026 trên bản Keno: 379px → 863px). Khoá cứng ⇒ mở ra đã đúng cỡ
+                cuối, danh sách cuộn bên trong. `min(20rem,40vh)` để không tràn laptop nhỏ. */}
+            <div className="divide-y divide-border/50 h-[min(20rem,40vh)] overflow-y-auto">
               {rows.length === 0 && (
-                <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-                  {preview.isLoading ? "Đang lấy gợi ý lịch quay..." : "Không có gợi ý — kiểm tra lại cấu hình game."}
+                <p className="flex h-full items-center justify-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                  {preview.isLoading ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      Đang lấy gợi ý lịch quay…
+                    </>
+                  ) : (
+                    "Không có gợi ý — kiểm tra lại cấu hình game."
+                  )}
                 </p>
               )}
               {rows.map((row, i) => (

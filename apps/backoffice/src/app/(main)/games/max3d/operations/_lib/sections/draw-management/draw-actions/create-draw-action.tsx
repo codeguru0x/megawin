@@ -244,10 +244,19 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-border/50 max-h-80 overflow-y-auto">
+            {/* Chiều cao CỐ ĐỊNH, KHÔNG `max-h-*` — xem giải thích ở bản Power 6/55: chờ preview thì
+                `rows` rỗng, data về là bung ra ⇒ dialog nhảy cỡ. `min(20rem,40vh)` chống tràn. */}
+            <div className="divide-y divide-border/50 h-[min(20rem,40vh)] overflow-y-auto">
               {rows.length === 0 && (
-                <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-                  {preview.isLoading ? "Đang lấy gợi ý lịch quay..." : "Không có gợi ý — kiểm tra lại cấu hình game."}
+                <p className="flex h-full items-center justify-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                  {preview.isLoading ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      Đang lấy gợi ý lịch quay…
+                    </>
+                  ) : (
+                    "Không có gợi ý — kiểm tra lại cấu hình game."
+                  )}
                 </p>
               )}
               {rows.map((row, i) => (

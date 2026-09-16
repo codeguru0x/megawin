@@ -20,6 +20,7 @@ import type { GetEntryByIdOutput } from "@megawin/game-keno-application/use-case
 import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { kenoKeys } from "@/lib/query-keys";
@@ -421,6 +422,17 @@ export function useUpdateSchedule() {
   );
 }
 
+/** Query key + fetcher của preview — dùng chung `usePreviewDraws` và {@link prefetchPreviewDraws}. */
+function previewDrawsQueryOptions(drawDate: string) {
+  return {
+    queryKey: [...kenoKeys.all, "preview", drawDate] as const,
+    queryFn: () =>
+      apiClient.get<PreviewDrawsOutput>("/keno/draws/preview", {
+        params: { drawDate },
+      }),
+  };
+}
+
 /**
  * Danh sách kỳ **còn tạo được** của một ngày — nguồn dữ liệu cho bảng gợi ý dialog tạo kỳ.
  *
@@ -431,13 +443,32 @@ export function useUpdateSchedule() {
  */
 export function usePreviewDraws(drawDate: string) {
   return useQuery({
-    queryKey: [...kenoKeys.all, "preview", drawDate] as const,
-    queryFn: () =>
-      apiClient.get<PreviewDrawsOutput>("/keno/draws/preview", {
-        params: { drawDate },
-      }),
+    ...previewDrawsQueryOptions(drawDate),
     enabled: drawDate.length > 0,
   });
+}
+
+/**
+ * Nạp trước preview cho `drawDate` — gọi khi staff **hover/focus** nút "Tạo kỳ quay", trước lúc
+ * dialog mount.
+ *
+ * Mục đích là bỏ trạng thái chờ ở lần mở đầu tiên: dialog mở ra đã có `rows`, không còn cảnh
+ * "hiện khung trống rồi mới đổ dữ liệu". Chiều cao đã khoá cứng nên KHÔNG còn nhảy layout dù
+ * prefetch trượt (mạng chậm, staff bấm ngay) — prefetch chỉ để bớt thời gian chờ.
+ *
+ * `staleTime` 30s: hover đi hover lại không bắn thêm request; đủ ngắn để không tạo kỳ dựa trên
+ * tập slot đã cũ (server vẫn cấp lại `drawId` từ counter khi tạo thật, nên đây không phải đường
+ * dữ liệu tài chính).
+ */
+export function prefetchPreviewDraws(qc: QueryClient, drawDate: string): void {
+  void qc
+    .query({
+      ...previewDrawsQueryOptions(drawDate),
+      staleTime: 30_000,
+    })
+    // Prefetch là best-effort: lỗi mạng ở đây không được nổi thành unhandled rejection, dialog
+    // vẫn tự fetch lại và tự hiện trạng thái lỗi khi mở.
+    .catch(() => undefined);
 }
 
 export function useCreateDraw() {

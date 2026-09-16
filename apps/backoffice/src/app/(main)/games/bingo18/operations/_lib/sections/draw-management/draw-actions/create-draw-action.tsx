@@ -390,10 +390,20 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 </span>
               </div>
 
-              <div className="divide-y divide-border/50 max-h-132 overflow-y-auto">
+              {/* Chiều cao CỐ ĐỊNH, KHÔNG `max-h-*` — xem giải thích ở bản Keno: lúc chờ preview
+                  `rows` rỗng nên vùng này cao bằng 1 dòng placeholder, data về là bung hết ⇒
+                  dialog nhảy hơn gấp đôi chiều cao. `min(33rem,45vh)` để không tràn laptop 13". */}
+              <div className="divide-y divide-border/50 h-[min(33rem,45vh)] overflow-y-auto">
                 {rows.length === 0 && (
-                  <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-                    Nhập số kỳ hợp lệ (1–{availableDraws.length}) hoặc để trống để tạo tất cả.
+                  <p className="flex h-full items-center justify-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                    {preview.data ? (
+                      `Nhập số kỳ hợp lệ (1–${availableDraws.length}) hoặc để trống để tạo tất cả.`
+                    ) : (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin" />
+                        Đang lấy danh sách kỳ còn tạo được…
+                      </>
+                    )}
                   </p>
                 )}
                 {rows.map((row, i) => (

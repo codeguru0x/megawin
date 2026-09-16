@@ -176,3 +176,121 @@ biết đúng `staleTime` của từng query để prefetch không phá tính "t
 - [x] `HoverPrefetchLink` retired; guides Link mặc định prefetch (đã `'use cache'`).
 - [x] RQ hover prefetch mở rộng: workers / resultfeed / audit-logs.
 - [x] Feature cycle **đóng** — `p3-01` deferred tới khi có sign-off auth-gate.
+
+---
+
+## 8. Vòng đo Lighthouse prod (16/09/2026) — Perf 86, và vì sao TTFB KHÔNG phải app code
+
+Lighthouse prod `operations-hub`: **Perf 86** · FCP 0.4s · LCP 1.9s · TBT 10ms · CLS 0.038 · SI 2.3s.
+Insight lớn nhất: `Document request latency — est. savings 1.710 ms`, kèm `Reduce unused JavaScript 585 KiB`.
+
+### 8.1. `Document request latency` = hạ tầng mạng, KHÔNG phải render (đo, không suy đoán)
+
+| Bằng chứng | Số đo | Kết luận |
+|---|---|---|
+| Dev server log (`terminals/2.txt`, 10 request hub) | `application-code: 46–219ms`, `proxy.ts: 1.5–4ms` | Server render đã nhanh; 1.710ms không sinh ra ở app |
+| `curl` prod `/login` | `TTFB=0.729s`, `x-vercel-cache: HIT`, `x-nextjs-prerender: 1` | Vercel trả cache HIT mà TTFB vẫn 0.7s |
+| Header prod | `cf-cache-status: DYNAMIC` + `report-to: cf-nel` | **Cloudflare đứng TRƯỚC Vercel** — thêm 1 hop proxy vào mọi HTML request |
+| `curl` static chunk | `cache-control: immutable`, `x-vercel-cache: HIT`, `cf-cache-status: HIT` | Asset tĩnh đã tối ưu — không phải nguồn |
+| `Accept-Encoding: br` | `content-encoding: br` | Compression đã bật |
+
+Auth **không** phải nghi phạm: app chạy DB-less, `cookieCache.enabled = true` (`lib/auth.ts`) → `getSession`
+chỉ verify cookie đã ký, không I/O DB.
+
+**Việc còn lại KHÔNG nằm trong code** — cần quyết định hạ tầng:
+1. `cf-cache-status: DYNAMIC` với `Cache-Control: max-age=0, must-revalidate`: Cloudflare không cache
+   được HTML nên mỗi request đi CF → Vercel edge → function. Nếu CF chỉ dùng cho DNS, bật **DNS-only**
+   (grey cloud) cho `www` để bỏ hop này.
+2. **`http://mega68.xyz` (apex, plain HTTP) treo 20s không phản hồi** — đo lại bằng
+   `curl -o /dev/null -L http://mega68.xyz/... -w '%{time_total}'`. `https://` apex và `www` đều OK
+   (2 redirect). User gõ tay domain không có `https://` sẽ chờ 20s. Cần sửa DNS/redirect apex.
+
+### 8.2. `unused JavaScript` — đã sửa phần thuộc code (đo trước/sau bằng manifest)
+
+Nguồn: `hub-queue-table.tsx` + `hub-page-header.tsx` import qua **barrel** `draw-actions/index.ts`,
+barrel re-export cả 4 dialog (publish 790 + create 479 + edit-schedule 177 + void 90 dòng). Repo
+không khai `sideEffects: false` → bundler giữ cả cụm. Bằng chứng trong artifact: chunk 52 KiB của hub
+chứa chuỗi **"Tạo kỳ", "Sửa lịch", "Huỷ kỳ"** — 3 dialog hub không bao giờ render.
+
+Thêm: 3 `BulkConfirmDialog` mount đồng thời (`buttons.map`, 2 cái luôn `open={false}`), và
+`PublishResultAction` mount ngay khi tồn tại kỳ `SalesClosed` — vì `publishQueue` không null ở nhánh
+`!publishAnchorId`, tức gần như mọi phiên.
+
+| Việc | Cách |
+|---|---|
+| Bỏ barrel | Import trực tiếp `draw-actions/publish-result-action` / `create-draw-action` |
+| Lazy 4 vùng behind-interaction | `next/dynamic` cho `HubExpandPanel`, `BulkConfirmDialog`, `CreateDrawAction`, `PublishResultAction` |
+| Gate mount | Cờ `*EverOpened` / `openedKinds` — **chỉ bật, không bao giờ tắt** |
+| Dedup session | `getServerSession` bọc `React.cache` — layout + page trước đó gọi `getSession` 2 lượt/request |
+
+**`*EverOpened` chỉ-bật là CÓ CHỦ ĐÍCH, không phải thừa.** Dùng thẳng `open` làm điều kiện mount sẽ
+unmount dialog ngay khoảnh khắc `open=false` → cắt animation đóng Radix, và tái phát bug 09/09
+(dialog publish phải sống sót qua mọi refetch giữa các kỳ trong hàng đợi). Sau lần mở đầu tiên,
+hành vi mount y hệt bản cũ.
+
+Kết quả đo (`page_client-reference-manifest.js`, chunk riêng route so với `/dashboard`):
+
+| Route | Trước | Sau |
+|---|---|---|
+| `keno/operations-hub` | 334 KiB / 7 chunks | **246 KiB / 8 chunks** |
+| `bingo18/operations-hub` | (cùng pattern) | **245 KiB / 8 chunks** |
+
+Áp cho **cả 2 hub** (keno + bingo18) — cùng pattern, sửa 1 game thôi thì game kia còn nguyên lỗi.
+
+### 8.3. `Legacy JavaScript 14 KiB` — QUYẾT ĐỊNH BỎ, không sửa
+
+Repo chưa khai `browserslist`. Thêm modern targets đổi transpile của **toàn bộ** app (7 game, màn
+tài chính) để lấy 14 KiB — sai tỉ lệ risk/benefit theo §3 nguyên tắc 3. Mở lại nếu có ngân sách
+regression test đầy đủ.
+
+### 8.4. Trần thực tế của Perf score
+
+TBT 10ms và CLS 0.038 đã rất tốt; điểm bị kéo bởi LCP/SI, mà cả hai bị chi phối bởi TTFB ở §8.1.
+**Bundle fix ở §8.2 không tự đẩy score lên nhiều** — nó cải thiện thời gian hydrate/tương tác và
+tiết kiệm băng thông. Muốn LCP xuống dưới 1.2s thì phải xử lý hop Cloudflare, không phải sửa thêm code.
+
+---
+
+## 9. Layout shift & nháy ở dialog (16/09/2026) — 3 nguyên nhân ĐỘC LẬP, đều đo được
+
+Staff báo 3 triệu chứng, dễ tưởng cùng gốc. Đo bằng `getComputedStyle` + sampling `requestAnimationFrame`
+qua Chrome DevTools MCP trên `keno/operations-hub` (dev, viewport 2482×779) cho thấy **3 nguyên nhân khác
+nhau** — sửa 1 chỗ không hết 2 chỗ kia.
+
+| Triệu chứng | Nguyên nhân (đo) | Sửa ở đâu |
+|---|---|---|
+| Dialog "Tạo kỳ" mở nhỏ rồi bung to | Chiều cao thân dialog do data quyết định: vùng danh sách `max-h-132` nên lúc chờ preview (`rows` rỗng) chỉ cao 1 dòng placeholder. Sampling rAF: **379px → 863px tại t=626ms** | Khoá `h-[min(33rem,45vh)]` (Keno/Bingo18), `h-[min(20rem,40vh)]` (5 game xổ số) + prefetch preview khi hover nút |
+| Đóng dialog "nháy 1 cái, mất màu nền trang" | Overlay và content **lệch duration**: `getComputedStyle` cho overlay `0.15s` vs content `0.2s` → nền tối tắt trước 50ms, content còn zoom-out trên trang đã sáng | `globals.css` override theo `data-slot` (KHÔNG sửa `components/ui/*`) |
+| ⌘J palette nháy liên tục khi gõ | `CommandList` chỉ có `max-h-[300px]` → khung co giãn theo số item khớp. Đo khi gõ "Vận": **350px → 186px ("Va", 1 item) → 350px ("Vận", 9 item)** | `search-dialog.tsx`: `CommandList className="h-[300px]"` |
+
+### 9.1. Vì sao override CSS ở `globals.css`, KHÔNG sửa `components/ui/*.tsx`
+
+`components/ui/*` do `shadcn add` sinh — sửa trực tiếp sẽ mất khi cập nhật registry. `data-slot` là
+thuộc tính công khai shadcn đặt sẵn cho mục đích style từ ngoài, nên selector `[data-slot="dialog-overlay"]`
+bền hơn. Khối override đặt **ngoài `@layer`** để thắng utility `duration-*` (nằm trong `@layer utilities`) —
+cùng cơ chế đã dùng cho `.chat-md`.
+
+Áp cho cả 4 primitive có overlay: `dialog`, `alert-dialog` (200ms), `sheet` (open 500 / closed 300),
+`drawer` (500ms — vaul điều khiển transform, content không tự khai `animate-in/out`).
+
+### 9.2. Chiều cao cố định dùng `min(<rem>, <vh>)`, không phải rem cứng
+
+Bản cũ `max-h-132` (33rem) + header + footer = **863px trên viewport 779px** — dialog vốn đã tràn màn
+hình laptop, không chỉ nhảy. Sau khi khoá: **686px, đứng yên qua 8 lần sample và cả khi đổi số kỳ**.
+
+### 9.3. Prefetch preview khi hover — mục đích là BỎ CHỜ, không phải chống shift
+
+`prefetchPreviewDraws(qc, todayVN())` gắn vào `onMouseEnter`/`onFocus` nút "Tạo kỳ quay" ở 2 hub
+(`staleTime` 30s để hover lại không bắn thêm request, `.catch` để prefetch lỗi không thành unhandled
+rejection). Chống layout shift đã do chiều cao cố định lo — prefetch chỉ để dialog mở ra đã có bảng kỳ.
+
+**5 game xổ số KHÔNG thêm prefetch**: `usePreviewDraws` của chúng key theo `count` (số kỳ staff gõ,
+hằng local `DEFAULT_COUNT`) chứ không theo ngày, và dialog ở đó không dùng `next/dynamic` nên đã nằm
+sẵn trong bundle. Chỉ khoá chiều cao là đủ.
+
+### 9.4. Bẫy khi viết điều kiện loading: Biome `noUnnecessaryConditions` báo sai trên `preview.isLoading`
+
+Viết `{preview.isLoading && …}` làm Biome kết luận "always falsy" (nó không narrow đúng discriminated
+union của React Query qua `enabled`). **Không** dập bằng `biome-ignore` — dùng `preview.data` làm điều
+kiện (đã là pattern sẵn có trong chính file đó, dòng badge "Còn N/M kỳ"). Xác nhận: `biome check` từng
+file về 0 lỗi mới; 8 lỗi còn lại ở 2 `use-operations.ts` đều ở dòng 153–487, ngoài hàm mới thêm (463+).

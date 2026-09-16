@@ -26,6 +26,8 @@
 
 import { useMemo, useState } from "react";
 
+import dynamic from "next/dynamic";
+
 // Import từ subpath riêng `bulk-draw-action/limits` (KHÔNG phải barrel `use-cases/draws`) — barrel đó
 // re-export use case dùng `DrawRepository` (mongodb driver), sẽ làm Next.js bundle mongodb
 // vào Client Component này và vỡ build ("Can't resolve 'child_process'").
@@ -38,10 +40,18 @@ import { cn } from "@/lib/utils";
 
 import type { DerivedRow } from "../../hub-types";
 import { useHubContext } from "../../use-hub-context";
-import { BulkConfirmDialog, type BulkDialogActionKind } from "./bulk-confirm-dialog";
+import type { BulkDialogActionKind } from "./bulk-confirm-dialog";
 import { partitionByAction } from "./partition-by-action";
 import { BulkActionKind } from "./queue-types";
 import { useBulkAction, useBulkBatchAction } from "./use-bulk-mutations";
+
+/**
+ * Dialog xác nhận — `next/dynamic` vì chỉ mount sau khi staff bấm 1 action bulk.
+ * Cùng module với bản lazy ở `hub-expand-panel.tsx` → 2 nơi share 1 chunk, tải 1 lần.
+ */
+const BulkConfirmDialog = dynamic(() => import("./bulk-confirm-dialog").then((m) => m.BulkConfirmDialog), {
+  loading: () => null,
+});
 
 interface ActionButtonDef {
   kind: BulkDialogActionKind;
@@ -60,6 +70,9 @@ export function HubBulkActionBar() {
   const nowMs = meta.getNowMs();
 
   const [openDialog, setOpenDialog] = useState<BulkDialogActionKind | null>(null);
+  // Các loại dialog đã từng mở trong phiên — chỉ THÊM, không bao giờ xoá. Gate mount để
+  // `next/dynamic` không tải chunk `BulkConfirmDialog` trong first-load. Xem comment ở render site.
+  const [openedKinds, setOpenedKinds] = useState<ReadonlySet<BulkDialogActionKind>>(() => new Set());
 
   const settleMutation = useBulkAction(BulkActionKind.Settle);
   const closeSalesMutation = useBulkAction(BulkActionKind.CloseSales);
@@ -160,6 +173,7 @@ export function HubBulkActionBar() {
     // Reset progress cũ của lô TRƯỚC (nếu có) — tránh dialog mở lên hiện nhầm số "đã xong"
     // của lần chạy trước khi job mới chưa kịp gọi `run()`.
     batchForKind(kind).resetBatch();
+    setOpenedKinds((curr) => (curr.has(kind) ? curr : new Set(curr).add(kind)));
     setOpenDialog(kind);
   }
 
@@ -191,7 +205,13 @@ export function HubBulkActionBar() {
       <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 border-primary/30 border-t-2 bg-card px-4 py-3 shadow-[0_-8px_28px_rgba(0,0,0,0.12)] dark:border-primary/40 dark:shadow-[0_-8px_28px_rgba(0,0,0,0.5)]">
         {/* Trái: clear + action — sát cột checkbox để chọn xong bấm ngay, không kéo chuột ngang bảng. */}
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <Button variant="ghost" size="icon" className="size-7 shrink-0" onClick={actions.clearSelection} aria-label="Bỏ chọn">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 shrink-0"
+            onClick={actions.clearSelection}
+            aria-label="Bỏ chọn"
+          >
             <X className="size-4" />
           </Button>
           {buttons
@@ -223,18 +243,28 @@ export function HubBulkActionBar() {
         </div>
       </div>
 
-      {buttons.map((btn) => (
-        <BulkConfirmDialog
-          key={btn.kind}
-          kind={btn.kind}
-          open={openDialog === btn.kind}
-          onOpenChange={(o) => setOpenDialog(o ? btn.kind : null)}
-          targetRows={targetRowsForKind(btn.kind)}
-          isPending={mutationForKind(btn.kind).isPending}
-          batchState={batchForKind(btn.kind).batchState}
-          onConfirm={() => handleConfirm(btn.kind)}
-        />
-      ))}
+      {/* Chỉ render dialog của action ĐANG mở HOẶC đã từng mở — bản trước map cả `buttons` nên 3
+          dialog mount đồng thời (2 cái luôn `open={false}`, chỉ tốn chi phí). Kết hợp
+          `next/dynamic` ở khối import, chunk dialog chỉ tải khi staff bấm action đầu tiên.
+
+          Dùng `openedKinds` (chỉ thêm, không xoá) chứ KHÔNG filter thẳng theo `openDialog === kind`:
+          filter thẳng sẽ unmount dialog ngay khoảnh khắc `open` chuyển false, cắt mất animation
+          đóng của Radix Dialog và làm mất progress UI của job nhiều lô (`useBulkBatchAction` giữ
+          state ngoài dialog, nhưng dialog cần còn mount để hiện). */}
+      {buttons
+        .filter((btn) => openedKinds.has(btn.kind))
+        .map((btn) => (
+          <BulkConfirmDialog
+            key={btn.kind}
+            kind={btn.kind}
+            open={openDialog === btn.kind}
+            onOpenChange={(o) => setOpenDialog(o ? btn.kind : null)}
+            targetRows={targetRowsForKind(btn.kind)}
+            isPending={mutationForKind(btn.kind).isPending}
+            batchState={batchForKind(btn.kind).batchState}
+            onConfirm={() => handleConfirm(btn.kind)}
+          />
+        ))}
     </>
   );
 }

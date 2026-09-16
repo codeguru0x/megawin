@@ -388,10 +388,24 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 </span>
               </div>
 
-              <div className="divide-y divide-border/50 max-h-132 overflow-y-auto">
+              {/* Chiều cao CỐ ĐỊNH, KHÔNG `max-h-*`: lúc chờ preview `rows` rỗng nên vùng này chỉ
+                  cao bằng 1 dòng placeholder, data về là bung hết ⇒ dialog nhảy 379px → 863px (đo
+                  16/09/2026, sampling rAF: cú nhảy ở t=626ms). Khoá cứng ⇒ dialog mở ra đã đúng
+                  kích thước cuối, danh sách cuộn bên trong.
+
+                  `min(33rem,45vh)` thay vì `33rem` cứng: 33rem + header + footer = 863px, đã vượt
+                  viewport laptop 13" (~760px khả dụng) nên bản cũ vừa nhảy vừa tràn. */}
+              <div className="divide-y divide-border/50 h-[min(33rem,45vh)] overflow-y-auto">
                 {rows.length === 0 && (
-                  <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-                    Nhập số kỳ hợp lệ (1–{availableDraws.length}) hoặc để trống để tạo tất cả.
+                  <p className="flex h-full items-center justify-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                    {preview.data ? (
+                      `Nhập số kỳ hợp lệ (1–${availableDraws.length}) hoặc để trống để tạo tất cả.`
+                    ) : (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin" />
+                        Đang lấy danh sách kỳ còn tạo được…
+                      </>
+                    )}
                   </p>
                 )}
                 {rows.map((row, i) => (

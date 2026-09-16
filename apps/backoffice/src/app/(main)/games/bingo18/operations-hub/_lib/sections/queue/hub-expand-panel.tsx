@@ -82,6 +82,7 @@
 
 import { useState } from "react";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
@@ -102,10 +103,18 @@ import { OpsStage, StageHealth, stageStartMs } from "../../derive-draw-state";
 import type { DerivedRow } from "../../hub-types";
 import { RelativeDuration } from "../../relative-duration";
 import { useHubContext } from "../../use-hub-context";
-import { BulkConfirmDialog, type BulkDialogActionKind } from "./bulk-confirm-dialog";
+import type { BulkDialogActionKind } from "./bulk-confirm-dialog";
 import { actionUnavailableReason, partitionByAction } from "./partition-by-action";
 import { BulkActionKind, OPS_STAGE_LABEL, SALE_GATE_LABEL } from "./queue-types";
 import { useBulkAction } from "./use-bulk-mutations";
+
+/**
+ * Dialog xác nhận — `next/dynamic` vì chỉ mount sau khi staff bấm 1 action trong panel.
+ * Type `BulkDialogActionKind` vẫn import tĩnh (`import type`, không phát sinh runtime code).
+ */
+const BulkConfirmDialog = dynamic(() => import("./bulk-confirm-dialog").then((m) => m.BulkConfirmDialog), {
+  loading: () => null,
+});
 
 /** Số cột bảng 5A (`hub-queue-table.tsx`) — panel expand `colSpan` khớp số này để full width. */
 const QUEUE_TABLE_COLUMN_COUNT = 10;
