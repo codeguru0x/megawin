@@ -1,19 +1,14 @@
 import type { ReactNode } from "react";
-import { ViewTransition } from "react";
 
 /**
- * Remount theo route segment — bọc content bằng ViewTransition để enter/exit fire đúng.
+ * Remount theo route segment (convention Next `template.tsx`).
  *
- * KHÔNG đặt ViewTransition trong `layout.tsx` (layout persist → enter/exit không chạy).
- * Sidebar/header nằm ở layout → không animate lại mỗi lần đổi route.
- *
- * Pattern: Suspense reveal + crossfade (`enter`/`exit` = auto). Không directional slide —
- * sidebar nav phẳng, không có hierarchy forward/back rõ (p2-02).
+ * ViewTransition (p2-02) tạm tắt: trên Vercel prod, soft-nav + trang client nặng
+ * (`config/tenant`, settle…) kích hoạt web-vitals INP/CLS attribution
+ * (`reportAllChanges` → `Cannot read properties of undefined (reading 'startTime')`).
+ * Stack anonymous/`requestIdleCallback` — không phải app code; nhưng Uncaught spam console.
+ * Bật lại khi Next/web-vitals vá hoặc có gate theo `prefers-reduced-motion` + feature flag.
  */
 export default function MainTemplate({ children }: { children: ReactNode }) {
-  return (
-    <ViewTransition enter="auto" exit="auto" default="none">
-      {children}
-    </ViewTransition>
-  );
+  return children;
 }

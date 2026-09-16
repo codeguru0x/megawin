@@ -1,8 +1,14 @@
 # p2-02 — View Transitions qua `(main)/template.tsx` (polish, không correctness)
 
-> **Phase:** P2 · **Status:** ✅ done · **Phụ thuộc:** không phụ thuộc chặt — làm bất kỳ lúc nào
+> **Phase:** P2 · **Status:** ⏸️ rolled back (prod) · **Phụ thuộc:** không phụ thuộc chặt — làm bất kỳ lúc nào
 > **sau khi P1 ổn định** (theo `00-overview.md` §2). Không chặn, không bị chặn.
 > **Rủi ro dữ liệu: KHÔNG** — thuần CSS/UX, không đụng data/cache.
+>
+> **Rollback 16/09/2026:** `<ViewTransition>` + CSS tạm gỡ khỏi `(main)/template.tsx`.
+> Vercel prod: soft-nav vào trang client nặng (`games/*/config/tenant`, settle…) → Uncaught
+> `Cannot read properties of undefined (reading 'startTime')` trong web-vitals
+> (`reportAllChanges` / `requestIdleCallback`). Không phải logic trang; spam console.
+> Bật lại khi Next/web-vitals vá hoặc có feature flag.
 > **Nguồn API:** `next@16.3.5` guide `view-transitions.md` + `template.md` + `react@19.3.0`
 > (`ViewTransition` đã ổn định — xác nhận bằng `Object.keys(require('react'))`).
 
