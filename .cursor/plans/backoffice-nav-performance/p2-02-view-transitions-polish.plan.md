@@ -1,14 +1,18 @@
 # p2-02 — View Transitions qua `(main)/template.tsx` (polish, không correctness)
 
-> **Phase:** P2 · **Status:** ⏸️ rolled back (prod) · **Phụ thuộc:** không phụ thuộc chặt — làm bất kỳ lúc nào
+> **Phase:** P2 · **Status:** ✅ done · **Phụ thuộc:** không phụ thuộc chặt — làm bất kỳ lúc nào
 > **sau khi P1 ổn định** (theo `00-overview.md` §2). Không chặn, không bị chặn.
 > **Rủi ro dữ liệu: KHÔNG** — thuần CSS/UX, không đụng data/cache.
 >
-> **Rollback 16/09/2026:** `<ViewTransition>` + CSS tạm gỡ khỏi `(main)/template.tsx`.
-> Vercel prod: soft-nav vào trang client nặng (`games/*/config/tenant`, settle…) → Uncaught
-> `Cannot read properties of undefined (reading 'startTime')` trong web-vitals
-> (`reportAllChanges` / `requestIdleCallback`). Không phải logic trang; spam console.
-> Bật lại khi Next/web-vitals vá hoặc có feature flag.
+> **Điều tra 16/09/2026 — `startTime` KHÔNG phải bug của app (đã đóng):**
+> Uncaught `Cannot read properties of undefined (reading 'startTime')` khi soft-nav vào
+> `games/*/config/tenant`, settle… phát sinh từ **React DevTools extension**, không phải code app.
+> Bằng chứng: stack frame trỏ `installHook.js` (content script của extension) và đoạn code lỗi
+> đọc `window.devToolsReportSoftNavs` — cờ chỉ DevTools đặt — trong bộ đo `onINP`/`onCLS`
+> (`t.entries[0].startTime` với `entries` rỗng khi soft-nav). App **không** import `web-vitals`,
+> **không** dùng `useReportWebVitals`, Vercel Speed Insights đã tắt.
+> Cách xác nhận: mở lại trang trong tab ẩn danh (extension off) → lỗi biến mất.
+> Kết luận: giữ `<ViewTransition>`; rollback trước đó đã hoàn tác.
 > **Nguồn API:** `next@16.3.5` guide `view-transitions.md` + `template.md` + `react@19.3.0`
 > (`ViewTransition` đã ổn định — xác nhận bằng `Object.keys(require('react'))`).
 

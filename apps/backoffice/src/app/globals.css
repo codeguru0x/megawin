@@ -534,5 +534,21 @@ html {
   }
 }
 
-/* View Transitions CSS — tạm tắt cùng `<ViewTransition>` trong `(main)/template.tsx`
-   (prod: web-vitals `startTime` spam). Giữ comment để bật lại đồng bộ. */
+/* View Transitions — backoffice content (p2-02). Ngắn: điều hướng công cụ, không marketing. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 150ms;
+}
+
+::view-transition {
+  pointer-events: none; /* giữ click được trong lúc transition (guide chính thức) */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
