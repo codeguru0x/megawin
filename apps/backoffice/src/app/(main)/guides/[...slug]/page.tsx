@@ -1,8 +1,12 @@
+import { Suspense } from "react";
+
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import type { Metadata } from "next";
 
+import { ListRouteSkeleton } from "@/components/skeletons/route-skeletons";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -39,29 +43,45 @@ export function generateStaticParams() {
 }
 
 function resolveDoc(slug: string[]) {
-  if (slug.length !== 3) return null;
+  if (slug.length !== 3) {
+    return null;
+  }
   const [gameKey, topicKey, docSlug] = slug as [string, string, string];
   const found = findStaffGuideDoc(gameKey, topicKey, docSlug);
-  if (!found) return null;
+  if (!found) {
+    return null;
+  }
   const content = DOC_CONTENT[found.doc.file];
-  if (content == null) return null;
+  if (content == null) {
+    return null;
+  }
   return { ...found, content, gameKey, topicKey, docSlug };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const resolved = resolveDoc(slug);
-  if (!resolved) return { title: "Không tìm thấy hướng dẫn" };
+  if (!resolved) {
+    return { title: "Không tìm thấy hướng dẫn" };
+  }
   return {
     title: `${resolved.doc.title} — ${resolved.game.title}`,
     description: resolved.doc.description,
   };
 }
 
-export default async function GuideDocPage({ params }: PageProps) {
-  const { slug } = await params;
+/**
+ * Nội dung doc guides — 100% build-time markdown, không phân quyền theo role.
+ * `'use cache'` tách khỏi `(main)/layout` session-dynamic (p2-01).
+ */
+async function GuideDocContent({ slug }: { slug: string[] }) {
+  "use cache";
+  cacheLife("days");
+
   const resolved = resolveDoc(slug);
-  if (!resolved) notFound();
+  if (!resolved) {
+    notFound();
+  }
 
   const { game, topic, doc, content, gameKey, topicKey, docSlug } = resolved;
   const toc = extractToc(content);
@@ -76,7 +96,7 @@ export default async function GuideDocPage({ params }: PageProps) {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link prefetch={false} href="/guides">Hướng dẫn</Link>
+                <Link href="/guides">Hướng dẫn</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -105,5 +125,14 @@ export default async function GuideDocPage({ params }: PageProps) {
         </div>
       </aside>
     </div>
+  );
+}
+
+export default async function GuideDocPage({ params }: PageProps) {
+  const { slug } = await params;
+  return (
+    <Suspense fallback={<ListRouteSkeleton />}>
+      <GuideDocContent slug={slug} />
+    </Suspense>
   );
 }

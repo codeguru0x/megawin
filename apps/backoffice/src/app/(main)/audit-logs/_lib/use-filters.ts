@@ -36,14 +36,23 @@ const TARGET_TYPE_VALUES = Object.values(AuditTargetType) as [AuditTargetType, .
 /** Reset về trang đầu — dùng chung khi đổi bất kỳ filter nào. */
 const RESET_PAGE = { cursor: null, page: null, detail: null } as const;
 
-export function useAuditLogFilters() {
+/**
+ * Filter list mặc định (today-6 → today) — khớp default URL state của `useAuditLogFilters`.
+ * Dùng chung prefetch trang đầu (p1-02).
+ */
+export function getDefaultAuditLogListFilters(): { from: string; to: string } {
   const today = todayVN();
-  const sevenDaysAgo = formatVNDate(subDays(new TZDate(new Date(), VN_TIMEZONE), 6));
+  const from = formatVNDate(subDays(new TZDate(new Date(), VN_TIMEZONE), 6));
+  return { from, to: today };
+}
+
+export function useAuditLogFilters() {
+  const { from: defaultFrom, to: defaultTo } = getDefaultAuditLogListFilters();
 
   const [state, setState] = useQueryStates(
     {
-      from: parseAsString.withDefault(sevenDaysAgo),
-      to: parseAsString.withDefault(today),
+      from: parseAsString.withDefault(defaultFrom),
+      to: parseAsString.withDefault(defaultTo),
       actor: parseAsString.withDefault(""),
       actorType: parseAsStringLiteral(ACTOR_TYPE_VALUES),
       game: parseAsString.withDefault(""),

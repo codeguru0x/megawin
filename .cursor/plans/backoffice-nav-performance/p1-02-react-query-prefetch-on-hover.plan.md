@@ -1,6 +1,6 @@
 # p1-02 — `queryClient.prefetchQuery` on hover cho 4-5 route nóng
 
-> **Phase:** P1 · **Status:** ⏳ pending · **Phụ thuộc:** `p1-01` nên xong trước (dùng chung cơ chế
+> **Phase:** P1 · **Status:** ✅ done · **Phụ thuộc:** `p1-01` nên xong trước (dùng chung cơ chế
 > hover-intent, tránh 2 timer khác nhau trên cùng 1 link) · Nên làm sau/cùng `p1-03` (cần đúng
 > `staleTime` đã chuẩn hoá trước khi quyết định prefetch bao lâu 1 lần)
 

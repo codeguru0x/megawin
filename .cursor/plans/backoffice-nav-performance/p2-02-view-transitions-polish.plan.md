@@ -1,109 +1,159 @@
-# p2-02 — View Transitions cho layout content khi đổi route (polish, không correctness)
+# p2-02 — View Transitions qua `(main)/template.tsx` (polish, không correctness)
 
-> **Phase:** P2 · **Status:** ⏳ pending · **Phụ thuộc:** không phụ thuộc chặt vào plan nào khác —
-> có thể làm bất kỳ lúc nào **sau khi P1 ổn định** (theo `00-overview.md` §2: "làm bất kỳ lúc nào sau
-> P1"). Không chặn, không bị chặn. **Rủi ro dữ liệu: KHÔNG** — thuần CSS/UX, không đụng data/cache.
+> **Phase:** P2 · **Status:** ✅ done · **Phụ thuộc:** không phụ thuộc chặt — làm bất kỳ lúc nào
+> **sau khi P1 ổn định** (theo `00-overview.md` §2). Không chặn, không bị chặn.
+> **Rủi ro dữ liệu: KHÔNG** — thuần CSS/UX, không đụng data/cache.
+> **Nguồn API:** `next@16.3.5` guide `view-transitions.md` + `template.md` + `react@19.3.0`
+> (`ViewTransition` đã ổn định — xác nhận bằng `Object.keys(require('react'))`).
 
 ## 1. Mục tiêu
 
 Hiện tại chuyển route trong `(main)` là "cắt cứng" — nội dung cũ biến mất, nội dung mới xuất hiện
-ngay (hoặc qua `loading.tsx` nếu route đó có, sau `p0-02`). React 19.2's `<ViewTransition>` cho phép
-thêm animation morph/fade/slide mượt giữa 2 trạng thái DOM khi route đổi, tăng cảm giác "webapp" mà
-**không đổi bất kỳ logic fetch/cache nào** — đây là lớp trang trí cuối cùng, cố ý làm SAU khi mọi thứ
-về tốc độ/đúng dữ liệu (P0, P1) đã ổn định, để không lẫn nguyên nhân nếu có regression.
+ngay (hoặc qua `loading.tsx` nếu route đó có, sau `p0-02`). React 19 `<ViewTransition>` cho phép
+thêm animation morph/fade giữa 2 trạng thái DOM khi route đổi, tăng cảm giác "webapp" mà
+**không đổi bất kỳ logic fetch/cache nào** — lớp trang trí cuối cùng, cố ý làm SAU khi mọi thứ
+về tốc độ/đúng dữ liệu (P0, P1) đã ổn định.
 
-## 2. Phạm vi — CHỈ vùng content chính, không đụng chrome cố định
+## 2. ⚠️ Sửa lỗi thiết kế bản cũ — KHÔNG đặt trong `layout.tsx`
 
-`(main)/layout.tsx` là nơi duy nhất cần sửa — bọc phần `{children}` (content thay đổi theo route)
-bằng `<ViewTransition>`, **giữ nguyên** sidebar/header (không animate lại mỗi lần đổi route, chúng
-không đổi DOM).
+Bản đầu (10/09) đề xuất bọc `{children}` trong `(main)/layout.tsx`. **SAI** theo guide chính thức
+`view-transitions.md` (Next 16.3.5):
+
+> *"Put the wrapper in each `page.tsx`, not the layout. Layouts persist across navigations, so
+> enter and exit never fire there."*
+
+Đặt trong layout → enter/exit **không bao giờ chạy** — animation vô hiệu, chỉ tốn wrapper.
+
+### 2.1. Vì sao chọn `template.tsx` thay vì sửa từng `page.tsx`
+
+Guide chính thức dùng từng `page.tsx` vì ví dụ demo chỉ có vài route. Backoffice có **~84 route**
+dưới `(main)` — sửa từng page là chắp vá, dễ sót, khó rollback.
+
+`template.md` (file convention Next) xác nhận template:
+
+- Nhận `key` riêng theo route segment → remount mỗi lần điều hướng ở segment đó.
+- Mục đích chính thức gồm: reset state Client Components, re-sync `useEffect`, và
+  *"Suspense boundaries inside layouts only show a fallback on first load, while templates show
+  it on every navigation."*
+
+→ `(main)/template.tsx` bọc `<ViewTransition>` **một lần** cover mọi page con, đúng convention,
+không chắp vá.
+
+### 2.2. Pattern motion — Suspense reveal + crossfade, KHÔNG directional slide
+
+Áp Step 2 (Suspense reveal) + Step 4 (same-route / content crossfade) của `view-transitions.md`.
+
+**Không** dùng Step 3 (directional `nav-forward` / `nav-back`):
+
+- Backoffice là sidebar nav **phẳng** — 84 route không có hệ thống cấp bậc "đi sâu / quay lại" rõ.
+- Guide cảnh báo: *"violating it feels disorienting"* khi gán hướng sai.
+- Gán `transitionTypes` cho ~91 `<Link>` sidebar là scope lớn, dễ sai, không tỷ lệ với mục polish.
+
+## 3. Việc phải làm
+
+### 3.1. Tạo `apps/backoffice/src/app/(main)/template.tsx`
 
 ```tsx
-// apps/backoffice/src/app/(main)/layout.tsx — minh hoạ, đọc file thật trước khi sửa để khớp cấu trúc
-import { unstable_ViewTransition as ViewTransition } from "react";
+import type { ReactNode } from "react";
+import { ViewTransition } from "react";
 
-export default async function MainLayout({ children }: { children: React.ReactNode }) {
-  // ... giữ nguyên phần requireOperatorSession() + sidebar/header hiện có ...
+/**
+ * Remount theo route segment — bọc content bằng ViewTransition để enter/exit fire đúng.
+ * KHÔNG đặt ViewTransition trong layout.tsx (layout persist → enter/exit không chạy).
+ * Sidebar/header nằm ở layout → không animate lại mỗi lần đổi route.
+ */
+export default function MainTemplate({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <SiteHeader />
-        <main className="...">
-          <ViewTransition>{children}</ViewTransition>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <ViewTransition
+      enter="auto"
+      exit="auto"
+      default="none"
+    >
+      {children}
+    </ViewTransition>
   );
 }
 ```
 
-**Lưu ý API:** React 19.2 tại thời điểm viết plan này export `unstable_ViewTransition` (chưa stable
-API name) — xác nhận lại đúng tên export khi implement bằng cách đọc
-`node_modules/react/index.js`/types thật trong repo (`react@19.2.8` theo phân tích ban đầu), không
-copy tên export từ tài liệu cũ nếu đã đổi ở bản patch mới hơn.
+**API:** `import { ViewTransition } from "react"` — tên ổn định ở `react@19.3.0`.
+**KHÔNG** dùng `unstable_ViewTransition` (đã bỏ).
 
-## 3. CSS animation — dùng transition tối giản, không gây chú ý quá mức
+### 3.2. CSS — ngắn, tôn trọng `prefers-reduced-motion`
+
+Thêm vào `apps/backoffice/src/app/globals.css` (hoặc file CSS layout tương ứng nếu đã tách):
 
 ```css
-/* apps/backoffice/src/app/globals.css — thêm mới, không sửa rule cũ */
-
+/* View Transitions — backoffice content (p2-02). Ngắn: điều hướng công cụ, không marketing. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 150ms; /* ngắn — đây là điều hướng công cụ vận hành, không phải marketing site */
+  animation-duration: 150ms;
+}
+
+::view-transition {
+  pointer-events: none; /* giữ click được trong lúc transition (guide chính thức) */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
 }
 ```
 
-**Nguyên tắc:** animation phải NGẮN (≤ 150-200ms) và không che khuất nội dung — mục tiêu là "cảm giác
-liền mạch", không phải "hiệu ứng đẹp mắt làm chậm cảm nhận". Test với `prefers-reduced-motion` (staff
-có thể đã tắt animation ở OS) — đảm bảo tôn trọng setting đó (React ViewTransition/CSS
-`@media (prefers-reduced-motion: reduce)` tự tắt theo chuẩn, xác nhận lại bằng test tay §5.4).
+**Nguyên tắc:** ≤ 150–200ms. Mục tiêu "liền mạch", không "hiệu ứng đẹp làm chậm cảm nhận".
 
-## 4. Việc phải làm
+### 3.3. KHÔNG sửa `layout.tsx` trong plan này
 
-1. Đọc `(main)/layout.tsx` hiện tại để xác định đúng vị trí bọc `{children}`.
-2. Thêm `<ViewTransition>` theo §2.
-3. Thêm CSS transition theo §3 vào `globals.css` (hoặc file CSS layout tương ứng nếu có tách riêng).
-4. **Không** áp dụng `<ViewTransition>` lồng nhau ở cấp con (ví dụ trong từng page riêng) ở vòng đầu
-   — chỉ 1 boundary ở layout gốc, tránh animation chồng animation gây giật.
+Chrome cố định (sidebar, header, providers) giữ nguyên ở layout. Chỉ thêm 1 file `template.tsx` + CSS.
+
+### 3.4. State phải persist ở layout/context — không lọt vào cây template
+
+Vì template remount theo thiết kế, mọi state client cần giữ qua điều hướng (search dialog mở,
+AI panel, sidebar collapse đã có cookie, QueryClient, …) **phải** nằm trong `layout.tsx` /
+provider — đã đúng hiện tại. Checklist §5 bắt buộc verify lại trước merge.
+
+## 4. Việc KHÔNG làm ở vòng đầu
+
+- Không lồng `<ViewTransition>` thêm ở từng page (tránh animation chồng).
+- Không `transitionTypes` / directional slide.
+- Không shared-element morph (không có cặp thumbnail↔hero trong backoffice ops).
 
 ## 5. Test/Review
 
-1. `pnpm --filter @megawin/backoffice check-types` — xác nhận export `ViewTransition` tồn tại đúng
-   tên trong version React đã cài (`react@19.2.8`), nếu lỗi type, kiểm tra lại tên export thật.
-2. `pnpm --filter @megawin/backoffice dev`, chuyển qua lại giữa vài route khác nhau (dashboard →
-   operations → reports) — quan sát trực quan: có animation mượt, KHÔNG giật/nhấp nháy, KHÔNG che
-   mất nội dung quá lâu.
-3. Test route có `loading.tsx` (sau `p0-02`) — xác nhận `ViewTransition` + `loading.tsx` **không xung
-   đột** (animation áp dụng đúng lúc, không làm skeleton hiện sai thời điểm hoặc bị animation che).
-4. **Test `prefers-reduced-motion`:** bật setting này ở OS (macOS: System Settings → Accessibility →
-   Display → Reduce motion), chuyển route lại — xác nhận animation tắt hoặc giảm đáng kể, không ép
-   staff xem hiệu ứng nếu họ đã tắt ở hệ thống.
-5. Test trên route có nội dung dài/bảng lớn (vd `reports/settle` với nhiều dòng) — xác nhận animation
-   không gây lag rõ rệt khi DOM lớn (đo bằng cảm quan; nếu cần số liệu, dùng Chrome Performance panel
-   ghi 1 lần chuyển route, xem thời gian frame).
-6. `pnpm lint` xanh cho `layout.tsx` + `globals.css`.
-7. Test hồi quy nhanh: các luồng có `router.push` bên trong (submit form rồi chuyển trang, ví dụ sau
-   khi lưu config) — xác nhận View Transition không làm mất state cần giữ (toast thông báo vẫn hiện
-   đúng, không bị animation "cắt" giữa đường).
+1. `pnpm --filter @megawin/backoffice check-types` — `ViewTransition` resolve đúng từ `"react"`.
+2. `pnpm --filter @megawin/backoffice dev` — chuyển dashboard → operations → reports: crossfade
+   ~150ms, không giật, không che nội dung lâu.
+3. Route có `loading.tsx` (sau `p0-02`): ViewTransition + skeleton **không xung đột**.
+4. **`prefers-reduced-motion`:** bật Reduce motion (macOS Accessibility) → animation tắt / 0s.
+5. Route DOM lớn (`reports/settle`): không lag rõ (cảm quan; Chrome Performance nếu nghi ngờ).
+6. **State persist (bắt buộc — rủi ro template remount):**
+   - Mở SearchDialog / gõ vài ký tự → đổi route → xác nhận state dialog/sidebar **không** bị reset
+     sai (providers ở layout vẫn giữ).
+   - AI panel mở → đổi route → panel vẫn mở (state từ cookie + provider ở layout).
+   - React Query cache vẫn còn (QueryProvider ở layout).
+7. `router.push` sau submit form (lưu config): toast vẫn hiện, không bị cắt giữa đường.
+8. `pnpm lint` xanh cho `template.tsx` + CSS.
 
 ## 6. Tác dụng kỳ vọng
 
 | Trước | Sau |
 |---|---|
-| Đổi route: nội dung cũ biến mất ngay lập tức, nội dung mới xuất hiện đột ngột | Có transition mượt 150ms — cảm giác liên tục hơn, giống app native |
-| Không phân biệt được "trang đang tải" và "trang đã đổi xong" chỉ bằng UI (phải nhìn kỹ) | Animation tự thân là tín hiệu "đã chuyển trang", rõ ràng hơn cho user |
+| Đổi route: cắt cứng | Crossfade ~150ms — liền mạch hơn |
+| Plan cũ đặt VT trong layout → enter/exit không fire | `template.tsx` remount → enter/exit chạy đúng docs |
 
-## 7. Rủi ro & vì sao KHÔNG ảnh hưởng dữ liệu
+## 7. Rủi ro
 
 | Rủi ro | Đánh giá |
 |---|---|
-| Ảnh hưởng data/cache | Không — CSS + React rendering transition thuần, không chạm `fetch`/`useQuery`/Next cache |
-| Ảnh hưởng performance nếu lạm dụng | Thấp nếu tuân §3 (animation ngắn, 1 boundary duy nhất) — theo dõi qua test §5.5 |
-| Browser cũ không hỗ trợ View Transition API | React tự fallback (render không animation) nếu browser không hỗ trợ — không lỗi cứng, chỉ mất hiệu ứng |
+| Data/cache | Không — CSS + React transition thuần |
+| Performance DOM lớn | Thấp nếu ≤150ms, 1 boundary — theo dõi §5.5 |
+| Browser không hỗ trợ View Transition API | React fallback không animation — không lỗi cứng |
+| Remount template làm mất state | Thấp nếu state ở layout — bắt buộc test §5.6 |
 
 ## 8. Rollback
 
-Xoá `<ViewTransition>` wrapper trong `layout.tsx` (trả `{children}` về render trực tiếp), xoá CSS
-đã thêm trong `globals.css`. Không migration, không đụng logic nghiệp vụ — rollback tức thời, độc lập
-hoàn toàn với mọi plan khác trong thư mục.
+Xoá `apps/backoffice/src/app/(main)/template.tsx` + xoá CSS đã thêm. **Không** đụng `layout.tsx` —
+rollback tức thời, cô lập hơn bản plan cũ.

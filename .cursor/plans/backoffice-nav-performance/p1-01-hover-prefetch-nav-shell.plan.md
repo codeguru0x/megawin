@@ -1,6 +1,6 @@
 # p1-01 — `HoverPrefetchLink` cho nav shell (pilot → đo → rollout)
 
-> **Phase:** P1 · **Status:** ⏳ pending · **Phụ thuộc CỨNG:** `p0-01` phải xong + verify Network tab
+> **Phase:** P1 · **Status:** 📦 retired · **Phụ thuộc CỨNG:** `p0-01` phải xong + verify Network tab
 > (không làm plan này trước — đây chính là thứ tự đã gây sự cố `/ai` 04/09) · Nên có `p0-02` xong trước
 > để đo hiệu ứng tổng hợp (loading skeleton + hover prefetch cùng lúc)
 

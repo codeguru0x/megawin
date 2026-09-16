@@ -93,9 +93,11 @@ export function LayoutControls() {
     if (!value) {
       return;
     }
-    applyFont(value);
-    setFont(value);
-    void persistPreference("font", value);
+    // applyFont await ensureFontLoaded — tránh set data-font khi CSS var chưa có.
+    void applyFont(value).then(() => {
+      setFont(value);
+      void persistPreference("font", value);
+    });
   };
 
   const handleRestore = () => {

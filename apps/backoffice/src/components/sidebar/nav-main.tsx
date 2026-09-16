@@ -1,11 +1,12 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
+import { type ComponentProps, type FocusEvent, Fragment, type MouseEvent, useMemo, useRef } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import type { AccountRole } from "@megawin/identity/entities";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import type { Route } from "next";
 
@@ -31,6 +32,8 @@ import {
 import { hasAnyRole } from "@/lib/roles";
 import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
 
+import { getNavDataPrefetch } from "./nav-data-prefetch";
+
 interface NavMainProps {
   readonly items: readonly NavGroup[];
   /**
@@ -47,14 +50,82 @@ const IsComingSoon = () => (
   <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">Soon</span>
 );
 
+type LinkSlotProps = Omit<ComponentProps<typeof Link>, "href" | "prefetch" | "children">;
+
+/**
+ * `<Link>` trực tiếp — **phải** nhận mọi prop từ `SidebarMenuButton asChild` (Slot)
+ * (`className` có `[&>svg]:size-4`, `data-slot`, ref…). Bọc thêm component không forward
+ * prop → icon vỡ size (bug sau HoverPrefetchLink).
+ *
+ * `prefetch`: App Shell (partialPrefetching) → Client Router Cache theo `staleTimes.static` (1800s).
+ * Backoffice sidebar ít link, UI ít đổi — viewport prefetch nhanh hơn HoverPrefetchLink.
+ *
+ * `onIntent`: làm ấm React Query (p1-02), độc lập shell prefetch; chỉ fire 1 lần / mount.
+ */
+function NavHref({
+  item,
+  iconClassName,
+  onIntent,
+  onMouseEnter,
+  onFocus,
+  ...slotProps
+}: {
+  item: Pick<NavMainItem, "url" | "newTab" | "icon" | "title" | "comingSoon">;
+  iconClassName?: string;
+  onIntent?: () => void;
+} & LinkSlotProps) {
+  const intentFiredRef = useRef(false);
+
+  const fireIntent = () => {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: ref mutate runtime; Biome không theo dõi `.current`.
+    if (intentFiredRef.current || !onIntent) {
+      return;
+    }
+    intentFiredRef.current = true;
+    onIntent();
+  };
+
+  if (item.newTab) {
+    return (
+      <Link {...slotProps} prefetch={false} href={item.url as Route} target="_blank" rel="noopener noreferrer">
+        {item.icon && <item.icon className={iconClassName} />}
+        <span>{item.title}</span>
+        {item.comingSoon && <IsComingSoon />}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      {...slotProps}
+      prefetch
+      href={item.url as Route}
+      onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+        onMouseEnter?.(e);
+        fireIntent();
+      }}
+      onFocus={(e: FocusEvent<HTMLAnchorElement>) => {
+        onFocus?.(e);
+        fireIntent();
+      }}
+    >
+      {item.icon && <item.icon className={iconClassName} />}
+      <span>{item.title}</span>
+      {item.comingSoon && <IsComingSoon />}
+    </Link>
+  );
+}
+
 const NavItemExpanded = ({
   item,
   isActive,
   isSubmenuOpen,
+  resolveIntent,
 }: {
   item: NavMainItem;
   isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
   isSubmenuOpen: (subItems?: NavMainItem["subItems"]) => boolean;
+  resolveIntent: (url: string) => (() => void) | undefined;
 }) => {
   // Item không có submenu → link thuần, KHÔNG bọc Collapsible/CollapsibleTrigger.
   // Bọc trigger lên <Link> gắn aria-controls/aria-expanded (useId) gây hydration
@@ -63,11 +134,7 @@ const NavItemExpanded = ({
     return (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton asChild aria-disabled={item.comingSoon} isActive={isActive(item.url)} tooltip={item.title}>
-          <Link prefetch={false} href={item.url as Route} target={item.newTab ? "_blank" : undefined}>
-            {item.icon && <item.icon />}
-            <span>{item.title}</span>
-            {item.comingSoon && <IsComingSoon />}
-          </Link>
+          <NavHref item={item} onIntent={resolveIntent(item.url)} />
         </SidebarMenuButton>
       </SidebarMenuItem>
     );
@@ -98,11 +165,7 @@ const NavItemExpanded = ({
                   </p>
                 )}
                 <SidebarMenuSubButton aria-disabled={subItem.comingSoon} isActive={isActive(subItem.url)} asChild>
-                  <Link prefetch={false} href={subItem.url as Route} target={subItem.newTab ? "_blank" : undefined}>
-                    {subItem.icon && <subItem.icon />}
-                    <span>{subItem.title}</span>
-                    {subItem.comingSoon && <IsComingSoon />}
-                  </Link>
+                  <NavHref item={subItem} onIntent={resolveIntent(subItem.url)} />
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             ))}
@@ -116,9 +179,11 @@ const NavItemExpanded = ({
 const NavItemCollapsed = ({
   item,
   isActive,
+  resolveIntent,
 }: {
   item: NavMainItem;
   isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
+  resolveIntent: (url: string) => (() => void) | undefined;
 }) => {
   return (
     <SidebarMenuItem key={item.title}>
@@ -151,11 +216,11 @@ const NavItemCollapsed = ({
                   aria-disabled={subItem.comingSoon}
                   isActive={isActive(subItem.url)}
                 >
-                  <Link prefetch={false} href={subItem.url as Route} target={subItem.newTab ? "_blank" : undefined}>
-                    {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
-                    <span>{subItem.title}</span>
-                    {subItem.comingSoon && <IsComingSoon />}
-                  </Link>
+                  <NavHref
+                    item={subItem}
+                    iconClassName="[&>svg]:text-sidebar-foreground"
+                    onIntent={resolveIntent(subItem.url)}
+                  />
                 </SidebarMenuSubButton>
               </DropdownMenuItem>
             </Fragment>
@@ -169,6 +234,9 @@ const NavItemCollapsed = ({
 export function NavMain({ items, userRoles }: NavMainProps) {
   const path = usePathname();
   const { state, isMobile } = useSidebar();
+  const queryClient = useQueryClient();
+
+  const resolveIntent = (url: string) => getNavDataPrefetch(url, queryClient);
 
   const isItemActive = (url: string, subItems?: NavMainItem["subItems"]) => {
     if (subItems?.length) {
@@ -221,20 +289,30 @@ export function NavMain({ items, userRoles }: NavMainProps) {
                           tooltip={item.title}
                           isActive={isItemActive(item.url)}
                         >
-                          <Link prefetch={false} href={item.url as Route} target={item.newTab ? "_blank" : undefined}>
-                            {item.icon && <item.icon />}
-                            <span>{item.title}</span>
-                          </Link>
+                          <NavHref item={item} onIntent={resolveIntent(item.url)} />
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     );
                   }
                   // Otherwise, render the dropdown as before
-                  return <NavItemCollapsed key={item.title} item={item} isActive={isItemActive} />;
+                  return (
+                    <NavItemCollapsed
+                      key={item.title}
+                      item={item}
+                      isActive={isItemActive}
+                      resolveIntent={resolveIntent}
+                    />
+                  );
                 }
                 // Expanded view
                 return (
-                  <NavItemExpanded key={item.title} item={item} isActive={isItemActive} isSubmenuOpen={isSubmenuOpen} />
+                  <NavItemExpanded
+                    key={item.title}
+                    item={item}
+                    isActive={isItemActive}
+                    isSubmenuOpen={isSubmenuOpen}
+                    resolveIntent={resolveIntent}
+                  />
                 );
               })}
             </SidebarMenu>

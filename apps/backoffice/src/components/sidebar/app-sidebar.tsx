@@ -1,8 +1,11 @@
 "use client";
 
+import { type ComponentProps, type FocusEvent, type MouseEvent, useRef } from "react";
+
 import Link from "next/link";
 
 import type { AccountRole } from "@megawin/identity/entities";
+import { useQueryClient } from "@tanstack/react-query";
 import { Crown } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
@@ -20,6 +23,7 @@ import type { AccountDisplayUser } from "@/lib/account-user";
 import { operatorSidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
+import { getNavDataPrefetch } from "./nav-data-prefetch";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 
@@ -38,7 +42,49 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: AccountDisplayUser;
 }
 
+/**
+ * Logo → `/` (dashboard). `prefetch` + forward Slot props giống `NavHref`.
+ * RQ prefetch Dashboard trên hover/focus (p1-02).
+ */
+function BrandLink({
+  onIntent,
+  onMouseEnter,
+  onFocus,
+  ...slotProps
+}: { onIntent?: () => void } & Omit<ComponentProps<typeof Link>, "href" | "prefetch" | "children">) {
+  const intentFiredRef = useRef(false);
+
+  const fireIntent = () => {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: ref mutate runtime; Biome không theo dõi `.current`.
+    if (intentFiredRef.current || !onIntent) {
+      return;
+    }
+    intentFiredRef.current = true;
+    onIntent();
+  };
+
+  return (
+    <Link
+      {...slotProps}
+      prefetch
+      href="/"
+      onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+        onMouseEnter?.(e);
+        fireIntent();
+      }}
+      onFocus={(e: FocusEvent<HTMLAnchorElement>) => {
+        onFocus?.(e);
+        fireIntent();
+      }}
+    >
+      <Crown />
+      <span className="font-semibold text-base">{APP_CONFIG.name}</span>
+    </Link>
+  );
+}
+
 export function AppSidebar({ scope: _scope, userRoles, user, ...props }: AppSidebarProps) {
+  const queryClient = useQueryClient();
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
       sidebarVariant: s.sidebarVariant,
@@ -49,6 +95,7 @@ export function AppSidebar({ scope: _scope, userRoles, user, ...props }: AppSide
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
+  const dashboardIntent = getNavDataPrefetch("/", queryClient);
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
@@ -56,10 +103,7 @@ export function AppSidebar({ scope: _scope, userRoles, user, ...props }: AppSide
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link prefetch={false} href="/">
-                <Crown />
-                <span className="font-semibold text-base">{APP_CONFIG.name}</span>
-              </Link>
+              <BrandLink onIntent={dashboardIntent} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

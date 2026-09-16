@@ -11,9 +11,10 @@
 | Câu hỏi | Trả lời |
 |---|---|
 | Vì sao `prefetch={true}` từng làm trang “load liên tục”? | Client Router Cache của **segment động** mặc định `staleTimes.dynamic = 0` → payload prefetch **hết hạn ngay**. Kết hợp `prefetch={true}` (full RSC) hoặc `router.prefetch(..., { onInvalidate })` tự re-prefetch → **vòng request không giới hạn**. |
-| Backoffice có nên bật `prefetch={true}` hàng loạt không? | **Không.** Hầu hết page là Client + fetch API; full RSC prefetch **không làm ấm data API** nhưng vẫn tốn server + có nguy cơ loop / storm. |
-| Giải pháp đúng nhất? | **Tách 2 tầng:** (A) Next chỉ tối ưu **shell / JS / layout** khi navigate; (B) React Query là **nguồn chân lý data** (staleTime / poll / invalidate sau mutation). Prefetch Link = soft hoặc hover-intent; **không** dùng Link prefetch để “cache data nghiệp vụ”. |
+| Backoffice có nên bật `prefetch={true}` hàng loạt không? | **Sidebar chính: Có** (ít link cố định, shell UI ít đổi) — sau khi `staleTimes` > 0. **Không** trên bảng dày / Hub expand / `target="_blank"`. |
+| Giải pháp đúng nhất? | **Tách 2 tầng:** (A) Next Client Cache = shell (`staleTimes` 300s + `<Link prefetch>` sidebar); (B) React Query = data API (prefetch on hover cho route nóng). **Không** dùng HoverPrefetchLink cho sidebar cố định — pattern đó cho marketing nhiều link viewport. |
 | Cache Components / Partial Prefetching? | Hướng dài hạn tốt cho shell, **không thay** RQ+API. Chỉ adopt khi đã có Suspense shell và **không** kỳ vọng prefetch RSC thay API. |
+| `staleTimes` 60s có đủ không? | **Không tối ưu cho backoffice.** Shell RSC ít đổi; staff thường ở 1 trang >60s. TTL **1800s (30 phút)** — Client Cache in-tab; deploy Vercel **không** tự clear; hard refresh / tab mới / hết TTL mới refetch shell. Data API vẫn RQ. |
 
 ---
 
@@ -102,24 +103,19 @@ Nguyên tắc vàng:
 
 | Việc | Chi tiết | Data chuẩn? |
 |---|---|---|
-| **Giữ shared layout** | `(main)/layout.tsx` không remount khi đổi sibling route → sidebar/header giữ nguyên (đã có). | Không ảnh hưởng API. |
-| **Hover-intent prefetch trên nav chính** | Sidebar: `prefetch={false}` mặc định; `onMouseEnter` / focus → `prefetch={null}` (default auto) hoặc `router.prefetch(href)` **một lần**, **không** `onInvalidate` loop. | Chỉ ấm JS/RSC shell. |
-| **`loading.tsx` theo nhóm route hay dùng** | games/*/operations, reports, accounts… Skeleton khớp layout → click thấy UI ngay, không trắng. | Shell only. |
-| **Không `prefetch={true}` hàng loạt** | Đặc biệt link có `searchParams`/`drawId`, deep report, dialog link. | Tránh full dynamic RSC. |
-| **Giữ `prefetch={false}`** | Bảng dày (Hub expand, 30+ row link), `target="_blank"`, link phụ trong drawer. | Đúng như plan Hub. |
-
-Pattern khuyến nghị (nav):
+| **`staleTimes` 1800s** | Client Router Cache in-tab (không phải CDN). Deploy không tự xoá. Hard refresh / tab mới / hết TTL. | Không ảnh hưởng RQ. |
+| **`<Link prefetch>` sidebar chính** | Ít link cố định → viewport prefetch đầy đủ. Forward mọi prop từ Radix `Slot` (`asChild`) — thiếu `className`/`[&>svg]:size-4` → icon vỡ. | Chỉ ấm JS/RSC shell. |
+| **`loading.tsx` theo nhóm route** | Skeleton khớp layout → click thấy UI ngay. | Shell only. |
+| **Giữ `prefetch={false}`** | Bảng dày (Hub expand, 30+ row), `target="_blank"`, link phụ drawer/`nav-user`. | Đúng như plan Hub. |
+| **Không HoverPrefetchLink** | Pattern Next cho marketing nhiều link trong viewport. Sidebar backoffice không cần; đã thử → bug Slot + phức tạp thừa. | — |
 
 ```tsx
-// Hover mới prefetch shell — không poll onInvalidate
-<Link
-  href={url}
-  prefetch={false}
-  onMouseEnter={() => router.prefetch(url)} // một lần; React Strict Mode: ok nếu idempotent
->
+// Sidebar: full prefetch + forward Slot props (SidebarMenuButton asChild)
+<Link {...slotProps} prefetch href={url}>
+  {icon}
+  <span>{title}</span>
+</Link>
 ```
-
-Hoặc component shared `HoverPrefetchLink` (docs Next: `prefetch={active ? null : false}`).
 
 ### 4.2 Tầng B — Data đúng (API + React Query) — **bắt buộc**
 
@@ -193,7 +189,7 @@ Thứ tự an toàn:
 
 | Ngữ cảnh Link | `prefetch` | Ghi chú |
 |---|---|---|
-| Sidebar / top nav (ít link, hay click) | `false` + **hover** soft prefetch | Cảm giác app, không storm lúc mount |
+| Sidebar / top nav (ít link, hay click) | `prefetch` (`true`) | Sau `staleTimes` 300s — ấm shell; data vẫn RQ |
 | Hub / table 10–50 link cùng lúc | `false` | Giữ nguyên rationale plan Hub |
 | `target="_blank"` | `false` | Prefetch lãng phí (full document load) |
 | Deep link `?drawId=` / report query | `false` (hoặc hover soft) | Không `true` — URL data + dynamic |
@@ -219,19 +215,20 @@ Trước khi bật bất kỳ prefetch / cache Next nào trên route X:
 
 | Phase | Việc | Effort | Cảm giác | Rủi ro data |
 |---|---|---|---|---|
-| **P0** | `HoverPrefetchLink` cho sidebar + account nav; bỏ `prefetch={false}` cứng ở nav chính | Thấp | Cao | Thấp |
-| **P0** | Thêm `loading.tsx` cho `games/**`, `reports/**`, `accounts/**` (skeleton khớp) | Thấp | Cao | Không |
-| **P1** | `queryClient.prefetchQuery` on hover cho Hub / Dashboard / Operations entry | Trung | Rất cao | Thấp nếu `staleTime` khớp |
-| **P1** | Document + lint convention: cấm `prefetch={true}` + cấm `onInvalidate` poll | Thấp | — | Phòng tái phát |
+| **P0** | `staleTimes` 300s + `loading.tsx` coverage | Thấp | Cao | Không |
+| **P1** | Sidebar `<Link prefetch>` (không HoverPrefetchLink) + RQ prefetch on hover route nóng | Thấp | Rất cao | Thấp nếu `staleTime` khớp |
+| **P1** | Document: cấm `router.prefetch` + `onInvalidate` poll khi TTL = 0 | Thấp | — | Phòng tái phát |
 | **P2** | Cache Components chỉ cho guides / static; ops giữ RQ | Cao | Trung | Trung nếu làm ẩu |
-| **P2** | View Transitions trên layout content | Trung | Polish | Không |
+| **P2** | View Transitions trên `(main)/template.tsx` | Trung | Polish | Không |
+
+> Trạng thái thật: xem [`.cursor/plans/backoffice-nav-performance/00-overview.md`](../../.cursor/plans/backoffice-nav-performance/00-overview.md).
 
 ---
 
 ## 8. Tóm tắt một dòng cho team
 
-**Đừng tìm “cache Next = 0 nên tăng staleTimes rồi bật prefetch true”.**  
-Với backoffice, tối ưu đúng là: **shell prefetch có chủ đích (hover) + data freshness do React Query/API quyết định** — đó vừa hết loop, vừa nhanh như webapp, vừa giữ số liệu đúng.
+**Next = shell nhanh (`staleTimes` + Link prefetch sidebar). React Query = data đúng (API).**  
+Không nhầm Client Router Cache với cache số tiền / kỳ quay.
 
 ---
 
@@ -240,16 +237,31 @@ Với backoffice, tối ưu đúng là: **shell prefetch có chủ đích (hover
 Plan chi tiết từng bước (P0/P1/P2), có test/review/rollback cho mỗi việc, xem thư mục
 [`.cursor/plans/backoffice-nav-performance/`](../../.cursor/plans/backoffice-nav-performance/00-overview.md).
 Bảng roadmap §7 ở trên là bản tóm tắt gốc — nguồn cập nhật trạng thái thật (⏳/🔨/✅) nằm ở
-`00-overview.md` §1 của thư mục plan, không sửa lại bảng §7 ở đây.
+`00-overview.md` §1 của thư mục plan.
 
-## 10. Tham chiếu
+## 10. Ma trận `staleTime` — chốt sau p1-03
 
-- Next 16.3.4 local docs (bản THẬT đang cài — xác nhận bằng `node -e "require('next/package.json').version"`):
-  `node_modules/.pnpm/next@16.3.4.../node_modules/next/dist/docs/01-app/02-guides/instant-navigation.md`
-- Instant navigation route config: `.../03-api-reference/03-file-conventions/02-route-segment-config/instant.md`
-  (export tên `instant`, KHÔNG phải `unstable_instant` — tên cũ đã đổi ở `16.3.4`)
-- Partial Prefetching: `.../03-api-reference/05-config/01-next-config-js/partialPrefetching.md`
-  (mới có từ `v16.3.0`)
-- `staleTimes` / Client Cache — glossary + upgrading notes cùng thư mục docs trên
-- Hub: `use-hub-query.ts`, plan `p1-03-hub-detail-panel` (`prefetch={false}` bảng dày)
-- Config hiện tại: `apps/backoffice/next.config.ts` (chưa `cacheComponents` / `partialPrefetching` / `staleTimes`)
+Hai tầng cache độc lập (§2.2). Bảng dưới chỉ mô tả **React Query** (JSON từ API). Client Router
+Cache (`staleTimes.dynamic/static = 1800` sau p0-01) không nằm ở đây.
+
+| Loại màn | `staleTime` | `refetchInterval` | Ghi chú |
+|---|---|---|---|
+| Ops Hub (keno/bingo18) | `pollSeconds × 1000` | = staleTime | Đọc từ response |
+| Ops snapshot 1 kỳ | `30_000` (hoặc derive poll) | khớp poll | 7 game |
+| Live feed | `pollMs × 0.8` | `pollMs` từ `pollSeconds` | Fallback: keno/lotto/mega/power/bingo18 = 10s; max3d/pro = 30s (khớp `tickSeconds` default) |
+| Đã settled | `Infinity` | tắt | Dữ liệu không đổi |
+| Dashboard KPI hôm nay | `60_000` | `120_000` | Partial, đổi khi settle |
+| Dashboard live strip | `0` | `30_000` | Outstanding/jackpot — không cache "tươi giả" |
+| Outstanding theo account | `0` | — | Tiền treo |
+| Audit / activity / api-logs / workers / resultfeed | `10_000` | tuỳ trang | Màn theo dõi, không phải tiền trực tiếp |
+| Danh mục / draws list / jackpot | `60_000`–`5×60_000` | ít/không poll | Ít đổi trong session |
+
+**p1-03 đã sửa:** bingo18 / max3d / max3dpro live feed — bỏ hardcode, derive `pollSeconds` như 4 game còn lại. Default server (`tickSeconds` 10 / 30 / 30) khớp hardcode cũ → hành vi runtime tại cấu hình mặc định không đổi.
+
+## 11. Tham chiếu
+
+- Next 16.3.5 local docs (bản THẬT đang cài):
+  `apps/backoffice/node_modules/next/dist/docs/.../staleTimes.md`
+- Instant navigation / Partial Prefetching: cùng thư mục docs trên
+- Hub: `use-hub-query.ts`, plan `p1-03` trong `backoffice-nav-performance`
+- Config: `apps/backoffice/next.config.ts` (`staleTimes.dynamic: 60` sau p0-01)

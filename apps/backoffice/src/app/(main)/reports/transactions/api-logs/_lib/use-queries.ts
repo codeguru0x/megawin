@@ -66,6 +66,7 @@ export function useTxLogList(filters: TxLogListFilters) {
       return apiClient.get<ListTxLogsOutput>("/transactions/api-logs", { params });
     },
     getNextPageParam: (last) => last.nextCursor,
+    // 10s — màn theo dõi api-logs, không cần nhanh hơn nhịp người đọc (p1-03).
     staleTime: 10_000,
   });
 }
@@ -101,6 +102,7 @@ export function useTxLogsByBatch(batchId: string | null) {
       });
     },
     getNextPageParam: (last) => last.nextCursor,
+    // 10s — màn theo dõi api-logs batch, không cần nhanh hơn nhịp người đọc (p1-03).
     staleTime: 10_000,
   });
 }
@@ -122,6 +124,7 @@ export function useTxLogSummary(params: { from?: string; to?: string; enabled: b
       apiClient.get<GetTxLogsSummaryOutput>("/transactions/api-logs/summary", {
         params: { from: params.from!, to: params.to! },
       }),
+    // 10s — KPI summary range, không cần nhanh hơn nhịp người đọc (p1-03).
     staleTime: 10_000,
   });
 }

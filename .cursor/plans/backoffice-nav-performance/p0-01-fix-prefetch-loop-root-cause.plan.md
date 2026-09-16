@@ -1,6 +1,6 @@
 # p0-01 — Sửa gốc lỗi "load liên tục" (`staleTimes.dynamic = 0`) + cấm anti-pattern
 
-> **Phase:** P0 · **Status:** ⏳ pending · **Phụ thuộc:** không · **Chặn:** `p1-01`, mọi việc dùng
+> **Phase:** P0 · **Status:** ✅ done · **Phụ thuộc:** không · **Chặn:** `p1-01`, mọi việc dùng
 > `router.prefetch()` hoặc bật lại prefetch trên `<Link>`
 > **Nguồn bằng chứng:** `apps/backoffice/src/components/ai-chat/chat-header.tsx` dòng 24-30 (sự cố
 > thật 04/09/2026) + [`docs/analytics/backoffice-navigation-performance.md`](../../../docs/analytics/backoffice-navigation-performance.md) §3

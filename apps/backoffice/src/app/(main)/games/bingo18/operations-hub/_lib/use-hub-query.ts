@@ -7,7 +7,7 @@
 
 import type { OpsHubSnapshotOutput } from "@megawin/game-bingo18-application/use-cases/operations";
 import { apiClient } from "@megawin/next/client";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, noop, type QueryClient, useQuery } from "@tanstack/react-query";
 
 import { bingo18Keys } from "@/lib/query-keys";
 
@@ -16,8 +16,22 @@ const BASE = "/bingo18/operations";
 /** Nhịp poll fallback trước khi tick đầu trả về `pollSeconds` thật từ server config. */
 export const DEFAULT_POLL_SECONDS = 10;
 
-function fetchOpsHubSnapshot(): Promise<OpsHubSnapshotOutput> {
+/** Named export — dùng chung `useHubQuery` và `prefetchOpsHub` (p1-02). */
+export function fetchOpsHubSnapshot(): Promise<OpsHubSnapshotOutput> {
   return apiClient.get<OpsHubSnapshotOutput>(`${BASE}/hub-snapshot`);
+}
+
+/**
+ * Prefetch snapshot Ops Hub — staleTime = DEFAULT_POLL_SECONDS (chưa có pollSeconds từ server).
+ */
+export function prefetchOpsHub(qc: QueryClient): void {
+  void qc
+    .query({
+      queryKey: bingo18Keys.opsHub(),
+      queryFn: fetchOpsHubSnapshot,
+      staleTime: DEFAULT_POLL_SECONDS * 1000,
+    })
+    .catch(noop);
 }
 
 /**

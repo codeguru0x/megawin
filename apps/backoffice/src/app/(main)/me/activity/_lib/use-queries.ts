@@ -33,6 +33,7 @@ export function useMyAuditLogList(filters: MyAuditLogsListFilters, cursor: strin
       return apiClient.get<AuditLogPage>("/me/audit-logs", { params });
     },
     placeholderData: keepPreviousData,
+    // 10s — màn theo dõi activity, không cần nhanh hơn nhịp người đọc (p1-03).
     staleTime: 10_000,
   });
 }

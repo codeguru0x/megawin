@@ -9,7 +9,7 @@ import type {
   SourceEntity,
 } from "@megawin/resultfeed/entities";
 import type { DashboardStatsOutput } from "@megawin/resultfeed-application/use-cases/dashboard";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, noop, type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { type ConsensusListFilters, resultfeedKeys } from "@/lib/query-keys";
@@ -42,6 +42,7 @@ export function useConsensusList(filters: ConsensusListFilters, cursor: string |
     queryKey: resultfeedKeys.consensusList(filters, cursor),
     queryFn: () => apiClient.get<ConsensusListPage>("/resultfeed/consensus", { params }),
     placeholderData: keepPreviousData,
+    // 10s — màn theo dõi consensus, không cần nhanh hơn nhịp người đọc (p1-03).
     staleTime: 10_000,
   });
 }
@@ -164,10 +165,28 @@ export function useAlerts(status?: string) {
 }
 
 /** Snapshot đếm consensus theo state/game + alert mới — trang dashboard. */
+export const RESULTFEED_DASHBOARD_STALE_MS = 15_000;
+
+/** Named export — dùng chung `useDashboardStats` và `prefetchResultfeedDashboard` (p1-02). */
+export async function fetchResultfeedDashboardStats(): Promise<DashboardStatsOutput> {
+  return apiClient.get<DashboardStatsOutput>("/resultfeed/dashboard");
+}
+
+/** Prefetch ResultFeed dashboard stats — stale 15s khớp hook. */
+export function prefetchResultfeedDashboard(qc: QueryClient): void {
+  void qc
+    .query({
+      queryKey: resultfeedKeys.dashboardStats,
+      queryFn: fetchResultfeedDashboardStats,
+      staleTime: RESULTFEED_DASHBOARD_STALE_MS,
+    })
+    .catch(noop);
+}
+
 export function useDashboardStats() {
   return useQuery({
     queryKey: resultfeedKeys.dashboardStats,
-    queryFn: () => apiClient.get<DashboardStatsOutput>("/resultfeed/dashboard"),
-    staleTime: 15_000,
+    queryFn: fetchResultfeedDashboardStats,
+    staleTime: RESULTFEED_DASHBOARD_STALE_MS,
   });
 }

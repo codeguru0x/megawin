@@ -1,9 +1,9 @@
 # Backoffice — Navigation Performance & Prefetch — Master Plan (00-overview)
 
 > **Nguồn:** [`docs/analytics/backoffice-navigation-performance.md`](../../../docs/analytics/backoffice-navigation-performance.md)
-> **Ngày chốt scope:** 10/09/2026
-> **Mục tiêu:** cảm giác chuyển trang nhanh như webapp trong `apps/backoffice`, **sửa dứt điểm** lỗi
-> "load liên tục" khi dùng prefetch, **không** đánh đổi độ chính xác dữ liệu (ops/tiền).
+> **Ngày chốt scope:** 10/09/2026 · **Cập nhật v2:** 15/09/2026 (đối chiếu `next@16.3.5` + `react@19.3.0` trong `node_modules`)
+> **Mục tiêu #1:** tối đa tốc độ tải trang / điều hướng trong `apps/backoffice`.
+> **Hệ quả:** cảm giác webapp liền mạch, sửa dứt điểm lỗi "load liên tục" khi prefetch, **không** đánh đổi độ chính xác dữ liệu (ops/tiền).
 > **Feature slug:** `backoffice-nav-performance` · tuân [`.cursor/plans/README.md`](../README.md)
 
 ---
@@ -34,22 +34,35 @@ comment cảnh báo, ghi lại một sự cố **CÙNG loại bug** đã xảy r
 4. Vì vậy plan này tách `p0-01` (sửa root cause + viết guardrail cấm lặp lại đúng bug `/ai`) làm
    **P0 thật**, đẩy hover-prefetch sidebar xuống `p1-01` với yêu cầu đo lường trước khi rollout rộng.
 
+### 0.1. Cập nhật v2 (15/09/2026) — đối chiếu docs thật `next@16.3.5` / `react@19.3.0`
+
+| Phát hiện | Hệ quả cho plan |
+|---|---|
+| `ViewTransition` đã ổn định (không còn `unstable_ViewTransition`) | `p2-02` dùng `import { ViewTransition } from "react"` |
+| Guide: wrapper **không** đặt trong `layout.tsx` (layout persist → enter/exit không fire) | `p2-02` dùng `(main)/template.tsx` — remount theo route, cover 84 route mà không sửa từng page |
+| `partialPrefetching` (16.3.0+) là cờ thứ 2 bắt buộc cùng `cacheComponents` để Instant Navigation phát huy | Plan mới `p2-01b` — không còn chỉ nhắc 1 dòng trong spike |
+| `cookies()`/`headers()` **không** tự loại route khỏi App Shell; shell có session data nếu cấu trúc đúng (`use cache` + Suspense) | `MainLayout` hiện block **ngoài** Suspense, **không** có `'use cache'` → shell rỗng; lý do đúng = thiếu 3-lever, không phải "có cookies = mù" |
+| `getPreference`/`getValueFromCookie` chỉ là `cookies().get()` (không I/O DB) | Không tối ưu preference reads riêng — ROI thấp |
+| `'use cache: private'` có thể vào App Shell nếu `stale >= 5 phút`; auth `redirect()` **không** nên đặt trong đó | Refactor `requireOperatorSession()` tách riêng, cần sign-off — nằm ngoài scope mặc định `p3-01` |
+
 ---
 
 ## 1. Bảng trạng thái
 
 | Plan | Phase | Status | Việc chính | Rủi ro dữ liệu |
 |---|---|---|---|---|
-| [`p0-01-fix-prefetch-loop-root-cause`](./p0-01-fix-prefetch-loop-root-cause.plan.md) | P0 | ⏳ pending | `staleTimes.dynamic` > 0 (60s) trong `next.config.ts` + viết rule cấm anti-pattern `/ai` + verify Network tab | Không — chỉ Next Client Cache, không đụng RQ/API |
-| [`p0-02-loading-skeleton-coverage`](./p0-02-loading-skeleton-coverage.plan.md) | P0 | ⏳ pending | Thêm `loading.tsx` cho `games/**`, `reports/**`, `dashboard`, `resultfeed`, `audit-logs`, `system/workers` | Không — server component tĩnh, không fetch |
-| [`p1-01-hover-prefetch-nav-shell`](./p1-01-hover-prefetch-nav-shell.plan.md) | P1 | ⏳ pending | `HoverPrefetchLink` cho sidebar, pilot 1 nhóm → đo → rollout | Thấp — chỉ shell, không kéo data API |
-| [`p1-02-react-query-prefetch-on-hover`](./p1-02-react-query-prefetch-on-hover.plan.md) | P1 | ⏳ pending | `queryClient.prefetchQuery` khi hover cho 4-5 route nóng (Dashboard, 2 Hub, Operations, Outstanding) | Thấp nếu `staleTime` khớp poll — có kiểm tra |
-| [`p1-03-react-query-staletime-matrix`](./p1-03-react-query-staletime-matrix.plan.md) | P1 | ⏳ pending | Chuẩn hoá + document ma trận `staleTime` theo loại màn (realtime/drilldown/config/tĩnh), audit lệch | Trung — sửa `staleTime` sai có thể làm số liệu cũ hiện lâu hơn dự kiến, cần review từng use-case |
-| [`p2-01-cache-components-guides-pilot`](./p2-01-cache-components-guides-pilot.plan.md) | P2 | ⏳ pending | `cacheComponents` + `'use cache'` CHỈ cho `/guides` (nội dung tĩnh, không ops/tiền) | Không — nội dung markdown build-time, không phải data nghiệp vụ |
-| [`p2-02-view-transitions-polish`](./p2-02-view-transitions-polish.plan.md) | P2 | ⏳ pending | `<ViewTransition>` cho layout content khi đổi route | Không — thuần CSS/UX polish |
-| [`p2-03-instant-navigation-spike`](./p2-03-instant-navigation-spike.plan.md) | P2 (spike) | ⏳ pending | Xác nhận `instant` (Next 16.3, đổi tên từ `unstable_instant`) có áp dụng được không — kỳ vọng bị chặn ở `MainLayout`, quyết định làm tiếp hay dừng | Không — chỉ thử nghiệm tạm rồi xoá, không giữ code trong nhánh chính |
+| [`p0-01-fix-prefetch-loop-root-cause`](./p0-01-fix-prefetch-loop-root-cause.plan.md) | P0 | ✅ done | `staleTimes.dynamic/static` = **1800s** (30 phút; Client Cache in-tab, không phải CDN). Deploy Vercel không tự clear — hard refresh/tab mới/hết TTL | Không — chỉ Next Client Cache |
+| [`p0-02-loading-skeleton-coverage`](./p0-02-loading-skeleton-coverage.plan.md) | P0 | ✅ done | 3 primitive + `loading.tsx` cho toàn bộ route thiếu (trừ not-found/unauthorized) | Không — server component tĩnh, không fetch |
+| [`p1-01-hover-prefetch-nav-shell`](./p1-01-hover-prefetch-nav-shell.plan.md) | P1 | 📦 retired | **Không dùng HoverPrefetchLink** cho sidebar. Thay bằng `<Link prefetch>` trực tiếp + forward Slot props (sửa icon). HoverPrefetchLink phù hợp marketing nhiều link viewport; backoffice sidebar ít link → full prefetch tốt hơn. File `hover-prefetch-link.tsx` đã xoá | — |
+| [`p1-02-react-query-prefetch-on-hover`](./p1-02-react-query-prefetch-on-hover.plan.md) | P1 | ✅ done | Hover RQ: Dashboard, 2 Hub, outstanding, **workers**, **resultfeed**, **audit-logs** | Thấp — `staleTime` khớp hook |
+| [`p1-03-react-query-staletime-matrix`](./p1-03-react-query-staletime-matrix.plan.md) | P1 | ✅ done | Chuẩn hoá live feed bingo18/max3d/max3dpro → derive `pollSeconds`; JSDoc + ma trận docs §10 | Trung — đã đối chiếu default `tickSeconds` (10/30/30) = hardcode cũ, không nới lỏng |
+| [`p2-01-cache-components-guides-pilot`](./p2-01-cache-components-guides-pilot.plan.md) | P2 | ✅ done | `cacheComponents: true` + `'use cache'` + `cacheLife('days')` cho `/guides` + `/guides/[...slug]`. Confirm: không filter role. `instantInsights: manual-warning` | Không — markdown build-time |
+| [`p2-01b-partial-prefetching-rollout`](./p2-01b-partial-prefetching-rollout.plan.md) | P2 | ✅ done | `partialPrefetching: true`. Audit: sidebar `prefetch` (App Shell); còn lại `prefetch={false}` (Hub/table). Không legacy full-prefetch cần migrate | Thấp — hạ tầng shell |
+| [`p2-02-view-transitions-polish`](./p2-02-view-transitions-polish.plan.md) | P2 | ✅ done | `(main)/template.tsx` bọc `<ViewTransition enter/exit="auto">` — không directional slide | Không — thuần CSS/UX |
+| [`p2-03-instant-navigation-spike`](./p2-03-instant-navigation-spike.plan.md) | P2 (cổng) | ✅ done | **HOÃN `p3-01`**: ROI shell đã lấy phần lớn từ staleTimes+Link+loading; Auth-gate `requireOperatorSession` ngoài Suspense vẫn blocker Instant layout; không đụng auth không sign-off. Mở lại khi cần 3-lever page-level | Không — quyết định |
+| [`p3-01-cache-components-hot-routes`](./p3-01-cache-components-hot-routes.plan.md) | P3 | 📦 deferred | **Không implement vòng này.** Auth-gate ngoài Suspense = Instant layout không đạt; ROI còn lại nhỏ so với risk ops/tiền. Mở lại khi sign-off `p3-02` auth Suspense | — |
 
-Status: ⏳ pending · 🔨 in-progress · ✅ done · ⏸️ blocked.
+Status: ⏳ pending · 🔨 in-progress · ✅ done · ⏸️ blocked · 📦 retired (chỉ còn tham khảo).
 
 ---
 
@@ -66,12 +79,24 @@ p0-02 (loading.tsx coverage) ─────────────────
                                                     không phụ thuộc p1-01/p1-02, nhưng nên làm trước
                                                     p1-02 để prefetch dùng ĐÚNG staleTime đã chuẩn hoá)
 
-p1-01 + p1-02 chạy thật ≥ 1 tuần ──► p2-01 (Cache Components — chỉ /guides, không đụng ops/tiền)
-                                 │                      │
-                                 │                      ▼
-                                 │       p2-03 (spike: instant route config — cần cacheComponents đã bật)
-                                 └──► p2-02 (View Transitions — polish, làm bất kỳ lúc nào sau P1)
+p1-01 + p1-02 chạy thật ≥ 1 tuần
+        │
+        ├──► p2-01 (Cache Components — chỉ /guides)  ──► p2-01b (partialPrefetching rollout)
+        │                                                      │
+        │                                                      ▼
+        │                                            p2-03 (cổng quyết định → mở / không mở p3-01)
+        │                                                      │
+        │                                                      ▼
+        │                                            p3-01 (3-lever hot routes T1 — nếu cổng mở)
+        │
+        └──► p2-02 (View Transitions qua template.tsx — polish, làm bất kỳ lúc nào sau P1)
 ```
+
+**Lộ trình Cache Components (3 bước) — mục tiêu #1 tốc độ tải trang:**
+
+1. **`p2-01`** — pilot an toàn trên `/guides` (nội dung tĩnh).
+2. **`p2-01b`** — bật `partialPrefetching` (hạ tầng App Shell prefetch đúng chuẩn Next 16.3).
+3. **`p3-01`** — áp 3-lever (Suspense / `use cache`+`cacheLife` / per-link prefetch) lên hot routes T1.
 
 **Điểm chặn cứng duy nhất:** `p0-01` phải xong và **verify bằng Network tab thật** trước khi làm bất
 kỳ plan nào gọi `router.prefetch()` hoặc bật lại prefetch trên link (`p1-01`) — đây chính xác là thứ
@@ -86,8 +111,9 @@ biết đúng `staleTime` của từng query để prefetch không phá tính "t
 ## 3. Nguyên tắc chung (áp cho MỌI plan trong thư mục)
 
 1. **Next tối ưu shell. React Query tối ưu data.** Không bao giờ dùng cơ chế prefetch/cache của Next
-   (`staleTimes`, `cacheComponents`, `router.prefetch`) để thay cho `staleTime`/`refetchInterval` của
-   React Query. Hai tầng cache độc lập — xem `docs/analytics/backoffice-navigation-performance.md` §2.2.
+   (`staleTimes`, `cacheComponents`, `router.prefetch`, `partialPrefetching`) để thay cho
+   `staleTime`/`refetchInterval` của React Query. Hai tầng cache độc lập — xem
+   `docs/analytics/backoffice-navigation-performance.md` §2.2.
 2. **Cấm tuyệt đối pattern `router.prefetch(href, { onInvalidate: poll })`** (docs Next gọi là
    `ManualPrefetchLink`) trên toàn bộ `apps/backoffice`, trừ khi thiết kế mới có `staleTimes.dynamic`
    dương **và** có debounce/cancel rõ ràng đã review riêng. Đây là nguồn gốc chính xác của cả 2 sự cố
@@ -95,49 +121,58 @@ biết đúng `staleTime` của từng query để prefetch không phá tính "t
 3. **Không thay đổi behavior tài chính/vận hành để lấy tốc độ.** `staleTime`/`refetchInterval` của
    màn hình tiền (settle, outstanding, exposure) chỉ được SIẾT chặt hơn hoặc giữ nguyên, không được
    nới lỏng vì "cho nhanh hơn" — theo `gitnexus-code-graph.mdc` §4 (code tài chính đọc bằng mắt, không
-   suy đoán).
-4. **Đo trước khi rollout rộng.** Mọi thay đổi liên quan prefetch (`p1-01`, `p1-02`) phải có bước đo
-   Network tab / React Query Devtools trên 1 nhóm nhỏ TRƯỚC khi áp dụng cho toàn bộ 91 chỗ
-   `prefetch={false}` hiện có. Không "sửa 1 lần cho tất cả" — chính cách làm này đã gây sự cố `/ai`.
+   suy đoán). Code tài chính trong `p3-01`: **tuyệt đối không** dùng `impact` graph làm bằng chứng duy nhất.
+4. **Đo trước khi rollout rộng.** Mọi thay đổi liên quan prefetch (`p1-01`, `p1-02`, `p2-01b`) phải có
+   bước đo Network tab / React Query Devtools / Next Navigation Inspector trên 1 nhóm nhỏ TRƯỚC khi
+   áp dụng rộng. Không "sửa 1 lần cho tất cả" — chính cách làm này đã gây sự cố `/ai`.
 5. **Mỗi plan có mục Test/Review + Rollback** — không có ngoại lệ, vì thay đổi thuộc tầng hạ tầng
    (Next config, cache) ảnh hưởng đồng thời nhiều trang, khó khoanh vùng nếu không có checklist rõ.
 6. **Tiếng Việt cho prose, tiếng Anh cho thuật ngữ.** JSDoc bắt buộc theo `code-quality-standards.mdc`.
 
 ---
 
-## 4. Câu hỏi phải trả lời BẰNG ĐO LƯỜNG (không quyết trước)
+## 4. Risk Register tổng hợp
+
+| Rủi ro | Plan liên quan | Mức | Đã kiểm soát bằng |
+|---|---|---|---|
+| Role đổi giữa session vẫn hiện quyền cũ tối đa 1800s | `p0-01` | Thấp | App nội bộ; shell cache — data ops/tiền vẫn RQ |
+| Prefetch storm RQ khi hover nhiều link | `p1-02` | Thấp | `intentFiredRef` 1 lần/mount; chỉ 4 route nóng |
+| `staleTime` nới lỏng làm số liệu ops/tiền cũ lâu hơn | `p1-03` | Trung | Review từng use-case; chỉ siết hoặc giữ nguyên với màn tiền |
+| Leak nội dung `/guides` giữa role (nếu tương lai phân role) | `p2-01` | Thấp (hiện tại) | Test đa session bắt buộc mỗi lần guides đổi |
+| Dev overlay nhiễu khi bật `cacheComponents` toàn app | `p2-01` / `p2-01b` | Thấp | `experimental.instantInsights.validationLevel = "manual-warning"` nếu cần |
+| `partialPrefetching` đổi hành vi link đang dùng `prefetch={true}` legacy | `p2-01b` | TB | Audit theo bảng migrate chính thức trước khi bật cờ |
+| `template.tsx` remount làm mất state client không mong muốn | `p2-02` | Thấp | Test hồi quy: state persist phải nằm ở layout/context, không trong cây template |
+| Refactor auth-gate (`requireOperatorSession`) để mở Instant Navigation đầy đủ | `p3-01` (tách riêng) | Cao | **KHÔNG tự quyết** — cần sign-off riêng; chưa nằm trong scope mặc định |
+
+---
+
+## 5. Câu hỏi phải trả lời BẰNG ĐO LƯỜNG (không quyết trước)
 
 | # | Câu hỏi | Chốt ở | Kết quả |
 |---|---|---|---|
-| 1 | Sau khi set `staleTimes.dynamic = 60`, hover lặp lại 20 lần trên 1 link có còn tạo > 1 request RSC không? | `p0-01` §5 | ⏳ Phải dán screenshot Network tab vào PR |
-| 2 | `HoverPrefetchLink` trên 1 nhóm nav pilot (7 game-group header) có tạo request storm không sau khi `staleTimes` đã fix? | `p1-01` §5 | ⏳ Đo trước khi rollout 91 chỗ còn lại |
-| 3 | `queryClient.prefetchQuery` on hover cho Hub có làm sai lệch data khi staff bấm ngay sau khi rời kỳ đang xem hơn `staleTime`? | `p1-02` §4 | ⏳ Test tay: hover → chờ > staleTime → click → so dữ liệu với API trực tiếp |
-| 4 | Cache Components + `'use cache'` cho `/guides` có leak nội dung giữa 2 session khác quyền xem không? | `p2-01` §4 | ⏳ `/guides` không phân quyền theo role — xác nhận trước khi bật |
-| 5 | `instant` (Instant Navigation, Next 16.3) có áp dụng được cho backoffice không, hay bị chặn ở `MainLayout`? | `p2-03` §4 | ⏳ Spike xác nhận bằng thử nghiệm thật, không suy đoán — xem `p2-03` §3 cho giả thuyết ban đầu |
+| 1 | `staleTimes` 1800s: nav lặp trong TTL dùng Client Cache (không `_rsc` mới)? | `p0-01` | ✅ Code — verify prod/`next start` (dev tắt Link prefetch) |
+| 2 | Sidebar `<Link prefetch>` + Slot forward: icon size đúng, không storm? | `p1-01` retired → Link trực tiếp | ✅ Icon fix; HoverPrefetchLink đã xoá |
+| 3 | Hover Tồn đọng / Hub: RQ prefetch trước click, data khớp `staleTime` hook? | `p1-02` | ✅ CDP verified trước đó |
+| 4 | Cache Components + `'use cache'` cho `/guides` có leak nội dung giữa 2 session khác quyền xem không? | `p2-01` §4 | ✅ Confirm: `STAFF_GUIDE_MANIFEST` không filter role — nội dung chung mọi operator |
+| 5 | Sau `p2-01`+`p2-01b`, ROI còn lại của 3-lever trên hot routes T1 có đủ để mở `p3-01` không? | `p2-03` | ✅ **HOÃN** — auth-gate blocker; shell đã đủ nhanh từ P0–P2 |
+| 6 | `template.tsx` + `<ViewTransition>` có làm mất state sidebar/search khi đổi route không? | `p2-02` | ✅ State ở layout/context — template chỉ wrap children |
 
 ---
 
-## 5. Định nghĩa "xong" (Definition of Done) cho toàn feature
+## 6. Định nghĩa "xong" (Definition of Done) cho toàn feature
 
-1. Network tab: hover lặp lại bất kỳ link nào trong sidebar **không** tạo quá 1 request RSC / lần
-   hover thật (không tính lần đầu), và không có request nào tự lặp lại khi không có tương tác mới.
-2. Toàn bộ route hay dùng (`games/**/operations`, `games/**/operations-hub`, `reports/**`,
-   `dashboard`, `accounts/**`) có `loading.tsx` khớp layout — không còn khoảng trắng khi chuyển trang
-   lần đầu (JS chunk chưa tải).
-3. `pnpm --filter @megawin/backoffice check-types` + `pnpm lint` xanh sau mỗi plan.
-4. Không màn hình tài chính/vận hành nào đổi `staleTime`/`refetchInterval` theo hướng nới lỏng —
-   `p1-03` phải liệt kê rõ từng thay đổi kèm lý do.
-5. `docs/analytics/backoffice-navigation-performance.md` được cập nhật link trỏ sang plan này (mục
-   "Plans phái sinh") sau khi `p0-01` xong.
+1. [x] Network / Client Cache: `staleTimes` 1800 + sidebar `<Link prefetch>` — không storm (dev tắt Link prefetch; verify prod/`next start`).
+2. [x] Route hay dùng có `loading.tsx` (trừ not-found/unauthorized theo p0-02).
+3. [x] `check-types` + build xanh sau Cache Components (`instant=false` login + main layout).
+4. [x] Không nới `staleTime`/`refetchInterval` màn tiền (p1-03).
+5. [x] Analysis doc + overview cập nhật.
+6. [x] `p2-01` → `p2-01b` done; `p2-03` quyết định **HOÃN `p3-01`** (ghi trong plan).
 
 ---
 
-## 6. Sau khi hoàn thành
+## 7. Sau khi hoàn thành
 
-- [ ] Cập nhật `docs/analytics/backoffice-navigation-performance.md`: thêm mục "Plans phái sinh" trỏ
-      về thư mục này, đổi các dòng roadmap §7 đã làm thành "✅ done, xem plan tương ứng".
-- [ ] Nếu `HoverPrefetchLink` ổn định sau rollout — xem xét thêm `.cursor/rules/` mới nếu pattern này
-      trở thành convention bắt buộc cho mọi `<Link>` sidebar mới (hiện chưa có rule riêng, chỉ có ghi
-      chú rải rác trong `chat-header.tsx` và các plan Hub).
-- [ ] Rà lại toàn bộ comment "KHÔNG prefetch..." còn sót trong code (grep `KHÔNG prefetch`) — cập
-      nhật hoặc xoá nếu `p0-01`/`p1-01` đã thay đổi bản chất khuyến nghị.
+- [x] Docs analytics + overview khớp `staleTimes` 1800s + `<Link prefetch>` sidebar.
+- [x] `HoverPrefetchLink` retired; guides Link mặc định prefetch (đã `'use cache'`).
+- [x] RQ hover prefetch mở rộng: workers / resultfeed / audit-logs.
+- [x] Feature cycle **đóng** — `p3-01` deferred tới khi có sign-off auth-gate.

@@ -8,6 +8,7 @@ import { APP_CONFIG } from "@/config/app-config";
 import { fontVars } from "@/lib/fonts/registry";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
 import { AuthProvider } from "@/providers/auth-provider";
+import { FontBoot } from "@/scripts/font-boot";
 import { ThemeBootScript } from "@/scripts/theme-boot";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
@@ -37,6 +38,8 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       {/* Script tự bơm vào <head> qua useServerInsertedHTML — không cần thẻ <head> ở đây. */}
       <ThemeBootScript />
       <body className={`${fontVars} min-h-screen antialiased`}>
+        {/* Lazy-load font cookie ≠ Inter/Geist Mono trước paint ổn định. */}
+        <FontBoot />
         <AuthProvider>
           <NuqsAdapter>
             <PreferencesStoreProvider

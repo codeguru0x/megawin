@@ -13,7 +13,7 @@
  * tiêu đề) nên không có tín hiệu thị giác nào nói "đọc tôi trước" → đúng phản hồi "không đúng điểm
  * nhấn". Bản mới:
  *
- * 1. **Dải A full-width trên cùng** — gộp chặng + câu "vì sao" (`text-sm`, trước `text-xs`) + tuổi
+ * 1. **Dải A full-width trên cùng** — gộp chặng + câu "vì sao" (`text-xs`, khớp bảng 5A) + tuổi
  *    trong chặng + NÚT hành động vào 1 dải, nút canh PHẢI. Trước đó nút nằm ở footer dưới cả 3
  *    khối, cách câu chẩn đoán ~120px, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm.
  *    `border-l-[3px]` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
@@ -179,8 +179,10 @@ interface TimelineDotProps {
  * khác chặng, không nhảy layout khi expand kỳ khác (cùng nguyên tắc "đúng 1 dòng sub" của KPI).
  */
 function TimelineDot({ label, ms, emptyText }: TimelineDotProps) {
+  // `text-xs` — khớp cỡ chữ dòng bảng 5A (`queue-row.tsx` dùng `text-xs` cho trạng thái/
+  // thời gian/vé/bộ/rủi ro). Trước dùng `text-sm` nên panel expand trông TO hơn bảng ngoài.
   return (
-    <div className="flex items-baseline justify-between gap-2 text-sm">
+    <div className="flex items-baseline justify-between gap-2 text-xs">
       <span className="flex min-w-0 items-baseline gap-2 text-muted-foreground">
         <span
           className={
@@ -196,7 +198,7 @@ function TimelineDot({ label, ms, emptyText }: TimelineDotProps) {
           {fmtTime(ms)}
         </span>
       ) : (
-        <span className="shrink-0 whitespace-nowrap text-muted-foreground/60 text-xs">{emptyText}</span>
+        <span className="shrink-0 whitespace-nowrap text-muted-foreground/60">{emptyText}</span>
       )}
     </div>
   );
@@ -220,8 +222,10 @@ interface FieldRowProps {
  * Value `shrink-0 whitespace-nowrap` — số tiền/thời gian phải luôn đọc trọn, đó là thứ staff cần.
  */
 function FieldRow({ label, value, emphasize, valueClassName, title }: FieldRowProps) {
+  // `text-xs` — đồng bộ với cột số của bảng 5A (`queue-row.tsx`), không dùng `text-sm` để
+  // tránh panel expand "phình" so với dòng ngoài.
   return (
-    <div className="flex items-baseline justify-between gap-2 text-sm" title={title}>
+    <div className="flex items-baseline justify-between gap-2 text-xs" title={title}>
       <span className="min-w-0 wrap-break-word text-muted-foreground leading-snug">{label}</span>
       <span
         className={cn("shrink-0 whitespace-nowrap tabular-nums", emphasize ? "font-medium" : undefined, valueClassName)}
@@ -329,7 +333,8 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
         {/* Header panel — drawId ĐẦY ĐỦ + chặng + nút đóng bằng icon X (KHÔNG phải nút text
             "Đóng" — đây chính là chỗ gây nhầm trong ảnh bạn chỉ ra: "Đóng" cạnh "Đóng bán"). */}
         <div className="flex items-center justify-between gap-3 border-b bg-card px-4 py-2.5">
-          <div className="flex items-center gap-2 text-sm">
+          {/* `text-xs` — cùng scale với `DrawIdLabel` / badge trạng thái ở dòng bảng ngoài. */}
+          <div className="flex items-center gap-2 text-xs">
             <span className="font-mono font-semibold">{row.drawId}</span>
             <span className="text-muted-foreground">·</span>
             <span>{stageLabel}</span>
@@ -363,10 +368,10 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
         <div className="@container/panel min-w-0 p-4">
           {/*
             ── Dải A: QUYẾT ĐỊNH (p1-09 §2.1) ──────────────────────────────────────────────
-            Gộp 3 thứ trước đây rời rạc vào 1 dải full-width: (a) câu "vì sao" — trước ở cột 1
-            hàng 1 với `text-xs`, tức câu QUAN TRỌNG NHẤT panel lại nhỏ nhất; (b) tuổi trong
+            Gộp 3 thứ trước đây rời rạc vào 1 dải full-width: (a) câu "vì sao" + chặng; (b) tuổi trong
             chặng; (c) NÚT hành động — trước ở footer dưới cả 3 khối, cách câu chẩn đoán ~120px
-            theo trục dọc, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm.
+            theo trục dọc, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm. Typography cả dải
+            giữ `text-xs` để khớp dòng bảng 5A (không bump `text-sm` — panel sẽ "to" hơn dòng ngoài).
 
             `border-l-[3px]` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
             `stuck` có nền đỏ nhạt, panel cũ đổi sang xám `bg-muted/30` nên tín hiệu "kỳ này đang
@@ -387,7 +392,9 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
           >
             <div className="min-w-[16rem] flex-1">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
-                <span className="font-semibold text-sm">{stageLabel}</span>
+                {/* `font-semibold` đủ nhấn chặng; giữ `text-xs` để khớp badge trạng thái bảng ngoài
+                    (không bump lên `text-sm` — panel sẽ lại "to" hơn dòng cha). */}
+                <span className="font-semibold">{stageLabel}</span>
                 {/*
                   Counter sống CHỈ hiện khi `health = Ok` — đây là chống TRÙNG LẶP có chủ đích, đo
                   được trên UI thật: ở `warn`/`stuck`, `deriveHealth` đã nhét thời lượng vào chính
@@ -408,8 +415,8 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                 ) : null}
               </div>
               {/* `break-words` — `reason` có thể chứa mã kỳ/số dài không có dấu cách để ngắt.
-                  `text-sm` (trước `text-xs`): đây là câu trả lời cho "kỳ này sao". */}
-              <p className="mt-1 break-words text-sm leading-snug">{row.reason}</p>
+                  `text-xs` — đồng bộ bảng ngoài; nhấn bằng `leading-snug`, không bump size. */}
+              <p className="mt-1 break-words text-xs leading-snug">{row.reason}</p>
             </div>
 
             {/* Nút hành động — CÙNG HÀNG với chẩn đoán, canh phải. `items-center` để nút thẳng

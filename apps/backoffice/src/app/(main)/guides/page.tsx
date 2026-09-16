@@ -1,8 +1,12 @@
+import { Suspense } from "react";
+
+import { cacheLife } from "next/cache";
 import Link from "next/link";
 
 import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 
+import { ListRouteSkeleton } from "@/components/skeletons/route-skeletons";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -15,7 +19,14 @@ export const metadata: Metadata = {
   description: "Tài liệu vận hành dành cho nhân viên: kết sổ lại kỳ quay.",
 };
 
-export default function GuidesLandingPage() {
+/**
+ * Landing `/guides` — manifest compile-time, không phân quyền theo role.
+ * `'use cache'` tách khỏi layout session (p2-01).
+ */
+async function GuidesLandingContent() {
+  "use cache";
+  cacheLife("days");
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-8 md:py-12">
       <header className="mb-10">
@@ -44,7 +55,6 @@ export default function GuidesLandingPage() {
               </p>
             </div>
             <Link
-              prefetch={false}
               href="/guides/power655/resettle/type-a"
               className="text-primary inline-flex shrink-0 items-center gap-1 text-sm font-medium hover:underline"
             >
@@ -70,7 +80,6 @@ export default function GuidesLandingPage() {
 
             return (
               <Link
-                prefetch={false}
                 key={game.gameKey}
                 href={firstTopic && firstDoc ? `/guides/${game.gameKey}/${firstTopic.key}/${firstDoc.slug}` : "/guides"}
                 className="group"
@@ -101,5 +110,13 @@ export default function GuidesLandingPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function GuidesLandingPage() {
+  return (
+    <Suspense fallback={<ListRouteSkeleton />}>
+      <GuidesLandingContent />
+    </Suspense>
   );
 }

@@ -26,7 +26,6 @@ export function DocsSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-1 p-3">
       <Link
-        prefetch={false}
         href="/guides"
         onClick={onNavigate}
         className={cn(
@@ -56,7 +55,6 @@ export function DocsSidebar({ onNavigate }: { onNavigate?: () => void }) {
                   const active = pathname === href;
                   return (
                     <Link
-                      prefetch={false}
                       key={href}
                       href={href}
                       onClick={onNavigate}

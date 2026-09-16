@@ -196,26 +196,37 @@ export function useAckAlert() {
 }
 
 // ─────────────────────────────────────────────
-// Live feed — timer 2 (chỉ chạy khi tab Phân tích mở & kỳ chưa settle)
+// Live feed — DÙNG CHUNG nhịp `tickSeconds` với snapshot (p1-03)
 // ─────────────────────────────────────────────
+
+/**
+ * Nhịp poll fallback (ms) khi snapshot chưa trả `pollSeconds`.
+ * Khớp default `ops.stats.tickSeconds` = 10 trong `@megawin/game-bingo18` (financials.ts).
+ */
+const LIVE_FEED_FALLBACK_MS = 10_000;
 
 /**
  * Live feed: N entries mới nhất của một kỳ Bingo 18 — **timer 2**.
  *
- * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng.
- * `enabled` gate ở caller (tab Phân tích mở && chưa settle) — tab Giám sát chỉ có
- * đúng 1 timer snapshot.
+ * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng, nhưng
+ * **DÙNG CHUNG nhịp `tickSeconds`** với snapshot. Caller truyền `pollSeconds` từ
+ * `snapshot.pollSeconds`; staff đổi tickSeconds thì live feed tự theo.
+ *
+ * `@param drawId` — truyền `undefined` khi tab Phân tích đóng để tắt query.
+ * `@param isSettled` — kỳ đã settle → dừng poll, `staleTime` Infinity.
+ * `@param pollSeconds` — nhịp chung từ snapshot (giây); `undefined` → fallback 10s.
  */
-export function useOpsLiveEntries(drawId: string | undefined, enabled: boolean) {
+export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean, pollSeconds: number | undefined) {
+  const pollMs = pollSeconds ? pollSeconds * 1000 : LIVE_FEED_FALLBACK_MS;
   return useQuery({
     queryKey: bingo18Keys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
         params: { drawId: drawId! },
       }),
-    enabled: !!drawId && enabled,
-    refetchInterval: enabled ? 10_000 : false,
-    staleTime: 8_000,
+    enabled: !!drawId,
+    refetchInterval: isSettled ? false : pollMs,
+    staleTime: isSettled ? Infinity : pollMs * 0.8,
   });
 }
 

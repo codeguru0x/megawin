@@ -240,24 +240,37 @@ export function useAckAlert() {
 }
 
 // ─────────────────────────────────────────────
-// Live feed — timer 2 (chỉ chạy khi tab Phân tích mở & kỳ chưa settle)
+// Live feed — DÙNG CHUNG nhịp `tickSeconds` với snapshot (p1-03)
 // ─────────────────────────────────────────────
 
 /**
- * Live feed: N entries mới nhất của một kỳ Max 3D — **timer 2**.
- * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng.
- * `enabled` gate ở caller (tab Phân tích mở && chưa settle).
+ * Nhịp poll fallback (ms) khi snapshot chưa trả `pollSeconds`.
+ * Khớp default `ops.stats.tickSeconds` = 30 trong `@megawin/game-max3d` (defaults.ts).
  */
-export function useOpsLiveEntries(drawId: string | undefined, enabled: boolean) {
+const LIVE_FEED_FALLBACK_MS = 30_000;
+
+/**
+ * Live feed: N entries mới nhất của một kỳ Max 3D — **timer 2**.
+ *
+ * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng, nhưng
+ * **DÙNG CHUNG nhịp `tickSeconds`** với snapshot. Caller truyền `pollSeconds` từ
+ * `snapshot.pollSeconds`; staff đổi tickSeconds thì live feed tự theo.
+ *
+ * `@param drawId` — truyền `undefined` khi tab Phân tích đóng để tắt query.
+ * `@param isSettled` — kỳ đã settle → dừng poll, `staleTime` Infinity.
+ * `@param pollSeconds` — nhịp chung từ snapshot (giây); `undefined` → fallback 30s.
+ */
+export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean, pollSeconds: number | undefined) {
+  const pollMs = pollSeconds ? pollSeconds * 1000 : LIVE_FEED_FALLBACK_MS;
   return useQuery({
     queryKey: max3dKeys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
         params: { drawId: drawId! },
       }),
-    enabled: !!drawId && enabled,
-    refetchInterval: enabled ? 30_000 : false,
-    staleTime: 25_000,
+    enabled: !!drawId,
+    refetchInterval: isSettled ? false : pollMs,
+    staleTime: isSettled ? Infinity : pollMs * 0.8,
   });
 }
 

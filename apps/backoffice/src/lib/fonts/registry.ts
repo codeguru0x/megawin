@@ -1,155 +1,47 @@
-import {
-  DM_Sans,
-  Gabriela,
-  Geist,
-  Geist_Mono,
-  Great_Vibes,
-  Inter,
-  Manrope,
-  Nunito,
-  Outfit,
-  Plus_Jakarta_Sans,
-  Poppins,
-  Roboto,
-} from "next/font/google";
+/**
+ * Font preference registry — metadata only.
+ *
+ * Critical path chỉ nạp Inter (sans mặc định) + Geist Mono (`--font-mono`).
+ * Các font UI khác lazy qua `ensureFontLoaded` khi user chọn / cookie khác default.
+ * Trước đây `fontVars` gắn cả 12 `next/font` → Lighthouse critical path kéo mọi woff2.
+ */
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+import { geistMono } from "./families/geist-mono";
+import { inter } from "./families/inter";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
-
-const roboto = Roboto({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-roboto",
-  display: "swap",
-});
-
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist",
-  display: "swap",
-});
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-poppins",
-  display: "swap",
-});
-
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-  display: "swap",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  variable: "--font-dm-sans",
-  display: "swap",
-});
-
-const nunito = Nunito({
-  subsets: ["latin"],
-  variable: "--font-nunito",
-  display: "swap",
-});
-
-const gabriela = Gabriela({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-gabriela",
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
-
-const greatVibes = Great_Vibes({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-great-vibes",
-  display: "swap",
-});
-
-export const fontRegistry = {
-  inter: {
-    label: "Inter",
-    font: inter,
-  },
-  roboto: {
-    label: "Roboto",
-    font: roboto,
-  },
-  poppins: {
-    label: "Poppins",
-    font: poppins,
-  },
-  geist: {
-    label: "Geist",
-    font: geist,
-  },
-  geistMono: {
-    label: "Geist Mono",
-    font: geistMono,
-  },
-  jakarta: {
-    label: "Plus Jakarta Sans",
-    font: jakarta,
-  },
-  nunito: {
-    label: "Nunito",
-    font: nunito,
-  },
-  gabriela: {
-    label: "Gabriela",
-    font: gabriela,
-  },
-  outfit: {
-    label: "Outfit",
-    font: outfit,
-  },
-  manrope: {
-    label: "Manrope",
-    font: manrope,
-  },
-  dmSans: {
-    label: "DM Sans",
-    font: dmSans,
-  },
-  greatVibes: {
-    label: "Great Vibes",
-    font: greatVibes,
-  },
+/** Nhãn + CSS variable name — KHÔNG import `next/font` ở đây (trừ always-on bên dưới). */
+export const FONT_META = {
+  inter: { label: "Inter", cssVar: "--font-inter" },
+  roboto: { label: "Roboto", cssVar: "--font-roboto" },
+  poppins: { label: "Poppins", cssVar: "--font-poppins" },
+  geist: { label: "Geist", cssVar: "--font-geist" },
+  geistMono: { label: "Geist Mono", cssVar: "--font-geist-mono" },
+  jakarta: { label: "Plus Jakarta Sans", cssVar: "--font-jakarta" },
+  nunito: { label: "Nunito", cssVar: "--font-nunito" },
+  gabriela: { label: "Gabriela", cssVar: "--font-gabriela" },
+  outfit: { label: "Outfit", cssVar: "--font-outfit" },
+  manrope: { label: "Manrope", cssVar: "--font-manrope" },
+  dmSans: { label: "DM Sans", cssVar: "--font-dm-sans" },
+  greatVibes: { label: "Great Vibes", cssVar: "--font-great-vibes" },
 } as const;
 
-export type FontKey = keyof typeof fontRegistry;
+export type FontKey = keyof typeof FONT_META;
 
-export const fontVars = (Object.values(fontRegistry) as Array<(typeof fontRegistry)[FontKey]>)
-  .map((f) => f.font.variable)
-  .join(" ");
+export const FONT_KEYS = Object.keys(FONT_META) as FontKey[];
 
-export const fontOptions = (Object.entries(fontRegistry) as Array<[FontKey, (typeof fontRegistry)[FontKey]]>).map(
-  ([key, f]) => ({
+/**
+ * Class CSS variable luôn gắn `<body>`: Inter + Geist Mono.
+ * Không gồm các family lazy — tránh preload/link mọi Google Font trên cold load.
+ */
+export const fontVars = `${inter.variable} ${geistMono.variable}`;
+
+/** Font đã có class trên body từ SSR — `ensureFontLoaded` no-op. */
+export const ALWAYS_LOADED_FONT_KEYS = new Set<FontKey>(["inter", "geistMono"]);
+
+export const fontOptions = (Object.entries(FONT_META) as Array<[FontKey, (typeof FONT_META)[FontKey]]>).map(
+  ([key, meta]) => ({
     key,
-    label: f.label,
-    variable: f.font.variable,
+    label: meta.label,
+    variable: meta.cssVar,
   }),
 );

@@ -1,7 +1,26 @@
 # p2-01 — Cache Components pilot CHỈ cho `/guides` (nội dung tĩnh, không ops/tiền)
 
-> **Phase:** P2 · **Status:** ⏳ pending · **Phụ thuộc:** `p1-01` + `p1-02` chạy thật ≥ 1 tuần không
-> lỗi (xem `00-overview.md` §2) · **KHÔNG** áp dụng ngoài `/guides` trong plan này
+> **Phase:** P2 · **Status:** ✅ done · **Phụ thuộc:** `p1-01` + `p1-02` (pilot sớm theo sign-off tốc độ)
+> **Lộ trình:** bước 1/3 Cache Components → tiếp [`p2-01b`](./p2-01b-partial-prefetching-rollout.plan.md)
+> **Docs xác nhận:** `next@16.3.5` (`use-cache.md`, `cacheComponents.md`, `instant-navigation.md`)
+
+## 0. Vị trí trong lộ trình Cache Components (3 bước) — mục tiêu #1 tốc độ tải trang
+
+Plan này là **bước 1/3**, không phải điểm dừng:
+
+| Bước | Plan | Việc |
+|---|---|---|
+| 1 | **`p2-01` (plan này)** | `cacheComponents: true` + `'use cache'` CHỈ `/guides` |
+| 2 | [`p2-01b`](./p2-01b-partial-prefetching-rollout.plan.md) | Bật `partialPrefetching: true` + audit legacy full prefetch |
+| 3 | [`p3-01`](./p3-01-cache-components-hot-routes.plan.md) (qua cổng [`p2-03`](./p2-03-instant-navigation-spike.plan.md)) | 3-lever trên hot routes T1 |
+
+**Điều kiện vào `p2-01b`:** `p2-01` ổn định ≥ 1 tuần thật (không lỗi runtime / không leak guides).
+
+**Precondition tốc độ (bổ sung 15/09):** `/guides` nên có `loading.tsx` (tier T3 trong `p0-02`) **trước hoặc
+cùng lúc** khi bật `'use cache'` — không có `loading.js` thì Next không auto-prefetch dynamic route
+(xem `prefetching.md`). Nếu `p0-02` T3 chưa làm, thêm `guides/loading.tsx` trong PR này.
+
+---
 
 ## 1. Vì sao chỉ `/guides`, không phải toàn app
 

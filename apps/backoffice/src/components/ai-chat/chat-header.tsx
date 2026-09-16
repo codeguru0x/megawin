@@ -22,12 +22,12 @@
  * `useTransition` để nút hiện spinner trong lúc chờ, và KHÔNG tự đóng panel tại chỗ (để effect
  * `pathname` của `AiPanelProvider` đóng sau khi trang mới đã lên). Chi tiết ở `onClick`.
  *
- * ⚠️ KHÔNG prefetch khi hover/focus (đã bỏ 04/09). Từng thêm `router.prefetch()` ở `onMouseEnter`/
- * `onFocus` để warm cache trước khi bấm — nhưng `/ai` là route dynamic session-gated, không cache
- * được (`DYNAMIC_STALETIME_MS` = 0 mặc định), nên MỌI lần gọi đều tạo 1 request RSC mới, hết hạn
- * ngay. Production ghi nhận hàng trăm request `_rsc` lặp lại dù đã thêm guard dedupe-theo-href —
- * lợi ích (giảm độ trễ khi bấm, đã có spinner `isNavigating` bù) không đáng với rủi ro loop. Xem
- * lịch sử fix trong PR liên quan nếu cần khôi phục ý tưởng này bằng cơ chế khác an toàn hơn.
+ * ⚠️ KHÔNG prefetch khi hover/focus bằng `router.prefetch()` trực tiếp (đã bỏ 04/09) — xem lý do gốc
+ * và fix root cause (`staleTimes`) tại
+ * `.cursor/plans/backoffice-nav-performance/p0-01-fix-prefetch-loop-root-cause.plan.md`.
+ * Sidebar dùng `<Link prefetch>` + `staleTimes` 1800s — an toàn. Pattern nguy hiểm là gọi
+ * `router.prefetch()` THẲNG trong event handler (không qua `<Link>`); không khôi phục ở nút này
+ * nếu chưa đo Network tab lại.
  */
 
 import type { ReactNode } from "react";

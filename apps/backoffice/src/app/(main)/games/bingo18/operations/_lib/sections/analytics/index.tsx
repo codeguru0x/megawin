@@ -70,8 +70,15 @@ export function AnalyticsSection({ active }: { active: boolean }) {
       : null,
   );
 
+  // Nhịp poll chung — live feed khớp cadence snapshot, không hardcode (p1-03).
+  const { data: pollSeconds } = useOpsSnapshot<number>(effectiveDrawId, isSettled, (s) => s.pollSeconds);
+
   // Timer 2: live feed — CHỈ khi tab Phân tích mở && kỳ chưa settle.
-  const { data: liveData } = useOpsLiveEntries(effectiveDrawId, active && !isSettled);
+  const { data: liveData } = useOpsLiveEntries(
+    active && effectiveDrawId ? effectiveDrawId : undefined,
+    isSettled,
+    pollSeconds,
+  );
 
   const liveEntries: LiveFeedEntry[] = useMemo(() => {
     if (!liveData) return [];

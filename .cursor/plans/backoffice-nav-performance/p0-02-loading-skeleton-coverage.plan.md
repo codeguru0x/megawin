@@ -1,6 +1,6 @@
 # p0-02 — Bổ sung `loading.tsx` cho các nhóm route chưa có
 
-> **Phase:** P0 · **Status:** ⏳ pending · **Phụ thuộc:** không (độc lập hoàn toàn với `p0-01`) ·
+> **Phase:** P0 · **Status:** ✅ done · **Phụ thuộc:** không (độc lập hoàn toàn với `p0-01`) ·
 > **Chặn:** không chặn plan nào, nhưng nên xong trước `p1-01` để đo hiệu ứng tổng hợp cùng lúc
 
 ## 1. Vì sao đây vẫn là P0 (không phải polish)

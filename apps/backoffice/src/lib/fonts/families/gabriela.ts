@@ -1,0 +1,9 @@
+import { Gabriela } from "next/font/google";
+
+/** Lazy — chỉ nạp khi user chọn Gabriela. */
+export const gabriela = Gabriela({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-gabriela",
+  display: "swap",
+});

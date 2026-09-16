@@ -14,6 +14,12 @@ import { auth } from "@/lib/auth";
 
 import { LoginClient } from "./_components/login-client";
 
+/**
+ * Blocking route: `headers()` + session check + `searchParams` — không thuộc App Shell.
+ * `instant = false` bắt buộc khi `cacheComponents` bật (p2-01).
+ */
+export const instant = false;
+
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string }> }) {
   // Kiểm tra nếu đã đăng nhập → redirect về trang chính
   const session = await auth.api.getSession({

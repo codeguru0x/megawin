@@ -1,6 +1,6 @@
 # p1-03 — Chuẩn hoá & audit ma trận `staleTime` theo use-case
 
-> **Phase:** P1 · **Status:** ⏳ pending · **Phụ thuộc:** không (làm song song `p1-01`/`p1-02`
+> **Phase:** P1 · **Status:** ✅ done · **Phụ thuộc:** không (làm song song `p1-01`/`p1-02`
 > được), nhưng nên **xong trước hoặc cùng lúc** `p1-02` vì `p1-02` cần đọc đúng `staleTime` hiện có
 > để prefetch không phá tính "tươi" của dữ liệu (xem `p1-02` §4).
 > **Rủi ro dữ liệu:** 🟡 Trung — đây là plan duy nhất trong `p1-*` có thể **sửa** giá trị `staleTime`

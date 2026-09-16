@@ -9,7 +9,7 @@ import type {
   GetTenantSummaryOutput,
 } from "@megawin/game-core-application/use-cases/reports";
 import { apiClient } from "@megawin/next/client";
-import { useQuery } from "@tanstack/react-query";
+import { noop, type QueryClient, useQuery } from "@tanstack/react-query";
 
 import { reportsKeys } from "@/lib/query-keys";
 
@@ -102,14 +102,45 @@ export function useSystemTenantBreakdown(tenantId: string, from: string, to: str
 
 // ─── System Outstanding ───────────────────────────────────────────────────────
 
+/** refetchInterval trang system outstanding — dùng chung useQuery + prefetch (p1-02). */
+export const SYSTEM_OUTSTANDING_REFETCH_MS = 60_000;
+
+/** Payload sau unwrap `{ data }` — đúng shape mà `useSystemOutstanding` trả cho UI. */
+export type SystemOutstandingData = GetSystemOutstandingOutput["data"];
+
+/**
+ * Fetch danh sách draws đang outstanding trên toàn hệ thống.
+ *
+ * Named export — dùng chung `useSystemOutstanding` và `prefetchSystemOutstanding` (p1-02).
+ * Khác `dashboardKeys.outstanding` (`/dashboard/outstanding`) — endpoint + query key riêng.
+ * Unwrap `{ data }` — khớp shape cũ của hook (UI nhận mảng raw).
+ */
+export async function fetchSystemOutstanding(): Promise<SystemOutstandingData> {
+  const result = await apiClient.get<GetSystemOutstandingOutput>("/reports/outstanding");
+  return result.data;
+}
+
+/**
+ * Prefetch system outstanding — `staleTime` mặc định RQ (= 0), khớp hook.
+ */
+export function prefetchSystemOutstanding(qc: QueryClient): void {
+  void qc
+    .query({
+      queryKey: reportsKeys.outstanding,
+      queryFn: fetchSystemOutstanding,
+      staleTime: 0,
+    })
+    .catch(noop);
+}
+
 /**
  * Danh sách draws đang outstanding trên toàn hệ thống.
- * Tự refresh mỗi 60 giây.
+ * Tự refresh mỗi 60 giây. `staleTime` mặc định React Query (= 0) — prefetch cũng dùng 0.
  */
 export function useSystemOutstanding() {
   return useQuery({
     queryKey: reportsKeys.outstanding,
-    queryFn: () => apiClient.get<GetSystemOutstandingOutput>("/reports/outstanding").then((r) => r.data),
-    refetchInterval: 60_000,
+    queryFn: fetchSystemOutstanding,
+    refetchInterval: SYSTEM_OUTSTANDING_REFETCH_MS,
   });
 }

@@ -22,6 +22,13 @@ import { QueryProvider } from "@/providers/query-provider";
 import { getPreference, getValueFromCookie } from "@/server/server-actions";
 import { AiThreadsProvider } from "@/stores/ai-threads/ai-threads-provider";
 
+/**
+ * Blocking layout: `requireOperatorSession()` + `cookies()` ngoài Suspense.
+ * `instant = false` khi `cacheComponents` bật — App Shell rỗng ở tầng layout;
+ * page có thể vẫn `'use cache'` (guides, p2-01). Refactor Suspense = p3 / sign-off auth.
+ */
+export const instant = false;
+
 export default async function MainLayout({ children }: Readonly<{ children: ReactNode }>) {
   const session = await requireOperatorSession();
   // Roles lấy từ server session và truyền xuống bằng prop — KHÔNG để sidebar tự

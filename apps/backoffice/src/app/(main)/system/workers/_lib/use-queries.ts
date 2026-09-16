@@ -2,7 +2,7 @@
 
 import { ApiClientError, apiClient } from "@megawin/next/client";
 import type { WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { noop, type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { workersKeys } from "@/lib/query-keys";
@@ -13,11 +13,30 @@ import { workersKeys } from "@/lib/query-keys";
  * Không polling (§3 plan p1-01) — trang tra cứu khi có sự cố, không phải
  * dashboard trực. Nút "Làm mới" gọi `refetch()`.
  */
+export const WORKERS_HEALTH_STALE_MS = 10_000;
+
+/** Named export — dùng chung `useWorkersHealth` và `prefetchWorkersHealth` (p1-02). */
+export async function fetchWorkersHealth(): Promise<WorkerHealthRow[]> {
+  return apiClient.get<WorkerHealthRow[]>("/system/workers");
+}
+
+/** Prefetch workers health — stale 10s khớp hook. */
+export function prefetchWorkersHealth(qc: QueryClient): void {
+  void qc
+    .query({
+      queryKey: workersKeys.list(),
+      queryFn: fetchWorkersHealth,
+      staleTime: WORKERS_HEALTH_STALE_MS,
+    })
+    .catch(noop);
+}
+
 export function useWorkersHealth() {
   return useQuery({
     queryKey: workersKeys.list(),
-    queryFn: () => apiClient.get<WorkerHealthRow[]>("/system/workers"),
-    staleTime: 10_000,
+    queryFn: fetchWorkersHealth,
+    // 10s — màn theo dõi worker health, không cần nhanh hơn nhịp người đọc (p1-03).
+    staleTime: WORKERS_HEALTH_STALE_MS,
   });
 }
 
