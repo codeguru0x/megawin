@@ -47,15 +47,15 @@ export function AiPanelTrigger() {
             // h-9 để khớp chiều cao size-9 của ThemeSwitcher/Avatar cùng hàng — pill lệch 32px
             // so với 36px làm cả hàng icon trông không cân.
             "flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-medium tracking-tight",
-            "from-game-max3d via-info to-info bg-linear-to-r text-white",
+            "bg-linear-to-r from-violet-600 via-indigo-500 to-sky-500 text-white",
             // ring-1 mảnh viền trong (không ring-offset) — tạo độ sắc cho mép pill mà không
             // trông như field đang được select trong form.
-            "ring-info/40 ring-1",
+            "ring-1 ring-indigo-500/40",
             "transition-[filter,box-shadow] outline-none hover:brightness-110",
-            "focus-visible:ring-info/60 focus-visible:ring-3",
+            "focus-visible:ring-[3px] focus-visible:ring-indigo-400/60",
             // Trạng thái mở: glow toả ra thay vì viền đôi — báo "đang bật" mà vẫn giữ được
             // cảm giác nút hành động, không thành khối bị highlight.
-            open && "shadow-info/40 ring-info/70 shadow-lg ring-2 brightness-110",
+            open && "shadow-lg ring-2 shadow-indigo-500/40 ring-indigo-400/70 brightness-110",
           )}
         >
           <Sparkles className="size-3.5" />

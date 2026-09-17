@@ -148,7 +148,7 @@ export function EditScheduleAction({
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-muted-foreground/70 text-xs">
+            <p className="text-muted-foreground/70 text-[11px]">
               Bingo 18 quay cố định mỗi 6 phút. Chỉ sửa khi có lý do đặc biệt.
             </p>
           </div>

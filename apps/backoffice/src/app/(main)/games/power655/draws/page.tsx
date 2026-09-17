@@ -31,7 +31,7 @@ export default function Power655DrawsPage() {
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
       <div className="flex items-center gap-3">
-        <div className="from-loss to-warning flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
           <CalendarClock className="size-4.5 text-white" />
         </div>
         <div>

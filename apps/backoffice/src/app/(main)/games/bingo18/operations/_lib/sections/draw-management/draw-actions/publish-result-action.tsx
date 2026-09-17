@@ -419,10 +419,10 @@ export function PublishResultAction({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ClipboardCheck className="text-warning size-4.5" />
+            <ClipboardCheck className="size-4.5 text-amber-500" />
             {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
             {inQueueMode && (
-              <span className="bg-muted text-muted-foreground ml-auto rounded-full px-2 py-0.5 font-mono text-xs">
+              <span className="bg-muted text-muted-foreground ml-auto rounded-full px-2 py-0.5 font-mono text-[11px]">
                 kỳ {(queue?.length ?? 0) - remainingDraws.length}/{queue?.length}
               </span>
             )}
@@ -438,8 +438,8 @@ export function PublishResultAction({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="bg-warning flex size-6 items-center justify-center rounded-md">
-                    <Dice5 className="text-warning size-3.5" />
+                  <div className="flex size-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <Label className="text-sm font-semibold">Kết quả xúc xắc</Label>
                 </div>
@@ -454,13 +454,13 @@ export function PublishResultAction({
               </div>
 
               {showDiff && (
-                <div className="text-muted-foreground flex items-center gap-3 text-xs">
+                <div className="text-muted-foreground flex items-center gap-3 text-[11px]">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="bg-muted ring-border size-4 rounded-full ring-1" />
                     Thứ tự
                   </span>
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="bg-warning ring-warning size-4 rounded-full ring-1" />
+                    <span className="size-4 rounded-full bg-amber-100 ring-1 ring-amber-300 dark:bg-amber-900/50 dark:ring-amber-700" />
                     Gợi ý Vietlott (ô lệch)
                   </span>
                 </div>
@@ -473,7 +473,7 @@ export function PublishResultAction({
                     return (
                       <div key={i} className="flex flex-col items-center gap-1">
                         <div className="relative w-full">
-                          <span className="bg-muted text-muted-foreground ring-background absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full text-xs font-semibold ring-2">
+                          <span className="bg-muted text-muted-foreground ring-background absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full text-[9px] font-semibold ring-2">
                             {i + 1}
                           </span>
                           <Input
@@ -488,15 +488,19 @@ export function PublishResultAction({
                             className={cn(
                               "h-11 w-full text-center text-lg font-bold tabular-nums",
                               validation.fieldErrors.has(i) && "border-destructive",
-                              !validation.fieldErrors.has(i) && isDiff && "border-warning bg-warning/50",
+                              !validation.fieldErrors.has(i) &&
+                                isDiff &&
+                                "border-amber-400 bg-amber-50/50 dark:bg-amber-900/20",
                             )}
                           />
                         </div>
                         {showDiff && (
                           <span
                             className={cn(
-                              "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono text-xs font-semibold tabular-nums",
-                              isDiff ? "bg-warning text-warning" : "invisible",
+                              "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono text-[10px] font-semibold tabular-nums",
+                              isDiff
+                                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
+                                : "invisible",
                             )}
                           >
                             {incomingNumbers?.[i] ?? "0"}
@@ -512,13 +516,13 @@ export function PublishResultAction({
                   <div className="flex items-center gap-2">
                     <span
                       className={`text-lg font-bold tabular-nums transition-colors ${
-                        sum !== null ? "text-warning" : "text-muted-foreground/40"
+                        sum !== null ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/40"
                       }`}
                     >
                       {sum ?? "—"}
                     </span>
                     {sum !== null && (
-                      <span className="bg-warning text-warning rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                      <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                         {classifySum(sum)} · {sum % 2 === 0 ? "Chẵn" : "Lẻ"}
                       </span>
                     )}
@@ -539,10 +543,10 @@ export function PublishResultAction({
               />
 
               {pasteNotice && (
-                <div className="border-warning/50 bg-warning rounded-lg border px-4 py-3">
+                <div className="rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="text-warning mt-0.5 size-3.5 shrink-0" />
-                    <p className="text-warning text-sm">{pasteNotice}</p>
+                    <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <p className="text-sm text-amber-800 dark:text-amber-300">{pasteNotice}</p>
                   </div>
                 </div>
               )}
@@ -563,8 +567,8 @@ export function PublishResultAction({
 
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="bg-info flex size-6 items-center justify-center rounded-md">
-                  <ExternalLink className="text-info size-3.5" />
+                <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                  <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
               </div>
@@ -599,18 +603,18 @@ export function PublishResultAction({
 
               {/* 4 trường hợp không suy được — mỗi trường hợp 1 thông báo riêng (overview §7.1). */}
               {!suggestion.isFetching && !suggestedPeriod && !trimmedPeriod && suggestion.data?.reason && (
-                <div className="border-info/50 bg-info rounded-lg border px-4 py-3">
+                <div className="rounded-lg border border-blue-300/50 bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="text-info mt-0.5 size-3.5 shrink-0" />
+                    <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
                     <div className="space-y-1">
-                      <p className="text-info text-sm leading-relaxed">
+                      <p className="text-sm leading-relaxed text-blue-800 dark:text-blue-300">
                         {VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES[suggestion.data.reason]}
                       </p>
                       {suggestion.data.reason === VietlottSuggestionUnavailableReason.NoAnchor && (
                         <Link
                           prefetch={false}
                           href={vietlottConfigLink}
-                          className="text-info text-xs font-medium underline"
+                          className="text-xs font-medium text-blue-700 underline dark:text-blue-400"
                         >
                           Cấu hình mã kỳ Vietlott →
                         </Link>
@@ -622,15 +626,15 @@ export function PublishResultAction({
 
               {/* Cảnh báo lệch — MỌI kỳ, không chỉ kỳ đầu ngày (overview §4.3, chốt 29/08). Mềm, không chặn lưu. */}
               {periodMismatch && (
-                <div className="border-warning/50 bg-warning rounded-lg border px-4 py-3">
+                <div className="rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
                   <div className="flex items-start gap-2">
-                    <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
                     <div className="space-y-1">
-                      <p className="text-warning text-sm">
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
                         Mã kỳ vừa nhập (<span className="font-mono font-semibold">{trimmedPeriod}</span>) khác gợi ý hệ
                         thống (<span className="font-mono font-semibold">{suggestedPeriod}</span>).
                       </p>
-                      <p className="text-warning text-xs">
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
                         Nếu giá trị vừa nhập đúng với trang Vietlott, hãy{" "}
                         <Link prefetch={false} href={vietlottConfigLink} className="font-medium underline">
                           cập nhật lại mã kỳ Vietlott

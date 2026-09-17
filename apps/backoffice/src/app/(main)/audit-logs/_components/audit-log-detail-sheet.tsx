@@ -152,10 +152,10 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
       {/* Actor + target — 2 khối gọn, mã ID inline nhỏ dưới tên */}
       <div className="grid gap-3 rounded-md border p-3 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Thực hiện bởi</span>
+          <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Thực hiện bởi</span>
           <div className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-sm font-medium">{log.actorName}</span>
-            <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tracking-wide uppercase">
+            <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
               {AuditActorTypeLabel[log.actorType]}
             </span>
           </div>
@@ -172,7 +172,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
               )}
               {ip && (
                 <span
-                  className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 font-mono text-xs font-medium"
+                  className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium"
                   title="Địa chỉ IP"
                 >
                   {ip}
@@ -182,14 +182,14 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Đối tượng</span>
+          <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">Đối tượng</span>
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-sm">{AuditTargetTypeLabel[log.targetType]}</span>
             {log.game && <GameBadge gameProduct={log.game} />}
           </div>
           {(log.targetLabel || log.targetId) && (
             <span
-              className="text-muted-foreground/70 truncate font-mono text-xs"
+              className="text-muted-foreground/70 truncate font-mono text-[11px]"
               title={log.targetLabel || log.targetId}
             >
               {log.targetLabel || log.targetId}
@@ -218,7 +218,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           <h3 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
             Thay đổi
             {diffKeys.size > 0 && (
-              <span className="bg-warning/15 text-warning rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums">
+              <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 tabular-nums dark:text-amber-300">
                 {diffKeys.size}
               </span>
             )}
@@ -300,14 +300,17 @@ function DiffPane({ title, value, highlight }: { title: string; value: unknown; 
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{title}</span>
+      <span className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">{title}</span>
       {formatted ? (
         isObject ? (
           <div className="bg-muted/40 flex flex-col gap-0.5 rounded-md border p-2 font-mono text-xs">
             {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
               <div
                 key={k}
-                className={cn("wrap-break-words", highlight.has(k) && "bg-warning/15 text-warning rounded px-1")}
+                className={cn(
+                  "wrap-break-words",
+                  highlight.has(k) && "rounded bg-amber-500/15 px-1 text-amber-800 dark:text-amber-300",
+                )}
               >
                 <span className="text-muted-foreground">{k}:</span> {formatValue(v)}
               </div>

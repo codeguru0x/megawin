@@ -196,7 +196,7 @@ export function HubProvider({ children }: { children: ReactNode }) {
   const derived = useMemo(() => {
     // `boundaryTick` cố ý làm TRIGGER re-run (không dùng giá trị) — mốc hẹn giờ theo đúng
     // thời điểm đổi trạng thái, không phải tick đều mỗi giây (guideline §5.3). Đọc `void` để
-    // Linter nhận diện là dependency có dùng, tránh bị coi "dependency dư".
+    // Biome nhận diện là dependency có dùng, tránh bị coi "dependency dư".
     void boundaryTick;
     if (!rows || !thresholds) {
       return {

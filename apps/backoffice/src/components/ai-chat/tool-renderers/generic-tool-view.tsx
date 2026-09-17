@@ -52,7 +52,7 @@ function signedClassName(value: unknown, signed: boolean | undefined): string | 
   if (signed !== true || typeof value !== "number") {
     return undefined;
   }
-  return value < 0 ? "text-destructive" : "text-profit";
+  return value < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400";
 }
 
 /** Export — dùng lại ở renderer bespoke (Tier 2, VD `daily-ops-cards.tsx`) để giữ cùng khung card. */
@@ -118,7 +118,7 @@ export function EmptyCard({ text }: { text: string }) {
 export function KpiTile({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
     <div className="bg-muted/50 rounded-md px-2 py-1.5">
-      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="text-muted-foreground text-[10px]">{label}</p>
       <p className={cn("text-sm font-semibold tabular-nums", valueClassName)}>{value}</p>
     </div>
   );
@@ -198,6 +198,7 @@ export function DataTable<Row>({ columns, rows }: { columns: readonly ColumnSpec
           {rows.map((row, rowIndex) => (
             // Không có id ổn định chung cho mọi Row → dùng index. An toàn vì list này TĨNH
             // (render 1 lần từ output tool đã hoàn tất, không thêm/xoá/sắp lại dòng).
+            // biome-ignore lint/suspicious/noArrayIndexKey: output tool bất biến, không reorder.
             <TableRow key={rowIndex}>
               {columns.map((column) => {
                 const value = (row as Record<string, unknown>)[column.key];

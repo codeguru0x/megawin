@@ -92,7 +92,7 @@ export function AuditLogsTable({
                   <TableCell>
                     <div className="flex min-w-0 items-center gap-1.5">
                       <span className="truncate text-sm font-medium">{row.actorName}</span>
-                      <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tracking-wide uppercase">
+                      <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
                         {AuditActorTypeLabel[row.actorType]}
                       </span>
                       {row.actorRoles.length > 0 && (
@@ -107,7 +107,7 @@ export function AuditLogsTable({
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-sm">{actionLabel}</span>
-                      <span className="bg-primary/10 text-primary w-fit rounded px-1.5 py-0.5 text-xs font-medium">
+                      <span className="bg-primary/10 text-primary w-fit rounded px-1.5 py-0.5 text-[10px] font-medium">
                         {AuditCategoryLabel[row.category]}
                       </span>
                     </div>

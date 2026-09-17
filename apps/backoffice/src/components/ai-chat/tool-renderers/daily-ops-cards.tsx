@@ -354,7 +354,7 @@ function IntegrationHealthCard({ output }: { output: GetIntegrationHealthOutput 
             <KpiTile
               label="Đang retry"
               value={formatCell(numOr0(summary.retrying), CellFormat.Number)}
-              valueClassName={numOr0(summary.retrying) > 0 ? "text-warning" : undefined}
+              valueClassName={numOr0(summary.retrying) > 0 ? "text-amber-600 dark:text-amber-400" : undefined}
             />
             <KpiTile
               label="Stuck"

@@ -174,7 +174,9 @@ export function TxLogTable({
                       <span
                         className={cn(
                           "inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium",
-                          req.action === "debit" ? "bg-loss/10 text-loss" : "bg-profit/10 text-profit",
+                          req.action === "debit"
+                            ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                            : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
                         )}
                       >
                         {TRANSACTION_ACTION_LABELS[req.action]}

@@ -44,41 +44,41 @@ export function PlayerKpiStrip({ data, isLoading }: PlayerKpiStripProps) {
   const cards = [
     {
       icon: Receipt,
-      iconBg: "bg-info",
-      iconColor: "text-info",
+      iconBg: "bg-blue-100 dark:bg-blue-900/50",
+      iconColor: "text-blue-600 dark:text-blue-400",
       label: "Tổng đơn cược",
       value: formatNumber(totalEntryCount),
       sub: `${formatNumber(totalSettledCount)} settled`,
     },
     {
       icon: DollarSign,
-      iconBg: "bg-profit",
-      iconColor: "text-profit",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
       label: "Tiền cược",
       value: formatVNDCompact(totalStake),
       sub: "Chỉ tính settled",
     },
     {
       icon: TrendingUp,
-      iconBg: isGgrNeg ? "bg-loss" : "bg-game-max3d",
-      iconColor: isGgrNeg ? "text-loss" : "text-game-max3d",
+      iconBg: isGgrNeg ? "bg-rose-100 dark:bg-rose-900/50" : "bg-violet-100 dark:bg-violet-900/50",
+      iconColor: isGgrNeg ? "text-rose-600 dark:text-rose-400" : "text-violet-600 dark:text-violet-400",
       label: "GGR",
       value: formatVNDCompact(ggr),
       sub: isGgrNeg ? "Player trúng lớn" : "Doanh thu ròng",
-      valueClass: isGgrNeg ? "text-loss" : undefined,
+      valueClass: isGgrNeg ? "text-rose-600 dark:text-rose-400" : undefined,
     },
     {
       icon: Percent,
-      iconBg: "bg-warning",
-      iconColor: "text-warning",
+      iconBg: "bg-amber-100 dark:bg-amber-900/50",
+      iconColor: "text-amber-600 dark:text-amber-400",
       label: "Payout %",
       value: formatPercent(payoutPct),
       sub: "Trả thưởng / Cược",
     },
     {
       icon: Trophy,
-      iconBg: "bg-loss",
-      iconColor: "text-loss",
+      iconBg: "bg-rose-100 dark:bg-rose-900/50",
+      iconColor: "text-rose-600 dark:text-rose-400",
       label: "Tỷ lệ thắng",
       value: formatPercent(winRate),
       sub: `${formatNumber(totalWinCount)} / ${formatNumber(totalSettledCount)} đơn`,
@@ -93,9 +93,9 @@ export function PlayerKpiStrip({ data, isLoading }: PlayerKpiStripProps) {
             <card.icon className={cn("size-5", card.iconColor)} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-muted-foreground text-xs font-medium">{card.label}</p>
+            <p className="text-muted-foreground text-[11px] font-medium">{card.label}</p>
             <p className={cn("text-foreground text-lg font-bold tabular-nums", card.valueClass)}>{card.value}</p>
-            <p className="text-muted-foreground truncate text-xs">{card.sub}</p>
+            <p className="text-muted-foreground truncate text-[11px]">{card.sub}</p>
           </div>
         </div>
       ))}

@@ -37,7 +37,7 @@ function BannerRow({ item }: { item: BannerItemDef }) {
   const toneClass =
     item.tone === "destructive"
       ? "border-destructive/30 bg-destructive/10 text-destructive"
-      : "border-warning/30 bg-warning/10 text-warning";
+      : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
 
   return (
     <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${toneClass}`}>

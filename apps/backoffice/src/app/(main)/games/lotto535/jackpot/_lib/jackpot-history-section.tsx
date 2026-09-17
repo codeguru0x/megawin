@@ -72,8 +72,8 @@ export function JackpotHistorySection() {
       {/* Section header — title + cycle selector */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="bg-info flex size-8 items-center justify-center rounded-lg">
-            <History className="text-info size-4" />
+          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <History className="size-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h2 className="text-foreground text-sm font-semibold">Lịch sử Jackpot</h2>
@@ -209,10 +209,12 @@ function CycleSelectorLabel({ cycle }: { cycle: JackpotCycleOption }) {
     <span className="flex items-center gap-2">
       <span className="tabular-nums">
         Vòng #{cycle.cycleNo}
-        {isActive && <span className="text-profit ml-1 text-xs">(hiện tại)</span>}
+        {isActive && <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>}
       </span>
-      {!isActive && cycle.closeReason === "winner" && <Sparkles className="text-profit size-3" />}
-      {!isActive && cycle.closeReason === "split" && <Split className="text-warning size-3" />}
+      {!isActive && cycle.closeReason === "winner" && (
+        <Sparkles className="size-3 text-green-600 dark:text-green-400" />
+      )}
+      {!isActive && cycle.closeReason === "split" && <Split className="size-3 text-amber-600 dark:text-amber-400" />}
     </span>
   );
 }
@@ -229,7 +231,13 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
-    <TableRow className={cn("transition-colors", isSplit && "bg-warning/50", isWinner && "bg-profit/50")}>
+    <TableRow
+      className={cn(
+        "transition-colors",
+        isSplit && "bg-amber-50/50 dark:bg-amber-950/20",
+        isWinner && "bg-green-50/50 dark:bg-green-950/20",
+      )}
+    >
       {/* Kỳ (DrawId) */}
       <TableCell className="pl-5 font-mono text-sm tabular-nums">{item.drawId}</TableCell>
 
@@ -281,14 +289,14 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       </TableCell>
 
       {/* Cuối kỳ */}
-      <TableCell className="text-warning text-right text-sm font-semibold tabular-nums">
+      <TableCell className="text-right text-sm font-semibold text-amber-700 tabular-nums dark:text-amber-400">
         {formatNumber(item.closingAmount)}
       </TableCell>
 
       {/* Jackpot (hasWinner) */}
       <TableCell className="text-center">
         {isWinner ? (
-          <Badge className="border-profit/30 bg-profit/15 text-profit gap-1">
+          <Badge className="gap-1 border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
             <Sparkles className="size-3" />
             Trúng
           </Badge>
@@ -300,7 +308,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       {/* Chia giải (isSplitCycle) */}
       <TableCell className="pr-5 text-center">
         {isSplit ? (
-          <Badge className="border-warning/30 bg-warning/15 text-warning gap-1">
+          <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
             <Split className="size-3" />
             Chia giải
           </Badge>

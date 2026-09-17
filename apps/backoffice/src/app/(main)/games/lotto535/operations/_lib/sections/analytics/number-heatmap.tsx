@@ -70,27 +70,27 @@ const LOTTO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES_MAIN: Record<HeatLevel, string> = {
-  cold: "bg-warning/80 text-warning",
-  low: "bg-warning text-warning",
-  mid: "bg-warning text-white",
-  warm: "bg-warning text-white",
-  hot: "bg-warning text-white ring-2 ring-warning/50",
+  cold: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200",
+  low: "bg-amber-300 text-amber-900 dark:bg-amber-800 dark:text-amber-100",
+  mid: "bg-amber-400 text-white dark:bg-amber-700",
+  warm: "bg-amber-600 text-white",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
 };
 
 const HEAT_BADGE_STYLES_SPECIAL: Record<HeatLevel, string> = {
-  cold: "bg-warning/80 text-warning",
-  low: "bg-warning text-warning",
-  mid: "bg-warning text-white",
-  warm: "bg-warning text-white",
-  hot: "bg-warning text-white ring-2 ring-warning/50",
+  cold: "bg-orange-200/80 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200",
+  low: "bg-orange-300 text-orange-900 dark:bg-orange-800 dark:text-orange-100",
+  mid: "bg-orange-400 text-white dark:bg-orange-700",
+  warm: "bg-orange-600 text-white",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-warning/40",
-  warm: "bg-warning/70",
-  hot: "bg-warning/60",
+  mid: "bg-amber-50/40 dark:bg-amber-950/10",
+  warm: "bg-amber-50/70 dark:bg-amber-950/20",
+  hot: "bg-amber-50/60 dark:bg-amber-950/15",
 };
 
 function getHeatLevel(amount: number, maxAmount: number): HeatLevel {
@@ -146,21 +146,24 @@ export function NumberBadge({
   if (selected) {
     colorClass =
       ballVariant === "special"
-        ? "bg-warning text-white ring-2 ring-warning/60"
-        : "bg-warning text-white ring-2 ring-warning/60";
+        ? "bg-orange-600 text-white ring-2 ring-orange-300/60"
+        : "bg-amber-600 text-white ring-2 ring-amber-300/60";
   } else if (muted) {
     colorClass = LOTTO_MUTED_BG;
   } else if (variant === "outlined") {
     colorClass =
       ballVariant === "special"
-        ? "border border-warning/70 text-warning bg-transparent"
-        : "border border-warning/70 text-warning bg-transparent";
+        ? "border border-orange-400/70 text-orange-600 bg-transparent dark:border-orange-600 dark:text-orange-400"
+        : "border border-amber-400/70 text-amber-600 bg-transparent dark:border-amber-600 dark:text-amber-400";
   } else if (variant === "soft") {
-    colorClass = ballVariant === "special" ? "bg-warning text-warning" : "bg-warning text-warning";
+    colorClass =
+      ballVariant === "special"
+        ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+        : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
   } else {
     // filled — heat intensity
     const styles = ballVariant === "special" ? HEAT_BADGE_STYLES_SPECIAL : HEAT_BADGE_STYLES_MAIN;
-    colorClass = heatLevel ? styles[heatLevel] : "bg-warning text-white";
+    colorClass = heatLevel ? styles[heatLevel] : "bg-amber-600 text-white";
   }
 
   return (
@@ -252,11 +255,14 @@ function NumberCell({
   const isLastCol = col === totalCols - 1;
   const isLastRow = row === totalRows - 1;
   const cellBg = isEmpty ? "" : HEAT_CELL_BG[heatLevel];
-  const hoverBg = ballVariant === "special" ? "hover:bg-warning/50" : "hover:bg-warning/50";
+  const hoverBg =
+    ballVariant === "special"
+      ? "hover:bg-orange-100/50 dark:hover:bg-orange-950/30"
+      : "hover:bg-amber-100/50 dark:hover:bg-amber-950/30";
   const selectedBg =
     ballVariant === "special"
-      ? "bg-warning/80 ring-2 ring-inset ring-warning"
-      : "bg-warning/80 ring-2 ring-inset ring-warning";
+      ? "bg-orange-100/80 ring-2 ring-inset ring-orange-500 dark:bg-orange-900/40"
+      : "bg-amber-100/80 ring-2 ring-inset ring-amber-500 dark:bg-amber-900/40";
 
   const cellClass = cn(
     "relative w-full text-left transition-colors select-none",
@@ -294,7 +300,7 @@ function NumberCell({
       </span>
       <div className="flex flex-col items-center gap-0.5">
         {isEmpty ? (
-          <span className="text-muted-foreground/20 text-xs tabular-nums">–</span>
+          <span className="text-muted-foreground/20 text-[11px] tabular-nums">–</span>
         ) : (
           <>
             {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
@@ -394,7 +400,7 @@ function MainGrid({
         )}
       </NumberHeatmapHoverLayer>
       {isSparse && (
-        <p className="text-muted-foreground/60 text-xs italic">
+        <p className="text-muted-foreground/60 text-[11px] italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.
         </p>
       )}
@@ -579,7 +585,12 @@ function ComboLookupDialog({
 
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span className={cn("text-xs font-medium tabular-nums", isValid ? "text-profit" : "text-muted-foreground")}>
+            <span
+              className={cn(
+                "text-xs font-medium tabular-nums",
+                isValid ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+              )}
+            >
               {selectedMain.length} số chính + {selectedSpecial.length} số ĐB
               {isValid ? " · hợp lệ" : ` · ${validation.errors[0] ?? "chưa hợp lệ"}`}
             </span>
@@ -601,7 +612,7 @@ function ComboLookupDialog({
                   key={n}
                   type="button"
                   onClick={() => onToggleMain(n)}
-                  className="bg-warning text-warning hover:bg-warning inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
+                  className="inline-flex h-6 items-center gap-0.5 rounded-full bg-amber-100 pr-1 pl-2 text-xs font-bold text-amber-700 tabular-nums transition-colors hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60"
                   title="Bỏ chọn"
                 >
                   {n}
@@ -617,7 +628,7 @@ function ComboLookupDialog({
                   key={n}
                   type="button"
                   onClick={() => onToggleSpecial(n)}
-                  className="bg-warning text-warning hover:bg-warning inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
+                  className="inline-flex h-6 items-center gap-0.5 rounded-full bg-orange-100 pr-1 pl-2 text-xs font-bold text-orange-700 tabular-nums transition-colors hover:bg-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:hover:bg-orange-900/60"
                   title="Bỏ chọn"
                 >
                   {n}
@@ -731,6 +742,7 @@ export function NumberHeatmap({
   }, []);
 
   // Đổi kỳ (drawId) → reset lựa chọn cũ, tránh tra cứu nhầm kỳ khác.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: drawId là trigger reset (không đọc trong body); biome coi dependency "unnecessary" nếu chỉ dùng làm signal.
   useEffect(() => {
     setSelectedMain([]);
     setSelectedSpecial([]);

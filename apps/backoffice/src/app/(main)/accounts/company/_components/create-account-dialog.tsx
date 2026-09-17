@@ -66,11 +66,11 @@ function getPasswordStrength(pwd: string): number {
 }
 
 const STRENGTH_CONFIG = [
-  { label: "Rất yếu", color: "bg-loss" },
-  { label: "Yếu", color: "bg-warning" },
-  { label: "Trung bình", color: "bg-warning" },
-  { label: "Mạnh", color: "bg-profit" },
-  { label: "Rất mạnh", color: "bg-profit" },
+  { label: "Rất yếu", color: "bg-red-500" },
+  { label: "Yếu", color: "bg-orange-500" },
+  { label: "Trung bình", color: "bg-yellow-500" },
+  { label: "Mạnh", color: "bg-emerald-500" },
+  { label: "Rất mạnh", color: "bg-emerald-600" },
 ] as const;
 
 const ROLE_META: Record<CompanyRole, { icon: typeof Shield; description: string; iconBg: string; iconColor: string }> =
@@ -78,14 +78,14 @@ const ROLE_META: Record<CompanyRole, { icon: typeof Shield; description: string;
     [CompanyRole.Admin]: {
       icon: Shield,
       description: "Toàn quyền quản trị hệ thống",
-      iconBg: "bg-game-max3d",
-      iconColor: "text-game-max3d",
+      iconBg: "bg-violet-100 dark:bg-violet-900/50",
+      iconColor: "text-violet-600 dark:text-violet-400",
     },
     [CompanyRole.Staff]: {
       icon: User,
       description: "Xem và thao tác nghiệp vụ cơ bản",
-      iconBg: "bg-info",
-      iconColor: "text-info",
+      iconBg: "bg-blue-100 dark:bg-blue-900/50",
+      iconColor: "text-blue-600 dark:text-blue-400",
     },
   };
 
@@ -121,7 +121,7 @@ export function CreateCompanyAccountDialog() {
     mutationFn: (values: CreateAccountValues) =>
       apiClient.post<CreateCompanyAccountResponse>("/accounts/company", values),
     onSuccess: (data) => {
-      void queryClient.invalidateQueries({ queryKey: accountsKeys.company });
+      queryClient.invalidateQueries({ queryKey: accountsKeys.company });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản thành công.", {
@@ -165,7 +165,7 @@ export function CreateCompanyAccountDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="from-info to-primary flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 shadow-sm">
               <UserPlus className="size-4.5 text-white" />
             </div>
             <div>

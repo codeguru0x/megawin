@@ -61,8 +61,8 @@ export function ChangePasswordForm() {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="bg-game-max3d flex size-7 items-center justify-center rounded-lg">
-            <KeyRound className="text-game-max3d size-3.5" />
+          <div className="flex size-7 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/50">
+            <KeyRound className="size-3.5 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Đổi mật khẩu</CardTitle>
@@ -205,26 +205,26 @@ export function ChangePasswordForm() {
             </div>
 
             {/* Lưu ý bảo mật — nằm trong cùng card */}
-            <div className="border-warning/60 bg-warning/50 rounded-lg border p-4">
+            <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/20">
               <div className="mb-2.5 flex items-center gap-2">
-                <Info className="text-warning size-3.5" />
-                <span className="text-warning text-xs font-semibold">Lưu ý bảo mật</span>
+                <Info className="size-3.5 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">Lưu ý bảo mật</span>
               </div>
               <ul className="text-muted-foreground space-y-1.5 text-xs">
                 <li className="flex items-center gap-2">
-                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
+                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
                   Không sử dụng lại mật khẩu đã dùng ở dịch vụ khác
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
+                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
                   Đổi mật khẩu định kỳ mỗi 90 ngày
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
+                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
                   Không chia sẻ mật khẩu với bất kỳ ai
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
+                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
                   Sử dụng trình quản lý mật khẩu (Password Manager) để lưu trữ an toàn
                 </li>
               </ul>
@@ -245,13 +245,13 @@ function PasswordStrength({ password }: { password: string }) {
     weak: { label: "Yếu", color: "bg-destructive", textColor: "text-destructive" },
     medium: {
       label: "Trung bình",
-      color: "bg-warning",
-      textColor: "text-warning",
+      color: "bg-amber-500",
+      textColor: "text-amber-600 dark:text-amber-400",
     },
     strong: {
       label: "Mạnh",
-      color: "bg-profit",
-      textColor: "text-profit",
+      color: "bg-emerald-500",
+      textColor: "text-emerald-600 dark:text-emerald-400",
     },
   } as const;
 
@@ -279,7 +279,7 @@ function PasswordStrength({ password }: { password: string }) {
               key={rule.label}
               className={cn(
                 "flex items-center gap-2 text-xs transition-colors",
-                passed ? "text-profit" : "text-muted-foreground",
+                passed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
               )}
             >
               {passed ? <Check className="size-3 shrink-0" /> : <X className="size-3 shrink-0" />}

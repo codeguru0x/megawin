@@ -16,7 +16,7 @@
  * 1. **Dải A full-width trên cùng** — gộp chặng + câu "vì sao" (`text-xs`, khớp bảng 5A) + tuổi
  *    trong chặng + NÚT hành động vào 1 dải, nút canh PHẢI. Trước đó nút nằm ở footer dưới cả 3
  *    khối, cách câu chẩn đoán ~120px, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm.
- *    `border-l-3` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
+ *    `border-l-[3px]` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
  *    panel cũ chuyển sang xám nên tín hiệu "đang đỏ" biến mất đúng lúc đọc kỹ nhất).
  * 2. **2 cột bất đối xứng 58/42**, mỗi cột bọc khung `border rounded-lg bg-card` riêng (fix vòng
  *    4, xem thêm bên dưới) — tách biệt khỏi nền `bg-muted/30` của panel.
@@ -134,21 +134,12 @@ function bulkKindForStatus(status: DrawStatus): BulkDialogActionKind | null {
       return BulkActionKind.CloseSales;
     case DrawStatus.Published:
       return BulkActionKind.Settle;
-    case "salesClosed": {
-      throw new Error('Not implemented yet: "salesClosed" case');
-    }
-    case "settled": {
-      throw new Error('Not implemented yet: "settled" case');
-    }
-    case "settling": {
-      throw new Error('Not implemented yet: "settling" case');
-    }
-    case "void": {
-      throw new Error('Not implemented yet: "void" case');
-    }
-    case "voiding": {
-      throw new Error('Not implemented yet: "voiding" case');
-    }
+    case DrawStatus.SalesClosed:
+    case DrawStatus.Settled:
+    case DrawStatus.Settling:
+    case DrawStatus.Void:
+    case DrawStatus.Voiding:
+      return null;
     default:
       return null;
   }
@@ -396,7 +387,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
             theo trục dọc, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm. Typography cả dải
             giữ `text-xs` để khớp dòng bảng 5A (không bump `text-sm` — panel sẽ "to" hơn dòng ngoài).
 
-            `border-l-3` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
+            `border-l-[3px]` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
             `stuck` có nền đỏ nhạt, panel cũ đổi sang xám `bg-muted/30` nên tín hiệu "kỳ này đang
             đỏ" BIẾN MẤT đúng lúc staff đọc kỹ nhất.
 
@@ -405,11 +396,11 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
           */}
           <div
             className={cn(
-              "mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-l-3 p-3",
+              "mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-l-[3px] p-3",
               row.health === StageHealth.Stuck
                 ? "border-l-destructive bg-destructive/5"
                 : row.health === StageHealth.Warn
-                  ? "bg-warning/5 border-l-warning"
+                  ? "border-l-amber-500 bg-amber-500/5"
                   : "border-l-primary/40 bg-card",
             )}
           >
@@ -598,7 +589,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
               <FieldRow
                 label="Rủi ro chi trả"
                 value={formatNumber(row.exposureRaw)}
-                valueClassName={row.exposureRaw > 0 ? "text-warning" : undefined}
+                valueClassName={row.exposureRaw > 0 ? "text-amber-600 dark:text-amber-500" : undefined}
               />
 
               {/* `Cược lớn` + `Cảnh báo` trước là 2 dòng LUÔN hiện, ở kỳ bình thường cả 2 đều `0`/
@@ -606,7 +597,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
               {row.largeBetCount > 0 || row.alertsOpen > 0 ? (
                 <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
                   {row.largeBetCount > 0 ? (
-                    <span className="bg-warning/10 text-warning rounded px-1.5 py-0.5">
+                    <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-amber-700 dark:text-amber-500">
                       {formatNumber(row.largeBetCount)} cược lớn
                     </span>
                   ) : null}

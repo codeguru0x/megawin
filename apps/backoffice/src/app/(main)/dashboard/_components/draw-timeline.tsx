@@ -67,8 +67,8 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       href={href}
       className={cn(
         "group flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors",
-        "hover:bg-muted/60",
-        isActive && "bg-info/50 hover:bg-info/60",
+        "hover:bg-muted/60 dark:hover:bg-muted/30",
+        isActive && "bg-blue-50/50 hover:bg-blue-100/60 dark:bg-blue-950/20 dark:hover:bg-blue-950/30",
       )}
     >
       <span className="size-2 shrink-0 rounded-full" style={{ background: c.hex }} />
@@ -80,7 +80,7 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
         {isActive && event.pendingEntries != null && (
-          <span className="text-info text-xs tabular-nums">
+          <span className="text-xs text-blue-600 tabular-nums dark:text-blue-400">
             {formatNumber(event.pendingEntries)} vé
             {event.pendingStake != null && event.pendingStake > 0 && <> · {formatVNDCompact(event.pendingStake)}</>}
           </span>
@@ -118,8 +118,8 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         <span
           className={cn(
             "text-xs font-semibold",
-            accent === "blue" && "text-info",
-            accent === "emerald" && "text-profit",
+            accent === "blue" && "text-blue-700 dark:text-blue-400",
+            accent === "emerald" && "text-emerald-700 dark:text-emerald-400",
             accent === "muted" && "text-muted-foreground",
           )}
         >
@@ -128,9 +128,9 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         <Badge
           variant="secondary"
           className={cn(
-            "ml-auto h-4 min-w-5 justify-center px-1.5 text-xs font-bold",
-            accent === "blue" && "bg-info text-info",
-            accent === "emerald" && "bg-profit text-profit",
+            "ml-auto h-4 min-w-5 justify-center px-1.5 text-[10px] font-bold",
+            accent === "blue" && "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+            accent === "emerald" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
             accent === "muted" && "bg-muted text-muted-foreground",
           )}
         >
@@ -215,7 +215,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
         {hasHighFreq && (
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1">
-              <Zap className="text-warning size-3" />
+              <Zap className="size-3 text-amber-500" />
               <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Quay nhanh</span>
             </div>
             {data.highFreqGames.map((g) => {
@@ -231,7 +231,9 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
                   <span className="text-xs font-medium">{getGameLabel(g.gameProduct)}</span>
                   <span className="text-muted-foreground text-xs">·</span>
                   {g.activeCount > 0 && (
-                    <span className="text-info text-xs tabular-nums">{g.activeCount} kỳ đang diễn ra</span>
+                    <span className="text-xs text-blue-600 tabular-nums dark:text-blue-400">
+                      {g.activeCount} kỳ đang diễn ra
+                    </span>
                   )}
                   {g.scheduledCount > 0 && (
                     <>
@@ -254,11 +256,11 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
             icon={
               active.length > 0 ? (
                 <span className="relative flex size-2">
-                  <span className="bg-info absolute inline-flex size-full animate-ping rounded-full opacity-75" />
-                  <span className="bg-info relative inline-flex size-2 rounded-full" />
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
                 </span>
               ) : (
-                <Play className="fill-info text-info size-3.5" />
+                <Play className="size-3.5 fill-blue-500 text-blue-500" />
               )
             }
             count={active.length}
@@ -272,7 +274,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
 
           <Column
             title="Vừa hoàn thành"
-            icon={<CheckCircle2 className="text-profit size-3.5" />}
+            icon={<CheckCircle2 className="size-3.5 text-emerald-500" />}
             count={settled.length}
             accent="emerald"
             emptyText="Chưa có kỳ nào hoàn thành"

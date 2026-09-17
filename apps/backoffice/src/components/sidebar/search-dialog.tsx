@@ -361,7 +361,7 @@ export function SearchDialog() {
       >
         <Search className="size-4" />
         Search
-        <kbd className="bg-muted inline-flex h-5 items-center gap-1 rounded border px-1.5 text-xs font-medium select-none">
+        <kbd className="bg-muted inline-flex h-5 items-center gap-1 rounded border px-1.5 text-[10px] font-medium select-none">
           <span className="text-xs">⌘</span>J
         </kbd>
       </Button>
@@ -399,7 +399,7 @@ export function SearchDialog() {
                         {entry.icon && <entry.icon />}
                         <span>{entry.title}</span>
                         {entry.comingSoon && (
-                          <span className="bg-muted text-muted-foreground ml-auto rounded-md px-2 py-1 text-xs">
+                          <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">
                             Soon
                           </span>
                         )}

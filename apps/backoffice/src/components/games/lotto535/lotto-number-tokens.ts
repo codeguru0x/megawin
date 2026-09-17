@@ -6,9 +6,9 @@
 // ─── Number ball color tokens ─────────────────────────────────────────────────
 
 /** Orange circle: main numbers (01–35) */
-export const LOTTO_MAIN_BG = "bg-warning text-white";
+export const LOTTO_MAIN_BG = "bg-orange-400 text-white dark:bg-orange-500";
 /** Indigo circle: special number (01–12) */
-export const LOTTO_SPECIAL_BG = "bg-info text-white";
+export const LOTTO_SPECIAL_BG = "bg-indigo-400 text-white dark:bg-indigo-500";
 /** Muted placeholder when no data */
 export const LOTTO_MUTED_BG = "bg-muted/40 text-muted-foreground/40";
 
@@ -21,7 +21,7 @@ export const LOTTO_SPECIAL_HEX = "#818cf8"; // indigo-400
 export type LottoNumberSize = "xs" | "sm" | "md" | "lg";
 
 export const LOTTO_NUMBER_SIZE: Record<LottoNumberSize, { sizeClass: string; textClass: string }> = {
-  xs: { sizeClass: "size-5", textClass: "text-xs" },
+  xs: { sizeClass: "size-5", textClass: "text-[10px]" },
   sm: { sizeClass: "size-7", textClass: "text-xs" },
   md: { sizeClass: "size-9", textClass: "text-sm" },
   lg: { sizeClass: "size-11", textClass: "text-base" },

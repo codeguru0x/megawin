@@ -124,7 +124,7 @@ function PickCard({ row }: { row: PlayTypeRow }) {
         <p className="text-foreground min-w-0 truncate text-sm leading-none font-bold tabular-nums">
           {formatNumber(row.revenue)}
         </p>
-        <span className="text-muted-foreground/70 shrink-0 text-xs leading-none font-medium tabular-nums">
+        <span className="text-muted-foreground/70 shrink-0 text-[10px] leading-none font-medium tabular-nums">
           {formatNumber(row.sets)} bộ
         </span>
       </div>
@@ -144,7 +144,7 @@ function PickCard({ row }: { row: PlayTypeRow }) {
  *
  * Badge "Lệch X%" dùng pill có nền + icon cảnh báo (KHÔNG chỉ đổi màu chữ) để tách biệt
  * rõ với nhãn hướng cược (Lớn/Nhỏ/Chẵn/Lẻ) bên dưới — trước đây cả 2 cùng dùng
- * `text-warning` nên nhìn giống nhau, khó nhận ra đâu là cảnh báo. Nhãn hướng nặng hơn
+ * `text-amber-600` nên nhìn giống nhau, khó nhận ra đâu là cảnh báo. Nhãn hướng nặng hơn
  * chỉ in đậm + màu foreground (không tô màu) để amber chỉ còn đúng 1 nghĩa: "cảnh báo lệch".
  */
 function SideBetPairCard({
@@ -163,8 +163,8 @@ function SideBetPairCard({
   const skewed = pairTotal > 0 && maxPct >= skewPct;
   const leftHeavier = leftPct >= rightPct;
 
-  const leftColor = skewed && leftHeavier ? "bg-warning" : "bg-info";
-  const rightColor = skewed && !leftHeavier ? "bg-warning" : "bg-muted";
+  const leftColor = skewed && leftHeavier ? "bg-amber-500" : "bg-sky-500";
+  const rightColor = skewed && !leftHeavier ? "bg-amber-500" : "bg-slate-400 dark:bg-slate-500";
 
   return (
     <div className={cn("flex flex-1 flex-col gap-2 rounded-xl border p-3", style.bg, style.border)}>
@@ -172,7 +172,7 @@ function SideBetPairCard({
         <div className={cn("size-2 shrink-0 rounded-full", style.dot)} />
         <span className={cn("flex-1 text-xs font-semibold", style.text)}>{style.label}</span>
         {skewed && (
-          <span className="border-warning/50 bg-warning/15 text-warning inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-bold tabular-nums">
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/50 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 tabular-nums dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-300">
             <TriangleAlert className="size-2.5 shrink-0" />
             Lệch {maxPct.toFixed(0)}%
           </span>
@@ -204,7 +204,7 @@ function SideBetPairCard({
         <div className={cn("transition-all", rightColor)} style={{ width: `${rightPct}%` }} />
       </div>
 
-      <div className="text-muted-foreground/70 flex items-center justify-between text-xs tabular-nums">
+      <div className="text-muted-foreground/70 flex items-center justify-between text-[10px] tabular-nums">
         <span>{leftPct.toFixed(0)}%</span>
         {pair.drawAmount > 0 && <span>Hoà {formatNumber(pair.drawAmount)}</span>}
         <span>{rightPct.toFixed(0)}%</span>
@@ -251,8 +251,8 @@ export function PlayTypeCard({
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <BarChart2 className="text-warning size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/50">
+              <BarChart2 className="size-3.5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
@@ -360,8 +360,8 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-profit flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <TrendingUp className="text-profit size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+            <TrendingUp className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top người chơi</CardTitle>
@@ -388,8 +388,10 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   className="min-w-0 flex-1 text-sm"
                 />
                 <div className="shrink-0 text-right">
-                  <p className="text-profit text-sm font-bold tabular-nums">{formatNumber(a.amount)}</p>
-                  <p className="text-muted-foreground/60 text-xs tabular-nums">{formatNumber(a.entries)} vé</p>
+                  <p className="text-sm font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
+                    {formatNumber(a.amount)}
+                  </p>
+                  <p className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -406,8 +408,8 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <TrendingUp className="text-loss size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+            <TrendingUp className="size-3.5 text-red-600 dark:text-red-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
@@ -434,14 +436,14 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     username={p.username}
                     className="text-sm"
                   />
-                  <p className="text-muted-foreground/70 mt-0.5 text-xs tabular-nums">
+                  <p className="text-muted-foreground/70 mt-0.5 text-[11px] tabular-nums">
                     Cược <span className="text-foreground font-medium">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
                 {/* Rủi ro chi trả — số chính, đỏ đậm, có nền để nổi bật */}
-                <div className="bg-loss/10 shrink-0 rounded-md px-2 py-1 text-right">
-                  <p className="text-loss/70 text-xs leading-none">Phải trả</p>
-                  <p className="text-loss text-sm leading-tight font-bold tabular-nums">
+                <div className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-right">
+                  <p className="text-[10px] leading-none text-red-500/70">Phải trả</p>
+                  <p className="text-sm leading-tight font-bold text-red-600 tabular-nums dark:text-red-400">
                     {formatNumber(p.potentialWin)}
                   </p>
                 </div>
@@ -468,8 +470,8 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Trophy className="text-warning size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+            <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Bộ số phổ biến nhất</CardTitle>
@@ -516,8 +518,12 @@ function RankBadge({ rank, danger = false }: { rank: number; danger?: boolean })
   return (
     <span
       className={cn(
-        "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums",
-        rank === 1 ? (danger ? "bg-loss text-white" : "bg-profit text-white") : "bg-muted text-muted-foreground",
+        "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums",
+        rank === 1
+          ? danger
+            ? "bg-red-500 text-white"
+            : "bg-emerald-500 text-white"
+          : "bg-muted text-muted-foreground",
       )}
     >
       {rank}
@@ -543,8 +549,8 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Store className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Store className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Phân tích theo đại lý</CardTitle>
@@ -575,11 +581,11 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
     <div className="bg-muted/10 rounded-xl border p-3.5">
       {/* Header: rank + tên + % share */}
       <div className="flex items-center gap-2">
-        <span className="bg-info/10 text-info inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums">
+        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[11px] font-bold text-blue-600 tabular-nums dark:text-blue-400">
           {rank}
         </span>
         <span className="flex-1 truncate text-sm font-semibold">{tenant.tenantId}</span>
-        <span className="bg-info/10 text-info rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums">
+        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold text-blue-600 tabular-nums dark:text-blue-400">
           {tenant.pct.toFixed(1)}%
         </span>
       </div>
@@ -587,7 +593,7 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
       {/* Bar doanh thu (tỷ trọng so với đại lý lớn nhất) */}
       <div className="bg-muted mt-2.5 h-1.5 overflow-hidden rounded-full">
         <div
-          className="bg-info/70 h-full rounded-full transition-all"
+          className="h-full rounded-full bg-blue-500/70 transition-all"
           style={{ width: `${(tenant.revenue / maxRevenue) * 100}%` }}
         />
       </div>
@@ -600,7 +606,12 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
           value={formatNumber(tenant.revenue)}
           accent="text-foreground"
         />
-        <TenantMetric icon={Receipt} label="Hoa hồng" value={formatNumber(tenant.commission)} accent="text-warning" />
+        <TenantMetric
+          icon={Receipt}
+          label="Hoa hồng"
+          value={formatNumber(tenant.commission)}
+          accent="text-amber-600 dark:text-amber-400"
+        />
         <TenantMetric
           icon={Users}
           label="Người chơi"
@@ -629,12 +640,12 @@ function TenantMetric({
 }) {
   return (
     <div className="bg-card border-border/40 rounded-lg border px-2.5 py-2">
-      <div className="text-muted-foreground/60 flex items-center gap-1 text-xs tracking-wider uppercase">
+      <div className="text-muted-foreground/60 flex items-center gap-1 text-[10px] tracking-wider uppercase">
         <Icon className="size-3 shrink-0" />
         <span className="truncate">{label}</span>
       </div>
       <p className={cn("mt-0.5 text-sm leading-tight font-bold tabular-nums", accent)}>{value}</p>
-      {sub ? <p className="text-muted-foreground/60 text-xs tabular-nums">{sub}</p> : null}
+      {sub ? <p className="text-muted-foreground/60 text-[10px] tabular-nums">{sub}</p> : null}
     </div>
   );
 }
@@ -660,7 +671,7 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
             style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
           >
             <div
-              className="bg-info/5 absolute inset-y-0 left-0 rounded-r-sm"
+              className="absolute inset-y-0 left-0 rounded-r-sm bg-blue-500/5 dark:bg-blue-400/5"
               style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
             />
             <div className="relative flex min-w-0 items-center gap-2">

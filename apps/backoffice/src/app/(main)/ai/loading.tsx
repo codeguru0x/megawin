@@ -44,6 +44,7 @@ export default function AiLoading() {
       <div className="hidden w-72 shrink-0 space-y-3 border-l p-3 md:block">
         <Skeleton className="h-9 w-full rounded-md" />
         {Array.from({ length: 5 }).map((_, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton tĩnh, không reorder — index là key ổn định duy nhất có sẵn.
           <Skeleton className="h-8 w-full rounded-md" key={index} />
         ))}
       </div>

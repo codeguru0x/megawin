@@ -41,26 +41,29 @@ import { WinningEntriesDialog } from "./winning-entries-dialog";
 
 const TIER_CONFIG: Partial<Record<PrizeTier, { badge: string; row: string; icon?: React.ElementType }>> = {
   [PrizeTier.Jackpot1]: {
-    badge: "border-game-max3d bg-game-max3d text-game-max3d",
-    row: "bg-game-max3d/60 border-l-2 border-l-game-max3d",
+    badge:
+      "border-purple-300 bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-700",
+    row: "bg-purple-50/60 dark:bg-purple-950/10 border-l-2 border-l-purple-400",
     icon: Gem,
   },
   [PrizeTier.Jackpot2]: {
-    badge: "border-info bg-info text-info",
-    row: "bg-info/40 border-l-2 border-l-info",
+    badge:
+      "border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-700",
+    row: "bg-indigo-50/40 dark:bg-indigo-950/10 border-l-2 border-l-indigo-400",
     icon: Zap,
   },
   [PrizeTier.Tier1]: {
-    badge: "border-profit bg-profit text-profit",
-    row: "bg-profit/40",
+    badge:
+      "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700",
+    row: "bg-emerald-50/40 dark:bg-emerald-950/5",
     icon: Trophy,
   },
   [PrizeTier.Tier2]: {
-    badge: "border-info bg-info text-info",
-    row: "bg-info/30",
+    badge: "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-700",
+    row: "bg-cyan-50/30 dark:bg-cyan-950/5",
   },
   [PrizeTier.Tier3]: {
-    badge: "border-info bg-info text-info",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
 };
@@ -77,50 +80,77 @@ function JackpotWinnerBanner({
   const isJp1 = tier === "jp1";
   return (
     <div
-      className={cn("relative overflow-hidden rounded-xl border-2", isJp1 ? "border-game-max3d/60" : "border-info/60")}
+      className={cn(
+        "relative overflow-hidden rounded-xl border-2",
+        isJp1 ? "border-purple-400/60 dark:border-purple-500/50" : "border-indigo-400/60 dark:border-indigo-500/50",
+      )}
     >
       <div
         className={cn(
           "absolute inset-0 bg-linear-to-br",
-          isJp1 ? "from-game-max3d via-game-max3d to-info" : "from-info via-info to-info",
+          isJp1
+            ? "from-purple-50 via-violet-50 to-indigo-50 dark:from-purple-950/40 dark:via-violet-950/30 dark:to-indigo-950/40"
+            : "from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-950/40 dark:via-blue-950/30 dark:to-cyan-950/40",
         )}
       />
 
       <Sparkles
-        className={cn("absolute top-3 right-3 size-4 animate-pulse", isJp1 ? "text-game-max3d/60" : "text-info/60")}
+        className={cn(
+          "absolute top-3 right-3 size-4 animate-pulse",
+          isJp1 ? "text-purple-400/60" : "text-indigo-400/60",
+        )}
       />
 
       <div className="relative flex items-center gap-4 px-5 py-4">
         <div
           className={cn(
             "flex size-12 shrink-0 items-center justify-center rounded-full ring-2",
-            isJp1 ? "bg-game-max3d/20 ring-game-max3d/40" : "bg-info/20 ring-info/40",
+            isJp1
+              ? "bg-purple-400/20 ring-purple-400/40 dark:bg-purple-500/20 dark:ring-purple-500/30"
+              : "bg-indigo-400/20 ring-indigo-400/40 dark:bg-indigo-500/20 dark:ring-indigo-500/30",
           )}
         >
           {isJp1 ? (
-            <Gem className={cn("size-6 drop-shadow-sm", "text-game-max3d")} />
+            <Gem className={cn("size-6 drop-shadow-sm", "text-purple-500 dark:text-purple-400")} />
           ) : (
-            <Zap className={cn("size-6 drop-shadow-sm", "text-info")} />
+            <Zap className={cn("size-6 drop-shadow-sm", "text-indigo-500 dark:text-indigo-400")} />
           )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className={cn("text-sm font-bold tracking-tight", isJp1 ? "text-game-max3d" : "text-info")}>
+            <p
+              className={cn(
+                "text-sm font-bold tracking-tight",
+                isJp1 ? "text-purple-800 dark:text-purple-300" : "text-indigo-800 dark:text-indigo-300",
+              )}
+            >
               🎉 {isJp1 ? "JACKPOT 1" : "JACKPOT 2"} — CÓ NGƯỜI TRÚNG!
             </p>
             <Badge
               className={cn(
                 "h-4.5 gap-1 border px-2 text-xs",
-                isJp1 ? "border-game-max3d/50 bg-game-max3d/20 text-game-max3d" : "border-info/50 bg-info/20 text-info",
+                isJp1
+                  ? "border-purple-400/50 bg-purple-500/20 text-purple-700 dark:text-purple-300"
+                  : "border-indigo-400/50 bg-indigo-500/20 text-indigo-700 dark:text-indigo-300",
               )}
             >
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
           </div>
-          <p className={cn("mt-0.5 text-xs", isJp1 ? "text-game-max3d/80" : "text-info/80")}>
+          <p
+            className={cn(
+              "mt-0.5 text-xs",
+              isJp1 ? "text-purple-700/80 dark:text-purple-400/80" : "text-indigo-700/80 dark:text-indigo-400/80",
+            )}
+          >
             Tổng giải đã trao:{" "}
-            <span className={cn("text-sm font-bold tabular-nums", isJp1 ? "text-game-max3d" : "text-info")}>
+            <span
+              className={cn(
+                "text-sm font-bold tabular-nums",
+                isJp1 ? "text-purple-700 dark:text-purple-300" : "text-indigo-700 dark:text-indigo-300",
+              )}
+            >
               {formatNumber(totalPrize)}
             </span>
           </p>
@@ -142,19 +172,24 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
 
   return (
     <>
-      <Card className={cn("gap-0 py-0 shadow-sm", (hasJp1Winner || hasJp2Winner) && "ring-game-max3d/40 ring-1")}>
+      <Card
+        className={cn(
+          "gap-0 py-0 shadow-sm",
+          (hasJp1Winner || hasJp2Winner) && "ring-1 ring-purple-400/40 dark:ring-purple-500/30",
+        )}
+      >
         <CardHeader className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-2">
             <div
               className={cn(
                 "flex size-7 shrink-0 items-center justify-center rounded-lg",
-                hasJp1Winner ? "bg-game-max3d" : "bg-game-max3d",
+                hasJp1Winner ? "bg-purple-200 dark:bg-purple-800/60" : "bg-purple-100 dark:bg-purple-900/50",
               )}
             >
               {hasJp1Winner ? (
-                <Gem className="text-game-max3d size-3.5" />
+                <Gem className="size-3.5 text-purple-600 dark:text-purple-400" />
               ) : (
-                <Trophy className="text-game-max3d size-3.5" />
+                <Trophy className="size-3.5 text-purple-600 dark:text-purple-400" />
               )}
             </div>
             <div>
@@ -179,7 +214,9 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           <div
             className={cn(
               "flex w-full flex-col items-center gap-3 rounded-xl border px-4 py-4",
-              hasJp1Winner || hasJp2Winner ? "border-game-max3d/60 bg-game-max3d/40" : "bg-muted/20",
+              hasJp1Winner || hasJp2Winner
+                ? "border-purple-200/60 bg-purple-50/40 dark:border-purple-800/40 dark:bg-purple-950/10"
+                : "bg-muted/20",
             )}
           >
             <div className="flex w-full items-center justify-between">
@@ -189,7 +226,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -244,9 +281,9 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                       <IconComp
                         className={cn(
                           "size-3.5 shrink-0",
-                          t.tier === PrizeTier.Jackpot1 && "text-game-max3d",
-                          t.tier === PrizeTier.Jackpot2 && "text-info",
-                          t.tier === PrizeTier.Tier1 && "text-profit",
+                          t.tier === PrizeTier.Jackpot1 && "text-purple-500",
+                          t.tier === PrizeTier.Jackpot2 && "text-indigo-500",
+                          t.tier === PrizeTier.Tier1 && "text-emerald-500",
                         )}
                       />
                     ) : (
@@ -260,7 +297,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                   <span
                     className={cn(
                       "text-right text-sm font-semibold tabular-nums",
-                      hasWinner ? "text-profit" : "text-muted-foreground/40",
+                      hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(t.winnerCount)}
@@ -387,8 +424,8 @@ export function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Coins className="text-info size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -434,8 +471,8 @@ export function FinancialSummary({
   const rows: LedgerRow[] = [
     {
       icon: TrendingUp,
-      iconBg: "bg-profit",
-      iconColor: "text-profit",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
       label: "Doanh thu gộp",
       value: f.totalRevenue,
       // Dòng input gốc → trung tính, chỉ khoản trừ & kết quả mới có màu ngữ nghĩa
@@ -445,8 +482,8 @@ export function FinancialSummary({
     },
     {
       icon: Users,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
+      iconBg: "bg-slate-100 dark:bg-slate-800",
+      iconColor: "text-slate-500 dark:text-slate-400",
       label: "Hoa hồng đại lý",
       value: f.totalAgentCommission,
       // Khoản chi bình thường → muted (không dùng destructive để tránh "báo động giả")
@@ -456,8 +493,8 @@ export function FinancialSummary({
     },
     {
       icon: Trophy,
-      iconBg: "bg-game-max3d",
-      iconColor: "text-game-max3d",
+      iconBg: "bg-purple-100 dark:bg-purple-900/50",
+      iconColor: "text-purple-600 dark:text-purple-400",
       label: "Chi trả giải cố định",
       value: f.totalFixedPrizes,
       sign: "-",
@@ -467,8 +504,8 @@ export function FinancialSummary({
     },
     {
       icon: ArrowDownRight,
-      iconBg: "bg-info",
-      iconColor: "text-info",
+      iconBg: "bg-blue-100 dark:bg-blue-900/50",
+      iconColor: "text-blue-600 dark:text-blue-400",
       label: "Số dư sau giải & hoa hồng",
       value: netAfterPrizes,
       sign: "=",
@@ -479,8 +516,8 @@ export function FinancialSummary({
     },
     {
       icon: TrendingDown,
-      iconBg: "bg-game-max3d",
-      iconColor: "text-game-max3d",
+      iconBg: "bg-purple-100 dark:bg-purple-900/50",
+      iconColor: "text-purple-600 dark:text-purple-400",
       label: "Trích quỹ Jackpot (JP1+JP2)",
       value: totalJpContribution,
       // Tiền ĐI RA khỏi P&L công ty vào quỹ (liability) → dấu −, muted
@@ -491,12 +528,12 @@ export function FinancialSummary({
     },
     {
       icon: Coins,
-      iconBg: companyResult >= 0 ? "bg-profit" : "bg-loss",
-      iconColor: companyResult >= 0 ? "text-profit" : "text-loss",
+      iconBg: companyResult >= 0 ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+      iconColor: companyResult >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
       label: "Kết quả công ty (P&L kỳ)",
       value: companyResult,
       sign: "=",
-      valueColor: companyResult >= 0 ? "text-profit" : "text-destructive",
+      valueColor: companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
       bold: true,
       separator: true,
       hint: resultHint,
@@ -507,8 +544,8 @@ export function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Coins className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -527,7 +564,7 @@ export function FinancialSummary({
         {/* Biến động Jackpot kép — JP1 + JP2 */}
         <div className="border-border/60 bg-muted/20 mt-2 overflow-hidden rounded-xl border">
           <div className="border-border/40 bg-muted/30 flex items-center gap-2 border-b px-3 py-2">
-            <Gem className="text-game-max3d size-3.5 shrink-0" />
+            <Gem className="size-3.5 shrink-0 text-purple-500" />
             <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               Biến động Jackpot
             </span>
@@ -536,13 +573,13 @@ export function FinancialSummary({
             {(f.hasJackpot1Winner || f.hasJackpot2Winner || f.jp1Overflow > 0) && (
               <div className="ml-auto flex items-center gap-1">
                 {f.hasJackpot1Winner && (
-                  <Badge className="border-game-max3d/40 bg-game-max3d/15 text-game-max3d h-4 gap-1 border px-1.5 text-xs">
+                  <Badge className="h-4 gap-1 border border-purple-400/40 bg-purple-500/15 px-1.5 text-[10px] text-purple-700 dark:text-purple-300">
                     <Star className="size-2 fill-current" />
                     Trao JP1
                   </Badge>
                 )}
                 {f.hasJackpot2Winner && (
-                  <Badge className="border-info/40 bg-info/15 text-info h-4 gap-1 border px-1.5 text-xs">
+                  <Badge className="h-4 gap-1 border border-indigo-400/40 bg-indigo-500/15 px-1.5 text-[10px] text-indigo-700 dark:text-indigo-300">
                     <Star className="size-2 fill-current" />
                     Trao JP2
                   </Badge>
@@ -551,7 +588,7 @@ export function FinancialSummary({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button type="button" className="flex items-center" aria-label="Giải thích tràn quỹ">
-                        <Badge className="border-warning/40 bg-warning/15 text-warning h-4 cursor-help gap-1 border px-1.5 text-xs">
+                        <Badge className="h-4 cursor-help gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-[10px] text-amber-700 dark:text-amber-300">
                           <Info className="size-2.5" />
                           Tràn JP1→JP2
                         </Badge>
@@ -571,21 +608,21 @@ export function FinancialSummary({
           {/* JP1 */}
           <div className="divide-border/30 divide-y">
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-game-max3d text-sm font-medium">JP1 trước</span>
+              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">JP1 trước</span>
               <span className="text-muted-foreground font-mono text-sm tabular-nums">
                 {formatNumber(f.jackpot1Before)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-game-max3d/70 pl-3 text-sm">+ Đóng góp</span>
-              <span className="text-game-max3d font-mono text-sm font-semibold tabular-nums">
+              <span className="pl-3 text-sm text-purple-600/70 dark:text-purple-400/70">+ Đóng góp</span>
+              <span className="font-mono text-sm font-semibold text-purple-600 tabular-nums dark:text-purple-400">
                 +{formatNumber(f.jackpot1Contribution + (f.jp1Overflow > 0 ? f.jp1Overflow : 0))}
               </span>
             </div>
             {f.jp1Overflow > 0 && (
               <div className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-warning pl-3 text-sm">→ Tràn sang JP2</span>
-                <span className="text-warning font-mono text-sm font-semibold tabular-nums">
+                <span className="pl-3 text-sm text-amber-600 dark:text-amber-400">→ Tràn sang JP2</span>
+                <span className="font-mono text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                   −{formatNumber(f.jp1Overflow)}
                 </span>
               </div>
@@ -593,13 +630,13 @@ export function FinancialSummary({
             {f.hasJackpot1Winner ? (
               <>
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-warning pl-3 text-sm">− Trao JP1</span>
-                  <span className="text-warning font-mono text-sm font-semibold tabular-nums">
+                  <span className="pl-3 text-sm text-amber-600 dark:text-amber-400">− Trao JP1</span>
+                  <span className="font-mono text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                     −{formatNumber(f.jackpot1PrizeAwarded)}
                   </span>
                 </div>
-                <div className="bg-game-max3d/30 flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-game-max3d flex items-center gap-1 pl-3 text-sm font-bold">
+                <div className="flex items-center justify-between gap-3 bg-purple-50/30 px-3 py-2 dark:bg-purple-950/10">
+                  <span className="flex items-center gap-1 pl-3 text-sm font-bold text-purple-700 dark:text-purple-300">
                     JP1 sau
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -613,13 +650,15 @@ export function FinancialSummary({
                       </TooltipContent>
                     </Tooltip>
                   </span>
-                  <span className="text-game-max3d font-mono text-sm font-bold tabular-nums">0</span>
+                  <span className="font-mono text-sm font-bold text-purple-600 tabular-nums dark:text-purple-400">
+                    0
+                  </span>
                 </div>
               </>
             ) : (
-              <div className="bg-game-max3d/30 flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-game-max3d pl-3 text-sm font-bold">JP1 sau</span>
-                <span className="text-game-max3d font-mono text-sm font-bold tabular-nums">
+              <div className="flex items-center justify-between gap-3 bg-purple-50/30 px-3 py-2 dark:bg-purple-950/10">
+                <span className="pl-3 text-sm font-bold text-purple-700 dark:text-purple-300">JP1 sau</span>
+                <span className="font-mono text-sm font-bold text-purple-600 tabular-nums dark:text-purple-400">
                   {formatNumber(f.jackpot1After)}
                 </span>
               </div>
@@ -627,21 +666,21 @@ export function FinancialSummary({
 
             {/* JP2 */}
             <div className="flex items-center justify-between gap-3 border-t px-3 py-2">
-              <span className="text-info text-sm font-medium">JP2 trước</span>
+              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">JP2 trước</span>
               <span className="text-muted-foreground font-mono text-sm tabular-nums">
                 {formatNumber(f.jackpot2Before)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-info/70 pl-3 text-sm">+ Đóng góp</span>
-              <span className="text-info font-mono text-sm font-semibold tabular-nums">
+              <span className="pl-3 text-sm text-indigo-600/70 dark:text-indigo-400/70">+ Đóng góp</span>
+              <span className="font-mono text-sm font-semibold text-indigo-600 tabular-nums dark:text-indigo-400">
                 +{formatNumber(f.jackpot2Contribution - (f.jp1Overflow > 0 ? f.jp1Overflow : 0))}
               </span>
             </div>
             {f.jp1Overflow > 0 && (
               <div className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-warning pl-3 text-sm">+ Nhận tràn từ JP1</span>
-                <span className="text-warning font-mono text-sm font-semibold tabular-nums">
+                <span className="pl-3 text-sm text-amber-600 dark:text-amber-400">+ Nhận tràn từ JP1</span>
+                <span className="font-mono text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                   +{formatNumber(f.jp1Overflow)}
                 </span>
               </div>
@@ -649,13 +688,13 @@ export function FinancialSummary({
             {f.hasJackpot2Winner ? (
               <>
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-warning pl-3 text-sm">− Trao JP2</span>
-                  <span className="text-warning font-mono text-sm font-semibold tabular-nums">
+                  <span className="pl-3 text-sm text-amber-600 dark:text-amber-400">− Trao JP2</span>
+                  <span className="font-mono text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                     −{formatNumber(f.jackpot2PrizeAwarded)}
                   </span>
                 </div>
-                <div className="bg-info/30 flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-info flex items-center gap-1 pl-3 text-sm font-bold">
+                <div className="flex items-center justify-between gap-3 bg-indigo-50/30 px-3 py-2 dark:bg-indigo-950/10">
+                  <span className="flex items-center gap-1 pl-3 text-sm font-bold text-indigo-700 dark:text-indigo-300">
                     JP2 sau
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -669,20 +708,22 @@ export function FinancialSummary({
                       </TooltipContent>
                     </Tooltip>
                   </span>
-                  <span className="text-info font-mono text-sm font-bold tabular-nums">0</span>
+                  <span className="font-mono text-sm font-bold text-indigo-600 tabular-nums dark:text-indigo-400">
+                    0
+                  </span>
                 </div>
               </>
             ) : (
-              <div className="bg-info/30 flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-info pl-3 text-sm font-bold">JP2 sau</span>
-                <span className="text-info font-mono text-sm font-bold tabular-nums">
+              <div className="flex items-center justify-between gap-3 bg-indigo-50/30 px-3 py-2 dark:bg-indigo-950/10">
+                <span className="pl-3 text-sm font-bold text-indigo-700 dark:text-indigo-300">JP2 sau</span>
+                <span className="font-mono text-sm font-bold text-indigo-600 tabular-nums dark:text-indigo-400">
                   {formatNumber(f.jackpot2After)}
                 </span>
               </div>
             )}
             {(f.hasJackpot1Winner || f.hasJackpot2Winner) && (
               <div className="bg-muted/10 px-3 py-1.5">
-                <p className="text-muted-foreground/70 pl-3 text-xs">
+                <p className="text-muted-foreground/70 pl-3 text-[11px]">
                   Cycle đã đóng — kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                 </p>
               </div>

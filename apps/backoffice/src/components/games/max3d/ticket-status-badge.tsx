@@ -6,23 +6,23 @@ import { cn } from "@/lib/utils";
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   pending: {
     label: "Chờ xử lý",
-    className: "bg-warning text-warning",
+    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
   },
   active: {
     label: "Đang hoạt động",
-    className: "bg-profit text-profit",
+    className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
   },
   completed: {
     label: "Hoàn tất",
-    className: "bg-profit text-profit",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
   },
   cancelled: {
     label: "Đã huỷ",
-    className: "bg-loss text-loss",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
   void: {
     label: "Void",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
 };
 

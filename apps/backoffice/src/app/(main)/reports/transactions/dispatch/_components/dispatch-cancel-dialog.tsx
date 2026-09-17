@@ -65,7 +65,7 @@ export function DispatchCancelDialog({ tx, label, onClose, onSuccess }: Dispatch
       <DialogContent className="sm:max-w-110">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="from-loss to-warning flex size-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm">
+            <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-sm">
               <XCircle className="size-5" />
             </div>
             <div className="flex flex-col gap-0.5">

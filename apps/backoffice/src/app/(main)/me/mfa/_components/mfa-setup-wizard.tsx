@@ -94,7 +94,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         accessToken,
       }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
+      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       setStep("done");
     },
     onError: (error) => {
@@ -114,10 +114,10 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
   if (step === "done") {
     return (
-      <Card className="border-profit/60 gap-0 py-0 shadow-sm">
+      <Card className="gap-0 border-emerald-200/60 py-0 shadow-sm dark:border-emerald-800/40">
         <CardContent className="flex flex-col items-center gap-5 px-5 py-12">
-          <div className="bg-profit ring-profit flex size-16 items-center justify-center rounded-full ring-4">
-            <ShieldCheck className="text-profit size-8" />
+          <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100 ring-4 ring-emerald-50 dark:bg-emerald-900/50 dark:ring-emerald-900/20">
+            <ShieldCheck className="size-8 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="text-center">
             <h3 className="text-lg font-semibold">MFA đã được kích hoạt</h3>
@@ -138,8 +138,8 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-5 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="bg-profit flex size-7 items-center justify-center rounded-lg">
-            <ShieldCheck className="text-profit size-3.5" />
+          <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+            <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Thiết lập MFA</CardTitle>
@@ -170,7 +170,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                     </div>
                     <span
                       className={cn(
-                        "text-xs font-medium",
+                        "text-[11px] font-medium",
                         isCurrent ? "text-primary" : "text-muted-foreground",
                         isCompleted && "text-foreground",
                       )}
@@ -272,7 +272,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
             <div className="bg-muted/30 rounded-lg border p-4">
               <ol className="flex flex-col gap-3 text-sm">
                 <li className="flex gap-3">
-                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
                     1
                   </span>
                   <span className="text-muted-foreground">
@@ -281,7 +281,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
+                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
                     2
                   </span>
                   <span className="text-muted-foreground">
@@ -310,7 +310,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   {formatSecret(setupData.secretCode)}
                 </code>
                 <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={handleCopySecret}>
-                  {copied ? <Check className="text-profit size-4" /> : <Copy className="size-4" />}
+                  {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
                 </Button>
               </div>
             </div>

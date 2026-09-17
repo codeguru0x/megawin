@@ -62,10 +62,10 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
         c.gradientFromDark,
         c.gradientViaDark,
         c.gradientToDark,
-        isHot ? "border-game-mega645" : "border-game-mega645",
+        isHot ? "border-teal-400 dark:border-teal-700/70" : "border-teal-200 dark:border-teal-800/50",
       )}
     >
-      <div className="from-game-mega645/20 to-info/10 pointer-events-none absolute -top-8 -right-8 size-40 rounded-full bg-linear-to-br blur-3xl" />
+      <div className="pointer-events-none absolute -top-8 -right-8 size-40 rounded-full bg-linear-to-br from-teal-300/20 to-cyan-300/10 blur-3xl dark:from-teal-500/8 dark:to-cyan-500/4" />
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
@@ -74,21 +74,26 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
             href="/games/mega645/jackpot"
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
-            <div className="from-game-mega645 to-profit shadow-game-mega645/25 flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-md">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
-            <p className="text-game-mega645/70 text-xs font-semibold tracking-wider uppercase">Mega 6/45 — Jackpot</p>
+            <p className="text-xs font-semibold tracking-wider text-teal-700/70 uppercase dark:text-teal-400/60">
+              Mega 6/45 — Jackpot
+            </p>
           </Link>
-          <Badge variant="outline" className="border-game-mega645/60 bg-game-mega645/80 text-game-mega645 text-xs">
+          <Badge
+            variant="outline"
+            className="border-teal-300/60 bg-teal-50/80 text-[10px] text-teal-700 dark:border-teal-700/60 dark:bg-teal-950/50 dark:text-teal-300"
+          >
             Vòng #{data.cycleNo}
           </Badge>
         </div>
 
         <div>
-          <p className="text-game-mega645 text-2xl font-extrabold tracking-tight tabular-nums">
+          <p className="text-2xl font-extrabold tracking-tight text-teal-900 tabular-nums dark:text-teal-100">
             {formatVNDCompact(data.currentAmount)}
           </p>
-          <p className="text-game-mega645/60 mt-0.5 text-xs">{formatVND(data.currentAmount)}</p>
+          <p className="mt-0.5 text-[11px] text-teal-700/60 dark:text-teal-400/50">{formatVND(data.currentAmount)}</p>
         </div>
 
         {data.progressPercent != null && (
@@ -100,12 +105,12 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
                   ? `linear-gradient(90deg, ${c.hex}, #0891b2, #06b6d4)`
                   : `linear-gradient(90deg, #5eead4, #2dd4bf, ${c.hex})`
               }
-              trackClassName="bg-game-mega645/60"
+              trackClassName="bg-teal-200/60 dark:bg-teal-900/50"
             />
-            <div className="text-game-mega645/60 flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-[11px] text-teal-700/60 dark:text-teal-400/50">
               <span>Khởi điểm: {formatVNDCompact(data.seedAmount)}</span>
               <span className="flex items-center gap-1">
-                {isHot && <Flame className="text-loss size-3" />}
+                {isHot && <Flame className="size-3 text-red-500" />}
                 {pct.toFixed(1)}% mục tiêu
               </span>
             </div>
@@ -113,9 +118,9 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
         )}
 
         <div className="flex items-center justify-between">
-          <p className="text-game-mega645/50 text-xs">{data.drawCount} kỳ đã tích lũy</p>
+          <p className="text-[11px] text-teal-700/50 dark:text-teal-400/40">{data.drawCount} kỳ đã tích lũy</p>
           {data.drawCount > 0 && (
-            <p className="text-game-mega645/50 flex items-center gap-1 text-xs">
+            <p className="flex items-center gap-1 text-[11px] text-teal-700/50 dark:text-teal-400/40">
               <TrendingUp className="size-3" />~
               {formatVNDCompact(Math.round((data.currentAmount - data.seedAmount) / data.drawCount))}
               /kỳ
@@ -147,10 +152,14 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
         c.gradientFromDark,
         c.gradientViaDark,
         c.gradientToDark,
-        isOverflow ? "border-game-max3d" : isHot ? "border-loss" : "border-loss",
+        isOverflow
+          ? "border-violet-300 dark:border-violet-700/60"
+          : isHot
+            ? "border-red-300 dark:border-red-800/60"
+            : "border-red-200 dark:border-red-800/50",
       )}
     >
-      <div className="from-loss/15 to-warning/8 pointer-events-none absolute -top-8 -right-8 size-40 rounded-full bg-linear-to-br blur-3xl" />
+      <div className="pointer-events-none absolute -top-8 -right-8 size-40 rounded-full bg-linear-to-br from-red-300/15 to-orange-300/8 blur-3xl dark:from-red-500/6 dark:to-orange-500/3" />
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
@@ -159,38 +168,49 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
             href="/games/power655/jackpot"
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
-            <div className="from-loss to-warning shadow-loss/25 flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-md">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-md shadow-red-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
-            <p className="text-loss/70 text-xs font-semibold tracking-wider uppercase">Power 6/55 — Jackpot</p>
+            <p className="text-xs font-semibold tracking-wider text-red-700/70 uppercase dark:text-red-400/60">
+              Power 6/55 — Jackpot
+            </p>
           </Link>
-          <Badge variant="outline" className="border-loss/60 bg-loss/80 text-loss text-xs">
+          <Badge
+            variant="outline"
+            className="border-red-300/60 bg-red-50/80 text-[10px] text-red-700 dark:border-red-700/60 dark:bg-red-950/50 dark:text-red-300"
+          >
             Vòng #{data.cycleNo}
           </Badge>
         </div>
 
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="bg-loss text-loss rounded-md px-1.5 py-0.5 text-xs font-bold">Jackpot 1</span>
-            <span className="text-loss text-2xl font-extrabold tracking-tight tabular-nums">
+            <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+              Jackpot 1
+            </span>
+            <span className="text-2xl font-extrabold tracking-tight text-red-900 tabular-nums dark:text-red-100">
               {formatVNDCompact(data.jp1Current)}
             </span>
             {isOverflow && (
-              <Badge className="border-game-max3d bg-game-max3d text-game-max3d gap-1 text-xs">
+              <Badge className="gap-1 border-violet-300 bg-violet-50 text-[10px] text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
                 <Zap className="size-3" />
                 Overflow
               </Badge>
             )}
             {!isOverflow && isHot && (
-              <Badge className="border-loss bg-loss text-loss gap-1 text-xs">
+              <Badge className="gap-1 border-red-300 bg-red-50 text-[10px] text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
                 <Flame className="size-3" />
                 Nóng
               </Badge>
             )}
           </div>
           <div className="mt-1.5 flex items-center gap-2">
-            <span className="bg-info text-info rounded-md px-1.5 py-0.5 text-xs font-bold">Jackpot 2</span>
-            <span className="text-info text-sm font-semibold tabular-nums">{formatVNDCompact(data.jp2Current)}</span>
+            <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+              Jackpot 2
+            </span>
+            <span className="text-sm font-semibold text-blue-700 tabular-nums dark:text-blue-300">
+              {formatVNDCompact(data.jp2Current)}
+            </span>
           </div>
         </div>
 
@@ -204,18 +224,18 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
                   ? `linear-gradient(90deg, ${c.hex}, #dc2626, #b91c1c)`
                   : `linear-gradient(90deg, #fca5a5, #f87171, ${c.hex})`
             }
-            trackClassName="bg-loss/50"
+            trackClassName="bg-red-200/50 dark:bg-red-900/40"
           />
-          <div className="text-loss/60 flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
             <span>Khởi điểm: {formatVNDCompact(data.jp1Seed)}</span>
             <span>Overflow: {formatVNDCompact(data.jp1OverflowThreshold)}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
-          <p className="text-loss/50 text-xs">{data.drawCount} kỳ đã tích lũy</p>
+          <p className="text-[11px] text-red-700/50 dark:text-red-400/40">{data.drawCount} kỳ đã tích lũy</p>
           {data.drawCount > 0 && (
-            <p className="text-loss/50 flex items-center gap-1 text-xs">
+            <p className="flex items-center gap-1 text-[11px] text-red-700/50 dark:text-red-400/40">
               <TrendingUp className="size-3" />~
               {formatVNDCompact(Math.round((data.jp1Current - data.jp1Seed) / data.drawCount))}/kỳ
             </p>
@@ -245,10 +265,10 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
         c.gradientFromDark,
         c.gradientViaDark,
         c.gradientToDark,
-        isHot ? "border-loss" : "border-warning",
+        isHot ? "border-red-300 dark:border-red-800/60" : "border-amber-200 dark:border-amber-800/50",
       )}
     >
-      <div className="from-warning/20 to-warning/10 pointer-events-none absolute -top-8 -right-8 size-40 rounded-full bg-linear-to-br blur-3xl" />
+      <div className="pointer-events-none absolute -top-8 -right-8 size-40 rounded-full bg-linear-to-br from-yellow-300/20 to-orange-300/10 blur-3xl dark:from-yellow-500/8 dark:to-orange-500/4" />
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
@@ -257,21 +277,26 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
             href="/games/lotto535/jackpot"
             className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
           >
-            <div className="from-warning to-loss shadow-warning/25 flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-md">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
-            <p className="text-warning/70 text-xs font-semibold tracking-wider uppercase">Lotto 5/35 — Jackpot</p>
+            <p className="text-xs font-semibold tracking-wider text-amber-700/70 uppercase dark:text-amber-400/60">
+              Lotto 5/35 — Jackpot
+            </p>
           </Link>
-          <Badge variant="outline" className="border-warning/60 bg-warning/80 text-warning text-xs">
+          <Badge
+            variant="outline"
+            className="border-amber-300/60 bg-amber-50/80 text-[10px] text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-300"
+          >
             Vòng #{data.cycleNo}
           </Badge>
         </div>
 
         <div>
-          <p className="text-warning text-2xl font-extrabold tracking-tight tabular-nums">
+          <p className="text-2xl font-extrabold tracking-tight text-amber-900 tabular-nums dark:text-amber-100">
             {formatVNDCompact(data.currentAmount)}
           </p>
-          <p className="text-warning/60 mt-0.5 text-xs">{formatVND(data.currentAmount)}</p>
+          <p className="mt-0.5 text-[11px] text-amber-700/60 dark:text-amber-400/50">{formatVND(data.currentAmount)}</p>
         </div>
 
         {data.splitThreshold != null && data.progressPercent != null && (
@@ -283,12 +308,12 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
                   ? `linear-gradient(90deg, ${c.hex}, #ef4444, #dc2626)`
                   : `linear-gradient(90deg, #fde68a, #fbbf24, ${c.hex})`
               }
-              trackClassName="bg-warning/60"
+              trackClassName="bg-amber-200/60 dark:bg-amber-900/50"
             />
-            <div className="text-warning/60 flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">
               <span>Khởi điểm: {formatVNDCompact(data.seedAmount)}</span>
               <span className="flex items-center gap-1">
-                {isHot && <Flame className="text-loss size-3" />}
+                {isHot && <Flame className="size-3 text-red-500" />}
                 Ngưỡng chia: {formatVNDCompact(data.splitThreshold)}
               </span>
             </div>
@@ -296,9 +321,9 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
         )}
 
         <div className="flex items-center justify-between">
-          <p className="text-warning/50 text-xs">{data.drawCount} kỳ đã tích lũy</p>
+          <p className="text-[11px] text-amber-700/50 dark:text-amber-400/40">{data.drawCount} kỳ đã tích lũy</p>
           {data.drawCount > 0 && (
-            <p className="text-warning/50 flex items-center gap-1 text-xs">
+            <p className="flex items-center gap-1 text-[11px] text-amber-700/50 dark:text-amber-400/40">
               <TrendingUp className="size-3" />~
               {formatVNDCompact(Math.round((data.currentAmount - data.seedAmount) / data.drawCount))}
               /kỳ

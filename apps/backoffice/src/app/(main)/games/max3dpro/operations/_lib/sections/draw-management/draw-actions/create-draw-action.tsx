@@ -152,7 +152,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CalendarPlus className="text-game-max3dpro size-4.5" />
+            <CalendarPlus className="size-4.5 text-pink-500" />
             Tạo kỳ quay Max 3D Pro
           </DialogTitle>
           <DialogDescription>
@@ -194,9 +194,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </span>
                 )}
                 {openCount > 0 && (
-                  <Badge className="bg-game-max3dpro hover:bg-game-max3dpro text-xs text-white">
-                    {openCount} mở bán
-                  </Badge>
+                  <Badge className="bg-pink-600 text-xs text-white hover:bg-pink-600">{openCount} mở bán</Badge>
                 )}
                 {scheduledCount > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -204,12 +202,12 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </Badge>
                 )}
                 {hasFewerPreviewSlots && (
-                  <Badge variant="outline" className="border-warning text-warning text-xs">
+                  <Badge variant="outline" className="border-amber-300 text-xs text-amber-600">
                     Chỉ tạo được {rows.length}/{count} kỳ
                   </Badge>
                 )}
                 {preview.isError && (
-                  <Badge variant="outline" className="border-warning text-warning text-xs">
+                  <Badge variant="outline" className="border-amber-300 text-xs text-amber-600">
                     Lỗi tải gợi ý — thử lại
                   </Badge>
                 )}
@@ -224,24 +222,22 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               className="bg-muted/40 grid items-center gap-x-3 border-b px-4 py-2"
               style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
             >
-              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">#</span>
-              <span className="text-muted-foreground text-center text-xs font-medium tracking-wider uppercase">
+              <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">#</span>
+              <span className="text-muted-foreground text-center text-[11px] font-medium tracking-wider uppercase">
                 Thứ
               </span>
-              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Mã kỳ</span>
-              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ quay</span>
+              <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Mã kỳ</span>
+              <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Giờ quay</span>
               <div className="flex items-center justify-end">
                 <button
                   type="button"
                   onClick={toggleAll}
                   disabled={rows.length === 0}
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium transition-colors disabled:opacity-40"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] font-medium transition-colors disabled:opacity-40"
                   title={allOpen ? "Tắt tất cả" : "Mở bán tất cả"}
                 >
-                  {allOpen ? <Unlock className="text-game-max3dpro size-3" /> : <Lock className="size-3" />}
-                  <span className={cn(allOpen && "text-game-max3dpro text-game-max3dpro")}>
-                    {allOpen ? "Đóng" : "Mở"}
-                  </span>
+                  {allOpen ? <Unlock className="size-3 text-pink-600" /> : <Lock className="size-3" />}
+                  <span className={cn(allOpen && "text-pink-600 dark:text-pink-400")}>{allOpen ? "Đóng" : "Mở"}</span>
                 </button>
               </div>
             </div>
@@ -267,7 +263,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   key={row.previewDrawId}
                   className={cn(
                     "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
-                    row.isOpen ? "bg-game-max3dpro/50 bg-game-max3dpro/15" : "hover:bg-muted/20",
+                    row.isOpen ? "bg-pink-50/50 dark:bg-pink-950/15" : "hover:bg-muted/20",
                   )}
                   style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
                 >
@@ -275,7 +271,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   <span
                     className={cn(
                       "text-xs font-semibold tabular-nums",
-                      row.isOpen ? "text-game-max3dpro text-game-max3dpro" : "text-foreground",
+                      row.isOpen ? "text-pink-700 dark:text-pink-300" : "text-foreground",
                     )}
                   >
                     {i + 1}
@@ -285,7 +281,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   <span
                     className={cn(
                       "text-center text-xs font-semibold tabular-nums",
-                      row.isOpen ? "text-game-max3dpro text-game-max3dpro" : "text-foreground",
+                      row.isOpen ? "text-pink-700 dark:text-pink-300" : "text-foreground",
                     )}
                   >
                     {row.weekday}
@@ -315,7 +311,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     className="flex cursor-pointer items-center justify-end gap-1.5 select-none"
                   >
                     {row.isOpen ? (
-                      <Unlock className="text-game-max3dpro size-3 shrink-0" />
+                      <Unlock className="size-3 shrink-0 text-pink-500" />
                     ) : (
                       <Lock className="text-muted-foreground/40 size-3 shrink-0" />
                     )}
@@ -327,8 +323,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     />
                     <span
                       className={cn(
-                        "min-w-12 text-left text-xs font-medium",
-                        row.isOpen ? "text-game-max3dpro text-game-max3dpro" : "text-muted-foreground",
+                        "min-w-12 text-left text-[11px] font-medium",
+                        row.isOpen ? "text-pink-600 dark:text-pink-400" : "text-muted-foreground",
                       )}
                     >
                       {row.isOpen ? "Mở bán" : "Chờ lịch"}
@@ -347,7 +343,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <Button
             onClick={handleCreate}
             disabled={!canSubmit}
-            className={cn(openCount > 0 && "bg-game-max3dpro hover:bg-game-max3dpro text-white")}
+            className={cn(openCount > 0 && "bg-pink-600 text-white hover:bg-pink-700")}
           >
             {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Tạo {rows.length} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}

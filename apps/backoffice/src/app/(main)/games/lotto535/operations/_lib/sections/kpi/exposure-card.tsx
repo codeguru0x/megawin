@@ -23,12 +23,12 @@ import type { ExposureView } from "../../types";
 /** Màu theo tỉ lệ fixedWorstCase/warnAmount: <0.6 xanh, 0.6–<1 amber, ≥1 đỏ (vượt ngưỡng). */
 function riskColor(ratio: number): string {
   if (ratio >= 1) {
-    return "text-loss";
+    return "text-red-600 dark:text-red-400";
   }
   if (ratio >= 0.6) {
-    return "text-warning";
+    return "text-amber-600 dark:text-amber-400";
   }
-  return "text-profit";
+  return "text-emerald-600 dark:text-emerald-400";
 }
 
 export function ExposureCard({
@@ -64,8 +64,8 @@ export function ExposureCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="bg-loss flex size-9 shrink-0 items-center justify-center rounded-lg">
-              <ShieldAlert className="text-loss size-5" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+              <ShieldAlert className="size-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs font-medium">Rủi ro chi trả giải cố định (worst-case)</p>
@@ -79,8 +79,8 @@ export function ExposureCard({
           </div>
           <div className="max-w-xs min-w-40 flex-1 space-y-1.5">
             <div className="flex items-center gap-2">
-              <div className="bg-warning flex size-9 shrink-0 items-center justify-center rounded-lg">
-                <CircleDollarSign className="text-warning size-5" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/50">
+                <CircleDollarSign className="size-5 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-muted-foreground text-xs font-medium">Exposure Jackpot</p>

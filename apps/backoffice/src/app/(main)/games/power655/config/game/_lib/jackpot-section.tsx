@@ -115,7 +115,9 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-muted-foreground text-xs">
-                          <Badge className="bg-loss text-loss mr-1">Jackpot 1</Badge>
+                          <Badge className="mr-1 bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                            Jackpot 1
+                          </Badge>
                           <LabelWithTooltip
                             label="Giá trị khởi điểm"
                             tip="Số tiền khởi điểm của Jackpot 1 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Vietlott quy định tối thiểu 30 tỷ VND; hệ thống không ép buộc giá trị này."
@@ -146,7 +148,9 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-muted-foreground text-xs">
-                          <Badge className="bg-info text-info mr-1">Jackpot 2</Badge>
+                          <Badge className="mr-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                            Jackpot 2
+                          </Badge>
                           <LabelWithTooltip
                             label="Giá trị khởi điểm"
                             tip="Số tiền khởi điểm của Jackpot 2 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Vietlott quy định tối thiểu 3 tỷ VND; hệ thống không ép buộc giá trị này."
@@ -200,7 +204,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           {jp1Ratio >= 5 && `JP1 · ${jp1Ratio}%`}
                         </div>
                         <div
-                          className="bg-info flex items-center justify-center text-white transition-[width] duration-150"
+                          className="flex items-center justify-center bg-blue-500 text-white transition-[width] duration-150"
                           style={{ width: `${jp2Ratio}%` }}
                         >
                           {jp2Ratio >= 5 && `JP2 · ${jp2Ratio}%`}
@@ -298,10 +302,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
             </div>
           </CardContent>
 
-          <div className="bg-info/80 border-t px-6 py-3">
+          <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
             <div className="flex items-start gap-2">
-              <Info className="text-info mt-0.5 size-3.5 shrink-0" />
-              <p className="text-info text-xs leading-relaxed">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
+              <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
                 Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) và Jackpot 2 (trùng 5/6 + bonus).
                 Vietlott quy định tối thiểu 30 tỷ (JP1) / 3 tỷ (JP2); hệ thống không ép buộc giá trị này. Tích luỹ mỗi
                 kỳ theo tỷ lệ Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có người trúng —{" "}

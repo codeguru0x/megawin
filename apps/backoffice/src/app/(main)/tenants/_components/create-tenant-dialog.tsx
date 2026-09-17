@@ -55,7 +55,7 @@ export function CreateTenantDialog() {
 
   function handleCopy() {
     if (createdApiKey) {
-      void navigator.clipboard.writeText(createdApiKey);
+      navigator.clipboard.writeText(createdApiKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -98,7 +98,7 @@ export function CreateTenantDialog() {
           <div className="bg-muted/50 flex items-center gap-2 rounded-md border p-3">
             <code className="flex-1 font-mono text-sm break-all">{createdApiKey}</code>
             <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
-              {copied ? <Check className="text-profit size-4" /> : <Copy className="size-4" />}
+              {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
             </Button>
           </div>
           <DialogFooter>

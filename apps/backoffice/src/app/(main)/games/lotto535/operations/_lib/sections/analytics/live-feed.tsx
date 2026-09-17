@@ -38,8 +38,8 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
           <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
-            <span className="text-warning ml-auto flex items-center gap-1 text-xs font-medium">
-              <span className="bg-warning size-1.5 animate-pulse rounded-full" />
+            <span className="ml-auto flex items-center gap-1 text-xs font-medium text-amber-500">
+              <span className="size-1.5 animate-pulse rounded-full bg-amber-500" />
               Live
             </span>
           )}
@@ -65,7 +65,7 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                   className={cn(
                     "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
                     i === 0 && "bg-muted/20",
-                    isLargeBet && "bg-loss/5",
+                    isLargeBet && "bg-red-500/5",
                   )}
                   style={{
                     borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
@@ -83,7 +83,7 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                         {e.playTypeLabel}
                       </span>
                       {isLargeBet && (
-                        <span className="bg-loss/10 text-loss shrink-0 rounded-full px-1.5 py-0.5 text-xs font-semibold">
+                        <span className="shrink-0 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
                           Cược lớn
                         </span>
                       )}

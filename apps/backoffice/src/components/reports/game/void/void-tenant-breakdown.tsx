@@ -107,7 +107,7 @@ export function VoidTenantBreakdown({
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.totalOriginalStake)}
                     </TableCell>
-                    <TableCell className="text-warning pr-5 text-right text-sm font-medium tabular-nums">
+                    <TableCell className="pr-5 text-right text-sm font-medium text-amber-600 tabular-nums dark:text-amber-400">
                       {formatNumber(row.totalRefundAmount)}
                     </TableCell>
                   </TableRow>
@@ -127,7 +127,7 @@ export function VoidTenantBreakdown({
                     <TableCell className="text-right text-sm font-semibold tabular-nums">
                       {formatNumber(totalOriginal)}
                     </TableCell>
-                    <TableCell className="text-warning pr-5 text-right text-sm font-semibold tabular-nums">
+                    <TableCell className="pr-5 text-right text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                       {formatNumber(totalRefund)}
                     </TableCell>
                   </TableRow>

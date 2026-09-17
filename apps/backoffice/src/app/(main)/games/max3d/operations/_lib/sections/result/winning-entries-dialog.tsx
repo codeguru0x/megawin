@@ -46,7 +46,7 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
 
   return (
     <div className="flex items-start gap-2">
-      <span className="text-muted-foreground/50 mt-0.5 w-4 shrink-0 text-xs font-medium tabular-nums">
+      <span className="text-muted-foreground/50 mt-0.5 w-4 shrink-0 text-[10px] font-medium tabular-nums">
         {board.boardNo}
       </span>
       <div className="flex flex-col gap-0.5">
@@ -55,9 +55,9 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
             <TripletDisplay key={i} value={t} variant={winningSet.has(t) ? "matched" : "default"} size="sm" />
           ))}
         </div>
-        <span className="text-warning text-xs font-medium">
+        <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
           {modeLabel} · {typeLabel}
-          {board.isDuplicate && <span className="text-warning ml-1">(ĐB)</span>}
+          {board.isDuplicate && <span className="ml-1 text-amber-600">(ĐB)</span>}
         </span>
       </div>
     </div>
@@ -67,10 +67,14 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
 // ─── Tier chips ───────────────────────────────────────────────────────────────
 
 const TIER_BADGE_COLORS: Record<string, string> = {
-  [BasicPrizeTier.Special]: "border-warning bg-warning text-warning",
-  [BasicPrizeTier.First]: "border-warning bg-warning text-warning",
-  [BasicPrizeTier.Second]: "border-warning bg-warning text-warning",
-  [BasicPrizeTier.Third]: "border-info bg-info text-info",
+  [BasicPrizeTier.Special]:
+    "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
+  [BasicPrizeTier.First]:
+    "border-yellow-300 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-700",
+  [BasicPrizeTier.Second]:
+    "border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-700",
+  [BasicPrizeTier.Third]:
+    "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
   [PlusPrizeTier.Fourth]: "border-border bg-muted/40 text-muted-foreground",
   [PlusPrizeTier.Fifth]: "border-border bg-muted/40 text-muted-foreground",
   [PlusPrizeTier.Sixth]: "border-border bg-muted/40 text-muted-foreground",
@@ -85,10 +89,10 @@ function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <Badge variant="outline" className={cn("h-4 py-0 text-xs", badgeClass)}>
+      <Badge variant="outline" className={cn("h-4 py-0 text-[10px]", badgeClass)}>
         {label}
       </Badge>
-      <span className="text-warning text-xs tabular-nums">+{formatNumber(tier.amount)}</span>
+      <span className="text-xs text-amber-700 tabular-nums dark:text-amber-400">+{formatNumber(tier.amount)}</span>
     </div>
   );
 }
@@ -130,15 +134,15 @@ function KpiBar({ totalWinningEntries, totalWinAmount }: { totalWinningEntries: 
     <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
@@ -162,7 +166,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
       <TableCell className="py-3">
         <div>
           <p className="text-foreground text-sm">{displayName}</p>
-          <p className="text-muted-foreground/50 mt-0.5 max-w-32 truncate font-mono text-xs">@{entry.tenantId}</p>
+          <p className="text-muted-foreground/50 mt-0.5 max-w-32 truncate font-mono text-[10px]">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
@@ -226,8 +230,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
       >
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-warning/15 ring-warning/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <Trophy className="text-warning size-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 ring-1 ring-orange-500/30">
+              <Trophy className="size-5 text-orange-500" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>

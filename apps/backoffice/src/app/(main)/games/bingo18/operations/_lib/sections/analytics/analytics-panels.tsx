@@ -32,35 +32,35 @@ const BASIC_STYLES: Record<
   { dot: string; text: string; fill: string; bg: string; border: string; label: string }
 > = {
   singleNum: {
-    dot: "bg-warning",
-    text: "text-warning",
+    dot: "bg-amber-400",
+    text: "text-amber-700 dark:text-amber-400",
     fill: "#fbbf24",
-    bg: "bg-warning/60",
-    border: "border-warning/60",
+    bg: "bg-amber-50/60 dark:bg-amber-950/20",
+    border: "border-amber-200/60 dark:border-amber-800/40",
     label: "Một số",
   },
   doubleMatch: {
-    dot: "bg-warning",
-    text: "text-warning",
+    dot: "bg-orange-500",
+    text: "text-orange-700 dark:text-orange-400",
     fill: "#f97316",
-    bg: "bg-warning/60",
-    border: "border-warning/60",
+    bg: "bg-orange-50/60 dark:bg-orange-950/20",
+    border: "border-orange-200/60 dark:border-orange-800/40",
     label: "Đôi",
   },
   "tripleMatch-specific": {
-    dot: "bg-loss",
-    text: "text-loss",
+    dot: "bg-red-500",
+    text: "text-red-700 dark:text-red-400",
     fill: "#ef4444",
-    bg: "bg-loss/60",
-    border: "border-loss/60",
+    bg: "bg-red-50/60 dark:bg-red-950/20",
+    border: "border-red-200/60 dark:border-red-800/40",
     label: "Ba cụ thể",
   },
   "tripleMatch-any": {
-    dot: "bg-loss",
-    text: "text-loss",
+    dot: "bg-rose-400",
+    text: "text-rose-700 dark:text-rose-400",
     fill: "#fb7185",
-    bg: "bg-loss/60",
-    border: "border-loss/60",
+    bg: "bg-rose-50/60 dark:bg-rose-950/20",
+    border: "border-rose-200/60 dark:border-rose-800/40",
     label: "Ba bất kỳ",
   },
 };
@@ -70,19 +70,19 @@ const SIDE_BET_STYLES: Record<
   { dot: string; text: string; fill: string; bg: string; border: string; label: string }
 > = {
   sumTotal: {
-    dot: "bg-info",
-    text: "text-info",
+    dot: "bg-cyan-500",
+    text: "text-cyan-700 dark:text-cyan-400",
     fill: "#0ea5e9",
-    bg: "bg-info/70",
-    border: "border-info/60",
+    bg: "bg-cyan-50/70 dark:bg-cyan-950/25",
+    border: "border-cyan-200/60 dark:border-cyan-800/40",
     label: "Tổng điểm",
   },
   bigSmallDraw: {
-    dot: "bg-game-mega645",
-    text: "text-game-mega645",
+    dot: "bg-teal-500",
+    text: "text-teal-700 dark:text-teal-400",
     fill: "#14b8a6",
-    bg: "bg-game-mega645/70",
-    border: "border-game-mega645/60",
+    bg: "bg-teal-50/70 dark:bg-teal-950/25",
+    border: "border-teal-200/60 dark:border-teal-800/40",
     label: "Lớn / Hòa / Nhỏ",
   },
 };
@@ -224,8 +224,8 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <BarChart2 className="text-warning size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+              <BarChart2 className="size-3.5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>

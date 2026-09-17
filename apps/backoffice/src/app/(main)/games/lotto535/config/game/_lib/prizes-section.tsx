@@ -26,42 +26,42 @@ const PRIZE_FIELDS = [
     label: "Giải Nhất",
     desc: "5 số chính",
     badge: "1st",
-    color: "bg-warning text-white",
+    color: "bg-amber-500 text-white",
   },
   {
     key: "tier2" as const,
     label: "Giải Nhì",
     desc: "4 chính + ĐB",
     badge: "2nd",
-    color: "bg-muted text-white",
+    color: "bg-slate-400 text-white",
   },
   {
     key: "tier3" as const,
     label: "Giải Ba",
     desc: "4 số chính",
     badge: "3rd",
-    color: "bg-warning text-white",
+    color: "bg-amber-700 text-white",
   },
   {
     key: "tier4" as const,
     label: "Giải Tư",
     desc: "3 chính + ĐB",
     badge: "4th",
-    color: "bg-muted text-white",
+    color: "bg-slate-500 text-white",
   },
   {
     key: "tier5" as const,
     label: "Giải Năm",
     desc: "3 số chính",
     badge: "5th",
-    color: "bg-muted text-white",
+    color: "bg-slate-600 text-white",
   },
   {
     key: "consolation" as const,
     label: "Khuyến Khích",
     desc: "≤2 chính + ĐB",
     badge: "KK",
-    color: "bg-profit text-white",
+    color: "bg-emerald-600 text-white",
   },
 ] as const;
 
@@ -151,7 +151,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
                         <div
                           className={`font-bold tabular-nums ${
-                            profitAnalysis.grossMarginPercent >= 0 ? "text-profit" : "text-loss"
+                            profitAnalysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"
                           }`}
                         >
                           {profitAnalysis.grossMarginPercent >= 0 ? (
@@ -252,10 +252,10 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                               <span
                                 className={`text-right text-xs font-semibold tabular-nums ${
                                   profit && profit.payoutRatio > 1
-                                    ? "text-loss"
+                                    ? "text-red-600"
                                     : profit && profit.payoutRatio > 0.5
-                                      ? "text-warning"
-                                      : "text-profit"
+                                      ? "text-amber-600"
+                                      : "text-emerald-600"
                                 }`}
                               >
                                 {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -264,7 +264,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                 <TooltipTrigger asChild>
                                   <span
                                     className={`cursor-help text-right text-xs tabular-nums ${
-                                      isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground"
+                                      isOverBreakEven ? "font-bold text-red-600" : "text-muted-foreground"
                                     }`}
                                   >
                                     {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
@@ -331,7 +331,10 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                       >
                         <div className="flex items-center gap-1.5">
                           {isJackpot && (
-                            <Badge variant="secondary" className="bg-loss text-loss text-xs font-bold">
+                            <Badge
+                              variant="secondary"
+                              className="bg-red-100 text-xs font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                            >
                               JP
                             </Badge>
                           )}

@@ -39,19 +39,19 @@ const fmt = formatNumber;
 const CAP_ROWS = [
   {
     pick: 10,
-    badge: "bg-loss",
+    badge: "bg-red-500",
     maxPerDrawField: "pick10MaxPerDraw" as const,
     maxSetsField: "pick10MaxSetsForFixed" as const,
   },
   {
     pick: 9,
-    badge: "bg-warning",
+    badge: "bg-orange-500",
     maxPerDrawField: "pick9MaxPerDraw" as const,
     maxSetsField: "pick9MaxSetsForFixed" as const,
   },
   {
     pick: 8,
-    badge: "bg-warning",
+    badge: "bg-amber-600",
     maxPerDrawField: "pick8MaxPerDraw" as const,
     maxSetsField: "pick8MaxSetsForFixed" as const,
   },
@@ -81,10 +81,10 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
               </p>
             </div>
 
-            <div className="bg-warning/80 border-t px-6 py-2.5">
+            <div className="border-t bg-amber-50/80 px-6 py-2.5 dark:bg-amber-950/20">
               <div className="flex items-start gap-2">
-                <Info className="text-warning mt-0.5 size-3.5 shrink-0" />
-                <p className="text-warning text-xs leading-relaxed">
+                <Info className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
                   Nếu số bộ trúng vượt ngưỡng, tổng giải tối đa / kỳ sẽ được chia đều cho số bộ trúng thay vì trả giải
                   cố định.
                 </p>

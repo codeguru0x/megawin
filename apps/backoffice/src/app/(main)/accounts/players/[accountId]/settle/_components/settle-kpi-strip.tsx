@@ -13,16 +13,16 @@ import { cn } from "@/lib/utils";
 function payoutBadgeClass(ratio: number): string {
   const color = getPayoutRatioColor(ratio);
   if (color === "text-loss") {
-    return "bg-loss text-loss";
+    return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400";
   }
   if (color === "text-warning") {
-    return "bg-warning text-warning";
+    return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400";
   }
-  return "bg-profit text-profit";
+  return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400";
 }
 
 /** Badge background cho win rate (luôn dùng tông xanh dương nhẹ). */
-const WIN_RATE_BADGE = "bg-info text-info";
+const WIN_RATE_BADGE = "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400";
 
 interface SettleKpiStripProps {
   data: PlayerOverviewResult | undefined;
@@ -68,12 +68,12 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Tổng đơn cược — tất cả entries trong báo cáo settle đều đã kết sổ */}
       <KpiCard
         icon={Receipt}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label="Tổng đơn cược"
         value={formatNumber(totalEntryCount)}
         subNode={
-          <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5 text-[11px]">
             Thắng {formatNumber(totalWinCount)}
             <span
               className={cn("inline-flex items-center rounded px-1 py-0.5 font-semibold tabular-nums", WIN_RATE_BADGE)}
@@ -87,8 +87,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Tiền cược */}
       <KpiCard
         icon={DollarSign}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatVNDCompact(totalStake)}
         sub={`TB ${formatNumber(avgBet)} ₫/đơn`}
@@ -97,12 +97,12 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Trả thưởng + Tỷ lệ TT */}
       <KpiCard
         icon={TrendingDown}
-        iconBg={payoutColor ? "bg-loss" : "bg-warning"}
-        iconColor={payoutColor ? "text-loss" : "text-warning"}
+        iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
+        iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={
-          <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+          <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
             Tỷ lệ TT{" "}
             <span
               className={cn(
@@ -119,8 +119,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Doanh thu thuần */}
       <KpiCard
         icon={TrendingUp}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.ggr}
         value={formatVNDCompact(ggr)}
       />
@@ -128,8 +128,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Hoa hồng đại lý */}
       <KpiCard
         icon={Building2}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalCommission}
         value={formatVNDCompact(totalCommission)}
       />
@@ -137,8 +137,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={TrendingUp}
-        iconBg={netProfit < 0 ? "bg-loss" : "bg-game-max3d"}
-        iconColor={netProfit < 0 ? "text-loss" : "text-game-max3d"}
+        iconBg={netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
+        iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
         valueClass={getNetProfitColor(netProfit)}

@@ -61,13 +61,13 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, isLoading }
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className="text-muted-foreground text-[11px] font-medium">{label}</p>
         {isLoading ? (
           <Skeleton className="my-0.5 h-6 w-24" />
         ) : (
           <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
         )}
-        <p className="text-muted-foreground truncate text-xs">{sub}</p>
+        <p className="text-muted-foreground truncate text-[11px]">{sub}</p>
       </div>
     </div>
   );
@@ -90,8 +90,8 @@ function KpiStrip({ data, isLoading }: KpiStripProps) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <KpiCard
         icon={CalendarClock}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Kỳ đang hoạt động"
         value={formatNumber(totalActiveDraws)}
         sub="kỳ quay chưa settle"
@@ -99,8 +99,8 @@ function KpiStrip({ data, isLoading }: KpiStripProps) {
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={COL_LABELS.entryCount}
         value={formatNumber(totalEntries)}
         sub="entries đang chờ"
@@ -108,8 +108,8 @@ function KpiStrip({ data, isLoading }: KpiStripProps) {
       />
       <KpiCard
         icon={HandCoins}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={COL_LABELS.estimatedCommission}
         value={formatVNDCompact(totalCommission)}
         sub="ước tính hoa hồng"
@@ -117,8 +117,8 @@ function KpiStrip({ data, isLoading }: KpiStripProps) {
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label={COL_LABELS.totalStake}
         value={formatVNDCompact(totalStake)}
         sub="tiền cược chưa settle"
@@ -138,6 +138,7 @@ function SystemOutstandingContent() {
   const rows = data ?? [];
 
   // Tổng cho footer row
+  const _totalActiveDraws = rows.reduce((s, r) => s + r.activeDrawCount, 0);
   const totalEntries = rows.reduce((s, r) => s + r.totalEntryCount, 0);
   const totalCommission = rows.reduce((s, r) => s + r.totalEstimatedCommission, 0);
   const totalStake = rows.reduce((s, r) => s + r.totalOutstandingStake, 0);

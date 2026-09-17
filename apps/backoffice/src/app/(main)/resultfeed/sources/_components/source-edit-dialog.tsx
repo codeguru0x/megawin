@@ -248,7 +248,7 @@ export function SourceEditDialog({ source, onClose }: SourceEditDialogProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex items-center gap-3">
-              <div className="from-warning to-loss flex size-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm">
+              <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
                 <AlertTriangle className="size-5" />
               </div>
               <AlertDialogTitle className="text-base font-semibold">Xác nhận thay đổi cấu hình nguồn?</AlertDialogTitle>

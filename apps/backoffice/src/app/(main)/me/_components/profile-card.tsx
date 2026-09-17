@@ -42,12 +42,12 @@ const mfaStatusConfig = {
   enabled: {
     icon: ShieldCheck,
     variant: "default" as const,
-    color: "text-profit",
+    color: "text-emerald-600 dark:text-emerald-400",
   },
   disabled: {
     icon: Shield,
     variant: "secondary" as const,
-    color: "text-warning",
+    color: "text-amber-600 dark:text-amber-400",
   },
 } as const;
 
@@ -90,8 +90,8 @@ export function ProfileCard() {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="bg-info flex size-7 items-center justify-center rounded-lg">
-            <CircleUser className="text-info size-3.5" />
+          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <CircleUser className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Thông tin cá nhân</CardTitle>

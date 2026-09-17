@@ -20,7 +20,7 @@ function Power655FinancialContent() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="from-loss to-warning flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
@@ -43,11 +43,11 @@ function Power655FinancialContent() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as "draws" | "tenants")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="draws" className="gap-1.5">
-            <CalendarRange className="text-game-max3d size-4" />
+            <CalendarRange className="size-4 text-violet-500" />
             Theo kỳ quay
           </TabsTrigger>
           <TabsTrigger value="tenants" className="gap-1.5">
-            <Building2 className="text-info size-4" />
+            <Building2 className="size-4 text-blue-500" />
             Theo đại lý
           </TabsTrigger>
         </TabsList>

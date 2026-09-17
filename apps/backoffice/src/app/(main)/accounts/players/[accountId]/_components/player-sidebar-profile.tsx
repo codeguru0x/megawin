@@ -130,7 +130,7 @@ function CopyableId({ value }: { value: string }) {
         className="text-muted-foreground hover:text-foreground flex shrink-0 items-center justify-center rounded p-0.5 transition-colors"
         title="Copy Account ID"
       >
-        {copied ? <Check className="text-profit size-3" /> : <Copy className="size-3" />}
+        {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
       </button>
     </div>
   );

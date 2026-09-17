@@ -99,12 +99,12 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
         >
           <span className="relative flex size-2">
             {isFetching ? (
-              <span className="bg-warning size-2 animate-pulse rounded-full" />
+              <span className="size-2 animate-pulse rounded-full bg-amber-500" />
             ) : (
               <>
                 {/* Ping animation — live indicator */}
-                <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-60" />
-                <span className="bg-profit relative inline-flex size-2 rounded-full" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </>
             )}
           </span>

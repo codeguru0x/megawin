@@ -22,18 +22,18 @@ import { NumberBadge } from "./number-heatmap";
 // ─── PlayType color map — Keno ───────────────────────────────────────────────
 
 const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string }> = {
-  pick1: { dot: "bg-warning", text: "text-warning", fill: "#fbbf24" },
-  pick2: { dot: "bg-warning", text: "text-warning", fill: "#f59e0b" },
-  pick3: { dot: "bg-warning", text: "text-warning", fill: "#f59e0b" },
-  pick4: { dot: "bg-warning", text: "text-warning", fill: "#fb923c" },
-  pick5: { dot: "bg-warning", text: "text-warning", fill: "#f97316" },
-  pick6: { dot: "bg-warning", text: "text-warning", fill: "#f97316" },
-  pick7: { dot: "bg-warning", text: "text-warning", fill: "#ea580c" },
-  pick8: { dot: "bg-loss", text: "text-loss", fill: "#f87171" },
-  pick9: { dot: "bg-loss", text: "text-loss", fill: "#ef4444" },
-  pick10: { dot: "bg-loss", text: "text-loss", fill: "#dc2626" },
-  bigSmall: { dot: "bg-info", text: "text-info", fill: "#0ea5e9" },
-  evenOdd: { dot: "bg-game-mega645", text: "text-game-mega645", fill: "#14b8a6" },
+  pick1: { dot: "bg-amber-400", text: "text-amber-600 dark:text-amber-400", fill: "#fbbf24" },
+  pick2: { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400", fill: "#f59e0b" },
+  pick3: { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400", fill: "#f59e0b" },
+  pick4: { dot: "bg-orange-400", text: "text-orange-600 dark:text-orange-400", fill: "#fb923c" },
+  pick5: { dot: "bg-orange-500", text: "text-orange-600 dark:text-orange-400", fill: "#f97316" },
+  pick6: { dot: "bg-orange-500", text: "text-orange-600 dark:text-orange-400", fill: "#f97316" },
+  pick7: { dot: "bg-orange-600", text: "text-orange-600 dark:text-orange-400", fill: "#ea580c" },
+  pick8: { dot: "bg-red-400", text: "text-red-600 dark:text-red-400", fill: "#f87171" },
+  pick9: { dot: "bg-red-500", text: "text-red-600 dark:text-red-400", fill: "#ef4444" },
+  pick10: { dot: "bg-red-600", text: "text-red-600 dark:text-red-400", fill: "#dc2626" },
+  bigSmall: { dot: "bg-cyan-500", text: "text-cyan-600 dark:text-cyan-400", fill: "#0ea5e9" },
+  evenOdd: { dot: "bg-teal-500", text: "text-teal-600 dark:text-teal-400", fill: "#14b8a6" },
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
       className={cn(
         "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
         highlightFirst && "bg-muted/20",
-        isLargeBet && "bg-loss/5",
+        isLargeBet && "bg-red-500/5",
       )}
       style={{
         borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
@@ -83,7 +83,7 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
           <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
           <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>{label}</span>
           {isLargeBet && (
-            <span className="bg-loss/15 text-loss inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-xs font-semibold">
+            <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
               Cược lớn
             </span>
           )}
@@ -118,7 +118,7 @@ function SideBetChip({ playType, bet }: { playType: string; bet?: string }) {
   if (playType === "bigSmall" && bet !== undefined) {
     const betLabel = (KENO_BIG_SMALL_BET_LABELS as Record<string, string>)[bet] ?? bet;
     return (
-      <span className="bg-info/15 text-info inline-flex h-5 shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold">
+      <span className="inline-flex h-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/15 px-2 text-xs font-semibold text-cyan-700 dark:text-cyan-400">
         {betLabel}
       </span>
     );
@@ -126,7 +126,7 @@ function SideBetChip({ playType, bet }: { playType: string; bet?: string }) {
   if (playType === "evenOdd" && bet !== undefined) {
     const betLabel = (KENO_EVEN_ODD_BET_LABELS as Record<string, string>)[bet] ?? bet;
     return (
-      <span className="bg-game-mega645/15 text-game-mega645 inline-flex h-5 shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold">
+      <span className="inline-flex h-5 shrink-0 items-center justify-center rounded-full bg-teal-500/15 px-2 text-xs font-semibold text-teal-700 dark:text-teal-400">
         {betLabel}
       </span>
     );
@@ -156,7 +156,7 @@ function FeedGroup({
       <div className="flex items-center gap-1.5 py-1">
         <Icon className={cn("size-3.5 shrink-0", accent)} />
         <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">{title}</span>
-        <span className="bg-muted text-muted-foreground ml-auto rounded-full px-1.5 text-xs font-medium tabular-nums">
+        <span className="bg-muted text-muted-foreground ml-auto rounded-full px-1.5 text-[11px] font-medium tabular-nums">
           {entries.length}
         </span>
       </div>
@@ -195,13 +195,13 @@ export function LiveFeed({
           <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {totalCount > 0 && (
-            <span className="bg-muted text-muted-foreground rounded-full px-1.5 text-xs font-medium tabular-nums">
+            <span className="bg-muted text-muted-foreground rounded-full px-1.5 text-[11px] font-medium tabular-nums">
               {formatNumber(totalCount)}
             </span>
           )}
           {!isSettled && (
-            <span className="text-info ml-auto flex items-center gap-1 text-xs font-medium">
-              <span className="bg-info size-1.5 animate-pulse rounded-full" />
+            <span className="ml-auto flex items-center gap-1 text-xs font-medium text-sky-600">
+              <span className="size-1.5 animate-pulse rounded-full bg-sky-500" />
               Live
             </span>
           )}
@@ -218,8 +218,14 @@ export function LiveFeed({
           // Mỗi nhóm cuộn độc lập → thấy cả 2 cùng lúc, không cuộn qua nhóm này mới tới nhóm kia.
           // Màn hẹp (feed container < 32rem) → stack dọc, Pick trên (analysis §4.8).
           <div className="grid items-start gap-4 @[32rem]/feed:grid-cols-[1.7fr_1fr]">
-            <FeedGroup title="Pick cơ bản" icon={Grid3x3} accent="text-warning" entries={pickEntries} isFirstGroup />
-            <FeedGroup title="Side bet" icon={Dices} accent="text-info" entries={sideBetEntries} isFirstGroup={false} />
+            <FeedGroup title="Pick cơ bản" icon={Grid3x3} accent="text-orange-500" entries={pickEntries} isFirstGroup />
+            <FeedGroup
+              title="Side bet"
+              icon={Dices}
+              accent="text-cyan-500"
+              entries={sideBetEntries}
+              isFirstGroup={false}
+            />
           </div>
         )}
       </div>

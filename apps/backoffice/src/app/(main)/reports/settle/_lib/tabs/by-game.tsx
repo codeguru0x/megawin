@@ -70,8 +70,8 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
       {/* Tiền cược */}
       <KpiCard
         icon={DollarSign}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatVNDCompact(totalStake)}
         sub={`${formatNumber(data.reduce((s, r) => s + r.entryCount, 0))} lượt cược`}
@@ -79,8 +79,8 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
       {/* Trả thưởng + Tỷ lệ TT — Phương án C: gộp 1 card */}
       <KpiCard
         icon={TrendingDown}
-        iconBg={payoutColor ? "bg-loss" : "bg-warning"}
-        iconColor={payoutColor ? "text-loss" : "text-warning"}
+        iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
+        iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={<PayoutRatioKpiBadge ratio={payoutRatio} />}
@@ -88,8 +88,8 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
       {/* Doanh thu thuần */}
       <KpiCard
         icon={TrendingUp}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.ggr}
         value={formatVNDCompact(ggr)}
         valueClass={getNetProfitColor(ggr)}
@@ -97,8 +97,8 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
       {/* Hoa hồng ĐL */}
       <KpiCard
         icon={Building2}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalCommission}
         value={formatVNDCompact(totalCommission)}
         sub={`${data.reduce((s, r) => s + r.tenantCount, 0)} đại lý`}
@@ -106,8 +106,8 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={TrendingUp}
-        iconBg={netProfit < 0 ? "bg-loss" : "bg-game-max3d"}
-        iconColor={netProfit < 0 ? "text-loss" : "text-game-max3d"}
+        iconBg={netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
+        iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
         valueClass={getNetProfitColor(netProfit)}

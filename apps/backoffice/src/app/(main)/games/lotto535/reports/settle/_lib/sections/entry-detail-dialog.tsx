@@ -106,16 +106,16 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2.5 text-base">
           {isSettled ? (
-            <span className="bg-profit/15 inline-flex items-center justify-center rounded-full p-1">
-              <CheckCircle2 className="text-profit size-5 shrink-0" />
+            <span className="inline-flex items-center justify-center rounded-full bg-emerald-500/15 p-1">
+              <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
             </span>
           ) : isVoid ? (
             <span className="bg-destructive/15 inline-flex items-center justify-center rounded-full p-1">
               <XCircle className="text-destructive size-5 shrink-0" />
             </span>
           ) : (
-            <span className="bg-warning/15 inline-flex items-center justify-center rounded-full p-1">
-              <Timer className="text-warning size-5 shrink-0" />
+            <span className="inline-flex items-center justify-center rounded-full bg-amber-500/15 p-1">
+              <Timer className="size-5 shrink-0 text-amber-500" />
             </span>
           )}
           Phiếu cược — Lotto 5/35
@@ -131,7 +131,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 1. Metadata 2-column ──────────────────────────────────── */}
           <div className="bg-muted/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg px-4 py-3 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                 <User className="size-3.5 shrink-0" />
                 Người chơi
               </span>
@@ -155,21 +155,21 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                 <Layers className="size-3.5 shrink-0" />
                 {REPORT_COLUMN_LABELS.lineCount}
               </span>
               <span className="font-semibold tabular-nums">{formatNumber(entry.lineCount)}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                 <Building2 className="size-3.5 shrink-0" />
                 Đại lý
               </span>
               <span className="font-semibold">{(entry as any).tenantId ?? "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                 <Clock className="size-3.5 shrink-0" />
                 Đặt lúc
               </span>
@@ -183,14 +183,14 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {isScheduled ? (
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-profit flex size-8 shrink-0 items-center justify-center rounded-md">
-                  <Banknote className="text-profit size-4" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                  <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                     Tiền cược
                     {entry.betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-xs font-medium">
+                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
                         ×{formatNumber(entry.betUnitCount)}
                       </span>
                     )}
@@ -199,11 +199,11 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 </div>
               </div>
               <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-warning flex size-8 shrink-0 items-center justify-center rounded-md">
-                  <HandCoins className="text-warning size-4" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                  <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalCommission}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
@@ -212,14 +212,14 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             /* Settled mode: 4 KPIs đầy đủ, 2×2 */
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-profit flex size-8 shrink-0 items-center justify-center rounded-md">
-                  <Banknote className="text-profit size-4" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                  <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
                     Tiền cược
                     {entry.betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-xs font-medium">
+                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
                         ×{formatNumber(entry.betUnitCount)}
                       </span>
                     )}
@@ -228,20 +228,20 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 </div>
               </div>
               <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-info flex size-8 shrink-0 items-center justify-center rounded-md">
-                  <Banknote className="text-info size-4" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                  <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalPayout}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
               <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
-                <div className="bg-warning flex size-8 shrink-0 items-center justify-center rounded-md">
-                  <HandCoins className="text-warning size-4" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                  <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalCommission}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
@@ -249,19 +249,23 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
                   <div
                     className={`flex size-8 shrink-0 items-center justify-center rounded-md ${
-                      playerNet > 0 ? "bg-profit" : playerNet < 0 ? "bg-loss" : "bg-muted"
+                      playerNet > 0
+                        ? "bg-emerald-100 dark:bg-emerald-900/50"
+                        : playerNet < 0
+                          ? "bg-red-100 dark:bg-red-900/50"
+                          : "bg-muted"
                     }`}
                   >
                     {playerNet > 0 ? (
-                      <TrendingUp className="text-profit size-4" />
+                      <TrendingUp className="size-4 text-emerald-600 dark:text-emerald-400" />
                     ) : playerNet < 0 ? (
-                      <TrendingDown className="text-loss size-4" />
+                      <TrendingDown className="size-4 text-red-600 dark:text-red-400" />
                     ) : (
                       <Minus className="text-muted-foreground size-4" />
                     )}
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-xs">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
+                    <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
                         playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
@@ -281,7 +285,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {entry.result && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
               {/* Hàng kết quả kỳ quay */}
-              <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Kết quả</p>
+              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">Kết quả</p>
               <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                 {entry.result.winningMain.map((n: string) => {
                   const playerPicked = allPickedMain.has(n);
@@ -303,7 +307,9 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="mb-3 border-t" />
 
               {/* Từng board của khách */}
-              <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Bộ số đã chọn</p>
+              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">
+                Bộ số đã chọn
+              </p>
               <div className="space-y-2.5">
                 {boards.map((board, i) => {
                   const playLabel =
@@ -314,7 +320,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   return (
                     <div
                       key={i}
-                      className="grid items-center gap-x-3 rounded-md border-l-3 py-2 pl-3"
+                      className="grid items-center gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
                       style={{
                         borderLeftColor: boardColor,
                         gridTemplateColumns: "2rem 4rem 1fr",
@@ -326,14 +332,14 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground text-xs leading-tight font-semibold">
+                        <span className="text-foreground text-[11px] leading-tight font-semibold">
                           {playLabel ?? "Thường"}
                         </span>
-                        <span className="text-muted-foreground text-xs leading-tight">
+                        <span className="text-muted-foreground text-[10px] leading-tight">
                           {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                         </span>
                         {board.betCount > 1 && (
-                          <span className="text-muted-foreground/70 text-xs leading-tight">×{board.betCount}</span>
+                          <span className="text-muted-foreground/70 text-[10px] leading-tight">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -367,7 +373,9 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             /* Fallback: chỉ hiển thị board nếu chưa có kết quả (scheduled) */
             boards.length > 0 && (
               <div className="rounded-lg border p-4">
-                <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">Bộ số đã chọn</p>
+                <p className="text-muted-foreground mb-3 text-[11px] font-medium tracking-wide uppercase">
+                  Bộ số đã chọn
+                </p>
                 <div className="space-y-2.5">
                   {boards.map((board, i) => {
                     const playLabel =
@@ -378,7 +386,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     return (
                       <div
                         key={i}
-                        className="grid items-center gap-x-3 rounded-md border-l-3 py-2 pl-3"
+                        className="grid items-center gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
                         style={{
                           borderLeftColor: boardColor,
                           gridTemplateColumns: "2rem 4rem 1fr",
@@ -390,14 +398,16 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-foreground text-xs leading-tight font-semibold">
+                          <span className="text-foreground text-[11px] leading-tight font-semibold">
                             {playLabel ?? "Thường"}
                           </span>
-                          <span className="text-muted-foreground text-xs leading-tight">
+                          <span className="text-muted-foreground text-[10px] leading-tight">
                             {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                           </span>
                           {board.betCount > 1 && (
-                            <span className="text-muted-foreground/70 text-xs leading-tight">×{board.betCount}</span>
+                            <span className="text-muted-foreground/70 text-[10px] leading-tight">
+                              ×{board.betCount}
+                            </span>
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-1">
@@ -422,7 +432,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 4. Giải trúng ─────────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="border-profit/30 bg-profit/5 rounded-lg border p-4">
-              <p className="text-profit mb-3 text-xs font-medium tracking-wide uppercase">Giải trúng</p>
+              <p className="text-profit mb-3 text-[11px] font-medium tracking-wide uppercase">Giải trúng</p>
               <div className="space-y-2">
                 {tiers.map(
                   (tier: { tier: string; hitCount: number; unitAmount: number; amount: number }, i: number) => (
@@ -435,7 +445,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           {LOTTO535_PRIZE_TIER_LABELS[tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS] ??
                             tier.tier}
                         </Badge>
-                        <span className="bg-profit/15 text-profit inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
+                        <span className="bg-profit/15 text-profit inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums">
                           ×{tier.hitCount} lần
                         </span>
                       </div>

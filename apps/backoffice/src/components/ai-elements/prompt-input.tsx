@@ -206,6 +206,7 @@ export const PromptInputProvider = ({ initialInput: initialTextInput = "", child
   // ----- attachments state (global when wrapped)
   const [attachmentFiles, setAttachmentFiles] = useState<(FileUIPart & { id: string })[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: giá trị khởi tạo placeholder, được gán thật trong FileUIPart component (setter thay ref.current bằng hàm mở dialog chọn file thật).
   const openRef = useRef<() => void>(() => {});
 
   const add = useCallback((files: File[] | FileList) => {
@@ -636,6 +637,7 @@ export const PromptInput = ({
   // Attach drop handlers on nearest form and document (opt-in)
   useEffect(() => {
     const form = formRef.current;
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome suy ra type ref luôn non-null từ generic, nhưng formRef.current thực tế có thể null nếu effect chạy trước khi DOM attach ref.
     if (!form) {
       return;
     }

@@ -59,14 +59,14 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; wi
 
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-3 border-l-warning py-1.5 pl-2"
+      className="grid items-center gap-x-2 rounded-md border-l-[3px] border-l-amber-400 py-1.5 pl-2"
       style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}
     >
       <div className="flex min-w-0 items-center gap-2">
         <span className="text-foreground text-xs font-semibold whitespace-nowrap">{label}</span>
         {/* Khách chọn gì */}
         {isAnyTriple ? (
-          <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-xs font-medium whitespace-nowrap">
+          <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap">
             3 số bất kỳ
           </span>
         ) : board.number !== undefined ? (
@@ -76,12 +76,12 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; wi
         )}
         {/* Trúng gì: số lần khớp */}
         {board.matchCount != null && board.matchCount > 0 && (
-          <span className="bg-warning/15 text-warning inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-bold whitespace-nowrap tabular-nums">
+          <span className="inline-flex items-center rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-bold whitespace-nowrap text-amber-700 tabular-nums dark:text-amber-400">
             trúng ×{board.matchCount}
           </span>
         )}
       </div>
-      <span className="text-warning justify-self-end text-xs font-semibold whitespace-nowrap tabular-nums">
+      <span className="justify-self-end text-xs font-semibold whitespace-nowrap text-amber-700 tabular-nums dark:text-amber-400">
         +{formatNumber(board.winAmount)}
       </span>
     </div>
@@ -100,17 +100,17 @@ function SideBetDetail({ board, drawSum }: { board: WinningBoardDetail; drawSum:
     : (BINGO18_BIG_SMALL_BET_LABELS[board.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ?? board.bet ?? "—");
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-3 border-l-info py-1.5 pl-2"
+      className="grid items-center gap-x-2 rounded-md border-l-[3px] border-l-cyan-400 py-1.5 pl-2"
       style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}
     >
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <span className="border-info bg-info text-info rounded border px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap">
+        <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-400">
           {typeLabel} · {pick}
         </span>
         {/* Trúng gì: kết quả thực tế của kỳ quay để đối chiếu */}
-        {drawSum > 0 && <span className="text-muted-foreground text-xs whitespace-nowrap">KQ: tổng {drawSum}</span>}
+        {drawSum > 0 && <span className="text-muted-foreground text-[11px] whitespace-nowrap">KQ: tổng {drawSum}</span>}
       </div>
-      <span className="text-info justify-self-end text-xs font-semibold whitespace-nowrap tabular-nums">
+      <span className="justify-self-end text-xs font-semibold whitespace-nowrap text-cyan-700 tabular-nums dark:text-cyan-400">
         +{formatNumber(board.winAmount)}
       </span>
     </div>
@@ -154,15 +154,15 @@ function KpiBar({ totalWinningEntries, totalWinAmount }: { totalWinningEntries: 
     <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
@@ -249,8 +249,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
       >
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-warning/15 ring-warning/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <Trophy className="text-warning size-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 ring-1 ring-amber-500/30">
+              <Trophy className="size-5 text-amber-500" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>

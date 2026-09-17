@@ -53,15 +53,15 @@ function SystemFinancialReportsContent() {
       >
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="daily" className="gap-1.5">
-            <CalendarDays className="text-info size-4" />
+            <CalendarDays className="size-4 text-indigo-500" />
             Tổng quan ngày
           </TabsTrigger>
           <TabsTrigger value="by-game" className="gap-1.5">
-            <Gamepad2 className="text-profit size-4" />
+            <Gamepad2 className="size-4 text-emerald-500" />
             Theo game
           </TabsTrigger>
           <TabsTrigger value="by-tenant" className="gap-1.5">
-            <Building2 className="text-info size-4" />
+            <Building2 className="size-4 text-blue-500" />
             Theo đại lý
           </TabsTrigger>
         </TabsList>

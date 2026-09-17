@@ -95,16 +95,19 @@ export function PayoutRatioKpiBadge({ ratio, className }: PayoutRatioProps) {
   // badge background + text tương ứng với ngưỡng
   const badgeClass =
     color === "text-loss"
-      ? "bg-loss text-loss"
+      ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
       : color === "text-warning"
-        ? "bg-warning text-warning"
+        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
         : "bg-muted text-muted-foreground";
 
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
-      <span className="text-muted-foreground text-xs">Tỷ lệ TT</span>
+      <span className="text-muted-foreground text-[11px]">Tỷ lệ TT</span>
       <span
-        className={cn("inline-flex items-center rounded px-1 py-0.5 text-xs font-semibold tabular-nums", badgeClass)}
+        className={cn(
+          "inline-flex items-center rounded px-1 py-0.5 text-[11px] font-semibold tabular-nums",
+          badgeClass,
+        )}
       >
         {formatPayoutRatio(ratio)}
       </span>

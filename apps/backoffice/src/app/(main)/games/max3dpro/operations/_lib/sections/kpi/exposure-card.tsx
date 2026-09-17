@@ -22,8 +22,13 @@ function ComponentStat({ label, value, tip, danger }: { label: string; value: nu
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="border-border/50 bg-muted/10 cursor-help rounded-lg border px-3 py-2">
-          <p className="text-muted-foreground text-xs">{label}</p>
-          <p className={cn("text-sm leading-tight font-bold tabular-nums", danger ? "text-loss" : "text-foreground")}>
+          <p className="text-muted-foreground text-[11px]">{label}</p>
+          <p
+            className={cn(
+              "text-sm leading-tight font-bold tabular-nums",
+              danger ? "text-red-600 dark:text-red-400" : "text-foreground",
+            )}
+          >
             {formatNumber(value)}
           </p>
         </div>
@@ -51,15 +56,15 @@ export function ExposureCard({
 
   // Gauge scale: 100% thanh = ngưỡng tuyệt đối; ≥ ngưỡng → đỏ, ≥ 1/2 → amber.
   const ratio = warnAmount > 0 ? worst / warnAmount : 0;
-  const gaugeColor = ratio >= 1 ? "bg-loss" : ratio >= 0.5 ? "bg-warning" : "bg-profit";
+  const gaugeColor = ratio >= 1 ? "bg-red-500" : ratio >= 0.5 ? "bg-amber-500" : "bg-emerald-500";
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <ShieldAlert className="text-loss size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+              <ShieldAlert className="size-3.5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
@@ -68,7 +73,7 @@ export function ExposureCard({
           </div>
           <div className="text-right">
             <p className="text-muted-foreground text-xs">Worst-case tổng</p>
-            <p className="text-loss text-base font-bold tabular-nums">{formatNumber(worst)}</p>
+            <p className="text-base font-bold text-red-600 tabular-nums dark:text-red-400">{formatNumber(worst)}</p>
           </div>
         </div>
 
@@ -98,7 +103,7 @@ export function ExposureCard({
 
         {/* Gauge vs ngưỡng tuyệt đối */}
         <div className="space-y-1">
-          <div className="text-muted-foreground flex items-center justify-between text-xs tabular-nums">
+          <div className="text-muted-foreground flex items-center justify-between text-[11px] tabular-nums">
             <span>
               Worst-case / Ngưỡng: <span className="text-foreground font-semibold">{Math.round(ratio * 100)}%</span>
             </span>

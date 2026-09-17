@@ -55,6 +55,7 @@ function BrandLink({
   const intentFiredRef = useRef(false);
 
   const fireIntent = () => {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: ref mutate runtime; Biome không theo dõi `.current`.
     if (intentFiredRef.current || !onIntent) {
       return;
     }

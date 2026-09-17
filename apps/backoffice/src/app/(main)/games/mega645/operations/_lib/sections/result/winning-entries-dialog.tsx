@@ -32,20 +32,20 @@ import {
 
 const TIER_STYLE: Partial<Record<PrizeTier, { badge: string; winColor: string }>> = {
   [PrizeTier.Jackpot]: {
-    badge: "border-game-mega645/60 bg-game-mega645/10 text-game-mega645",
-    winColor: "text-game-mega645",
+    badge: "border-teal-400/60 bg-teal-500/10 text-teal-600 dark:text-teal-400 dark:border-teal-500/50",
+    winColor: "text-teal-500 dark:text-teal-400",
   },
   [PrizeTier.Tier1]: {
-    badge: "border-profit/60 bg-profit/10 text-profit",
-    winColor: "text-profit",
+    badge: "border-emerald-400/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 dark:border-emerald-500/50",
+    winColor: "text-emerald-600 dark:text-emerald-400",
   },
   [PrizeTier.Tier2]: {
-    badge: "border-info/60 bg-info/10 text-info",
-    winColor: "text-info",
+    badge: "border-cyan-400/60 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 dark:border-cyan-500/50",
+    winColor: "text-cyan-600 dark:text-cyan-400",
   },
   [PrizeTier.Tier3]: {
-    badge: "border-info/60 bg-info/10 text-info",
-    winColor: "text-info",
+    badge: "border-blue-400/60 bg-blue-500/10 text-blue-700 dark:text-blue-400 dark:border-blue-500/50",
+    winColor: "text-blue-600 dark:text-blue-400",
   },
 };
 
@@ -59,7 +59,7 @@ function TierChip({ tier }: { tier: WinningEntryTierDetail }) {
         s?.badge,
       )}
     >
-      {isJackpot && <Star className="fill-game-mega645 text-game-mega645 size-3" />}
+      {isJackpot && <Star className="size-3 fill-teal-500 text-teal-500" />}
       {tier.tierLabel}
       {tier.hitCount > 1 && <span className="ml-0.5 font-bold">×{tier.hitCount}</span>}
     </span>
@@ -136,22 +136,22 @@ function KpiBar({
     <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Hash}
-        iconBg="bg-game-mega645"
-        iconColor="text-game-mega645"
+        iconBg="bg-teal-100 dark:bg-teal-900/50"
+        iconColor="text-teal-600 dark:text-teal-400"
         label={REPORT_COLUMN_LABELS.winningLineCount}
         value={formatNumber(totalWinningLines)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
@@ -199,8 +199,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
       >
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-game-mega645/15 ring-game-mega645/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <Trophy className="text-game-mega645 size-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/15 ring-1 ring-teal-500/30">
+              <Trophy className="size-5 text-teal-500" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
@@ -313,14 +313,14 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
         // Entry trúng Jackpot: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Icon nhận biết JP nằm trong chip Hạng trúng.
-        hasJackpot && "border-l-3 border-l-game-mega645",
+        hasJackpot && "border-l-[3px] border-l-teal-400",
       )}
     >
       <TableCell className="py-3 pl-6 text-center">
         <span
           className={cn(
             "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            hasJackpot ? "bg-game-mega645/10 text-game-mega645" : "bg-muted text-muted-foreground",
+            hasJackpot ? "bg-teal-500/10 text-teal-600 dark:text-teal-400" : "bg-muted text-muted-foreground",
           )}
         >
           {rowNo}

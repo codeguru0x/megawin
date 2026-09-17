@@ -83,12 +83,14 @@ function RefreshButton() {
       const stale = elapsedSec > 3 * pollSecondsRef.current;
       const dot = dotRef.current;
       const label = labelRef.current;
+      // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome suy luận nhầm `current` luôn non-null vì đọc qua closure lồng trong `tick()` — `tsc --noEmit` xác nhận type thật là `HTMLSpanElement | null`.
       if (dot) {
-        dot.className = `size-1.5 rounded-full animate-pulse ${stale ? "bg-warning" : "bg-profit"}`;
+        dot.className = `size-1.5 rounded-full animate-pulse ${stale ? "bg-amber-500" : "bg-emerald-500"}`;
       }
+      // biome-ignore lint/suspicious/noUnnecessaryConditions: Tương tự — Biome không theo dõi đúng qua closure lồng, `tsc` xác nhận `label` có thể `null`.
       if (label) {
         label.textContent = stale ? "Chậm" : "Live";
-        label.className = `font-medium text-xs ${stale ? "text-warning" : "text-profit"}`;
+        label.className = `font-medium text-xs ${stale ? "text-amber-600" : "text-emerald-600"}`;
       }
     }
     tick();
@@ -106,8 +108,8 @@ function RefreshButton() {
           disabled={state.isFetching}
           onClick={actions.refresh}
         >
-          <span ref={dotRef} className="bg-profit size-1.5 animate-pulse rounded-full" />
-          <span ref={labelRef} className="text-profit text-xs font-medium">
+          <span ref={dotRef} className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+          <span ref={labelRef} className="text-xs font-medium text-emerald-600">
             Live
           </span>
         </Button>
@@ -155,7 +157,7 @@ export function HubPageHeader() {
             <p className="text-muted-foreground text-xs">
               {totalRows} kỳ đang theo dõi
               {needsActionCount > 0 ? (
-                <span className="text-loss font-medium"> · {needsActionCount} kỳ cần xử lý</span>
+                <span className="font-medium text-rose-600 dark:text-rose-400"> · {needsActionCount} kỳ cần xử lý</span>
               ) : null}
               <RefreshButton />
             </p>

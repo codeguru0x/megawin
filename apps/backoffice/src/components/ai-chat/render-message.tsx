@@ -89,6 +89,7 @@ function AttachmentPart({ part }: { part: EveFilePart }) {
   const body = (
     <span className="bg-background/60 flex max-w-sm items-center gap-3 rounded-md border p-2 text-sm">
       {isImage ? (
+        // biome-ignore lint/performance/noImgElement: file url tuỳ ý từ eve (blob/remote domain bất kỳ), không thể khai next/image remotePatterns tĩnh.
         <img alt={label} className="size-12 shrink-0 rounded-sm object-cover" src={part.url} />
       ) : (
         <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-sm">
@@ -161,10 +162,10 @@ function AuthorizationPromptPart({ part }: { part: EveAuthorizationPart }) {
       className={cn(
         "space-y-3 rounded-md border p-3",
         isAuthorized
-          ? "border-profit/30 bg-profit/5"
+          ? "border-emerald-500/30 bg-emerald-500/5"
           : isCompleted
             ? "border-destructive/30 bg-destructive/5"
-            : "border-info/30 bg-info/5",
+            : "border-blue-500/30 bg-blue-500/5",
       )}
     >
       <div className="flex items-start gap-3">
@@ -172,10 +173,10 @@ function AuthorizationPromptPart({ part }: { part: EveAuthorizationPart }) {
           className={cn(
             "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full",
             isAuthorized
-              ? "bg-profit/10 text-profit"
+              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
               : isCompleted
                 ? "bg-destructive/10 text-destructive"
-                : "bg-info/10 text-info",
+                : "bg-blue-500/10 text-blue-700 dark:text-blue-300",
           )}
         >
           <Icon className="size-4" />
@@ -367,7 +368,7 @@ function InputRequestActions({
   const prompt = resolveHitlPrompt(inputRequest, getToolLabel(part.toolName));
 
   return (
-    <div className="border-warning/30 bg-warning/5 space-y-3 rounded-md border p-3">
+    <div className="space-y-3 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-3">
       <p className="text-muted-foreground text-sm">{prompt}</p>
       {inputResponse ? (
         <p className="text-sm font-medium">

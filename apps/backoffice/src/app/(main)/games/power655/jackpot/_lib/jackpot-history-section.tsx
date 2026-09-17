@@ -80,8 +80,8 @@ export function JackpotHistorySection() {
       {/* Section header — title + cycle selector */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="bg-info flex size-8 items-center justify-center rounded-lg">
-            <History className="text-info size-4" />
+          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <History className="size-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <h2 className="text-foreground text-sm font-semibold">Lịch sử Jackpot</h2>
@@ -108,13 +108,17 @@ export function JackpotHistorySection() {
                   <TableHead className="text-right">{COL.totalFixedPrizes}</TableHead>
                   <TableHead className="text-right">{COL.actualCompanyTake}</TableHead>
                   {/* JP1 columns — red tint */}
-                  <TableHead className="text-loss/80 text-right">{COL.jp1Opening}</TableHead>
-                  <TableHead className="text-loss/80 text-right">{COL.jp1Contribution}</TableHead>
-                  <TableHead className="text-loss/80 text-right">{COL.jp1Closing}</TableHead>
+                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">{COL.jp1Opening}</TableHead>
+                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">
+                    {COL.jp1Contribution}
+                  </TableHead>
+                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">{COL.jp1Closing}</TableHead>
                   {/* JP2 columns — blue tint */}
-                  <TableHead className="text-info/80 text-right">{COL.jp2Opening}</TableHead>
-                  <TableHead className="text-info/80 text-right">{COL.jp2Contribution}</TableHead>
-                  <TableHead className="text-info/80 text-right">{COL.jp2Closing}</TableHead>
+                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">{COL.jp2Opening}</TableHead>
+                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">
+                    {COL.jp2Contribution}
+                  </TableHead>
+                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">{COL.jp2Closing}</TableHead>
                   {/* JP1 Overflow */}
                   <TableHead className="text-right">{COL.jp1Overflow}</TableHead>
                   <TableHead className="pr-5 text-center">{COL.hasWinner}</TableHead>
@@ -223,11 +227,11 @@ function CycleSelectorLabel({ cycle }: { cycle: JackpotCycleOption }) {
     <span className="flex items-center gap-2">
       <span className="tabular-nums">
         Vòng #{cycle.cycleNo}
-        {isActive && <span className="text-profit ml-1 text-xs">(hiện tại)</span>}
+        {isActive && <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>}
       </span>
       {/* Power 6/55 đóng khi JP1 có winner — hiện Sparkles cho jackpot1_winner / both_winner */}
       {!isActive && (cycle.closedReason === "jackpot1_winner" || cycle.closedReason === "both_winner") && (
-        <Sparkles className="text-profit size-3" />
+        <Sparkles className="size-3 text-green-600 dark:text-green-400" />
       )}
     </span>
   );
@@ -244,7 +248,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
-    <TableRow className={cn("transition-colors", hasWinner && "bg-info/40")}>
+    <TableRow className={cn("transition-colors", hasWinner && "bg-blue-50/40 dark:bg-blue-950/20")}>
       {/* Kỳ (DrawId) */}
       <TableCell className="pl-5 font-mono text-sm tabular-nums">{item.drawId}</TableCell>
 
@@ -281,14 +285,14 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       </TableCell>
 
       {/* JP1 Đầu kỳ */}
-      <TableCell className="text-loss/80 text-right text-sm tabular-nums">
+      <TableCell className="text-right text-sm text-red-600/80 tabular-nums dark:text-red-400/80">
         {formatNumber(item.openingJackpot1)}
       </TableCell>
 
       {/* JP1 Tích lũy */}
       <TableCell className="text-right">
         {item.jackpot1Contribution > 0 ? (
-          <span className="text-loss/80 inline-flex items-center justify-end gap-0.5 text-sm">
+          <span className="inline-flex items-center justify-end gap-0.5 text-sm text-red-600/80 dark:text-red-400/80">
             <ArrowUpRight className="size-3 shrink-0" />
             <span className="tabular-nums">{formatNumber(item.jackpot1Contribution)}</span>
           </span>
@@ -298,19 +302,19 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       </TableCell>
 
       {/* JP1 Cuối kỳ */}
-      <TableCell className="text-loss text-right text-sm font-semibold tabular-nums">
+      <TableCell className="text-right text-sm font-semibold text-red-700 tabular-nums dark:text-red-400">
         {formatNumber(item.closingJackpot1)}
       </TableCell>
 
       {/* JP2 Đầu kỳ */}
-      <TableCell className="text-info/80 text-right text-sm tabular-nums">
+      <TableCell className="text-right text-sm text-blue-600/80 tabular-nums dark:text-blue-400/80">
         {formatNumber(item.openingJackpot2)}
       </TableCell>
 
       {/* JP2 Tích lũy */}
       <TableCell className="text-right">
         {item.jackpot2Contribution > 0 ? (
-          <span className="text-info/80 inline-flex items-center justify-end gap-0.5 text-sm">
+          <span className="inline-flex items-center justify-end gap-0.5 text-sm text-blue-600/80 dark:text-blue-400/80">
             <ArrowUpRight className="size-3 shrink-0" />
             <span className="tabular-nums">{formatNumber(item.jackpot2Contribution)}</span>
           </span>
@@ -320,7 +324,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       </TableCell>
 
       {/* JP2 Cuối kỳ */}
-      <TableCell className="text-info text-right text-sm font-semibold tabular-nums">
+      <TableCell className="text-right text-sm font-semibold text-blue-700 tabular-nums dark:text-blue-400">
         {formatNumber(item.closingJackpot2)}
       </TableCell>
 
@@ -329,7 +333,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
         {item.jp1Overflow > 0 ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-warning inline-flex cursor-default items-center justify-end gap-0.5 text-sm">
+              <span className="inline-flex cursor-default items-center justify-end gap-0.5 text-sm text-amber-600 dark:text-amber-400">
                 <TrendingDown className="size-3 shrink-0" />
                 <span className="tabular-nums">{formatNumber(item.jp1Overflow)}</span>
               </span>
@@ -348,13 +352,13 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
         {hasWinner ? (
           <div className="flex flex-col items-center gap-0.5">
             {item.hasJackpot1Winner && (
-              <Badge className="border-loss/30 bg-loss/15 text-loss gap-1 text-xs">
+              <Badge className="gap-1 border-red-500/30 bg-red-500/15 text-xs text-red-700 dark:text-red-400">
                 <Sparkles className="size-3" />
                 JP1
               </Badge>
             )}
             {item.hasJackpot2Winner && (
-              <Badge className="border-info/30 bg-info/15 text-info gap-1 text-xs">
+              <Badge className="gap-1 border-blue-500/30 bg-blue-500/15 text-xs text-blue-700 dark:text-blue-400">
                 <Sparkles className="size-3" />
                 JP2
               </Badge>

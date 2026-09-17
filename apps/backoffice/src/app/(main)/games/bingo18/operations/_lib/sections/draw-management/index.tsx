@@ -257,7 +257,7 @@ export function DrawManagementSection() {
             <AlertDialogAction
               onClick={() => triggerResettle.mutate({ drawId: effectiveDrawId })}
               disabled={triggerResettle.isPending}
-              className="bg-warning hover:bg-warning text-white"
+              className="bg-orange-600 text-white hover:bg-orange-700"
             >
               Xác nhận kết sổ lại
             </AlertDialogAction>

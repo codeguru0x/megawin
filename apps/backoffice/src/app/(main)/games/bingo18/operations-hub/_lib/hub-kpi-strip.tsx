@@ -177,8 +177,8 @@ export function HubKpiStrip() {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <KpiCard
         icon={Wallet}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Tổng tiền cược"
         value={formatVNDCompact(stats.revenue.total)}
         sub={pendingSub(stats.revenue.pending, formatVNDCompact, "")}
@@ -194,8 +194,8 @@ export function HubKpiStrip() {
           `formatNumber` (KPI count) — KHÔNG dùng `formatMoneyCompact`/`formatNumberVN`. */}
       <KpiCard
         icon={Percent}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Hoa hồng đại lý"
         value={formatVNDCompact(stats.commission.total)}
         sub={pendingSub(stats.commission.pending, formatVNDCompact, "")}
@@ -203,16 +203,16 @@ export function HubKpiStrip() {
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label="Tổng số vé"
         value={`${formatNumber(stats.entries.total)} vé`}
         sub={pendingSub(stats.entries.pending, formatNumber, " vé")}
       />
       <KpiCard
         icon={AlertTriangle}
-        iconBg="bg-loss"
-        iconColor="text-loss"
+        iconBg="bg-rose-100 dark:bg-rose-900/50"
+        iconColor="text-rose-600 dark:text-rose-400"
         label="Rủi ro chi trả"
         value={formatVNDCompact(stats.exposure.total)}
         sub={stats.alertsCritical > 0 ? `${stats.alertsCritical} cảnh báo nghiêm trọng` : "Bình thường"}
@@ -223,8 +223,8 @@ export function HubKpiStrip() {
           (đang diễn ra, không phải tồn đọng) nên `sub` không dùng `pendingSub`. */}
       <KpiCard
         icon={Radio}
-        iconBg="bg-game-max3d"
-        iconColor="text-game-max3d"
+        iconBg="bg-violet-100 dark:bg-violet-900/50"
+        iconColor="text-violet-600 dark:text-violet-400"
         label="Đang bán"
         value={`${formatNumber(selling.count)} kỳ`}
         sub={

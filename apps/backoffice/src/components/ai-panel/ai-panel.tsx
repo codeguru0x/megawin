@@ -92,6 +92,7 @@ function AiPanelResizeHandle({
   );
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: resize handle cần pointer drag + custom hit-area — <hr> không hỗ trợ onPointerDown; div[role=separator] tabIndex là pattern chuẩn cho resizable panel.
     <div
       onPointerDown={handlePointerDown}
       onKeyDown={handleKeyDown}

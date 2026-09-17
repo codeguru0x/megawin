@@ -25,7 +25,10 @@ function TrendBadge({ value }: { value: number }) {
   const Icon = isPositive ? TrendingUp : TrendingDown;
   return (
     <span
-      className={cn("inline-flex items-center gap-0.5 text-xs font-semibold", isPositive ? "text-profit" : "text-loss")}
+      className={cn(
+        "inline-flex items-center gap-0.5 text-xs font-semibold",
+        isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+      )}
     >
       <Icon className="size-2.5" />
       {isPositive ? "+" : ""}
@@ -123,8 +126,8 @@ export function HeroKpis({ todayKpis, yesterdayKpis, compareKpis, isLoading }: H
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label="Doanh thu"
         todayValue={formatVNDCompact(todayKpis.totalStake)}
         yesterdayValue={yesterdayKpis ? formatVNDCompact(yesterdayKpis.totalStake) : undefined}
@@ -132,28 +135,28 @@ export function HeroKpis({ todayKpis, yesterdayKpis, compareKpis, isLoading }: H
       />
       <KpiCard
         icon={BarChart3}
-        iconBg="bg-game-max3d"
-        iconColor="text-game-max3d"
+        iconBg="bg-violet-100 dark:bg-violet-900/50"
+        iconColor="text-violet-600 dark:text-violet-400"
         label="GGR"
         todayValue={formatVNDCompact(todayKpis.totalGgr)}
-        todayValueClassName={todayKpis.totalGgr < 0 ? "text-loss" : undefined}
+        todayValueClassName={todayKpis.totalGgr < 0 ? "text-red-600 dark:text-red-400" : undefined}
         yesterdayValue={yesterdayKpis ? formatVNDCompact(yesterdayKpis.totalGgr) : undefined}
         trend={yesterdayKpis ? ggrTrend : undefined}
       />
       <KpiCard
         icon={Wallet}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Lợi nhuận"
         todayValue={formatVNDCompact(todayKpis.totalProfit)}
-        todayValueClassName={todayKpis.totalProfit < 0 ? "text-loss" : undefined}
+        todayValueClassName={todayKpis.totalProfit < 0 ? "text-red-600 dark:text-red-400" : undefined}
         yesterdayValue={yesterdayKpis ? formatVNDCompact(yesterdayKpis.totalProfit) : undefined}
         trend={yesterdayKpis ? profitTrend : undefined}
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Số vé"
         todayValue={formatNumber(todayKpis.totalEntries)}
         yesterdayValue={yesterdayKpis ? formatNumber(yesterdayKpis.totalEntries) : undefined}
@@ -161,8 +164,8 @@ export function HeroKpis({ todayKpis, yesterdayKpis, compareKpis, isLoading }: H
       />
       <KpiCard
         icon={Users}
-        iconBg="bg-loss"
-        iconColor="text-loss"
+        iconBg="bg-rose-100 dark:bg-rose-900/50"
+        iconColor="text-rose-600 dark:text-rose-400"
         label="Người chơi"
         todayValue={formatNumber(todayKpis.totalPlayers)}
         yesterdayValue={yesterdayKpis ? formatNumber(yesterdayKpis.totalPlayers) : undefined}

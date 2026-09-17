@@ -62,11 +62,11 @@ function getPasswordStrength(pwd: string): number {
 }
 
 const STRENGTH_CONFIG = [
-  { label: "Rất yếu", color: "bg-loss" },
-  { label: "Yếu", color: "bg-warning" },
-  { label: "Trung bình", color: "bg-warning" },
-  { label: "Mạnh", color: "bg-profit" },
-  { label: "Rất mạnh", color: "bg-profit" },
+  { label: "Rất yếu", color: "bg-red-500" },
+  { label: "Yếu", color: "bg-orange-500" },
+  { label: "Trung bình", color: "bg-yellow-500" },
+  { label: "Mạnh", color: "bg-emerald-500" },
+  { label: "Rất mạnh", color: "bg-emerald-600" },
 ] as const;
 
 export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordDialogProps) {
@@ -127,7 +127,7 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="from-profit to-game-mega645 flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
                 <CheckCircle2 className="size-4.5 text-white" />
               </div>
               <div>
@@ -179,7 +179,7 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="from-info to-primary flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 shadow-sm">
               <KeyRound className="size-4.5 text-white" />
             </div>
             <div>

@@ -68,7 +68,7 @@ const BASIC_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "trùng 1 trong 2 bộ ĐB",
     badge: "ĐB",
-    color: "bg-loss text-white",
+    color: "bg-red-600 text-white",
   },
   {
     key: "basicFirst" as const,
@@ -76,7 +76,7 @@ const BASIC_FIELDS = [
     label: "Giải Nhất",
     desc: "trùng 1 trong 4 bộ Nhất",
     badge: "1st",
-    color: "bg-warning text-white",
+    color: "bg-amber-500 text-white",
   },
   {
     key: "basicSecond" as const,
@@ -84,7 +84,7 @@ const BASIC_FIELDS = [
     label: "Giải Nhì",
     desc: "trùng 1 trong 6 bộ Nhì",
     badge: "2nd",
-    color: "bg-muted text-white",
+    color: "bg-slate-400 text-white",
   },
   {
     key: "basicThird" as const,
@@ -92,7 +92,7 @@ const BASIC_FIELDS = [
     label: "Giải Ba",
     desc: "trùng 1 trong 8 bộ Ba",
     badge: "3rd",
-    color: "bg-warning text-white",
+    color: "bg-amber-700 text-white",
   },
 ] as const;
 
@@ -103,7 +103,7 @@ const COMBO3_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "3 hoán vị, trùng bộ ĐB",
     badge: "ĐB",
-    color: "bg-loss text-white",
+    color: "bg-red-600 text-white",
   },
   {
     key: "combo3First" as const,
@@ -111,7 +111,7 @@ const COMBO3_FIELDS = [
     label: "Giải Nhất",
     desc: "3 hoán vị, trùng bộ Nhất",
     badge: "1st",
-    color: "bg-warning text-white",
+    color: "bg-amber-500 text-white",
   },
   {
     key: "combo3Second" as const,
@@ -119,7 +119,7 @@ const COMBO3_FIELDS = [
     label: "Giải Nhì",
     desc: "3 hoán vị, trùng bộ Nhì",
     badge: "2nd",
-    color: "bg-muted text-white",
+    color: "bg-slate-400 text-white",
   },
   {
     key: "combo3Third" as const,
@@ -127,7 +127,7 @@ const COMBO3_FIELDS = [
     label: "Giải Ba",
     desc: "3 hoán vị, trùng bộ Ba",
     badge: "3rd",
-    color: "bg-warning text-white",
+    color: "bg-amber-700 text-white",
   },
 ] as const;
 
@@ -138,7 +138,7 @@ const COMBO6_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "6 hoán vị, trùng bộ ĐB",
     badge: "ĐB",
-    color: "bg-loss text-white",
+    color: "bg-red-600 text-white",
   },
   {
     key: "combo6First" as const,
@@ -146,7 +146,7 @@ const COMBO6_FIELDS = [
     label: "Giải Nhất",
     desc: "6 hoán vị, trùng bộ Nhất",
     badge: "1st",
-    color: "bg-warning text-white",
+    color: "bg-amber-500 text-white",
   },
   {
     key: "combo6Second" as const,
@@ -154,7 +154,7 @@ const COMBO6_FIELDS = [
     label: "Giải Nhì",
     desc: "6 hoán vị, trùng bộ Nhì",
     badge: "2nd",
-    color: "bg-muted text-white",
+    color: "bg-slate-400 text-white",
   },
   {
     key: "combo6Third" as const,
@@ -162,7 +162,7 @@ const COMBO6_FIELDS = [
     label: "Giải Ba",
     desc: "6 hoán vị, trùng bộ Ba",
     badge: "3rd",
-    color: "bg-warning text-white",
+    color: "bg-amber-700 text-white",
   },
 ] as const;
 
@@ -173,7 +173,7 @@ const PLUS_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "2 bộ khớp đủ 2 bộ ĐB",
     badge: "ĐB",
-    color: "bg-loss text-white",
+    color: "bg-red-600 text-white",
   },
   {
     key: "plusFirst" as const,
@@ -181,7 +181,7 @@ const PLUS_FIELDS = [
     label: "Giải Nhất",
     desc: "2 bộ khớp 2 bộ Nhất riêng biệt",
     badge: "1st",
-    color: "bg-warning text-white",
+    color: "bg-amber-500 text-white",
   },
   {
     key: "plusSecond" as const,
@@ -189,7 +189,7 @@ const PLUS_FIELDS = [
     label: "Giải Nhì",
     desc: "2 bộ khớp 2 bộ Nhì riêng biệt",
     badge: "2nd",
-    color: "bg-muted text-white",
+    color: "bg-slate-400 text-white",
   },
   {
     key: "plusThird" as const,
@@ -197,7 +197,7 @@ const PLUS_FIELDS = [
     label: "Giải Ba",
     desc: "2 bộ khớp 2 bộ Ba riêng biệt",
     badge: "3rd",
-    color: "bg-warning text-white",
+    color: "bg-amber-700 text-white",
   },
   {
     key: "plusFourth" as const,
@@ -205,7 +205,7 @@ const PLUS_FIELDS = [
     label: "Giải Tư",
     desc: "2 bộ khớp 2 kết quả bất kỳ trong 20 bộ",
     badge: "4th",
-    color: "bg-muted text-white",
+    color: "bg-slate-500 text-white",
   },
   {
     key: "plusFifth" as const,
@@ -213,7 +213,7 @@ const PLUS_FIELDS = [
     label: "Giải Năm",
     desc: "mỗi bộ khớp 1 bộ ĐB (xét riêng từng bộ)",
     badge: "5th",
-    color: "bg-muted text-white",
+    color: "bg-slate-600 text-white",
   },
   {
     key: "plusSixth" as const,
@@ -221,7 +221,7 @@ const PLUS_FIELDS = [
     label: "Giải Sáu",
     desc: "mỗi bộ khớp 1 bộ Nhất/Nhì/Ba (xét riêng)",
     badge: "6th",
-    color: "bg-profit text-white",
+    color: "bg-emerald-600 text-white",
   },
 ] as const;
 
@@ -290,7 +290,9 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 
           </div>
           <div className="text-right">
             <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-            <div className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-profit" : "text-loss"}`}>
+            <div
+              className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
+            >
               {analysis.grossMarginPercent >= 0 ? (
                 <TrendingUp className="mr-1 inline size-3.5" />
               ) : (
@@ -428,10 +430,10 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
             <span
               className={`text-right text-xs font-semibold tabular-nums ${
                 profit && profit.payoutRatio > 1
-                  ? "text-loss"
+                  ? "text-red-600"
                   : profit && profit.payoutRatio > 0.5
-                    ? "text-warning"
-                    : "text-profit"
+                    ? "text-amber-600"
+                    : "text-emerald-600"
               }`}
             >
               {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -439,7 +441,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
-                  className={`cursor-help text-right text-xs tabular-nums ${isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground"}`}
+                  className={`cursor-help text-right text-xs tabular-nums ${isOverBreakEven ? "font-bold text-red-600" : "text-muted-foreground"}`}
                 >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
                 </span>

@@ -13,7 +13,7 @@ export function PowerNumberBall({ number, variant = "main", size = "md" }: Power
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none",
-        variant === "main" ? "bg-loss text-white" : "bg-info text-white",
+        variant === "main" ? "bg-red-500 text-white" : "bg-blue-600 text-white",
         size === "sm" && "size-7 text-xs",
         size === "md" && "size-9 text-sm",
         size === "lg" && "size-11 text-base",
@@ -36,9 +36,9 @@ export type PowerMatchBallVariant = "default" | "matched" | "bonus" | "result" |
 
 const POWER_MATCH_BALL_STYLE: Record<PowerMatchBallVariant, string> = {
   matched: "bg-primary text-primary-foreground ring-2 ring-primary/30",
-  bonus: "bg-warning text-white ring-2 ring-warning/40",
+  bonus: "bg-amber-500 text-white ring-2 ring-amber-300/40",
   result: "bg-muted/60 text-muted-foreground/60",
-  "result-bonus": "bg-warning/60 text-warning/60",
+  "result-bonus": "bg-amber-200/60 text-amber-700/60 dark:bg-amber-900/40 dark:text-amber-400/60",
   default: "bg-muted text-muted-foreground",
 };
 
@@ -59,7 +59,7 @@ export function PowerMatchBall({
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none",
-        size === "sm" ? "size-7 text-xs" : "size-8 text-xs",
+        size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
         POWER_MATCH_BALL_STYLE[variant],
       )}
     >

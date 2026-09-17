@@ -154,16 +154,16 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         icon={Send}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Tổng orders"
         value={formatNumber(data.total)}
         sub={data.firstCreatedAt ? `Từ ${displayVNDateTime(data.firstCreatedAt)}` : "—"}
       />
       <KpiCard
         icon={Clock}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Đang chờ"
         value={formatNumber(data.pending)}
         valueClass={data.pending > 0 ? "text-warning" : ""}
@@ -172,8 +172,8 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
       />
       <KpiCard
         icon={CheckCircle2}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Đã dispatched"
         value={formatNumber(data.dispatched)}
         valueClass={data.dispatched > 0 ? "text-profit" : ""}
@@ -184,8 +184,8 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
       {isComplete ? (
         <KpiCard
           icon={CheckCircle2}
-          iconBg="bg-profit"
-          iconColor="text-profit"
+          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+          iconColor="text-emerald-600 dark:text-emerald-400"
           label="Thời gian hoàn tất"
           value={durationLabel ?? "—"}
           valueClass="text-profit"
@@ -194,8 +194,8 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
       ) : hasStarted ? (
         <KpiCard
           icon={Loader2}
-          iconBg="bg-warning"
-          iconColor="text-warning"
+          iconBg="bg-amber-100 dark:bg-amber-900/50"
+          iconColor="text-amber-600 dark:text-amber-400"
           iconSpin
           label="Dispatch gần nhất"
           value={data.lastDispatchedAt ? displayVNDateTime(data.lastDispatchedAt) : "—"}

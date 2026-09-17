@@ -58,13 +58,13 @@ interface ResettleActionProps {
 function ScenarioBadge({ scenario }: { scenario: string }) {
   switch (scenario) {
     case "TYPE_A":
-      return <Badge className="bg-profit hover:bg-profit">TYPE_A — Tự động</Badge>;
+      return <Badge className="bg-emerald-600 hover:bg-emerald-600">TYPE_A — Tự động</Badge>;
     case "TYPE_B1":
-      return <Badge className="bg-warning hover:bg-warning">TYPE_B1 — Admin cập nhật Jackpot Cycle</Badge>;
+      return <Badge className="bg-amber-600 hover:bg-amber-600">TYPE_B1 — Admin cập nhật Jackpot Cycle</Badge>;
     case "TYPE_B2":
-      return <Badge className="bg-warning hover:bg-warning">TYPE_B2 — Cascade từng kỳ + Admin chốt cycle</Badge>;
+      return <Badge className="bg-orange-600 hover:bg-orange-600">TYPE_B2 — Cascade từng kỳ + Admin chốt cycle</Badge>;
     case "LEDGER_MISSING":
-      return <Badge className="bg-loss hover:bg-loss">LEDGER_MISSING — Bất thường, báo kỹ thuật</Badge>;
+      return <Badge className="bg-red-600 hover:bg-red-600">LEDGER_MISSING — Bất thường, báo kỹ thuật</Badge>;
     default:
       return <Badge variant="outline">{scenario}</Badge>;
   }
@@ -99,16 +99,20 @@ function ScenarioCard({ preflight }: { preflight: ResettlePreflightOutput }) {
   return (
     <div
       className={`space-y-3 rounded-lg border p-4 ${
-        isBlocked ? "border-loss bg-loss" : needsDba ? "border-warning bg-warning" : "border-profit bg-profit"
+        isBlocked
+          ? "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30"
+          : needsDba
+            ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30"
+            : "border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30"
       }`}
     >
       <div className="flex items-start gap-2">
         {isBlocked ? (
-          <XCircle className="text-loss mt-0.5 size-4 shrink-0" />
+          <XCircle className="mt-0.5 size-4 shrink-0 text-red-600 dark:text-red-400" />
         ) : needsDba ? (
-          <ShieldAlert className="text-warning mt-0.5 size-4 shrink-0" />
+          <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
         ) : (
-          <CheckCircle2 className="text-profit mt-0.5 size-4 shrink-0" />
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
         )}
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -124,12 +128,14 @@ function ScenarioCard({ preflight }: { preflight: ResettlePreflightOutput }) {
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="flex items-center gap-1.5">
           {jpWinnerAffected ? (
-            <AlertTriangle className="text-warning size-3 shrink-0" />
+            <AlertTriangle className="size-3 shrink-0 text-amber-500" />
           ) : (
-            <CheckCircle2 className="text-profit size-3 shrink-0" />
+            <CheckCircle2 className="size-3 shrink-0 text-emerald-500" />
           )}
           <span className="text-muted-foreground">Winner JP:</span>
-          <span className={`font-semibold ${jpWinnerAffected ? "text-warning" : "text-profit"}`}>{jpWinnerLabel}</span>
+          <span className={`font-semibold ${jpWinnerAffected ? "text-amber-600" : "text-emerald-600"}`}>
+            {jpWinnerLabel}
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <Info className="text-muted-foreground size-3 shrink-0" />
@@ -139,16 +145,16 @@ function ScenarioCard({ preflight }: { preflight: ResettlePreflightOutput }) {
       </div>
 
       {isPartial && (
-        <div className="border-loss bg-loss space-y-1.5 rounded-md border-2 p-3">
-          <p className="text-loss flex items-center gap-1.5 text-sm font-bold">
+        <div className="space-y-1.5 rounded-md border-2 border-red-400 bg-red-50 p-3 dark:border-red-700 dark:bg-red-950/40">
+          <p className="flex items-center gap-1.5 text-sm font-bold text-red-700 dark:text-red-300">
             <AlertTriangle className="size-4 shrink-0" /> BẮT BUỘC báo Quản trị hệ thống
           </p>
-          <p className="text-loss text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed text-red-700 dark:text-red-300">
             Kết quả mới làm <span className="font-semibold">thay đổi người trúng Jackpot</span> tại kỳ này (xuất hiện
             mới hoặc gỡ bỏ winner cũ). Hệ thống tự động hoàn tiền và kết sổ lại, nhưng{" "}
             <span className="font-semibold">KHÔNG</span> tự cập nhật Jackpot Cycle.
           </p>
-          <p className="text-loss text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed text-red-700 dark:text-red-300">
             Bạn <span className="font-semibold">PHẢI thông báo Quản trị hệ thống NGAY</span> để họ cập nhật thủ công
             Jackpot Cycle sau khi kết sổ lại hoàn tất. Nếu bỏ qua bước này, các kỳ tiếp theo sẽ tính sai jackpot.
           </p>
@@ -156,24 +162,24 @@ function ScenarioCard({ preflight }: { preflight: ResettlePreflightOutput }) {
       )}
 
       {isCascade && (
-        <div className="border-warning bg-warning space-y-1.5 rounded-md border-2 p-3">
-          <p className="text-warning flex items-center gap-1.5 text-sm font-bold">
+        <div className="space-y-1.5 rounded-md border-2 border-orange-400 bg-orange-50 p-3 dark:border-orange-700 dark:bg-orange-950/40">
+          <p className="flex items-center gap-1.5 text-sm font-bold text-orange-700 dark:text-orange-300">
             <AlertTriangle className="size-4 shrink-0" /> Cascade từng kỳ — BẮT BUỘC báo Quản trị hệ thống
           </p>
-          <p className="text-warning text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed text-orange-700 dark:text-orange-300">
             Sửa kết quả kỳ này ảnh hưởng tới <span className="font-semibold">{chainLength} kỳ đã kết sổ phía sau</span>{" "}
             (cùng cycle). Số quay các kỳ sau KHÔNG đổi — chỉ số tiền jackpot đổi. Hệ thống tự hoàn tiền + kết sổ lại{" "}
             <span className="font-semibold">TỪNG kỳ</span>, nhưng <span className="font-semibold">KHÔNG</span> tự cập
             nhật Jackpot Cycle.
           </p>
           {chainDrawIds && chainDrawIds.length > 0 && (
-            <p className="text-warning text-xs leading-relaxed">
+            <p className="text-xs leading-relaxed text-orange-700 dark:text-orange-300">
               Thứ tự cascade (resettle lần lượt):{" "}
               <span className="font-mono font-semibold">{chainDrawIds.join(" → ")}</span>. Sau mỗi kỳ, Quản trị hệ thống
               chốt cycle rồi mới sang kỳ kế tiếp.
             </p>
           )}
-          <p className="text-warning text-xs leading-relaxed">
+          <p className="text-xs leading-relaxed text-orange-700 dark:text-orange-300">
             Bạn <span className="font-semibold">PHẢI phối hợp Quản trị hệ thống</span> chốt Jackpot Cycle sau mỗi kỳ.
             Resettle kỳ sau khi kỳ trước chưa xong sẽ bị chặn.
           </p>
@@ -181,7 +187,7 @@ function ScenarioCard({ preflight }: { preflight: ResettlePreflightOutput }) {
       )}
 
       {isBlocked && (
-        <div className="text-loss space-y-1 text-xs">
+        <div className="space-y-1 text-xs text-red-700 dark:text-red-300">
           <p className="flex items-center gap-1 font-semibold">
             <XCircle className="size-3" /> Bất thường — không tự xử lý:
           </p>
@@ -280,7 +286,7 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <RefreshCw className="text-warning size-4" />
+            <RefreshCw className="size-4 text-orange-500" />
             Kết sổ lại — {draw.drawId}
           </DialogTitle>
           <DialogDescription>
@@ -295,9 +301,9 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
             {hasResult ? (
               <>
                 {/* Note nhắc staff rà soát kết quả mới lần cuối */}
-                <div className="border-warning bg-warning flex items-start gap-2 rounded-md border p-3">
-                  <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
-                  <p className="text-warning text-xs leading-relaxed">
+                <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
                     Đây là kết quả <span className="font-semibold">đã sửa</span> của kỳ này. Vui lòng kiểm tra lại lần
                     cuối trước khi phân tích tác động. Nếu sai, đóng dialog và bấm{" "}
                     <span className="font-semibold">"Sửa kết quả"</span> để cập nhật lại.
@@ -312,23 +318,23 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                       {mainNumbers.map((n, i) => (
                         <span
                           key={i}
-                          className="bg-game-max3d text-game-max3d inline-flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold"
+                          className="inline-flex size-7 items-center justify-center rounded-full bg-violet-100 font-mono text-xs font-bold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
                         >
                           {n}
                         </span>
                       ))}
                     </div>
                     <span className="text-muted-foreground text-xs">+</span>
-                    <span className="bg-warning text-warning inline-flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold">
+                    <span className="inline-flex size-7 items-center justify-center rounded-full bg-orange-100 font-mono text-xs font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
                       {bonusNumber}
                     </span>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="border-loss bg-loss flex items-start gap-2 rounded-md border p-3">
-                <XCircle className="text-loss mt-0.5 size-4 shrink-0" />
-                <p className="text-loss text-xs leading-relaxed">
+              <div className="flex items-start gap-2 rounded-md border border-red-300 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
+                <XCircle className="mt-0.5 size-4 shrink-0 text-red-600 dark:text-red-400" />
+                <p className="text-xs leading-relaxed text-red-700 dark:text-red-300">
                   Chưa có kết quả để kết sổ lại. Hãy bấm <span className="font-semibold">"Sửa kết quả"</span> để công bố
                   kết quả trước.
                 </p>
@@ -347,14 +353,14 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                   {mainNumbers.map((n, i) => (
                     <span
                       key={i}
-                      className="bg-game-max3d text-game-max3d inline-flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold"
+                      className="inline-flex size-7 items-center justify-center rounded-full bg-violet-100 font-mono text-xs font-bold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
                     >
                       {n}
                     </span>
                   ))}
                 </div>
                 <span className="text-muted-foreground text-xs">+</span>
-                <span className="bg-warning text-warning inline-flex size-7 items-center justify-center rounded-full font-mono text-xs font-bold">
+                <span className="inline-flex size-7 items-center justify-center rounded-full bg-orange-100 font-mono text-xs font-bold text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
                   {bonusNumber}
                 </span>
               </div>
@@ -393,10 +399,10 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                   size="sm"
                   className={
                     preflightResult?.scenario === "TYPE_B1"
-                      ? "bg-loss hover:bg-loss text-white"
+                      ? "bg-red-600 text-white hover:bg-red-700"
                       : preflightResult?.scenario === "TYPE_B2"
-                        ? "bg-warning hover:bg-warning text-white"
-                        : "bg-warning hover:bg-warning text-white"
+                        ? "bg-orange-600 text-white hover:bg-orange-700"
+                        : "bg-orange-600 text-white hover:bg-orange-700"
                   }
                   onClick={handleConfirm}
                   disabled={isTriggering}

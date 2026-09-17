@@ -64,8 +64,8 @@ function LastUpdatedBadge({ drawId }: { drawId: string | undefined }) {
   return (
     <span className="text-muted-foreground/70 flex items-center gap-1 text-xs tabular-nums">
       <span className="relative flex size-1.5">
-        <span className="bg-loss absolute inline-flex size-full animate-ping rounded-full opacity-60" />
-        <span className="bg-loss relative inline-flex size-1.5 rounded-full" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-400 opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-red-500" />
       </span>
       Live · <span ref={spanRef} />
     </span>
@@ -109,7 +109,7 @@ function OperationsContent() {
       {/* Page Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="from-loss to-warning flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
@@ -144,11 +144,11 @@ function OperationsContent() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="gap-6">
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="monitor" className="gap-1.5">
-            <Activity className="text-profit size-4" />
+            <Activity className="size-4 text-emerald-500" />
             Giám sát
           </TabsTrigger>
           <TabsTrigger value="analysis" className="gap-1.5">
-            <BarChart3 className="text-info size-4" />
+            <BarChart3 className="size-4 text-sky-500" />
             Phân tích cược
           </TabsTrigger>
         </TabsList>
@@ -188,7 +188,7 @@ function DrawNotFound({
     <div className="@container/main flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="from-loss to-warning flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
             <Radio className="size-4.5 text-white" />
           </div>
           <div>

@@ -191,7 +191,7 @@ function statusLabel(col: DayFlowColumn): string {
  */
 const HEALTH_CARD_CLASS: Record<string, string> = {
   [StageHealth.Ok]: "",
-  [StageHealth.Warn]: "border-warning/50 bg-warning/5",
+  [StageHealth.Warn]: "border-amber-500/50 bg-amber-500/5",
   [StageHealth.Stuck]: "border-destructive/50 bg-destructive/5",
 };
 
@@ -251,11 +251,11 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
         // Đang bán THẬT (gate=Open) — viền trái xanh ngọc, tín hiệu "đang sống" độc lập với
         // zone (round 4 v2 điểm 2: trước đây chỉ có opacity phân biệt past/future, không đủ rõ
         // "kỳ nào đang bán thật" khi nhìn lướt).
-        isSelling && !isBoundary && "border-l-2 border-l-profit/70",
+        isSelling && !isBoundary && "border-l-2 border-l-emerald-500/70",
         // Chờ đóng bán (hết giờ cược, OpsStage.PendingClose) — viền trái cam, KHÁC màu cam của
         // `StageHealth.Warn` về Ý NGHĨA (trạng thái bình thường "đang chờ xử lý", không phải
         // cảnh báo sức khoẻ) nhưng dùng cùng hue cam vì cùng "cần chú ý sớm".
-        isPendingClose && !isBoundary && "bg-warning/5 border-l-2 border-l-warning/70",
+        isPendingClose && !isBoundary && "border-l-2 border-l-orange-500/70 bg-orange-500/5",
         // Vạch phân chia quá khứ/hiện tại — viền trái đậm màu, ranh giới "NGAY BÂY GIỜ" bổ sung
         // cho ring (Tailwind không có utility border-style riêng theo từng cạnh nên dùng màu
         // đậm thay dashed để tránh ảnh hưởng 3 cạnh còn lại).
@@ -276,22 +276,22 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
             // với chấm xanh dương của kỳ hiện tại (`isBoundary`) để không nhầm "kỳ hiện tại" và
             // "kỳ đang bán" là 1 (thực tế nhiều kỳ Đang bán cùng lúc, chỉ 1 kỳ là "hiện tại").
             <span className="relative flex size-3 shrink-0 items-center justify-center">
-              <span className="bg-profit absolute size-1.5 animate-pulse rounded-full" />
+              <span className="absolute size-1.5 animate-pulse rounded-full bg-emerald-500" />
             </span>
           ) : isPendingClose ? (
-            <Clock className="text-warning size-3 shrink-0" />
+            <Clock className="size-3 shrink-0 text-orange-600" />
           ) : null}
           <DrawIdLabel drawId={col.drawId} className="text-xs" />
         </span>
-        <span className="text-muted-foreground shrink-0 text-xs">
+        <span className="text-muted-foreground shrink-0 text-[10px]">
           {new Date(col.drawTimeMs).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>
       <span
         className={cn(
-          "truncate text-xs",
-          isSelling ? "text-profit font-medium" : "text-muted-foreground",
-          isPendingClose && "text-warning font-medium",
+          "truncate text-[10px]",
+          isSelling ? "font-medium text-emerald-700 dark:text-emerald-400" : "text-muted-foreground",
+          isPendingClose && "font-medium text-orange-700 dark:text-orange-400",
         )}
       >
         {statusLabel(col)}
@@ -300,13 +300,13 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
         <div
           className={cn(
             "h-full rounded",
-            col.health === StageHealth.Stuck ? "bg-destructive" : isSelling ? "bg-profit/70" : "bg-primary/60",
+            col.health === StageHealth.Stuck ? "bg-destructive" : isSelling ? "bg-emerald-500/70" : "bg-primary/60",
           )}
           style={{ width: `${Math.max(4, barPct)}%` }}
         />
       </div>
       {/* Dòng tiền + vé (câu 3 user 07/09) — `col.entries` đã có sẵn trong `DayFlowColumn`. */}
-      <div className="flex items-center justify-between gap-1 text-xs tabular-nums">
+      <div className="flex items-center justify-between gap-1 text-[10px] tabular-nums">
         <span className="font-medium">{formatNumber(col.revenue)}</span>
         <span className="text-muted-foreground">{formatNumber(col.entries)} vé</span>
       </div>
@@ -491,7 +491,7 @@ export function HubTimelineRail() {
             >
               <Minus className="size-3" />
             </button>
-            <span className="text-muted-foreground w-11 text-center text-xs tabular-nums">{span} kỳ</span>
+            <span className="text-muted-foreground w-11 text-center text-[10px] tabular-nums">{span} kỳ</span>
             <button
               type="button"
               onClick={() => adjustSpan(2)}

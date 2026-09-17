@@ -6,31 +6,31 @@ import { cn } from "@/lib/utils";
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   draft: {
     label: "Nháp",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
   paid: {
     label: "Đã thanh toán",
-    className: "bg-profit text-profit",
+    className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
   },
   partial: {
     label: "Chưa xong",
-    className: "bg-warning text-warning",
+    className: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
   },
   refunded: {
     label: "Hoàn tiền",
-    className: "bg-warning text-warning",
+    className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
   },
   void: {
     label: "Vô hiệu",
-    className: "bg-loss text-loss",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
   completed: {
     label: "Hoàn tất",
-    className: "bg-profit text-profit",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
   },
   cancelled: {
     label: "Đã huỷ",
-    className: "bg-loss text-loss",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
 };
 

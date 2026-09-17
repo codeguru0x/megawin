@@ -114,7 +114,7 @@ export function HubBulkActionBar() {
       label: "Đóng bán",
       icon: Lock,
       drawIds: partition.closable,
-      className: "bg-warning text-white hover:bg-warning",
+      className: "bg-amber-600 text-white hover:bg-amber-700",
     },
     {
       kind: BulkActionKind.OpenSales,

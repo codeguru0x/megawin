@@ -41,29 +41,33 @@ const TIER_CONFIG: Partial<
   >
 > = {
   [PrizeTier.Jackpot]: {
-    badge: "border-warning bg-warning text-warning",
-    row: "bg-warning/60 border-l-2 border-l-warning",
+    badge: "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
+    row: "bg-amber-50/60 dark:bg-amber-950/10 border-l-2 border-l-amber-400",
     icon: Gem,
   },
   [PrizeTier.Tier1]: {
-    badge: "border-warning bg-warning text-warning",
-    row: "bg-warning/40",
+    badge:
+      "border-yellow-300 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-700",
+    row: "bg-yellow-50/40 dark:bg-yellow-950/5",
     icon: Trophy,
   },
   [PrizeTier.Tier2]: {
-    badge: "border-warning bg-warning text-warning",
-    row: "bg-warning/30",
+    badge:
+      "border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-700",
+    row: "bg-orange-50/30 dark:bg-orange-950/5",
   },
   [PrizeTier.Tier3]: {
-    badge: "border-info bg-info text-info",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
   [PrizeTier.Tier4]: {
-    badge: "border-info bg-info text-info",
+    badge:
+      "border-indigo-300 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-700",
     row: "",
   },
   [PrizeTier.Tier5]: {
-    badge: "border-game-max3d bg-game-max3d text-game-max3d",
+    badge:
+      "border-violet-300 bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-700",
     row: "",
   },
   [PrizeTier.Consolation]: {
@@ -76,35 +80,39 @@ const TIER_CONFIG: Partial<
 
 function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number; totalPrize: number }) {
   return (
-    <div className="border-warning/60 relative overflow-hidden rounded-xl border-2">
+    <div className="relative overflow-hidden rounded-xl border-2 border-amber-400/60 dark:border-amber-500/50">
       {/* Animated gradient background */}
-      <div className="from-warning via-warning to-warning absolute inset-0 bg-linear-to-br" />
+      <div className="absolute inset-0 bg-linear-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/40 dark:via-yellow-950/30 dark:to-orange-950/40" />
 
       {/* Shimmer sweep */}
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite] bg-linear-to-r from-transparent via-white/40 to-transparent dark:via-white/10" />
 
       {/* Corner sparkles */}
-      <Sparkles className="text-warning/60 absolute top-3 right-3 size-4 animate-pulse" />
-      <Sparkles className="text-warning/50 absolute bottom-3 left-3 size-3 animate-pulse [animation-delay:0.8s]" />
+      <Sparkles className="absolute top-3 right-3 size-4 animate-pulse text-amber-400/60 dark:text-amber-500/60" />
+      <Sparkles className="absolute bottom-3 left-3 size-3 animate-pulse text-amber-300/50 [animation-delay:0.8s] dark:text-amber-600/50" />
 
       <div className="relative flex items-center gap-4 px-5 py-4">
         {/* Icon */}
-        <div className="bg-warning/20 ring-warning/40 flex size-12 shrink-0 items-center justify-center rounded-full ring-2">
-          <Gem className="text-warning size-6 drop-shadow-sm" />
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-amber-400/20 ring-2 ring-amber-400/40 dark:bg-amber-500/20 dark:ring-amber-500/30">
+          <Gem className="size-6 text-amber-500 drop-shadow-sm dark:text-amber-400" />
         </div>
 
         {/* Text */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-warning text-sm font-bold tracking-tight">🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!</p>
-            <Badge className="border-warning/50 bg-warning/20 text-warning h-4.5 gap-1 border px-2 text-xs">
+            <p className="text-sm font-bold tracking-tight text-amber-800 dark:text-amber-300">
+              🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!
+            </p>
+            <Badge className="h-4.5 gap-1 border border-amber-400/50 bg-amber-500/20 px-2 text-xs text-amber-700 dark:text-amber-300">
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
           </div>
-          <p className="text-warning/80 mt-0.5 text-xs">
+          <p className="mt-0.5 text-xs text-amber-700/80 dark:text-amber-400/80">
             Tổng giải Jackpot đã trao:{" "}
-            <span className="text-warning text-sm font-bold tabular-nums">{formatNumber(totalPrize)}</span>
+            <span className="text-sm font-bold text-amber-700 tabular-nums dark:text-amber-300">
+              {formatNumber(totalPrize)}
+            </span>
           </p>
         </div>
       </div>
@@ -116,19 +124,28 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
 
 function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
   return (
-    <div className="border-warning/70 relative overflow-hidden border-b">
-      <div className="from-warning/80 via-warning/60 to-warning/30 absolute inset-0 bg-linear-to-r dark:to-transparent" />
+    <div className="relative overflow-hidden border-b border-amber-200/70 dark:border-amber-800/50">
+      <div className="absolute inset-0 bg-linear-to-r from-amber-50/80 via-yellow-50/60 to-amber-50/30 dark:from-amber-950/30 dark:via-yellow-950/20 dark:to-transparent" />
       <div className="relative grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-3">
         <div className="flex items-center gap-2">
-          <Gem className="text-warning size-3.5 shrink-0 animate-pulse" />
-          <Badge variant="outline" className="border-warning bg-warning text-warning h-5 gap-1 px-2 py-0 text-xs">
-            <Star className="fill-warning text-warning size-2.5" />
+          <Gem className="size-3.5 shrink-0 animate-pulse text-amber-500" />
+          <Badge
+            variant="outline"
+            className="h-5 gap-1 border-amber-300 bg-amber-50 px-2 py-0 text-xs text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+          >
+            <Star className="size-2.5 fill-amber-500 text-amber-500" />
             {t.label}
           </Badge>
         </div>
-        <span className="text-warning text-right text-sm font-bold tabular-nums">{formatNumber(t.winnerCount)}</span>
-        <span className="text-warning/70 text-right text-sm tabular-nums">{formatNumber(t.prizeAmount)}</span>
-        <span className="text-warning text-right text-sm font-bold tabular-nums">{formatNumber(t.totalPrize)}</span>
+        <span className="text-right text-sm font-bold text-amber-600 tabular-nums dark:text-amber-400">
+          {formatNumber(t.winnerCount)}
+        </span>
+        <span className="text-right text-sm text-amber-600/70 tabular-nums dark:text-amber-400/70">
+          {formatNumber(t.prizeAmount)}
+        </span>
+        <span className="text-right text-sm font-bold text-amber-600 tabular-nums dark:text-amber-400">
+          {formatNumber(t.totalPrize)}
+        </span>
       </div>
     </div>
   );
@@ -146,19 +163,19 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
 
   return (
     <>
-      <Card className={cn("shadow-sm", hasJackpotWinner && "ring-warning/40 ring-1")}>
+      <Card className={cn("shadow-sm", hasJackpotWinner && "ring-1 ring-amber-400/40 dark:ring-amber-500/30")}>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div
               className={cn(
                 "flex size-7 shrink-0 items-center justify-center rounded-lg",
-                hasJackpotWinner ? "bg-warning" : "bg-warning",
+                hasJackpotWinner ? "bg-amber-200 dark:bg-amber-800/60" : "bg-amber-100 dark:bg-amber-900/50",
               )}
             >
               {hasJackpotWinner ? (
-                <Gem className="text-warning size-3.5" />
+                <Gem className="size-3.5 text-amber-600 dark:text-amber-400" />
               ) : (
-                <Trophy className="text-warning size-3.5" />
+                <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
               )}
             </div>
             <div>
@@ -181,7 +198,9 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           <div
             className={cn(
               "flex w-full flex-col items-center gap-3 rounded-xl border px-4 py-4",
-              hasJackpotWinner ? "border-warning/60 bg-warning/40" : "bg-muted/20",
+              hasJackpotWinner
+                ? "border-amber-200/60 bg-amber-50/40 dark:border-amber-800/40 dark:bg-amber-950/10"
+                : "bg-muted/20",
             )}
           >
             <div className="flex w-full items-center justify-between">
@@ -191,7 +210,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -248,8 +267,8 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                       <IconComp
                         className={cn(
                           "size-3.5 shrink-0",
-                          t.tier === PrizeTier.Jackpot && "text-warning",
-                          t.tier === PrizeTier.Tier1 && "text-warning",
+                          t.tier === PrizeTier.Jackpot && "text-amber-500",
+                          t.tier === PrizeTier.Tier1 && "text-yellow-500",
                         )}
                       />
                     ) : (
@@ -263,7 +282,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                   <span
                     className={cn(
                       "text-right text-sm font-semibold tabular-nums",
-                      hasWinner ? "text-profit" : "text-muted-foreground/40",
+                      hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(t.winnerCount)}
@@ -387,8 +406,8 @@ export function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Coins className="text-info size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -433,8 +452,8 @@ export function FinancialSummary({
   const rows: LedgerRow[] = [
     {
       icon: TrendingUp,
-      iconBg: "bg-profit",
-      iconColor: "text-profit",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
       label: "Doanh thu gộp",
       value: f.totalRevenue,
       // Dòng input gốc → trung tính, chỉ khoản trừ & kết quả mới có màu ngữ nghĩa
@@ -444,8 +463,8 @@ export function FinancialSummary({
     },
     {
       icon: Users,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
+      iconBg: "bg-slate-100 dark:bg-slate-800",
+      iconColor: "text-slate-500 dark:text-slate-400",
       label: "Hoa hồng đại lý",
       value: f.totalAgentCommission,
       // Khoản chi bình thường → muted (không dùng destructive để tránh "báo động giả")
@@ -455,8 +474,8 @@ export function FinancialSummary({
     },
     {
       icon: Trophy,
-      iconBg: "bg-warning",
-      iconColor: "text-warning",
+      iconBg: "bg-amber-100 dark:bg-amber-900/50",
+      iconColor: "text-amber-600 dark:text-amber-400",
       label: "Chi trả giải cố định",
       value: f.totalFixedPrizes,
       sign: "-",
@@ -466,8 +485,8 @@ export function FinancialSummary({
     },
     {
       icon: ArrowDownRight,
-      iconBg: "bg-info",
-      iconColor: "text-info",
+      iconBg: "bg-blue-100 dark:bg-blue-900/50",
+      iconColor: "text-blue-600 dark:text-blue-400",
       label: "Số dư sau giải & hoa hồng",
       value: netAfterPrizes,
       sign: "=",
@@ -478,8 +497,8 @@ export function FinancialSummary({
     },
     {
       icon: TrendingDown,
-      iconBg: "bg-profit",
-      iconColor: "text-profit",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
       label: "Trích quỹ Jackpot",
       value: f.jackpotContribution,
       // Tiền ĐI RA khỏi P&L công ty vào quỹ (liability) → dấu −, muted
@@ -490,12 +509,12 @@ export function FinancialSummary({
     },
     {
       icon: Coins,
-      iconBg: companyResult >= 0 ? "bg-profit" : "bg-loss",
-      iconColor: companyResult >= 0 ? "text-profit" : "text-loss",
+      iconBg: companyResult >= 0 ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+      iconColor: companyResult >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
       label: "Kết quả công ty (P&L kỳ)",
       value: companyResult,
       sign: "=",
-      valueColor: companyResult >= 0 ? "text-profit" : "text-destructive",
+      valueColor: companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
       bold: true,
       separator: true,
       hint: resultHint,
@@ -506,8 +525,8 @@ export function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Coins className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -528,12 +547,12 @@ export function FinancialSummary({
         <div className="border-border/60 bg-muted/20 mt-2 overflow-hidden rounded-xl border">
           {/* Header */}
           <div className="border-border/40 bg-muted/30 flex items-center gap-2 border-b px-3 py-2">
-            <Gem className="text-warning size-3.5 shrink-0" />
+            <Gem className="size-3.5 shrink-0 text-amber-500" />
             <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               Biến động Jackpot
             </span>
             {f.hasJackpotWinner && (
-              <Badge className="border-warning/40 bg-warning/15 text-warning ml-auto h-4 gap-1 border px-1.5 text-xs">
+              <Badge className="ml-auto h-4 gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-[10px] text-amber-700 dark:text-amber-300">
                 <Star className="size-2 fill-current" />
                 Đã trao
               </Badge>
@@ -542,7 +561,7 @@ export function FinancialSummary({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button type="button" className="ml-auto flex items-center" aria-label="Giải thích kỳ chia giải">
-                    <Badge className="border-game-max3d/40 bg-game-max3d/15 text-game-max3d h-4 cursor-help gap-1 border px-1.5 text-xs">
+                    <Badge className="h-4 cursor-help gap-1 border border-violet-400/40 bg-violet-500/15 px-1.5 text-[10px] text-violet-700 dark:text-violet-300">
                       <Info className="size-2.5" />
                       Kỳ chia giải
                     </Badge>
@@ -565,8 +584,8 @@ export function FinancialSummary({
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-profit pl-8 text-sm">+ Đóng góp</span>
-              <span className="text-profit shrink-0 font-mono text-sm font-semibold tabular-nums">
+              <span className="pl-8 text-sm text-emerald-700 dark:text-emerald-400">+ Đóng góp</span>
+              <span className="shrink-0 font-mono text-sm font-semibold text-emerald-700 tabular-nums dark:text-emerald-400">
                 +{formatNumber(f.jackpotContribution)}
               </span>
             </div>
@@ -574,10 +593,10 @@ export function FinancialSummary({
             {f.hasJackpotWinner ? (
               <>
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-warning flex items-center gap-1 pl-8 text-sm">
+                  <span className="flex items-center gap-1 pl-8 text-sm text-amber-600 dark:text-amber-400">
                     <Gem className="size-3" />− Trao độc đắc
                   </span>
-                  <span className="text-warning shrink-0 font-mono text-sm font-semibold tabular-nums">
+                  <span className="shrink-0 font-mono text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                     −{formatNumber(f.jackpotPrizeAwarded)}
                   </span>
                 </div>
@@ -596,10 +615,12 @@ export function FinancialSummary({
                       </TooltipContent>
                     </Tooltip>
                   </span>
-                  <span className="text-warning shrink-0 font-mono text-sm font-bold tabular-nums">0</span>
+                  <span className="shrink-0 font-mono text-sm font-bold text-amber-600 tabular-nums dark:text-amber-400">
+                    0
+                  </span>
                 </div>
                 <div className="bg-muted/10 px-3 py-1.5">
-                  <p className="text-muted-foreground/70 pl-8 text-xs">
+                  <p className="text-muted-foreground/70 pl-8 text-[11px]">
                     Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                   </p>
                 </div>
@@ -607,10 +628,10 @@ export function FinancialSummary({
             ) : f.isSplitCycle ? (
               <>
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-game-max3d flex items-center gap-1 pl-8 text-sm">
+                  <span className="flex items-center gap-1 pl-8 text-sm text-violet-600 dark:text-violet-400">
                     <Split className="size-3" />− Chia cho hạng 1–5
                   </span>
-                  <span className="text-game-max3d shrink-0 font-mono text-sm font-semibold tabular-nums">
+                  <span className="shrink-0 font-mono text-sm font-semibold text-violet-600 tabular-nums dark:text-violet-400">
                     −{formatNumber(f.jackpotPrizeAwarded)}
                   </span>
                 </div>
@@ -629,10 +650,12 @@ export function FinancialSummary({
                       </TooltipContent>
                     </Tooltip>
                   </span>
-                  <span className="text-game-max3d shrink-0 font-mono text-sm font-bold tabular-nums">0</span>
+                  <span className="shrink-0 font-mono text-sm font-bold text-violet-600 tabular-nums dark:text-violet-400">
+                    0
+                  </span>
                 </div>
                 <div className="bg-muted/10 px-3 py-1.5">
-                  <p className="text-muted-foreground/70 pl-8 text-xs">
+                  <p className="text-muted-foreground/70 pl-8 text-[11px]">
                     Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                   </p>
                 </div>
@@ -640,7 +663,7 @@ export function FinancialSummary({
             ) : (
               <div className="bg-muted/20 flex items-center justify-between gap-3 px-3 py-2">
                 <span className="text-foreground pl-8 text-sm font-bold">Sau kỳ</span>
-                <span className="text-warning shrink-0 font-mono text-sm font-bold tabular-nums">
+                <span className="shrink-0 font-mono text-sm font-bold text-amber-600 tabular-nums dark:text-amber-400">
                   {formatNumber(f.jackpotAfter)}
                 </span>
               </div>

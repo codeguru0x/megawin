@@ -35,16 +35,16 @@ const PICK_MATCH_COUNTS: Record<number, number[]> = {
 const fmt = formatNumber;
 
 const PICK_BADGE_COLORS: Record<number, string> = {
-  10: "bg-loss",
-  9: "bg-warning",
-  8: "bg-warning",
-  7: "bg-warning",
-  6: "bg-warning",
-  5: "bg-game-bingo18",
-  4: "bg-profit",
-  3: "bg-game-mega645",
-  2: "bg-info",
-  1: "bg-muted",
+  10: "bg-red-500",
+  9: "bg-orange-500",
+  8: "bg-amber-600",
+  7: "bg-amber-500",
+  6: "bg-yellow-500",
+  5: "bg-lime-500",
+  4: "bg-emerald-500",
+  3: "bg-teal-500",
+  2: "bg-cyan-500",
+  1: "bg-slate-500",
 };
 
 function isCapped(pick: number, match: number): boolean {
@@ -93,10 +93,10 @@ function PickPrizeGroup({
 
   const marginColor =
     profitAnalysis.grossMarginPercent >= 50
-      ? "text-profit"
+      ? "text-emerald-600"
       : profitAnalysis.grossMarginPercent >= 0
-        ? "text-warning"
-        : "text-loss";
+        ? "text-amber-600"
+        : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -114,7 +114,7 @@ function PickPrizeGroup({
               Chọn {pick} số &middot; {matchCounts.length} mức thưởng
             </span>
             {matchCounts.some((m) => isCapped(pick, m)) && (
-              <Badge variant="outline" className="border-loss text-loss text-xs">
+              <Badge variant="outline" className="border-red-300 text-xs text-red-600 dark:text-red-400">
                 Có giới hạn
               </Badge>
             )}
@@ -163,7 +163,7 @@ function PickPrizeGroup({
                 key={match}
                 className={cn(
                   "grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 rounded-md px-2 py-1.5",
-                  capped && "bg-loss",
+                  capped && "bg-red-50 dark:bg-red-950/20",
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -204,10 +204,10 @@ function PickPrizeGroup({
                   className={cn(
                     "text-right text-xs font-semibold tabular-nums",
                     profit && profit.payoutRatio > 1
-                      ? "text-loss"
+                      ? "text-red-600"
                       : profit && profit.payoutRatio > 0.5
-                        ? "text-warning"
-                        : "text-profit",
+                        ? "text-amber-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -215,7 +215,7 @@ function PickPrizeGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "font-bold text-red-600" : "text-muted-foreground",
                   )}
                 >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
@@ -306,7 +306,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               <div
                 className={cn(
                   "font-bold tabular-nums",
-                  avgMargin >= 50 ? "text-profit" : avgMargin >= 0 ? "text-warning" : "text-loss",
+                  avgMargin >= 50 ? "text-emerald-600" : avgMargin >= 0 ? "text-amber-600" : "text-red-600",
                 )}
               >
                 {avgMargin >= 0 ? (

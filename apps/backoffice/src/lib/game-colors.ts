@@ -44,7 +44,7 @@ export interface GameColorTokens {
    *
    * Dùng với: `className={\`bg-linear-to-br \${c.iconGradient}\`}`
    * Đồng nhất trên tất cả pages của cùng 1 game.
-   * Ví dụ: `"from-game-mega645 to-game-mega645-muted"`
+   * Ví dụ: `"from-teal-500 to-teal-600"`
    */
   iconGradient: string;
 }
@@ -60,31 +60,31 @@ export interface GameColorTokens {
  * - Mega645:  teal      (#0d9488) — teal-600
  * - Power655: red       (#dc2626) — red-600 (đậm hơn red-500 để tách khỏi pink)
  * - Lotto535: amber     (#d97706) — amber-600
- * - Keno:     sky/cyan  (#0284c7) — sky-700 (tách xa khỏi amber/orange của Lotto535)
+ * - Keno:     chart sky-700 (#0284c7); page icon orange-500→600 (khớp header Kỳ quay)
  * - Max3D:    violet    (#7c3aed) — violet-600
  * - Max3DPro: fuchsia   (#c026d3) — fuchsia-600 (tách rõ khỏi red Power655)
  * - Bingo18:  lime      (#65a30d) — lime-600 (tách rõ khỏi teal Mega645)
  */
 export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
   // ── Mega 6/45 — Teal ─────────────────────────────────────────────────────
-  // Jackpot page: from-game-mega645 to-profit, overview: teal-400→emerald-500
+  // Jackpot page: from-teal-400 to-emerald-500, overview: teal-400→emerald-500
   [GameProduct.Mega645]: {
     hex: "#0d9488",
     twBg: "bg-game-mega645",
     twText: "text-game-mega645",
     twBorder: "border-game-mega645",
     twBgMuted: "bg-game-mega645-muted",
-    gradientFrom: "from-game-mega645/90",
-    gradientVia: "via-info/70",
-    gradientTo: "to-profit/50",
-    gradientFromDark: "from-game-mega645/50",
-    gradientViaDark: "via-info/40",
-    gradientToDark: "to-profit/30",
-    iconGradient: "from-game-mega645 to-game-mega645-muted",
+    gradientFrom: "from-teal-50/90",
+    gradientVia: "via-cyan-50/70",
+    gradientTo: "to-emerald-50/50",
+    gradientFromDark: "dark:from-teal-950/50",
+    gradientViaDark: "dark:via-cyan-950/40",
+    gradientToDark: "dark:to-emerald-950/30",
+    iconGradient: "from-teal-500 to-teal-600",
   },
 
   // ── Power 6/55 — Red/Orange ───────────────────────────────────────────────
-  // Jackpot page: from-loss to-warning, overview: red-500→orange-500
+  // Jackpot page: from-red-500 to-orange-500, overview: red-500→orange-500
   // Hex: red-600 (#dc2626) đậm hơn red-500 để tách rõ khỏi pink Max3DPro trên bar
   [GameProduct.Power655]: {
     hex: "#dc2626",
@@ -92,48 +92,49 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     twText: "text-game-power655",
     twBorder: "border-game-power655",
     twBgMuted: "bg-game-power655-muted",
-    gradientFrom: "from-loss/90",
-    gradientVia: "via-warning/70",
-    gradientTo: "to-warning/50",
-    gradientFromDark: "from-loss/50",
-    gradientViaDark: "via-warning/40",
-    gradientToDark: "to-warning/30",
-    iconGradient: "from-loss to-warning",
+    gradientFrom: "from-red-50/90",
+    gradientVia: "via-orange-50/70",
+    gradientTo: "to-amber-50/50",
+    gradientFromDark: "dark:from-red-950/50",
+    gradientViaDark: "dark:via-orange-950/40",
+    gradientToDark: "dark:to-amber-950/30",
+    iconGradient: "from-red-500 to-orange-500",
   },
 
   // ── Lotto 5/35 — Amber/Orange ────────────────────────────────────────────
-  // Jackpot page: from-warning to-loss, overview: amber-400→orange-500
+  // Jackpot page: from-amber-400 to-orange-500, overview: amber-400→orange-500
   [GameProduct.Lotto535]: {
     hex: "#d97706",
     twBg: "bg-game-lotto535",
     twText: "text-game-lotto535",
     twBorder: "border-game-lotto535",
     twBgMuted: "bg-game-lotto535-muted",
-    gradientFrom: "from-warning/90",
-    gradientVia: "via-warning/70",
-    gradientTo: "to-warning/50",
-    gradientFromDark: "from-warning/50",
-    gradientViaDark: "via-warning/40",
-    gradientToDark: "to-warning/30",
-    iconGradient: "from-warning to-loss",
+    gradientFrom: "from-amber-50/90",
+    gradientVia: "via-yellow-50/70",
+    gradientTo: "to-orange-50/50",
+    gradientFromDark: "dark:from-amber-950/50",
+    gradientViaDark: "dark:via-yellow-950/40",
+    gradientToDark: "dark:to-orange-950/30",
+    iconGradient: "from-amber-400 to-orange-500",
   },
 
-  // ── Keno — Sky/Cyan ─────────────────────────────────────────────────────
-  // Chuyển từ orange → sky-700 (#0284c7) để tách xa khỏi amber của Lotto535.
-  // Trên stacked bar, orange Keno và amber Lotto535 gần như không phân biệt được.
+  // ── Keno — Sky/Cyan (chart) + Orange (page icon) ─────────────────────────
+  // `hex` giữ sky-700 (#0284c7) để tách stacked bar khỏi amber Lotto535.
+  // `iconGradient` dùng orange — khớp header trang Kỳ quay / Vận hành / Kỳ huỷ /
+  // Tồn đọng (`from-orange-500 to-orange-600`).
   [GameProduct.Keno]: {
     hex: "#0284c7",
     twBg: "bg-game-keno",
     twText: "text-game-keno",
     twBorder: "border-game-keno",
     twBgMuted: "bg-game-keno-muted",
-    gradientFrom: "from-info/90",
-    gradientVia: "via-info/70",
-    gradientTo: "to-info/50",
-    gradientFromDark: "from-info/50",
-    gradientViaDark: "via-info/40",
-    gradientToDark: "to-info/30",
-    iconGradient: "from-info to-primary",
+    gradientFrom: "from-sky-50/90",
+    gradientVia: "via-cyan-50/70",
+    gradientTo: "to-blue-50/50",
+    gradientFromDark: "dark:from-sky-950/50",
+    gradientViaDark: "dark:via-cyan-950/40",
+    gradientToDark: "dark:to-blue-950/30",
+    iconGradient: "from-orange-500 to-orange-600",
   },
 
   // ── Max3D — Violet ────────────────────────────────────────────────────────
@@ -144,13 +145,13 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     twText: "text-game-max3d",
     twBorder: "border-game-max3d",
     twBgMuted: "bg-game-max3d-muted",
-    gradientFrom: "from-game-max3d/90",
-    gradientVia: "via-game-max3d/70",
-    gradientTo: "to-info/50",
-    gradientFromDark: "from-game-max3d/50",
-    gradientViaDark: "via-game-max3d/40",
-    gradientToDark: "to-info/30",
-    iconGradient: "from-game-max3d to-game-max3d-muted",
+    gradientFrom: "from-violet-50/90",
+    gradientVia: "via-purple-50/70",
+    gradientTo: "to-indigo-50/50",
+    gradientFromDark: "dark:from-violet-950/50",
+    gradientViaDark: "dark:via-purple-950/40",
+    gradientToDark: "dark:to-indigo-950/30",
+    iconGradient: "from-violet-500 to-violet-600",
   },
 
   // ── Max3D Pro — Fuchsia ──────────────────────────────────────────────────
@@ -162,13 +163,13 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     twText: "text-game-max3dpro",
     twBorder: "border-game-max3dpro",
     twBgMuted: "bg-game-max3dpro-muted",
-    gradientFrom: "from-game-max3dpro/90",
-    gradientVia: "via-game-max3d/70",
-    gradientTo: "to-game-max3dpro/50",
-    gradientFromDark: "from-game-max3dpro/50",
-    gradientViaDark: "via-game-max3d/40",
-    gradientToDark: "to-game-max3dpro/30",
-    iconGradient: "from-game-max3dpro to-game-max3dpro-muted",
+    gradientFrom: "from-fuchsia-50/90",
+    gradientVia: "via-purple-50/70",
+    gradientTo: "to-pink-50/50",
+    gradientFromDark: "dark:from-fuchsia-950/50",
+    gradientViaDark: "dark:via-purple-950/40",
+    gradientToDark: "dark:to-pink-950/30",
+    iconGradient: "from-fuchsia-500 to-fuchsia-600",
   },
 
   // ── Bingo 18 — Lime ──────────────────────────────────────────────────────
@@ -179,13 +180,13 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     twText: "text-game-bingo18",
     twBorder: "border-game-bingo18",
     twBgMuted: "bg-game-bingo18-muted",
-    gradientFrom: "from-game-bingo18/90",
-    gradientVia: "via-profit/70",
-    gradientTo: "to-profit/50",
-    gradientFromDark: "from-game-bingo18/50",
-    gradientViaDark: "via-profit/40",
-    gradientToDark: "to-profit/30",
-    iconGradient: "from-game-bingo18 to-game-bingo18-muted",
+    gradientFrom: "from-lime-50/90",
+    gradientVia: "via-green-50/70",
+    gradientTo: "to-emerald-50/50",
+    gradientFromDark: "dark:from-lime-950/50",
+    gradientViaDark: "dark:via-green-950/40",
+    gradientToDark: "dark:to-emerald-950/30",
+    iconGradient: "from-lime-500 to-lime-600",
   },
 };
 
@@ -195,13 +196,13 @@ const DEFAULT_COLORS: GameColorTokens = {
   twText: "text-muted-foreground",
   twBorder: "border-border",
   twBgMuted: "bg-muted",
-  gradientFrom: "from-muted/90",
-  gradientVia: "via-muted/70",
-  gradientTo: "to-muted/50",
-  gradientFromDark: "from-muted/50",
-  gradientViaDark: "via-muted/40",
-  gradientToDark: "to-muted/30",
-  iconGradient: "from-muted to-background",
+  gradientFrom: "from-gray-50/90",
+  gradientVia: "via-gray-50/70",
+  gradientTo: "to-slate-50/50",
+  gradientFromDark: "dark:from-gray-950/50",
+  gradientViaDark: "dark:via-gray-950/40",
+  gradientToDark: "dark:to-slate-950/30",
+  iconGradient: "from-gray-400 to-gray-500",
 };
 
 /**

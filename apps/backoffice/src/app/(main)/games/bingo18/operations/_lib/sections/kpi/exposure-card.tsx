@@ -27,7 +27,7 @@ function DiceBadges({ numbers }: { numbers: [number, number, number] }) {
       {numbers.map((n, i) => (
         <span
           key={i}
-          className="bg-loss/10 text-loss inline-flex size-5 items-center justify-center rounded text-xs font-bold tabular-nums"
+          className="inline-flex size-5 items-center justify-center rounded bg-red-500/10 text-[11px] font-bold text-red-700 tabular-nums dark:text-red-300"
         >
           {n}
         </span>
@@ -61,12 +61,12 @@ export function ExposureCard({
   // ≥ ngưỡng % → đỏ; ≥ 1/2 ngưỡng → amber; còn lại xanh.
   const underFloor = worst < warnMinAmount;
   const gaugeColor = underFloor
-    ? "bg-profit"
+    ? "bg-emerald-500"
     : pct >= warnRevenuePct
-      ? "bg-loss"
+      ? "bg-red-500"
       : pct >= warnRevenuePct / 2
-        ? "bg-warning"
-        : "bg-profit";
+        ? "bg-amber-500"
+        : "bg-emerald-500";
   // Gauge scale: 100% thanh = ngưỡng cảnh báo (worst chạm ngưỡng % = full bar).
   const gaugeWidth = Math.min(100, warnRevenuePct > 0 ? (pct / warnRevenuePct) * 100 : 0);
 
@@ -75,8 +75,8 @@ export function ExposureCard({
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <ShieldAlert className="text-loss size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+              <ShieldAlert className="size-3.5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
@@ -88,13 +88,13 @@ export function ExposureCard({
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-muted-foreground text-xs">Worst-case</p>
-              <p className="text-loss text-base font-bold tabular-nums">{formatNumber(worst)}</p>
+              <p className="text-base font-bold text-red-600 tabular-nums dark:text-red-400">{formatNumber(worst)}</p>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex cursor-help flex-col items-center gap-0.5">
                   <DiceBadges numbers={exposure.worstCase.numbers} />
-                  <span className="text-muted-foreground text-xs tabular-nums">Tổng {exposure.worstCase.sum}</span>
+                  <span className="text-muted-foreground text-[10px] tabular-nums">Tổng {exposure.worstCase.sum}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-72 text-xs">
@@ -110,7 +110,9 @@ export function ExposureCard({
             <p className="text-sm font-semibold tabular-nums">
               {formatNumber(expected)}
               <span className="text-muted-foreground mx-1">·</span>
-              <span className={cn(margin < 0 ? "text-loss" : "text-profit")}>
+              <span
+                className={cn(margin < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}
+              >
                 {margin >= 0 ? "+" : ""}
                 {formatNumber(margin)}
               </span>
@@ -120,7 +122,7 @@ export function ExposureCard({
 
         {/* Gauge worst-case / doanh thu */}
         <div className="space-y-1">
-          <div className="text-muted-foreground flex items-center justify-between text-xs tabular-nums">
+          <div className="text-muted-foreground flex items-center justify-between text-[11px] tabular-nums">
             <span>
               Worst-case / Doanh thu: <span className="text-foreground font-semibold">{Math.round(pct)}%</span>
               {underFloor && (
@@ -154,10 +156,12 @@ export function ExposureCard({
                   className="border-border/50 bg-muted/10 flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground/60 text-xs tabular-nums">#{i + 1}</span>
+                    <span className="text-muted-foreground/60 text-[10px] tabular-nums">#{i + 1}</span>
                     <DiceBadges numbers={o.numbers} />
                   </span>
-                  <span className="text-loss/90 text-xs font-semibold tabular-nums">{formatNumber(o.amount)}</span>
+                  <span className="text-xs font-semibold text-red-600/90 tabular-nums dark:text-red-400">
+                    {formatNumber(o.amount)}
+                  </span>
                 </div>
               ))}
             </div>

@@ -101,16 +101,16 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <TxLogKpiCard
         icon={FileStack}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Tổng giao dịch"
         value={placeholder ? "—" : formatNumber(total)}
         sub={placeholder ? "\u00a0" : `${formatNumber(successCount)} thành công · ${formatNumber(failedCount)} lỗi`}
       />
       <TxLogKpiCard
         icon={CheckCircle2}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Tỷ lệ thành công"
         value={successRateText}
         valueClass={getSuccessRateColor(successRate)}
@@ -118,8 +118,8 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
       />
       <TxLogKpiCard
         icon={AlertTriangle}
-        iconBg="bg-loss"
-        iconColor="text-loss"
+        iconBg="bg-rose-100 dark:bg-rose-900/50"
+        iconColor="text-rose-600 dark:text-rose-400"
         label="Giao dịch lỗi"
         value={placeholder ? "—" : formatNumber(failedCount)}
         valueClass={failedCount > 0 ? "text-loss" : ""}
@@ -133,8 +133,8 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
       />
       <TxLogKpiCard
         icon={Activity}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Cần reconcile"
         value={placeholder ? "—" : formatNumber(uncertainCount)}
         valueClass={uncertainCount > 0 ? "text-warning" : ""}

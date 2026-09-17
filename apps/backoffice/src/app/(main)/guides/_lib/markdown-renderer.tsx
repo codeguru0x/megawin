@@ -78,7 +78,7 @@ function CopyButton({ value }: { value: string }) {
       className="text-muted-foreground hover:text-foreground bg-background/80 absolute top-2 right-2 inline-flex size-7 items-center justify-center rounded-md border backdrop-blur transition-colors"
       aria-label="Sao chép"
     >
-      {copied ? <Check className="text-profit size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
     </button>
   );
 }

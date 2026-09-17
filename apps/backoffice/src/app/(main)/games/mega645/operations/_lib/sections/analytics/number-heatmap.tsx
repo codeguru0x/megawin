@@ -66,19 +66,19 @@ const MEGA_MUTED_BG = "bg-muted/40 text-muted-foreground";
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-game-mega645/80 text-game-mega645",
-  low: "bg-game-mega645 text-game-mega645",
-  mid: "bg-game-mega645 text-white",
-  warm: "bg-game-mega645 text-white",
-  hot: "bg-warning text-white ring-2 ring-warning/50",
+  cold: "bg-teal-200/80 text-teal-900 dark:bg-teal-900/40 dark:text-teal-200",
+  low: "bg-teal-300 text-teal-900 dark:bg-teal-800 dark:text-teal-100",
+  mid: "bg-teal-400 text-white dark:bg-teal-700",
+  warm: "bg-teal-600 text-white",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-game-mega645/40",
-  warm: "bg-game-mega645/70",
-  hot: "bg-warning/60",
+  mid: "bg-teal-50/40 dark:bg-teal-950/10",
+  warm: "bg-teal-50/70 dark:bg-teal-950/20",
+  hot: "bg-amber-50/60 dark:bg-amber-950/15",
 };
 
 function getHeatLevel(count: number, maxCount: number): HeatLevel {
@@ -131,16 +131,16 @@ export function NumberBadge({
 }) {
   let colorClass: string;
   if (selected) {
-    colorClass = "bg-game-mega645 text-white ring-2 ring-game-mega645/60";
+    colorClass = "bg-teal-600 text-white ring-2 ring-teal-300/60";
   } else if (muted) {
     colorClass = MEGA_MUTED_BG;
   } else if (variant === "outlined") {
-    colorClass = "border border-game-mega645/70 text-game-mega645 bg-transparent";
+    colorClass = "border border-teal-400/70 text-teal-600 bg-transparent dark:border-teal-600 dark:text-teal-400";
   } else if (variant === "soft") {
-    colorClass = "bg-game-mega645 text-game-mega645";
+    colorClass = "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300";
   } else {
     // filled — heat intensity
-    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-game-mega645 text-white";
+    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-teal-600 text-white";
   }
 
   return (
@@ -235,8 +235,8 @@ function NumberCell({
     HEATMAP_CELL_PT,
     "px-1 pb-1.5",
     cellBg || "bg-card",
-    "hover:bg-game-mega645/50 cursor-pointer",
-    selected && "bg-game-mega645/80 ring-game-mega645 ring-2 ring-inset",
+    "cursor-pointer hover:bg-teal-100/50 dark:hover:bg-teal-950/30",
+    selected && "bg-teal-100/80 ring-2 ring-teal-500 ring-inset dark:bg-teal-900/40",
   );
 
   return (
@@ -256,7 +256,7 @@ function NumberCell({
       </span>
       <div className="flex flex-col items-center gap-0.5">
         {isEmpty ? (
-          <span className="text-muted-foreground/20 text-xs tabular-nums">–</span>
+          <span className="text-muted-foreground/20 text-[11px] tabular-nums">–</span>
         ) : (
           <>
             {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
@@ -309,7 +309,7 @@ function MainGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
             style={{ background: MEGA_HEX }}
           >
             M
@@ -358,7 +358,7 @@ function MainGrid({
         )}
       </NumberHeatmapHoverLayer>
       {isSparse && (
-        <p className="text-muted-foreground/60 text-xs italic">
+        <p className="text-muted-foreground/60 text-[11px] italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.
         </p>
       )}
@@ -472,12 +472,15 @@ function ComboLookupDialog({
             value={raw}
             onChange={(e) => handleCsvChange(e.target.value)}
             placeholder="Nhập số, vd 01,05,12,... (hoặc chọn trên bảng)"
-            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-3"
+            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-[3px]"
           />
 
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={cn("text-xs font-medium tabular-nums", isValidCount ? "text-profit" : "text-muted-foreground")}
+              className={cn(
+                "text-xs font-medium tabular-nums",
+                isValidCount ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+              )}
             >
               Đã chọn {selected.length} số
               {isValidCount && pt ? ` · ${MEGA645_PLAY_TYPE_LABELS[pt]}` : " · cần 5, 6, 7–15 hoặc 18"}
@@ -499,7 +502,7 @@ function ComboLookupDialog({
                   key={n}
                   type="button"
                   onClick={() => onToggleNumber(n)}
-                  className="bg-game-mega645 text-game-mega645 hover:bg-game-mega645 inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
+                  className="inline-flex h-6 items-center gap-0.5 rounded-full bg-teal-100 pr-1 pl-2 text-xs font-bold text-teal-700 tabular-nums transition-colors hover:bg-teal-200 dark:bg-teal-900/40 dark:text-teal-300 dark:hover:bg-teal-900/60"
                   title="Bỏ chọn"
                 >
                   {n}

@@ -61,6 +61,7 @@ function NumbersRow({ numbers, diff }: { numbers: string[]; diff: Set<number> })
     <div className="flex flex-wrap gap-1">
       {numbers.map((n, i) => (
         <span
+          // biome-ignore lint/suspicious/noArrayIndexKey: thứ tự phần tử CHÍNH LÀ dữ liệu hiển thị (không sort lại), số có thể trùng giá trị (VD bingo18) nên không có key nào ổn định hơn index.
           key={`${i}-${n}`}
           className={cn(
             "rounded border px-1.5 py-0.5 font-mono text-xs tabular-nums",
@@ -307,7 +308,7 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
               )}
 
               {mismatchWarning && (
-                <div className="border-warning/40 bg-warning/10 text-warning flex flex-col gap-2 rounded-md border p-3 text-xs">
+                <div className="flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
                   <p>{mismatchWarning}</p>
                   <div className="flex items-center gap-2">
                     <Checkbox

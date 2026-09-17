@@ -64,13 +64,13 @@ const statusLabels: Record<ToolPart["state"], string> = {
 };
 
 const statusIcons: Record<ToolPart["state"], ReactNode> = {
-  "approval-requested": <ClockIcon className="text-warning size-3.5" />,
-  "approval-responded": <CheckCircleIcon className="text-info size-3.5" />,
+  "approval-requested": <ClockIcon className="size-3.5 text-yellow-600" />,
+  "approval-responded": <CheckCircleIcon className="size-3.5 text-blue-600" />,
   "input-available": <LoaderIcon className="text-muted-foreground size-3.5 animate-spin" />,
   "input-streaming": <CircleIcon className="text-muted-foreground size-3.5" />,
-  "output-available": <CheckCircleIcon className="text-profit size-3.5" />,
-  "output-denied": <XCircleIcon className="text-warning size-3.5" />,
-  "output-error": <XCircleIcon className="text-loss size-3.5" />,
+  "output-available": <CheckCircleIcon className="size-3.5 text-emerald-600" />,
+  "output-denied": <XCircleIcon className="size-3.5 text-orange-600" />,
+  "output-error": <XCircleIcon className="size-3.5 text-red-600" />,
 };
 
 /** Trạng thái trình bày cho tool call mồ côi — KHÔNG thuộc `ToolPart["state"]` của AI SDK. */

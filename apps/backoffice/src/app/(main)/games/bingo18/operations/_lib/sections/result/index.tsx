@@ -129,7 +129,7 @@ function DiceStatBadge({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-150",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all duration-150",
         active ? cn("shadow-sm ring-1 ring-offset-1", activeClass) : colorClass,
       )}
     >
@@ -137,7 +137,7 @@ function DiceStatBadge({
       {sublabel && (
         <span
           className={cn(
-            "min-w-[1.2rem] rounded-full px-1 py-0 text-center text-xs font-bold tabular-nums",
+            "min-w-[1.2rem] rounded-full px-1 py-0 text-center text-[10px] font-bold tabular-nums",
             active ? "bg-white/30" : "bg-current/10 opacity-80",
           )}
         >
@@ -168,8 +168,8 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Trophy className="text-warning size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+              <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
@@ -187,12 +187,12 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
           <div className="bg-muted/20 space-y-3 rounded-xl border px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex-1" />
-              <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">Kết quả</span>
+              <span className="text-muted-foreground text-[11px] font-semibold tracking-widest uppercase">Kết quả</span>
               <div className="flex flex-1 justify-end">
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -214,20 +214,20 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
                       <DiceStatBadge
                         label="Nhỏ (3-9)"
                         active={bsResult === "small"}
-                        colorClass="bg-info/70 text-info border-info/70"
-                        activeClass="bg-warning text-white border-warning ring-warning"
+                        colorClass="bg-blue-50/70 text-blue-400 border-blue-200/70 dark:bg-blue-950/10 dark:text-blue-500/70 dark:border-blue-900/50"
+                        activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
                       />
                       <DiceStatBadge
                         label="Hoà (10-11)"
                         active={bsResult === "draw"}
-                        colorClass="bg-muted/70 text-muted-foreground border-border/70"
-                        activeClass="bg-warning text-white border-warning ring-warning"
+                        colorClass="bg-slate-50/70 text-slate-400 border-slate-200/70 dark:bg-slate-950/10 dark:text-slate-500/70 dark:border-slate-900/50"
+                        activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
                       />
                       <DiceStatBadge
                         label="Lớn (12-18)"
                         active={bsResult === "big"}
-                        colorClass="bg-loss/70 text-loss border-loss/70"
-                        activeClass="bg-warning text-white border-warning ring-warning"
+                        colorClass="bg-red-50/70 text-red-400 border-red-200/70 dark:bg-red-950/10 dark:text-red-500/70 dark:border-red-900/50"
+                        activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
                       />
                     </>
                   );
@@ -243,14 +243,14 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
                     sublabel={String(result.diceNumbers[0])}
                     active
                     colorClass=""
-                    activeClass="bg-warning text-white border-warning ring-warning"
+                    activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
                   />
                 ) : hasDouble(result.diceNumbers) ? (
                   <DiceStatBadge
                     label="Có đôi"
                     active
                     colorClass=""
-                    activeClass="bg-warning/80 text-white border-warning ring-warning"
+                    activeClass="bg-amber-500/80 text-white border-amber-400 dark:bg-amber-500/80 ring-amber-300"
                   />
                 ) : (
                   <DiceStatBadge
@@ -268,14 +268,14 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
           {result.boardPrizes.length > 0 && (
             <div className="overflow-hidden rounded-xl border">
               <div className="bg-muted/40 grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 border-b px-3 py-2">
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Boards</span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Boards</span>
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Trúng
                 </span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>
@@ -285,14 +285,14 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
                   className={cn(
                     "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
                     idx < result.boardPrizes.length - 1 && "border-border/50 border-b",
-                    r.winnerCount > 0 ? "bg-warning/40" : "",
+                    r.winnerCount > 0 ? "bg-amber-50/40 dark:bg-amber-950/5" : "",
                   )}
                 >
                   <span className="text-muted-foreground text-xs">{r.label}</span>
                   <span
                     className={cn(
                       "text-right text-sm font-semibold tabular-nums",
-                      r.winnerCount > 0 ? "text-warning" : "text-muted-foreground/40",
+                      r.winnerCount > 0 ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(r.winnerCount)}
@@ -322,14 +322,16 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
           {result.sideBetPrizes.length > 0 && (
             <div className="overflow-hidden rounded-xl border">
               <div className="bg-muted/40 grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 border-b px-3 py-2">
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Side Bets</span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+                  Side Bets
+                </span>
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Bets
                 </span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>
@@ -339,14 +341,14 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
                   className={cn(
                     "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
                     idx < result.sideBetPrizes.length - 1 && "border-border/50 border-b",
-                    r.winnerCount > 0 ? "bg-info/40" : "",
+                    r.winnerCount > 0 ? "bg-cyan-50/40 dark:bg-cyan-950/5" : "",
                   )}
                 >
                   <span className="text-muted-foreground text-xs">{r.label}</span>
                   <span
                     className={cn(
                       "text-right text-sm font-semibold tabular-nums",
-                      r.winnerCount > 0 ? "text-info" : "text-muted-foreground/40",
+                      r.winnerCount > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(r.winnerCount)}
@@ -396,8 +398,8 @@ function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Coins className="text-info size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -436,8 +438,8 @@ function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Coins className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -450,8 +452,8 @@ function FinancialSummary({
         {[
           {
             icon: TrendingUp,
-            iconBg: "bg-warning",
-            iconColor: "text-warning",
+            iconBg: "bg-amber-100 dark:bg-amber-900/50",
+            iconColor: "text-amber-600 dark:text-amber-400",
             label: "Doanh thu gộp",
             value: f.totalRevenue,
             // Dòng input gốc → trung tính, chỉ khoản trừ & lợi nhuận mới có màu ngữ nghĩa
@@ -461,8 +463,8 @@ function FinancialSummary({
           },
           {
             icon: Users,
-            iconBg: "bg-muted",
-            iconColor: "text-muted-foreground",
+            iconBg: "bg-slate-100 dark:bg-slate-800",
+            iconColor: "text-slate-500 dark:text-slate-400",
             label: "Hoa hồng đại lý",
             value: f.totalAgentCommission,
             // Khoản chi bình thường → muted (không dùng destructive để tránh "báo động giả")
@@ -472,8 +474,8 @@ function FinancialSummary({
           },
           {
             icon: Trophy,
-            iconBg: "bg-warning",
-            iconColor: "text-warning",
+            iconBg: "bg-amber-100 dark:bg-amber-900/50",
+            iconColor: "text-amber-600 dark:text-amber-400",
             label: "Chi trả giải thưởng",
             value: f.totalPrizes,
             sign: "-" as const,
@@ -483,12 +485,12 @@ function FinancialSummary({
           },
           {
             icon: isProfit ? TrendingUp : TrendingDown,
-            iconBg: isProfit ? "bg-profit" : "bg-loss",
-            iconColor: isProfit ? "text-profit" : "text-loss",
+            iconBg: isProfit ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+            iconColor: isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
             label: "Kết quả công ty (P&L kỳ)",
             value: profit,
             sign: "=" as const,
-            valueColor: isProfit ? "text-profit" : "text-destructive",
+            valueColor: isProfit ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
             bold: true,
             separator: true,
             hint: resultHint,
@@ -543,10 +545,10 @@ function FinancialSummary({
 
         {/* Cảnh báo khi kỳ lỗ — Bingo 18 có thể âm khi chi trả giải vượt doanh thu */}
         {!isProfit && (
-          <div className="border-loss bg-loss/60 rounded-lg border px-3 py-2.5">
+          <div className="rounded-lg border border-red-200 bg-red-50/60 px-3 py-2.5 dark:border-red-900/60 dark:bg-red-950/20">
             <div className="flex items-center gap-2">
-              <TrendingDown className="text-loss size-3.5 shrink-0" />
-              <span className="text-loss text-xs">
+              <TrendingDown className="size-3.5 shrink-0 text-red-600 dark:text-red-400" />
+              <span className="text-xs text-red-700 dark:text-red-300">
                 Kỳ này chi trả vượt doanh thu — kiểm tra các entry trúng giải lớn.
               </span>
             </div>

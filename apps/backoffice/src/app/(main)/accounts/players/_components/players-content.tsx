@@ -65,6 +65,7 @@ export function PlayersContent() {
   }, [isSearchOpen]);
 
   // Khởi tạo isSearchOpen từ URL khi mount lần đầu — chỉ chạy 1 lần, không theo activeSearch thay đổi sau đó.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: chỉ chạy 1 lần lúc mount, không muốn re-run khi activeSearch đổi.
   useEffect(() => {
     if (activeSearch) {
       setIsSearchOpen(true);
@@ -184,7 +185,7 @@ export function PlayersContent() {
         {tenants.map((t) => (
           <SelectItem key={t.tenantId} value={t.tenantId}>
             <span className="font-medium">{t.displayName}</span>
-            <span className="text-muted-foreground ml-1.5 font-mono text-xs">{t.tenantId}</span>
+            <span className="text-muted-foreground ml-1.5 font-mono text-[11px]">{t.tenantId}</span>
           </SelectItem>
         ))}
         {tenants.length === 0 && !isLoadingOptions && (
@@ -238,7 +239,7 @@ function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolb
             <CardTitle className="text-sm font-semibold">Kết quả tìm kiếm</CardTitle>
             <span className="text-muted-foreground font-mono text-xs">{keyword}</span>
             {accounts.length > 0 && (
-              <Badge variant="secondary" className="text-xs tabular-nums">
+              <Badge variant="secondary" className="text-[11px] tabular-nums">
                 {accounts.length} kết quả
               </Badge>
             )}

@@ -47,45 +47,45 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatNumber(kpi.totalRevenue)}
       />
       <KpiCard
         icon={FileText}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.entryCount}
         value={formatNumber(kpi.totalEntries)}
       />
       <KpiCard
         icon={Grid2x2}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Bộ cược cơ bản"
         value={formatNumber(kpi.totalBasicSets)}
         sub="singleNum · double · triple"
       />
       <KpiCard
         icon={Layers}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-cyan-100 dark:bg-cyan-900/50"
+        iconColor="text-cyan-600 dark:text-cyan-400"
         label="Side bets"
         value={formatNumber(kpi.totalSideBets)}
         sub="sumTotal · bigSmallDraw"
       />
       <KpiCard
         icon={Users}
-        iconBg="bg-game-max3d"
-        iconColor="text-game-max3d"
+        iconBg="bg-violet-100 dark:bg-violet-900/50"
+        iconColor="text-violet-600 dark:text-violet-400"
         label={REPORT_COLUMN_LABELS.playerCount}
         value={formatNumber(kpi.uniquePlayers)}
       />
       <KpiCard
         icon={Wallet}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-orange-100 dark:bg-orange-900/50"
+        iconColor="text-orange-600 dark:text-orange-400"
         label={REPORT_COLUMN_LABELS.totalCommission}
         value={formatNumber(kpi.totalCommission)}
       />

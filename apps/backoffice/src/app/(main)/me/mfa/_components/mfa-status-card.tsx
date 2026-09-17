@@ -32,8 +32,8 @@ const statusConfig = {
     description: "Tài khoản của bạn đang được bảo vệ bằng xác thực 2 lớp qua app Authenticator.",
     badgeLabel: "Đang bật",
     badgeVariant: "default" as const,
-    iconColor: "text-profit",
-    iconBg: "bg-profit",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
   },
   disabled: {
     icon: ShieldAlert,
@@ -41,8 +41,8 @@ const statusConfig = {
     description: "Xác thực 2 lớp đã bị tắt. Tài khoản của bạn chỉ được bảo vệ bằng mật khẩu.",
     badgeLabel: "Đã tắt",
     badgeVariant: "secondary" as const,
-    iconColor: "text-warning",
-    iconBg: "bg-warning",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-100 dark:bg-amber-900/50",
   },
 } as const;
 

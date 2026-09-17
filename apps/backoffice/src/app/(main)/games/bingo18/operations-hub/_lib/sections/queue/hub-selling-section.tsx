@@ -52,7 +52,7 @@ const OUTLIER_COPY: Record<
 
 const OUTLIER_TONE_CLASS: Record<"destructive" | "amber", string> = {
   destructive: "border-destructive/20 bg-destructive/5 hover:bg-destructive/10",
-  amber: "border-warning/20 bg-warning/5 hover:bg-warning/10",
+  amber: "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10",
 };
 
 /** Ngưỡng gộp cảnh báo Lớp 1 thành 1 dòng tổng — chốt user §10 mục 8: > 5 dòng thì gộp, tránh

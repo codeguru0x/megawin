@@ -85,7 +85,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     label: "Một số",
     description: "Đoán đúng 1 trong 3 xúc xắc · 3 mức thưởng",
     icon: <Dice1 className="size-3.5 text-white" />,
-    badgeColor: "bg-info",
+    badgeColor: "bg-blue-500",
     isSingleBet: true,
     entries: [
       { key: "match1", label: "Trùng 1/3", desc: "số chọn xuất hiện 1 lần" },
@@ -98,7 +98,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     label: "Hai số trùng",
     description: "Số đã chọn xuất hiện ≥ 2 trong 3 xúc xắc · 1 mức thưởng",
     icon: <Dice2 className="size-3.5 text-white" />,
-    badgeColor: "bg-game-max3d",
+    badgeColor: "bg-purple-500",
     isSingleBet: true,
     entries: [{ key: "win", label: "Trùng ≥2/3", desc: "số đã chọn xuất hiện 2 hoặc 3 lần" }],
   },
@@ -107,7 +107,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     label: "Ba số trùng",
     description: "Cả 3 xúc xắc cùng giá trị — 2 cửa cược độc lập (Cụ thể / Bất kỳ)",
     icon: <Dice3 className="size-3.5 text-white" />,
-    badgeColor: "bg-loss",
+    badgeColor: "bg-red-500",
     isSingleBet: false,
     entries: [
       { key: "specific", label: "Cụ thể", desc: "3 số đều trùng số đã chọn (1/216 = 0,46%)" },
@@ -119,7 +119,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     label: "Cộng tổng",
     description: "Đoán tổng 3 xúc xắc (3–18) · 16 mức thưởng",
     icon: <Hash className="size-3.5 text-white" />,
-    badgeColor: "bg-profit",
+    badgeColor: "bg-emerald-500",
     isSingleBet: false,
     entries: Array.from({ length: 16 }, (_, i) => {
       const sum = i + 3;
@@ -135,7 +135,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     label: "Lớn / Hoà / Nhỏ",
     description: "3 cửa cược độc lập — Lớn (≥12), Hoà (10–11), Nhỏ (≤9) · phủ kín 100% kết quả",
     icon: <Dice5 className="size-3.5 text-white" />,
-    badgeColor: "bg-warning",
+    badgeColor: "bg-amber-500",
     isSingleBet: false,
     entries: [
       { key: "big", label: "Lớn", desc: "tổng ≥ 12 (81/216 = 37,5%)" },
@@ -317,7 +317,7 @@ function PrizeGroup({
 
   const displayMargin = group.isSingleBet ? (profitAnalysis?.grossMarginPercent ?? 0) : worstMargin;
 
-  const marginColor = displayMargin >= 50 ? "text-profit" : displayMargin >= 0 ? "text-warning" : "text-loss";
+  const marginColor = displayMargin >= 50 ? "text-emerald-600" : displayMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -388,7 +388,7 @@ function PrizeGroup({
                 key={entry.key}
                 className={cn(
                   "grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 rounded-md px-2 py-1.5",
-                  isOverBreakEven && "bg-loss",
+                  isOverBreakEven && "bg-red-50 dark:bg-red-950/20",
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -423,10 +423,10 @@ function PrizeGroup({
                   className={cn(
                     "text-right text-xs font-semibold tabular-nums",
                     tier && tier.payoutRatio > 1
-                      ? "text-loss"
+                      ? "text-red-600"
                       : tier && tier.payoutRatio > 0.5
-                        ? "text-warning"
-                        : "text-profit",
+                        ? "text-amber-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -434,7 +434,7 @@ function PrizeGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "font-bold text-red-600" : "text-muted-foreground",
                   )}
                 >
                   {tier ? `${fmt(Math.round(tier.breakEvenPrize))}` : "–"}
@@ -565,10 +565,10 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                       className={cn(
                         "font-bold tabular-nums",
                         worstMarginOverall >= 50
-                          ? "text-profit"
+                          ? "text-emerald-600"
                           : worstMarginOverall >= 0
-                            ? "text-warning"
-                            : "text-loss",
+                            ? "text-amber-600"
+                            : "text-red-600",
                       )}
                     >
                       {worstMarginOverall >= 0 ? (

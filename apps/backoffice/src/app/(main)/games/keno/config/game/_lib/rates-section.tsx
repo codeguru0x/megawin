@@ -64,19 +64,19 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
               <div className="bg-muted h-3 w-full overflow-hidden rounded-full">
                 <div className="flex h-full">
                   <div
-                    className="bg-info h-full transition-all duration-300"
+                    className="h-full bg-blue-500 transition-all duration-300"
                     style={{ width: `${Math.min(commissionRate, 100)}%` }}
                   />
                 </div>
               </div>
               <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                 <span className="flex items-center gap-1.5">
-                  <span className="bg-info inline-block size-2 rounded-full" />
+                  <span className="inline-block size-2 rounded-full bg-blue-500" />
                   Hoa hồng: {commissionRate}%
                 </span>
                 {remainingRate > 0 && (
                   <span className="flex items-center gap-1.5">
-                    <span className="bg-profit inline-block size-2 rounded-full" />
+                    <span className="inline-block size-2 rounded-full bg-emerald-500" />
                     Còn lại để trả thưởng + lợi nhuận: {remainingRate}%
                   </span>
                 )}
@@ -94,8 +94,8 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                 render={({ field }) => (
                   <FormItem>
                     <div className="mb-4 flex items-center gap-3">
-                      <div className="bg-info flex size-9 items-center justify-center rounded-lg">
-                        <TrendingUp className="text-info size-4" />
+                      <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/40">
+                        <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
                         <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>

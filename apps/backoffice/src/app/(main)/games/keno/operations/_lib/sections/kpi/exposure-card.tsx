@@ -23,12 +23,12 @@ import type { ExposureCapRow, ExposureView } from "../../types";
  */
 function capColor(ratio: number): { text: string; bar: string } {
   if (ratio >= 1) {
-    return { text: "text-loss", bar: "bg-loss" };
+    return { text: "text-red-600 dark:text-red-400", bar: "bg-red-500" };
   }
   if (ratio >= 0.6) {
-    return { text: "text-warning", bar: "bg-warning" };
+    return { text: "text-amber-600 dark:text-amber-400", bar: "bg-amber-500" };
   }
-  return { text: "text-profit", bar: "bg-profit" };
+  return { text: "text-emerald-600 dark:text-emerald-400", bar: "bg-emerald-500" };
 }
 
 function CapRow({ row }: { row: ExposureCapRow }) {
@@ -81,8 +81,8 @@ export function ExposureCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="bg-loss flex size-9 shrink-0 items-center justify-center rounded-lg">
-              <ShieldAlert className="text-loss size-5" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+              <ShieldAlert className="size-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <p className="text-muted-foreground text-xs font-medium">Rủi ro chi trả (worst-case)</p>

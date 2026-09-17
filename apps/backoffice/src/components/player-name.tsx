@@ -47,7 +47,7 @@ export function PlayerName({
   return (
     <span className={cn("inline-flex min-w-0 items-baseline gap-1", className)}>
       <span className="text-foreground truncate font-medium">{primary}</span>
-      {showTenant && tenantId && <span className="text-muted-foreground/70 shrink-0 text-xs">· {tenantId}</span>}
+      {showTenant && tenantId && <span className="text-muted-foreground/70 shrink-0 text-[11px]">· {tenantId}</span>}
     </span>
   );
 }

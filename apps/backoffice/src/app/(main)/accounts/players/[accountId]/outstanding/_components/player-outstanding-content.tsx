@@ -75,11 +75,11 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
         >
           <span className="relative flex size-2">
             {isFetching ? (
-              <span className="bg-warning size-2 animate-pulse rounded-full" />
+              <span className="size-2 animate-pulse rounded-full bg-amber-500" />
             ) : (
               <>
-                <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-60" />
-                <span className="bg-profit relative inline-flex size-2 rounded-full" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
               </>
             )}
           </span>
@@ -693,8 +693,8 @@ function OutstandingKpiStrip({
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <KpiCard
         icon={CalendarClock}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Kỳ đang hoạt động"
         value={formatNumber(activeDrawCount)}
         sub=""
@@ -702,8 +702,8 @@ function OutstandingKpiStrip({
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.entryCount}
         value={formatNumber(totalEntryCount)}
         sub=""
@@ -711,8 +711,8 @@ function OutstandingKpiStrip({
       />
       <KpiCard
         icon={HandCoins}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.estimatedCommission}
         value={formatVNDCompact(totalCommission)}
         sub=""
@@ -720,8 +720,8 @@ function OutstandingKpiStrip({
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatVNDCompact(totalStake)}
         sub=""

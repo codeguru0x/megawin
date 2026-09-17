@@ -53,23 +53,23 @@ const SEVERITY_LABEL: Record<string, string> = {
 
 function severityBadgeClass(severity: string): string {
   if (severity === OpsAlertSeverity.Critical) {
-    return "bg-loss text-loss";
+    return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
   }
   if (severity === OpsAlertSeverity.Warning) {
-    return "bg-warning text-warning";
+    return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
   }
-  return "bg-info text-info";
+  return "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300";
 }
 
 /** Màu chấm + viền trái item theo severity — dấu hiệu quét mắt nhanh. */
 function severityAccent(severity: string): { dot: string; border: string } {
   if (severity === OpsAlertSeverity.Critical) {
-    return { dot: "bg-loss", border: "border-l-loss" };
+    return { dot: "bg-red-500", border: "border-l-red-500" };
   }
   if (severity === OpsAlertSeverity.Warning) {
-    return { dot: "bg-warning", border: "border-l-warning" };
+    return { dot: "bg-amber-500", border: "border-l-amber-500" };
   }
-  return { dot: "bg-info", border: "border-l-info" };
+  return { dot: "bg-sky-500", border: "border-l-sky-500" };
 }
 
 // ─── Mô tả alert dạng người-đọc (thay JSON payload thô) ───────────────────────
@@ -219,7 +219,7 @@ function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<
             </span>
             {e.fixedPotential > 0 && (
               <span
-                className="text-loss/80 shrink-0 text-xs tabular-nums"
+                className="shrink-0 text-[11px] text-red-500/80 tabular-nums"
                 title="Rủi ro chi trả giải cố định nếu trúng tối đa"
               >
                 ⚠ {formatNumber(e.fixedPotential)}
@@ -267,8 +267,8 @@ function AlertItemRow({ alert }: { alert: Power655OpsAlertEntity }) {
                 <span
                   key={c.label}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs tabular-nums",
-                    c.danger ? "bg-loss/10 text-loss" : "bg-muted text-muted-foreground",
+                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] tabular-nums",
+                    c.danger ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground",
                   )}
                 >
                   <span className="opacity-70">{c.label}</span>
@@ -279,12 +279,12 @@ function AlertItemRow({ alert }: { alert: Power655OpsAlertEntity }) {
           )}
           {/* Danh sách người/entry liên quan (large_bet) — minh bạch ai/cược gì/bao nhiêu. */}
           <AlertTopEntries drawId={alert.drawId} payload={alert.payload} />
-          <p className="text-muted-foreground/70 text-xs tabular-nums">
+          <p className="text-muted-foreground/70 text-[11px] tabular-nums">
             {displayVNTimeWithSeconds(new Date(alert.createdAt))}
           </p>
         </div>
         {isAcked ? (
-          <span className="text-profit flex shrink-0 items-center gap-1 text-xs">
+          <span className="flex shrink-0 items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
             <ShieldCheck className="size-3.5" />
             Đã xử lý
           </span>
@@ -374,7 +374,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
   if (groups.length === 0) {
     return (
       <div className="bg-muted/10 flex items-center gap-2 rounded-xl border border-dashed px-4 py-2.5">
-        <ShieldCheck className="text-profit/70 size-4 shrink-0" />
+        <ShieldCheck className="size-4 shrink-0 text-emerald-500/70" />
         <span className="text-muted-foreground text-xs">Không có cảnh báo cho kỳ này.</span>
       </div>
     );
@@ -387,8 +387,8 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <BellRing className="text-loss size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+            <BellRing className="size-3.5 text-red-600 dark:text-red-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Cảnh báo vận hành</CardTitle>
@@ -407,7 +407,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                 <AccordionTrigger className="py-3 hover:no-underline">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className={cn("size-2 shrink-0 rounded-full", accent.dot)} />
-                    {isCritical && activeCount > 0 && <AlertTriangle className="text-loss size-3.5 shrink-0" />}
+                    {isCritical && activeCount > 0 && <AlertTriangle className="size-3.5 shrink-0 text-red-500" />}
                     <span className="truncate text-sm font-semibold">
                       {POWER655_OPS_ALERT_TYPE_LABELS[g.type] ?? g.type}
                     </span>
@@ -418,7 +418,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                     {activeCount > 0 && (
                       <span
                         className={cn(
-                          "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+                          "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
                           severityBadgeClass(g.severity),
                         )}
                       >
@@ -465,7 +465,7 @@ export function AlertHeaderBadge({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-        "bg-warning text-warning hover:bg-warning",
+        "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-300",
       )}
     >
       <BellRing className="size-3.5" />

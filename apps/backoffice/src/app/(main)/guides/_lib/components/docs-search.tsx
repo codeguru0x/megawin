@@ -49,7 +49,7 @@ export function DocsSearch() {
       >
         <Search className="size-4" />
         <span className="flex-1 text-left">Tìm kiếm hướng dẫn...</span>
-        <kbd className="bg-muted pointer-events-none hidden rounded border px-1.5 font-mono text-xs sm:inline-block">
+        <kbd className="bg-muted pointer-events-none hidden rounded border px-1.5 font-mono text-[10px] sm:inline-block">
           ⌘K
         </kbd>
       </button>

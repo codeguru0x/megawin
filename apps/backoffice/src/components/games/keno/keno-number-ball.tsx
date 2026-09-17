@@ -13,10 +13,10 @@ export function KenoNumberBall({ number, variant = "default", size = "md" }: Ken
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none",
-        variant === "default" && "bg-info text-white",
-        variant === "matched" && "bg-profit ring-profit text-white ring-2",
-        variant === "big" && "bg-warning text-white",
-        variant === "small" && "bg-game-mega645 text-white",
+        variant === "default" && "bg-sky-500 text-white",
+        variant === "matched" && "bg-emerald-500 text-white ring-2 ring-emerald-300",
+        variant === "big" && "bg-orange-500 text-white",
+        variant === "small" && "bg-teal-500 text-white",
         size === "sm" && "size-7 text-xs",
         size === "md" && "size-9 text-sm",
         size === "lg" && "size-11 text-base",

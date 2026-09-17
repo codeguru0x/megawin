@@ -46,20 +46,22 @@ type TierConfig = { badge: string; row: string; icon?: React.ElementType };
  */
 const TIER_CONFIG: Record<string, TierConfig> = {
   special: {
-    badge: "border-warning bg-warning text-warning",
-    row: "bg-warning/60 border-l-2 border-l-warning",
+    badge: "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
+    row: "bg-amber-50/60 dark:bg-amber-950/10 border-l-2 border-l-amber-400",
     icon: Trophy,
   },
   first: {
-    badge: "border-warning bg-warning text-warning",
-    row: "bg-warning/40",
+    badge:
+      "border-yellow-300 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-700",
+    row: "bg-yellow-50/40 dark:bg-yellow-950/5",
   },
   second: {
-    badge: "border-warning bg-warning text-warning",
+    badge:
+      "border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-700",
     row: "",
   },
   third: {
-    badge: "border-info bg-info text-info",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
   fourth: { badge: "border-border bg-muted/40 text-muted-foreground", row: "" },
@@ -118,7 +120,7 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
           >
             <div className="flex min-w-0 items-center gap-2">
               {cfg.icon ? (
-                <cfg.icon className="text-warning size-3.5 shrink-0" />
+                <cfg.icon className="size-3.5 shrink-0 text-amber-500" />
               ) : (
                 <span className="size-3.5 shrink-0" />
               )}
@@ -130,7 +132,7 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
             <span
               className={cn(
                 "text-right text-sm font-semibold tabular-nums",
-                hasWinner ? "text-profit" : "text-muted-foreground/40",
+                hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
               )}
             >
               {formatNumber(tier.winnerCount)}
@@ -183,8 +185,8 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
       <Card className="gap-0 py-0 shadow-sm">
         <CardHeader className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Trophy className="text-warning size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+              <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
@@ -206,7 +208,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -266,8 +268,8 @@ function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Coins className="text-info size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -306,8 +308,8 @@ function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Coins className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -320,8 +322,8 @@ function FinancialSummary({
         {[
           {
             icon: TrendingUp,
-            iconBg: "bg-profit",
-            iconColor: "text-profit",
+            iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+            iconColor: "text-emerald-600 dark:text-emerald-400",
             label: "Doanh thu gộp",
             value: f.totalRevenue,
             sign: "+" as const,
@@ -330,8 +332,8 @@ function FinancialSummary({
           },
           {
             icon: Users,
-            iconBg: "bg-muted",
-            iconColor: "text-muted-foreground",
+            iconBg: "bg-slate-100 dark:bg-slate-800",
+            iconColor: "text-slate-500 dark:text-slate-400",
             label: "Hoa hồng đại lý",
             value: f.totalAgentCommission,
             sign: "-" as const,
@@ -340,8 +342,8 @@ function FinancialSummary({
           },
           {
             icon: Trophy,
-            iconBg: "bg-warning",
-            iconColor: "text-warning",
+            iconBg: "bg-amber-100 dark:bg-amber-900/50",
+            iconColor: "text-amber-600 dark:text-amber-400",
             label: "Chi trả giải thưởng",
             value: f.totalFixedPrizes,
             sign: "-" as const,
@@ -351,12 +353,12 @@ function FinancialSummary({
           },
           {
             icon: isProfit ? TrendingUp : TrendingDown,
-            iconBg: isProfit ? "bg-profit" : "bg-loss",
-            iconColor: isProfit ? "text-profit" : "text-loss",
+            iconBg: isProfit ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+            iconColor: isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
             label: "Kết quả công ty (P&L kỳ)",
             value: netProfit,
             sign: "=" as const,
-            valueColor: isProfit ? "text-profit" : "text-destructive",
+            valueColor: isProfit ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
             bold: true,
             separator: true,
             hint: resultHint,
@@ -411,10 +413,10 @@ function FinancialSummary({
 
         {/* Cảnh báo khi kỳ lỗ — Max 3D có thể âm khi chi trả giải vượt doanh thu */}
         {!isProfit && (
-          <div className="border-loss bg-loss/60 rounded-lg border px-3 py-2.5">
+          <div className="rounded-lg border border-red-200 bg-red-50/60 px-3 py-2.5 dark:border-red-900/60 dark:bg-red-950/20">
             <div className="flex items-center gap-2">
-              <TrendingDown className="text-loss size-3.5 shrink-0" />
-              <span className="text-loss text-xs">
+              <TrendingDown className="size-3.5 shrink-0 text-red-600 dark:text-red-400" />
+              <span className="text-xs text-red-700 dark:text-red-300">
                 Kỳ này chi trả vượt doanh thu — kiểm tra các entry trúng giải lớn.
               </span>
             </div>

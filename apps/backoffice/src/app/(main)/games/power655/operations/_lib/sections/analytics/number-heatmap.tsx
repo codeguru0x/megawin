@@ -68,19 +68,19 @@ const POWER_MUTED_BG = "bg-muted/40 text-muted-foreground";
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-loss/80 text-loss",
-  low: "bg-loss text-loss",
-  mid: "bg-loss text-white",
-  warm: "bg-loss text-white",
-  hot: "bg-warning text-white ring-2 ring-warning/50",
+  cold: "bg-red-200/80 text-red-900 dark:bg-red-900/40 dark:text-red-200",
+  low: "bg-red-300 text-red-900 dark:bg-red-800 dark:text-red-100",
+  mid: "bg-red-400 text-white dark:bg-red-700",
+  warm: "bg-red-600 text-white",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-loss/40",
-  warm: "bg-loss/70",
-  hot: "bg-warning/60",
+  mid: "bg-red-50/40 dark:bg-red-950/10",
+  warm: "bg-red-50/70 dark:bg-red-950/20",
+  hot: "bg-amber-50/60 dark:bg-amber-950/15",
 };
 
 function getHeatLevel(count: number, maxCount: number): HeatLevel {
@@ -133,16 +133,16 @@ export function NumberBadge({
 }) {
   let colorClass: string;
   if (selected) {
-    colorClass = "bg-loss text-white ring-2 ring-loss/60";
+    colorClass = "bg-red-600 text-white ring-2 ring-red-300/60";
   } else if (muted) {
     colorClass = POWER_MUTED_BG;
   } else if (variant === "outlined") {
-    colorClass = "border border-loss/70 text-loss bg-transparent";
+    colorClass = "border border-red-400/70 text-red-600 bg-transparent dark:border-red-600 dark:text-red-400";
   } else if (variant === "soft") {
-    colorClass = "bg-loss text-loss";
+    colorClass = "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
   } else {
     // filled — heat intensity
-    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-loss text-white";
+    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-red-600 text-white";
   }
 
   return (
@@ -237,8 +237,8 @@ function NumberCell({
     HEATMAP_CELL_PT,
     "px-1 pb-1.5",
     cellBg || "bg-card",
-    "hover:bg-loss/50 cursor-pointer",
-    selected && "bg-loss/80 ring-loss ring-2 ring-inset",
+    "cursor-pointer hover:bg-red-100/50 dark:hover:bg-red-950/30",
+    selected && "bg-red-100/80 ring-2 ring-red-500 ring-inset dark:bg-red-900/40",
   );
 
   return (
@@ -258,7 +258,7 @@ function NumberCell({
       </span>
       <div className="flex flex-col items-center gap-0.5">
         {isEmpty ? (
-          <span className="text-muted-foreground/20 text-xs tabular-nums">–</span>
+          <span className="text-muted-foreground/20 text-[11px] tabular-nums">–</span>
         ) : (
           <>
             {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
@@ -311,7 +311,7 @@ function MainGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
             style={{ background: POWER_HEX }}
           >
             P
@@ -360,7 +360,7 @@ function MainGrid({
         )}
       </NumberHeatmapHoverLayer>
       {isSparse && (
-        <p className="text-muted-foreground/60 text-xs italic">
+        <p className="text-muted-foreground/60 text-[11px] italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.
         </p>
       )}
@@ -474,12 +474,15 @@ function ComboLookupDialog({
             value={raw}
             onChange={(e) => handleCsvChange(e.target.value)}
             placeholder="Nhập số, vd 01,05,12,... (hoặc chọn trên bảng)"
-            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-3"
+            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-[3px]"
           />
 
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={cn("text-xs font-medium tabular-nums", isValidCount ? "text-profit" : "text-muted-foreground")}
+              className={cn(
+                "text-xs font-medium tabular-nums",
+                isValidCount ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+              )}
             >
               Đã chọn {selected.length} số
               {isValidCount && pt ? ` · ${POWER655_PLAY_TYPE_LABELS[pt]}` : " · cần 5, 6, 7–15 hoặc 18"}
@@ -501,7 +504,7 @@ function ComboLookupDialog({
                   key={n}
                   type="button"
                   onClick={() => onToggleNumber(n)}
-                  className="bg-loss text-loss hover:bg-loss inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
+                  className="inline-flex h-6 items-center gap-0.5 rounded-full bg-red-100 pr-1 pl-2 text-xs font-bold text-red-700 tabular-nums transition-colors hover:bg-red-200 dark:bg-red-900/40 dark:text-red-300 dark:hover:bg-red-900/60"
                   title="Bỏ chọn"
                 >
                   {n}

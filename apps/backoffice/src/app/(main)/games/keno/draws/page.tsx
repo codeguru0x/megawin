@@ -29,7 +29,7 @@ export default function KenoDrawsPage() {
       {/* Page Header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-3">
-          <div className="from-warning to-loss flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
             <CalendarClock className="size-4.5 text-white" />
           </div>
           <div>

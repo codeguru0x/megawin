@@ -63,7 +63,9 @@ export function WorkerToggleDialog({ row, onClose, mutation }: WorkerToggleDialo
               <div className="flex items-center gap-3">
                 <div
                   className={`flex size-10 items-center justify-center rounded-full text-white shadow-sm ${
-                    nextEnabled ? "from-profit to-game-mega645 bg-gradient-to-br" : "from-loss to-warning bg-gradient-to-br"
+                    nextEnabled
+                      ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
+                      : "bg-gradient-to-br from-red-500 to-rose-600"
                   }`}
                 >
                   {nextEnabled ? <Power className="size-5" /> : <PowerOff className="size-5" />}

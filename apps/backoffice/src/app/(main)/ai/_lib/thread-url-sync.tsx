@@ -66,6 +66,7 @@ export function ThreadUrlSync() {
       return;
     }
 
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome không track mutation runtime của ref.current qua các lần render — didInitialSyncRef.current thực sự đổi thành true ở nhánh này, effect sau lần chạy đầu sẽ thấy false này là true.
     if (!didInitialSyncRef.current) {
       didInitialSyncRef.current = true;
       prevActiveThreadIdRef.current = activeThreadId;

@@ -142,6 +142,7 @@ export function AiComposer({
   );
 
   const handleRetry = useCallback(() => {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome không track mutation runtime của ref.current qua các lần render — lastSentTextRef.current thực sự có thể là string (set ở handleSubmit).
     if (lastSentTextRef.current) {
       onSend(lastSentTextRef.current);
     }
@@ -180,7 +181,7 @@ export function AiComposer({
                   {errorDisplay.message}
                   {/* Chi tiết kỹ thuật CHỈ ở môi trường development (xem `describeAgentError`). */}
                   {errorDisplay.devDetail !== undefined && (
-                    <span className="mt-1 block font-mono text-xs wrap-break-word opacity-70">
+                    <span className="mt-1 block font-mono text-[10px] wrap-break-word opacity-70">
                       dev: {errorDisplay.devDetail}
                     </span>
                   )}

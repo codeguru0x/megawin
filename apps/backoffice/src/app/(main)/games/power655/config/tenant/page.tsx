@@ -106,7 +106,7 @@ export default function Power655TenantConfigPage() {
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="from-loss to-warning flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>
@@ -141,24 +141,24 @@ export default function Power655TenantConfigPage() {
       <div className="grid grid-cols-3 gap-4">
         <KpiCard
           icon={Users}
-          iconBg="bg-info"
-          iconColor="text-info"
+          iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+          iconColor="text-indigo-600 dark:text-indigo-400"
           label="Tổng đại lý"
           value={stats.total}
           isLoading={isLoading}
         />
         <KpiCard
           icon={CircleCheck}
-          iconBg="bg-profit"
-          iconColor="text-profit"
+          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+          iconColor="text-emerald-600 dark:text-emerald-400"
           label="Đang hoạt động"
           value={stats.active}
           isLoading={isLoading}
         />
         <KpiCard
           icon={CircleX}
-          iconBg="bg-loss"
-          iconColor="text-loss"
+          iconBg="bg-red-100 dark:bg-red-900/50"
+          iconColor="text-red-500 dark:text-red-400"
           label="Vô hiệu hoá"
           value={stats.inactive}
           isLoading={isLoading}
@@ -285,8 +285,8 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                   render={({ field }) => (
                     <FormItem>
                       <div className="mb-4 flex items-center gap-3">
-                        <div className="bg-info flex size-9 items-center justify-center rounded-lg">
-                          <TrendingUp className="text-info size-4" />
+                        <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/40">
+                          <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
                           <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>
@@ -322,9 +322,11 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                     <FormItem>
                       <div className="mb-4 flex items-center gap-3">
                         <div
-                          className={`flex size-9 items-center justify-center rounded-lg ${isEnabled ? "bg-profit" : "bg-loss"}`}
+                          className={`flex size-9 items-center justify-center rounded-lg ${isEnabled ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-red-100 dark:bg-red-950/40"}`}
                         >
-                          <Power className={`size-4 ${isEnabled ? "text-profit" : "text-loss"}`} />
+                          <Power
+                            className={`size-4 ${isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}
+                          />
                         </div>
                         <div>
                           <FormLabel className="text-sm font-semibold">Trạng thái game</FormLabel>
@@ -335,7 +337,9 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                         <FormControl>
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
-                        <span className={`text-sm font-medium ${isEnabled ? "text-profit" : "text-loss"}`}>
+                        <span
+                          className={`text-sm font-medium ${isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}
+                        >
                           {isEnabled ? "Đang hoạt động" : "Đã vô hiệu hoá"}
                         </span>
                       </div>
@@ -413,7 +417,7 @@ function AddTenantDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="from-loss to-warning flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
               <Building2 className="size-4.5 text-white" />
             </div>
             <div>

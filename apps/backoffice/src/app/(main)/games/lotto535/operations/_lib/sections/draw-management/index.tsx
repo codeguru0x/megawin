@@ -204,7 +204,7 @@ export function DrawManagementSection() {
                   cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này đưa kỳ về trạng thái{" "}
                   <strong>Published</strong> để vào lại luồng kết sổ lại — số trúng được giữ nguyên.
                 </p>
-                <p className="text-warning font-medium">
+                <p className="font-medium text-orange-600 dark:text-orange-400">
                   Chỉ thực hiện khi DBA đã xác nhận cập nhật jackpot cycle thủ công.
                 </p>
               </div>

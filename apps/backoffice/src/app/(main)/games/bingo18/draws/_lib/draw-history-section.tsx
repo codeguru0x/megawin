@@ -67,14 +67,14 @@ export function Bingo18DrawHistorySection() {
   const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
 
   function handleDateChange(from: string, to: string) {
-    void setFromDate(from);
-    void setToDate(to);
-    void setPage(null);
+    setFromDate(from);
+    setToDate(to);
+    setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    void setStatusParam(value === "all" ? null : value);
-    void setPage(null);
+    setStatusParam(value === "all" ? null : value);
+    setPage(null);
   }
 
   return (

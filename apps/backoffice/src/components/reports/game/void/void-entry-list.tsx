@@ -132,7 +132,7 @@ export function VoidEntryList({
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(entry.originalAmount)}
                     </TableCell>
-                    <TableCell className="text-warning text-right text-sm font-medium tabular-nums">
+                    <TableCell className="text-right text-sm font-medium text-amber-600 tabular-nums dark:text-amber-400">
                       {formatNumber(entry.refundAmount)}
                     </TableCell>
                   </TableRow>

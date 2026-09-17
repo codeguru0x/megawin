@@ -169,7 +169,7 @@ export function BulkConfirmDialog({
                 />
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <span className="text-profit flex items-center gap-1">
+                <span className="flex items-center gap-1 text-emerald-600">
                   <CheckCircle2 className="size-3.5" />
                   {batchState.successCount} thành công
                 </span>

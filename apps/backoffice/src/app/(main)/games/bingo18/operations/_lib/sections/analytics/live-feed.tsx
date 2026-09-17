@@ -24,24 +24,24 @@ import { cn } from "@/lib/utils";
 import type { LiveFeedEntry } from "../../types";
 
 const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string }> = {
-  singleNum: { dot: "bg-warning", text: "text-warning", fill: "#fbbf24" },
+  singleNum: { dot: "bg-amber-400", text: "text-amber-600 dark:text-amber-400", fill: "#fbbf24" },
   doubleMatch: {
-    dot: "bg-warning",
-    text: "text-warning",
+    dot: "bg-orange-500",
+    text: "text-orange-600 dark:text-orange-400",
     fill: "#f97316",
   },
   "tripleMatch-specific": {
-    dot: "bg-loss",
-    text: "text-loss",
+    dot: "bg-red-500",
+    text: "text-red-600 dark:text-red-400",
     fill: "#ef4444",
   },
   "tripleMatch-any": {
-    dot: "bg-loss",
-    text: "text-loss",
+    dot: "bg-rose-400",
+    text: "text-rose-600 dark:text-rose-400",
     fill: "#fb7185",
   },
-  sumTotal: { dot: "bg-info", text: "text-info", fill: "#0ea5e9" },
-  bigSmallDraw: { dot: "bg-game-mega645", text: "text-game-mega645", fill: "#14b8a6" },
+  sumTotal: { dot: "bg-cyan-500", text: "text-cyan-600 dark:text-cyan-400", fill: "#0ea5e9" },
+  bigSmallDraw: { dot: "bg-teal-500", text: "text-teal-600 dark:text-teal-400", fill: "#14b8a6" },
 };
 
 /** Compound key labels for tripleMatch subtypes in live feed */
@@ -73,7 +73,7 @@ function FeedRow({
       className={cn(
         "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
         isFirst && "bg-muted/20",
-        isLargeBet && "bg-loss/5",
+        isLargeBet && "bg-red-500/5",
       )}
       style={{ borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") }}
     >
@@ -82,7 +82,7 @@ function FeedRow({
           <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
           <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>{label}</span>
           {isLargeBet && (
-            <span className="bg-loss/15 text-loss inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-xs font-semibold">
+            <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
               Cược lớn
             </span>
           )}
@@ -91,11 +91,11 @@ function FeedRow({
         <div className="flex flex-wrap items-center gap-1">
           {isSide ? (
             entry.playType === "sumTotal" && entry.sum !== undefined ? (
-              <span className="bg-info/15 text-info inline-flex h-5 shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums">
+              <span className="inline-flex h-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/15 px-2 text-xs font-semibold text-cyan-700 tabular-nums dark:text-cyan-400">
                 Tổng {entry.sum}
               </span>
             ) : entry.playType === "bigSmallDraw" && entry.bet !== undefined ? (
-              <span className="bg-game-mega645/15 text-game-mega645 inline-flex h-5 shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold">
+              <span className="inline-flex h-5 shrink-0 items-center justify-center rounded-full bg-teal-500/15 px-2 text-xs font-semibold text-teal-700 dark:text-teal-400">
                 {(BINGO18_BIG_SMALL_BET_LABELS as Record<string, string>)[entry.bet] ?? entry.bet}
               </span>
             ) : (
@@ -105,7 +105,7 @@ function FeedRow({
             entry.numbers.map((n, idx) => (
               <span
                 key={`n-${idx}`}
-                className="bg-profit inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white tabular-nums"
+                className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500 text-[11px] font-bold text-white tabular-nums"
               >
                 {n}
               </span>
@@ -145,7 +145,7 @@ function FeedColumn({
       <div className="mb-1.5 flex items-center gap-1.5">
         <Icon className="text-muted-foreground size-3.5 shrink-0" />
         <span className="text-muted-foreground text-xs font-semibold">{title}</span>
-        <span className="text-muted-foreground/60 text-xs tabular-nums">{formatNumber(entries.length)}</span>
+        <span className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(entries.length)}</span>
       </div>
       <div className="max-h-[560px] space-y-0.5 overflow-y-auto pr-1">
         {entries.length === 0 ? (
@@ -181,10 +181,10 @@ export function LiveFeed({
         <div className="flex items-center gap-2">
           <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
-          <span className="text-muted-foreground/60 text-xs tabular-nums">{formatNumber(totalCount)} phiếu</span>
+          <span className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(totalCount)} phiếu</span>
           {!isSettled && (
-            <span className="text-profit ml-auto flex items-center gap-1 text-xs font-medium">
-              <span className="bg-profit size-1.5 animate-pulse rounded-full" />
+            <span className="ml-auto flex items-center gap-1 text-xs font-medium text-green-600">
+              <span className="size-1.5 animate-pulse rounded-full bg-green-500" />
               Live
             </span>
           )}

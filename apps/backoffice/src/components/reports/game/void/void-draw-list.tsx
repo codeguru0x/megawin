@@ -21,6 +21,8 @@ export interface VoidDrawListProps {
  * Click row → drill vào Tenant Breakdown (Level 2).
  */
 export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
+  const _totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
+  const _totalPlayers = data.reduce((s, r) => s + r.playerCount, 0);
   const totalTenants = data.reduce((s, r) => s + r.tenantCount, 0);
   const totalOriginal = data.reduce((s, r) => s + r.totalOriginalStake, 0);
   const totalRefund = data.reduce((s, r) => s + r.totalRefundAmount, 0);
@@ -71,7 +73,7 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(row.totalOriginalStake)}
                   </TableCell>
-                  <TableCell className="text-warning pr-5 text-right text-sm font-medium tabular-nums">
+                  <TableCell className="pr-5 text-right text-sm font-medium text-amber-600 tabular-nums dark:text-amber-400">
                     {formatNumber(row.totalRefundAmount)}
                   </TableCell>
                 </TableRow>
@@ -90,7 +92,7 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
                   <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalOriginal)}
                   </TableCell>
-                  <TableCell className="text-warning pr-5 text-right text-sm font-semibold tabular-nums">
+                  <TableCell className="pr-5 text-right text-sm font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                     {formatNumber(totalRefund)}
                   </TableCell>
                 </TableRow>

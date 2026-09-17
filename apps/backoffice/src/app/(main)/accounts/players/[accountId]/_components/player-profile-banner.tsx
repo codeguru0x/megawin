@@ -55,7 +55,7 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
     <div className="bg-card flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-xl border px-5 py-3.5 shadow-sm">
       {/* Username — primary identifier */}
       <div className="flex min-w-0 items-center gap-2">
-        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Tài khoản</span>
+        <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">Tài khoản</span>
         <span className="text-foreground font-mono text-sm font-semibold">{profile.username}</span>
       </div>
 
@@ -63,7 +63,7 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
 
       {/* Display name */}
       <div className="flex min-w-0 items-center gap-2">
-        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Tên hiển thị</span>
+        <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">Tên hiển thị</span>
         <span className="text-foreground text-sm">{profile.displayName}</span>
       </div>
 
@@ -72,7 +72,7 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
       {/* Status badge */}
       <div className="flex items-center gap-2">
         <Shield className="text-muted-foreground size-3.5 shrink-0" />
-        <Badge variant={statusVariant} className="h-5 text-xs">
+        <Badge variant={statusVariant} className="h-5 text-[11px]">
           {statusLabel}
         </Badge>
       </div>

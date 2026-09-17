@@ -26,10 +26,10 @@ import type { DiceCellItem } from "../../types";
 /** 5 cấp heat nền theo Dòng tiền: cold → hot (hot = amber, đồng bộ cross-game). */
 const HEAT_LEVELS = [
   "bg-card border-border/50",
-  "bg-warning/40 border-warning/40",
-  "bg-warning/80 border-warning/60",
-  "bg-warning/80 border-warning/70",
-  "bg-warning/80 border-warning/80",
+  "bg-amber-50/40 border-amber-200/40 dark:bg-amber-950/10 dark:border-amber-900/30",
+  "bg-amber-50/80 border-amber-200/60 dark:bg-amber-950/25 dark:border-amber-800/40",
+  "bg-amber-100/80 border-amber-300/70 dark:bg-amber-900/35 dark:border-amber-700/50",
+  "bg-amber-200/80 border-amber-400/80 dark:bg-amber-800/45 dark:border-amber-600/60",
 ] as const;
 
 function heatLevel(amount: number, max: number): number {
@@ -76,7 +76,7 @@ const DiceCell = memo(function DiceCell({
           <span className="text-base leading-tight font-bold tabular-nums">
             {amount > 0 ? formatCurrency(amount) : "—"}
           </span>
-          <span className="text-muted-foreground text-xs tabular-nums">{formatNumber(sets)}x</span>
+          <span className="text-muted-foreground text-[11px] tabular-nums">{formatNumber(sets)}x</span>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-xs tabular-nums">
@@ -93,8 +93,8 @@ export function DiceBoard({ cells }: { cells: DiceCellItem[] }) {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Dice5 className="text-warning size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+            <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Dòng tiền theo mặt xúc xắc</CardTitle>

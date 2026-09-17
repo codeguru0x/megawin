@@ -26,21 +26,21 @@ type AlertSeverity = (typeof OpsAlertSeverity)[keyof typeof OpsAlertSeverity];
 /** Style token severity — dùng cho icon + accent của từng hàng alert. */
 const SEVERITY_STYLES: Record<AlertSeverity, { badge: string; icon: string; ring: string; label: string }> = {
   [OpsAlertSeverity.Critical]: {
-    badge: "bg-loss",
-    icon: "text-loss",
-    ring: "ring-loss/70",
+    badge: "bg-red-50 dark:bg-red-950/40",
+    icon: "text-red-600 dark:text-red-400",
+    ring: "ring-red-200/70 dark:ring-red-800/50",
     label: "Nghiêm trọng",
   },
   [OpsAlertSeverity.Warning]: {
-    badge: "bg-warning",
-    icon: "text-warning",
-    ring: "ring-warning/70",
+    badge: "bg-amber-50 dark:bg-amber-950/40",
+    icon: "text-amber-600 dark:text-amber-400",
+    ring: "ring-amber-200/70 dark:ring-amber-800/50",
     label: "Cảnh báo",
   },
   [OpsAlertSeverity.Info]: {
-    badge: "bg-info",
-    icon: "text-info",
-    ring: "ring-info/70",
+    badge: "bg-sky-50 dark:bg-sky-950/40",
+    icon: "text-sky-600 dark:text-sky-400",
+    ring: "ring-sky-200/70 dark:ring-sky-800/50",
     label: "Thông tin",
   },
 };
@@ -242,7 +242,7 @@ function AlertToggleRow({
           >
             {meta.label}
           </span>
-          <span className={cn("rounded px-1.5 py-px text-xs leading-tight font-medium", style.badge, style.icon)}>
+          <span className={cn("rounded px-1.5 py-px text-[10px] leading-tight font-medium", style.badge, style.icon)}>
             {style.label}
           </span>
           <Tooltip>
@@ -407,13 +407,13 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                         </TooltipContent>
                       </Tooltip>
                     </p>
-                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
+                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-medium">
                       {enabledCount}/{alertMeta.length} đang bật
                     </span>
                   </div>
 
                   {enabledCount === 0 ? (
-                    <div className="border-warning/70 bg-warning text-warning flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
+                    <div className="flex items-center gap-2 rounded-md border border-amber-200/70 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
                       <BellOff className="size-4 shrink-0" />
                       Tất cả alert đang tắt — worker sẽ không sinh cảnh báo rủi ro nào.
                     </div>

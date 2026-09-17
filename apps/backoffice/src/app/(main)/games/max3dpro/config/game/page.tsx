@@ -37,7 +37,7 @@ export default function Max3dproConfigPage() {
   return (
     <div className="@container/main flex flex-col gap-2">
       <div className="flex items-center gap-2.5">
-        <div className="from-game-max3dpro to-game-max3dpro-muted flex size-8 items-center justify-center rounded-lg bg-linear-to-br shadow-sm">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-pink-500 to-pink-600 shadow-sm">
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
@@ -64,22 +64,22 @@ export default function Max3dproConfigPage() {
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
             <TabsTrigger value="prizes" className="gap-1.5">
-              <DollarSign className="text-profit size-4" />
+              <DollarSign className="size-4 text-emerald-500" />
               Giải thưởng
             </TabsTrigger>
             <TabsTrigger value="rates" className="gap-1.5">
-              <Percent className="text-info size-4" /> Tài chính
+              <Percent className="size-4 text-blue-500" /> Tài chính
             </TabsTrigger>
             <TabsTrigger value="play" className="gap-1.5">
-              <Settings2 className="text-game-max3d size-4" />
+              <Settings2 className="size-4 text-violet-500" />
               Luật chơi
             </TabsTrigger>
             <TabsTrigger value="ops" className="gap-1.5">
-              <ShieldAlert className="text-loss size-4" />
+              <ShieldAlert className="size-4 text-red-500" />
               Vận hành
             </TabsTrigger>
             <TabsTrigger value="vietlott" className="gap-1.5">
-              <ExternalLink className="text-info size-4" />
+              <ExternalLink className="size-4 text-blue-500" />
               Vietlott
             </TabsTrigger>
           </TabsList>

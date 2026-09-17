@@ -43,44 +43,44 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Doanh thu"
         value={formatNumber(kpi.totalRevenue)}
       />
       <KpiCard
         icon={FileText}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label="Entries"
         value={formatNumber(kpi.totalEntries)}
       />
       <KpiCard
         icon={Grid2x2}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Số bộ cược"
         value={formatNumber(kpi.totalSets)}
         sub="cơ bản + bổ sung"
       />
       <KpiCard
         icon={Users}
-        iconBg="bg-game-max3d"
-        iconColor="text-game-max3d"
+        iconBg="bg-violet-100 dark:bg-violet-900/50"
+        iconColor="text-violet-600 dark:text-violet-400"
         label="Người chơi"
         value={kpi.uniquePlayers === null ? "—" : formatNumber(kpi.uniquePlayers)}
       />
       <KpiCard
         icon={Wallet}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Hoa hồng ĐL"
         value={formatNumber(kpi.totalCommission)}
       />
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-orange-100 dark:bg-orange-900/50"
+        iconColor="text-orange-600 dark:text-orange-400"
         label={REPORT_COLUMN_LABELS.netRevenueAfterCommission}
         value={formatNumber(kpi.netRevenue)}
         sub="Sau hoa hồng đại lý"

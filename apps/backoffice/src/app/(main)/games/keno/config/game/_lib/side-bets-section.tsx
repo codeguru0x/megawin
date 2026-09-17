@@ -146,7 +146,7 @@ function BetRtpStrip({ summaries }: { summaries: BetSummary[] }) {
           key={b.label}
           className={cn(
             "font-semibold tabular-nums",
-            b.payoutRatio > 1 ? "text-loss" : b.payoutRatio > 0.8 ? "text-warning" : "text-profit",
+            b.payoutRatio > 1 ? "text-red-600" : b.payoutRatio > 0.8 ? "text-amber-600" : "text-emerald-600",
           )}
         >
           {b.label}: {(b.payoutRatio * 100).toFixed(1)}%
@@ -178,7 +178,7 @@ function BigSmallGroup({
   const bestMargin = Math.max(...betSummaries.map((b) => b.marginPercent));
   const allSafe = overBetCount === 0;
 
-  const marginColor = worstMargin >= 50 ? "text-profit" : worstMargin >= 0 ? "text-warning" : "text-loss";
+  const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -191,7 +191,7 @@ function BigSmallGroup({
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className="bg-warning text-xs text-white">Lớn/Nhỏ</Badge>
+            <Badge className="bg-amber-500 text-xs text-white">Lớn/Nhỏ</Badge>
             <span className="text-muted-foreground text-sm">{BS_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -281,10 +281,10 @@ function BigSmallGroup({
                   className={cn(
                     "text-right text-xs font-semibold tabular-nums",
                     tier && tier.payoutRatio > 1
-                      ? "text-loss"
+                      ? "text-red-600"
                       : tier && tier.payoutRatio > 0.5
-                        ? "text-warning"
-                        : "text-profit",
+                        ? "text-amber-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -292,7 +292,7 @@ function BigSmallGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "font-bold text-red-600" : "text-muted-foreground",
                   )}
                 >
                   {tier ? fmt(Math.round(tier.breakEvenPrize)) : "–"}
@@ -342,7 +342,7 @@ function EvenOddGroup({
   const bestMargin = Math.max(...betSummaries.map((b) => b.marginPercent));
   const allSafe = overBetCount === 0;
 
-  const marginColor = worstMargin >= 50 ? "text-profit" : worstMargin >= 0 ? "text-warning" : "text-loss";
+  const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -355,7 +355,7 @@ function EvenOddGroup({
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className="bg-game-mega645 text-xs text-white">Chẵn/Lẻ</Badge>
+            <Badge className="bg-teal-500 text-xs text-white">Chẵn/Lẻ</Badge>
             <span className="text-muted-foreground text-sm">{EO_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -445,10 +445,10 @@ function EvenOddGroup({
                   className={cn(
                     "text-right text-xs font-semibold tabular-nums",
                     tier && tier.payoutRatio > 1
-                      ? "text-loss"
+                      ? "text-red-600"
                       : tier && tier.payoutRatio > 0.5
-                        ? "text-warning"
-                        : "text-profit",
+                        ? "text-amber-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -456,7 +456,7 @@ function EvenOddGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "font-bold text-red-600" : "text-muted-foreground",
                   )}
                 >
                   {tier ? fmt(Math.round(tier.breakEvenPrize)) : "–"}

@@ -66,7 +66,7 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningEntryBoardDetai
   const numbers = board.numbers ?? [];
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-3 py-1.5 pl-2"
+      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
       style={{
         borderLeftColor: boardColor,
         gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
@@ -79,7 +79,7 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningEntryBoardDetai
         <div className="flex items-center gap-2">
           <span className="text-foreground text-xs font-semibold whitespace-nowrap">
             Pick {board.pickCount ?? 0}/{board.matchCount ?? 0}
-            {board.isCapped && <span className="text-warning ml-1">[cap]</span>}
+            {board.isCapped && <span className="ml-1 text-amber-600">[cap]</span>}
           </span>
           <div className="flex flex-wrap items-center gap-0.5">
             {numbers.map((n) => (
@@ -102,7 +102,7 @@ function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
   const outcomeLabel = board.outcome ? KENO_OUTCOME_LABELS[board.outcome] : undefined;
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-3 py-1.5 pl-2"
+      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
       style={{
         borderLeftColor: boardColor,
         gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
@@ -112,12 +112,12 @@ function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
         {board.boardNo}
       </span>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        <span className="border-info bg-info text-info rounded border px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap">
+        <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-400">
           {typeLabel} · {betLabel}
         </span>
         {outcomeLabel && <span className="text-muted-foreground text-xs whitespace-nowrap">{outcomeLabel}</span>}
       </div>
-      <span className="text-info justify-self-end text-xs font-semibold whitespace-nowrap tabular-nums">
+      <span className="justify-self-end text-xs font-semibold whitespace-nowrap text-cyan-700 tabular-nums dark:text-cyan-400">
         +{formatNumber(board.winAmount)}
       </span>
     </div>
@@ -171,26 +171,26 @@ function KpiBar({
     <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
       {cappedEntries > 0 && (
         <KpiCard
           icon={AlertCircle}
-          iconBg="bg-warning"
-          iconColor="text-warning"
+          iconBg="bg-amber-100 dark:bg-amber-900/50"
+          iconColor="text-amber-600 dark:text-amber-400"
           label="Bị Payout Cap"
           value={formatNumber(cappedEntries)}
-          valueColor="text-warning"
+          valueColor="text-amber-600 dark:text-amber-400"
         />
       )}
     </div>
@@ -215,14 +215,14 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
         // Entry bị payout cap: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Nhãn [cap] đã có trong board detail.
-        hasCapped && "border-l-3 border-l-warning",
+        hasCapped && "border-l-[3px] border-l-amber-400",
       )}
     >
       <TableCell className="py-3 pl-6 text-center">
         <span
           className={cn(
             "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            hasCapped ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground",
+            hasCapped ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground",
           )}
         >
           {rowNo}
@@ -291,8 +291,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
       >
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-warning/15 ring-warning/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <Trophy className="text-warning size-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 ring-1 ring-orange-500/30">
+              <Trophy className="size-5 text-orange-500" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>

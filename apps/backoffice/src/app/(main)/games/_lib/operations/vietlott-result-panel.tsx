@@ -69,8 +69,10 @@ export function VietlottResultPanel({
   if (!found) {
     return (
       <PanelBox tone="amber">
-        <TriangleAlert className="text-warning size-3.5 shrink-0" />
-        <p className="text-warning text-sm font-medium">Chưa có kết quả cho kỳ này — bạn hãy tự nhập.</p>
+        <TriangleAlert className="size-3.5 shrink-0 text-amber-700 dark:text-amber-400" />
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+          Chưa có kết quả cho kỳ này — bạn hãy tự nhập.
+        </p>
       </PanelBox>
     );
   }
@@ -78,9 +80,9 @@ export function VietlottResultPanel({
   if (alreadyApplied) {
     return (
       <PanelBox tone="emerald">
-        <WandSparkles className="text-profit size-3.5 shrink-0" />
+        <WandSparkles className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
         <div className="flex flex-1 items-center justify-between gap-2">
-          <p className="text-profit text-sm">Đã điền kết quả tự động.</p>
+          <p className="text-sm text-emerald-800 dark:text-emerald-300">Đã điền kết quả tự động.</p>
           {verifiedByHuman !== null && <VietlottTrustBadge verifiedByHuman={verifiedByHuman} />}
         </div>
       </PanelBox>
@@ -96,9 +98,9 @@ export function VietlottResultPanel({
   if (diff.isIdentical) {
     return (
       <PanelBox tone="emerald">
-        <CheckCircle2 className="text-profit size-3.5 shrink-0" />
+        <CheckCircle2 className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
         <div className="flex flex-1 items-center justify-between gap-2">
-          <p className="text-profit text-sm">Kết quả đang nhập khớp với Vietlott.</p>
+          <p className="text-sm text-emerald-800 dark:text-emerald-300">Kết quả đang nhập khớp với Vietlott.</p>
           {verifiedByHuman !== null && <VietlottTrustBadge verifiedByHuman={verifiedByHuman} />}
         </div>
       </PanelBox>
@@ -107,9 +109,9 @@ export function VietlottResultPanel({
 
   return (
     <PanelBox tone="amber">
-      <TriangleAlert className="text-warning size-3.5 shrink-0" />
+      <TriangleAlert className="size-3.5 shrink-0 text-amber-700 dark:text-amber-400" />
       <div className="flex flex-1 items-center justify-between gap-2">
-        <p className="text-warning text-sm">
+        <p className="text-sm text-amber-800 dark:text-amber-300">
           {diff.sameSetDifferentOrder
             ? "Cùng tập số, khác thứ tự quay."
             : `${diff.diffCount}/${totalCount} số khác Vietlott.`}
@@ -118,7 +120,7 @@ export function VietlottResultPanel({
           type="button"
           size="sm"
           onClick={onApply}
-          className="bg-warning hover:bg-warning shrink-0 gap-1.5 text-white"
+          className="shrink-0 gap-1.5 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700"
         >
           <WandSparkles className="size-3.5" />
           Áp dụng
@@ -134,8 +136,8 @@ function PanelBox({ tone, children }: { tone: "muted" | "amber" | "emerald"; chi
       className={cn(
         "flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5",
         tone === "muted" && "border-border bg-muted/30",
-        tone === "amber" && "border-warning/60 bg-warning",
-        tone === "emerald" && "border-profit/60 bg-profit",
+        tone === "amber" && "border-amber-300/60 bg-amber-50 dark:border-amber-700/60 dark:bg-amber-900/20",
+        tone === "emerald" && "border-emerald-300/60 bg-emerald-50 dark:border-emerald-700/60 dark:bg-emerald-900/20",
       )}
     >
       {children}

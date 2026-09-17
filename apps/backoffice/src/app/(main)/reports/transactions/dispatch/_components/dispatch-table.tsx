@@ -168,7 +168,7 @@ export function DispatchTable({
                   <TableCell className="text-center">
                     {isPending && (
                       <Loader2
-                        className="text-warning inline-block size-4 animate-spin"
+                        className="inline-block size-4 animate-spin text-amber-500"
                         aria-label={DISPATCH_ORDER_STATUS_LABELS[row.status]}
                       />
                     )}
@@ -197,7 +197,9 @@ export function DispatchTable({
                     <span
                       className={cn(
                         "inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium",
-                        row.action === "debit" ? "bg-loss/10 text-loss" : "bg-profit/10 text-profit",
+                        row.action === "debit"
+                          ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
+                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
                       )}
                     >
                       {TRANSACTION_ACTION_LABELS[row.action]}
@@ -253,7 +255,7 @@ export function DispatchTable({
                         title={row.batchKey}
                       >
                         {batch.op && batch.purpose && (
-                          <span className="text-muted-foreground flex items-center gap-1 text-xs font-semibold tracking-wide uppercase">
+                          <span className="text-muted-foreground flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase">
                             <span>{batch.op}</span>
                             <span className="opacity-40">·</span>
                             <span>{batch.purpose}</span>

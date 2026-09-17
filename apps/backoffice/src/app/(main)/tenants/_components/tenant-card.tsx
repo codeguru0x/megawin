@@ -62,7 +62,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
   const maskedKey = tenant.apiKey.slice(0, 8) + "••••••••••••••••";
 
   function handleCopy(key: string) {
-    void navigator.clipboard.writeText(key);
+    navigator.clipboard.writeText(key);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -117,8 +117,8 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             {/* API Key */}
             <div className="p-6">
               <div className="mb-4 flex items-center gap-3">
-                <div className="bg-warning flex size-9 items-center justify-center rounded-lg">
-                  <Key className="text-warning size-4" />
+                <div className="flex size-9 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/40">
+                  <Key className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">API Key</p>
@@ -148,7 +148,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
                   aria-label="Sao chép API key"
                 >
                   {copied && !newApiKey ? (
-                    <Check className="text-profit size-3.5" />
+                    <Check className="size-3.5 text-emerald-600" />
                   ) : (
                     <Copy className="text-muted-foreground size-3.5" />
                   )}
@@ -160,12 +160,14 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="p-6">
               <div className="mb-4 flex items-center gap-3">
                 <div
-                  className={`flex size-9 items-center justify-center rounded-lg ${isActive ? "bg-profit" : "bg-loss"}`}
+                  className={`flex size-9 items-center justify-center rounded-lg ${
+                    isActive ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-red-100 dark:bg-red-950/40"
+                  }`}
                 >
                   {isActive ? (
-                    <CheckCircle2 className="text-profit size-4" />
+                    <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
                   ) : (
-                    <XCircle className="text-loss size-4" />
+                    <XCircle className="size-4 text-red-500 dark:text-red-400" />
                   )}
                 </div>
                 <div>
@@ -179,7 +181,11 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
                   onCheckedChange={() => setStatusDialogOpen(true)}
                   disabled={toggleStatus.isPending}
                 />
-                <span className={`text-sm font-medium ${isActive ? "text-profit" : "text-loss"}`}>
+                <span
+                  className={`text-sm font-medium ${
+                    isActive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                  }`}
+                >
                   {isActive ? "Đang hoạt động" : "Đã vô hiệu hoá"}
                 </span>
                 {toggleStatus.isPending && <Spinner className="size-4" />}
@@ -192,14 +198,14 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="flex items-center gap-3 px-6 py-4">
               <Globe className="text-muted-foreground size-4 shrink-0" />
               <div className="min-w-0">
-                <p className="text-muted-foreground text-xs">Callback URL</p>
+                <p className="text-muted-foreground text-[11px]">Callback URL</p>
                 <p className="text-foreground truncate text-xs font-medium">{tenant.callbackBaseUrl}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4">
               <Calendar className="text-muted-foreground size-4 shrink-0" />
               <div className="min-w-0">
-                <p className="text-muted-foreground text-xs">Ngày tạo</p>
+                <p className="text-muted-foreground text-[11px]">Ngày tạo</p>
                 <p className="text-foreground text-xs font-medium tabular-nums">
                   {new Date(tenant.createdAt).toLocaleDateString("vi-VN", {
                     day: "2-digit",
@@ -216,7 +222,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
 
         {/* Card Footer */}
         <CardFooter className="justify-between border-t px-6 py-3">
-          <p className="text-muted-foreground text-xs tabular-nums">
+          <p className="text-muted-foreground text-[11px] tabular-nums">
             Cập nhật lần cuối:{" "}
             {new Date(tenant.updatedAt).toLocaleDateString("vi-VN", {
               day: "2-digit",
@@ -226,7 +232,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
               minute: "2-digit",
             })}
           </p>
-          {tenant.description && <p className="text-muted-foreground text-xs italic">{tenant.description}</p>}
+          {tenant.description && <p className="text-muted-foreground text-[11px] italic">{tenant.description}</p>}
         </CardFooter>
       </Card>
 
@@ -275,7 +281,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="bg-muted/50 flex items-center gap-2 rounded-md border p-3">
               <code className="flex-1 font-mono text-sm break-all">{newApiKey}</code>
               <Button variant="outline" size="icon" className="shrink-0" onClick={() => handleCopy(newApiKey)}>
-                {copied ? <Check className="text-profit size-4" /> : <Copy className="size-4" />}
+                {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
               </Button>
             </div>
             <DialogFooter>

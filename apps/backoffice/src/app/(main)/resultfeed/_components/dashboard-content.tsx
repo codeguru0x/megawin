@@ -31,32 +31,32 @@ const STATE_KPI_STYLES: Record<
 > = {
   [ConsensusState.Conflict]: {
     icon: AlertTriangle,
-    iconBg: "bg-loss",
-    iconColor: "text-loss",
+    iconBg: "bg-rose-100 dark:bg-rose-900/50",
+    iconColor: "text-rose-600 dark:text-rose-400",
     sub: "Cần xử lý ngay",
   },
   [ConsensusState.Pending]: {
     icon: Clock,
-    iconBg: "bg-warning",
-    iconColor: "text-warning",
+    iconBg: "bg-amber-100 dark:bg-amber-900/50",
+    iconColor: "text-amber-600 dark:text-amber-400",
     sub: "Đang chờ nguồn",
   },
   [ConsensusState.Agreed]: {
     icon: CheckCircle2,
-    iconBg: "bg-profit",
-    iconColor: "text-profit",
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
     sub: "Các nguồn tự khớp",
   },
   [ConsensusState.HumanVerified]: {
     icon: ShieldCheck,
-    iconBg: "bg-info",
-    iconColor: "text-info",
+    iconBg: "bg-blue-100 dark:bg-blue-900/50",
+    iconColor: "text-blue-600 dark:text-blue-400",
     sub: "Người đã xác nhận",
   },
   [ConsensusState.Rejected]: {
     icon: XCircle,
-    iconBg: "bg-muted",
-    iconColor: "text-muted-foreground",
+    iconBg: "bg-slate-100 dark:bg-slate-800",
+    iconColor: "text-slate-600 dark:text-slate-400",
     sub: "Không hợp lệ",
   },
 };
@@ -72,7 +72,12 @@ function StateKpiCard({ state, count }: { state: ConsensusState; count: number }
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-muted-foreground text-xs font-medium">{CONSENSUS_STATE_LABELS[state]}</p>
-        <p className={cn("text-foreground text-lg font-bold tabular-nums", isConflict && count > 0 && "text-loss")}>
+        <p
+          className={cn(
+            "text-foreground text-lg font-bold tabular-nums",
+            isConflict && count > 0 && "text-rose-600 dark:text-rose-400",
+          )}
+        >
           {formatNumber(count)}
         </p>
         <p className="text-muted-foreground truncate text-xs">{sub}</p>
@@ -185,7 +190,7 @@ export function DashboardContent() {
       <Card className="gap-0 overflow-hidden py-0">
         <CardHeader className="border-b px-5 py-4">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="text-warning size-4" />
+            <AlertTriangle className="size-4 text-amber-500" />
             <CardTitle className="text-sm font-semibold">Alert mới ({alerts.length})</CardTitle>
           </div>
         </CardHeader>

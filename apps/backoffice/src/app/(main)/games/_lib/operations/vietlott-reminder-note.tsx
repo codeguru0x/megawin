@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
  * `py-2.5` riêng, không cần khoảng cách lớn) — 6 game còn lại (giai đoạn 2, chưa làm) vẫn
  * dùng mặc định `mt-3`, KHÔNG bị breaking.
  *
- * Bỏ icon `AlertTriangle` + giảm còn `text-xs` so với trước (P09 §6.6) — nhắc nhở tĩnh
+ * Bỏ icon `AlertTriangle` + giảm còn `text-[11px]` so với trước (P09 §6.6) — nhắc nhở tĩnh
  * luôn hiện, phải nhẹ nhất về thị giác trong khối "Tham chiếu Vietlott", không tranh
  * attention với `VietlottResultPanel` (khối trạng thái động, quan trọng hơn).
  *
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
  */
 export function VietlottReminderNote({ className }: { className?: string }) {
   return (
-    <p className={cn("text-muted-foreground/80 mt-3 text-xs", className)}>
+    <p className={cn("text-muted-foreground/80 mt-3 text-[11px]", className)}>
       Luôn đối chiếu mã kỳ với trang Vietlott trước khi lưu — giá trị gợi ý (nếu có) chỉ để so sánh, không phải giá trị
       chắc chắn đúng.
     </p>

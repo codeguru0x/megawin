@@ -368,9 +368,9 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
 
                 {scheduleChanged && (
-                  <div className="border-warning/50 bg-warning mt-4 flex items-start gap-2 rounded-lg border px-3 py-2.5">
-                    <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
-                    <p className="text-warning text-xs">
+                  <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2.5 dark:bg-amber-900/20">
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
                       Đổi giờ quay sẽ làm <strong>mã kỳ Vietlott hiện tại vô hiệu</strong> — sau khi lưu, hãy vào mục
                       "Mã kỳ Vietlott" bên dưới để cập nhật lại, nếu không các kỳ sau sẽ được gợi ý mã kỳ sai.
                     </p>

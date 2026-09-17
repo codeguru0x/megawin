@@ -30,8 +30,8 @@ export function JackpotCyclesSection() {
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center gap-2.5">
-        <div className="bg-game-max3d flex size-8 items-center justify-center rounded-lg">
-          <Crown className="text-game-max3d size-4" />
+        <div className="flex size-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/50">
+          <Crown className="size-4 text-violet-600 dark:text-violet-400" />
         </div>
         <div>
           <h2 className="text-foreground text-sm font-semibold">Lịch sử chia giải / Trúng Jackpot</h2>
@@ -66,8 +66,8 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
       <div
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
-          isSplit && "border-warning bg-warning/30",
-          isWinner && "border-profit bg-profit/30",
+          isSplit && "border-amber-200 bg-amber-50/30 dark:border-amber-800/50 dark:bg-amber-950/10",
+          isWinner && "border-green-200 bg-green-50/30 dark:border-green-800/50 dark:bg-green-950/10",
           !isSplit && !isWinner && "bg-card",
         )}
       >
@@ -81,9 +81,9 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
                 isWinner
-                  ? "from-profit to-game-mega645 shadow-profit/20 bg-linear-to-br shadow-md"
+                  ? "bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20"
                   : isSplit
-                    ? "from-warning to-loss shadow-warning/20 bg-linear-to-br shadow-md"
+                    ? "bg-linear-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/20"
                     : "bg-muted",
               )}
             >
@@ -115,7 +115,12 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
 
             {/* Amount */}
             <div className="text-right">
-              <p className={cn("text-lg font-bold tabular-nums", isWinner ? "text-profit" : "text-warning")}>
+              <p
+                className={cn(
+                  "text-lg font-bold tabular-nums",
+                  isWinner ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400",
+                )}
+              >
                 {formatVNDCompact(cycle.currentAmount)}
               </p>
               <p className="text-muted-foreground text-xs tabular-nums">
@@ -162,7 +167,7 @@ function StatMini({ label, value }: { label: string; value: string }) {
 function CycleReasonBadge({ reason }: { reason?: string }) {
   if (reason === JackpotCycleCloseReason.Winner) {
     return (
-      <Badge className="border-profit/30 bg-profit/15 text-profit gap-1">
+      <Badge className="gap-1 border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
         <Sparkles className="size-3" />
         Trúng Jackpot
       </Badge>
@@ -170,7 +175,7 @@ function CycleReasonBadge({ reason }: { reason?: string }) {
   }
   if (reason === JackpotCycleCloseReason.Split) {
     return (
-      <Badge className="border-warning/30 bg-warning/15 text-warning gap-1">
+      <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
         <Split className="size-3" />
         Chia giải
       </Badge>
@@ -209,7 +214,7 @@ function SplitDetailTable({ detail }: { detail: NonNullable<JackpotCycleSummary[
                 <TableCell className="pl-5 font-medium capitalize">{tier}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatNumber(d.winnerCount)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatNumber(d.totalAmount)}</TableCell>
-                <TableCell className="text-warning pr-5 text-right font-semibold tabular-nums">
+                <TableCell className="pr-5 text-right font-semibold text-amber-700 tabular-nums dark:text-amber-400">
                   {formatNumber(d.bonusPerWinner)}
                 </TableCell>
               </TableRow>
@@ -242,9 +247,9 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
             key={`${w.entryId}-${idx}`}
             type="button"
             onClick={() => setSelectedEntryId(w.entryId)}
-            className="group border-profit bg-profit/50 hover:border-profit hover:bg-profit/60 focus-visible:ring-profit/50 flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+            className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3.5 text-left transition-colors hover:border-green-400 hover:bg-green-100/60 focus-visible:ring-2 focus-visible:ring-green-500/50 focus-visible:outline-none dark:border-green-800/50 dark:bg-green-950/20 dark:hover:border-green-700 dark:hover:bg-green-950/40"
           >
-            <div className="from-profit to-game-mega645 shadow-profit/20 flex size-10 items-center justify-center rounded-lg bg-linear-to-br shadow-md">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20">
               <User className="size-4.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
@@ -254,7 +259,9 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2.5">
-              <p className="text-profit text-lg font-bold tabular-nums">{formatNumber(w.prizeAmount)}</p>
+              <p className="text-lg font-bold text-green-700 tabular-nums dark:text-green-400">
+                {formatNumber(w.prizeAmount)}
+              </p>
             </div>
           </button>
         ))}

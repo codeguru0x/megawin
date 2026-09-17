@@ -51,14 +51,14 @@ export function getNextAction(
     case DrawStatus.SalesOpen:
       return {
         label: "Đóng bán",
-        className: "bg-warning hover:bg-warning text-white",
+        className: "bg-amber-600 hover:bg-amber-700 text-white",
         handler: handlers.onCloseSales,
         icon: Lock,
       };
     case DrawStatus.SalesClosed:
       return {
         label: "Công bố kết quả",
-        className: "bg-game-max3d hover:bg-game-max3d text-white",
+        className: "bg-violet-600 hover:bg-violet-700 text-white",
         handler: handlers.onPublishResult,
         icon: Radio,
       };
@@ -69,7 +69,7 @@ export function getNextAction(
           label: "Kết sổ lại",
           handler: handlers.onTriggerResettle,
           icon: RotateCcw,
-          className: "bg-warning hover:bg-warning text-white",
+          className: "bg-orange-600 hover:bg-orange-700 text-white",
         };
       }
       return {

@@ -54,8 +54,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
           <CardContent className="p-0">
             <div className="p-6 pb-4">
               <div className="flex items-center gap-3">
-                <div className="bg-warning flex size-9 items-center justify-center rounded-lg">
-                  <Trophy className="text-warning size-4" />
+                <div className="flex size-9 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-950/40">
+                  <Trophy className="size-4 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
                   <h3 className="text-foreground text-sm font-semibold">Cấu hình Jackpot</h3>
@@ -97,10 +97,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               />
             </div>
 
-            <div className="bg-info/80 border-t px-6 py-3">
+            <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
               <div className="flex items-start gap-2">
-                <Info className="text-info mt-0.5 size-3.5 shrink-0" />
-                <p className="text-info text-xs leading-relaxed">
+                <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
+                <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
                   Giá trị khởi điểm là số tiền của quỹ Jackpot khi bắt đầu một chu kỳ mới (sau khi có người trúng Độc
                   Đắc). Nếu không có người trúng, quỹ sẽ <strong>tích luỹ (roll-over)</strong> sang kỳ tiếp theo. Nhiều
                   người cùng trúng thì chia đều theo đơn vị dự thưởng — không chia xuống hạng giải thấp hơn. Vietlott

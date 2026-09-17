@@ -48,21 +48,22 @@ const TIER_CONFIG: Partial<
   >
 > = {
   [PrizeTier.Jackpot]: {
-    badge: "border-game-mega645 bg-game-mega645 text-game-mega645",
-    row: "bg-game-mega645/60 border-l-2 border-l-game-mega645",
+    badge: "border-teal-300 bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-700",
+    row: "bg-teal-50/60 dark:bg-teal-950/10 border-l-2 border-l-teal-400",
     icon: Gem,
   },
   [PrizeTier.Tier1]: {
-    badge: "border-profit bg-profit text-profit",
-    row: "bg-profit/40",
+    badge:
+      "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700",
+    row: "bg-emerald-50/40 dark:bg-emerald-950/5",
     icon: Trophy,
   },
   [PrizeTier.Tier2]: {
-    badge: "border-info bg-info text-info",
-    row: "bg-info/30",
+    badge: "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-700",
+    row: "bg-cyan-50/30 dark:bg-cyan-950/5",
   },
   [PrizeTier.Tier3]: {
-    badge: "border-info bg-info text-info",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
 };
@@ -71,28 +72,32 @@ const TIER_CONFIG: Partial<
 
 function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number; totalPrize: number }) {
   return (
-    <div className="border-game-mega645/60 relative overflow-hidden rounded-xl border-2">
-      <div className="from-game-mega645 via-profit to-info absolute inset-0 bg-linear-to-br" />
+    <div className="relative overflow-hidden rounded-xl border-2 border-teal-400/60 dark:border-teal-500/50">
+      <div className="absolute inset-0 bg-linear-to-br from-teal-50 via-emerald-50 to-cyan-50 dark:from-teal-950/40 dark:via-emerald-950/30 dark:to-cyan-950/40" />
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite] bg-linear-to-r from-transparent via-white/40 to-transparent dark:via-white/10" />
 
-      <Sparkles className="text-game-mega645/60 absolute top-3 right-3 size-4 animate-pulse" />
-      <Sparkles className="text-profit/50 absolute bottom-3 left-3 size-3 animate-pulse [animation-delay:0.8s]" />
+      <Sparkles className="absolute top-3 right-3 size-4 animate-pulse text-teal-400/60 dark:text-teal-500/60" />
+      <Sparkles className="absolute bottom-3 left-3 size-3 animate-pulse text-emerald-300/50 [animation-delay:0.8s] dark:text-emerald-600/50" />
 
       <div className="relative flex items-center gap-4 px-5 py-4">
-        <div className="bg-game-mega645/20 ring-game-mega645/40 flex size-12 shrink-0 items-center justify-center rounded-full ring-2">
-          <Gem className="text-game-mega645 size-6 drop-shadow-sm" />
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-teal-400/20 ring-2 ring-teal-400/40 dark:bg-teal-500/20 dark:ring-teal-500/30">
+          <Gem className="size-6 text-teal-500 drop-shadow-sm dark:text-teal-400" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-game-mega645 text-sm font-bold tracking-tight">🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!</p>
-            <Badge className="border-game-mega645/50 bg-game-mega645/20 text-game-mega645 h-4.5 gap-1 border px-2 text-xs">
+            <p className="text-sm font-bold tracking-tight text-teal-800 dark:text-teal-300">
+              🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!
+            </p>
+            <Badge className="h-4.5 gap-1 border border-teal-400/50 bg-teal-500/20 px-2 text-xs text-teal-700 dark:text-teal-300">
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
           </div>
-          <p className="text-game-mega645/80 mt-0.5 text-xs">
+          <p className="mt-0.5 text-xs text-teal-700/80 dark:text-teal-400/80">
             Tổng giải Jackpot đã trao:{" "}
-            <span className="text-game-mega645 text-sm font-bold tabular-nums">{formatNumber(totalPrize)}</span>
+            <span className="text-sm font-bold text-teal-700 tabular-nums dark:text-teal-300">
+              {formatNumber(totalPrize)}
+            </span>
           </p>
         </div>
       </div>
@@ -104,24 +109,26 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
 
 function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
   return (
-    <div className="border-game-mega645/70 relative overflow-hidden border-b">
-      <div className="from-game-mega645/80 via-profit/60 to-game-mega645/30 absolute inset-0 bg-linear-to-r dark:to-transparent" />
+    <div className="relative overflow-hidden border-b border-teal-200/70 dark:border-teal-800/50">
+      <div className="absolute inset-0 bg-linear-to-r from-teal-50/80 via-emerald-50/60 to-teal-50/30 dark:from-teal-950/30 dark:via-emerald-950/20 dark:to-transparent" />
       <div className="relative grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-3">
         <div className="flex items-center gap-2">
-          <Gem className="text-game-mega645 size-3.5 shrink-0 animate-pulse" />
+          <Gem className="size-3.5 shrink-0 animate-pulse text-teal-500" />
           <Badge
             variant="outline"
-            className="border-game-mega645 bg-game-mega645 text-game-mega645 h-5 gap-1 px-2 py-0 text-xs"
+            className="h-5 gap-1 border-teal-300 bg-teal-50 px-2 py-0 text-xs text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
           >
-            <Star className="fill-game-mega645 text-game-mega645 size-2.5" />
+            <Star className="size-2.5 fill-teal-500 text-teal-500" />
             {t.label}
           </Badge>
         </div>
-        <span className="text-game-mega645 text-right text-sm font-bold tabular-nums">
+        <span className="text-right text-sm font-bold text-teal-600 tabular-nums dark:text-teal-400">
           {formatNumber(t.winnerCount)}
         </span>
-        <span className="text-game-mega645/70 text-right text-sm tabular-nums">{formatNumber(t.prizeAmount)}</span>
-        <span className="text-game-mega645 text-right text-sm font-bold tabular-nums">
+        <span className="text-right text-sm text-teal-600/70 tabular-nums dark:text-teal-400/70">
+          {formatNumber(t.prizeAmount)}
+        </span>
+        <span className="text-right text-sm font-bold text-teal-600 tabular-nums dark:text-teal-400">
           {formatNumber(t.totalPrize)}
         </span>
       </div>
@@ -141,19 +148,19 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
 
   return (
     <>
-      <Card className={cn("shadow-sm", hasJackpotWinner && "ring-game-mega645/40 ring-1")}>
+      <Card className={cn("shadow-sm", hasJackpotWinner && "ring-1 ring-teal-400/40 dark:ring-teal-500/30")}>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div
               className={cn(
                 "flex size-7 shrink-0 items-center justify-center rounded-lg",
-                hasJackpotWinner ? "bg-game-mega645" : "bg-game-mega645",
+                hasJackpotWinner ? "bg-teal-200 dark:bg-teal-800/60" : "bg-teal-100 dark:bg-teal-900/50",
               )}
             >
               {hasJackpotWinner ? (
-                <Gem className="text-game-mega645 size-3.5" />
+                <Gem className="size-3.5 text-teal-600 dark:text-teal-400" />
               ) : (
-                <Trophy className="text-game-mega645 size-3.5" />
+                <Trophy className="size-3.5 text-teal-600 dark:text-teal-400" />
               )}
             </div>
             <div>
@@ -175,7 +182,9 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           <div
             className={cn(
               "flex w-full flex-col items-center gap-3 rounded-xl border px-4 py-4",
-              hasJackpotWinner ? "border-game-mega645/60 bg-game-mega645/40" : "bg-muted/20",
+              hasJackpotWinner
+                ? "border-teal-200/60 bg-teal-50/40 dark:border-teal-800/40 dark:bg-teal-950/10"
+                : "bg-muted/20",
             )}
           >
             <div className="flex w-full items-center justify-between">
@@ -185,7 +194,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -239,8 +248,8 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                       <IconComp
                         className={cn(
                           "size-3.5 shrink-0",
-                          t.tier === PrizeTier.Jackpot && "text-game-mega645",
-                          t.tier === PrizeTier.Tier1 && "text-profit",
+                          t.tier === PrizeTier.Jackpot && "text-teal-500",
+                          t.tier === PrizeTier.Tier1 && "text-emerald-500",
                         )}
                       />
                     ) : (
@@ -254,7 +263,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                   <span
                     className={cn(
                       "text-right text-sm font-semibold tabular-nums",
-                      hasWinner ? "text-profit" : "text-muted-foreground/40",
+                      hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(t.winnerCount)}
@@ -377,8 +386,8 @@ export function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <Coins className="text-info size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -424,8 +433,8 @@ export function FinancialSummary({
   const rows: LedgerRow[] = [
     {
       icon: TrendingUp,
-      iconBg: "bg-profit",
-      iconColor: "text-profit",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
       label: "Doanh thu gộp",
       value: f.totalRevenue,
       // Dòng input gốc → trung tính, chỉ khoản trừ & kết quả mới có màu ngữ nghĩa
@@ -435,8 +444,8 @@ export function FinancialSummary({
     },
     {
       icon: Users,
-      iconBg: "bg-muted",
-      iconColor: "text-muted-foreground",
+      iconBg: "bg-slate-100 dark:bg-slate-800",
+      iconColor: "text-slate-500 dark:text-slate-400",
       label: "Hoa hồng đại lý",
       value: f.totalAgentCommission,
       // Khoản chi bình thường → muted (không dùng destructive để tránh "báo động giả")
@@ -446,8 +455,8 @@ export function FinancialSummary({
     },
     {
       icon: Trophy,
-      iconBg: "bg-game-mega645",
-      iconColor: "text-game-mega645",
+      iconBg: "bg-teal-100 dark:bg-teal-900/50",
+      iconColor: "text-teal-600 dark:text-teal-400",
       label: "Chi trả giải cố định",
       value: f.totalFixedPrizes,
       sign: "-",
@@ -457,8 +466,8 @@ export function FinancialSummary({
     },
     {
       icon: ArrowDownRight,
-      iconBg: "bg-info",
-      iconColor: "text-info",
+      iconBg: "bg-blue-100 dark:bg-blue-900/50",
+      iconColor: "text-blue-600 dark:text-blue-400",
       label: "Số dư sau giải & hoa hồng",
       value: netAfterPrizes,
       sign: "=",
@@ -469,8 +478,8 @@ export function FinancialSummary({
     },
     {
       icon: TrendingDown,
-      iconBg: "bg-game-mega645",
-      iconColor: "text-game-mega645",
+      iconBg: "bg-teal-100 dark:bg-teal-900/50",
+      iconColor: "text-teal-600 dark:text-teal-400",
       label: "Trích quỹ Jackpot",
       value: f.jackpotContribution,
       // Tiền ĐI RA khỏi P&L công ty vào quỹ (liability) → dấu −, muted
@@ -481,12 +490,12 @@ export function FinancialSummary({
     },
     {
       icon: Coins,
-      iconBg: companyResult >= 0 ? "bg-profit" : "bg-loss",
-      iconColor: companyResult >= 0 ? "text-profit" : "text-loss",
+      iconBg: companyResult >= 0 ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+      iconColor: companyResult >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
       label: "Kết quả công ty (P&L kỳ)",
       value: companyResult,
       sign: "=",
-      valueColor: companyResult >= 0 ? "text-profit" : "text-destructive",
+      valueColor: companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
       bold: true,
       separator: true,
       hint: resultHint,
@@ -497,8 +506,8 @@ export function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Coins className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
@@ -517,12 +526,12 @@ export function FinancialSummary({
         {/* Biến động Jackpot pool — Mega 6/45 chỉ có 1 jackpot */}
         <div className="border-border/60 bg-muted/20 mt-2 overflow-hidden rounded-xl border">
           <div className="border-border/40 bg-muted/30 flex items-center gap-2 border-b px-3 py-2">
-            <Gem className="text-game-mega645 size-3.5 shrink-0" />
+            <Gem className="size-3.5 shrink-0 text-teal-500" />
             <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               Biến động Jackpot
             </span>
             {f.hasJackpotWinner && (
-              <Badge className="border-game-mega645/40 bg-game-mega645/15 text-game-mega645 ml-auto h-4 gap-1 border px-1.5 text-xs">
+              <Badge className="ml-auto h-4 gap-1 border border-teal-400/40 bg-teal-500/15 px-1.5 text-[10px] text-teal-700 dark:text-teal-300">
                 <Star className="size-2 fill-current" />
                 Đã trao
               </Badge>
@@ -536,8 +545,8 @@ export function FinancialSummary({
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-game-mega645 pl-8 text-sm">+ Đóng góp kỳ</span>
-              <span className="text-game-mega645 shrink-0 font-mono text-sm font-semibold tabular-nums">
+              <span className="pl-8 text-sm text-teal-700 dark:text-teal-400">+ Đóng góp kỳ</span>
+              <span className="shrink-0 font-mono text-sm font-semibold text-teal-700 tabular-nums dark:text-teal-400">
                 +{formatNumber(f.jackpotContribution)}
               </span>
             </div>
@@ -546,8 +555,8 @@ export function FinancialSummary({
               <>
                 {/* Có winner: toàn bộ pool (trước kỳ + đóng góp) được trao cho người trúng. */}
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-warning pl-8 text-sm">− Trao độc đắc</span>
-                  <span className="text-warning shrink-0 font-mono text-sm font-semibold tabular-nums">
+                  <span className="pl-8 text-sm text-amber-700 dark:text-amber-400">− Trao độc đắc</span>
+                  <span className="shrink-0 font-mono text-sm font-semibold text-amber-700 tabular-nums dark:text-amber-400">
                     −{formatNumber(f.jackpotPrizeAwarded)}
                   </span>
                 </div>
@@ -573,7 +582,7 @@ export function FinancialSummary({
                   <span className="text-foreground shrink-0 font-mono text-sm font-bold tabular-nums">0</span>
                 </div>
                 <div className="bg-muted/10 px-3 py-1.5">
-                  <p className="text-muted-foreground/70 pl-8 text-xs">
+                  <p className="text-muted-foreground/70 pl-8 text-[11px]">
                     Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                   </p>
                 </div>
@@ -581,7 +590,7 @@ export function FinancialSummary({
             ) : (
               <div className="bg-muted/20 flex items-center justify-between gap-3 px-3 py-2">
                 <span className="text-foreground pl-8 text-sm font-bold">Quỹ sau kỳ</span>
-                <span className="text-game-mega645 shrink-0 font-mono text-sm font-bold tabular-nums">
+                <span className="shrink-0 font-mono text-sm font-bold text-teal-600 tabular-nums dark:text-teal-400">
                   {formatNumber(f.jackpotAfter)}
                 </span>
               </div>

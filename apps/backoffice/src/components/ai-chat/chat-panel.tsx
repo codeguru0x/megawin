@@ -158,7 +158,7 @@ export function ChatPanel({ header }: { header: ReactNode }) {
   // tránh một render trung gian mà baseline còn là của lượt trước.
   const turnBaselineRef = useRef<TurnBaseline | null>(null);
   const wasActiveTurnRef = useRef(false);
-  // `undefined` = render đầu tiên (ref chưa được gán lần nào). Không dùng `useRef(true)`: Linter hẹp
+  // `undefined` = render đầu tiên (ref chưa được gán lần nào). Không dùng `useRef(true)`: Biome hẹp
   // type về literal `true` và báo `noUnnecessaryConditions`.
   const hasRenderedRef = useRef<boolean | undefined>(undefined);
   // Cửa ghi vào composer cho nút "Hỏi lại câu này" trên message assistant — xem `AiComposerHandle`.

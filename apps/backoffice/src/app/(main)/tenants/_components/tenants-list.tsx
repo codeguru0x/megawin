@@ -95,7 +95,12 @@ function KpiCard({
   isLoading: boolean;
   variant?: "success" | "danger";
 }) {
-  const colorClass = variant === "success" ? "text-profit" : variant === "danger" ? "text-loss" : "text-foreground";
+  const colorClass =
+    variant === "success"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : variant === "danger"
+        ? "text-red-500 dark:text-red-400"
+        : "text-foreground";
 
   return (
     <div className="bg-card rounded-xl border p-4">

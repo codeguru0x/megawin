@@ -239,7 +239,7 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
 
   if (isDispatched && !hasErrorOrRetry) {
     return (
-      <div className="border-profit/30 bg-profit/5 flex items-center gap-2 rounded-md border px-3 py-2.5 text-sm">
+      <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5 text-sm">
         <CheckCircle2 className="text-profit size-4" />
         <span className="text-muted-foreground">Dispatch ngay lần đầu — không có retry.</span>
         {order.dispatchedAt && (

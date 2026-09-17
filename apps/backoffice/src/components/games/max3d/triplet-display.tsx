@@ -13,18 +13,20 @@ export type TierVariant = "special" | "first" | "second" | "third";
 
 /** Màu dot/icon cho từng giải — dùng chung ở publish-result-action và result display */
 export const TIER_DOT_STYLES: Record<TierVariant, string> = {
-  special: "bg-gradient-to-br from-warning to-loss",
-  first: "bg-gradient-to-br from-loss to-warning",
-  second: "bg-gradient-to-br from-info to-primary",
-  third: "bg-gradient-to-br from-profit to-game-mega645",
+  special: "bg-gradient-to-br from-amber-400 to-orange-500",
+  first: "bg-gradient-to-br from-red-500 to-rose-600",
+  second: "bg-gradient-to-br from-blue-500 to-indigo-600",
+  third: "bg-gradient-to-br from-emerald-500 to-green-600",
 };
 
 const VARIANT_STYLES: Record<string, string> = {
-  default: "bg-muted text-muted-foreground",
-  special: "bg-linear-to-br from-warning to-loss text-white shadow-md shadow-warning/50",
-  first: "bg-linear-to-br from-loss to-warning text-white shadow-md shadow-loss/40",
-  second: "bg-linear-to-br from-info to-primary text-white shadow-sm shadow-info/40",
-  third: "bg-linear-to-br from-profit to-game-mega645 text-white shadow-sm shadow-profit/40",
+  default: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+  special:
+    "bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-200/50 dark:shadow-amber-900/30",
+  first: "bg-linear-to-br from-red-500 to-rose-600 text-white shadow-md shadow-red-200/40 dark:shadow-red-900/20",
+  second: "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-200/40 dark:shadow-blue-900/20",
+  third:
+    "bg-linear-to-br from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200/40 dark:shadow-emerald-900/20",
   // Highlight đối chiếu kết quả (entry-detail + winning-entries dialog):
   matched: "bg-primary text-primary-foreground ring-2 ring-primary/30",
   result: "bg-muted/60 text-muted-foreground/50",

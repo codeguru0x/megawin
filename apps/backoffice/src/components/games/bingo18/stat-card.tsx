@@ -26,7 +26,7 @@ export function Bingo18StatCard({ title, value, description, icon: Icon, trend, 
           <div className="flex items-baseline gap-2">
             <p className="text-xl font-bold tabular-nums">{value}</p>
             {trend && (
-              <span className={cn("text-xs font-medium", trend.isPositive ? "text-profit" : "text-loss")}>
+              <span className={cn("text-xs font-medium", trend.isPositive ? "text-green-600" : "text-red-600")}>
                 {trend.isPositive ? "+" : ""}
                 {trend.value}%
               </span>

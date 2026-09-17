@@ -44,7 +44,7 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
   const mutation = useMutation({
     mutationFn: (values: DisableMfaFormValues) => apiClient.post("/me/mfa/disable", values),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
+      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       toast.success("MFA đã được tắt");
       form.reset();
       onOpenChange(false);

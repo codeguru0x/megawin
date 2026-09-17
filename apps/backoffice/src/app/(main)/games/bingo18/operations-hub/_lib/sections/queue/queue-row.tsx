@@ -34,14 +34,14 @@ import { RelativeDuration } from "../../relative-duration";
 import { OPS_STAGE_LABEL, SALE_GATE_LABEL } from "./queue-types";
 
 const HEALTH_DOT_CLASS: Record<string, string> = {
-  ok: "bg-profit",
-  warn: "bg-warning",
+  ok: "bg-emerald-500",
+  warn: "bg-amber-500",
   stuck: "bg-destructive",
 };
 
 const ACCENT_ROW_CLASS: Record<string, string> = {
   none: "",
-  warn: "bg-warning/5 hover:bg-warning/10",
+  warn: "bg-amber-500/5 hover:bg-amber-500/10",
   destructive: "bg-destructive/5 hover:bg-destructive/10",
 };
 
@@ -212,7 +212,7 @@ function QueueRowImpl(props: QueueRowProps) {
             onMouseDown={(e) => onCheckboxMouseDown(e.shiftKey)}
             onChange={() => onToggleSelect(drawId, rowIndex, isSelected)}
             aria-label={`Chọn kỳ ${drawNo}`}
-            className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded"
+            className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded-[4px]"
           />
         ) : (
           // Kỳ không có action bulk khả dụng — icon Lock xám thay ô trống hoàn toàn, tránh
@@ -261,7 +261,7 @@ function QueueRowImpl(props: QueueRowProps) {
         {largeBetCount > 0 ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-warning ml-1 cursor-default">+{largeBetCount}</span>
+              <span className="ml-1 cursor-default text-amber-600">+{largeBetCount}</span>
             </TooltipTrigger>
             <TooltipContent>{largeBetCount} cược lớn (≥ ngưỡng cấu hình)</TooltipContent>
           </Tooltip>

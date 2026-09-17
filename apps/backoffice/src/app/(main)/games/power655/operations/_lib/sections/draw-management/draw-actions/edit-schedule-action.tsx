@@ -164,7 +164,7 @@ export function EditScheduleAction({
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-muted-foreground/70 text-xs">Chỉ sửa nếu lịch quay chính thức thay đổi.</p>
+            <p className="text-muted-foreground/70 text-[11px]">Chỉ sửa nếu lịch quay chính thức thay đổi.</p>
           </div>
 
           <DialogFooter>

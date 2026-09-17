@@ -51,17 +51,17 @@ interface DrawSelectorProps {
 const STATUS_DOT: Record<string, React.ReactNode> = {
   [DrawStatus.SalesOpen]: (
     <span className="relative flex size-1.5 shrink-0">
-      <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-75" />
-      <span className="bg-profit relative inline-flex size-1.5 rounded-full" />
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
+      <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
     </span>
   ),
-  [DrawStatus.SalesClosed]: <span className="bg-warning inline-block size-1.5 shrink-0 rounded-full" />,
-  [DrawStatus.Published]: <span className="bg-game-max3d inline-block size-1.5 shrink-0 rounded-full" />,
-  [DrawStatus.Settling]: <Clock className="text-warning size-2.5 shrink-0 animate-spin" />,
-  [DrawStatus.Scheduled]: <span className="bg-muted inline-block size-1.5 shrink-0 rounded-full" />,
-  [DrawStatus.Settled]: <CheckCircle2 className="text-profit size-2.5 shrink-0" />,
-  [DrawStatus.Void]: <XCircle className="text-loss size-2.5 shrink-0" />,
-  [DrawStatus.Voiding]: <XCircle className="text-loss size-2.5 shrink-0 animate-pulse" />,
+  [DrawStatus.SalesClosed]: <span className="inline-block size-1.5 shrink-0 rounded-full bg-amber-500" />,
+  [DrawStatus.Published]: <span className="inline-block size-1.5 shrink-0 rounded-full bg-violet-500" />,
+  [DrawStatus.Settling]: <Clock className="size-2.5 shrink-0 animate-spin text-orange-500" />,
+  [DrawStatus.Scheduled]: <span className="inline-block size-1.5 shrink-0 rounded-full bg-slate-400" />,
+  [DrawStatus.Settled]: <CheckCircle2 className="size-2.5 shrink-0 text-emerald-500" />,
+  [DrawStatus.Void]: <XCircle className="size-2.5 shrink-0 text-red-400" />,
+  [DrawStatus.Voiding]: <XCircle className="size-2.5 shrink-0 animate-pulse text-red-500" />,
 };
 
 // ─── Group config ─────────────────────────────────────────────────────────────
@@ -69,26 +69,26 @@ const STATUS_DOT: Record<string, React.ReactNode> = {
 const GROUP_CONFIG = {
   [DrawSelectorGroup.Active]: {
     label: "Đang diễn ra",
-    color: "text-profit",
-    badgeClass: "bg-profit text-profit border-profit",
+    color: "text-green-600 dark:text-green-400",
+    badgeClass: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200",
     icon: (
       <span className="relative flex size-1.5">
-        <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-75" />
-        <span className="bg-profit relative inline-flex size-1.5 rounded-full" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
       </span>
     ),
   },
   [DrawSelectorGroup.Future]: {
     label: "Kỳ sắp tới",
-    color: "text-muted-foreground",
-    badgeClass: "bg-muted text-muted-foreground border-border",
-    icon: <Circle className="fill-muted-foreground text-muted-foreground size-1.5" />,
+    color: "text-slate-500 dark:text-slate-400",
+    badgeClass: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200",
+    icon: <Circle className="size-1.5 fill-slate-400 text-slate-400" />,
   },
   [DrawSelectorGroup.Recent]: {
     label: "Vừa hoàn thành",
-    color: "text-profit",
-    badgeClass: "bg-profit text-profit border-profit",
-    icon: <CheckCircle2 className="text-profit size-2.5" />,
+    color: "text-emerald-600 dark:text-emerald-400",
+    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200",
+    icon: <CheckCircle2 className="size-2.5 text-emerald-500" />,
   },
 } as const;
 
@@ -112,7 +112,7 @@ function DrawRow({
         isSelected && "bg-accent font-medium",
       )}
     >
-      {STATUS_DOT[draw.status] ?? <span className="bg-muted inline-block size-1.5 shrink-0 rounded-full" />}
+      {STATUS_DOT[draw.status] ?? <span className="inline-block size-1.5 shrink-0 rounded-full bg-slate-300" />}
 
       {/* Giờ quay — thông tin quan trọng nhất cho Keno */}
       <span className="text-foreground w-12 shrink-0 font-mono font-semibold tabular-nums">{draw.drawTime}</span>
@@ -125,7 +125,7 @@ function DrawRow({
         <KenoDrawStatusBadge status={draw.status} />
       </span>
 
-      {draw.status === DrawStatus.Void && <TriangleAlert className="text-loss size-3 shrink-0" />}
+      {draw.status === DrawStatus.Void && <TriangleAlert className="size-3 shrink-0 text-red-400" />}
     </button>
   );
 }
@@ -156,8 +156,8 @@ function GroupSection({
       {/* Group header */}
       <div className="flex items-center gap-1.5 px-2 pb-1">
         {cfg.icon}
-        <span className={cn("text-xs font-semibold tracking-wider uppercase", cfg.color)}>{cfg.label}</span>
-        <Badge variant="outline" className={cn("ml-auto h-4 px-1.5 py-0 font-mono text-xs", cfg.badgeClass)}>
+        <span className={cn("text-[11px] font-semibold tracking-wider uppercase", cfg.color)}>{cfg.label}</span>
+        <Badge variant="outline" className={cn("ml-auto h-4 px-1.5 py-0 font-mono text-[10px]", cfg.badgeClass)}>
           {draws.length}
         </Badge>
       </div>
@@ -273,9 +273,9 @@ export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }
 
         {/* Thống kê nhanh */}
         {!search && allActive.length >= 5 && (
-          <div className="bg-profit mb-2 flex items-center gap-1.5 rounded-md px-2.5 py-1.5">
-            <Zap className="text-profit size-3 shrink-0" />
-            <span className="text-profit text-xs">
+          <div className="mb-2 flex items-center gap-1.5 rounded-md bg-green-50 px-2.5 py-1.5 dark:bg-green-950/40">
+            <Zap className="size-3 shrink-0 text-green-500" />
+            <span className="text-[11px] text-green-700 dark:text-green-400">
               {allActive.length} kỳ đang diễn ra
               {allFuture.length > 0 && ` · ${allFuture.length} sắp tới`}
             </span>

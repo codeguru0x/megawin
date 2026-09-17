@@ -32,95 +32,95 @@ import { NumberBadge } from "./number-heatmap";
 export const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
   {
     standard: {
-      dot: "bg-profit",
-      text: "text-profit",
+      dot: "bg-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-400",
       fill: "#10b981",
-      bg: "bg-profit/60",
-      border: "border-profit/60",
+      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+      border: "border-emerald-200/60 dark:border-emerald-800/40",
     },
     mainCover4: {
-      dot: "bg-game-max3d",
-      text: "text-game-max3d",
+      dot: "bg-violet-500",
+      text: "text-violet-600 dark:text-violet-400",
       fill: "#8b5cf6",
-      bg: "bg-game-max3d/60",
-      border: "border-game-max3d/60",
+      bg: "bg-violet-50/60 dark:bg-violet-950/20",
+      border: "border-violet-200/60 dark:border-violet-800/40",
     },
     mainCover6: {
-      dot: "bg-info",
-      text: "text-info",
+      dot: "bg-blue-500",
+      text: "text-blue-600 dark:text-blue-400",
       fill: "#3b82f6",
-      bg: "bg-info/60",
-      border: "border-info/60",
+      bg: "bg-blue-50/60 dark:bg-blue-950/20",
+      border: "border-blue-200/60 dark:border-blue-800/40",
     },
     mainCover7: {
-      dot: "bg-info",
-      text: "text-info",
+      dot: "bg-sky-500",
+      text: "text-sky-600 dark:text-sky-400",
       fill: "#0ea5e9",
-      bg: "bg-info/60",
-      border: "border-info/60",
+      bg: "bg-sky-50/60 dark:bg-sky-950/20",
+      border: "border-sky-200/60 dark:border-sky-800/40",
     },
     mainCover8: {
-      dot: "bg-info",
-      text: "text-info",
+      dot: "bg-cyan-500",
+      text: "text-cyan-600 dark:text-cyan-400",
       fill: "#06b6d4",
-      bg: "bg-info/60",
-      border: "border-info/60",
+      bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
+      border: "border-cyan-200/60 dark:border-cyan-800/40",
     },
     mainCover9: {
-      dot: "bg-game-mega645",
-      text: "text-game-mega645",
+      dot: "bg-teal-500",
+      text: "text-teal-600 dark:text-teal-400",
       fill: "#14b8a6",
-      bg: "bg-game-mega645/60",
-      border: "border-game-mega645/60",
+      bg: "bg-teal-50/60 dark:bg-teal-950/20",
+      border: "border-teal-200/60 dark:border-teal-800/40",
     },
     mainCover10: {
-      dot: "bg-game-bingo18",
-      text: "text-game-bingo18",
+      dot: "bg-lime-500",
+      text: "text-lime-600 dark:text-lime-400",
       fill: "#84cc16",
-      bg: "bg-game-bingo18/60",
-      border: "border-game-bingo18/60",
+      bg: "bg-lime-50/60 dark:bg-lime-950/20",
+      border: "border-lime-200/60 dark:border-lime-800/40",
     },
     mainCover11: {
-      dot: "bg-warning",
-      text: "text-warning",
+      dot: "bg-yellow-500",
+      text: "text-yellow-600 dark:text-yellow-400",
       fill: "#eab308",
-      bg: "bg-warning/60",
-      border: "border-warning/60",
+      bg: "bg-yellow-50/60 dark:bg-yellow-950/20",
+      border: "border-yellow-200/60 dark:border-yellow-800/40",
     },
     mainCover12: {
-      dot: "bg-warning",
-      text: "text-warning",
+      dot: "bg-orange-500",
+      text: "text-orange-600 dark:text-orange-400",
       fill: "#f97316",
-      bg: "bg-warning/60",
-      border: "border-warning/60",
+      bg: "bg-orange-50/60 dark:bg-orange-950/20",
+      border: "border-orange-200/60 dark:border-orange-800/40",
     },
     mainCover13: {
-      dot: "bg-game-max3dpro",
-      text: "text-game-max3dpro",
+      dot: "bg-fuchsia-500",
+      text: "text-fuchsia-600 dark:text-fuchsia-400",
       fill: "#d946ef",
-      bg: "bg-game-max3dpro/60",
-      border: "border-game-max3dpro/60",
+      bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
+      border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
     },
     mainCover14: {
-      dot: "bg-game-max3dpro",
-      text: "text-game-max3dpro text-game-max3dpro",
+      dot: "bg-pink-500",
+      text: "text-pink-600 dark:text-pink-400",
       fill: "#ec4899",
-      bg: "bg-game-max3dpro/60 bg-game-max3dpro/20",
-      border: "border-game-max3dpro/60 border-game-max3dpro/40",
+      bg: "bg-pink-50/60 dark:bg-pink-950/20",
+      border: "border-pink-200/60 dark:border-pink-800/40",
     },
     mainCover15: {
-      dot: "bg-loss",
-      text: "text-loss",
+      dot: "bg-rose-500",
+      text: "text-rose-600 dark:text-rose-400",
       fill: "#f43f5e",
-      bg: "bg-loss/60",
-      border: "border-loss/60",
+      bg: "bg-rose-50/60 dark:bg-rose-950/20",
+      border: "border-rose-200/60 dark:border-rose-800/40",
     },
     specialCover: {
-      dot: "bg-warning",
-      text: "text-warning",
+      dot: "bg-amber-500",
+      text: "text-amber-600 dark:text-amber-400",
       fill: "#f59e0b",
-      bg: "bg-warning/60",
-      border: "border-warning/60",
+      bg: "bg-amber-50/60 dark:bg-amber-950/20",
+      border: "border-amber-200/60 dark:border-amber-800/40",
     },
   };
 
@@ -216,10 +216,10 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
         </p>
       </div>
       <div className="flex flex-wrap items-baseline gap-2">
-        <span className="text-muted-foreground/70 text-xs tabular-nums">
+        <span className="text-muted-foreground/70 text-[10px] tabular-nums">
           <span className="text-foreground font-semibold">{formatNumber(d.sets)}</span> bộ
         </span>
-        <span className="text-muted-foreground/70 text-xs tabular-nums">
+        <span className="text-muted-foreground/70 text-[10px] tabular-nums">
           <span className="text-foreground font-semibold">{formatNumber(d.boards)}</span> board
         </span>
       </div>
@@ -254,8 +254,8 @@ export function PlayTypeCard({ distribution }: { distribution: PlayTypeRow[] }) 
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-              <BarChart2 className="text-warning size-3.5" />
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+              <BarChart2 className="size-3.5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
@@ -324,8 +324,8 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-profit flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <TrendingUp className="text-profit size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+            <TrendingUp className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top người chơi</CardTitle>
@@ -352,8 +352,10 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   className="min-w-0 flex-1 text-sm"
                 />
                 <div className="shrink-0 text-right">
-                  <p className="text-profit text-sm font-bold tabular-nums">{formatNumber(a.amount)}</p>
-                  <p className="text-muted-foreground/60 text-xs tabular-nums">{formatNumber(a.entries)} vé</p>
+                  <p className="text-sm font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
+                    {formatNumber(a.amount)}
+                  </p>
+                  <p className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -370,8 +372,8 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <TrendingUp className="text-loss size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
+            <TrendingUp className="size-3.5 text-red-600 dark:text-red-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
@@ -398,13 +400,13 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     username={p.username}
                     className="text-sm"
                   />
-                  <p className="text-muted-foreground/70 mt-0.5 text-xs tabular-nums">
+                  <p className="text-muted-foreground/70 mt-0.5 text-[11px] tabular-nums">
                     Cược <span className="text-foreground font-medium">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
-                <div className="bg-loss/10 shrink-0 rounded-md px-2 py-1 text-right">
-                  <p className="text-loss/70 text-xs leading-none">Phải trả</p>
-                  <p className="text-loss text-sm leading-tight font-bold tabular-nums">
+                <div className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-right">
+                  <p className="text-[10px] leading-none text-red-500/70">Phải trả</p>
+                  <p className="text-sm leading-tight font-bold text-red-600 tabular-nums dark:text-red-400">
                     {formatNumber(p.potentialWin)}
                   </p>
                 </div>
@@ -431,8 +433,8 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Trophy className="text-warning size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
+            <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Bộ số phổ biến nhất</CardTitle>
@@ -482,8 +484,12 @@ function RankBadge({ rank, danger = false }: { rank: number; danger?: boolean })
   return (
     <span
       className={cn(
-        "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums",
-        rank === 1 ? (danger ? "bg-loss text-white" : "bg-profit text-white") : "bg-muted text-muted-foreground",
+        "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums",
+        rank === 1
+          ? danger
+            ? "bg-red-500 text-white"
+            : "bg-emerald-500 text-white"
+          : "bg-muted text-muted-foreground",
       )}
     >
       {rank}
@@ -511,8 +517,8 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
     <Card className="gap-0 py-0 shadow-sm">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
-            <Store className="text-info size-3.5" />
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <Store className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Phân tích theo đại lý</CardTitle>
@@ -542,17 +548,17 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
   return (
     <div className="bg-muted/10 rounded-xl border p-3.5">
       <div className="flex items-center gap-2">
-        <span className="bg-info/10 text-info inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums">
+        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[11px] font-bold text-blue-600 tabular-nums dark:text-blue-400">
           {rank}
         </span>
         <span className="flex-1 truncate text-sm font-semibold">{tenant.tenantId}</span>
-        <span className="bg-info/10 text-info rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums">
+        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold text-blue-600 tabular-nums dark:text-blue-400">
           {tenant.pct.toFixed(1)}%
         </span>
       </div>
       <div className="bg-muted mt-2.5 h-1.5 overflow-hidden rounded-full">
         <div
-          className="bg-info/70 h-full rounded-full transition-all"
+          className="h-full rounded-full bg-blue-500/70 transition-all"
           style={{ width: `${(tenant.revenue / maxRevenue) * 100}%` }}
         />
       </div>
@@ -563,7 +569,12 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
           value={formatNumber(tenant.revenue)}
           accent="text-foreground"
         />
-        <TenantMetric icon={Receipt} label="Hoa hồng" value={formatNumber(tenant.commission)} accent="text-warning" />
+        <TenantMetric
+          icon={Receipt}
+          label="Hoa hồng"
+          value={formatNumber(tenant.commission)}
+          accent="text-amber-600 dark:text-amber-400"
+        />
         <TenantMetric
           icon={Users}
           label="Người chơi"
@@ -592,12 +603,12 @@ function TenantMetric({
 }) {
   return (
     <div className="bg-card border-border/40 rounded-lg border px-2.5 py-2">
-      <div className="text-muted-foreground/60 flex items-center gap-1 text-xs tracking-wider uppercase">
+      <div className="text-muted-foreground/60 flex items-center gap-1 text-[10px] tracking-wider uppercase">
         <Icon className="size-3 shrink-0" />
         <span className="truncate">{label}</span>
       </div>
       <p className={cn("mt-0.5 text-sm leading-tight font-bold tabular-nums", accent)}>{value}</p>
-      {sub ? <p className="text-muted-foreground/60 text-xs tabular-nums">{sub}</p> : null}
+      {sub ? <p className="text-muted-foreground/60 text-[10px] tabular-nums">{sub}</p> : null}
     </div>
   );
 }
@@ -623,7 +634,7 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
             style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
           >
             <div
-              className="bg-info/5 absolute inset-y-0 left-0 rounded-r-sm"
+              className="absolute inset-y-0 left-0 rounded-r-sm bg-blue-500/5 dark:bg-blue-400/5"
               style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
             />
             <div className="relative flex min-w-0 items-center gap-2">

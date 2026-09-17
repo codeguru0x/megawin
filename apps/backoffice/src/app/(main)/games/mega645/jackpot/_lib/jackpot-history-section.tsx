@@ -68,8 +68,8 @@ export function JackpotHistorySection() {
       {/* Section header — title + cycle selector */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="bg-game-mega645 flex size-8 items-center justify-center rounded-lg">
-            <History className="text-game-mega645 size-4" />
+          <div className="flex size-8 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900/50">
+            <History className="size-4 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
             <h2 className="text-foreground text-sm font-semibold">Lịch sử Jackpot</h2>
@@ -204,10 +204,12 @@ function CycleSelectorLabel({ cycle }: { cycle: JackpotCycleOption }) {
     <span className="flex items-center gap-2">
       <span className="tabular-nums">
         Vòng #{cycle.cycleNo}
-        {isActive && <span className="text-profit ml-1 text-xs">(hiện tại)</span>}
+        {isActive && <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>}
       </span>
       {/* Mega 6/45 chỉ đóng khi có winner — không có split */}
-      {!isActive && cycle.closeReason === "winner" && <Sparkles className="text-profit size-3" />}
+      {!isActive && cycle.closeReason === "winner" && (
+        <Sparkles className="size-3 text-green-600 dark:text-green-400" />
+      )}
     </span>
   );
 }
@@ -223,7 +225,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
-    <TableRow className={cn("transition-colors", isWinner && "bg-game-mega645/50")}>
+    <TableRow className={cn("transition-colors", isWinner && "bg-teal-50/50 dark:bg-teal-950/20")}>
       {/* Kỳ (DrawId) */}
       <TableCell className="pl-5 font-mono text-sm tabular-nums">{item.drawId}</TableCell>
 
@@ -275,14 +277,14 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       </TableCell>
 
       {/* Cuối kỳ */}
-      <TableCell className="text-game-mega645 text-right text-sm font-semibold tabular-nums">
+      <TableCell className="text-right text-sm font-semibold text-teal-700 tabular-nums dark:text-teal-400">
         {formatNumber(item.closingAmount)}
       </TableCell>
 
       {/* Jackpot (hasWinner) */}
       <TableCell className="pr-5 text-center">
         {isWinner ? (
-          <Badge className="border-game-mega645/30 bg-game-mega645/15 text-game-mega645 gap-1">
+          <Badge className="gap-1 border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
             <Sparkles className="size-3" />
             Trúng
           </Badge>

@@ -98,13 +98,13 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
             <div
               className={cn(
                 "flex size-6 items-center justify-center rounded-full border-2 transition-all",
-                step.state === "done" && "border-profit bg-profit",
+                step.state === "done" && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40",
                 step.state === "active" && "border-primary bg-primary/10",
                 step.state === "pending" && "border-border bg-background",
               )}
             >
               {step.state === "done" ? (
-                <CheckCircle2 className="text-profit size-3" />
+                <CheckCircle2 className="size-3 text-emerald-500" />
               ) : step.state === "active" ? (
                 <span className="bg-primary size-1.5 animate-pulse rounded-full" />
               ) : (
@@ -123,7 +123,7 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
                 {step.label}
               </p>
               {step.time && (
-                <p className="text-muted-foreground/60 mt-0.5 font-mono text-xs tabular-nums">{step.time}</p>
+                <p className="text-muted-foreground/60 mt-0.5 font-mono text-[10px] tabular-nums">{step.time}</p>
               )}
             </div>
           </div>
@@ -132,7 +132,7 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
               <div
                 className={cn(
                   "h-0.5 w-full rounded-full",
-                  steps[i + 1]?.state !== "pending" ? "bg-profit" : "bg-border/60",
+                  steps[i + 1]?.state !== "pending" ? "bg-emerald-400" : "bg-border/60",
                 )}
               />
             </div>

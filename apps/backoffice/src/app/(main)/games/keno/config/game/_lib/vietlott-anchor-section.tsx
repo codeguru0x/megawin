@@ -60,8 +60,8 @@ export function VietlottAnchorSection({ config, onSave, isPending }: VietlottAnc
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="space-y-4 p-6">
             <div className="flex items-center gap-2">
-              <div className="bg-info flex size-6 items-center justify-center rounded-md">
-                <ExternalLink className="text-info size-3.5" />
+              <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <h3 className="text-foreground text-sm font-semibold">Mã kỳ</h3>

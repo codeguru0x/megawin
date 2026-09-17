@@ -6,46 +6,46 @@ import { cn } from "@/lib/utils";
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   scheduled: {
     label: "Đã lên lịch",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
   salesOpen: {
     label: "Đang bán",
-    className: "bg-profit text-profit",
+    className: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
   },
   salesClosed: {
     label: "Đóng bán",
-    className: "bg-warning text-warning",
+    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
   },
   drawing: {
     label: "Đang quay",
-    className: "bg-info text-info animate-pulse",
+    className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 animate-pulse",
   },
   published: {
     label: "Đã có kết quả",
-    className: "bg-game-max3d text-game-max3d",
+    className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   },
   settling: {
     label: "Đang kết sổ",
-    className: "bg-warning text-warning animate-pulse",
+    className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 animate-pulse",
   },
   settled: {
     label: "Hoàn tất",
-    className: "bg-profit text-profit",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
   },
   voiding: {
     label: "Đang huỷ",
-    className: "bg-loss text-loss animate-pulse",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 animate-pulse",
   },
   void: {
     label: "Đã huỷ",
-    className: "bg-loss text-loss",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
 };
 
 /** Published sau khi đã từng settle (republish) — chờ kết sổ lại. Bingo 18 không có Jackpot. */
 const AWAITING_RESETTLE = {
   label: "Chờ kết sổ lại",
-  className: "bg-warning text-warning",
+  className: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300",
 } as const;
 
 interface Bingo18DrawStatusBadgeProps {

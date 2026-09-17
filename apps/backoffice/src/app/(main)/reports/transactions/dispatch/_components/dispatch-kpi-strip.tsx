@@ -126,8 +126,8 @@ export function DispatchKpiStrip({
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <DispatchKpiCard
         icon={FileStack}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+        iconColor="text-indigo-600 dark:text-indigo-400"
         label="Tổng orders"
         value={placeholder ? "—" : formatNumber(total)}
         dim={!placeholder && total === 0}
@@ -135,8 +135,8 @@ export function DispatchKpiStrip({
       />
       <DispatchKpiCard
         icon={Clock}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Đang chờ"
         value={placeholder ? "—" : formatNumber(pending)}
         valueClass={pending > 0 ? "text-warning" : ""}
@@ -153,8 +153,8 @@ export function DispatchKpiStrip({
       />
       <DispatchKpiCard
         icon={CheckCircle2}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Đã gửi"
         value={placeholder ? "—" : formatNumber(dispatched)}
         valueClass={dispatched > 0 ? "text-profit" : ""}
@@ -171,8 +171,8 @@ export function DispatchKpiStrip({
       />
       <DispatchKpiCard
         icon={AlertTriangle}
-        iconBg="bg-loss"
-        iconColor="text-loss"
+        iconBg="bg-rose-100 dark:bg-rose-900/50"
+        iconColor="text-rose-600 dark:text-rose-400"
         label="Cần chú ý"
         value={placeholder ? "—" : formatNumber(stuck)}
         valueClass={stuck > 0 ? "text-loss" : ""}

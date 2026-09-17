@@ -300,9 +300,9 @@ export function HubQueueTable() {
 
   function handleSort(key: QueueSortKey) {
     if (key === sortKey) {
-      void setUrlParams({ sort: key, dir: sortDir === QueueSortDir.Desc ? QueueSortDir.Asc : QueueSortDir.Desc });
+      setUrlParams({ sort: key, dir: sortDir === QueueSortDir.Desc ? QueueSortDir.Asc : QueueSortDir.Desc });
     } else {
-      void setUrlParams({ sort: key, dir: QueueSortDir.Desc });
+      setUrlParams({ sort: key, dir: QueueSortDir.Desc });
     }
   }
 

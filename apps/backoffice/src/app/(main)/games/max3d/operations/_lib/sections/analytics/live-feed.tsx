@@ -23,13 +23,13 @@ import type { LiveFeedEntry } from "../../types";
 /** Màu theo play mode (basic emerald / plus violet) — UI-only, chuyển từ analytics-panels cũ. */
 const PLAY_MODE_COLORS: Record<string, { dot: string; text: string; fill: string }> = {
   [PlayMode.Basic]: {
-    dot: "bg-profit",
-    text: "text-profit",
+    dot: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
     fill: "#10b981",
   },
   [PlayMode.Plus]: {
-    dot: "bg-game-max3d",
-    text: "text-game-max3d",
+    dot: "bg-violet-500",
+    text: "text-violet-600 dark:text-violet-400",
     fill: "#8b5cf6",
   },
 };
@@ -56,8 +56,8 @@ export function LiveFeed({
           <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
-            <span className="text-game-max3d ml-auto flex items-center gap-1 text-xs font-medium">
-              <span className="bg-game-max3d size-1.5 animate-pulse rounded-full" />
+            <span className="ml-auto flex items-center gap-1 text-xs font-medium text-violet-600">
+              <span className="size-1.5 animate-pulse rounded-full bg-violet-500" />
               Live
             </span>
           )}
@@ -87,7 +87,7 @@ export function LiveFeed({
                   className={cn(
                     "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
                     i === 0 && "bg-muted/20",
-                    isLargeBet && "bg-loss/5",
+                    isLargeBet && "bg-red-500/5",
                   )}
                   style={{
                     borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
@@ -111,7 +111,7 @@ export function LiveFeed({
                             </>
                           )}
                           {isLargeBet && (
-                            <span className="bg-loss/15 text-loss inline-flex h-4 shrink-0 items-center rounded-full px-1.5 text-xs font-semibold">
+                            <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
                               Cược lớn
                             </span>
                           )}
@@ -132,7 +132,7 @@ export function LiveFeed({
                         <span className="text-muted-foreground ml-0.5 shrink-0 text-xs">({e.lineCount} lines)</span>
                       )}
                       {e.betCount > 1 && (
-                        <span className="bg-warning text-warning ml-0.5 shrink-0 rounded px-1 text-xs font-semibold">
+                        <span className="ml-0.5 shrink-0 rounded bg-amber-100 px-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                           ×{e.betCount}
                         </span>
                       )}

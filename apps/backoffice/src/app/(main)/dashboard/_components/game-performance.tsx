@@ -21,10 +21,10 @@ import { ChartSkeleton, GameTableSkeleton } from "./skeletons";
 
 function getNetProfitClass(value: number) {
   if (value < 0) {
-    return "text-loss";
+    return "text-red-600 dark:text-red-400";
   }
   if (value > 0) {
-    return "text-profit";
+    return "text-emerald-600 dark:text-emerald-400";
   }
   return "";
 }
@@ -80,7 +80,7 @@ function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }:
       fill="white"
       textAnchor="middle"
       dominantBaseline="central"
-      className="text-xs font-bold"
+      className="text-[10px] font-bold"
       style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
     >
       {(percent * 100).toFixed(0)}%
@@ -168,7 +168,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                 <p className="text-foreground text-sm font-bold tabular-nums">{formatVNDCompact(kpis.totalStake)}</p>
               </div>
             </div>
-            {/* Mini legend dưới chart — text-xs chấp nhận vì trong vùng chart compact */}
+            {/* Mini legend dưới chart — text-[10px] chấp nhận vì trong vùng chart compact */}
             <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 px-2">
               {chartData.map((item) => (
                 <div key={item.gameProduct} className="flex items-center gap-1">
@@ -286,7 +286,13 @@ function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; pay
       <span
         className={cn(
           "w-12 shrink-0 text-right text-xs font-medium tabular-nums",
-          isOver ? "text-loss" : isDanger ? "text-warning" : isWarn ? "text-warning" : "text-foreground",
+          isOver
+            ? "text-red-600 dark:text-red-400"
+            : isDanger
+              ? "text-orange-600 dark:text-orange-400"
+              : isWarn
+                ? "text-yellow-600 dark:text-yellow-400"
+                : "text-foreground",
         )}
       >
         {(payoutRatio * 100).toFixed(1)}%
@@ -333,7 +339,9 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
             variant="outline"
             className={cn(
               "shrink-0 text-xs tabular-nums",
-              isOverallDanger ? "border-loss bg-loss text-loss" : "border-profit bg-profit text-profit",
+              isOverallDanger
+                ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400"
+                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400",
             )}
           >
             Tổng: {(overallRatio * 100).toFixed(1)}%
@@ -352,9 +360,9 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
           <p className="text-muted-foreground text-xs font-medium">Số %:</p>
           {[
             { textClass: "text-foreground", label: "< 85%" },
-            { textClass: "text-warning", label: "85–95%" },
-            { textClass: "text-warning", label: "95–100%" },
-            { textClass: "text-loss", label: "> 100%" },
+            { textClass: "text-yellow-600 dark:text-yellow-400", label: "85–95%" },
+            { textClass: "text-orange-600 dark:text-orange-400", label: "95–100%" },
+            { textClass: "text-red-600 dark:text-red-400", label: "> 100%" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
               <span className={cn("text-xs font-medium tabular-nums", item.textClass)}>{item.label}</span>

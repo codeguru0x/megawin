@@ -42,34 +42,34 @@ export function ScheduleChips({ draw }: { draw: DrawScheduleFields }) {
   if (draw.salesOpenAt) {
     const past = new Date(draw.salesOpenAt) < now;
     items.push({
-      icon: <Unlock className={cn("size-3.5 shrink-0", past ? "text-profit" : "text-profit")} />,
+      icon: <Unlock className={cn("size-3.5 shrink-0", past ? "text-emerald-400" : "text-emerald-500")} />,
       label: "Mở bán",
       time: displayVNTime(draw.salesOpenAt),
       fullDateTime: displayVNDateTime(draw.salesOpenAt),
       active: !past,
-      color: "text-profit",
+      color: "text-emerald-600 dark:text-emerald-400",
     });
   }
 
   const closePast = new Date(draw.salesCloseAt) < now;
   items.push({
-    icon: <Lock className={cn("size-3.5 shrink-0", closePast ? "text-warning" : "text-warning")} />,
+    icon: <Lock className={cn("size-3.5 shrink-0", closePast ? "text-amber-400" : "text-amber-500")} />,
     label: "Đóng bán",
     time: displayVNTime(draw.salesCloseAt),
     fullDateTime: displayVNDateTime(draw.salesCloseAt),
     active: !closePast,
-    color: "text-warning",
+    color: "text-amber-600 dark:text-amber-400",
   });
 
   if (draw.drawResultAt) {
     const past = new Date(draw.drawResultAt) < now;
     items.push({
-      icon: <Clock className={cn("size-3.5 shrink-0", past ? "text-game-max3d" : "text-game-max3d")} />,
+      icon: <Clock className={cn("size-3.5 shrink-0", past ? "text-violet-400" : "text-violet-500")} />,
       label: "Quay số",
       time: displayVNTime(draw.drawResultAt),
       fullDateTime: displayVNDateTime(draw.drawResultAt),
       active: !past,
-      color: "text-game-max3d",
+      color: "text-violet-600 dark:text-violet-400",
     });
   }
 

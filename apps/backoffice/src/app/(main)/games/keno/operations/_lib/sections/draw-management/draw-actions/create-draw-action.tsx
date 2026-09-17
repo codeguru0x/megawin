@@ -260,7 +260,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CalendarPlus className="text-warning size-4.5" />
+            <CalendarPlus className="size-4.5 text-orange-500" />
             Tạo kỳ quay Keno
           </DialogTitle>
           <DialogDescription>
@@ -306,7 +306,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </span>
                 )}
                 {openCount > 0 && (
-                  <Badge className="bg-warning hover:bg-warning text-xs text-white">{openCount} mở bán</Badge>
+                  <Badge className="bg-orange-600 text-xs text-white hover:bg-orange-600">{openCount} mở bán</Badge>
                 )}
                 {scheduledCount > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -319,7 +319,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </Badge>
                 )}
                 {preview.isError && (
-                  <Badge variant="outline" className="border-warning text-warning text-xs">
+                  <Badge variant="outline" className="border-amber-300 text-xs text-amber-600">
                     Lỗi tải gợi ý — thử chọn lại ngày
                   </Badge>
                 )}
@@ -329,11 +329,13 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
 
           {/* Ngày đã hết slot: không render bảng, chỉ hướng staff sang ngày khác */}
           {isDayFull ? (
-            <div className="border-warning bg-warning/60 flex items-start gap-3 rounded-xl border px-4 py-3.5">
-              <TriangleAlert className="text-warning mt-0.5 size-4 shrink-0" />
+            <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50/60 px-4 py-3.5 dark:border-amber-500/40 dark:bg-amber-950/20">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
               <div className="space-y-1.5 text-sm">
-                <p className="text-warning font-medium">Ngày {drawDate} không còn kỳ nào có thể tạo.</p>
-                <p className="text-warning text-xs">
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  Ngày {drawDate} không còn kỳ nào có thể tạo.
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
                   {drawDate === todayVN()
                     ? "Hôm nay đã qua giờ quay kỳ cuối hoặc đã tạo đủ kỳ."
                     : `Đã tạo đủ ${preview.data?.maxPerDay ?? 0} kỳ cho ngày này.`}{" "}
@@ -355,7 +357,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             <div className="overflow-hidden rounded-xl border">
               {/* Header: ngày quay ghi 1 lần ở đây, không lặp trên từng dòng */}
               <div className="bg-muted/40 flex items-center justify-between border-b px-4 py-2">
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
                   Ngày quay: <span className="text-foreground font-mono normal-case">{drawDate}</span>
                   {rows.length > 0 && ` · ${rows.length} kỳ`}
                 </span>
@@ -363,10 +365,12 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   type="button"
                   onClick={toggleAll}
                   disabled={rows.length === 0}
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium transition-colors disabled:opacity-40"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] font-medium transition-colors disabled:opacity-40"
                 >
-                  {allOpen ? <Unlock className="text-warning size-3" /> : <Lock className="size-3" />}
-                  <span className={cn(allOpen && "text-warning")}>{allOpen ? "Đóng tất cả" : "Mở tất cả"}</span>
+                  {allOpen ? <Unlock className="size-3 text-orange-600" /> : <Lock className="size-3" />}
+                  <span className={cn(allOpen && "text-orange-600 dark:text-orange-400")}>
+                    {allOpen ? "Đóng tất cả" : "Mở tất cả"}
+                  </span>
                 </button>
               </div>
 
@@ -375,10 +379,10 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 className="bg-muted/20 grid items-center gap-x-3 border-b px-4 py-2"
                 style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
               >
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">#</span>
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Mã kỳ</span>
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ quay</span>
-                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">#</span>
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Mã kỳ</span>
+                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Giờ quay</span>
+                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
                   Trạng thái
                 </span>
               </div>
@@ -408,14 +412,14 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     key={row.previewDrawId}
                     className={cn(
                       "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
-                      row.isOpen ? "bg-warning/50" : "hover:bg-muted/20",
+                      row.isOpen ? "bg-orange-50/50 dark:bg-orange-950/15" : "hover:bg-muted/20",
                     )}
                     style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
                   >
                     <span
                       className={cn(
                         "text-xs font-semibold tabular-nums",
-                        row.isOpen ? "text-warning" : "text-muted-foreground",
+                        row.isOpen ? "text-orange-700 dark:text-orange-300" : "text-muted-foreground",
                       )}
                     >
                       {i + 1}
@@ -443,7 +447,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       className="flex cursor-pointer items-center justify-end gap-1.5 select-none"
                     >
                       {row.isOpen ? (
-                        <Unlock className="text-warning size-3 shrink-0" />
+                        <Unlock className="size-3 shrink-0 text-orange-500" />
                       ) : (
                         <Lock className="text-muted-foreground/40 size-3 shrink-0" />
                       )}
@@ -455,8 +459,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       />
                       <span
                         className={cn(
-                          "min-w-12 text-left text-xs font-medium",
-                          row.isOpen ? "text-warning" : "text-muted-foreground",
+                          "min-w-12 text-left text-[11px] font-medium",
+                          row.isOpen ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground",
                         )}
                       >
                         {row.isOpen ? "Mở bán" : "Chờ lịch"}
@@ -476,7 +480,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <Button
             onClick={handleCreate}
             disabled={!canSubmit}
-            className={cn(openCount > 0 && "bg-warning hover:bg-warning text-white")}
+            className={cn(openCount > 0 && "bg-orange-600 text-white hover:bg-orange-700")}
           >
             {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Tạo {rows.length} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}

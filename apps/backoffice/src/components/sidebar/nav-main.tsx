@@ -47,7 +47,7 @@ interface NavMainProps {
 }
 
 const IsComingSoon = () => (
-  <span className="bg-muted text-muted-foreground ml-auto rounded-md px-2 py-1 text-xs">Soon</span>
+  <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">Soon</span>
 );
 
 type LinkSlotProps = Omit<ComponentProps<typeof Link>, "href" | "prefetch" | "children">;
@@ -77,6 +77,7 @@ function NavHref({
   const intentFiredRef = useRef(false);
 
   const fireIntent = () => {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: ref mutate runtime; Biome không theo dõi `.current`.
     if (intentFiredRef.current || !onIntent) {
       return;
     }
@@ -159,7 +160,7 @@ const NavItemExpanded = ({
             {item.subItems.map((subItem) => (
               <SidebarMenuSubItem key={subItem.title}>
                 {subItem.sectionLabel && (
-                  <p className="text-muted-foreground/60 px-2 pt-3 pb-1 text-xs font-semibold tracking-wider uppercase">
+                  <p className="text-muted-foreground/60 px-2 pt-3 pb-1 text-[10px] font-semibold tracking-wider uppercase">
                     {subItem.sectionLabel}
                   </p>
                 )}
@@ -204,7 +205,7 @@ const NavItemCollapsed = ({
             // chỉ nhận đúng 1 child, 2 children gây lỗi runtime/hydration.
             <Fragment key={subItem.title}>
               {subItem.sectionLabel && (
-                <p className="text-muted-foreground/60 pointer-events-none px-2 pt-2 pb-0.5 text-xs font-semibold tracking-wider uppercase">
+                <p className="text-muted-foreground/60 pointer-events-none px-2 pt-2 pb-0.5 text-[10px] font-semibold tracking-wider uppercase">
                   {subItem.sectionLabel}
                 </p>
               )}

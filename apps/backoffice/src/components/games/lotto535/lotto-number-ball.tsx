@@ -46,10 +46,10 @@ export type LottoMatchBallVariant = "default" | "matched" | "special" | "special
 
 const LOTTO_MATCH_BALL_STYLE: Record<LottoMatchBallVariant, string> = {
   matched: "bg-primary text-primary-foreground ring-2 ring-primary/30",
-  special: "bg-muted text-muted-foreground ring-1 ring-warning",
-  "special-matched": "bg-warning text-white ring-2 ring-warning/40",
+  special: "bg-muted text-muted-foreground ring-1 ring-amber-400",
+  "special-matched": "bg-amber-500 text-white ring-2 ring-amber-300/40",
   result: "bg-muted/60 text-muted-foreground/60",
-  "result-special": "bg-warning/60 text-warning/60",
+  "result-special": "bg-amber-200/60 text-amber-700/60 dark:bg-amber-900/40 dark:text-amber-400/60",
   default: "bg-muted text-muted-foreground",
 };
 
@@ -73,7 +73,7 @@ export function LottoMatchBall({
       title={title}
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none",
-        size === "sm" ? "size-7 text-xs" : "size-8 text-xs",
+        size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
         LOTTO_MATCH_BALL_STYLE[variant],
       )}
     >

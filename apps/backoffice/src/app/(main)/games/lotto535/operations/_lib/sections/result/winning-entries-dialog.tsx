@@ -32,28 +32,28 @@ import {
 
 const TIER_STYLE: Partial<Record<PrizeTier, { badge: string; winColor: string }>> = {
   [PrizeTier.Jackpot]: {
-    badge: "border-warning/60 bg-warning/10 text-warning",
-    winColor: "text-warning",
+    badge: "border-amber-400/60 bg-amber-500/10 text-amber-600 dark:text-amber-400 dark:border-amber-500/50",
+    winColor: "text-amber-500 dark:text-amber-400",
   },
   [PrizeTier.Tier1]: {
-    badge: "border-warning/60 bg-warning/10 text-warning",
-    winColor: "text-warning",
+    badge: "border-yellow-400/60 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 dark:border-yellow-500/50",
+    winColor: "text-yellow-600 dark:text-yellow-400",
   },
   [PrizeTier.Tier2]: {
-    badge: "border-warning/60 bg-warning/10 text-warning",
-    winColor: "text-warning",
+    badge: "border-orange-400/60 bg-orange-500/10 text-orange-700 dark:text-orange-400 dark:border-orange-500/50",
+    winColor: "text-orange-600 dark:text-orange-400",
   },
   [PrizeTier.Tier3]: {
-    badge: "border-info/60 bg-info/10 text-info",
-    winColor: "text-info",
+    badge: "border-blue-400/60 bg-blue-500/10 text-blue-700 dark:text-blue-400 dark:border-blue-500/50",
+    winColor: "text-blue-600 dark:text-blue-400",
   },
   [PrizeTier.Tier4]: {
-    badge: "border-info/60 bg-info/10 text-info",
-    winColor: "text-info",
+    badge: "border-indigo-400/60 bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 dark:border-indigo-500/50",
+    winColor: "text-indigo-600 dark:text-indigo-400",
   },
   [PrizeTier.Tier5]: {
-    badge: "border-game-max3d/60 bg-game-max3d/10 text-game-max3d",
-    winColor: "text-game-max3d",
+    badge: "border-violet-400/60 bg-violet-500/10 text-violet-700 dark:text-violet-400 dark:border-violet-500/50",
+    winColor: "text-violet-600 dark:text-violet-400",
   },
   [PrizeTier.Consolation]: {
     badge: "border-border bg-muted/40 text-muted-foreground",
@@ -71,7 +71,7 @@ function TierChip({ tier }: { tier: WinningEntryTierDetail }) {
         s?.badge,
       )}
     >
-      {isJackpot && <Star className="fill-warning text-warning size-3" />}
+      {isJackpot && <Star className="size-3 fill-amber-500 text-amber-500" />}
       {tier.tierLabel}
       {tier.hitCount > 1 && <span className="ml-0.5 font-bold">×{tier.hitCount}</span>}
     </span>
@@ -163,22 +163,22 @@ function KpiBar({
     <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Hash}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label={REPORT_COLUMN_LABELS.winningLineCount}
         value={formatNumber(totalWinningLines)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
@@ -228,8 +228,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         {/* ── Top header bar ── */}
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="bg-warning/15 ring-warning/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
-              <Trophy className="text-warning size-5" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 ring-1 ring-amber-500/30">
+              <Trophy className="size-5 text-amber-500" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
@@ -345,7 +345,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
         // Entry trúng Jackpot: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Icon nhận biết JP nằm trong chip Hạng trúng.
-        hasJackpot && "border-l-3 border-l-warning",
+        hasJackpot && "border-l-[3px] border-l-amber-400",
       )}
     >
       {/* Row number */}
@@ -353,7 +353,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         <span
           className={cn(
             "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            hasJackpot ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground",
+            hasJackpot ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground",
           )}
         >
           {rowNo}

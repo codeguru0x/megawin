@@ -46,36 +46,36 @@ export function VoidKpiStrip({ data }: VoidKpiStripProps) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         icon={Ban}
-        iconBg="bg-loss"
-        iconColor="text-loss"
+        iconBg="bg-rose-100 dark:bg-rose-900/50"
+        iconColor="text-rose-600 dark:text-rose-400"
         label="Tổng kỳ huỷ"
         value={formatNumber(data.totalVoidedDraws)}
         sub="Kỳ quay đã void"
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-info"
-        iconColor="text-info"
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
         label="Phiếu cược"
         value={formatNumber(data.totalEntries)}
         sub="Phiếu cược bị huỷ"
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-profit"
-        iconColor="text-profit"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Tiền cược"
         value={formatVNDCompact(data.totalOriginalStake)}
         sub=""
       />
       <KpiCard
         icon={Undo2}
-        iconBg="bg-warning"
-        iconColor="text-warning"
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
         label="Hoàn trả"
         value={formatVNDCompact(data.totalRefundAmount)}
         sub="Đã hoàn cho khách"
-        valueClassName="text-warning"
+        valueClassName="text-amber-600 dark:text-amber-400"
       />
     </div>
   );

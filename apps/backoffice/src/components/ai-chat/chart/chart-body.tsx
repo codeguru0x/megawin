@@ -188,7 +188,7 @@ function TooltipItem({ color, label, value }: { color: string | undefined; label
   return (
     <>
       {color !== undefined && (
-        <span className="mt-0.5 size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
+        <span className="mt-0.5 size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: color }} />
       )}
       <div className="flex flex-1 items-center justify-between gap-4 leading-none">
         <span className="text-muted-foreground">{label}</span>
@@ -887,7 +887,7 @@ function ScatterChartBody({
         type="number"
       >
         <Label
-          className="fill-muted-foreground text-xs"
+          className="fill-muted-foreground text-[11px]"
           offset={-14}
           position="insideBottom"
           value={prettifyLabel(pair.x.dataKey, reportLabels)}
@@ -905,7 +905,7 @@ function ScatterChartBody({
       >
         <Label
           angle={-90}
-          className="fill-muted-foreground text-xs"
+          className="fill-muted-foreground text-[11px]"
           position="insideLeft"
           style={{ textAnchor: "middle" }}
           value={prettifyLabel(pair.y.dataKey, reportLabels)}

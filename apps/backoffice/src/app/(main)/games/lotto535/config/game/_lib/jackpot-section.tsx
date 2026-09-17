@@ -36,11 +36,11 @@ interface JackpotSectionProps {
 }
 
 const TIER_LABELS: Record<string, { label: string; badge: string; color: string }> = {
-  tier1: { label: "Giải Nhất", badge: "1st", color: "bg-warning text-white" },
-  tier2: { label: "Giải Nhì", badge: "2nd", color: "bg-muted text-white" },
-  tier3: { label: "Giải Ba", badge: "3rd", color: "bg-warning text-white" },
-  tier4: { label: "Giải Tư", badge: "4th", color: "bg-muted text-white" },
-  tier5: { label: "Giải Năm", badge: "5th", color: "bg-muted text-white" },
+  tier1: { label: "Giải Nhất", badge: "1st", color: "bg-amber-500 text-white" },
+  tier2: { label: "Giải Nhì", badge: "2nd", color: "bg-slate-400 text-white" },
+  tier3: { label: "Giải Ba", badge: "3rd", color: "bg-amber-700 text-white" },
+  tier4: { label: "Giải Tư", badge: "4th", color: "bg-slate-500 text-white" },
+  tier5: { label: "Giải Năm", badge: "5th", color: "bg-slate-600 text-white" },
 };
 
 export function JackpotSection({ config, onSave, isPending }: JackpotSectionProps) {
@@ -250,10 +250,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               </div>
             </div>
 
-            <div className="bg-info/80 border-t px-6 py-3">
+            <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
               <div className="flex items-start gap-2">
-                <Info className="text-info mt-0.5 size-3.5 shrink-0" />
-                <p className="text-info text-xs leading-relaxed">
+                <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
+                <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
                   Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do làm tròn sẽ cộng vào hạng cao nhất có
                   người trúng. Giải Nhất luôn nhận phần dư nếu có.
                 </p>

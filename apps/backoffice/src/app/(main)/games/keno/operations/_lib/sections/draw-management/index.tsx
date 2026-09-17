@@ -254,7 +254,7 @@ export function DrawManagementSection() {
         drawId={effectiveDrawId}
         title="Xác nhận kết sổ lại?"
         confirmLabel="Xác nhận kết sổ lại"
-        confirmClassName="bg-warning hover:bg-warning text-white"
+        confirmClassName="bg-orange-600 hover:bg-orange-700 text-white"
         description={
           <>
             Kỳ{" "}

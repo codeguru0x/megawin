@@ -21,31 +21,33 @@ function TenantRichCard({ tenant, rank }: { tenant: TenantRow; rank: number }) {
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums",
-            rank === 1 ? "bg-warning text-warning" : "bg-muted text-muted-foreground",
+            "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums",
+            rank === 1
+              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+              : "bg-muted text-muted-foreground",
           )}
         >
           {rank}
         </span>
         <span className="min-w-0 flex-1 truncate text-xs font-semibold">{tenant.tenantId}</span>
-        <span className="text-muted-foreground shrink-0 text-xs font-medium tabular-nums">
+        <span className="text-muted-foreground shrink-0 text-[11px] font-medium tabular-nums">
           {tenant.pct.toFixed(0)}%
         </span>
       </div>
       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-        <div className="bg-warning/60 h-full rounded-full transition-all" style={{ width: `${tenant.pct}%` }} />
+        <div className="h-full rounded-full bg-amber-500/60 transition-all" style={{ width: `${tenant.pct}%` }} />
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <div className="bg-muted/40 rounded-md px-1 py-1.5">
-          <p className="text-muted-foreground text-xs">Doanh thu</p>
+          <p className="text-muted-foreground text-[10px]">Doanh thu</p>
           <p className="text-xs font-semibold tabular-nums">{formatNumber(tenant.revenue)}</p>
         </div>
         <div className="bg-muted/40 rounded-md px-1 py-1.5">
-          <p className="text-muted-foreground text-xs">Hoa hồng</p>
+          <p className="text-muted-foreground text-[10px]">Hoa hồng</p>
           <p className="text-xs font-semibold tabular-nums">{formatNumber(tenant.commission)}</p>
         </div>
         <div className="bg-muted/40 rounded-md px-1 py-1.5">
-          <p className="text-muted-foreground text-xs">Phiếu</p>
+          <p className="text-muted-foreground text-[10px]">Phiếu</p>
           <p className="text-xs font-semibold tabular-nums">{formatNumber(tenant.entries)}</p>
         </div>
       </div>
@@ -84,9 +86,11 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
                 style={{ gridTemplateColumns: "1fr 4rem 5rem 3rem" }}
               >
                 <span className="truncate text-xs font-medium">{t.tenantId}</span>
-                <span className="text-muted-foreground text-right text-xs tabular-nums">{formatNumber(t.entries)}</span>
+                <span className="text-muted-foreground text-right text-[11px] tabular-nums">
+                  {formatNumber(t.entries)}
+                </span>
                 <span className="text-right text-xs font-semibold tabular-nums">{formatNumber(t.revenue)}</span>
-                <span className="text-muted-foreground text-right text-xs tabular-nums">{t.pct.toFixed(0)}%</span>
+                <span className="text-muted-foreground text-right text-[11px] tabular-nums">{t.pct.toFixed(0)}%</span>
               </div>
             ))}
           </div>

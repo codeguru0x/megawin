@@ -6,23 +6,23 @@ import { cn } from "@/lib/utils";
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   scheduled: {
     label: "Chờ quay",
-    className: "bg-muted text-muted-foreground",
+    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   },
   active: {
     label: "Đã khoá",
-    className: "bg-info text-info",
+    className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   },
   drawn: {
     label: "Đã quay",
-    className: "bg-game-max3d text-game-max3d",
+    className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   },
   settled: {
     label: "Đã settle",
-    className: "bg-profit text-profit",
+    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
   },
   void: {
     label: "Vô hiệu",
-    className: "bg-loss text-loss",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   },
 };
 
