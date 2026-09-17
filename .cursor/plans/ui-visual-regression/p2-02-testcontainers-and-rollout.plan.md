@@ -6,10 +6,14 @@ phải nền tảng bắt buộc.
 ## 1. Chuyển seed data sang Testcontainers (thay `page.route()` mock)
 
 **Điều kiện:** `.cursor/plans/testcontainers-setup/00-overview.md` phải hoàn thành **và** được mở
-rộng sang `apps/backoffice` — hiện plan đó target đúng 14 package Vitest
-(`game-*-application`, `resultfeed-application`, `identity-application`, `tenant-gateway`,
-`tenant-dispatch`, `audit`, `cache`), KHÔNG bao gồm app Next.js nào. Đây là gap thật cần lấp nếu
-muốn dùng, không phải chi tiết kỹ thuật nhỏ.
+rộng sang `apps/backoffice` — verify 17/09/2026: phần "hoàn thành" **ĐÃ ĐÚNG** (13 package Mongo +
+`cache` đã migrate sang `integrationConfig` + `@megawin/vitest-config/global-setup-mongo`/
+`global-setup-redis`, `tooling/vitest-config/src/testcontainers/*` tồn tại thật trên đĩa — không còn
+là plan trên giấy). Phần CHƯA đủ vẫn là **"mở rộng sang `apps/backoffice`"** — plan đó target đúng
+14 package Vitest (`game-*-application`, `resultfeed-application`, `identity-application`,
+`tenant-gateway`, `tenant-dispatch`, `audit`, `cache`), KHÔNG bao gồm app Next.js nào. Vậy điều kiện
+đã unblock được 1 nửa; nửa còn lại (seed script riêng cho `apps/backoffice`, chưa viết) vẫn là gap
+thật cần lấp nếu muốn dùng.
 
 **Vì sao đáng làm (khi điều kiện đủ):** mock ở `page.route()` (p0-01) chặn ở tầng HTTP — nếu route
 handler thật (`apps/backoffice/src/app/api/keno/operations/hub-snapshot/route.ts`) có bug parse/map

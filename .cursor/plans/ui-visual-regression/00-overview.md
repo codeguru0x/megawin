@@ -90,3 +90,12 @@ thể.
 - Không tự tạo `.github/workflows/` — CI đầu tiên của repo cần quyết định user, không tự thêm.
 - Không mở rộng ngoài `apps/backoffice` (không làm cho `operator-web` tương lai — game B2C khác
   stack, khác rủi ro, xét riêng khi package đó tồn tại).
+
+## Cập nhật 17/09/2026 — khoảng trống `packages/ui` đã có plan riêng
+
+Plan này chỉ test **trang** (page-level, qua route Next.js) — KHÔNG test **component** cô lập trong
+`packages/ui`. Khoảng trống đó (Storybook + interaction test + visual regression per-component) được
+lấp bởi [`.cursor/plans/ui-component-testing-storybook/`](../ui-component-testing-storybook/00-overview.md),
+plan bổ sung, độc lập, KHÔNG đổi bất kỳ quyết định nào ở đây. `p2-01` (Chromatic) của plan đó
+(`ui-component-testing-storybook/p2-01`) là phân tích RIÊNG cho `packages/ui` — điều kiện "chưa có
+Storybook" ở `p2-01` của CHÍNH FILE NÀY vẫn đúng cho `apps/backoffice`, không bị ảnh hưởng.
