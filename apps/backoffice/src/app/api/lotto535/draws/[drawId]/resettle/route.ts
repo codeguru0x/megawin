@@ -1,5 +1,6 @@
 import { TriggerResettleUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { env } from "@/env";
 import { withApi } from "@/lib/api";
@@ -14,11 +15,16 @@ const triggerResettleUseCase = new TriggerResettleUseCase();
  *
  * Khởi động phiên kết sổ lại (Resettle) Lotto 5/35.
  */
+
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(triggerResettleSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return triggerResettleUseCase.run({
       drawId,
       RESETTLE_SFN_ARN: env.LOTTO535_RESETTLE_SFN_ARN,

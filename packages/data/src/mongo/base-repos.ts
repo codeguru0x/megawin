@@ -1,5 +1,4 @@
-import type { Document } from "mongodb";
-import { ReadPreference } from "mongodb";
+import { ReadPreference, type Document } from "mongodb";
 
 import type { BaseEntity } from "./base-entity";
 import { Constants } from "./constants";

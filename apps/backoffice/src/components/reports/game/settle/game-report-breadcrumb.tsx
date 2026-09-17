@@ -42,34 +42,34 @@ export function GameDrawBreadcrumb({
 
       {drawId && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3" />
           {onDrawClick ? (
             <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onDrawClick}>
               {drawId}
             </Button>
           ) : (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{drawId}</span>
+            <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{drawId}</span>
           )}
         </>
       )}
 
       {tenantId && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3" />
           {onTenantClick ? (
             <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onTenantClick}>
               {tenantId}
             </Button>
           ) : (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
+            <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{tenantId}</span>
           )}
         </>
       )}
 
       {playerName && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerName}</span>
+          <ChevronRight className="text-muted-foreground size-3" />
+          <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{playerName}</span>
         </>
       )}
     </div>
@@ -113,34 +113,34 @@ export function GameTenantBreadcrumb({
 
       {tenantId && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3" />
           {onTenantClick ? (
             <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onTenantClick}>
               {tenantId}
             </Button>
           ) : (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
+            <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{tenantId}</span>
           )}
         </>
       )}
 
       {drawId && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3" />
           {onDrawClick ? (
             <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onDrawClick}>
               {drawId}
             </Button>
           ) : (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{drawId}</span>
+            <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{drawId}</span>
           )}
         </>
       )}
 
       {playerName && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerName}</span>
+          <ChevronRight className="text-muted-foreground size-3" />
+          <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{playerName}</span>
         </>
       )}
     </div>

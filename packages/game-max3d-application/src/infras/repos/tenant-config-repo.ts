@@ -1,6 +1,5 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type { TenantConfigEntity } from "@megawin/game-max3d/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
+import { Max3dCollections, type TenantConfigEntity } from "@megawin/game-max3d/entities";
 import { nowVN } from "@megawin/shared/utils";
 
 import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
@@ -41,14 +40,22 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
     const now = nowVN();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
-    if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
+    if (fields.commissionRate !== undefined) {
+      $set.commissionRate = fields.commissionRate;
+    }
+    if (fields.isEnabled !== undefined) {
+      $set.isEnabled = fields.isEnabled;
+    }
 
     const $setOnInsert: Record<string, unknown> = { createdAt: now };
 
     // Default values khi insert mới (fields chưa được truyền vào)
-    if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0;
-    if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;
+    if (fields.commissionRate === undefined) {
+      $setOnInsert.commissionRate = 0;
+    }
+    if (fields.isEnabled === undefined) {
+      $setOnInsert.isEnabled = true;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Tenant, tenantId },

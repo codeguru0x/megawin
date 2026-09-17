@@ -18,8 +18,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { Power655DrawComboAccountDoc, Power655DrawComboAccountEntity } from "@megawin/game-power655/entities";
-import { Power655Collections } from "@megawin/game-power655/entities";
+import {
+  Power655Collections,
+  type Power655DrawComboAccountDoc,
+  type Power655DrawComboAccountEntity,
+} from "@megawin/game-power655/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { ComboAccountMapper } from "../mappers/combo-account-mapper";
@@ -66,7 +69,9 @@ export class ComboAccountsRepository extends BaseRepo<Power655DrawComboAccountEn
    */
   async countAccountsByCombo(drawId: string, comboKeys: string[]): Promise<Map<string, number>> {
     const counts = new Map<string, number>();
-    if (comboKeys.length === 0) return counts;
+    if (comboKeys.length === 0) {
+      return counts;
+    }
 
     const rows = await this.aggregate([
       { $match: { drawId, comboKey: { $in: comboKeys } } },
@@ -91,7 +96,9 @@ export class ComboAccountsRepository extends BaseRepo<Power655DrawComboAccountEn
    * @param batchMaxId - ObjectId hex entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: ComboStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = [];
@@ -121,7 +128,9 @@ export class ComboAccountsRepository extends BaseRepo<Power655DrawComboAccountEn
       }
     }
 
-    if (ops.length === 0) return;
+    if (ops.length === 0) {
+      return;
+    }
 
     await runDeltaBulkWrite(async () => await this.bulkWrite(ops, { ordered: false }));
   }

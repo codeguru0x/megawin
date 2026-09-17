@@ -1,3 +1,6 @@
+import type { GlobalConfigDoc } from "./global-config";
+import type { TenantConfigDoc } from "./tenant-config";
+
 /**
  * Lotto 5/35 – Game Configuration
  *
@@ -14,8 +17,5 @@
 /** Union type cho collection lotto535GameConfigs. */
 export type { GlobalConfigDoc, GlobalConfigDoc as _GlobalConfigDoc } from "./global-config";
 export type { TenantConfigDoc, TenantConfigDoc as _TenantConfigDoc } from "./tenant-config";
-
-import type { GlobalConfigDoc } from "./global-config";
-import type { TenantConfigDoc } from "./tenant-config";
 
 export type GameConfigDoc = GlobalConfigDoc | TenantConfigDoc;

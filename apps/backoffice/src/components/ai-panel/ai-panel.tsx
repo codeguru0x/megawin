@@ -14,8 +14,7 @@
  * `ChatPanel` (`src/components/ai-chat/`) — dùng chung với trang `/ai`, panel chỉ thêm
  * frame/resize/drawer xung quanh.
  */
-
-import { Activity, type PointerEvent as ReactPointerEvent, useCallback, useRef } from "react";
+import { Activity, useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
 
 import { usePathname } from "next/navigation";
 
@@ -93,11 +92,10 @@ function AiPanelResizeHandle({
   );
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: resize handle cần pointer drag + custom hit-area — <hr> không hỗ trợ onPointerDown; div[role=separator] tabIndex là pattern chuẩn cho resizable panel.
     <div
       onPointerDown={handlePointerDown}
       onKeyDown={handleKeyDown}
-      className="absolute inset-y-0 left-0 z-10 w-1 cursor-col-resize touch-none hover:bg-accent active:bg-accent"
+      className="hover:bg-accent active:bg-accent absolute inset-y-0 left-0 z-10 w-1 cursor-col-resize touch-none"
       role="separator"
       aria-orientation="vertical"
       aria-label="Đổi độ rộng panel AI"
@@ -133,7 +131,7 @@ export function AiPanel() {
   if (mode === AiPanelMode.Drawer) {
     return (
       <Drawer open={open} onOpenChange={setOpen} direction="right">
-        <DrawerContent className="flex flex-col bg-background p-0 data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-sm">
+        <DrawerContent className="bg-background flex flex-col p-0 data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-sm">
           <DrawerTitle className="sr-only">{AI_ASSISTANT_NAME}</DrawerTitle>
           {panelBody}
         </DrawerContent>
@@ -159,7 +157,7 @@ export function AiPanel() {
       // panel là flex sibling chiếm chỗ thật trong layout — không thể "trượt ra ngoài" như overlay.
       style={isOverlay ? { width } : { width: open ? width : 0 }}
       className={cn(
-        "flex flex-col bg-background",
+        "bg-background flex flex-col",
         isOverlay
           ? cn(
               "fixed inset-y-0 right-0 z-40 border-l shadow-xl transition-transform duration-200 ease-linear",

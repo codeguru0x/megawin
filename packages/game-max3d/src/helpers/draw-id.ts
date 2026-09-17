@@ -8,8 +8,7 @@
  * file này CHỈ lo format drawId từ (drawDate, drawNo) đã biết.
  */
 
-import type { ISODateString } from "../entities/types";
-import { DrawNo } from "../entities/types";
+import { DrawNo, type ISODateString } from "../entities/types";
 
 export function generateDrawId(drawDate: ISODateString, drawNo: number = DrawNo.Default): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;

@@ -5,7 +5,6 @@ export default defineConfig({
   ...sharedConfig,
   test: {
     ...sharedConfig.test,
-    include: ["test/**/*.test.ts"],
-    environment: "node",
+    include: ["test/unit/**/*.test.ts"],
   },
 });

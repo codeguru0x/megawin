@@ -26,17 +26,20 @@
  * + `$slice` lo phần cắt).
  */
 
-import type {
-  BasicPrizes,
-  BigSmallPrizes,
-  EvenOddPrizes,
-  KenoByPlayType,
-  KenoNumberStat,
-  KenoPlayTypeStat,
-  KenoTopPotential,
-  TenantBettingStat,
+import {
+  KENO_VALID_NUMBERS,
+  KenoBigSmallBet,
+  KenoEvenOddBet,
+  KenoPlayType,
+  type BasicPrizes,
+  type BigSmallPrizes,
+  type EvenOddPrizes,
+  type KenoByPlayType,
+  type KenoNumberStat,
+  type KenoPlayTypeStat,
+  type KenoTopPotential,
+  type TenantBettingStat,
 } from "@megawin/game-keno/entities";
-import { KENO_VALID_NUMBERS, KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
 import { buildComboKey, createEmptyByPlayType, maxBoardPrize } from "@megawin/game-keno/rules";
 
 import type {
@@ -264,6 +267,9 @@ export class DrawStatsAccumulator {
           return this.byPlayType.bigSmall.small;
         case KenoBigSmallBet.BigSmallDraw:
           return this.byPlayType.bigSmall.draw;
+        case undefined: {
+          throw new Error("Not implemented yet: undefined case");
+        }
         default:
           return null;
       }
@@ -280,6 +286,9 @@ export class DrawStatsAccumulator {
           return this.byPlayType.evenOdd.odd1112;
         case KenoEvenOddBet.Odd:
           return this.byPlayType.evenOdd.odd;
+        case undefined: {
+          throw new Error("Not implemented yet: undefined case");
+        }
         default:
           return null;
       }

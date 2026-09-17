@@ -7,11 +7,9 @@
  * `select` slice `exposure` riêng → KPI đổi không kéo Exposure re-render (§4.2).
  * Click Exposure card → chuyển sang tab Phân tích cược.
  */
-
 import { Skeleton } from "@/components/ui/skeleton";
 
-import type { OfficialFinancialSlice } from "../../adapters";
-import { toExposureView, toKpi } from "../../adapters";
+import { toExposureView, toKpi, type OfficialFinancialSlice } from "../../adapters";
 import type { ExposureViewWithThreshold, OpsKpi } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail, useOpsSnapshot } from "../../use-operations";
@@ -54,7 +52,9 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
       : null,
   );
 
-  if (!effectiveDrawId) return null;
+  if (!effectiveDrawId) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -66,7 +66,9 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
     );
   }
 
-  if (!kpi) return null;
+  if (!kpi) {
+    return null;
+  }
 
   return (
     <div className="space-y-3">

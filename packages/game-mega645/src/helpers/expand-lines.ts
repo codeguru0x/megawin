@@ -12,7 +12,7 @@
 
 import type { EntryBoardSnapshot } from "../entities/entry";
 import { PlayType } from "../entities/enums";
-import { ALL_NUMBERS, type BoardSelection, type LineValue, MEGA645_NUMBER_COUNT } from "../entities/types";
+import { ALL_NUMBERS, MEGA645_NUMBER_COUNT, type BoardSelection, type LineValue } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Core: generate combinations
@@ -53,7 +53,9 @@ function expandBao5(sel: BoardSelection): LineValue[] {
   const lines: LineValue[] = [];
 
   for (const n of ALL_NUMBERS) {
-    if (chosen.has(n)) continue;
+    if (chosen.has(n)) {
+      continue;
+    }
     // Ghép số bổ sung n vào 5 số đã chọn → 1 line 6 số.
     const nums = [...sel.numbers, n];
     lines.push({ numbers: nums.sort() });

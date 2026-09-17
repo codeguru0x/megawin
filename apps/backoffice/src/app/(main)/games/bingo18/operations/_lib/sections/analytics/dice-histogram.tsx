@@ -12,7 +12,6 @@
  *
  * Data từ snapshot bucket (adapter `toDiceCells`) — không request riêng.
  */
-
 import { memo } from "react";
 
 import { formatCurrency, formatNumber } from "@megawin/shared/utils";
@@ -27,18 +26,26 @@ import type { DiceCellItem } from "../../types";
 /** 5 cấp heat nền theo Dòng tiền: cold → hot (hot = amber, đồng bộ cross-game). */
 const HEAT_LEVELS = [
   "bg-card border-border/50",
-  "bg-amber-50/40 border-amber-200/40 dark:bg-amber-950/10 dark:border-amber-900/30",
-  "bg-amber-50/80 border-amber-200/60 dark:bg-amber-950/25 dark:border-amber-800/40",
-  "bg-amber-100/80 border-amber-300/70 dark:bg-amber-900/35 dark:border-amber-700/50",
-  "bg-amber-200/80 border-amber-400/80 dark:bg-amber-800/45 dark:border-amber-600/60",
+  "bg-warning/40 border-warning/40",
+  "bg-warning/80 border-warning/60",
+  "bg-warning/80 border-warning/70",
+  "bg-warning/80 border-warning/80",
 ] as const;
 
 function heatLevel(amount: number, max: number): number {
-  if (amount <= 0 || max <= 0) return 0;
+  if (amount <= 0 || max <= 0) {
+    return 0;
+  }
   const ratio = amount / max;
-  if (ratio >= 0.85) return 4;
-  if (ratio >= 0.6) return 3;
-  if (ratio >= 0.35) return 2;
+  if (ratio >= 0.85) {
+    return 4;
+  }
+  if (ratio >= 0.6) {
+    return 3;
+  }
+  if (ratio >= 0.35) {
+    return 2;
+  }
   return 1;
 }
 
@@ -63,13 +70,13 @@ const DiceCell = memo(function DiceCell({
             HEAT_LEVELS[level],
           )}
         >
-          <span className="absolute left-2 top-2 flex size-6 items-center justify-center rounded-md bg-foreground/5 text-sm font-bold tabular-nums">
+          <span className="bg-foreground/5 absolute top-2 left-2 flex size-6 items-center justify-center rounded-md text-sm font-bold tabular-nums">
             {diceValue}
           </span>
-          <span className="text-base font-bold tabular-nums leading-tight">
+          <span className="text-base leading-tight font-bold tabular-nums">
             {amount > 0 ? formatCurrency(amount) : "—"}
           </span>
-          <span className="text-[11px] tabular-nums text-muted-foreground">{formatNumber(sets)}x</span>
+          <span className="text-muted-foreground text-xs tabular-nums">{formatNumber(sets)}x</span>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-xs tabular-nums">
@@ -84,20 +91,20 @@ export function DiceBoard({ cells }: { cells: DiceCellItem[] }) {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
-            <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
+          <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <Dice5 className="text-warning size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Dòng tiền theo mặt xúc xắc</CardTitle>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-0.5 text-xs">
               Một số + Hai số trùng + Ba số cụ thể · heat theo tiền cược
             </p>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-1">
+      <CardContent className="px-5 pt-1 pb-4">
         <div className="grid grid-cols-3 gap-2 @[28rem]/main:grid-cols-6">
           {cells.map((c) => (
             <DiceCell

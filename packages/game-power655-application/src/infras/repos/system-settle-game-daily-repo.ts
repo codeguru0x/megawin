@@ -10,8 +10,8 @@
  */
 
 import {
-  type SettleGameDailyAggregateResult,
   SystemSettleGameDailyRepository,
+  type SettleGameDailyAggregateResult,
 } from "@megawin/game-core-application/repos";
 import { POWER655_SETTLE_DRAW_REPORTS } from "@megawin/game-power655/entities";
 

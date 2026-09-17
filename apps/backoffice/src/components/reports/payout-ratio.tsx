@@ -20,8 +20,12 @@ const PAYOUT_THRESHOLDS = {
  * @param ratio - Tỷ lệ trả thưởng chưa nhân 100 (ví dụ 0.75 = 75%).
  */
 export function getPayoutRatioColor(ratio: number): string {
-  if (ratio > PAYOUT_THRESHOLDS.danger) return "text-loss";
-  if (ratio > PAYOUT_THRESHOLDS.warning) return "text-warning";
+  if (ratio > PAYOUT_THRESHOLDS.danger) {
+    return "text-loss";
+  }
+  if (ratio > PAYOUT_THRESHOLDS.warning) {
+    return "text-warning";
+  }
   return "";
 }
 
@@ -43,8 +47,12 @@ export function formatPayoutRatio(ratio: number): string {
  * - Zero → mặc định
  */
 export function getNetProfitColor(value: number): string {
-  if (value < 0) return "text-loss";
-  if (value > 0) return "text-profit";
+  if (value < 0) {
+    return "text-loss";
+  }
+  if (value > 0) {
+    return "text-profit";
+  }
   return "";
 }
 
@@ -87,19 +95,16 @@ export function PayoutRatioKpiBadge({ ratio, className }: PayoutRatioProps) {
   // badge background + text tương ứng với ngưỡng
   const badgeClass =
     color === "text-loss"
-      ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400"
+      ? "bg-loss text-loss"
       : color === "text-warning"
-        ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400"
+        ? "bg-warning text-warning"
         : "bg-muted text-muted-foreground";
 
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
-      <span className="text-[11px] text-muted-foreground">Tỷ lệ TT</span>
+      <span className="text-muted-foreground text-xs">Tỷ lệ TT</span>
       <span
-        className={cn(
-          "inline-flex items-center rounded px-1 py-0.5 text-[11px] font-semibold tabular-nums",
-          badgeClass,
-        )}
+        className={cn("inline-flex items-center rounded px-1 py-0.5 text-xs font-semibold tabular-nums", badgeClass)}
       >
         {formatPayoutRatio(ratio)}
       </span>

@@ -26,9 +26,10 @@
  * Exit code != 0 nếu vi phạm → dùng trong CI.
  */
 
-import { collectRouteConsumers, listSourceFiles, matchRoute, objectLiteralKeys } from "./_lib/route-query-collector";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
+
+import { collectRouteConsumers, listSourceFiles, matchRoute, objectLiteralKeys } from "./_lib/route-query-collector";
 
 /** `src/scripts/check-url-params.ts` -> `src`. */
 const srcRoot = dirname(dirname(new URL(import.meta.url).pathname));

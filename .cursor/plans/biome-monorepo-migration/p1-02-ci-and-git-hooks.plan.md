@@ -91,23 +91,20 @@ jobs:
 
 ### ⚠️ Ràng buộc với test infra (bắt buộc giải quyết khi thực thi)
 
-`pnpm test` KHÔNG chạy trơn trong CI như local — hai chốt chặn từ test infra hiện tại
-(xem `.cursor/plans/monorepo-test-setup/` + `.cursor/rules/test-data-safety.mdc`):
+`pnpm test` integration cần Docker daemon (Testcontainers) — xem
+`.cursor/plans/testcontainers-setup/` + `.cursor/rules/test-data-safety.mdc`:
 
-1. **db-guard runtime** (`@megawin/vitest-config/setup-db-guard`): từ chối chạy nếu `MONGODB_URI`
-   không phải `localhost`/`127.0.0.1` và không set `ALLOW_DB_TESTS=true`. Test integration (Group B/D)
-   hiện chạy trên **DB staging chung** — KHÔNG đưa URI staging vào CI công khai.
-2. `test/global-setup.ts` của các package gọi `turbo build --filter=...^...` — cần Turbo cache trong CI
-   để không build lại cả graph mỗi run.
+1. Integration project dùng `global-setup-mongo` / `global-setup-redis` — CI phải có Docker
+   (hoặc chỉ chạy unit trước).
+2. `build-deps` trong globalSetup gọi turbo — cần Turbo cache trong CI để không build lại cả graph
+   mỗi run.
 
 Hướng chốt (chọn khi thực thi, khuyến nghị (a) trước):
 
 - **(a) Giai đoạn đầu:** CI chỉ chạy nhóm test KHÔNG cần DB (Group A domain pure + C UI jsdom) —
-  filter qua `turbo run test --filter=...` hoặc env flag; test integration vẫn chạy local/manual.
-- **(b) Giai đoạn sau:** thêm service container `mongodb` trong workflow (`MONGODB_URI=mongodb://localhost:27017`)
-  → db-guard pass tự nhiên, test integration chạy trên Mongo ephemeral, không đụng staging.
-
-KHÔNG set `ALLOW_DB_TESTS=true` trong CI để "cho qua" — flag đó dành cho chủ đích chạy trên DB thật.
+  filter qua `turbo run test --filter=...` hoặc `--project unit`; test integration chạy local/manual.
+- **(b) Giai đoạn sau:** bật Docker-in-CI / Testcontainers; integration chạy trên Mongo/Redis
+  ephemeral, không đụng staging.
 
 Giải trình:
 
@@ -182,6 +179,6 @@ git reset --hard
 
 **3. Verify CI trên PR thật:** mở PR draft chứa 1 vi phạm lint cố ý → job `quality` đỏ, log chỉ đúng file/rule; push fix → xanh. Đo tổng thời gian job (< 3 phút).
 
-**4. Verify test strategy đã chọn (mục ⚠️):** nếu chọn (a) — log CI phải cho thấy CHỈ các package Group A/C chạy test; nếu (b) — service container Mongo khởi động, `MONGODB_URI=mongodb://localhost:27017`, db-guard pass mà KHÔNG có `ALLOW_DB_TESTS`.
+**4. Verify test strategy đã chọn (mục ⚠️):** nếu chọn (a) — log CI chỉ chạy unit / Group A/C; nếu (b) — Docker + Testcontainers start, integration xanh trên container ephemeral.
 
 **5. Rollback:** xoá `.husky/` + revert package.json → hook biến mất ngay (husky không để lại global state). CI: xoá workflow file.

@@ -11,7 +11,7 @@ import type {
   TripleMatchPrizes,
   VietlottPeriodAnchor,
 } from "@megawin/game-bingo18/entities";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 

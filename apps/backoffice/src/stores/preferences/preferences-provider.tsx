@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
-import { type StoreApi, useStore } from "zustand";
+import { useStore, type StoreApi } from "zustand";
 
 import { FONT_KEYS } from "@/lib/fonts/registry";
 import {
@@ -19,7 +19,9 @@ import { createPreferencesStore, type PreferencesState } from "./preferences-sto
 const PreferencesStoreContext = createContext<StoreApi<PreferencesState> | null>(null);
 
 function getSafeValue<T extends string>(raw: string | null, allowed: readonly T[]): T | undefined {
-  if (!raw) return undefined;
+  if (!raw) {
+    return undefined;
+  }
   return allowed.includes(raw as T) ? (raw as T) : undefined;
 }
 
@@ -99,7 +101,9 @@ export const PreferencesStoreProvider = ({
     applyFromMode(startMode);
 
     const unsubscribeStore = store.subscribe((s, p) => {
-      if (s.themeMode !== p.themeMode) applyFromMode(s.themeMode);
+      if (s.themeMode !== p.themeMode) {
+        applyFromMode(s.themeMode);
+      }
     });
 
     return () => {
@@ -113,6 +117,8 @@ export const PreferencesStoreProvider = ({
 
 export const usePreferencesStore = <T,>(selector: (state: PreferencesState) => T): T => {
   const store = useContext(PreferencesStoreContext);
-  if (!store) throw new Error("Missing PreferencesStoreProvider");
+  if (!store) {
+    throw new Error("Missing PreferencesStoreProvider");
+  }
   return useStore(store, selector);
 };

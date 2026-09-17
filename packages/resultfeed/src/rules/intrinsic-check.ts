@@ -355,6 +355,12 @@ function checkFormatOnly(gameKey: ResultFeedGameKey, numbersDisplay: string[]): 
     case ResultFeedGameKey.Max3dpro: {
       return checkMax3dFormat(numbersDisplay);
     }
+    case "bingo18": {
+      throw new Error('Not implemented yet: "bingo18" case');
+    }
+    case "keno": {
+      throw new Error('Not implemented yet: "keno" case');
+    }
     default: {
       throw new Error(`checkFormatOnly: gameKey "${gameKey}" không thuộc nhóm format-only.`);
     }

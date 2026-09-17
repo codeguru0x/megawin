@@ -10,8 +10,7 @@
  * @output BuildSettleReportResult
  */
 
-import type { SettleContext } from "@megawin/game-mega645-application/use-cases/settle";
-import { BuildSettleReportUseCase } from "@megawin/game-mega645-application/use-cases/settle";
+import { BuildSettleReportUseCase, type SettleContext } from "@megawin/game-mega645-application/use-cases/settle";
 
 const useCase = new BuildSettleReportUseCase();
 

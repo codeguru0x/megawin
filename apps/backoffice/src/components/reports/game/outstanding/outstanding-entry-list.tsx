@@ -58,11 +58,11 @@ export function OutstandingEntryList({
   if (isLoading) {
     return (
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <Skeleton className="h-4 w-48" />
           <Skeleton className="mt-1 h-3 w-72" />
         </CardHeader>
-        <CardContent className="space-y-2 px-5 pb-4 pt-0">
+        <CardContent className="space-y-2 px-5 pt-0 pb-4">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
@@ -75,7 +75,7 @@ export function OutstandingEntryList({
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-sm text-muted-foreground">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
+          <p className="text-muted-foreground text-sm">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
           <Button variant="outline" size="sm" onClick={onRefetch}>
             <RefreshCw className="mr-2 size-4" />
             Thử lại
@@ -87,19 +87,19 @@ export function OutstandingEntryList({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Ticket className="size-4 text-muted-foreground" />
+          <Ticket className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Phiếu cược — {displayName}</CardTitle>
         </div>
         <CardDescription className="text-xs">
           {rows.length} phiếu · Kỳ {drawId} · {tenantId} · Click để xem chi tiết
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-0 pb-4 pt-0">
+      <CardContent className="px-0 pt-0 pb-4">
         {rows.length === 0 ? (
           <div className="flex h-30 items-center justify-center">
-            <p className="text-sm text-muted-foreground">Không có entries outstanding.</p>
+            <p className="text-muted-foreground text-sm">Không có entries outstanding.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -117,7 +117,7 @@ export function OutstandingEntryList({
                 {rows.map((entry) => (
                   <TableRow
                     key={entry.id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(entry)}
                   >
                     <TableCell className="pl-5 font-mono text-sm">{entry.ticketNo ?? entry.id}</TableCell>
@@ -140,7 +140,7 @@ export function OutstandingEntryList({
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(entry.commissionAmount)}
                     </TableCell>
-                    <TableCell className="pr-5 text-right text-sm tabular-nums font-medium">
+                    <TableCell className="pr-5 text-right text-sm font-medium tabular-nums">
                       {formatNumber(entry.totalStake)}
                     </TableCell>
                   </TableRow>

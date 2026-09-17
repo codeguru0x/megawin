@@ -14,8 +14,7 @@
  */
 
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { TicketEntryEntity } from "@megawin/game-max3dpro/entities";
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections, type TicketEntryEntity } from "@megawin/game-max3dpro/entities";
 
 import { EntryMapper } from "../mappers/entry-mapper";
 import { BaseRepo } from "./base-repo";

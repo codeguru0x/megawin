@@ -12,7 +12,7 @@
  * - Thống kê: bao nhiêu kỳ tích lũy, peak amount, v.v.
  */
 
-import type { ISODateString, SplitRatios } from "./types";
+import type { SplitRatios } from "./types";
 
 // ─────────────────────────────────────────────
 // Jackpot Cycle Status

@@ -10,7 +10,8 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -44,7 +45,7 @@
     "@types/react": "^19.3.0",
     "next": "^16.3.5",
     "react": "^19.3.0",
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   }
 }

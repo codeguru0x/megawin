@@ -6,13 +6,13 @@ import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
 import { toTenantUsername } from "@megawin/shared/utils/player-username";
 
-import type {
-  OutstandingDrawRow,
-  OutstandingEntryRow,
-  OutstandingPlayerRow,
-  OutstandingTenantRow,
+import {
+  OutstandingContent,
+  type OutstandingDrawRow,
+  type OutstandingEntryRow,
+  type OutstandingPlayerRow,
+  type OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
 import { GAME_COLORS } from "@/lib/game-colors";
 
 import { Lotto535EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
@@ -185,7 +185,9 @@ export function Lotto535OutstandingContent() {
         }}
         onEntryClick={(row) => {
           const entity = entryEntityMap.get(row.id);
-          if (entity) setSelectedEntry(entity);
+          if (entity) {
+            setSelectedEntry(entity);
+          }
         }}
         showLineCount={true}
         lineCountLabel="Bộ số"

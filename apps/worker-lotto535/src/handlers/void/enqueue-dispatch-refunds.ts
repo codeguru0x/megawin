@@ -10,8 +10,7 @@
  * @output EnqueueDispatchRefundsOutput
  */
 
-import type { VoidContext } from "@megawin/game-lotto535-application/use-cases/void";
-import { EnqueueDispatchRefundsUseCase } from "@megawin/game-lotto535-application/use-cases/void";
+import { EnqueueDispatchRefundsUseCase, type VoidContext } from "@megawin/game-lotto535-application/use-cases/void";
 
 const useCase = new EnqueueDispatchRefundsUseCase();
 

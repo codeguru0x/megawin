@@ -1,8 +1,8 @@
 "use client";
 
+import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
 import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
-import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
 import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
 
@@ -29,13 +29,13 @@ interface GameBreakdownTableProps {
 export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTableProps) {
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Layers className="size-4 text-muted-foreground" />
+          <Layers className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Thống kê theo game</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         <div className="overflow-hidden rounded-md border">
           {isLoading ? (
             <div className="space-y-0">
@@ -56,12 +56,12 @@ export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTa
             </div>
           ) : isError ? (
             <div className="flex h-40 items-center justify-center">
-              <p className="text-sm text-destructive">Không thể tải dữ liệu.</p>
+              <p className="text-destructive text-sm">Không thể tải dữ liệu.</p>
             </div>
           ) : !data || data.games.length === 0 ? (
             <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
-              <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-              <p className="text-xs text-muted-foreground">Player chưa tham gia game nào trong khoảng thời gian này.</p>
+              <p className="text-muted-foreground text-sm font-medium">Chưa có dữ liệu</p>
+              <p className="text-muted-foreground text-xs">Player chưa tham gia game nào trong khoảng thời gian này.</p>
             </div>
           ) : (
             <Table>
@@ -98,16 +98,16 @@ export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTa
                       <TableCell className="text-right tabular-nums">{formatNumber(row.totalStake)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                       <TableCell
-                        className={cn("text-right tabular-nums font-medium", row.ggr < 0 ? "text-destructive" : "")}
+                        className={cn("text-right font-medium tabular-nums", row.ggr < 0 ? "text-destructive" : "")}
                       >
                         {formatNumber(row.ggr)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-right tabular-nums">
                         {formatNumber(row.totalCommission)}
                       </TableCell>
                       <TableCell
                         className={cn(
-                          "text-right tabular-nums font-medium",
+                          "text-right font-medium tabular-nums",
                           row.netProfit < 0 ? "text-destructive" : "",
                         )}
                       >
@@ -129,7 +129,7 @@ export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTa
                   <TableCell className={cn("text-right tabular-nums", data.ggr < 0 ? "text-destructive" : "")}>
                     {formatNumber(data.ggr)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-right tabular-nums">
                     {formatNumber(data.totalCommission)}
                   </TableCell>
                   <TableCell className={cn("text-right tabular-nums", data.netProfit < 0 ? "text-destructive" : "")}>

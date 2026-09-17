@@ -32,9 +32,9 @@ import { GAME_LABELS } from "@megawin/game-core/labels";
 import type { VietlottPeriodAnchor } from "@megawin/game-core/types";
 import {
   suggestVietlottPeriod,
-  type VietlottDrawSchedule,
   VietlottScheduleKind,
   VietlottSuggestionUnavailableReason,
+  type VietlottDrawSchedule,
 } from "@megawin/game-core/utils";
 import { GetVietlottSuggestionUseCase as KenoSuggestionUseCase } from "@megawin/game-keno-application/use-cases/draws";
 import { GetGlobalConfigUseCase as KenoGetConfigUseCase } from "@megawin/game-keno-application/use-cases/game-config";
@@ -52,9 +52,9 @@ import { AppException } from "@megawin/shared/errors";
 import { toVNDate } from "@megawin/shared/utils";
 
 import {
+  VietlottSuggestionMode,
   type GetVietlottSuggestionDispatchInput,
   type GetVietlottSuggestionDispatchOutput,
-  VietlottSuggestionMode,
 } from "./types";
 
 const suggestionUseCases = {

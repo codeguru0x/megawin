@@ -21,10 +21,10 @@ export const ENDPOINTS = {
     getCurrentDraw: "/games/keno/draws/current",
     listPendingTickets: "/games/keno/tickets/pending",
     listTickets: "/games/keno/tickets",
-    getTicketEntries: (ticketId: string) => `/games/keno/tickets/${ticketId}/entries` as const,
+    getTicketEntries: (ticketId: string): string => `/games/keno/tickets/${ticketId}/entries`,
     listDrawResults: "/games/keno/draw-results",
-    getDrawResult: (drawId: string) => `/games/keno/draw-results/${drawId}` as const,
-    getComboPopularity: (drawId: string) => `/games/keno/draws/${drawId}/combo-popularity` as const,
+    getDrawResult: (drawId: string): string => `/games/keno/draw-results/${drawId}`,
+    getComboPopularity: (drawId: string): string => `/games/keno/draws/${drawId}/combo-popularity`,
   },
 
   lotto535: {
@@ -34,11 +34,11 @@ export const ENDPOINTS = {
     getJackpot: "/games/lotto535/jackpot",
     listPendingTickets: "/games/lotto535/tickets/pending",
     listTickets: "/games/lotto535/tickets",
-    getTicketEntries: (ticketId: string) => `/games/lotto535/tickets/${ticketId}/entries` as const,
-    getEntryLines: (entryId: string) => `/games/lotto535/entries/${entryId}/lines` as const,
+    getTicketEntries: (ticketId: string): string => `/games/lotto535/tickets/${ticketId}/entries`,
+    getEntryLines: (entryId: string): string => `/games/lotto535/entries/${entryId}/lines`,
     listDrawResults: "/games/lotto535/draw-results",
-    getDrawResult: (drawId: string) => `/games/lotto535/draw-results/${drawId}` as const,
-    getComboPopularity: (drawId: string) => `/games/lotto535/draws/${drawId}/combo-popularity` as const,
+    getDrawResult: (drawId: string): string => `/games/lotto535/draw-results/${drawId}`,
+    getComboPopularity: (drawId: string): string => `/games/lotto535/draws/${drawId}/combo-popularity`,
   },
 
   mega645: {
@@ -48,11 +48,11 @@ export const ENDPOINTS = {
     getJackpot: "/games/mega645/jackpot",
     listPendingTickets: "/games/mega645/tickets/pending",
     listTickets: "/games/mega645/tickets",
-    getTicketEntries: (ticketId: string) => `/games/mega645/tickets/${ticketId}/entries` as const,
-    getEntryLines: (entryId: string) => `/games/mega645/entries/${entryId}/lines` as const,
+    getTicketEntries: (ticketId: string): string => `/games/mega645/tickets/${ticketId}/entries`,
+    getEntryLines: (entryId: string): string => `/games/mega645/entries/${entryId}/lines`,
     listDrawResults: "/games/mega645/draw-results",
-    getDrawResult: (drawId: string) => `/games/mega645/draw-results/${drawId}` as const,
-    getComboPopularity: (drawId: string) => `/games/mega645/draws/${drawId}/combo-popularity` as const,
+    getDrawResult: (drawId: string): string => `/games/mega645/draw-results/${drawId}`,
+    getComboPopularity: (drawId: string): string => `/games/mega645/draws/${drawId}/combo-popularity`,
   },
 
   power655: {
@@ -62,11 +62,11 @@ export const ENDPOINTS = {
     getJackpot: "/games/power655/jackpot",
     listPendingTickets: "/games/power655/tickets/pending",
     listTickets: "/games/power655/tickets",
-    getTicketEntries: (ticketId: string) => `/games/power655/tickets/${ticketId}/entries` as const,
-    getEntryLines: (entryId: string) => `/games/power655/entries/${entryId}/lines` as const,
+    getTicketEntries: (ticketId: string): string => `/games/power655/tickets/${ticketId}/entries`,
+    getEntryLines: (entryId: string): string => `/games/power655/entries/${entryId}/lines`,
     listDrawResults: "/games/power655/draw-results",
-    getDrawResult: (drawId: string) => `/games/power655/draw-results/${drawId}` as const,
-    getComboPopularity: (drawId: string) => `/games/power655/draws/${drawId}/combo-popularity` as const,
+    getDrawResult: (drawId: string): string => `/games/power655/draw-results/${drawId}`,
+    getComboPopularity: (drawId: string): string => `/games/power655/draws/${drawId}/combo-popularity`,
   },
 
   max3d: {
@@ -75,10 +75,10 @@ export const ENDPOINTS = {
     getCurrentDraw: "/games/max3d/draws/current",
     listPendingTickets: "/games/max3d/tickets/pending",
     listTickets: "/games/max3d/tickets",
-    getTicketEntries: (ticketId: string) => `/games/max3d/tickets/${ticketId}/entries` as const,
-    getEntryLines: (entryId: string) => `/games/max3d/entries/${entryId}/lines` as const,
+    getTicketEntries: (ticketId: string): string => `/games/max3d/tickets/${ticketId}/entries`,
+    getEntryLines: (entryId: string): string => `/games/max3d/entries/${entryId}/lines`,
     listDrawResults: "/games/max3d/draw-results",
-    getDrawResult: (drawId: string) => `/games/max3d/draw-results/${drawId}` as const,
+    getDrawResult: (drawId: string): string => `/games/max3d/draw-results/${drawId}`,
   },
 
   max3dpro: {
@@ -87,10 +87,10 @@ export const ENDPOINTS = {
     getCurrentDraw: "/games/max3dpro/draws/current",
     listPendingTickets: "/games/max3dpro/tickets/pending",
     listTickets: "/games/max3dpro/tickets",
-    getTicketEntries: (ticketId: string) => `/games/max3dpro/tickets/${ticketId}/entries` as const,
-    getEntryLines: (entryId: string) => `/games/max3dpro/entries/${entryId}/lines` as const,
+    getTicketEntries: (ticketId: string): string => `/games/max3dpro/tickets/${ticketId}/entries`,
+    getEntryLines: (entryId: string): string => `/games/max3dpro/entries/${entryId}/lines`,
     listDrawResults: "/games/max3dpro/draw-results",
-    getDrawResult: (drawId: string) => `/games/max3dpro/draw-results/${drawId}` as const,
+    getDrawResult: (drawId: string): string => `/games/max3dpro/draw-results/${drawId}`,
   },
 
   bingo18: {
@@ -99,8 +99,8 @@ export const ENDPOINTS = {
     getCurrentDraw: "/games/bingo18/draws/current",
     listPendingTickets: "/games/bingo18/tickets/pending",
     listTickets: "/games/bingo18/tickets",
-    getTicketEntries: (ticketId: string) => `/games/bingo18/tickets/${ticketId}/entries` as const,
+    getTicketEntries: (ticketId: string): string => `/games/bingo18/tickets/${ticketId}/entries`,
     listDrawResults: "/games/bingo18/draw-results",
-    getDrawResult: (drawId: string) => `/games/bingo18/draw-results/${drawId}` as const,
+    getDrawResult: (drawId: string): string => `/games/bingo18/draw-results/${drawId}`,
   },
 } as const;

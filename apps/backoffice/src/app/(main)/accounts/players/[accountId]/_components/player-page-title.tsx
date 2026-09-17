@@ -29,11 +29,11 @@ export function PlayerPageTitle({ accountId }: PlayerPageTitleProps) {
         <CircleUser className="size-4.5 text-white" />
       </div>
       <div>
-        <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản người chơi</h1>
+        <h1 className="text-foreground text-lg font-semibold tracking-tight">Tài khoản người chơi</h1>
         {isLoading ? (
           <Skeleton className="mt-0.5 h-3.5 w-28" />
         ) : (
-          <p className="font-mono text-xs text-muted-foreground">{profile?.username ?? accountId}</p>
+          <p className="text-muted-foreground font-mono text-xs">{profile?.username ?? accountId}</p>
         )}
       </div>
     </div>

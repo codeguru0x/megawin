@@ -5,10 +5,7 @@
 export type { BuildSettleReportResult } from "./build-settle-report";
 export { BuildSettleReportUseCase } from "./build-settle-report";
 export { CalculateFinancialsUseCase } from "./calculate-financials";
-export type {
-  EnqueueDispatchPayoutsInput,
-  EnqueueDispatchPayoutsOutput,
-} from "./enqueue-dispatch-payouts";
+export type { EnqueueDispatchPayoutsInput, EnqueueDispatchPayoutsOutput } from "./enqueue-dispatch-payouts";
 export { EnqueueDispatchPayoutsUseCase } from "./enqueue-dispatch-payouts";
 export type { FinalizeSettleResult } from "./finalize-settle";
 export { FinalizeSettleUseCase } from "./finalize-settle";

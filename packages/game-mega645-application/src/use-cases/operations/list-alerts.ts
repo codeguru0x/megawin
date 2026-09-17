@@ -6,8 +6,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Mega645OpsAlertEntity, Mega645OpsAlertType } from "@megawin/game-mega645/entities";
-import { OpsAlertSeverity } from "@megawin/game-mega645/entities";
+import { OpsAlertSeverity, type Mega645OpsAlertEntity, type Mega645OpsAlertType } from "@megawin/game-mega645/entities";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { ListAlertsInput, ListAlertsOutput, Mega645AlertGroup } from "./dto/ops.dto";

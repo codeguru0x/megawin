@@ -8,7 +8,7 @@
 
 import type { GlobalConfigEntity } from "@megawin/game-keno-application/use-cases/game-config";
 
-import { type ConfigItem, item } from "../../payload";
+import { item, type ConfigItem } from "../../payload";
 import { GameConfigSection } from "../types";
 
 /** Section mà Keno CÓ — dùng để tính `sectionsNotApplicable` ở use-case dispatch. */

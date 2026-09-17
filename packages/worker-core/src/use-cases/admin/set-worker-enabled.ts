@@ -1,6 +1,6 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 import { AUDIT_ACTIONS, AuditCategory, AuditTargetType } from "@megawin/audit/entities";
-import { type AuditActor, record } from "@megawin/audit/logger";
+import { record, type AuditActor } from "@megawin/audit/logger";
 import { AppException } from "@megawin/shared/errors";
 
 import { WorkerLockRepository } from "../../infras/repos";

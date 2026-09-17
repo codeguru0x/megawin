@@ -26,8 +26,11 @@
  * `findByDraw` trả null cho kỳ cũ → caller phải guard và chuyển về DBA thủ công.
  */
 
-import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-mega645/entities";
-import { Mega645Collections } from "@megawin/game-mega645/entities";
+import {
+  Mega645Collections,
+  type JackpotCycleEntryDoc,
+  type JackpotCycleEntryEntity,
+} from "@megawin/game-mega645/entities";
 
 import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
 import { BaseRepo } from "./base-repo";

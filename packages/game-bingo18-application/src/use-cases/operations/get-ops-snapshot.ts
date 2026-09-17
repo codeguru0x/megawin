@@ -1,6 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { TopAccountStat } from "@megawin/game-bingo18/entities";
-import { OpsAlertStatus } from "@megawin/game-bingo18/entities";
+import { OpsAlertStatus, type TopAccountStat } from "@megawin/game-bingo18/entities";
 import { computeBingo18Exposure, DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
@@ -83,14 +82,12 @@ export class GetOpsSnapshotUseCase extends UseCase<GetOpsSnapshotInput, GetOpsSn
       drawStatus: draw?.status ?? null,
       stats,
       exposure,
-      topAccounts: topAccounts.map(
-        (a): TopAccountStat => ({
-          accountId: a.accountId,
-          username: a.username,
-          amount: a.amount,
-          entries: a.entries,
-        }),
-      ),
+      topAccounts: topAccounts.map((a): TopAccountStat => ({
+        accountId: a.accountId,
+        username: a.username,
+        amount: a.amount,
+        entries: a.entries,
+      })),
       uniquePlayers,
       alertCounts: { new: newCount, critical: criticalCount },
       // Ngưỡng từ config → FE tô màu đúng cấu hình thực, không hardcode default.

@@ -3,7 +3,7 @@
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
 
-import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
 
 import { useMega645Entries } from "../use-report-queries";
 import { Mega645EntryDetailDialog } from "./entry-detail-dialog";
@@ -23,9 +23,15 @@ export function EntryList({
 }) {
   const { data, isLoading, error } = useMega645Entries(drawId, tenantId, accountId);
 
-  if (isLoading) return <TableSkeleton rows={5} />;
-  if (error) return <ErrorCard />;
-  if (!data?.length) return <EmptyCard icon="ticket" message="Không có entry nào." />;
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.length) {
+    return <EmptyCard icon="ticket" message="Không có entry nào." />;
+  }
 
   const rows: EntryRow[] = data.map((entry) => ({
     id: entry.id,

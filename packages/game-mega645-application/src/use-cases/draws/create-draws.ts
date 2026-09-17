@@ -12,8 +12,7 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc } from "@megawin/game-mega645/entities";
-import { DrawNo } from "@megawin/game-mega645/entities";
+import { DrawNo, type DrawDoc } from "@megawin/game-mega645/entities";
 import { generateDrawId } from "@megawin/game-mega645/helpers";
 import { MEGA645_CREATE_DRAW_BATCH_MAX } from "@megawin/game-mega645/schemas";
 import { AppException } from "@megawin/shared/errors";

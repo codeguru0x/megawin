@@ -9,8 +9,10 @@
  * @output PublishSettleDailyResult
  */
 
-import type { SettleContextWithFinancials } from "@megawin/game-lotto535-application/use-cases/settle";
-import { PublishSettleDailyUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
+import {
+  PublishSettleDailyUseCase,
+  type SettleContextWithFinancials,
+} from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new PublishSettleDailyUseCase();
 

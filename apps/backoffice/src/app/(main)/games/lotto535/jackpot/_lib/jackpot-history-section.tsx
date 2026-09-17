@@ -17,10 +17,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 
 import {
-  type JackpotCycleOption,
-  type JackpotHistoryItem,
   useJackpotCycleOptions,
   useJackpotHistoryByCycle,
+  type JackpotCycleOption,
+  type JackpotHistoryItem,
 } from "./use-jackpot";
 
 const PAGE_SIZE = Pagination.Default.Size;
@@ -72,12 +72,12 @@ export function JackpotHistorySection() {
       {/* Section header — title + cycle selector */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
-            <History className="size-4 text-blue-600 dark:text-blue-400" />
+          <div className="bg-info flex size-8 items-center justify-center rounded-lg">
+            <History className="text-info size-4" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Lịch sử Jackpot</h2>
-            <p className="text-xs text-muted-foreground">Biến động Jackpot qua từng kỳ quay đã kết sổ</p>
+            <h2 className="text-foreground text-sm font-semibold">Lịch sử Jackpot</h2>
+            <p className="text-muted-foreground text-xs">Biến động Jackpot qua từng kỳ quay đã kết sổ</p>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export function JackpotHistorySection() {
       </div>
 
       <Card className="gap-0 py-0">
-        <CardContent className="px-0 pb-0 pt-0">
+        <CardContent className="px-0 pt-0 pb-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -110,14 +110,14 @@ export function JackpotHistorySection() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={9} className="h-32 text-center">
-                      <Loader2 className="mx-auto size-5 animate-spin text-muted-foreground" />
+                      <Loader2 className="text-muted-foreground mx-auto size-5 animate-spin" />
                     </TableCell>
                   </TableRow>
                 ) : draws.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="h-32 text-center">
-                      <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-                      <p className="text-xs text-muted-foreground">Vòng này chưa có kỳ quay nào đã tính thưởng.</p>
+                      <p className="text-muted-foreground text-sm font-medium">Chưa có dữ liệu</p>
+                      <p className="text-muted-foreground text-xs">Vòng này chưa có kỳ quay nào đã tính thưởng.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -129,8 +129,8 @@ export function JackpotHistorySection() {
 
           {/* Pagination */}
           {(draws.length > 0 || total > 0) && (
-            <div className="flex items-center justify-between border-t bg-muted/20 px-5 py-3">
-              <p className="text-xs text-muted-foreground tabular-nums">
+            <div className="bg-muted/20 flex items-center justify-between border-t px-5 py-3">
+              <p className="text-muted-foreground text-xs tabular-nums">
                 Trang {page} / {totalPages}
                 {total > 0 && <span className="ml-1">({formatNumber(total)} kỳ)</span>}
               </p>
@@ -176,8 +176,8 @@ interface CycleSelectorProps {
 function CycleSelector({ cycles, value, isLoading, onChange }: CycleSelectorProps) {
   if (isLoading) {
     return (
-      <div className="flex h-9 w-52 items-center justify-center rounded-md border bg-muted/30">
-        <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+      <div className="bg-muted/30 flex h-9 w-52 items-center justify-center rounded-md border">
+        <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
       </div>
     );
   }
@@ -209,12 +209,10 @@ function CycleSelectorLabel({ cycle }: { cycle: JackpotCycleOption }) {
     <span className="flex items-center gap-2">
       <span className="tabular-nums">
         Vòng #{cycle.cycleNo}
-        {isActive && <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>}
+        {isActive && <span className="text-profit ml-1 text-xs">(hiện tại)</span>}
       </span>
-      {!isActive && cycle.closeReason === "winner" && (
-        <Sparkles className="size-3 text-green-600 dark:text-green-400" />
-      )}
-      {!isActive && cycle.closeReason === "split" && <Split className="size-3 text-amber-600 dark:text-amber-400" />}
+      {!isActive && cycle.closeReason === "winner" && <Sparkles className="text-profit size-3" />}
+      {!isActive && cycle.closeReason === "split" && <Split className="text-warning size-3" />}
     </span>
   );
 }
@@ -231,13 +229,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
-    <TableRow
-      className={cn(
-        "transition-colors",
-        isSplit && "bg-amber-50/50 dark:bg-amber-950/20",
-        isWinner && "bg-green-50/50 dark:bg-green-950/20",
-      )}
-    >
+    <TableRow className={cn("transition-colors", isSplit && "bg-warning/50", isWinner && "bg-profit/50")}>
       {/* Kỳ (DrawId) */}
       <TableCell className="pl-5 font-mono text-sm tabular-nums">{item.drawId}</TableCell>
 
@@ -257,7 +249,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
           companyTakeRatePct ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="cursor-default underline decoration-dashed decoration-muted-foreground/50 underline-offset-2">
+                <span className="decoration-muted-foreground/50 cursor-default underline decoration-dashed underline-offset-2">
                   {formatNumber(item.actualCompanyTake)}
                 </span>
               </TooltipTrigger>
@@ -279,41 +271,41 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       {/* Tích luỹ */}
       <TableCell className="text-right">
         {item.contribution > 0 ? (
-          <span className="inline-flex items-center justify-end gap-0.5 text-sm text-profit">
+          <span className="text-profit inline-flex items-center justify-end gap-0.5 text-sm">
             <ArrowUpRight className="size-3 shrink-0" />
             <span className="tabular-nums">{formatNumber(item.contribution)}</span>
           </span>
         ) : (
-          <span className="text-sm text-muted-foreground">—</span>
+          <span className="text-muted-foreground text-sm">—</span>
         )}
       </TableCell>
 
       {/* Cuối kỳ */}
-      <TableCell className="text-right text-sm font-semibold tabular-nums text-amber-700 dark:text-amber-400">
+      <TableCell className="text-warning text-right text-sm font-semibold tabular-nums">
         {formatNumber(item.closingAmount)}
       </TableCell>
 
       {/* Jackpot (hasWinner) */}
       <TableCell className="text-center">
         {isWinner ? (
-          <Badge className="gap-1 border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
+          <Badge className="border-profit/30 bg-profit/15 text-profit gap-1">
             <Sparkles className="size-3" />
             Trúng
           </Badge>
         ) : (
-          <span className="text-sm text-muted-foreground">—</span>
+          <span className="text-muted-foreground text-sm">—</span>
         )}
       </TableCell>
 
       {/* Chia giải (isSplitCycle) */}
       <TableCell className="pr-5 text-center">
         {isSplit ? (
-          <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
+          <Badge className="border-warning/30 bg-warning/15 text-warning gap-1">
             <Split className="size-3" />
             Chia giải
           </Badge>
         ) : (
-          <span className="text-sm text-muted-foreground">—</span>
+          <span className="text-muted-foreground text-sm">—</span>
         )}
       </TableCell>
     </TableRow>

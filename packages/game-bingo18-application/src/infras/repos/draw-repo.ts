@@ -12,21 +12,25 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type {
-  DrawDoc,
-  DrawEntity,
-  DrawFinancial,
-  DrawResult,
-  DrawSales,
-  DrawSettleSummary,
-  DrawStats,
-  DrawVietlottRef,
-  DrawVoidInfo,
-  DrawVoidSummary,
+import {
+  Bingo18Collections,
+  type DrawDoc,
+  type DrawEntity,
+  type DrawFinancial,
+  type DrawResult,
+  type DrawSales,
+  type DrawSettleSummary,
+  type DrawStats,
+  type DrawVietlottRef,
+  type DrawVoidInfo,
+  type DrawVoidSummary,
 } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DRAW_COMPLETED_STATUSES, DRAW_UNFINISHED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
+import {
+  DRAW_COMPLETED_STATUSES,
+  DRAW_UNFINISHED_STATUSES,
+  DrawStatus,
+  type UnfinishedDrawStatus,
+} from "@megawin/game-core/entities";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 import type { AnyBulkWriteOperation, Document, Filter, FindOptions } from "mongodb";
@@ -190,11 +194,17 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     size: number,
   ): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {};
-    if (filter.status) query.status = filter.status;
+    if (filter.status) {
+      query.status = filter.status;
+    }
     if (filter.fromDate || filter.toDate) {
       const dateRange: Record<string, unknown> = {};
-      if (filter.fromDate) dateRange.$gte = filter.fromDate;
-      if (filter.toDate) dateRange.$lte = filter.toDate;
+      if (filter.fromDate) {
+        dateRange.$gte = filter.fromDate;
+      }
+      if (filter.toDate) {
+        dateRange.$lte = filter.toDate;
+      }
       query.drawDate = dateRange;
     }
     return await this.paging(query, page, size, {
@@ -240,7 +250,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * @returns Map chỉ chứa kỳ TỒN TẠI (drawId lạ sẽ không có key).
    */
   async getStatusesByDrawIds(drawIds: string[]): Promise<Map<string, DrawStatus>> {
-    if (drawIds.length === 0) return new Map();
+    if (drawIds.length === 0) {
+      return new Map();
+    }
 
     const docs = await this.findManyAsDocuments(
       { drawId: { $in: drawIds } },
@@ -459,7 +471,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async triggerSettle(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
-    if (!allowed?.has(DrawStatus.Settling)) return null;
+    if (!allowed?.has(DrawStatus.Settling)) {
+      return null;
+    }
 
     return await this.findOneAndUpdate(
       {
@@ -512,7 +526,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(DrawStatus.SalesOpen)) return null;
+    if (!allowed?.has(DrawStatus.SalesOpen)) {
+      return null;
+    }
 
     const $set: Record<string, unknown> = {
       status: DrawStatus.SalesOpen,
@@ -531,7 +547,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async closeSales(drawId: string, salesCloseAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
-    if (!allowed?.has(DrawStatus.SalesClosed)) return null;
+    if (!allowed?.has(DrawStatus.SalesClosed)) {
+      return null;
+    }
 
     const $set: Record<string, unknown> = {
       status: DrawStatus.SalesClosed,
@@ -549,7 +567,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async voidDraw(drawId: string, fromStatus: string, voidInfo: DrawVoidInfo): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(DrawStatus.Voiding)) return null;
+    if (!allowed?.has(DrawStatus.Voiding)) {
+      return null;
+    }
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },

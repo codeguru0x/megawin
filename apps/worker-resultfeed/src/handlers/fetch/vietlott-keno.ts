@@ -12,9 +12,9 @@
  * không chỉ 1 lượt fetch đơn — xem `FetchAndParseUseCase.budgetMs`.
  */
 
-import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { vietlottDetailAdapter } from "@megawin/resultfeed-application/sources";
 import { FetchAndParseUseCase } from "@megawin/resultfeed-application/use-cases/fetch";
+import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 
 const useCase = new FetchAndParseUseCase({
   sourceId: vietlottDetailAdapter.sourceId,

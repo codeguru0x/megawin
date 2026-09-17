@@ -17,10 +17,7 @@ export type {
   VoidedEntryForDispatch,
   WinningEntryForDispatch,
 } from "./entry.types";
-export type {
-  OutstandingPlayerBreakdownRow,
-  OutstandingTenantBreakdownRow,
-} from "./entry-outstanding.types";
+export type { OutstandingPlayerBreakdownRow, OutstandingTenantBreakdownRow } from "./entry-outstanding.types";
 export type { VoidPlayerBreakdownRow, VoidTenantBreakdownRow } from "./entry-void.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
 export type { DrawSummaryResult } from "./settle-draw-report.types";

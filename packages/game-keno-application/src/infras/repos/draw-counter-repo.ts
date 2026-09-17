@@ -7,8 +7,7 @@
  * Dùng $inc + upsert để đảm bảo race-safe.
  */
 
-import type { DrawCounterEntity } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
+import { KenoCollections, type DrawCounterEntity } from "@megawin/game-keno/entities";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawCounterMapper } from "../mappers/draw-counter-mapper";

@@ -14,8 +14,11 @@
  * Max 3D CÓ lineCount (lines/pairs per board).
  */
 
-import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-max3d/entities";
-import { MAX3D_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-max3d/entities";
+import {
+  MAX3D_OUTSTANDING_DRAW_REPORTS,
+  type OutstandingDrawReport,
+  type OutstandingDrawReportEntity,
+} from "@megawin/game-max3d/entities";
 
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";

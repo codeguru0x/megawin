@@ -13,7 +13,7 @@
     "./styles/*": "./src/styles/*"
   },
   "scripts": {
-    "lint": "biome check .",
+    "lint": "oxlint .",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit",
     "dev": "tsc --watch",
@@ -21,7 +21,8 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
@@ -34,9 +35,9 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^30.0.1",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "dependencies": {
     "@megawin/shared": "workspace:*",

@@ -1,5 +1,5 @@
-import { CompanyRole } from "@megawin/identity/entities";
 import { SetAccountPasswordUseCase } from "@megawin/identity-application/use-cases/accounts";
+import { CompanyRole } from "@megawin/identity/entities";
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";

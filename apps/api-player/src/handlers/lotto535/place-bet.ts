@@ -7,6 +7,7 @@
 
 import { withPlayerAuth } from "@megawin/auth";
 import { TicketChannel } from "@megawin/game-core/entities";
+import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
 import { PlayType } from "@megawin/game-lotto535/entities";
 import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import {
@@ -14,7 +15,6 @@ import {
   lotto535MainNumberSchema,
   lotto535SpecialNumberSchema,
 } from "@megawin/game-lotto535/schemas";
-import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";
 
@@ -57,63 +57,71 @@ export const lotto535BoardSchema = z
 
     switch (playType) {
       case PlayType.Standard:
-        if (mainLen !== 5)
+        if (mainLen !== 5) {
           ctx.addIssue({
             code: "custom",
             message: "Chơi thường: cần chọn đúng 5 số chính.",
             path: ["selection", "mainNumbers"],
           });
-        if (specialLen !== 1)
+        }
+        if (specialLen !== 1) {
           ctx.addIssue({
             code: "custom",
             message: "Chơi thường: cần chọn đúng 1 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
+        }
         break;
 
       case PlayType.MainCover4:
-        if (mainLen !== 4)
+        if (mainLen !== 4) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 4 số: cần chọn đúng 4 số chính.",
             path: ["selection", "mainNumbers"],
           });
-        if (specialLen !== 1)
+        }
+        if (specialLen !== 1) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 4 số: cần chọn đúng 1 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
+        }
         break;
 
       case PlayType.MainCover:
-        if (mainLen < 6 || mainLen > 15)
+        if (mainLen < 6 || mainLen > 15) {
           ctx.addIssue({
             code: "custom",
             message: "Bao số chính: cần chọn 6-15 số chính.",
             path: ["selection", "mainNumbers"],
           });
-        if (specialLen !== 1)
+        }
+        if (specialLen !== 1) {
           ctx.addIssue({
             code: "custom",
             message: "Bao số chính: cần chọn đúng 1 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
+        }
         break;
 
       case PlayType.SpecialCover:
-        if (mainLen !== 5)
+        if (mainLen !== 5) {
           ctx.addIssue({
             code: "custom",
             message: "Bao số đặc biệt: cần chọn đúng 5 số chính.",
             path: ["selection", "mainNumbers"],
           });
-        if (specialLen < 2)
+        }
+        if (specialLen < 2) {
           ctx.addIssue({
             code: "custom",
             message: "Bao số đặc biệt: cần chọn ít nhất 2 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
+        }
         break;
     }
   });

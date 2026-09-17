@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { COMPANY_ROLE_VALUES, CompanyRole } from "@megawin/identity/entities";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AtSign, Dices, Eye, EyeOff, Lock, Shield, User, UserPlus } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
@@ -27,9 +27,9 @@ import { useSession } from "@/lib/auth-client";
 import { accountsKeys } from "@/lib/query-keys/accounts";
 import { cn } from "@/lib/utils";
 
-import { generatePassword } from "../../_shared/generate-password";
 import { COMPANY_ROLES_OPTIONS } from "../_lib/constants";
 import type { CreateCompanyAccountResponse } from "../_lib/types";
+import { generatePassword } from "../../_shared/generate-password";
 
 const createAccountSchema = z.object({
   username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
@@ -43,22 +43,34 @@ type CreateAccountValues = z.infer<typeof createAccountSchema>;
 
 /** Tính độ mạnh password 0–4 dựa trên length + complexity. */
 function getPasswordStrength(pwd: string): number {
-  if (pwd.length === 0) return 0;
+  if (pwd.length === 0) {
+    return 0;
+  }
   let score = 0;
-  if (pwd.length >= 8) score++;
-  if (pwd.length >= 12) score++;
-  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
-  if (/[0-9]/.test(pwd)) score++;
-  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  if (pwd.length >= 8) {
+    score++;
+  }
+  if (pwd.length >= 12) {
+    score++;
+  }
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) {
+    score++;
+  }
+  if (/[0-9]/.test(pwd)) {
+    score++;
+  }
+  if (/[^A-Za-z0-9]/.test(pwd)) {
+    score++;
+  }
   return Math.min(score, 4);
 }
 
 const STRENGTH_CONFIG = [
-  { label: "Rất yếu", color: "bg-red-500" },
-  { label: "Yếu", color: "bg-orange-500" },
-  { label: "Trung bình", color: "bg-yellow-500" },
-  { label: "Mạnh", color: "bg-emerald-500" },
-  { label: "Rất mạnh", color: "bg-emerald-600" },
+  { label: "Rất yếu", color: "bg-loss" },
+  { label: "Yếu", color: "bg-warning" },
+  { label: "Trung bình", color: "bg-warning" },
+  { label: "Mạnh", color: "bg-profit" },
+  { label: "Rất mạnh", color: "bg-profit" },
 ] as const;
 
 const ROLE_META: Record<CompanyRole, { icon: typeof Shield; description: string; iconBg: string; iconColor: string }> =
@@ -66,14 +78,14 @@ const ROLE_META: Record<CompanyRole, { icon: typeof Shield; description: string;
     [CompanyRole.Admin]: {
       icon: Shield,
       description: "Toàn quyền quản trị hệ thống",
-      iconBg: "bg-violet-100 dark:bg-violet-900/50",
-      iconColor: "text-violet-600 dark:text-violet-400",
+      iconBg: "bg-game-max3d",
+      iconColor: "text-game-max3d",
     },
     [CompanyRole.Staff]: {
       icon: User,
       description: "Xem và thao tác nghiệp vụ cơ bản",
-      iconBg: "bg-blue-100 dark:bg-blue-900/50",
-      iconColor: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-info",
+      iconColor: "text-info",
     },
   };
 
@@ -109,7 +121,7 @@ export function CreateCompanyAccountDialog() {
     mutationFn: (values: CreateAccountValues) =>
       apiClient.post<CreateCompanyAccountResponse>("/accounts/company", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: accountsKeys.company });
+      void queryClient.invalidateQueries({ queryKey: accountsKeys.company });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản thành công.", {
@@ -136,7 +148,9 @@ export function CreateCompanyAccountDialog() {
   }
 
   function handleOpenChange(value: boolean) {
-    if (!value) form.reset();
+    if (!value) {
+      form.reset();
+    }
     setOpen(value);
   }
 
@@ -151,7 +165,7 @@ export function CreateCompanyAccountDialog() {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 shadow-sm">
+            <div className="from-info to-primary flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
               <UserPlus className="size-4.5 text-white" />
             </div>
             <div>
@@ -176,7 +190,7 @@ export function CreateCompanyAccountDialog() {
                   <FormLabel className="text-xs font-medium">Tên tài khoản</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <AtSign className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <AtSign className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                       <Input placeholder="vd: admin.company" autoComplete="off" className="pl-8.5 text-sm" {...field} />
                     </div>
                   </FormControl>
@@ -194,13 +208,13 @@ export function CreateCompanyAccountDialog() {
                   <FormLabel className="text-xs font-medium">Mật khẩu</FormLabel>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Lock className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <Lock className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                       <FormControl>
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Tối thiểu 8 ký tự"
                           autoComplete="new-password"
-                          className="pr-10 pl-8.5 text-sm font-mono"
+                          className="pr-10 pl-8.5 font-mono text-sm"
                           {...field}
                         />
                       </FormControl>
@@ -212,9 +226,9 @@ export function CreateCompanyAccountDialog() {
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeOff className="size-3.5 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground size-3.5" />
                         ) : (
-                          <Eye className="size-3.5 text-muted-foreground" />
+                          <Eye className="text-muted-foreground size-3.5" />
                         )}
                       </Button>
                     </div>
@@ -243,7 +257,7 @@ export function CreateCompanyAccountDialog() {
                           />
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
+                      <p className="text-muted-foreground text-xs">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
                     </div>
                   )}
                   <FormMessage className="text-xs" />
@@ -271,7 +285,7 @@ export function CreateCompanyAccountDialog() {
                           className={cn(
                             "flex items-center gap-3 rounded-lg border p-3 text-left transition-all",
                             checked
-                              ? "border-primary/40 bg-primary/5 ring-1 ring-primary/20"
+                              ? "border-primary/40 bg-primary/5 ring-primary/20 ring-1"
                               : "border-border bg-card hover:bg-muted/50",
                           )}
                         >
@@ -281,8 +295,8 @@ export function CreateCompanyAccountDialog() {
                             <RoleIcon className={cn("size-4", meta?.iconColor)} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium leading-none">{opt.label}</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">{meta?.description}</p>
+                            <p className="text-sm leading-none font-medium">{opt.label}</p>
+                            <p className="text-muted-foreground mt-0.5 text-xs">{meta?.description}</p>
                           </div>
                           <div
                             className={cn(

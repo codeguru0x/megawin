@@ -7,8 +7,8 @@
  */
 
 import { withTenantAuth } from "@megawin/auth/tenant";
-import { GameProduct } from "@megawin/game-core/entities";
 import { GetEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
+import { GameProduct } from "@megawin/game-core/entities";
 import { z } from "zod";
 
 // ============ Zod schema ============

@@ -29,9 +29,7 @@
  * `router.prefetch()` THẲNG trong event handler (không qua `<Link>`); không khôi phục ở nút này
  * nếu chưa đo Network tab lại.
  */
-
-import type { ReactNode } from "react";
-import { useTransition } from "react";
+import { useTransition, type ReactNode } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -57,8 +55,8 @@ import { useAiPanel } from "../ai-panel/ai-panel-provider";
 function ChatHeaderFrame({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn("flex h-12 shrink-0 items-center justify-between gap-2 px-3", className)}>
-      <div className="flex items-center gap-2 font-medium text-sm">
-        <Sparkles className="size-4 text-primary" />
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <Sparkles className="text-primary size-4" />
         {AI_ASSISTANT_NAME}
       </div>
       <div className="flex items-center gap-1">{children}</div>

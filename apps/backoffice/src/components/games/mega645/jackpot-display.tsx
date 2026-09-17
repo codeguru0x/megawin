@@ -15,7 +15,7 @@ export function JackpotDisplay({ amount, size = "md", className }: JackpotDispla
     <div className={cn("flex flex-col", className)}>
       <span
         className={cn(
-          "font-bold tabular-nums text-amber-600 dark:text-amber-400",
+          "text-warning font-bold tabular-nums",
           size === "sm" && "text-sm",
           size === "md" && "text-lg",
           size === "lg" && "text-3xl",

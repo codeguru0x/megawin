@@ -14,7 +14,6 @@
  * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish,
  * financial bị $unset — không render ledger toàn 0 giả tạo.
  */
-
 import { useMemo, useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -92,13 +91,23 @@ type HighlightFilter = "big" | "small" | "even" | "odd" | null;
 
 // Lớn: 41-80, Nhỏ: 1-40, Chẵn: số chẵn, Lẻ: số lẻ
 function getNumberHighlight(n: number, filter: HighlightFilter): "match" | "dim" | "none" {
-  if (!filter) return "none";
+  if (!filter) {
+    return "none";
+  }
   const isBig = n >= 41;
   const isEven = n % 2 === 0;
-  if (filter === "big") return isBig ? "match" : "dim";
-  if (filter === "small") return !isBig ? "match" : "dim";
-  if (filter === "even") return isEven ? "match" : "dim";
-  if (filter === "odd") return !isEven ? "match" : "dim";
+  if (filter === "big") {
+    return isBig ? "match" : "dim";
+  }
+  if (filter === "small") {
+    return !isBig ? "match" : "dim";
+  }
+  if (filter === "even") {
+    return isEven ? "match" : "dim";
+  }
+  if (filter === "odd") {
+    return !isEven ? "match" : "dim";
+  }
   return "none";
 }
 
@@ -117,22 +126,20 @@ function HighlightedBall({
 
   if (highlight === "dim") {
     // Số không thuộc nhóm chọn → mờ đi
-    return (
-      <span className={cn(baseClass, "bg-orange-500 text-white opacity-20")}>{String(number).padStart(2, "0")}</span>
-    );
+    return <span className={cn(baseClass, "bg-warning text-white opacity-20")}>{String(number).padStart(2, "0")}</span>;
   }
 
   if (highlight === "match") {
     // Số thuộc nhóm chọn → giữ màu cam + thêm ring để nổi bật
     return (
-      <span className={cn(baseClass, "bg-orange-500 text-white ring-2 ring-orange-400 ring-offset-1")}>
+      <span className={cn(baseClass, "bg-warning ring-warning text-white ring-2 ring-offset-1")}>
         {String(number).padStart(2, "0")}
       </span>
     );
   }
 
   // none — mặc định không filter
-  return <span className={cn(baseClass, "bg-orange-500 text-white")}>{String(number).padStart(2, "0")}</span>;
+  return <span className={cn(baseClass, "bg-warning text-white")}>{String(number).padStart(2, "0")}</span>;
 }
 
 // ─── Filter Badge Button ──────────────────────────────────────────────────────
@@ -159,7 +166,7 @@ function FilterBadge({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tabular-nums transition-all duration-150",
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums transition-all duration-150",
         "hover:scale-105 active:scale-95",
         active ? cn("shadow-sm ring-1 ring-offset-1", activeClass) : colorClass,
       )}
@@ -167,7 +174,7 @@ function FilterBadge({
       {label}
       <span
         className={cn(
-          "rounded-full px-1 py-0 text-[10px] font-bold tabular-nums min-w-[1.2rem] text-center",
+          "min-w-[1.2rem] rounded-full px-1 py-0 text-center text-xs font-bold tabular-nums",
           active ? "bg-white/30" : "bg-current/10 opacity-80",
         )}
       >
@@ -202,15 +209,15 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/50 shrink-0">
-              <Trophy className="size-3.5 text-orange-600 dark:text-orange-400" />
+            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <Trophy className="text-warning size-3.5" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinners)}</span> người
+              <CardDescription className="mt-0.5 text-xs">
+                <span className="text-foreground font-semibold tabular-nums">{formatNumber(totalWinners)}</span> người
                 trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
+                <span className="text-foreground font-semibold tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
@@ -218,16 +225,16 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
 
         <CardContent className="space-y-4 pt-0">
           {/* Kết quả 20 số với interactive highlight */}
-          <div className="rounded-xl border bg-muted/20 px-4 py-4 space-y-3">
+          <div className="bg-muted/20 space-y-3 rounded-xl border px-4 py-4">
             {/* Header: "KẾT QUẢ" căn giữa + link xem entries */}
             <div className="flex items-center justify-between">
               <div className="flex-1" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Kết quả</span>
-              <div className="flex-1 flex justify-end">
+              <span className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">Kết quả</span>
+              <div className="flex flex-1 justify-end">
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -250,44 +257,44 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
             </div>
 
             {/* Filter badges bên dưới grid — màu nhạt mặc định, active → cam */}
-            <div className="flex items-center justify-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <FilterBadge
                 label="Lớn (41-80)"
                 count={result.bigCount}
                 active={highlight === "big"}
-                colorClass="bg-red-50/70 text-red-400 border-red-200/70 dark:bg-red-950/10 dark:text-red-500/70 dark:border-red-900/50"
-                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                colorClass="bg-loss/70 text-loss border-loss/70"
+                activeClass="bg-warning text-white border-warning"
                 onClick={() => toggleFilter("big")}
               />
               <FilterBadge
                 label="Nhỏ (1-40)"
                 count={result.smallCount}
                 active={highlight === "small"}
-                colorClass="bg-blue-50/70 text-blue-400 border-blue-200/70 dark:bg-blue-950/10 dark:text-blue-500/70 dark:border-blue-900/50"
-                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                colorClass="bg-info/70 text-info border-info/70"
+                activeClass="bg-warning text-white border-warning"
                 onClick={() => toggleFilter("small")}
               />
               <FilterBadge
                 label="Chẵn"
                 count={result.evenCount}
                 active={highlight === "even"}
-                colorClass="bg-amber-50/70 text-amber-400 border-amber-200/70 dark:bg-amber-950/10 dark:text-amber-500/70 dark:border-amber-900/50"
-                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                colorClass="bg-warning/70 text-warning border-warning/70"
+                activeClass="bg-warning text-white border-warning"
                 onClick={() => toggleFilter("even")}
               />
               <FilterBadge
                 label="Lẻ"
                 count={result.oddCount}
                 active={highlight === "odd"}
-                colorClass="bg-purple-50/70 text-purple-400 border-purple-200/70 dark:bg-purple-950/10 dark:text-purple-500/70 dark:border-purple-900/50"
-                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                colorClass="bg-game-max3d/70 text-game-max3d border-game-max3d/70"
+                activeClass="bg-warning text-white border-warning"
                 onClick={() => toggleFilter("odd")}
               />
               {highlight && (
                 <button
                   type="button"
                   onClick={() => setHighlight(null)}
-                  className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground underline underline-offset-2"
+                  className="text-muted-foreground/50 hover:text-muted-foreground text-xs underline underline-offset-2"
                 >
                   Xoá lọc
                 </button>
@@ -296,7 +303,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
 
             {/* Chú thích khi đang filter */}
             {highlight && (
-              <p className="text-[10px] text-muted-foreground/60 text-center">
+              <p className="text-muted-foreground/60 text-center text-xs">
                 {highlight === "big" && `${result.bigCount} số Lớn (≥41) · ${result.smallCount} số Nhỏ`}
                 {highlight === "small" && `${result.smallCount} số Nhỏ (≤40) · ${result.bigCount} số Lớn`}
                 {highlight === "even" && `${result.evenCount} số Chẵn · ${result.oddCount} số Lẻ`}
@@ -307,18 +314,18 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
 
           {/* Basic prizes table */}
           {result.basicPrizes.length > 0 && (
-            <div className="rounded-xl border overflow-hidden">
-              <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="overflow-hidden rounded-xl border">
+              <div className="bg-muted/40 grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 border-b px-3 py-2">
+                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   Cơ bản (Pick × Trúng)
                 </span>
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Boards
                 </span>
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>
@@ -327,23 +334,23 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                 <div
                   key={`${r.pickCount}-${r.matchCount}`}
                   className={cn(
-                    "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center",
-                    idx < result.basicPrizes.length - 1 && "border-b border-border/50",
-                    r.winnerCount > 0 ? "bg-orange-50/40 dark:bg-orange-950/5" : "",
+                    "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
+                    idx < result.basicPrizes.length - 1 && "border-border/50 border-b",
+                    r.winnerCount > 0 ? "bg-warning/40" : "",
                   )}
                 >
-                  <span className="text-xs text-muted-foreground">{basicPrizeLabel(r.pickCount, r.matchCount)}</span>
+                  <span className="text-muted-foreground text-xs">{basicPrizeLabel(r.pickCount, r.matchCount)}</span>
                   <span
                     className={cn(
-                      "text-right tabular-nums text-sm font-semibold",
-                      r.winnerCount > 0 ? "text-orange-700 dark:text-orange-400" : "text-muted-foreground/40",
+                      "text-right text-sm font-semibold tabular-nums",
+                      r.winnerCount > 0 ? "text-warning" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(r.winnerCount)}
                   </span>
                   <span
                     className={cn(
-                      "text-right tabular-nums text-sm",
+                      "text-right text-sm tabular-nums",
                       r.winnerCount > 0 ? "text-muted-foreground" : "text-muted-foreground/40",
                     )}
                   >
@@ -351,7 +358,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                   </span>
                   <span
                     className={cn(
-                      "text-right tabular-nums text-sm font-bold",
+                      "text-right text-sm font-bold tabular-nums",
                       r.totalPrize > 0 ? "text-foreground" : "text-muted-foreground/40",
                     )}
                   >
@@ -364,18 +371,16 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
 
           {/* Side bet prizes table */}
           {result.sideBetPrizes.length > 0 && (
-            <div className="rounded-xl border overflow-hidden">
-              <div className="grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  Side Bets
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+            <div className="overflow-hidden rounded-xl border">
+              <div className="bg-muted/40 grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 border-b px-3 py-2">
+                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Side Bets</span>
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Bets
                 </span>
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>
@@ -384,23 +389,23 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                 <div
                   key={`${r.playType}-${r.bet}`}
                   className={cn(
-                    "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center",
-                    idx < result.sideBetPrizes.length - 1 && "border-b border-border/50",
-                    r.winnerCount > 0 ? "bg-cyan-50/40 dark:bg-cyan-950/5" : "",
+                    "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
+                    idx < result.sideBetPrizes.length - 1 && "border-border/50 border-b",
+                    r.winnerCount > 0 ? "bg-info/40" : "",
                   )}
                 >
-                  <span className="text-xs text-muted-foreground">{r.label}</span>
+                  <span className="text-muted-foreground text-xs">{r.label}</span>
                   <span
                     className={cn(
-                      "text-right tabular-nums text-sm font-semibold",
-                      r.winnerCount > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-muted-foreground/40",
+                      "text-right text-sm font-semibold tabular-nums",
+                      r.winnerCount > 0 ? "text-info" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(r.winnerCount)}
                   </span>
                   <span
                     className={cn(
-                      "text-right tabular-nums text-sm",
+                      "text-right text-sm tabular-nums",
                       r.winnerCount > 0 ? "text-muted-foreground" : "text-muted-foreground/40",
                     )}
                   >
@@ -408,7 +413,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                   </span>
                   <span
                     className={cn(
-                      "text-right tabular-nums text-sm font-bold",
+                      "text-right text-sm font-bold tabular-nums",
                       r.totalPrize > 0 ? "text-foreground" : "text-muted-foreground/40",
                     )}
                   >
@@ -443,23 +448,23 @@ function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
-              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <Coins className="text-info size-3.5" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
+              <CardDescription className="mt-0.5 text-xs">
                 {awaitingResettle ? "Chờ kết sổ lại" : "Chờ kết sổ"}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-5 pb-4 pt-0">
-          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-5 space-y-2">
-            <p className="text-sm font-medium text-foreground">
+        <CardContent className="px-5 pt-0 pb-4">
+          <div className="border-border/70 bg-muted/20 space-y-2 rounded-xl border border-dashed px-4 py-5">
+            <p className="text-foreground text-sm font-medium">
               {awaitingResettle ? "Kỳ đang chờ kết sổ lại" : "Kỳ đang chờ kết sổ"}
             </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               Số liệu tài chính sẽ cập nhật sau khi kết sổ hoàn tất. KPI cược phía trên phản ánh số liệu live — không
               phải báo cáo phân bổ doanh thu kỳ này.
             </p>
@@ -482,22 +487,22 @@ function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
-            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <Coins className="text-info size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Phân bổ doanh thu sau kết sổ</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Phân bổ doanh thu sau kết sổ</CardDescription>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 space-y-2">
+      <CardContent className="space-y-2 pt-0">
         {[
           {
             icon: TrendingUp,
-            iconBg: "bg-orange-100 dark:bg-orange-900/50",
-            iconColor: "text-orange-600 dark:text-orange-400",
+            iconBg: "bg-warning",
+            iconColor: "text-warning",
             label: "Doanh thu gộp",
             value: f.totalRevenue,
             // Dòng input gốc → trung tính, chỉ khoản trừ & lợi nhuận mới có màu ngữ nghĩa
@@ -507,8 +512,8 @@ function FinancialSummary({
           },
           {
             icon: Users,
-            iconBg: "bg-slate-100 dark:bg-slate-800",
-            iconColor: "text-slate-500 dark:text-slate-400",
+            iconBg: "bg-muted",
+            iconColor: "text-muted-foreground",
             label: "Hoa hồng đại lý",
             value: f.totalAgentCommission,
             // Khoản chi bình thường → muted (không dùng destructive để tránh "báo động giả")
@@ -518,8 +523,8 @@ function FinancialSummary({
           },
           {
             icon: Trophy,
-            iconBg: "bg-amber-100 dark:bg-amber-900/50",
-            iconColor: "text-amber-600 dark:text-amber-400",
+            iconBg: "bg-warning",
+            iconColor: "text-warning",
             label: "Chi trả giải thưởng",
             value: f.totalPrizes,
             sign: "-" as const,
@@ -529,12 +534,12 @@ function FinancialSummary({
           },
           {
             icon: isProfit ? TrendingUp : TrendingDown,
-            iconBg: isProfit ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
-            iconColor: isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+            iconBg: isProfit ? "bg-profit" : "bg-loss",
+            iconColor: isProfit ? "text-profit" : "text-loss",
             label: "Kết quả công ty (P&L kỳ)",
             value: f.companyTake,
             sign: "=" as const,
-            valueColor: isProfit ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
+            valueColor: isProfit ? "text-profit" : "text-destructive",
             bold: true,
             separator: true,
             hint: resultHint,
@@ -551,15 +556,15 @@ function FinancialSummary({
               key={row.label}
               className={cn(
                 "flex items-center justify-between gap-3 py-2",
-                row.separator && "border-t border-border/60 mt-1 pt-3",
+                row.separator && "border-border/60 mt-1 border-t pt-3",
                 row.indent && "pl-5",
               )}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}>
+              <div className="flex min-w-0 items-center gap-2">
+                <div className={cn("flex size-6 shrink-0 items-center justify-center rounded-md", row.iconBg)}>
                   <row.icon className={cn("size-3.5", row.iconColor)} />
                 </div>
-                <span className={cn("text-sm", row.bold ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                <span className={cn("text-sm", row.bold ? "text-foreground font-semibold" : "text-muted-foreground")}>
                   {row.label}
                 </span>
                 {row.hint && (
@@ -567,7 +572,7 @@ function FinancialSummary({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help"
+                        className="text-muted-foreground/40 hover:text-muted-foreground shrink-0 cursor-help transition-colors"
                         aria-label={`Giải thích ${row.label}`}
                       >
                         <Info className="size-3" />
@@ -578,7 +583,7 @@ function FinancialSummary({
                 )}
               </div>
               <span
-                className={cn("tabular-nums text-sm font-mono shrink-0", row.bold ? "font-bold" : "", displayColor)}
+                className={cn("shrink-0 font-mono text-sm tabular-nums", row.bold ? "font-bold" : "", displayColor)}
               >
                 {displaySign !== "=" ? displaySign : ""}
                 {formatNumber(row.value)}
@@ -589,10 +594,10 @@ function FinancialSummary({
 
         {/* Cảnh báo khi kỳ lỗ — Keno có thể âm khi trúng giải lớn ở bậc pick cao */}
         {!isProfit && (
-          <div className="rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/20 px-3 py-2.5">
+          <div className="border-loss bg-loss/60 rounded-lg border px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <TrendingDown className="size-3.5 text-red-600 dark:text-red-400 shrink-0" />
-              <span className="text-xs text-red-700 dark:text-red-300">
+              <TrendingDown className="text-loss size-3.5 shrink-0" />
+              <span className="text-loss text-xs">
                 Kỳ này chi trả vượt doanh thu — kiểm tra các entry trúng giải lớn.
               </span>
             </div>
@@ -613,7 +618,9 @@ export function ResultSection() {
 
   const result: KenoResultData | undefined = useMemo(() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     // Unified prizes[] — filter by pickCount != null cho cơ bản, bet defined cho bổ sung
     const allPrizes: any[] = d.settleSummary?.prizes ?? [];
@@ -668,7 +675,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
+      <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />

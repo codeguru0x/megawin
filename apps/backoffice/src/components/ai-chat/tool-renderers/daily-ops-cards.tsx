@@ -17,7 +17,6 @@
  * bespoke không được là ngoại lệ "card luôn mở" giữa danh sách các dòng đóng. Tiêu đề vì thế nằm ở
  * DÒNG GẠCH, không nằm trong thân card (để cả hai chỗ sẽ ra hai lần cùng một chữ).
  */
-
 import type { DrawStatus } from "@megawin/game-core/entities";
 import { GAME_LABELS, getDrawStatusLabel } from "@megawin/game-core/labels";
 import { isAppError } from "@megawin/shared/errors";
@@ -209,13 +208,13 @@ function OpsSnapshotCard({ meta, snapshotRaw }: { meta: OpsDispatchMeta; snapsho
         )}
         {accountRows.length > 0 && (
           <div className="space-y-1">
-            <p className="font-medium text-muted-foreground text-xs">Top người chơi cược nhiều</p>
+            <p className="text-muted-foreground text-xs font-medium">Top người chơi cược nhiều</p>
             <DataTable columns={TOP_ACCOUNT_COLUMNS} rows={accountRows} />
           </div>
         )}
         {comboRows.length > 0 && (
           <div className="space-y-1">
-            <p className="font-medium text-muted-foreground text-xs">Top combo bị dồn cược</p>
+            <p className="text-muted-foreground text-xs font-medium">Top combo bị dồn cược</p>
             <DataTable columns={TOP_COMBO_COLUMNS} rows={comboRows} />
           </div>
         )}
@@ -355,7 +354,7 @@ function IntegrationHealthCard({ output }: { output: GetIntegrationHealthOutput 
             <KpiTile
               label="Đang retry"
               value={formatCell(numOr0(summary.retrying), CellFormat.Number)}
-              valueClassName={numOr0(summary.retrying) > 0 ? "text-amber-600 dark:text-amber-400" : undefined}
+              valueClassName={numOr0(summary.retrying) > 0 ? "text-warning" : undefined}
             />
             <KpiTile
               label="Stuck"
@@ -368,7 +367,7 @@ function IntegrationHealthCard({ output }: { output: GetIntegrationHealthOutput 
           <p className="text-muted-foreground text-xs">Không lấy được danh sách đơn dispatch bị kẹt.</p>
         ) : stuckOrderRows.length > 0 ? (
           <div className="space-y-1">
-            <p className="font-medium text-muted-foreground text-xs">Đơn dispatch bị kẹt (retry cao)</p>
+            <p className="text-muted-foreground text-xs font-medium">Đơn dispatch bị kẹt (retry cao)</p>
             <DataTable columns={STUCK_ORDER_COLUMNS} rows={stuckOrderRows} />
           </div>
         ) : (
@@ -378,7 +377,7 @@ function IntegrationHealthCard({ output }: { output: GetIntegrationHealthOutput 
           <p className="text-muted-foreground text-xs">Không lấy được trạng thái worker.</p>
         ) : workerRows.length > 0 ? (
           <div className="space-y-1">
-            <p className="font-medium text-muted-foreground text-xs">Worker cần chú ý</p>
+            <p className="text-muted-foreground text-xs font-medium">Worker cần chú ý</p>
             <DataTable columns={WORKER_HEALTH_COLUMNS} rows={workerRows} />
           </div>
         ) : (

@@ -1,6 +1,6 @@
 import {
-  type EnqueueReversalsInput,
   EnqueueReversalsUseCase,
+  type EnqueueReversalsInput,
 } from "@megawin/game-lotto535-application/use-cases/resettle";
 
 const useCase = new EnqueueReversalsUseCase();

@@ -12,7 +12,6 @@
  * Tài chính kỳ: CHỈ map khi `draw.financial` có mặt (đã settle). Sau republish,
  * financial bị $unset — không render ledger toàn 0 giả tạo.
  */
-
 import { useMemo, useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -38,27 +37,24 @@ type TierCfg = { badge: string; row: string; icon?: React.ElementType };
 
 const TIER_CONFIG: Record<string, TierCfg> = {
   [PrizeTier.Special]: {
-    badge: "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
-    row: "bg-amber-50/60 dark:bg-amber-950/10 border-l-2 border-l-amber-400",
+    badge: "border-warning bg-warning text-warning",
+    row: "bg-warning/60 border-l-2 border-l-warning",
     icon: Trophy,
   },
   [PrizeTier.SpecialSub]: {
-    badge:
-      "border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-700",
-    row: "bg-orange-50/40 dark:bg-orange-950/5 border-l-2 border-l-orange-300",
+    badge: "border-warning bg-warning text-warning",
+    row: "bg-warning/40 border-l-2 border-l-warning",
   },
   [PrizeTier.First]: {
-    badge:
-      "border-yellow-300 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-700",
-    row: "bg-yellow-50/40 dark:bg-yellow-950/5",
+    badge: "border-warning bg-warning text-warning",
+    row: "bg-warning/40",
   },
   [PrizeTier.Second]: {
-    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
+    badge: "border-info bg-info text-info",
     row: "",
   },
   [PrizeTier.Third]: {
-    badge:
-      "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700",
+    badge: "border-profit bg-profit text-profit",
     row: "",
   },
   [PrizeTier.Fourth]: { badge: "border-border bg-muted/40 text-muted-foreground", row: "" },
@@ -80,30 +76,30 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50 shrink-0">
-              <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
+            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <Trophy className="text-warning size-3.5" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
-                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinnerCount)}</span>{" "}
+              <CardDescription className="mt-0.5 text-xs">
+                <span className="text-foreground font-semibold tabular-nums">{formatNumber(totalWinnerCount)}</span>{" "}
                 line trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
+                <span className="text-foreground font-semibold tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
           {/* 20 bộ ba số — header bên trong card */}
-          <div className="rounded-xl border bg-muted/20 px-4 py-4 space-y-3">
-            <div className="flex items-center justify-between w-full">
+          <div className="bg-muted/20 space-y-3 rounded-xl border px-4 py-4">
+            <div className="flex w-full items-center justify-between">
               <div className="flex-1" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kết quả</span>
-              <div className="flex-1 flex justify-end">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Kết quả</span>
+              <div className="flex flex-1 justify-end">
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
+                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-xs transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -119,7 +115,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   { label: "Giải Ba", triplets: result.third, variant: "third" as const },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-muted-foreground w-16 shrink-0">{row.label}</span>
+                    <span className="text-muted-foreground w-16 shrink-0 text-xs font-semibold">{row.label}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {row.triplets.map((t, i) => (
                         <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
@@ -133,16 +129,16 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
 
           {/* Prize tiers table — 8 tiers Max 3D Pro */}
           {result.tiers.length > 0 && (
-            <div className="rounded-xl border overflow-hidden">
-              <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Hạng giải</span>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
+            <div className="overflow-hidden rounded-xl border">
+              <div className="bg-muted/40 grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 border-b px-3 py-2">
+                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Hạng giải</span>
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Số trúng
                 </span>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
+                <span className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>
@@ -159,26 +155,26 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   <div
                     key={tier.tier}
                     className={cn(
-                      "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center",
-                      idx < result.tiers.length - 1 && "border-b border-border/50",
+                      "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
+                      idx < result.tiers.length - 1 && "border-border/50 border-b",
                       hasWinner ? cfg.row : "",
                     )}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
                       {cfg.icon ? (
-                        <cfg.icon className="size-3.5 shrink-0 text-amber-500" />
+                        <cfg.icon className="text-warning size-3.5 shrink-0" />
                       ) : (
                         <span className="size-3.5 shrink-0" />
                       )}
-                      <Badge variant="outline" className={cn("text-xs border px-2 py-0 h-5", cfg.badge)}>
+                      <Badge variant="outline" className={cn("h-5 border px-2 py-0 text-xs", cfg.badge)}>
                         {label}
                       </Badge>
                     </div>
 
                     <span
                       className={cn(
-                        "text-right tabular-nums text-sm font-semibold",
-                        hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
+                        "text-right text-sm font-semibold tabular-nums",
+                        hasWinner ? "text-profit" : "text-muted-foreground/40",
                       )}
                     >
                       {formatNumber(tier.winnerCount)}
@@ -186,7 +182,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
 
                     <span
                       className={cn(
-                        "text-right tabular-nums text-sm",
+                        "text-right text-sm tabular-nums",
                         hasWinner ? "text-muted-foreground" : "text-muted-foreground/40",
                       )}
                     >
@@ -195,7 +191,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
 
                     <span
                       className={cn(
-                        "text-right tabular-nums text-sm font-bold",
+                        "text-right text-sm font-bold tabular-nums",
                         hasWinner ? "text-foreground" : "text-muted-foreground/40",
                       )}
                     >
@@ -205,13 +201,13 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                 );
               })}
 
-              <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center border-t bg-muted/20">
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tổng cộng</span>
-                <span className="text-right tabular-nums text-sm font-bold text-foreground">
+              <div className="bg-muted/20 grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 border-t px-3 py-2.5">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Tổng cộng</span>
+                <span className="text-foreground text-right text-sm font-bold tabular-nums">
                   {formatNumber(result.tiers.reduce((a, t) => a + t.winnerCount, 0))}
                 </span>
                 <span />
-                <span className="text-right tabular-nums text-sm font-bold text-foreground">
+                <span className="text-foreground text-right text-sm font-bold tabular-nums">
                   {formatNumber(result.tiers.reduce((a, t) => a + t.totalPrize, 0))}
                 </span>
               </div>
@@ -241,23 +237,23 @@ function FinancialSummary({
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
-              <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <Coins className="text-info size-3.5" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
+              <CardDescription className="mt-0.5 text-xs">
                 {awaitingResettle ? "Chờ kết sổ lại" : "Chờ kết sổ"}
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="px-5 pb-4 pt-0">
-          <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-5 space-y-2">
-            <p className="text-sm font-medium text-foreground">
+        <CardContent className="px-5 pt-0 pb-4">
+          <div className="border-border/70 bg-muted/20 space-y-2 rounded-xl border border-dashed px-4 py-5">
+            <p className="text-foreground text-sm font-medium">
               {awaitingResettle ? "Kỳ đang chờ kết sổ lại" : "Kỳ đang chờ kết sổ"}
             </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               Số liệu tài chính sẽ cập nhật sau khi kết sổ hoàn tất. KPI cược phía trên phản ánh số liệu live — không
               phải báo cáo phân bổ doanh thu kỳ này.
             </p>
@@ -280,22 +276,22 @@ function FinancialSummary({
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
-            <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <Coins className="text-info size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Phân bổ doanh thu sau kết sổ</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Phân bổ doanh thu sau kết sổ</CardDescription>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 space-y-2">
+      <CardContent className="space-y-2 pt-0">
         {[
           {
             icon: TrendingUp,
-            iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
-            iconColor: "text-emerald-600 dark:text-emerald-400",
+            iconBg: "bg-profit",
+            iconColor: "text-profit",
             label: "Doanh thu gộp",
             value: f.totalRevenue,
             sign: "+" as const,
@@ -304,8 +300,8 @@ function FinancialSummary({
           },
           {
             icon: Users,
-            iconBg: "bg-slate-100 dark:bg-slate-800",
-            iconColor: "text-slate-500 dark:text-slate-400",
+            iconBg: "bg-muted",
+            iconColor: "text-muted-foreground",
             label: "Hoa hồng đại lý",
             value: f.totalAgentCommission,
             sign: "-" as const,
@@ -314,8 +310,8 @@ function FinancialSummary({
           },
           {
             icon: Trophy,
-            iconBg: "bg-amber-100 dark:bg-amber-900/50",
-            iconColor: "text-amber-600 dark:text-amber-400",
+            iconBg: "bg-warning",
+            iconColor: "text-warning",
             label: "Chi trả giải thưởng",
             value: f.totalFixedPrizes,
             sign: "-" as const,
@@ -325,12 +321,12 @@ function FinancialSummary({
           },
           {
             icon: isProfit ? TrendingUp : TrendingDown,
-            iconBg: isProfit ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
-            iconColor: isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
+            iconBg: isProfit ? "bg-profit" : "bg-loss",
+            iconColor: isProfit ? "text-profit" : "text-loss",
             label: "Kết quả công ty (P&L kỳ)",
             value: f.profit,
             sign: "=" as const,
-            valueColor: isProfit ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
+            valueColor: isProfit ? "text-profit" : "text-destructive",
             bold: true,
             separator: true,
             hint: resultHint,
@@ -347,15 +343,15 @@ function FinancialSummary({
               key={row.label}
               className={cn(
                 "flex items-center justify-between gap-3 py-2",
-                row.separator && "border-t border-border/60 mt-1 pt-3",
+                row.separator && "border-border/60 mt-1 border-t pt-3",
                 row.indent && "pl-5",
               )}
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}>
+              <div className="flex min-w-0 items-center gap-2">
+                <div className={cn("flex size-6 shrink-0 items-center justify-center rounded-md", row.iconBg)}>
                   <row.icon className={cn("size-3.5", row.iconColor)} />
                 </div>
-                <span className={cn("text-sm", row.bold ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                <span className={cn("text-sm", row.bold ? "text-foreground font-semibold" : "text-muted-foreground")}>
                   {row.label}
                 </span>
                 {row.hint && (
@@ -363,7 +359,7 @@ function FinancialSummary({
                     <TooltipTrigger asChild>
                       <button
                         type="button"
-                        className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help"
+                        className="text-muted-foreground/40 hover:text-muted-foreground shrink-0 cursor-help transition-colors"
                         aria-label={`Giải thích ${row.label}`}
                       >
                         <Info className="size-3" />
@@ -374,7 +370,7 @@ function FinancialSummary({
                 )}
               </div>
               <span
-                className={cn("tabular-nums text-sm font-mono shrink-0", row.bold ? "font-bold" : "", displayColor)}
+                className={cn("shrink-0 font-mono text-sm tabular-nums", row.bold ? "font-bold" : "", displayColor)}
               >
                 {displaySign !== "=" ? displaySign : ""}
                 {formatNumber(row.value)}
@@ -385,10 +381,10 @@ function FinancialSummary({
 
         {/* Cảnh báo khi kỳ lỗ — Max 3D Pro có thể âm khi chi trả giải vượt doanh thu */}
         {!isProfit && (
-          <div className="rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/20 px-3 py-2.5">
+          <div className="border-loss bg-loss/60 rounded-lg border px-3 py-2.5">
             <div className="flex items-center gap-2">
-              <TrendingDown className="size-3.5 text-red-600 dark:text-red-400 shrink-0" />
-              <span className="text-xs text-red-700 dark:text-red-300">
+              <TrendingDown className="text-loss size-3.5 shrink-0" />
+              <span className="text-loss text-xs">
                 Kỳ này chi trả vượt doanh thu — kiểm tra các entry trúng giải lớn.
               </span>
             </div>
@@ -409,7 +405,9 @@ export function ResultSection() {
 
   const result: DrawResult | undefined = useMemo(() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier, t]));
     const tiers = Object.values(PrizeTier).map((tier) => {
@@ -454,7 +452,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
+      <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultCard result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />

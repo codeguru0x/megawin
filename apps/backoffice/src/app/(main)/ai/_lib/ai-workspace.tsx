@@ -12,9 +12,7 @@
  * - Dưới `md` (`useIsMobile`): lịch sử hiện dạng `Sheet` phủ lên, LUÔN mặc định đóng bất kể cookie
  *   — mở sẵn một overlay che nửa màn hình ngay khi vào trang trên điện thoại là hành vi sai.
  */
-
-import type { CSSProperties } from "react";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useRef, useState, type CSSProperties } from "react";
 
 import { PageChatHeader } from "@/components/ai-chat/chat-header";
 import { ChatPanel } from "@/components/ai-chat/chat-panel";

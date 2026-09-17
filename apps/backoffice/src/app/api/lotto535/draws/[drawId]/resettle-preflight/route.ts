@@ -1,5 +1,6 @@
 import { DetectResettleBoundariesUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 
@@ -13,11 +14,16 @@ const detectBoundariesUseCase = new DetectResettleBoundariesUseCase();
  * Phân tích tác động trước khi thực hiện Resettle Lotto 5/35.
  * Staff gọi sau khi có kết quả mới, trước khi nhấn "Kết sổ lại".
  */
+
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(resettlePreflightSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return detectBoundariesUseCase.run({
       drawId,
       proposedWinningMain: body.proposedWinningMain,

@@ -57,7 +57,9 @@ export class TieredCache implements CacheStore {
    */
   async get<T>(key: string): Promise<T | undefined> {
     const fromL1 = await this.l1.get<T>(key);
-    if (fromL1 !== undefined) return fromL1;
+    if (fromL1 !== undefined) {
+      return fromL1;
+    }
 
     const fromL2 = await this.l2.get<T>(key);
     if (fromL2 !== undefined) {

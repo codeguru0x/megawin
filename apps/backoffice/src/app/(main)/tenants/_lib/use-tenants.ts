@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ export function useCreateTenant() {
   return useMutation({
     mutationFn: (values: CreateTenantInput) => apiClient.post<CreateTenantResponse>("/tenants", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
       toast.success(`Tạo tenant "${data.tenantId}" thành công.`);
     },
     onError: (error) => {
@@ -57,7 +57,7 @@ export function useUpdateTenant() {
   return useMutation({
     mutationFn: (values: UpdateTenantInput) => apiClient.patch<UpdateTenantResponse>("/tenants", values),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
       toast.success(`Đã cập nhật tenant "${variables.tenantId}".`);
     },
     onError: (error) => {
@@ -76,7 +76,7 @@ export function useToggleTenantStatus() {
         status,
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
       toast.success(`Đã ${data.status === "active" ? "kích hoạt" : "vô hiệu hóa"} tenant "${data.tenantId}".`);
     },
     onError: (error) => {
@@ -94,7 +94,7 @@ export function useRegenerateApiKey() {
         tenantId,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
       toast.success("Đã tạo API key mới.");
     },
     onError: (error) => {

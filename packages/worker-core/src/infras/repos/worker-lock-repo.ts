@@ -1,7 +1,11 @@
 import { isDuplicateKeyError } from "@megawin/data/mongo";
 
-import type { WorkerLockEntity, WorkerLockKind, WorkerStalledItem } from "../../entities";
-import { WorkerCoreCollections } from "../../entities";
+import {
+  WorkerCoreCollections,
+  type WorkerLockEntity,
+  type WorkerLockKind,
+  type WorkerStalledItem,
+} from "../../entities";
 import { WorkerCoreBaseRepo } from "../base-repo";
 import { WorkerLockMapper } from "../mappers";
 import type { AcquireOptions } from "./types/worker-lock.types";
@@ -94,7 +98,9 @@ export class WorkerLockRepository extends WorkerCoreBaseRepo<WorkerLockEntity, W
       return result != null;
     } catch (err) {
       // E11000 — doc tồn tại nhưng filter không match = owner khác đang giữ còn hiệu lực.
-      if (isDuplicateKeyError(err)) return false;
+      if (isDuplicateKeyError(err)) {
+        return false;
+      }
       throw err;
     }
   }

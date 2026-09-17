@@ -6,8 +6,8 @@
  */
 
 import {
-  type SettleTenantDailyAggregateResult,
   SystemSettleTenantDailyRepository,
+  type SettleTenantDailyAggregateResult,
 } from "@megawin/game-core-application/repos";
 import { MAX3D_SETTLE_TENANT_REPORTS } from "@megawin/game-max3d/entities";
 

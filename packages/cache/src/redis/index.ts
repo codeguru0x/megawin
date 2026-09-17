@@ -5,7 +5,7 @@
  * Với nhu cầu CACHE thuần (get/set/delete + TTL), dùng `RedisCacheStore`
  * từ `@megawin/cache/stores` — adapter fail-open trên RedisRepository.
  */
-export { default as getRedisClient } from "./client";
+export { getRedisClient } from "./client";
 export { RedisRepository } from "./repository";
 export type {
   ExpireMode,

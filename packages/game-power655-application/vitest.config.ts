@@ -1,13 +1,25 @@
-import { integrationConfig } from "@megawin/vitest-config/dist";
-import { loadEnv } from "vite";
+import { integrationConfig, nodeConfig } from "@megawin/vitest-config/dist";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig(({ mode }) => ({
-  ...integrationConfig,
+/** Vitest config — unit (pure) + integration (Mongo Testcontainers). */
+export default defineConfig({
   test: {
-    ...integrationConfig.test,
-    env: loadEnv(mode, import.meta.dirname, ""),
-    include: ["test/**/*.test.ts"],
-    globalSetup: ["test/global-setup.ts"],
+    projects: [
+      {
+        test: {
+          name: "unit",
+          ...nodeConfig.test,
+          include: ["test/unit/**/*.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "integration",
+          ...integrationConfig.test,
+          include: ["test/integration/**/*.test.ts"],
+          globalSetup: ["@megawin/vitest-config/global-setup-mongo"],
+        },
+      },
+    ],
   },
-}));
+});

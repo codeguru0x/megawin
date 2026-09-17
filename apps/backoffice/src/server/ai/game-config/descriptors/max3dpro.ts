@@ -7,7 +7,7 @@
 import type { GlobalConfigEntity } from "@megawin/game-max3dpro-application/use-cases/game-config";
 import { WEEKDAY_LABELS_FULL } from "@megawin/shared/utils";
 
-import { type ConfigItem, item } from "../../payload";
+import { item, type ConfigItem } from "../../payload";
 import { GameConfigSection } from "../types";
 
 export const APPLICABLE_SECTIONS: readonly GameConfigSection[] = [
@@ -105,6 +105,9 @@ export function describe(c: GlobalConfigEntity, section: GameConfigSection): Con
       return describePrizes(c);
     case GameConfigSection.Ops:
       return describeOps(c);
+    case "jackpot": {
+      throw new Error('Not implemented yet: "jackpot" case');
+    }
     default:
       return [];
   }

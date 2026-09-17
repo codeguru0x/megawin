@@ -133,13 +133,16 @@
  * cậy để tự kết luận "đã hết lỗi" từ 1 quan sát.
  */
 
+import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
+
 import {
   IntrinsicState,
   ResultFeedAlertSeverity,
   ResultFeedAlertType,
+  SubmissionState,
   type ResultFeedGameKey,
   type ResultFeedSourceId,
-  SubmissionState,
 } from "@megawin/resultfeed/entities";
 import {
   canonicalizeNumbers,
@@ -149,8 +152,7 @@ import {
   incrementPeriod,
 } from "@megawin/resultfeed/rules";
 import { AppException } from "@megawin/shared/errors";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { TickLoopWorker } from "@megawin/worker-core/workers";
+import { TickLoopWorker, type TickLoopResult, type TickOutcome } from "@megawin/worker-core/workers";
 import { Binary } from "mongodb";
 
 import { resolveProvider } from "../../infras/providers/registry";
@@ -159,12 +161,8 @@ import { ObservationRepository } from "../../infras/repos/observation-repo";
 import { SourceCursorRepository } from "../../infras/repos/source-cursor-repo";
 import { SourceRepository } from "../../infras/repos/source-repo";
 import { SubmissionRepository } from "../../infras/repos/submission-repo";
-import type { SourceAdapter } from "../../sources/types";
-import { ResultUnavailableError } from "../../sources/types";
-import type { GameFetchSchedule } from "./schedule";
-import { computeNextFetchAtAfterConfirm, computeNextFetchAtOnUnavailable } from "./schedule";
-import { createHash } from "node:crypto";
-import { gzipSync } from "node:zlib";
+import { ResultUnavailableError, type SourceAdapter } from "../../sources/types";
+import { computeNextFetchAtAfterConfirm, computeNextFetchAtOnUnavailable, type GameFetchSchedule } from "./schedule";
 
 /** ±20% — nhịp đều tăm tắp là dấu hiệu bot rõ nhất (plan §4, "Jitter bắt buộc"). */
 const JITTER_RATIO = 0.2;
@@ -393,7 +391,6 @@ export class FetchAndParseUseCase extends TickLoopWorker<void, FetchAndParseRunR
     minIntervalMs: number,
     confirmedDrawDate: string,
   ): Date {
-    // biome-ignore lint/suspicious/noUnnecessaryConditions: false positive — Biome không track this.burstEnabled bị gán lại true trong beforeLoop() (control-flow qua method khác cùng class).
     if (this.burstEnabled) {
       // Mốc QUÁ KHỨ, KHÔNG cộng offset: gate `nextFetchAt > now` ở bước 1 do chính tick này ghi
       // ra, cộng thêm bất kỳ ms nào cũng là tự chặn tick kế tiếp (bug vòng 3, xem JSDoc trên).

@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ApiClientError } from "@megawin/next/client";
-import type { ObservationEntity, ResultFeedGameKey } from "@megawin/resultfeed/entities";
-import { ConsensusState } from "@megawin/resultfeed/entities";
+import { ConsensusState, type ObservationEntity, type ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 
@@ -62,7 +61,6 @@ function NumbersRow({ numbers, diff }: { numbers: string[]; diff: Set<number> })
     <div className="flex flex-wrap gap-1">
       {numbers.map((n, i) => (
         <span
-          // biome-ignore lint/suspicious/noArrayIndexKey: thứ tự phần tử CHÍNH LÀ dữ liệu hiển thị (không sort lại), số có thể trùng giá trị (VD bingo18) nên không có key nào ổn định hơn index.
           key={`${i}-${n}`}
           className={cn(
             "rounded border px-1.5 py-0.5 font-mono text-xs tabular-nums",
@@ -97,13 +95,13 @@ function ObservationCard({
       className={cn(
         "flex w-full flex-col gap-2 rounded-md border p-3 text-left transition-colors",
         isChosen ? "border-primary bg-primary/5" : "border-border",
-        selectable && !isChosen && "cursor-pointer hover:bg-muted/40",
+        selectable && !isChosen && "hover:bg-muted/40 cursor-pointer",
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {selectable && <RadioGroupItem value={observation.id} id={`obs-${observation.id}`} />}
-          <span className="font-medium font-mono text-sm">{observation.sourceId}</span>
+          <span className="font-mono text-sm font-medium">{observation.sourceId}</span>
           {role && (
             <Badge variant="outline" className="text-xs">
               {role}
@@ -119,7 +117,7 @@ function ObservationCard({
       <NumbersRow numbers={observation.numbersDisplay} diff={diff} />
 
       {observation.numbersCanonical.join(",") !== observation.numbersDisplay.join(",") && (
-        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <span>Canonical:</span>
           <span className="font-mono">{observation.numbersCanonical.join(", ")}</span>
         </div>
@@ -200,7 +198,7 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
 
   if (query.isLoading) {
     return (
-      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải…</span>
       </div>
@@ -210,8 +208,8 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
   if (query.isError || !consensus) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
-        <AlertCircle className="size-8 text-destructive/60" />
-        <p className="font-medium text-destructive text-sm">
+        <AlertCircle className="text-destructive/60 size-8" />
+        <p className="text-destructive text-sm font-medium">
           {query.isError ? "Không tải được chi tiết kỳ này." : "Chưa có dữ liệu cho kỳ này."}
         </p>
       </div>
@@ -222,15 +220,15 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
     <div className="flex flex-col gap-0">
       <div className="flex flex-col gap-5 px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-base">
+          <span className="text-base font-semibold">
             {RESULTFEED_GAME_LABELS[consensus.gameKey]} · Kỳ {consensus.drawPeriod}
           </span>
           <Badge variant={CONSENSUS_STATE_VARIANT[consensus.state]}>{CONSENSUS_STATE_LABELS[consensus.state]}</Badge>
         </div>
 
         {consensus.humanVerify && (
-          <div className="flex flex-col gap-1 rounded-md border border-primary/30 bg-primary/5 p-3 text-xs">
-            <span className="font-medium text-primary">
+          <div className="border-primary/30 bg-primary/5 flex flex-col gap-1 rounded-md border p-3 text-xs">
+            <span className="text-primary font-medium">
               Đã xác nhận bởi {consensus.humanVerify.username} — {displayVNDateTime(consensus.humanVerify.verifiedAt)}
             </span>
             {consensus.humanVerify.note && <span className="text-muted-foreground">{consensus.humanVerify.note}</span>}
@@ -239,7 +237,7 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
 
         {consensus.numbers && (
           <div className="flex flex-col gap-1.5">
-            <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">Kết quả đã chốt</span>
+            <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Kết quả đã chốt</span>
             <NumbersRow numbers={consensus.numbers} diff={new Set()} />
           </div>
         )}
@@ -247,7 +245,7 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
         <Separator />
 
         <div className="flex flex-col gap-2">
-          <span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Observations ({observations.length})
           </span>
 
@@ -309,7 +307,7 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
               )}
 
               {mismatchWarning && (
-                <div className="flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-amber-800 text-xs dark:text-amber-300">
+                <div className="border-warning/40 bg-warning/10 text-warning flex flex-col gap-2 rounded-md border p-3 text-xs">
                   <p>{mismatchWarning}</p>
                   <div className="flex items-center gap-2">
                     <Checkbox

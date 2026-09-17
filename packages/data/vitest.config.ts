@@ -5,6 +5,6 @@ export default defineConfig({
   ...nodeConfig,
   test: {
     ...nodeConfig.test,
-    include: ["test/**/*.test.ts"],
+    include: ["test/unit/**/*.test.ts"],
   },
 });

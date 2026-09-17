@@ -8,6 +8,6 @@ const useCase = new ListVoidTenantPlayersUseCase();
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async ({ params }) => {
-    const { drawId, tenantId } = await params;
+    const { drawId, tenantId } = params;
     return useCase.run({ drawId: drawId as string, tenantId: tenantId as string });
   });

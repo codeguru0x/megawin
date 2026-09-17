@@ -11,8 +11,8 @@
 
 import { BINGO18_SETTLE_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
 import {
-  type SettleGameDailyAggregateResult,
   SystemSettleGameDailyRepository,
+  type SettleGameDailyAggregateResult,
 } from "@megawin/game-core-application/repos";
 
 import { BaseRepo } from "./base-repo";

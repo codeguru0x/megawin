@@ -99,31 +99,40 @@
     },
     "./browser": "./dist/megawin-player-sdk-browser.global.js"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "docs:build": "rm -rf docs && typedoc",
-    "docs:watch": "typedoc --watch",
+    "docs:build": "rm -rf docs && node --import ./scripts/alias-typescript6.mjs ./node_modules/typedoc/bin/typedoc",
+    "docs:watch": "node --import ./scripts/alias-typescript6.mjs ./node_modules/typedoc/bin/typedoc --watch",
     "release": "pnpm build && pnpm docs:build && mkdir -p release && pnpm pack --pack-gzip-level 9 --pack-destination release && gzip -9 -k dist/megawin-player-sdk-browser.global.js && mv dist/megawin-player-sdk-browser.global.js.gz release/megawin-player-sdk-browser.js.gz",
     "upload": "bash scripts/upload-s3.sh patch",
     "upload:patch": "bash scripts/upload-s3.sh patch",
     "upload:minor": "bash scripts/upload-s3.sh minor",
     "upload:major": "bash scripts/upload-s3.sh major",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run"
   },
-  "keywords": ["megawin", "sdk", "player"],
+  "keywords": [
+    "megawin",
+    "sdk",
+    "player"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.9.6",
-    "tsup": "^8.5.1",
-    "typedoc": "^0.28.19",
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "@typescript/typescript6": "^6.0.2",
+    "tsdown": "^0.23.0",
+    "typedoc": "^0.28.20",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   }
 }

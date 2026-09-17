@@ -21,7 +21,6 @@
  * đây (đã hiện inline tại dòng qua `rowErrors`, tránh lặp thông tin — đúng góp ý "chỉ báo tổng
  * số thành/thất, không cần nhắc từng kỳ thành công").
  */
-
 import { formatNumber } from "@megawin/shared/utils";
 import { AlertTriangle, Ban, CheckCircle2, Loader2, PlayCircle, RotateCcw } from "lucide-react";
 
@@ -109,7 +108,7 @@ export function BulkConfirmDialog({
     <Dialog open={open} onOpenChange={isBatchRunning ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <div className="mb-1 flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <div className="bg-primary/10 text-primary mb-1 flex size-9 items-center justify-center rounded-full">
             <Icon className="size-5" />
           </div>
           <DialogTitle>{title}</DialogTitle>
@@ -121,14 +120,14 @@ export function BulkConfirmDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-3 py-2">
-          <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
+          <div className="bg-muted/40 flex items-center justify-between rounded-lg border px-3 py-2">
             <span className="text-sm">Sẽ {copy.verb}</span>
             <span className="font-semibold tabular-nums">
               {isSingle ? <span className="font-mono">{targetRows[0]?.drawId}</span> : `${targetRows.length} kỳ`}
             </span>
           </div>
           {totalRevenue > 0 ? (
-            <div className="flex items-center justify-between px-1 text-muted-foreground text-xs">
+            <div className="text-muted-foreground flex items-center justify-between px-1 text-xs">
               <span>Tổng doanh thu liên quan</span>
               <span className="font-medium tabular-nums">{formatNumber(totalRevenue)}</span>
             </div>
@@ -137,10 +136,10 @@ export function BulkConfirmDialog({
           {/* Danh sách mã kỳ — chỉ cần khi có ≥2 kỳ VÀ job không chạy nhiều lô (job nhiều lô đã
               có progress bar bên dưới thay thế, liệt kê hết 200 mã kỳ ở đây không có giá trị). */}
           {!isSingle && !isMultiChunk ? (
-            <div className="max-h-32 overflow-y-auto rounded-md border bg-muted/20 p-2">
+            <div className="bg-muted/20 max-h-32 overflow-y-auto rounded-md border p-2">
               <div className="flex flex-wrap gap-1 font-mono text-xs">
                 {targetRows.map((r) => (
-                  <span key={r.drawId} className="rounded bg-muted px-1.5 py-0.5">
+                  <span key={r.drawId} className="bg-muted rounded px-1.5 py-0.5">
                     #{r.drawNo}
                   </span>
                 ))}
@@ -152,7 +151,7 @@ export function BulkConfirmDialog({
               danh sách mã kỳ phía trên. CHỈ báo tổng thành/thất bại — không liệt kê từng kỳ lỗi
               (đã hiện inline tại dòng qua `rowErrors`, tránh lặp thông tin 2 nơi). */}
           {isMultiChunk && batchState.status !== "idle" ? (
-            <div className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3">
+            <div className="bg-muted/20 flex flex-col gap-2 rounded-lg border p-3">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">
                   {isBatchDone
@@ -163,19 +162,19 @@ export function BulkConfirmDialog({
                   {batchState.doneChunks}/{batchState.totalChunks} lô
                 </span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                 <div
-                  className="h-full rounded-full bg-primary transition-all"
+                  className="bg-primary h-full rounded-full transition-all"
                   style={{ width: `${(batchState.doneChunks / batchState.totalChunks) * 100}%` }}
                 />
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <span className="flex items-center gap-1 text-emerald-600">
+                <span className="text-profit flex items-center gap-1">
                   <CheckCircle2 className="size-3.5" />
                   {batchState.successCount} thành công
                 </span>
                 {batchState.failureCount > 0 ? (
-                  <span className="flex items-center gap-1 text-destructive">
+                  <span className="text-destructive flex items-center gap-1">
                     <AlertTriangle className="size-3.5" />
                     {batchState.failureCount} thất bại
                   </span>
@@ -191,7 +190,7 @@ export function BulkConfirmDialog({
           ) : null}
 
           {targetRows.length === 0 ? (
-            <p className="flex items-center gap-1.5 text-destructive text-xs">
+            <p className="text-destructive flex items-center gap-1.5 text-xs">
               <AlertTriangle className="size-3.5" />
               Không có kỳ nào đủ điều kiện thực hiện.
             </p>

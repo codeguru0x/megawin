@@ -12,14 +12,15 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type {
-  KenoOpsAlertDoc,
-  KenoOpsAlertEntity,
-  OpsAlertStatus as OpsAlertStatusType,
+import {
+  KenoCollections,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type KenoOpsAlertDoc,
+  type KenoOpsAlertEntity,
+  type OpsAlertStatus as OpsAlertStatusType,
 } from "@megawin/game-keno/entities";
-import { KenoCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-keno/entities";
-import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type Document } from "mongodb";
 
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
 import { BaseRepo } from "./base-repo";
@@ -47,7 +48,9 @@ export class OpsAlertRepository extends BaseRepo<KenoOpsAlertEntity, OpsAlertMap
    * @param alerts - Alert cần upsert (không có `_id`; Mongo tự sinh).
    */
   async bulkUpsertByDedupe(alerts: Omit<KenoOpsAlertDoc, "_id">[]): Promise<void> {
-    if (alerts.length === 0) return;
+    if (alerts.length === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = alerts.map((a) => ({
       updateOne: {
@@ -92,7 +95,9 @@ export class OpsAlertRepository extends BaseRepo<KenoOpsAlertEntity, OpsAlertMap
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
   async listByDrawAndStatus(drawId: string, status?: OpsAlertStatusType): Promise<KenoOpsAlertEntity[]> {
     const filter: Document = { drawId };
-    if (status) filter.status = status;
+    if (status) {
+      filter.status = status;
+    }
     return await this.findMany(filter, { sort: { createdAt: -1 } });
   }
 

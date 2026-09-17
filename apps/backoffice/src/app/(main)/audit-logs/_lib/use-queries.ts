@@ -3,9 +3,9 @@
 import type { AuditLogEntity } from "@megawin/audit/entities";
 import type { AuditLogPage } from "@megawin/audit/use-cases";
 import { apiClient } from "@megawin/next/client";
-import { keepPreviousData, noop, type QueryClient, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, noop, useQuery, type QueryClient } from "@tanstack/react-query";
 
-import { type AuditLogsListFilters, auditLogsKeys } from "@/lib/query-keys";
+import { auditLogsKeys, type AuditLogsListFilters } from "@/lib/query-keys";
 
 import { getDefaultAuditLogListFilters } from "./use-filters";
 

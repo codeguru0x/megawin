@@ -10,14 +10,16 @@
  */
 
 import { Bingo18BigSmallBet, Bingo18TripleKind } from "../entities/enums";
-import type {
-  BigSmallDrawPrizes,
-  DoubleMatchPrizes,
-  SingleNumPrizes,
-  SumTotalPrizes,
-  TripleMatchPrizes,
+import {
+  BINGO18_BIG_MIN,
+  BINGO18_DRAW_VALUES,
+  BINGO18_SMALL_MAX,
+  type BigSmallDrawPrizes,
+  type DoubleMatchPrizes,
+  type SingleNumPrizes,
+  type SumTotalPrizes,
+  type TripleMatchPrizes,
 } from "../entities/types";
-import { BINGO18_BIG_MIN, BINGO18_DRAW_VALUES, BINGO18_SMALL_MAX } from "../entities/types";
 import {
   DEFAULT_BIG_SMALL_DRAW_PRIZES,
   DEFAULT_DOUBLE_MATCH_PRIZES,

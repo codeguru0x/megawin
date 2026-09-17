@@ -14,8 +14,7 @@
  */
 
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { TicketEntryEntity } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
+import { KenoCollections, type TicketEntryEntity } from "@megawin/game-keno/entities";
 
 import { EntryMapper } from "../mappers/entry-mapper";
 import { BaseRepo } from "./base-repo";

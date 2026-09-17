@@ -4,12 +4,7 @@
 
 export { AckAlertUseCase } from "./ack-alert";
 export type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selector.dto";
-export type {
-  GetLiveEntriesInput,
-  GetLiveEntriesOutput,
-  LiveEntryBoard,
-  LiveEntryItem,
-} from "./dto/live-entries.dto";
+export type { GetLiveEntriesInput, GetLiveEntriesOutput, LiveEntryBoard, LiveEntryItem } from "./dto/live-entries.dto";
 export type {
   AckAlertInput,
   AckAlertOutput,

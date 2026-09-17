@@ -11,8 +11,8 @@
  */
 
 import {
-  type EnqueueDispatchPayoutsInput,
   EnqueueDispatchPayoutsUseCase,
+  type EnqueueDispatchPayoutsInput,
 } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new EnqueueDispatchPayoutsUseCase();

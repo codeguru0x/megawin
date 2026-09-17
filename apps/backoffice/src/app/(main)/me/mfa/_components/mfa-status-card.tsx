@@ -32,8 +32,8 @@ const statusConfig = {
     description: "Tài khoản của bạn đang được bảo vệ bằng xác thực 2 lớp qua app Authenticator.",
     badgeLabel: "Đang bật",
     badgeVariant: "default" as const,
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+    iconColor: "text-profit",
+    iconBg: "bg-profit",
   },
   disabled: {
     icon: ShieldAlert,
@@ -41,8 +41,8 @@ const statusConfig = {
     description: "Xác thực 2 lớp đã bị tắt. Tài khoản của bạn chỉ được bảo vệ bằng mật khẩu.",
     badgeLabel: "Đã tắt",
     badgeVariant: "secondary" as const,
-    iconColor: "text-amber-600 dark:text-amber-400",
-    iconBg: "bg-amber-100 dark:bg-amber-900/50",
+    iconColor: "text-warning",
+    iconBg: "bg-warning",
   },
 } as const;
 
@@ -56,7 +56,7 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
     return (
       <Card className="gap-0 py-0 shadow-sm">
         <CardContent className="flex items-center justify-center px-5 py-12">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground size-6 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -68,7 +68,7 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-3 pt-4">
+      <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className={`flex size-7 items-center justify-center rounded-lg ${config.iconBg}`}>
@@ -84,11 +84,11 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-5 pt-0">
+      <CardContent className="px-5 pt-0 pb-5">
         <div className="mx-auto flex max-w-lg flex-col gap-4">
           <div className="rounded-lg border p-4">
             <h4 className="mb-2 text-sm font-medium">Xác thực 2 lớp (TOTP) là gì?</h4>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Mỗi lần đăng nhập, ngoài mật khẩu, bạn cần nhập thêm mã 6 số từ app Authenticator (Google Authenticator,
               Authy, Microsoft Authenticator...). Điều này giúp bảo vệ tài khoản ngay cả khi mật khẩu bị lộ.
             </p>

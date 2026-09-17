@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type EditScheduleInput, editScheduleSchema } from "@megawin/game-power655/schemas";
+import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-power655/schemas";
 import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils";
 import { Check, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -20,14 +20,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import type { DrawSelectorItem } from "../../../use-operations";
-import { useUpdateSchedule } from "../../../use-operations";
+import { useUpdateSchedule, type DrawSelectorItem } from "../../../use-operations";
 
 /** Parse ISO string → { date: "yyyy-MM-dd", time: "HH:mm" } theo giờ VN */
 function parseISOToVN(iso: string | undefined): { date: string; time: string } {
-  if (!iso) return { date: "", time: "" };
+  if (!iso) {
+    return { date: "", time: "" };
+  }
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return { date: "", time: "" };
+  if (isNaN(d.getTime())) {
+    return { date: "", time: "" };
+  }
   return { date: formatVNDate(d), time: formatVNTime(d) };
 }
 
@@ -123,13 +126,13 @@ export function EditScheduleAction({
         <form onSubmit={rhfSubmit(handleSubmit)} className="space-y-4 py-2">
           {/* Mở bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ mở bán</Label>
+            <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ mở bán</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesOpenDate")} />
               <Input type="time" className="w-28" {...register("salesOpenTime")} />
             </div>
             {(errors.salesOpenDate ?? errors.salesOpenTime) && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-destructive text-sm font-medium">
                 {errors.salesOpenDate?.message ?? errors.salesOpenTime?.message}
               </p>
             )}
@@ -137,13 +140,13 @@ export function EditScheduleAction({
 
           {/* Đóng bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ đóng bán</Label>
+            <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ đóng bán</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesCloseDate")} />
               <Input type="time" className="w-28" {...register("salesCloseTime")} />
             </div>
             {(errors.salesCloseDate ?? errors.salesCloseTime) && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-destructive text-sm font-medium">
                 {errors.salesCloseDate?.message ?? errors.salesCloseTime?.message}
               </p>
             )}
@@ -151,17 +154,17 @@ export function EditScheduleAction({
 
           {/* Quay số */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ quay số</Label>
+            <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ quay số</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("drawDate")} />
               <Input type="time" className="w-28" {...register("drawTime")} />
             </div>
             {(errors.drawDate ?? errors.drawTime) && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-destructive text-sm font-medium">
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-[11px] text-muted-foreground/70">Chỉ sửa nếu lịch quay chính thức thay đổi.</p>
+            <p className="text-muted-foreground/70 text-xs">Chỉ sửa nếu lịch quay chính thức thay đổi.</p>
           </div>
 
           <DialogFooter>

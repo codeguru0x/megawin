@@ -33,10 +33,10 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
+import { PlaceBetUseCase } from "@megawin/game-bingo18-application/use-cases/place-bet";
 import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 import { bingo18DrawIdSchema, bingo18NumberSchema, bingo18SumSchema } from "@megawin/game-bingo18/schemas";
-import { PlaceBetUseCase } from "@megawin/game-bingo18-application/use-cases/place-bet";
 import { TicketChannel } from "@megawin/game-core/entities";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";

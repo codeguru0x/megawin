@@ -51,7 +51,7 @@
  */
 
 import { chunk, toTenantUsername } from "@megawin/shared/utils";
-import { type BatchTransactionItem, type TenantGatewayClient, tenantGateway } from "@megawin/tenant-gateway";
+import { tenantGateway, type BatchTransactionItem, type TenantGatewayClient } from "@megawin/tenant-gateway";
 import { SingleRunWorker } from "@megawin/worker-core/workers";
 
 import { DISPATCH_CHUNK_SIZE } from "../../config";

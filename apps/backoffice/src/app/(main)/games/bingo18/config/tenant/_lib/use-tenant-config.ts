@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -55,7 +55,7 @@ export function useCreateTenantConfig() {
       apiClient.put<UpdateTenantConfigOutput>(`/bingo18/tenant-config/${tenantId}`, { isEnabled: true }),
     onSuccess: (res, tenantId) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: bingo18Keys.tenantConfigs });
+      void queryClient.invalidateQueries({ queryKey: bingo18Keys.tenantConfigs });
       toast.success(`Đã tạo cấu hình Bingo 18 cho đại lý "${tenantId}".`);
     },
     onError: (err) => {
@@ -72,7 +72,7 @@ export function useUpdateTenantConfig(tenantId: string) {
       apiClient.put<UpdateTenantConfigOutput>(`/bingo18/tenant-config/${tenantId}`, data),
     onSuccess: (res) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: bingo18Keys.tenantConfigs });
+      void queryClient.invalidateQueries({ queryKey: bingo18Keys.tenantConfigs });
       toast.success(`Đã lưu cấu hình Bingo 18 tenant "${tenantId}" (v${res.version}).`);
     },
     onError: (err) => {

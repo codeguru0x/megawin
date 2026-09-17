@@ -1,6 +1,6 @@
 "use client";
 
-import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { AccountStatusLabel, type AccountStatus } from "@megawin/identity/entities";
 import { Building2, Clock, Shield } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ interface PlayerProfileBannerProps {
 export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfileBannerProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border bg-card px-5 py-3.5 shadow-sm">
+      <div className="bg-card flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border px-5 py-3.5 shadow-sm">
         <Skeleton className="h-5 w-32" />
         <Skeleton className="h-5 w-24" />
         <Skeleton className="h-5 w-20" />
@@ -42,8 +42,8 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
 
   if (isError || !profile) {
     return (
-      <div className="flex items-center rounded-xl border bg-card px-5 py-3.5 shadow-sm">
-        <p className="text-sm text-destructive">Không thể tải thông tin tài khoản.</p>
+      <div className="bg-card flex items-center rounded-xl border px-5 py-3.5 shadow-sm">
+        <p className="text-destructive text-sm">Không thể tải thông tin tài khoản.</p>
       </div>
     );
   }
@@ -52,27 +52,27 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
   const statusLabel = AccountStatusLabel[profile.status as AccountStatus] ?? profile.status;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-xl border bg-card px-5 py-3.5 shadow-sm">
+    <div className="bg-card flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-xl border px-5 py-3.5 shadow-sm">
       {/* Username — primary identifier */}
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tài khoản</span>
-        <span className="font-mono text-sm font-semibold text-foreground">{profile.username}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Tài khoản</span>
+        <span className="text-foreground font-mono text-sm font-semibold">{profile.username}</span>
       </div>
 
       <Separator />
 
       {/* Display name */}
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tên hiển thị</span>
-        <span className="text-sm text-foreground">{profile.displayName}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Tên hiển thị</span>
+        <span className="text-foreground text-sm">{profile.displayName}</span>
       </div>
 
       <Separator />
 
       {/* Status badge */}
       <div className="flex items-center gap-2">
-        <Shield className="size-3.5 shrink-0 text-muted-foreground" />
-        <Badge variant={statusVariant} className="h-5 text-[11px]">
+        <Shield className="text-muted-foreground size-3.5 shrink-0" />
+        <Badge variant={statusVariant} className="h-5 text-xs">
           {statusLabel}
         </Badge>
       </div>
@@ -80,17 +80,17 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
       <Separator />
 
       {/* Tenant / Đại lý */}
-      <div className="flex items-center gap-2 min-w-0">
-        <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="font-mono text-xs text-muted-foreground">{profile.tenantId}</span>
+      <div className="flex min-w-0 items-center gap-2">
+        <Building2 className="text-muted-foreground size-3.5 shrink-0" />
+        <span className="text-muted-foreground font-mono text-xs">{profile.tenantId}</span>
       </div>
 
       <Separator />
 
       {/* Ngày tạo */}
       <div className="flex items-center gap-2">
-        <Clock className="size-3.5 shrink-0 text-muted-foreground" />
-        <span className="tabular-nums text-xs text-muted-foreground">
+        <Clock className="text-muted-foreground size-3.5 shrink-0" />
+        <span className="text-muted-foreground text-xs tabular-nums">
           {new Date(profile.createdAt).toLocaleDateString("vi-VN", {
             year: "numeric",
             month: "2-digit",
@@ -105,5 +105,5 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
 }
 
 function Separator() {
-  return <span className="hidden h-4 w-px shrink-0 bg-border sm:block" />;
+  return <span className="bg-border hidden h-4 w-px shrink-0 sm:block" />;
 }

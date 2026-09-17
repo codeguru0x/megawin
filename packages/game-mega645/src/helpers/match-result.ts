@@ -32,7 +32,9 @@ function countMatches(lineMain: readonly string[], winMain: readonly string[]): 
   const winSet = new Set(winMain);
   let count = 0;
   for (const n of lineMain) {
-    if (winSet.has(n)) count++;
+    if (winSet.has(n)) {
+      count++;
+    }
   }
   return count;
 }

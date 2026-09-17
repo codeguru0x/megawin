@@ -231,18 +231,14 @@ console.log(result.pricing.totalAmount); // 93 * 3 * 10000
 // Xem kết quả các kỳ quay theo ngày
 const results = await client.lotto535.listDrawResults({ from: "2026-03-07" });
 for (const draw of results.draws) {
-  console.log(
-    `${draw.drawId}: [${draw.result.winningMain.join(",")}] ĐB:${draw.result.winningSpecial}`,
-  );
+  console.log(`${draw.drawId}: [${draw.result.winningMain.join(",")}] ĐB:${draw.result.winningSpecial}`);
   console.log(`Jackpot cuối kỳ: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
 }
 
 // Xem chi tiết kỳ quay (bao gồm bảng giải thưởng)
 const detail = await client.lotto535.getDrawResult("2026-03-07.001");
 for (const prize of detail.prizes) {
-  console.log(
-    `${prize.tier}: ${prize.winnerCount} giải — ${prize.prizeAmount.toLocaleString()} VND`,
-  );
+  console.log(`${prize.tier}: ${prize.winnerCount} giải — ${prize.prizeAmount.toLocaleString()} VND`);
 }
 ```
 
@@ -282,9 +278,7 @@ console.log(result.pricing.totalAmount); // 10000
 // Xem danh sách vé chờ
 const pending = await client.mega645.listPendingTickets({ size: 20 });
 for (const ticket of pending.tickets) {
-  console.log(
-    `${ticket.ticketNo}: ${ticket.progress.settledDraws}/${ticket.progress.totalDraws} kỳ`,
-  );
+  console.log(`${ticket.ticketNo}: ${ticket.progress.settledDraws}/${ticket.progress.totalDraws} kỳ`);
 }
 ```
 
@@ -381,10 +375,7 @@ for (const jp of jackpots) {
     console.log(`  JP2: ${jp.details.jackpot2CurrentAmount.toLocaleString()} VND`);
   } else if (jp.gameProduct === "lotto535") {
     const { percentage, reachedSplitThreshold } = jp.details.progress;
-    console.log(
-      `  Tiến trình chia: ${percentage}%`,
-      reachedSplitThreshold ? "(đã chạm ngưỡng)" : "",
-    );
+    console.log(`  Tiến trình chia: ${percentage}%`, reachedSplitThreshold ? "(đã chạm ngưỡng)" : "");
   }
 }
 ```

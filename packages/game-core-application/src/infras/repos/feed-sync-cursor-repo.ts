@@ -1,5 +1,4 @@
-import type { FeedSyncCursorEntity, GameProduct } from "@megawin/game-core/entities";
-import { GameCoreCollections } from "@megawin/game-core/entities";
+import { GameCoreCollections, type FeedSyncCursorEntity, type GameProduct } from "@megawin/game-core/entities";
 import { Long } from "mongodb";
 
 import { FeedSyncCursorMapper } from "../mappers/feed-sync-cursor-mapper";

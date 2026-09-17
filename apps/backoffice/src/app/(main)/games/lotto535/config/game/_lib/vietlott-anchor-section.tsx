@@ -55,17 +55,17 @@ export function VietlottAnchorSection({ config, onSave, isPending }: VietlottAnc
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="space-y-4 p-6">
             <div className="flex items-center gap-2">
-              <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
-                <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+              <div className="bg-info flex size-6 items-center justify-center rounded-md">
+                <ExternalLink className="text-info size-3.5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Mã kỳ</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <h3 className="text-foreground text-sm font-semibold">Mã kỳ</h3>
+                <p className="text-muted-foreground mt-0.5 text-xs">
                   Nhập thông tin của MỘT kỳ bất kỳ đang hiển thị trên trang Vietlott (càng gần hiện tại càng tốt). Hệ
                   thống dùng neo này để tự gợi ý mã kỳ cho các kỳ khác khi công bố kết quả.
                 </p>
@@ -78,7 +78,7 @@ export function VietlottAnchorSection({ config, onSave, isPending }: VietlottAnc
                 name="anchorDrawDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <FormLabel className="text-muted-foreground flex items-center gap-1.5 text-xs">
                       <CalendarDays className="size-3" /> Ngày quay
                     </FormLabel>
                     <FormControl>
@@ -93,7 +93,7 @@ export function VietlottAnchorSection({ config, onSave, isPending }: VietlottAnc
                 name="anchorDrawTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs text-muted-foreground">Giờ quay</FormLabel>
+                    <FormLabel className="text-muted-foreground text-xs">Giờ quay</FormLabel>
                     <FormControl>
                       <TimeInput {...field} />
                     </FormControl>
@@ -106,7 +106,7 @@ export function VietlottAnchorSection({ config, onSave, isPending }: VietlottAnc
                 name="anchorPeriod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <FormLabel className="text-muted-foreground flex items-center gap-1.5 text-xs">
                       <Hash className="size-3" /> Mã kỳ Vietlott
                     </FormLabel>
                     <FormControl>
@@ -118,10 +118,10 @@ export function VietlottAnchorSection({ config, onSave, isPending }: VietlottAnc
               />
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              ⚠️ Giờ quay bạn nhập ở trên phải đúng với 1 trong các giờ quay đang cấu hình ở mục "Lịch quay số" bên trên.
-              Nếu sau này giờ quay (Kỳ 1/Kỳ 2) thay đổi, phải cập nhật lại thông tin ở đây — nếu không, hệ thống sẽ gợi
-              ý sai mã kỳ cho các kỳ sau.
+            <p className="text-muted-foreground text-xs">
+              ⚠️ Giờ quay bạn nhập ở trên phải đúng với 1 trong các giờ quay đang cấu hình ở mục "Lịch quay số" bên
+              trên. Nếu sau này giờ quay (Kỳ 1/Kỳ 2) thay đổi, phải cập nhật lại thông tin ở đây — nếu không, hệ thống
+              sẽ gợi ý sai mã kỳ cho các kỳ sau.
             </p>
           </CardContent>
 

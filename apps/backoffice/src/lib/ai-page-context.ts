@@ -105,7 +105,8 @@ export function collectAiPageContext(): Record<string, AiPageContextPayload> | u
       console.error(`[ai-page-context] đọc context "${key}" thất bại`, error);
       // Dev: vỡ to và ngay. Contributor throw luôn là BUG lập trình (gọi hook sai pha, đọc field
       // của object undefined) — không phải điều kiện runtime hợp lệ nào cần chịu đựng.
-      // biome-ignore lint/style/noProcessEnv: cần cổng "đang là dev BUILD" (nơi lập trình viên sửa code). `@/env` không quản `NODE_ENV`, và `NEXT_PUBLIC_APP_ENV` sai ngữ nghĩa ở đây — staging build có `NODE_ENV=production` nên KHÔNG throw vào mặt staff, đúng ý định. Tiền lệ: `lib/local-storage.client.ts`.
+      // Cổng "đang là dev BUILD" qua NODE_ENV — `@/env` không quản NODE_ENV; NEXT_PUBLIC_APP_ENV
+      // sai ngữ nghĩa ở đây (staging build có NODE_ENV=production nên không throw vào mặt staff).
       if (process.env.NODE_ENV !== "production") {
         throw error;
       }

@@ -15,8 +15,13 @@
  */
 
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { KenoDrawBettingStatsEntity, KenoTopCombo, TopAccountStat } from "@megawin/game-keno/entities";
-import { KENO_ALL_NUMBERS, KENO_BASIC_PLAY_TYPES } from "@megawin/game-keno/entities";
+import {
+  KENO_ALL_NUMBERS,
+  KENO_BASIC_PLAY_TYPES,
+  type KenoDrawBettingStatsEntity,
+  type KenoTopCombo,
+  type TopAccountStat,
+} from "@megawin/game-keno/entities";
 import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS, KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 
 import type {

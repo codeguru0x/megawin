@@ -16,11 +16,7 @@
  */
 
 export { GetGameConfigSnapshotUseCase } from "./game-config/get-game-config-snapshot";
-export type {
-  GameConfigMeta,
-  GetGameConfigInput,
-  GetGameConfigOutput,
-} from "./game-config/types";
+export type { GameConfigMeta, GetGameConfigInput, GetGameConfigOutput } from "./game-config/types";
 export { DEFAULT_GAME_CONFIG_SECTIONS, GameConfigSection } from "./game-config/types";
 export { GetGameJackpotUseCase } from "./jackpot/get-game-jackpot";
 export type { GetGameJackpotInput, GetGameJackpotOutput, JackpotBlock, JackpotMeta } from "./jackpot/types";

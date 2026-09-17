@@ -20,8 +20,8 @@ function AuditLogsPageInner() {
             <History className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lịch sử thao tác</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Lịch sử thao tác</h1>
+            <p className="text-muted-foreground text-xs">
               Nhật ký audit — ai làm gì, lên đối tượng nào, lúc nào. Lưu trữ 90 ngày.
             </p>
           </div>

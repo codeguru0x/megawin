@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type ReactNode, useState } from "react";
+import { useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import Link from "next/link";
 
@@ -17,9 +17,15 @@ import { slugify } from "./markdown";
 
 /** Lấy text thuần từ children React (để slugify heading + copy code). */
 function toText(node: ReactNode): string {
-  if (node == null || node === false || node === true) return "";
-  if (typeof node === "string" || typeof node === "number") return String(node);
-  if (Array.isArray(node)) return node.map(toText).join("");
+  if (node == null || node === false || node === true) {
+    return "";
+  }
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(toText).join("");
+  }
   if (typeof node === "object" && "props" in node) {
     return toText((node as { props: { children?: ReactNode } }).props.children);
   }
@@ -40,15 +46,21 @@ function rewriteHref(href: string, basePath: string): string | null {
   if (/^(https?:)?\/\//.test(href) || href.startsWith("#") || href.startsWith("mailto:")) {
     return href;
   }
-  if (!href.endsWith(".md")) return href;
+  if (!href.endsWith(".md")) {
+    return href;
+  }
 
   // Link tới bản developer không hiển thị trong backoffice → render như text.
-  if (href.includes("_developer") || href.includes("README")) return null;
+  if (href.includes("_developer") || href.includes("README")) {
+    return null;
+  }
 
   // Tách tên file `xxx.md` ở cùng thư mục → slug = xxx.
   const fileName = href.split("/").pop() ?? "";
   const slug = fileName.replace(/\.md$/, "");
-  if (!slug) return null;
+  if (!slug) {
+    return null;
+  }
   return `${basePath}/${slug}`;
 }
 
@@ -63,10 +75,10 @@ function CopyButton({ value }: { value: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="text-muted-foreground hover:text-foreground absolute top-2 right-2 inline-flex size-7 items-center justify-center rounded-md border bg-background/80 backdrop-blur transition-colors"
+      className="text-muted-foreground hover:text-foreground bg-background/80 absolute top-2 right-2 inline-flex size-7 items-center justify-center rounded-md border backdrop-blur transition-colors"
       aria-label="Sao chép"
     >
-      {copied ? <Check className="size-3.5 text-green-600" /> : <Copy className="size-3.5" />}
+      {copied ? <Check className="text-profit size-3.5" /> : <Copy className="size-3.5" />}
     </button>
   );
 }
@@ -128,9 +140,13 @@ export function MarkdownRenderer({ content, basePath }: { content: string; baseP
     hr: () => <hr className="my-6" />,
     blockquote,
     a: ({ href, children }) => {
-      if (!href) return <>{children}</>;
+      if (!href) {
+        return <>{children}</>;
+      }
       const resolved = rewriteHref(href, basePath);
-      if (resolved === null) return <span className="font-medium">{children}</span>;
+      if (resolved === null) {
+        return <span className="font-medium">{children}</span>;
+      }
       const isExternal = /^(https?:)?\/\//.test(resolved);
       if (isExternal) {
         return (

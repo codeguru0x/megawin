@@ -11,7 +11,6 @@
  * khác nhau mà 1 `ToolView` (table/kpi/keyValue) không mô tả nổi cùng lúc, viết ở
  * `daily-ops-cards.tsx` (Tier 2 bespoke, xem ranh giới cứng đầu `view-spec.ts`).
  */
-
 import { GAME_LABELS } from "@megawin/game-core/labels";
 import { formatVN } from "@megawin/shared/utils";
 

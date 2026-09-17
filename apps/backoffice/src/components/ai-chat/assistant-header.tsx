@@ -30,7 +30,6 @@
  * Đo từ MỐC TURN (`turnStartedAt` do `ChatPanel` giữ) chứ không từ lúc message assistant xuất hiện:
  * message assistant chỉ tồn tại sau khi server trả part đầu, nên đo theo nó sẽ hụt 1-3 giây đầu.
  */
-
 import { useEffect, useRef, useState } from "react";
 
 import { SparklesIcon } from "lucide-react";
@@ -148,9 +147,9 @@ export function AssistantHeader({
   turnStartedAt: number | null;
 }) {
   return (
-    <div className="flex items-center gap-2 text-muted-foreground text-xs">
-      <span className="flex size-5 items-center justify-center rounded-full bg-primary/10">
-        <SparklesIcon className="size-3 text-primary" />
+    <div className="text-muted-foreground flex items-center gap-2 text-xs">
+      <span className="bg-primary/10 flex size-5 items-center justify-center rounded-full">
+        <SparklesIcon className="text-primary size-3" />
       </span>
       {AI_ASSISTANT_NAME}
       <AssistantActivityLine isActive={isActive} isThinking={isThinking} turnStartedAt={turnStartedAt} />

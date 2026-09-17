@@ -1,0 +1,143 @@
+---
+description: Chuẩn lint Oxlint + format Prettier cho toàn monorepo — config, lệnh, suppression, convention AI phải tuân theo
+alwaysApply: true
+---
+
+# Oxlint Lint & Prettier Format Conventions
+
+Toàn monorepo **lint bằng Oxlint** (`.oxlintrc.json`) và **format bằng Prettier** (`.prettierrc` +
+plugin sort-imports + Tailwind). Rule này là lớp chặn **TĨNH** — AI phải sinh code đúng convention
+NGAY TỪ ĐẦU, không viết sai rồi để tool sửa sau. Phối hợp với `code-quality-standards.mdc` và
+`entity-typesafe-mongodb.mdc`.
+
+> Script chuẩn là Oxlint + Prettier. Biome đã retire (P0-07).
+
+---
+
+## a. Kiến trúc config — MỘT file duy nhất mỗi tool
+
+- Lint: **một** `/.oxlintrc.json` ở root. **CẤM** tạo `.oxlintrc*` / `.eslintrc*` / `eslint.config.*`
+  per-package.
+- Format: **một** `/.prettierrc` + `/.prettierignore` ở root. **CẤM** tạo `.prettierrc*` mới per-package.
+- App/package MỚI **KHÔNG cần thêm gì** — root config tự phủ. Không thêm script `lint` riêng, không
+  thêm `oxlint`/`prettier` per-package (đã là root dep).
+- Khác biệt theo loại package xử lý bằng `overrides[].files` trong `.oxlintrc.json` — sửa ở đó,
+  **kèm comment giải trình VÌ SAO**. Không hạ rule để "cho qua".
+
+## b. Lệnh chuẩn — AI phải dùng đúng
+
+| Việc | Lệnh |
+|---|---|
+| Lint toàn repo | `pnpm lint` (= `oxlint .`) |
+| Auto-fix lint an toàn | `pnpm lint:fix` (= `oxlint . --fix`) |
+| Format | `pnpm format` (= `prettier --write .`) |
+| Format check (dry-run) | `pnpm format:check` (= `prettier --check .`) |
+| CI local | `pnpm ci` (= `oxlint . && prettier --check .`) |
+
+Sửa scope hẹp: `oxlint <paths>` / `oxlint <paths> --fix` / `prettier --write <paths>`.
+**KHÔNG** dùng `turbo run lint` — Oxlint quét cả monorepo nhanh, wrap Turbo chỉ thêm overhead.
+
+## c. Phân giới tool
+
+- **Oxlint** xử lý lint: `.ts` `.tsx` `.js` `.mjs` (type-aware qua `oxlint-tsgolint` +
+  `options.typeAware` trong `.oxlintrc.json`).
+- **Prettier** xử lý format: `.ts` `.tsx` `.js` `.mjs` `.json` `.jsonc` `.css` `.md` `.yml` `.yaml`
+  (import order + Tailwind class sort ở format-time).
+- **KHÔNG** dùng Oxfmt. **KHÔNG** chạy Biome cho task lint/format mới.
+
+## d. Chính sách suppression
+
+- Chỉ dùng dạng ĐẦY ĐỦ: `// oxlint-disable-next-line <rule>: <lý do cụ thể>` (cũng chấp nhận
+  `oxlint-disable-line` / block `/* oxlint-disable <rule> */` … `/* oxlint-enable <rule> */`).
+- Lý do phải nói VÌ SAO là ngoại lệ hợp lệ. **CẤM** "fix later", "tạm thời", lý do rỗng.
+- Đặt comment **ngay trên dòng vi phạm**.
+- **CẤM** disable file-level rộng trừ file generated.
+- **CẤM** hạ level rule trong `.oxlintrc.json` để làm sạch output — chỉ đổi qua review có giải trình.
+- **CẤM** disable `typescript/no-floating-promises` / `typescript/no-misused-promises` trong code
+  tài chính (`settle`, `payout`, `financial`, `wallet`, `commission`). Phải `await`/`void` tường minh.
+- **Test-data-safety:** enforce bằng Cursor rule `test-data-safety.mdc` (GritQL đã xoá ở P0-07).
+  **CẤM** nới filter test DB không scope.
+
+```typescript
+/** ĐÚNG — lý do cụ thể, đặt đúng dòng */
+// oxlint-disable-next-line typescript/await-thenable: GetSessionFn luôn trả Promise; tsgolint chưa resolve return type qua generic alias.
+session = await cfg.getSession(req);
+
+/** SAI — lý do rỗng / đường tiền */
+// oxlint-disable-next-line typescript/no-floating-promises: fix later
+settleDraw(drawId); // ← CẤM ignore, phải `await`
+```
+
+## e. Convention Oxlint enforce — viết đúng từ đầu
+
+| Convention | Rule Oxlint | Nguồn |
+|---|---|---|
+| Luôn `{}` cho if/else/for/while | `curly` (`"all"`) | §6 code-quality |
+| `const object as const`, KHÔNG `enum` | `typescript/prefer-as-const` (+ review tay cho `enum`) | §5.3 code-quality |
+| `import type` / type exports | `typescript/consistent-type-imports` | `verbatimModuleSyntax` |
+| File mới kebab-case | `unicorn/filename-case` (`kebabCase`) | 100% repo |
+| Named export cho library (`packages/*/src`, `tooling/*/src`) | `import/no-default-export` (override) | — |
+| `===`, `== null` OK | `eqeqeq` (`null: "ignore"`) | — |
+| Import gộp đầu file, sort theo groups | Prettier `@ianvs/prettier-plugin-sort-imports` | §7 code-quality |
+| Barrel `export * from` HỢP LỆ | `oxc/no-barrel-file`: **off** | mongodb.mdc §6 |
+| `console.*` hợp lệ ở backend | `no-console`: **off** | CloudWatch |
+| `any` chỉ ở `*-application/src/infras/**` và test | override | mongodb.mdc §5 |
+| Không gán lại parameter | `no-param-reassign` | — |
+| Không import vòng | `import/no-cycle` | — |
+
+### Type-aware (bật sẵn trong `.oxlintrc.json`)
+
+| Convention | Rule |
+|---|---|
+| Mọi Promise phải `await` hoặc `void` | `typescript/no-floating-promises` (error; backoffice = warn) |
+| Không dùng Promise sai chỗ | `typescript/no-misused-promises` |
+| Chỉ `await` thenable thật | `typescript/await-thenable` |
+| `switch` trên union exhaustive | `typescript/switch-exhaustiveness-check` |
+| Method override ghi `override` | tsconfig `noImplicitOverride` |
+| KHÔNG parameter property | tsconfig `erasableSyntaxOnly` |
+| `import type` bắt buộc type-only | tsconfig `verbatimModuleSyntax` |
+
+```typescript
+/** SAI — parameter property (erasableSyntaxOnly cấm) */
+constructor(private readonly repo: Repo = new Repo()) {}
+
+/** ĐÚNG — khai báo field + gán trong body */
+private readonly repo: Repo;
+constructor(repo: Repo = new Repo()) {
+  this.repo = repo;
+}
+```
+
+## f. `@shadcn/lint` — backoffice + `@megawin/ui` (bắt buộc khi sửa UI)
+
+Bật trên `apps/backoffice/**` và `packages/ui/**` (warn; `components/ui/**` tắt vì là primitive).
+
+| Rule | Ý nghĩa | AI phải làm |
+|---|---|---|
+| `no-restyle` | Không override spacing/color/typography/shape của component ngoài contract | `className` chủ yếu **layout** (`flex`, `gap`, `w-full`, `mt-*`). Spacing/typography chỉ khi contract cho phép (CardContent, Title, Label…) |
+| `no-raw-colors` | Cấm `bg-red-500`, `text-amber-600`… | Dùng token theme: `profit`/`loss`/`warning`/`info`/`game-*`/`muted`/`primary`/`destructive` (xem `globals.css`) |
+| `no-arbitrary-values` | Cấm `text-[11px]`, `w-[137px]` (layout arbitrary được allow) | `text-xs`/`text-sm`, scale spacing/radius của theme |
+| `no-inline-styles` | Cấm `style={{…}}` cho layout/color tĩnh | Class hoặc CSS variable cho giá trị động |
+| `require-static-classes` | `className` trên shadcn component phải đọc được tĩnh | Không `cn(condition && dynamicBuild())` che mất class; dùng `cn("static", cond && "other-static")` |
+
+```tsx
+/** SAI */
+<Button className="bg-emerald-600 px-8 text-lg">Lưu</Button>
+<span className="text-red-500">-1.2M</span>
+
+/** ĐÚNG */
+<Button className="w-full mt-4">Lưu</Button>           {/* layout OK theo contract */}
+<span className="text-loss">-1.2M</span>               {/* semantic token */}
+<Badge className="text-warning">Cảnh báo</Badge>       {/* Badge cho phép color */}
+```
+
+**KHÔNG** tắt rule shadcn bằng `oxlint-disable` chỉ vì warn — sửa class/token.
+
+## g. Checklist AI trước khi kết thúc task có sửa code
+
+1. Chạy `oxlint <paths-đã-sửa>` (hoặc `pnpm lint` nếu sửa rộng) — **fix hết error**.
+2. Chạy `prettier --write <paths-đã-sửa>` nếu đụng format/import/className.
+3. Warning MỚI → nêu rõ trong summary, KHÔNG tự ignore/tắt rule.
+4. KHÔNG thêm `oxlint-disable` trừ khi thật sự ngoại lệ hợp lệ theo mục (d).
+5. KHÔNG tạo `.oxlintrc*` / `.eslintrc*` / `.prettierrc*` mới, KHÔNG hạ rule trong `.oxlintrc.json`.
+6. Sửa UI backoffice/`packages/ui`: không thêm raw Tailwind palette; tuân mục (f).

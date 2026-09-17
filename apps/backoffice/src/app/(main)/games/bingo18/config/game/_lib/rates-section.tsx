@@ -48,34 +48,34 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
   const remainingRate = Math.max(100 - commissionRate, 0);
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
             <div className="p-6 pb-4">
-              <h3 className="text-sm font-semibold text-foreground">Tỷ lệ tài chính</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-foreground text-sm font-semibold">Tỷ lệ tài chính</h3>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 Tiền cược thu về &rarr; trừ hoa hồng đại lý &rarr; trừ giải thưởng &rarr; lợi nhuận công ty
               </p>
             </div>
 
             <div className="mx-6 mb-2 space-y-1.5">
-              <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-3 w-full overflow-hidden rounded-full">
                 <div className="flex h-full">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-300"
+                    className="bg-info h-full transition-all duration-300"
                     style={{ width: `${Math.min(commissionRate, 100)}%` }}
                   />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
                 <span className="flex items-center gap-1.5">
-                  <span className="inline-block size-2 rounded-full bg-blue-500" />
+                  <span className="bg-info inline-block size-2 rounded-full" />
                   Hoa hồng: {commissionRate}%
                 </span>
                 {remainingRate > 0 && (
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block size-2 rounded-full bg-muted-foreground/30" />
+                    <span className="bg-muted-foreground/30 inline-block size-2 rounded-full" />
                     Giải thưởng + lợi nhuận: {remainingRate}%
                   </span>
                 )}
@@ -89,12 +89,12 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                 render={({ field }) => (
                   <FormItem>
                     <div className="mb-4 flex items-center gap-3">
-                      <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/40">
-                        <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
+                      <div className="bg-info flex size-9 items-center justify-center rounded-lg">
+                        <TrendingUp className="text-info size-4" />
                       </div>
                       <div>
                         <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>
-                        <p className="text-xs text-muted-foreground">Thu trước từ tiền cược</p>
+                        <p className="text-muted-foreground text-xs">Thu trước từ tiền cược</p>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -114,7 +114,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                             }
                           />
                         </FormControl>
-                        <span className="text-lg font-semibold text-muted-foreground">%</span>
+                        <span className="text-muted-foreground text-lg font-semibold">%</span>
                       </div>
                     </div>
                     <FormMessage />

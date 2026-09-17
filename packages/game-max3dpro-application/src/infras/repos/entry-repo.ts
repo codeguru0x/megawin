@@ -1,14 +1,13 @@
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import {
+  Max3dproCollections,
   type EntryPayout,
   type EntryVoidInfo,
-  Max3dproCollections,
-  type TicketEntryDoc,
+  type Max3dproDrawResult,
   type TicketEntryEntity,
 } from "@megawin/game-max3dpro/entities";
-import { type Long, ObjectId } from "mongodb";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -167,7 +166,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       result: Max3dproDrawResult & { publishedAt: Date };
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();

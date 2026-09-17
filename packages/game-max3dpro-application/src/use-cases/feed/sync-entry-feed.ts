@@ -6,9 +6,8 @@
  * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
-import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
-import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
+import { GameProduct, type EntryFeedDoc, type FeedVoidInfo } from "@megawin/game-core/entities";
 import type {
   EntryBoardSnapshot,
   EntryPayout,
@@ -75,7 +74,9 @@ function mapToFeedDoc(e: TicketEntryEntity, gameProduct: GameProduct): Omit<Entr
 }
 
 function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
-  if (!v) return undefined;
+  if (!v) {
+    return undefined;
+  }
   return {
     originalAmount: v.originalAmount,
     refundAmount: v.refundAmount,
@@ -112,7 +113,7 @@ function mapDrawResult(result: EntryResult | undefined): Max3dproFeedDrawResult 
 }
 
 function mapPayoutDetail(payout: EntryPayout | undefined): Max3dproFeedPayoutDetail | undefined {
-  if (!payout || !payout.tiers?.length) {
+  if (!payout?.tiers?.length) {
     return undefined;
   }
 

@@ -26,18 +26,12 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import type {
-  EntryBoardSnapshot,
-  EntryPayout,
-  EntryPayoutTier,
-  EntryResult,
-  TicketLineDoc,
-} from "@megawin/game-max3d/entities";
+import type { EntryBoardSnapshot, EntryPayout, EntryResult, TicketLineDoc } from "@megawin/game-max3d/entities";
 import {
-  type BoardMatchResultWithBetCount,
   buildPayoutTiers,
   flattenDrawResult,
   matchBoard,
+  type BoardMatchResultWithBetCount,
 } from "@megawin/game-max3d/rules/prize-tiers";
 import { generateId } from "@megawin/shared/utils";
 

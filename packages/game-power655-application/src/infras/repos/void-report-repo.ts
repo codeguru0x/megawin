@@ -7,8 +7,11 @@
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  */
 
-import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-power655/entities";
-import { POWER655_VOID_DRAW_REPORTS } from "@megawin/game-power655/entities";
+import {
+  POWER655_VOID_DRAW_REPORTS,
+  type VoidDrawReport,
+  type VoidDrawReportEntity,
+} from "@megawin/game-power655/entities";
 
 import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";

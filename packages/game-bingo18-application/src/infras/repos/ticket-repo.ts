@@ -1,8 +1,6 @@
-import type { TicketEntity } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections, type TicketEntity } from "@megawin/game-bingo18/entities";
 import { ALL_LISTABLE_STATUSES, TicketStatus } from "@megawin/game-core/entities";
-import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type Document, type Filter } from "mongodb";
 
 import { TicketMapper } from "../mappers/ticket-mapper";
 import { BaseRepo } from "./base-repo";
@@ -107,8 +105,12 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
 
     if (from || to) {
       const dateRange: Record<string, Date> = {};
-      if (from) dateRange.$gte = from;
-      if (to) dateRange.$lte = to;
+      if (from) {
+        dateRange.$gte = from;
+      }
+      if (to) {
+        dateRange.$lte = to;
+      }
       filter.createdAt = dateRange;
     }
 

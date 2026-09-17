@@ -298,23 +298,7 @@ POST http://localhost:4010/player/lotto535/bets
       "boardNo": "A",
       "playType": "mainCover",
       "selection": {
-        "mainNumbers": [
-          "01",
-          "02",
-          "03",
-          "04",
-          "05",
-          "06",
-          "07",
-          "08",
-          "09",
-          "10",
-          "11",
-          "12",
-          "13",
-          "14",
-          "15"
-        ],
+        "mainNumbers": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"],
         "specialNumbers": ["01"]
       },
       "betCount": 1

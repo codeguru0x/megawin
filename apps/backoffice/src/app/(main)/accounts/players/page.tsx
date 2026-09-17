@@ -17,8 +17,8 @@ export default function PlayerAccountsPage() {
             <UserCircle className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản người chơi</h1>
-            <p className="text-xs text-muted-foreground">Xem danh sách người chơi (Player) theo đại lý.</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Tài khoản người chơi</h1>
+            <p className="text-muted-foreground text-xs">Xem danh sách người chơi (Player) theo đại lý.</p>
           </div>
         </div>
       </div>

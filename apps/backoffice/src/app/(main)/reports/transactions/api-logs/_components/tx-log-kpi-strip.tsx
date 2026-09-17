@@ -1,8 +1,7 @@
 "use client";
 
 import { formatNumber, formatPercent } from "@megawin/shared/utils";
-import type { LucideIcon } from "lucide-react";
-import { Activity, AlertTriangle, CheckCircle2, FileStack } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, FileStack, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -38,14 +37,14 @@ interface TxLogKpiCardProps {
 
 function TxLogKpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, valueClass }: TxLogKpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass)}>{value}</p>
-        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className={cn("text-foreground text-lg font-bold tabular-nums", valueClass)}>{value}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -72,9 +71,15 @@ export interface TxLogKpiStripProps {
  *   null   → mặc định (chưa có data)
  */
 function getSuccessRateColor(rate: number | null): string {
-  if (rate === null) return "";
-  if (rate >= 0.99) return "text-profit";
-  if (rate >= 0.95) return "text-warning";
+  if (rate === null) {
+    return "";
+  }
+  if (rate >= 0.99) {
+    return "text-profit";
+  }
+  if (rate >= 0.95) {
+    return "text-warning";
+  }
   return "text-loss";
 }
 
@@ -96,16 +101,16 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <TxLogKpiCard
         icon={FileStack}
-        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-        iconColor="text-indigo-600 dark:text-indigo-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tổng giao dịch"
         value={placeholder ? "—" : formatNumber(total)}
         sub={placeholder ? "\u00a0" : `${formatNumber(successCount)} thành công · ${formatNumber(failedCount)} lỗi`}
       />
       <TxLogKpiCard
         icon={CheckCircle2}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Tỷ lệ thành công"
         value={successRateText}
         valueClass={getSuccessRateColor(successRate)}
@@ -113,8 +118,8 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
       />
       <TxLogKpiCard
         icon={AlertTriangle}
-        iconBg="bg-rose-100 dark:bg-rose-900/50"
-        iconColor="text-rose-600 dark:text-rose-400"
+        iconBg="bg-loss"
+        iconColor="text-loss"
         label="Giao dịch lỗi"
         value={placeholder ? "—" : formatNumber(failedCount)}
         valueClass={failedCount > 0 ? "text-loss" : ""}
@@ -128,8 +133,8 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
       />
       <TxLogKpiCard
         icon={Activity}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Cần reconcile"
         value={placeholder ? "—" : formatNumber(uncertainCount)}
         valueClass={uncertainCount > 0 ? "text-warning" : ""}

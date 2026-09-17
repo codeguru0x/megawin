@@ -23,13 +23,13 @@
  */
 
 import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
-import type {
-  Max3dproDrawBettingStatsDoc,
-  Max3dproDrawBettingStatsEntity,
-  Max3dproPlayTypeStat,
-  OpsStatsConfig,
+import {
+  Max3dproCollections,
+  type Max3dproDrawBettingStatsDoc,
+  type Max3dproDrawBettingStatsEntity,
+  type Max3dproPlayTypeStat,
+  type OpsStatsConfig,
 } from "@megawin/game-max3dpro/entities";
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";

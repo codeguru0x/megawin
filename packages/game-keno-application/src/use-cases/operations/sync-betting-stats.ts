@@ -38,8 +38,12 @@
 import { DRAW_COMPLETED_STATUSES, type DrawStatus } from "@megawin/game-core/entities";
 import type { GlobalConfigEntity, OpsStatsConfig } from "@megawin/game-keno/entities";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+import {
+  LockTakenOverError,
+  TickLoopWorker,
+  type TickLoopResult,
+  type TickOutcome,
+} from "@megawin/worker-core/workers";
 
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";

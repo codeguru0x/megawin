@@ -7,7 +7,7 @@
  * CRASH-SAFE: entries đã void tự filter ra.
  */
 
-import { type VoidContext, VoidEntriesBatchUseCase } from "@megawin/game-max3dpro-application/use-cases/void";
+import { VoidEntriesBatchUseCase, type VoidContext } from "@megawin/game-max3dpro-application/use-cases/void";
 
 const useCase = new VoidEntriesBatchUseCase();
 

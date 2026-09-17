@@ -149,9 +149,13 @@ export function displayVNDate(value: string | Date | undefined | null): string {
  * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
  */
 export function displayVNTime(value: string | Date | undefined | null): string {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
   const d = value instanceof Date ? value : new Date(value);
-  if (isNaN(d.getTime())) return "—";
+  if (isNaN(d.getTime())) {
+    return "—";
+  }
   return format(new TZDate(d, VN_TIMEZONE), "HH:mm");
 }
 
@@ -160,9 +164,13 @@ export function displayVNTime(value: string | Date | undefined | null): string {
  * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
  */
 export function displayVNTimeWithSeconds(value: string | Date | undefined | null): string {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
   const d = value instanceof Date ? value : new Date(value);
-  if (isNaN(d.getTime())) return "—";
+  if (isNaN(d.getTime())) {
+    return "—";
+  }
   return format(new TZDate(d, VN_TIMEZONE), "HH:mm:ss");
 }
 
@@ -171,9 +179,13 @@ export function displayVNTimeWithSeconds(value: string | Date | undefined | null
  * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
  */
 export function displayVNDateTime(value: string | Date | undefined | null): string {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
   const d = value instanceof Date ? value : new Date(value);
-  if (isNaN(d.getTime())) return "—";
+  if (isNaN(d.getTime())) {
+    return "—";
+  }
   return format(new TZDate(d, VN_TIMEZONE), "dd/MM/yyyy HH:mm");
 }
 
@@ -631,7 +643,9 @@ export function formatDurationCompact(seconds: number): string {
 export function calcRelativeTime(isoDate: string, now: number = Date.now()): string {
   const diff = Math.round((new Date(isoDate).getTime() - now) / 1000);
   const abs = Math.abs(diff);
-  if (abs < 60) return diff < 0 ? "vừa xong" : "ngay bây giờ";
+  if (abs < 60) {
+    return diff < 0 ? "vừa xong" : "ngay bây giờ";
+  }
   if (abs < 3600) {
     const m = Math.round(abs / 60);
     return diff < 0 ? `${m}ph trước` : `trong ${m}ph`;

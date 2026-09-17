@@ -19,7 +19,7 @@ function SourcesPageInner() {
           <Settings2 className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="font-semibold text-foreground text-lg tracking-tight">Nguồn dữ liệu</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Nguồn dữ liệu</h1>
           <p className="text-muted-foreground text-xs">Quản lý vai trò, trọng số tin cậy, và kill-switch từng nguồn.</p>
         </div>
       </div>

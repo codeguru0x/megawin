@@ -11,8 +11,7 @@
 
 import type { NextRequest } from "next/server";
 
-import type { AccountRole } from "@megawin/identity/entities";
-import { CompanyRole } from "@megawin/identity/entities";
+import { CompanyRole, type AccountRole } from "@megawin/identity/entities";
 import { createApiRouteBuilder, type RouteSession } from "@megawin/next/server";
 
 import { resolveAuthSession } from "@/lib/auth-session";

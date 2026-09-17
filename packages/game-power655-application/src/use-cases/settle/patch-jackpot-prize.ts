@@ -56,8 +56,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { JackpotWinnerInfo } from "@megawin/game-power655/entities";
-import { JackpotType, PrizeTier } from "@megawin/game-power655/entities";
+import { JackpotType, PrizeTier, type JackpotWinnerInfo } from "@megawin/game-power655/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";

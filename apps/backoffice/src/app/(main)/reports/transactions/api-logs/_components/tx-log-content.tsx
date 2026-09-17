@@ -46,7 +46,7 @@ export function TxLogContent() {
       {!isTxMode && <TxLogKpiStrip data={summaryQuery.data} isLoading={summaryQuery.isLoading} />}
 
       <Card className="gap-0 overflow-hidden py-0">
-        <CardContent className="px-0 pb-0 pt-0">
+        <CardContent className="px-0 pt-0 pb-0">
           <TxLogTable
             rows={rows}
             isLoading={query.isLoading}

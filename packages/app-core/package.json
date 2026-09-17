@@ -11,7 +11,8 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -62,8 +63,8 @@
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.6",
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "*",

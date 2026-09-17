@@ -9,8 +9,7 @@
  * @output ApplySplitBonusesResult { drawId, entriesPatched }
  */
 
-import type { SettleContext } from "@megawin/game-lotto535-application/use-cases/settle";
-import { ApplySplitBonusesUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
+import { ApplySplitBonusesUseCase, type SettleContext } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new ApplySplitBonusesUseCase();
 

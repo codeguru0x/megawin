@@ -115,27 +115,27 @@ export function DrawCommandCenter({
   const accentGradient =
     (
       {
-        [DrawStatus.SalesOpen]: "from-emerald-500 via-green-500 to-teal-500",
-        [DrawStatus.SalesClosed]: "from-amber-500 to-orange-500",
-        [DrawStatus.Published]: "from-violet-500 via-purple-500 to-fuchsia-500",
-        [DrawStatus.Settling]: "from-orange-500 to-red-500",
-        [DrawStatus.Settled]: "from-slate-400 to-slate-500",
-        [DrawStatus.Scheduled]: "from-slate-300 to-slate-400",
-        [DrawStatus.Void]: "from-red-600 to-rose-700",
-        [DrawStatus.Voiding]: "from-red-500 to-rose-600",
+        [DrawStatus.SalesOpen]: "from-profit via-profit to-game-mega645",
+        [DrawStatus.SalesClosed]: "from-warning to-loss",
+        [DrawStatus.Published]: "from-game-max3d via-game-max3d to-game-max3dpro",
+        [DrawStatus.Settling]: "from-warning to-loss",
+        [DrawStatus.Settled]: "from-muted to-background",
+        [DrawStatus.Scheduled]: "from-muted to-background",
+        [DrawStatus.Void]: "from-loss to-warning",
+        [DrawStatus.Voiding]: "from-loss to-warning",
       } as Record<string, string>
-    )[status] ?? "from-border to-border";
+    )[status] ?? "from-border to-muted";
 
   const cardBorder =
     (
       {
-        [DrawStatus.SalesOpen]: "border-green-200 dark:border-green-800",
-        [DrawStatus.SalesClosed]: "border-amber-200 dark:border-amber-800",
-        [DrawStatus.Published]: "border-violet-200 dark:border-violet-800",
-        [DrawStatus.Settling]: "border-orange-200 dark:border-orange-800",
-        [DrawStatus.Void]: "border-red-200 dark:border-red-800",
-        [DrawStatus.Voiding]: "border-red-200 dark:border-red-800",
-        [DrawStatus.Settled]: "border-slate-200 dark:border-slate-700",
+        [DrawStatus.SalesOpen]: "border-profit",
+        [DrawStatus.SalesClosed]: "border-warning",
+        [DrawStatus.Published]: "border-game-max3d",
+        [DrawStatus.Settling]: "border-warning",
+        [DrawStatus.Void]: "border-loss",
+        [DrawStatus.Voiding]: "border-loss",
+        [DrawStatus.Settled]: "border-border border-border",
         [DrawStatus.Scheduled]: "border-border",
       } as Record<string, string>
     )[status] ?? "border-border";
@@ -143,52 +143,52 @@ export function DrawCommandCenter({
   const iconBg =
     (
       {
-        [DrawStatus.SalesOpen]: "bg-green-100 dark:bg-green-900/60",
-        [DrawStatus.SalesClosed]: "bg-amber-100 dark:bg-amber-900/60",
-        [DrawStatus.Published]: "bg-violet-100 dark:bg-violet-900/60",
-        [DrawStatus.Settling]: "bg-orange-100 dark:bg-orange-900/60",
-        [DrawStatus.Settled]: "bg-slate-100 dark:bg-slate-800",
-        [DrawStatus.Scheduled]: "bg-slate-100 dark:bg-slate-800",
-        [DrawStatus.Void]: "bg-red-100 dark:bg-red-900/60",
-        [DrawStatus.Voiding]: "bg-red-100 dark:bg-red-900/60",
+        [DrawStatus.SalesOpen]: "bg-profit",
+        [DrawStatus.SalesClosed]: "bg-warning",
+        [DrawStatus.Published]: "bg-game-max3d",
+        [DrawStatus.Settling]: "bg-warning",
+        [DrawStatus.Settled]: "bg-muted",
+        [DrawStatus.Scheduled]: "bg-muted",
+        [DrawStatus.Void]: "bg-loss",
+        [DrawStatus.Voiding]: "bg-loss",
       } as Record<string, string>
     )[status] ?? "bg-muted/40";
 
   const iconColor =
     (
       {
-        [DrawStatus.SalesOpen]: "text-green-600 dark:text-green-400",
-        [DrawStatus.SalesClosed]: "text-amber-600 dark:text-amber-400",
-        [DrawStatus.Published]: "text-violet-600 dark:text-violet-400",
-        [DrawStatus.Settling]: "text-orange-600 dark:text-orange-400",
-        [DrawStatus.Settled]: "text-slate-500 dark:text-slate-400",
-        [DrawStatus.Scheduled]: "text-slate-500 dark:text-slate-400",
-        [DrawStatus.Void]: "text-red-600 dark:text-red-400",
-        [DrawStatus.Voiding]: "text-red-600 dark:text-red-400",
+        [DrawStatus.SalesOpen]: "text-profit",
+        [DrawStatus.SalesClosed]: "text-warning",
+        [DrawStatus.Published]: "text-game-max3d",
+        [DrawStatus.Settling]: "text-warning",
+        [DrawStatus.Settled]: "text-muted-foreground",
+        [DrawStatus.Scheduled]: "text-muted-foreground",
+        [DrawStatus.Void]: "text-loss",
+        [DrawStatus.Voiding]: "text-loss",
       } as Record<string, string>
     )[status] ?? "text-muted-foreground";
 
   const pingColor =
     (
       {
-        [DrawStatus.SalesOpen]: "bg-green-400",
-        [DrawStatus.SalesClosed]: "bg-amber-400",
-        [DrawStatus.Published]: "bg-violet-400",
-        [DrawStatus.Settling]: "bg-orange-400",
-        [DrawStatus.Void]: "bg-red-400",
-        [DrawStatus.Voiding]: "bg-red-400",
+        [DrawStatus.SalesOpen]: "bg-profit",
+        [DrawStatus.SalesClosed]: "bg-warning",
+        [DrawStatus.Published]: "bg-game-max3d",
+        [DrawStatus.Settling]: "bg-warning",
+        [DrawStatus.Void]: "bg-loss",
+        [DrawStatus.Voiding]: "bg-loss",
       } as Record<string, string>
     )[status] ?? "";
 
   const dotColor =
     (
       {
-        [DrawStatus.SalesOpen]: "bg-green-500",
-        [DrawStatus.SalesClosed]: "bg-amber-500",
-        [DrawStatus.Published]: "bg-violet-500",
-        [DrawStatus.Settling]: "bg-orange-500",
-        [DrawStatus.Void]: "bg-red-500",
-        [DrawStatus.Voiding]: "bg-red-500",
+        [DrawStatus.SalesOpen]: "bg-profit",
+        [DrawStatus.SalesClosed]: "bg-warning",
+        [DrawStatus.Published]: "bg-game-max3d",
+        [DrawStatus.Settling]: "bg-warning",
+        [DrawStatus.Void]: "bg-loss",
+        [DrawStatus.Voiding]: "bg-loss",
       } as Record<string, string>
     )[status] ?? "";
 
@@ -210,22 +210,22 @@ export function DrawCommandCenter({
   ].includes(status as never);
 
   return (
-    <div className={cn("rounded-xl border overflow-hidden", cardBorder)}>
+    <div className={cn("overflow-hidden rounded-xl border", cardBorder)}>
       <div className={cn("h-1 w-full bg-linear-to-r", accentGradient)} />
 
       <div className="px-5 py-4">
         {/* Row 1: Identity */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
             <div
               className={cn(
-                "relative flex size-8 items-center justify-center rounded-lg shrink-0 mt-0.5 shadow-sm",
+                "relative mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
                 iconBg,
               )}
             >
               <StatusIcon className={cn("size-3.5", iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
-                <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
+                <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                   <span
                     className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", pingColor)}
                   />
@@ -234,29 +234,21 @@ export function DrawCommandCenter({
               )}
             </div>
             <div className="min-w-0 space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-sm font-semibold tracking-tight">Max 3D Pro — {draw.drawDate}</h2>
                 <DrawStatusBadge
                   status={status}
                   awaitingResettle={status === DrawStatus.Published && !!draw.settledAt}
                 />
               </div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-xs text-muted-foreground font-mono shrink-0">{draw.drawId}</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-muted-foreground shrink-0 font-mono text-xs">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
                 {status === DrawStatus.SalesOpen && !closeOverdue && (
-                  <Countdown
-                    target={draw.salesCloseAt}
-                    prefix="Đóng bán sau"
-                    className="text-amber-600 dark:text-amber-400"
-                  />
+                  <Countdown target={draw.salesCloseAt} prefix="Đóng bán sau" className="text-warning" />
                 )}
                 {status === DrawStatus.SalesClosed && !publishOverdue && (
-                  <Countdown
-                    target={draw.scheduledDrawAt}
-                    prefix="Quay số sau"
-                    className="text-violet-600 dark:text-violet-400"
-                  />
+                  <Countdown target={draw.scheduledDrawAt} prefix="Quay số sau" className="text-game-max3d" />
                 )}
               </div>
             </div>
@@ -264,7 +256,7 @@ export function DrawCommandCenter({
           {isSettled && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground">
+                <Button variant="ghost" size="icon" className="text-muted-foreground size-7 shrink-0">
                   <MoreVertical className="size-4" />
                   <span className="sr-only">Thao tác khác</span>
                 </Button>
@@ -273,7 +265,10 @@ export function DrawCommandCenter({
                 <DropdownMenuLabel>Thao tác khác</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link prefetch={false} href={`/games/max3dpro/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
+                  <Link
+                    prefetch={false}
+                    href={`/games/max3dpro/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                  >
                     <FileText className="size-3.5" /> Xem báo cáo
                   </Link>
                 </DropdownMenuItem>
@@ -296,22 +291,22 @@ export function DrawCommandCenter({
 
         {/* Void info */}
         {isVoided && voidInfo && (
-          <div className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-1">
-            <p className="text-sm font-semibold text-destructive dark:text-red-400 flex items-center gap-1.5">
+          <div className="border-destructive/30 bg-destructive/5 mt-4 space-y-1 rounded-lg border px-4 py-3">
+            <p className="text-destructive text-loss flex items-center gap-1.5 text-sm font-semibold">
               <AlertTriangle className="size-3.5" /> Kỳ đã bị hủy
             </p>
-            <p className="text-xs text-muted-foreground">"{voidInfo.reason}"</p>
-            <p className="text-xs text-muted-foreground">
-              Hủy bởi <span className="font-medium text-foreground">{voidInfo.voidedBy}</span> ·{" "}
+            <p className="text-muted-foreground text-xs">"{voidInfo.reason}"</p>
+            <p className="text-muted-foreground text-xs">
+              Hủy bởi <span className="text-foreground font-medium">{voidInfo.voidedBy}</span> ·{" "}
               {displayVNDateTime(voidInfo.voidedAt)}
             </p>
           </div>
         )}
 
         {isSettling && (
-          <div className="mt-4 flex items-center justify-between gap-2.5 rounded-lg border bg-muted/40 px-3 py-2.5">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <Loader2 className="size-3.5 text-orange-500 animate-spin shrink-0" />
+          <div className="bg-muted/40 mt-4 flex items-center justify-between gap-2.5 rounded-lg border px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Loader2 className="text-warning size-3.5 shrink-0 animate-spin" />
               <p className="text-xs font-medium">Đang kết sổ...</p>
             </div>
             {settlingRetryHandler && (
@@ -320,7 +315,7 @@ export function DrawCommandCenter({
                   <button
                     type="button"
                     onClick={settlingRetryHandler}
-                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-foreground transition-colors shrink-0"
+                    className="text-muted-foreground/70 hover:text-foreground inline-flex shrink-0 items-center gap-1 text-xs transition-colors"
                   >
                     <RotateCcw className="size-3" /> Thử lại
                   </button>
@@ -335,13 +330,13 @@ export function DrawCommandCenter({
         )}
 
         {status === DrawStatus.Scheduled && (
-          <p className="mt-4 text-xs text-muted-foreground text-center py-1">Chưa có dữ liệu cược — kỳ chưa mở bán</p>
+          <p className="text-muted-foreground mt-4 py-1 text-center text-xs">Chưa có dữ liệu cược — kỳ chưa mở bán</p>
         )}
 
         {/* Action bar */}
         {!isSettling && !isVoided && (
-          <div className="flex items-center justify-between gap-3 border-t mt-4 pt-3">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
+            <div className="flex flex-wrap items-center gap-2">
               {nextAction && (
                 <Button
                   className={cn("gap-1.5 font-medium", nextAction.className)}
@@ -364,7 +359,7 @@ export function DrawCommandCenter({
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
-                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="gap-1.5 text-muted-foreground">
+                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="text-muted-foreground gap-1.5">
                   <Pencil className="size-3.5" /> Sửa lịch
                 </Button>
               )}
@@ -373,7 +368,7 @@ export function DrawCommandCenter({
                   variant="ghost"
                   size="sm"
                   onClick={onVoidDraw}
-                  className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
                 >
                   <Trash2 className="size-3.5" /> Hủy kỳ
                 </Button>

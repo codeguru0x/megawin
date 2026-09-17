@@ -8,7 +8,6 @@
  *
  * Mega 6/45 dùng offset pagination (page/size), khác với lotto535 dùng cursor.
  */
-
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type {
   CurrentDrawInfo,

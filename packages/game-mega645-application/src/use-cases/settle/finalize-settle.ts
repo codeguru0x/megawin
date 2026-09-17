@@ -185,7 +185,9 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
       }
 
       const activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) return;
+      if (!activeCycle) {
+        return;
+      }
 
       await this.closeAndCreateNextCycle(activeCycle, input);
     } else {
@@ -194,7 +196,9 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
       // Dùng giá trị snapshot từ PrepareSettle (cycleContributionBefore, cycleDrawCountBefore)
       // thay vì đọc lại activeCycle → idempotent khi retry (không cộng dồn 2 lần).
       const activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) return;
+      if (!activeCycle) {
+        return;
+      }
 
       await this.cycleRepo.updateCycleStats({
         cycleNo: input.config.cycleNo,

@@ -29,7 +29,6 @@
  * useAiFormDirty("rates", form.formState.isDirty);
  * ```
  */
-
 import type { AiPageContextValue } from "@/lib/ai-page-context";
 
 import { useAiPageContext } from "./use-ai-page-context";

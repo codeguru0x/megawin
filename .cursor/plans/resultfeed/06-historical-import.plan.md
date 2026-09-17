@@ -125,9 +125,9 @@ Tạo `packages/resultfeed-application/src/scripts/import-historical-results.ts`
 
 ### 3.1.1 Env var riêng cho MongoDB URI — tách khỏi `MONGODB_URI` của test suite
 
-`MONGODB_URI` hiện tại là biến của vitest (`.env.test.local`, luôn bị `setup-db-guard.ts` ép
-local-only trừ khi `ALLOW_DB_TESTS=true`) — không phù hợp để script import (không chạy qua
-vitest, không có guard đó) dùng chung, và dễ nhầm lẫn khi user đổi giá trị cho mục đích khác.
+`MONGODB_URI` của vitest integration do Testcontainers `globalSetup` set tới container
+ephemeral — không phù hợp để script import (chạy ngoài vitest, cần URI DB thật) dùng chung,
+và dễ nhầm lẫn khi user đổi giá trị cho mục đích khác.
 
 Thêm biến MỚI riêng cho import: `RESULTFEED_IMPORT_MONGODB_URI`. Script fail-fast ngay đầu nếu
 thiếu (`throw new Error("Missing env RESULTFEED_IMPORT_MONGODB_URI")`), sau đó gán

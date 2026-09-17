@@ -9,8 +9,7 @@
  * qua tab mới/đóng trình duyệt, giống lịch sử chat của ChatGPT.
  */
 
-import type { ClientSessionState, MessageStreamEvent } from "eve/client";
-import { isCurrentTurnBoundaryEvent } from "eve/client";
+import { isCurrentTurnBoundaryEvent, type ClientSessionState, type MessageStreamEvent } from "eve/client";
 
 import { AI_SESSION_ABSOLUTE_LIFETIME_MS } from "@/config/ai-config";
 
@@ -208,6 +207,72 @@ function redactSensitiveEventFields(event: MessageStreamEvent): MessageStreamEve
       return { ...event, data: { ...event.data, webhookUrl: undefined } };
     case "session.waiting":
       return { ...event, data: { ...event.data, continuationToken: "" } };
+    case "action.input.appended": {
+      throw new Error('Not implemented yet: "action.input.appended" case');
+    }
+    case "action.partial": {
+      throw new Error('Not implemented yet: "action.partial" case');
+    }
+    case "action.result": {
+      throw new Error('Not implemented yet: "action.result" case');
+    }
+    case "actions.requested": {
+      throw new Error('Not implemented yet: "actions.requested" case');
+    }
+    case "approval.candidate": {
+      throw new Error('Not implemented yet: "approval.candidate" case');
+    }
+    case "approval.settled": {
+      throw new Error('Not implemented yet: "approval.settled" case');
+    }
+    case "authorization.completed": {
+      throw new Error('Not implemented yet: "authorization.completed" case');
+    }
+    case "context.cleared": {
+      throw new Error('Not implemented yet: "context.cleared" case');
+    }
+    case "input.requested": {
+      throw new Error('Not implemented yet: "input.requested" case');
+    }
+    case "input.resolved": {
+      throw new Error('Not implemented yet: "input.resolved" case');
+    }
+    case "message.appended": {
+      throw new Error('Not implemented yet: "message.appended" case');
+    }
+    case "message.completed": {
+      throw new Error('Not implemented yet: "message.completed" case');
+    }
+    case "message.received": {
+      throw new Error('Not implemented yet: "message.received" case');
+    }
+    case "reasoning.appended": {
+      throw new Error('Not implemented yet: "reasoning.appended" case');
+    }
+    case "reasoning.completed": {
+      throw new Error('Not implemented yet: "reasoning.completed" case');
+    }
+    case "result.completed": {
+      throw new Error('Not implemented yet: "result.completed" case');
+    }
+    case "session.completed": {
+      throw new Error('Not implemented yet: "session.completed" case');
+    }
+    case "subagent.completed": {
+      throw new Error('Not implemented yet: "subagent.completed" case');
+    }
+    case "subagent.event": {
+      throw new Error('Not implemented yet: "subagent.event" case');
+    }
+    case "subagent.started": {
+      throw new Error('Not implemented yet: "subagent.started" case');
+    }
+    case "turn.cancelled": {
+      throw new Error('Not implemented yet: "turn.cancelled" case');
+    }
+    case "turn.completed": {
+      throw new Error('Not implemented yet: "turn.completed" case');
+    }
     default:
       return event;
   }

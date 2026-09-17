@@ -15,8 +15,8 @@
  * `serializeDatesVN` + xử lý lỗi ở biên (output hiện toàn primitive nên serialize là no-op).
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
 import { GetGamePeriodTrendUseCase } from "@megawin/game-core-application/use-cases/reports";
+import { GameProduct } from "@megawin/game-core/entities";
 import { FinancialPeriod } from "@megawin/shared/utils";
 import { defineTool } from "eve/tools";
 import { z } from "zod";

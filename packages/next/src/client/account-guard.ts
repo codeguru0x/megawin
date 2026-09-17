@@ -96,7 +96,7 @@ export function createAccountGuard(config: CreateAccountGuardOptions) {
     const accountStatus = session?.user?.accountStatus as string | undefined;
 
     const result = useMemo<Omit<AccountGuardResult, "isLoading">>(() => {
-      const isAuthenticated = session != null && session.user != null;
+      const isAuthenticated = session?.user != null;
       return {
         accountStatus,
         isReadOnly: accountStatus === "read_only",
@@ -107,7 +107,9 @@ export function createAccountGuard(config: CreateAccountGuardOptions) {
     }, [accountStatus, session]);
 
     useEffect(() => {
-      if (skip || isPending) return;
+      if (skip || isPending) {
+        return;
+      }
 
       if (!result.isAuthenticated) {
         const target = redirectTo ?? unauthorizedRedirect;

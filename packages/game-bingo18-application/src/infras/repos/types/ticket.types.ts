@@ -1,5 +1,3 @@
-import type { TicketProgress, TicketSettlement, TicketVoidSummary } from "@megawin/game-bingo18/entities";
-
 import type { TicketAggregateResult } from "./entry.types";
 
 /**

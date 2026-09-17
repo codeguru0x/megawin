@@ -6,7 +6,6 @@
  * Đọc snapshot (timer 1) qua `select` slice → KpiStrip + ExposureCard.
  * Mỗi slice riêng → KPI đổi không kéo Exposure re-render (React Query dedupe 1 query).
  */
-
 import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
 import { DrawStatus } from "@megawin/game-core/entities";
 
@@ -56,7 +55,9 @@ export function KpiSection() {
       : null,
   );
 
-  if (!draw || !KPI_SHOW.has(draw.status as string)) return null;
+  if (!draw || !KPI_SHOW.has(draw.status as string)) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -68,7 +69,9 @@ export function KpiSection() {
     );
   }
 
-  if (!kpi) return null;
+  if (!kpi) {
+    return null;
+  }
 
   return (
     <section className="space-y-3">

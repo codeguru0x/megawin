@@ -10,7 +10,6 @@
  * reopen, financial (+ jackpot) bị $unset — không render ledger toàn 0 / biến
  * động Jackpot lệch (trước ≠ sau khi đóng góp hiện 0).
  */
-
 import { useMemo } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -94,7 +93,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
+      <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} awaitingResettle={awaitingResettle} />

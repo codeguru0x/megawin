@@ -9,8 +9,12 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 
-import type { AuditLogEntity } from "../entities";
-import { AuditTargetType, SELF_ACTIVITY_ACTION_SET, SELF_ACTIVITY_TARGET_ACTION_SET } from "../entities";
+import {
+  AuditTargetType,
+  SELF_ACTIVITY_ACTION_SET,
+  SELF_ACTIVITY_TARGET_ACTION_SET,
+  type AuditLogEntity,
+} from "../entities";
 import { AuditLogRepository } from "../infras/repos";
 
 /** Input lấy chi tiết audit — chỉ cần `id` (`_id` hex string). */
@@ -67,8 +71,12 @@ export class GetAuditLogUseCase extends UseCase<GetAuditLogInput, AuditLogEntity
    * whitelist hẹp {@link SELF_ACTIVITY_TARGET_ACTION_SET} (hiện rỗng → chỉ actor).
    */
   private isSelfVisible(log: AuditLogEntity, accountId: string): boolean {
-    if (!SELF_ACTIVITY_ACTION_SET.has(log.action)) return false;
-    if (log.actorId === accountId) return true;
+    if (!SELF_ACTIVITY_ACTION_SET.has(log.action)) {
+      return false;
+    }
+    if (log.actorId === accountId) {
+      return true;
+    }
     // Chiều target chỉ mở cho CROSS action đã whitelist (không lộ actor/IP tuỳ tiện).
     return (
       SELF_ACTIVITY_TARGET_ACTION_SET.has(log.action) &&

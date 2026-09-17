@@ -1,11 +1,27 @@
 "use client";
 
-import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type CSSProperties,
+  type HTMLAttributes,
+} from "react";
 
 import { CheckIcon, CopyIcon } from "lucide-react";
-import type { BundledLanguage, BundledTheme, HighlighterGeneric, ThemedToken } from "shiki";
-import { createHighlighter } from "shiki";
+import {
+  createHighlighter,
+  type BundledLanguage,
+  type BundledTheme,
+  type HighlighterGeneric,
+  type ThemedToken,
+} from "shiki";
 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -236,7 +252,7 @@ const CodeBlockBody = memo(
 
     return (
       <pre
-        className={cn("dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm", className)}
+        className={cn("m-0 p-4 text-sm dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)]", className)}
         style={preStyle}
       >
         <code className={cn("font-mono text-sm", showLineNumbers && "[counter-increment:line_0] [counter-reset:line]")}>
@@ -262,7 +278,7 @@ export const CodeBlockContainer = ({
   ...props
 }: HTMLAttributes<HTMLDivElement> & { language: string }) => (
   <div
-    className={cn("group relative w-full overflow-hidden rounded-md border bg-background text-foreground", className)}
+    className={cn("group bg-background text-foreground relative w-full overflow-hidden rounded-md border", className)}
     data-language={language}
     style={{
       containIntrinsicSize: "auto 200px",
@@ -276,7 +292,7 @@ export const CodeBlockContainer = ({
 export const CodeBlockHeader = ({ children, className, ...props }: HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex items-center justify-between border-b bg-muted/80 px-3 py-2 text-muted-foreground text-xs",
+      "bg-muted/80 text-muted-foreground flex items-center justify-between border-b px-3 py-2 text-xs",
       className,
     )}
     {...props}

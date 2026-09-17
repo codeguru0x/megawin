@@ -15,11 +15,7 @@ export { decodeCursor, encodeCursor } from "./cursor-codec";
 export type { CursorPage } from "./cursor-page";
 export type { DotPath, FieldPath } from "./dot-path";
 export { docPath } from "./dot-path";
-export {
-  isDuplicateKeyError,
-  isOnlyDuplicateKeyError,
-  runDeltaBulkWrite,
-} from "./duplicate-key-error";
+export { isDuplicateKeyError, isOnlyDuplicateKeyError, runDeltaBulkWrite } from "./duplicate-key-error";
 export { longToString } from "./long";
 export { DefaultMongoMapper, MongoMapper } from "./mapper";
 export {

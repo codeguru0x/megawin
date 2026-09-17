@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Loader2, ShieldOff } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { meKeys } from "@/lib/query-keys";
 
-import { type DisableMfaFormValues, disableMfaSchema } from "../_lib/schema";
+import { disableMfaSchema, type DisableMfaFormValues } from "../_lib/schema";
 
 interface MfaDisableDialogProps {
   open: boolean;
@@ -44,7 +44,7 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
   const mutation = useMutation({
     mutationFn: (values: DisableMfaFormValues) => apiClient.post("/me/mfa/disable", values),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
+      void qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       toast.success("MFA đã được tắt");
       form.reset();
       onOpenChange(false);
@@ -69,7 +69,7 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldOff className="size-5 text-destructive" />
+            <ShieldOff className="text-destructive size-5" />
             Tắt xác thực 2 lớp
           </DialogTitle>
           <DialogDescription>
@@ -109,9 +109,9 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
                         tabIndex={-1}
                       >
                         {showPassword ? (
-                          <EyeOff className="size-4 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground size-4" />
                         ) : (
-                          <Eye className="size-4 text-muted-foreground" />
+                          <Eye className="text-muted-foreground size-4" />
                         )}
                       </Button>
                     </div>

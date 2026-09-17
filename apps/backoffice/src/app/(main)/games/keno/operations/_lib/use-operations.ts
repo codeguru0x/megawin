@@ -19,8 +19,7 @@ import type {
 import type { GetEntryByIdOutput } from "@megawin/game-keno-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants/pagination";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { QueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { kenoKeys } from "@/lib/query-keys";
@@ -155,7 +154,9 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
     enabled: !!drawId,
     // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
     refetchInterval: (query) => {
-      if (isSettled) return false;
+      if (isSettled) {
+        return false;
+      }
       const s = query.state.data?.pollSeconds ?? 10;
       return s * 1000;
     },
@@ -196,7 +197,7 @@ export function useAckAlert() {
   return useMutation({
     mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: kenoKeys.all });
+      void qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success("Đã xác nhận cảnh báo.");
     },
     onError: (err) => {
@@ -307,7 +308,9 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
   });
 
   useEffect(() => {
-    if (!entryId) return;
+    if (!entryId) {
+      return;
+    }
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
@@ -350,7 +353,7 @@ function useDrawAction<TBody = void>(
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: kenoKeys.all });
+      void qc.invalidateQueries({ queryKey: kenoKeys.all });
       // P1-06: nhập KQ liên tiếp → toast phải ghi rõ kỳ nào vừa xong, không chỉ "Đã công bố".
       const message = typeof successMessage === "function" ? successMessage(variables) : successMessage;
       toast.success(message);
@@ -484,7 +487,7 @@ export function useCreateDraw() {
       }>;
     }) => apiClient.post<{ draws: { drawId: string }[] }>("/keno/draws", data),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: kenoKeys.all });
+      void qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {

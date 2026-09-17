@@ -1,16 +1,16 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type { VietlottPeriodAnchor } from "@megawin/game-core/types";
-import type {
-  BasicPrizes,
-  BigSmallPrizes,
-  EvenOddPrizes,
-  FinancialRates,
-  GlobalConfigEntity,
-  OpsConfig,
-  PayoutCaps,
-  PlayRules,
+import {
+  KenoCollections,
+  type BasicPrizes,
+  type BigSmallPrizes,
+  type EvenOddPrizes,
+  type FinancialRates,
+  type GlobalConfigEntity,
+  type OpsConfig,
+  type PayoutCaps,
+  type PlayRules,
 } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
 
 import { GameConfigMapper } from "../mappers/game-config-mapper";
 import { BaseRepo } from "./base-repo";
@@ -51,14 +51,30 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (config.rates) $set.rates = config.rates;
-    if (config.basicPrizes) $set.basicPrizes = config.basicPrizes;
-    if (config.bigSmallPrizes) $set.bigSmallPrizes = config.bigSmallPrizes;
-    if (config.evenOddPrizes) $set.evenOddPrizes = config.evenOddPrizes;
-    if (config.payoutCaps) $set.payoutCaps = config.payoutCaps;
-    if (config.play) $set.play = config.play;
-    if (config.ops) $set.ops = config.ops;
-    if (config.vietlott) $set.vietlott = config.vietlott;
+    if (config.rates) {
+      $set.rates = config.rates;
+    }
+    if (config.basicPrizes) {
+      $set.basicPrizes = config.basicPrizes;
+    }
+    if (config.bigSmallPrizes) {
+      $set.bigSmallPrizes = config.bigSmallPrizes;
+    }
+    if (config.evenOddPrizes) {
+      $set.evenOddPrizes = config.evenOddPrizes;
+    }
+    if (config.payoutCaps) {
+      $set.payoutCaps = config.payoutCaps;
+    }
+    if (config.play) {
+      $set.play = config.play;
+    }
+    if (config.ops) {
+      $set.ops = config.ops;
+    }
+    if (config.vietlott) {
+      $set.vietlott = config.vietlott;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

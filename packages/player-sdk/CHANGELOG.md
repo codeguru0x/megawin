@@ -84,10 +84,7 @@ for (const jp of jackpots) {
     console.log(`  JP2: ${jp.details.jackpot2CurrentAmount.toLocaleString()} VND`);
   } else if (jp.gameProduct === "lotto535") {
     const { percentage, reachedSplitThreshold } = jp.details.progress;
-    console.log(
-      `  Tiến trình chia: ${percentage}%`,
-      reachedSplitThreshold ? "(đã chạm ngưỡng)" : "",
-    );
+    console.log(`  Tiến trình chia: ${percentage}%`, reachedSplitThreshold ? "(đã chạm ngưỡng)" : "");
   }
 }
 ```
@@ -175,9 +172,7 @@ const res = await client.power655.getComboPopularity({
 });
 if (res.found && res.jackpotUnits) {
   const { jackpot1CurrentAmount } = await client.power655.getJackpot();
-  console.log(
-    `Tạm tính nếu trúng Jackpot 1 ngay: ${Math.floor(jackpot1CurrentAmount / res.jackpotUnits) * 1} VND`,
-  );
+  console.log(`Tạm tính nếu trúng Jackpot 1 ngay: ${Math.floor(jackpot1CurrentAmount / res.jackpotUnits) * 1} VND`);
 }
 ```
 
@@ -200,9 +195,7 @@ const res = await client.lotto535.getComboPopularity({
 });
 if (res.found && res.jackpotUnits) {
   const { currentAmount } = await client.lotto535.getJackpot();
-  console.log(
-    `Tạm tính nếu trúng Jackpot ngay: ${Math.floor(currentAmount / res.jackpotUnits) * 1} VND`,
-  );
+  console.log(`Tạm tính nếu trúng Jackpot ngay: ${Math.floor(currentAmount / res.jackpotUnits) * 1} VND`);
 }
 ```
 

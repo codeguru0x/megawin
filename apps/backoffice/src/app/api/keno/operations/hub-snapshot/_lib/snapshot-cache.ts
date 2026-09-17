@@ -1,5 +1,7 @@
-import type { OpsHubSnapshotOutput } from "@megawin/game-keno-application/use-cases/operations";
-import { GetOpsHubSnapshotUseCase } from "@megawin/game-keno-application/use-cases/operations";
+import {
+  GetOpsHubSnapshotUseCase,
+  type OpsHubSnapshotOutput,
+} from "@megawin/game-keno-application/use-cases/operations";
 
 const useCase = new GetOpsHubSnapshotUseCase();
 
@@ -33,10 +35,10 @@ let pendingFetch: Promise<OpsHubSnapshotOutput> | null = null;
  */
 export async function getSnapshotCached(limit: number): Promise<OpsHubSnapshotOutput> {
   const now = Date.now();
-  if (cachedSnapshot && cachedSnapshot.limit === limit && cachedSnapshot.expiresAt > now) {
+  if (cachedSnapshot?.limit === limit && cachedSnapshot.expiresAt > now) {
     return cachedSnapshot.data;
   }
-  // So sánh tường minh với `null` (không viết `if (pendingFetch)`) — Biome
+  // So sánh tường minh với `null` (không viết `if (pendingFetch)`) — linter
   // `nursery/noMisusedPromises` coi biểu thức Promise trong điều kiện là khả năng nhầm
   // quên `await`; ở đây chủ đích kiểm tra "đang có fetch pending hay không", không phải
   // trạng thái resolve của Promise.

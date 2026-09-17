@@ -1,5 +1,6 @@
 import { GetPlayerEntriesUseCase } from "@megawin/game-core-application/use-cases/reports";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 
@@ -14,11 +15,16 @@ const getPlayerEntriesUseCase = new GetPlayerEntriesUseCase();
  * Drill cấp 2 từ bảng tài chính Player Detail.
  * 1 player = 1 tenant — không cần tenantId param.
  */
+
+const paramsSchema = z.object({
+  accountId: z.string().min(1),
+});
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .query(playerEntriesQuerySchema)
+  .params(paramsSchema)
   .handler(async ({ query, params }) => {
-    const accountId = (params as { accountId: string }).accountId;
+    const accountId = params.accountId;
     return getPlayerEntriesUseCase.run({
       accountId,
       financialDate: query.financialDate,

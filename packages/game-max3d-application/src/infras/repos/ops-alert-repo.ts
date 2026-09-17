@@ -13,14 +13,15 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type {
-  Max3dOpsAlertDoc,
-  Max3dOpsAlertEntity,
-  OpsAlertStatus as OpsAlertStatusType,
+import {
+  Max3dCollections,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type Max3dOpsAlertDoc,
+  type Max3dOpsAlertEntity,
+  type OpsAlertStatus as OpsAlertStatusType,
 } from "@megawin/game-max3d/entities";
-import { Max3dCollections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3d/entities";
-import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type Document } from "mongodb";
 
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
 import { BaseRepo } from "./base-repo";
@@ -47,7 +48,9 @@ export class OpsAlertRepository extends BaseRepo<Max3dOpsAlertEntity, OpsAlertMa
    * @param alerts - Alert cần upsert (không có `_id`; Mongo tự sinh).
    */
   async bulkUpsertByDedupe(alerts: Omit<Max3dOpsAlertDoc, "_id">[]): Promise<void> {
-    if (alerts.length === 0) return;
+    if (alerts.length === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = alerts.map((a) => ({
       updateOne: {
@@ -92,7 +95,9 @@ export class OpsAlertRepository extends BaseRepo<Max3dOpsAlertEntity, OpsAlertMa
   /** List alert 1 kỳ, lọc status optional. Sort mới nhất trước. */
   async listByDrawAndStatus(drawId: string, status?: OpsAlertStatusType): Promise<Max3dOpsAlertEntity[]> {
     const filter: Document = { drawId };
-    if (status) filter.status = status;
+    if (status) {
+      filter.status = status;
+    }
     return await this.findMany(filter, { sort: { createdAt: -1 } });
   }
 

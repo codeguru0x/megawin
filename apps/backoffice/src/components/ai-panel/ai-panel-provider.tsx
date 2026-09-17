@@ -23,16 +23,25 @@
  * NHẤT bọc `children` (không remount). Đổi thread giờ chỉ remount `AgentBridge` (component rỗng,
  * không DOM) — `children` chỉ re-render bình thường theo context mới, không unmount.
  */
-
-import { createContext, type RefObject, use, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, use, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import { usePathname } from "next/navigation";
 
 import { financialDateTodayVN, formatVNDate, formatVNDateTime, VN_TIMEZONE } from "@megawin/shared/utils";
-import type { ClientSessionState, MessageStreamEvent } from "eve/client";
-import { Client, defaultMessageReducer, isCurrentTurnBoundaryEvent } from "eve/client";
-import type { EveMessage, EveMessageData, UseEveAgentHelpers, UseEveAgentStatus } from "eve/react";
-import { useEveAgent } from "eve/react";
+import {
+  Client,
+  defaultMessageReducer,
+  isCurrentTurnBoundaryEvent,
+  type ClientSessionState,
+  type MessageStreamEvent,
+} from "eve/client";
+import {
+  useEveAgent,
+  type EveMessage,
+  type EveMessageData,
+  type UseEveAgentHelpers,
+  type UseEveAgentStatus,
+} from "eve/react";
 
 import { AI_FULL_PAGE_PATH } from "@/config/ai-config";
 import { collectAiPageContext } from "@/lib/ai-page-context";
@@ -695,7 +704,7 @@ export function AiPanelProvider({
   // `useEffect` đầu tiên (bất đồng bộ, sau paint) — so `activeThreadId` để phát hiện lệch, dùng
   // slice "rỗng" tạm cho ĐÚNG thread mới thay vì hiển thị nhầm dữ liệu thread cũ.
   const liveSlice: AgentSlice =
-    agentSlice && agentSlice.activeThreadId === activeThreadId
+    agentSlice?.activeThreadId === activeThreadId
       ? agentSlice
       : {
           activeThreadId,

@@ -11,7 +11,6 @@
  *
  * Keno: không có jackpot — kết quả là 20 số (01-80) + side bet stats.
  */
-
 import { useMemo, useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -36,8 +35,8 @@ import { useCloseSales, useDrawDetail, useOpenSales, useTriggerResettle, useTrig
 import {
   EditScheduleAction,
   PublishResultAction,
-  type PublishResultCurrentValues,
   VoidDrawAction,
+  type PublishResultCurrentValues,
 } from "./draw-actions";
 import { DrawCommandCenter } from "./draw-command-center";
 
@@ -101,7 +100,9 @@ export function DrawManagementSection() {
   // Chuyển đổi draw detail → KenoDrawResult
   const result: KenoDrawResult | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     return {
       winningNumbers: d.result.winningNumbers ?? [],
       bigCount: d.result.bigCount ?? 0,
@@ -114,7 +115,9 @@ export function DrawManagementSection() {
 
   const currentResult: PublishResultCurrentValues | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     return {
       winningNumbers: d.result.winningNumbers ?? [],
       vietlottRef: d.vietlottRef
@@ -128,7 +131,9 @@ export function DrawManagementSection() {
 
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.voidInfo) return undefined;
+    if (!d?.voidInfo) {
+      return undefined;
+    }
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
@@ -138,7 +143,9 @@ export function DrawManagementSection() {
     };
   })();
 
-  if (!draw) return null;
+  if (!draw) {
+    return null;
+  }
 
   return (
     <>
@@ -247,7 +254,7 @@ export function DrawManagementSection() {
         drawId={effectiveDrawId}
         title="Xác nhận kết sổ lại?"
         confirmLabel="Xác nhận kết sổ lại"
-        confirmClassName="bg-orange-600 hover:bg-orange-700 text-white"
+        confirmClassName="bg-warning hover:bg-warning text-white"
         description={
           <>
             Kỳ{" "}
@@ -305,7 +312,9 @@ function SettleConfirmDialog({
   // Đóng dialog (Huỷ / sau khi thành công) → reset mutation để xoá lỗi cũ,
   // lần mở sau bắt đầu sạch.
   function handleOpenChange(next: boolean) {
-    if (!next) mutation.reset();
+    if (!next) {
+      mutation.reset();
+    }
     onOpenChange(next);
   }
 
@@ -327,12 +336,12 @@ function SettleConfirmDialog({
         </AlertDialogHeader>
 
         {errorToast && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-            <AlertTriangle className="size-4 text-destructive shrink-0 mt-0.5" />
+          <div className="border-destructive/30 bg-destructive/5 flex items-start gap-2.5 rounded-lg border px-3 py-2.5">
+            <AlertTriangle className="text-destructive mt-0.5 size-4 shrink-0" />
             <div className="space-y-0.5">
-              <p className="text-sm font-medium text-destructive">{errorToast.title}</p>
+              <p className="text-destructive text-sm font-medium">{errorToast.title}</p>
               {errorToast.description && (
-                <p className="text-xs text-muted-foreground whitespace-pre-line">{errorToast.description}</p>
+                <p className="text-muted-foreground text-xs whitespace-pre-line">{errorToast.description}</p>
               )}
             </div>
           </div>

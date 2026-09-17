@@ -11,11 +11,15 @@ const voidSchema = z.object({
 
 const voidDrawUseCase = new VoidDrawUseCase();
 
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(voidSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return voidDrawUseCase.run({
       drawId,
       reason: body.reason,

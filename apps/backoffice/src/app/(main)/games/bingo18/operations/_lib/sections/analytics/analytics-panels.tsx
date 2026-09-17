@@ -8,7 +8,6 @@
  *   - Phải: Side bets (sumTotal, bigSmallDraw) — 2 card lớn stretch full height.
  *   Cả hai cột dùng cùng card pattern: tinted bg + border + donut + KPI số.
  */
-
 import { formatNumber } from "@megawin/shared/utils";
 import { BarChart2 } from "lucide-react";
 
@@ -33,35 +32,35 @@ const BASIC_STYLES: Record<
   { dot: string; text: string; fill: string; bg: string; border: string; label: string }
 > = {
   singleNum: {
-    dot: "bg-amber-400",
-    text: "text-amber-700 dark:text-amber-400",
+    dot: "bg-warning",
+    text: "text-warning",
     fill: "#fbbf24",
-    bg: "bg-amber-50/60 dark:bg-amber-950/20",
-    border: "border-amber-200/60 dark:border-amber-800/40",
+    bg: "bg-warning/60",
+    border: "border-warning/60",
     label: "Một số",
   },
   doubleMatch: {
-    dot: "bg-orange-500",
-    text: "text-orange-700 dark:text-orange-400",
+    dot: "bg-warning",
+    text: "text-warning",
     fill: "#f97316",
-    bg: "bg-orange-50/60 dark:bg-orange-950/20",
-    border: "border-orange-200/60 dark:border-orange-800/40",
+    bg: "bg-warning/60",
+    border: "border-warning/60",
     label: "Đôi",
   },
   "tripleMatch-specific": {
-    dot: "bg-red-500",
-    text: "text-red-700 dark:text-red-400",
+    dot: "bg-loss",
+    text: "text-loss",
     fill: "#ef4444",
-    bg: "bg-red-50/60 dark:bg-red-950/20",
-    border: "border-red-200/60 dark:border-red-800/40",
+    bg: "bg-loss/60",
+    border: "border-loss/60",
     label: "Ba cụ thể",
   },
   "tripleMatch-any": {
-    dot: "bg-rose-400",
-    text: "text-rose-700 dark:text-rose-400",
+    dot: "bg-loss",
+    text: "text-loss",
     fill: "#fb7185",
-    bg: "bg-rose-50/60 dark:bg-rose-950/20",
-    border: "border-rose-200/60 dark:border-rose-800/40",
+    bg: "bg-loss/60",
+    border: "border-loss/60",
     label: "Ba bất kỳ",
   },
 };
@@ -71,19 +70,19 @@ const SIDE_BET_STYLES: Record<
   { dot: string; text: string; fill: string; bg: string; border: string; label: string }
 > = {
   sumTotal: {
-    dot: "bg-cyan-500",
-    text: "text-cyan-700 dark:text-cyan-400",
+    dot: "bg-info",
+    text: "text-info",
     fill: "#0ea5e9",
-    bg: "bg-cyan-50/70 dark:bg-cyan-950/25",
-    border: "border-cyan-200/60 dark:border-cyan-800/40",
+    bg: "bg-info/70",
+    border: "border-info/60",
     label: "Tổng điểm",
   },
   bigSmallDraw: {
-    dot: "bg-teal-500",
-    text: "text-teal-700 dark:text-teal-400",
+    dot: "bg-game-mega645",
+    text: "text-game-mega645",
     fill: "#14b8a6",
-    bg: "bg-teal-50/70 dark:bg-teal-950/25",
-    border: "border-teal-200/60 dark:border-teal-800/40",
+    bg: "bg-game-mega645/70",
+    border: "border-game-mega645/60",
     label: "Lớn / Hòa / Nhỏ",
   },
 };
@@ -137,27 +136,29 @@ function MiniDonut({ pct, fill, size }: { pct: number; fill: string; size: numbe
 
 function BasicCard({ row }: { row: PlayTypeRow }) {
   const s = BASIC_STYLES[row.playType];
-  if (!s) return null;
+  if (!s) {
+    return null;
+  }
   const isEmpty = row.sets === 0;
 
   return (
     <div
       className={cn(
-        "rounded-xl border p-2.5 flex flex-col gap-1.5 transition-all min-w-0",
+        "flex min-w-0 flex-col gap-1.5 rounded-xl border p-2.5 transition-all",
         isEmpty ? "opacity-40" : "",
         s.bg,
         s.border,
       )}
     >
-      <div className="flex items-center justify-between gap-1 min-w-0">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <div className={cn("size-1.5 rounded-full shrink-0", s.dot)} />
-          <span className={cn("text-xs font-bold truncate", s.text)}>{s.label}</span>
+      <div className="flex min-w-0 items-center justify-between gap-1">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <div className={cn("size-1.5 shrink-0 rounded-full", s.dot)} />
+          <span className={cn("truncate text-xs font-bold", s.text)}>{s.label}</span>
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={32} />
       </div>
-      <p className="text-xs font-bold tabular-nums text-foreground leading-tight">{formatNumber(row.sets)} bộ</p>
-      <p className="text-xs text-muted-foreground tabular-nums leading-none">{formatNumber(row.entries)} entries</p>
+      <p className="text-foreground text-xs leading-tight font-bold tabular-nums">{formatNumber(row.sets)} bộ</p>
+      <p className="text-muted-foreground text-xs leading-none tabular-nums">{formatNumber(row.entries)} entries</p>
     </div>
   );
 }
@@ -167,19 +168,19 @@ function BasicCard({ row }: { row: PlayTypeRow }) {
 function SideBetCard({ row }: { row: PlayTypeRow }) {
   const s = SIDE_BET_STYLES[row.playType] ?? SIDE_BET_STYLES.sumTotal!;
   return (
-    <div className={cn("rounded-xl border p-3.5 flex flex-col gap-2 flex-1 transition-all", s.bg, s.border)}>
+    <div className={cn("flex flex-1 flex-col gap-2 rounded-xl border p-3.5 transition-all", s.bg, s.border)}>
       <div className="flex items-center gap-2">
-        <div className={cn("size-2 rounded-full shrink-0", s.dot)} />
-        <span className={cn("text-xs font-semibold flex-1", s.text)}>{s.label}</span>
+        <div className={cn("size-2 shrink-0 rounded-full", s.dot)} />
+        <span className={cn("flex-1 text-xs font-semibold", s.text)}>{s.label}</span>
       </div>
-      <div className="flex items-center gap-3 flex-1">
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-bold tabular-nums text-foreground leading-tight">
+      <div className="flex flex-1 items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-foreground text-base leading-tight font-bold tabular-nums">
             {formatNumber(row.sets)}
-            <span className="text-xs font-normal text-muted-foreground ml-1">bộ</span>
+            <span className="text-muted-foreground ml-1 text-xs font-normal">bộ</span>
           </p>
-          <p className="text-xs text-muted-foreground tabular-nums mt-1">
-            <span className="font-semibold text-foreground">{formatNumber(row.entries)}</span> entries
+          <p className="text-muted-foreground mt-1 text-xs tabular-nums">
+            <span className="text-foreground font-semibold">{formatNumber(row.entries)}</span> entries
           </p>
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={46} />
@@ -220,37 +221,37 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+      <CardHeader className="px-5 pt-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50 shrink-0">
-              <BarChart2 className="size-3.5 text-amber-600 dark:text-amber-400" />
+            <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <BarChart2 className="text-warning size-3.5" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
+              <CardDescription className="mt-0.5 text-xs">
                 Cơ bản (Một số · Đôi · Ba) · Side bets (Tổng điểm · Lớn/Hòa/Nhỏ)
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
-            <span className="font-semibold text-foreground">{formatNumber(totalSets)}</span>
+          <div className="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums">
+            <span className="text-foreground font-semibold">{formatNumber(totalSets)}</span>
             <span>bộ</span>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         {playTypes.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
+          <p className="text-muted-foreground py-4 text-center text-sm">Chưa có dữ liệu</p>
         ) : (
           <div className="grid gap-4 @[640px]/main:grid-cols-[3fr_2fr]">
             {/* ── Cột trái: Basic boards grid 2×2 ── */}
             <div className="flex flex-col gap-2">
-              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">
+              <p className="text-muted-foreground/50 text-xs font-semibold tracking-wider uppercase">
                 Cơ bản — Số bộ cược
               </p>
-              <div className="flex-1 grid grid-cols-2 auto-rows-fr gap-2">
+              <div className="grid flex-1 auto-rows-fr grid-cols-2 gap-2">
                 {basics.map((row) => (
                   <BasicCard key={row.playType} row={row} />
                 ))}
@@ -259,8 +260,8 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
 
             {/* ── Cột phải: Side bets stretch full height ── */}
             <div className="flex flex-col gap-2">
-              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">Side Bets</p>
-              <div className="flex-1 flex flex-col gap-2.5">
+              <p className="text-muted-foreground/50 text-xs font-semibold tracking-wider uppercase">Side Bets</p>
+              <div className="flex flex-1 flex-col gap-2.5">
                 {sideBets.map((row) => (
                   <SideBetCard key={row.playType} row={row} />
                 ))}

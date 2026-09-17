@@ -122,10 +122,10 @@ function useAuthErrorRecovery(errorCode: string | null): RecoveryPhase {
 
 function AuthRecoveringCard() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
+    <div className="bg-background flex min-h-dvh flex-col items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-          <div className="size-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          <div className="border-muted border-t-primary size-8 animate-spin rounded-full border-4" />
           <p className="text-muted-foreground text-sm">Đang khôi phục phiên đăng nhập...</p>
         </CardContent>
       </Card>
@@ -157,18 +157,18 @@ function AuthErrorContent() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-background px-4">
+    <div className="bg-background flex min-h-dvh flex-col items-center justify-center px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="size-6 text-destructive" />
+          <div className="bg-destructive/10 mx-auto mb-3 flex size-12 items-center justify-center rounded-full">
+            <AlertTriangle className="text-destructive size-6" />
           </div>
           <CardTitle className="text-xl">Lỗi xác thực</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4 text-center">
-          <div className="inline-flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-            <span className="font-mono text-muted-foreground text-xs">{formatErrorCode(displayCode)}</span>
+          <div className="bg-muted/50 inline-flex items-center gap-2 rounded-md border px-3 py-1.5">
+            <span className="text-muted-foreground font-mono text-xs">{formatErrorCode(displayCode)}</span>
           </div>
 
           <p className="text-muted-foreground text-sm leading-relaxed">{displayMessage}</p>
@@ -186,7 +186,7 @@ function AuthErrorContent() {
         </CardFooter>
       </Card>
 
-      <p className="mt-6 text-muted-foreground text-xs">
+      <p className="text-muted-foreground mt-6 text-xs">
         Nếu lỗi tiếp tục xảy ra, vui lòng liên hệ quản trị viên hệ thống.
       </p>
     </div>
@@ -197,8 +197,8 @@ export default function AuthErrorPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-dvh items-center justify-center bg-background">
-          <div className="size-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
+        <div className="bg-background flex min-h-dvh items-center justify-center">
+          <div className="border-muted border-t-primary size-8 animate-spin rounded-full border-4" />
         </div>
       }
     >

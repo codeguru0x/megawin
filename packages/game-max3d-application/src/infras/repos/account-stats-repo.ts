@@ -27,8 +27,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { Max3dDrawAccountStatsDoc, Max3dDrawAccountStatsEntity } from "@megawin/game-max3d/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
+import {
+  Max3dCollections,
+  type Max3dDrawAccountStatsDoc,
+  type Max3dDrawAccountStatsEntity,
+} from "@megawin/game-max3d/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { AccountStatsMapper } from "../mappers/account-stats-mapper";
@@ -73,7 +76,9 @@ export class AccountStatsRepository extends BaseRepo<Max3dDrawAccountStatsEntity
    * @param batchMaxId - ObjectId hex entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: AccountStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = deltas.map((delta) => ({

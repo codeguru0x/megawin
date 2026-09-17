@@ -117,10 +117,14 @@ export function resolveRetryConfig(
   perRequest: RetryConfig | number | false | undefined,
   clientDefault: RetryConfig | number | undefined,
 ): RetryConfig | null {
-  if (perRequest === false || perRequest === 0) return null;
+  if (perRequest === false || perRequest === 0) {
+    return null;
+  }
 
   const raw = perRequest ?? clientDefault;
-  if (raw == null) return null;
+  if (raw == null) {
+    return null;
+  }
 
   if (typeof raw === "number") {
     return raw > 0 ? { maxRetries: raw } : null;

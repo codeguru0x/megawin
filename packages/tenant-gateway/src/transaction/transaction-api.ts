@@ -18,10 +18,10 @@ import { TxLogEventType, TxLoggingPolicy, TxLogStatus } from "../entities/enums"
 import type { TxLogInput } from "../entities/tx-log";
 import { CALLBACK_PATHS } from "../shared";
 import {
-  type ClassifiedOutcome,
   classifyBatchOuterReject,
   classifyItem,
   classifyThrown,
+  type ClassifiedOutcome,
 } from "../shared/tx-log-classifier";
 import { logTxBulkUseCase, logTxUseCase } from "../shared/tx-logging";
 import type {

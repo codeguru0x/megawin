@@ -14,14 +14,14 @@
  */
 
 import {
+  JackpotCycleStatus,
+  Power655Collections,
   type Jackpot2ResetRecord,
   type JackpotCycleClosedReason,
   type JackpotCycleConfig,
   type JackpotCycleDoc,
   type JackpotCycleEntity,
-  JackpotCycleStatus,
   type JackpotWinnerInfo,
-  Power655Collections,
 } from "@megawin/game-power655/entities";
 
 import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
@@ -53,7 +53,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     config: JackpotCycleConfig;
   }): Promise<void> {
     const existing = await this.findOne({ status: JackpotCycleStatus.Active });
-    if (existing) return;
+    if (existing) {
+      return;
+    }
 
     const maxCycle = await this.findOne({}, { sort: { cycleNo: -1 } });
     const cycleNo = (maxCycle?.cycleNo ?? 0) + 1;
@@ -205,7 +207,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       updatedAt: now,
     };
 
-    if (input.winners) $set.winners = input.winners;
+    if (input.winners) {
+      $set.winners = input.winners;
+    }
 
     await this.updateOne(
       {

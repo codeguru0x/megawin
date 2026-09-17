@@ -1,5 +1,11 @@
-import type { AuditAction } from "@megawin/audit/entities";
-import { AuditActionLabel, AuditActorType, AuditCategory, AuditStatus, AuditTargetType } from "@megawin/audit/entities";
+import {
+  AuditActionLabel,
+  AuditActorType,
+  AuditCategory,
+  AuditStatus,
+  AuditTargetType,
+  type AuditAction,
+} from "@megawin/audit/entities";
 import { decodeAuditCursor } from "@megawin/audit/use-cases";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";

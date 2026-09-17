@@ -1,12 +1,12 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type {
-  DrawBettingTotals,
-  Mega645DrawBettingStatsEntity,
-  Mega645Exposure,
-  Mega645PlayTypeStat,
-  TenantBettingStat,
+import {
+  PlayType,
+  type DrawBettingTotals,
+  type Mega645DrawBettingStatsEntity,
+  type Mega645Exposure,
+  type Mega645PlayTypeStat,
+  type TenantBettingStat,
 } from "@megawin/game-mega645/entities";
-import { PlayType } from "@megawin/game-mega645/entities";
 import type { Document } from "mongodb";
 
 /**

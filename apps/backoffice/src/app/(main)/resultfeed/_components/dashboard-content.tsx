@@ -31,32 +31,32 @@ const STATE_KPI_STYLES: Record<
 > = {
   [ConsensusState.Conflict]: {
     icon: AlertTriangle,
-    iconBg: "bg-rose-100 dark:bg-rose-900/50",
-    iconColor: "text-rose-600 dark:text-rose-400",
+    iconBg: "bg-loss",
+    iconColor: "text-loss",
     sub: "Cần xử lý ngay",
   },
   [ConsensusState.Pending]: {
     icon: Clock,
-    iconBg: "bg-amber-100 dark:bg-amber-900/50",
-    iconColor: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-warning",
+    iconColor: "text-warning",
     sub: "Đang chờ nguồn",
   },
   [ConsensusState.Agreed]: {
     icon: CheckCircle2,
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-profit",
+    iconColor: "text-profit",
     sub: "Các nguồn tự khớp",
   },
   [ConsensusState.HumanVerified]: {
     icon: ShieldCheck,
-    iconBg: "bg-blue-100 dark:bg-blue-900/50",
-    iconColor: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-info",
+    iconColor: "text-info",
     sub: "Người đã xác nhận",
   },
   [ConsensusState.Rejected]: {
     icon: XCircle,
-    iconBg: "bg-slate-100 dark:bg-slate-800",
-    iconColor: "text-slate-600 dark:text-slate-400",
+    iconBg: "bg-muted",
+    iconColor: "text-muted-foreground",
     sub: "Không hợp lệ",
   },
 };
@@ -66,21 +66,16 @@ function StateKpiCard({ state, count }: { state: ConsensusState; count: number }
   const isConflict = state === ConsensusState.Conflict;
   const { icon: Icon, iconBg, iconColor, sub } = STATE_KPI_STYLES[state];
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{CONSENSUS_STATE_LABELS[state]}</p>
-        <p
-          className={cn(
-            "text-lg font-bold tabular-nums text-foreground",
-            isConflict && count > 0 && "text-rose-600 dark:text-rose-400",
-          )}
-        >
+        <p className="text-muted-foreground text-xs font-medium">{CONSENSUS_STATE_LABELS[state]}</p>
+        <p className={cn("text-foreground text-lg font-bold tabular-nums", isConflict && count > 0 && "text-loss")}>
           {formatNumber(count)}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -98,8 +93,8 @@ export function DashboardContent() {
     return (
       <Card>
         <CardContent className="flex h-60 flex-col items-center justify-center gap-3 text-center">
-          <AlertCircle className="size-8 text-destructive/60" />
-          <p className="font-medium text-muted-foreground text-sm">Không tải được dữ liệu tổng quan.</p>
+          <AlertCircle className="text-destructive/60 size-8" />
+          <p className="text-muted-foreground text-sm font-medium">Không tải được dữ liệu tổng quan.</p>
           <Button variant="outline" size="sm" onClick={() => statsQuery.refetch()}>
             <RefreshCw className="size-3.5" />
             Thử lại
@@ -135,7 +130,7 @@ export function DashboardContent() {
 
       <Card className="gap-0 overflow-hidden py-0">
         <CardHeader className="border-b px-5 py-4">
-          <CardTitle className="font-semibold text-sm">Theo từng game</CardTitle>
+          <CardTitle className="text-sm font-semibold">Theo từng game</CardTitle>
         </CardHeader>
         <CardContent className="px-0 pt-0 pb-0">
           <div className="overflow-x-auto">
@@ -190,8 +185,8 @@ export function DashboardContent() {
       <Card className="gap-0 overflow-hidden py-0">
         <CardHeader className="border-b px-5 py-4">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4 text-amber-500" />
-            <CardTitle className="font-semibold text-sm">Alert mới ({alerts.length})</CardTitle>
+            <AlertTriangle className="text-warning size-4" />
+            <CardTitle className="text-sm font-semibold">Alert mới ({alerts.length})</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="px-5 py-4">
@@ -202,7 +197,7 @@ export function DashboardContent() {
               {alerts.map((alert) => (
                 <div key={alert.id} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-sm">{alert.type}</span>
+                    <span className="text-sm font-medium">{alert.type}</span>
                     <span className="text-muted-foreground text-xs">{alert.dedupeKey}</span>
                   </div>
                   <Badge variant={ALERT_SEVERITY_VARIANT[alert.severity]}>{alert.severity}</Badge>

@@ -83,7 +83,9 @@ export type AppResult<T> = { success: true; data: T } | { success: false; error:
 
 /** Type guard: kiểm tra object có phải AppError hay không. */
 export function isAppError(err: unknown): err is AppError {
-  if (typeof err !== "object" || err === null || err instanceof Error) return false;
+  if (typeof err !== "object" || err === null || err instanceof Error) {
+    return false;
+  }
 
   const obj = err as Record<string, unknown>;
   return typeof obj.code === "string" && typeof obj.message === "string";

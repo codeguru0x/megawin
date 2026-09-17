@@ -7,8 +7,14 @@
  * Gọi middleware = bắt buộc authed. Không gọi = public.
  */
 
-import type { AccountRole, AccountStatus } from "@megawin/identity/entities";
-import { AccountStatus as AccountStatusEnum, AccountType, ClaimKey, SUPER_ROLES } from "@megawin/identity/entities";
+import {
+  AccountStatus as AccountStatusEnum,
+  AccountType,
+  ClaimKey,
+  SUPER_ROLES,
+  type AccountRole,
+  type AccountStatus,
+} from "@megawin/identity/entities";
 import { APP_ERROR_CODES, type AppError } from "@megawin/shared/errors";
 
 // ============ Auth context (sau Authorizer) ============
@@ -83,12 +89,15 @@ const DEFAULT_ADAPTER_OPTIONS = {
 } as const;
 
 function parseRoles(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string");
-  if (typeof value === "string")
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === "string");
+  }
+  if (typeof value === "string") {
     return value
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean);
+  }
   return [];
 }
 
@@ -98,17 +107,23 @@ export function getAuthContextFromApiGatewayEvent(
 ): AuthContext | null {
   const opts = { ...DEFAULT_ADAPTER_OPTIONS, ...options };
   const authorizer = event.requestContext?.authorizer;
-  if (!authorizer) return null;
+  if (!authorizer) {
+    return null;
+  }
 
   const jwt = authorizer.jwt as { claims?: Record<string, unknown> } | undefined;
   const claims = (jwt?.claims ?? authorizer.claims ?? authorizer) as Record<string, unknown>;
   const sub = (claims[ClaimKey.Sub] as string) ?? (authorizer.sub as string) ?? (authorizer.principalId as string);
-  if (!sub || typeof sub !== "string") return null;
+  if (!sub || typeof sub !== "string") {
+    return null;
+  }
 
   const username = claims[opts.usernameClaim] as string | undefined;
   const accountId = claims[opts.accountIdClaim] as string | undefined;
 
-  if (!username || !accountId) return null;
+  if (!username || !accountId) {
+    return null;
+  }
 
   const tenantId = (claims[opts.tenantIdClaim] as string) ?? undefined;
   const roles = parseRoles(claims[opts.rolesClaim]);

@@ -15,8 +15,7 @@
 import { encodeCursor } from "@megawin/data/mongo";
 import type { ConsensusEntity, ConsensusState, ResultFeedGameKey } from "@megawin/resultfeed/entities";
 
-import type { ConsensusListCursor } from "../../infras/repos/consensus-repo";
-import { ConsensusRepository } from "../../infras/repos/consensus-repo";
+import { ConsensusRepository, type ConsensusListCursor } from "../../infras/repos/consensus-repo";
 
 export interface ListConsensusInput {
   state?: ConsensusState;

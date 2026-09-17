@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -31,11 +31,11 @@ import { meKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 import {
+  setupMfaSchema,
+  verifyMfaSchema,
   type SetupMfaFormValues,
   type SetupMfaResponse,
-  setupMfaSchema,
   type VerifyMfaFormValues,
-  verifyMfaSchema,
 } from "../_lib/schema";
 
 type WizardStep = "password" | "qrcode" | "verify" | "done";
@@ -94,7 +94,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         accessToken,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
+      void qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       setStep("done");
     },
     onError: (error) => {
@@ -103,7 +103,9 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
   });
 
   async function handleCopySecret() {
-    if (!setupData) return;
+    if (!setupData) {
+      return;
+    }
     await navigator.clipboard.writeText(setupData.secretCode);
     setCopied(true);
     toast.success("Đã sao chép mã bí mật");
@@ -112,14 +114,14 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
   if (step === "done") {
     return (
-      <Card className="gap-0 border-emerald-200/60 py-0 shadow-sm dark:border-emerald-800/40">
+      <Card className="border-profit/60 gap-0 py-0 shadow-sm">
         <CardContent className="flex flex-col items-center gap-5 px-5 py-12">
-          <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100 ring-4 ring-emerald-50 dark:bg-emerald-900/50 dark:ring-emerald-900/20">
-            <ShieldCheck className="size-8 text-emerald-600 dark:text-emerald-400" />
+          <div className="bg-profit ring-profit flex size-16 items-center justify-center rounded-full ring-4">
+            <ShieldCheck className="text-profit size-8" />
           </div>
           <div className="text-center">
             <h3 className="text-lg font-semibold">MFA đã được kích hoạt</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+            <p className="text-muted-foreground mx-auto mt-2 max-w-sm text-sm">
               Tài khoản của bạn đã được bảo vệ bằng xác thực 2 lớp. Từ giờ mỗi lần đăng nhập, bạn cần nhập mã từ app
               Authenticator.
             </p>
@@ -134,10 +136,10 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-4 pt-5">
+      <CardHeader className="px-5 pt-5 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
-            <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+          <div className="bg-profit flex size-7 items-center justify-center rounded-lg">
+            <ShieldCheck className="text-profit size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Thiết lập MFA</CardTitle>
@@ -160,7 +162,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                       className={cn(
                         "flex size-8 items-center justify-center rounded-full border-2 transition-all",
                         isCompleted && "border-primary bg-primary text-primary-foreground",
-                        isCurrent && "border-primary bg-primary/10 text-primary ring-4 ring-primary/10",
+                        isCurrent && "border-primary bg-primary/10 text-primary ring-primary/10 ring-4",
                         !isCompleted && !isCurrent && "border-muted-foreground/25 text-muted-foreground/50",
                       )}
                     >
@@ -168,7 +170,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                     </div>
                     <span
                       className={cn(
-                        "text-[11px] font-medium",
+                        "text-xs font-medium",
                         isCurrent ? "text-primary" : "text-muted-foreground",
                         isCompleted && "text-foreground",
                       )}
@@ -195,7 +197,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         </nav>
       </CardHeader>
 
-      <CardContent className="px-5 pb-6 pt-0">
+      <CardContent className="px-5 pt-0 pb-6">
         {/* ─── Bước 1: Xác nhận mật khẩu ─── */}
         {step === "password" && (
           <Form {...passwordForm}>
@@ -203,7 +205,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
               onSubmit={passwordForm.handleSubmit((v) => setupMutation.mutate(v))}
               className="mx-auto max-w-lg space-y-4"
             >
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Để thiết lập MFA, trước tiên hãy xác nhận mật khẩu tài khoản của bạn.
               </p>
               <FormField
@@ -230,9 +232,9 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                           tabIndex={-1}
                         >
                           {showPassword ? (
-                            <EyeOff className="size-4 text-muted-foreground" />
+                            <EyeOff className="text-muted-foreground size-4" />
                           ) : (
-                            <Eye className="size-4 text-muted-foreground" />
+                            <Eye className="text-muted-foreground size-4" />
                           )}
                         </Button>
                       </div>
@@ -267,10 +269,10 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         {step === "qrcode" && setupData && (
           <div className="mx-auto max-w-lg space-y-5">
             {/* Hướng dẫn theo bước */}
-            <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="bg-muted/30 rounded-lg border p-4">
               <ol className="flex flex-col gap-3 text-sm">
                 <li className="flex gap-3">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                     1
                   </span>
                   <span className="text-muted-foreground">
@@ -279,7 +281,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                     2
                   </span>
                   <span className="text-muted-foreground">
@@ -291,24 +293,24 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
             {/* QR Code */}
             <div className="flex flex-col items-center gap-3">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-xs font-medium">
                 <Smartphone className="size-3.5" />
                 Quét mã QR bằng app Authenticator
               </div>
-              <div className="rounded-2xl border-2 border-dashed border-muted-foreground/20 bg-white p-5">
+              <div className="border-muted-foreground/20 rounded-2xl border-2 border-dashed bg-white p-5">
                 <QRCodeSVG value={setupData.otpauthUri} size={180} level="M" />
               </div>
             </div>
 
             {/* Secret code fallback — chia nhóm 4 ký tự */}
             <div className="rounded-lg border p-4">
-              <p className="mb-2.5 text-xs font-medium text-muted-foreground">Không quét được? Nhập mã thủ công:</p>
+              <p className="text-muted-foreground mb-2.5 text-xs font-medium">Không quét được? Nhập mã thủ công:</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 select-all rounded-md bg-muted px-3 py-2.5 font-mono text-xs leading-relaxed tracking-wider">
+                <code className="bg-muted flex-1 rounded-md px-3 py-2.5 font-mono text-xs leading-relaxed tracking-wider select-all">
                   {formatSecret(setupData.secretCode)}
                 </code>
                 <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={handleCopySecret}>
-                  {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+                  {copied ? <Check className="text-profit size-4" /> : <Copy className="size-4" />}
                 </Button>
               </div>
             </div>
@@ -341,11 +343,11 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
               className="mx-auto max-w-lg space-y-6"
             >
               {/* Gợi ý trực quan */}
-              <div className="flex flex-col items-center gap-3 rounded-lg border bg-muted/30 px-4 py-5">
-                <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-                  <Smartphone className="size-5 text-primary" />
+              <div className="bg-muted/30 flex flex-col items-center gap-3 rounded-lg border px-4 py-5">
+                <div className="bg-primary/10 flex size-10 items-center justify-center rounded-full">
+                  <Smartphone className="text-primary size-5" />
                 </div>
-                <p className="text-center text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-center text-sm">
                   Mở app Authenticator và nhập mã <strong className="text-foreground">6 số</strong> đang hiển thị
                 </p>
               </div>

@@ -68,7 +68,7 @@ Chi tiết quan trọng:
 
 Khảo sát 01/08 đã lệch với hiện trạng do các plan khác chạy song song (`monorepo-test-setup`, ops-risk-control 3 game):
 
-- **`tooling/vitest-config` mới xuất hiện** (có source TS thật: `src/index.ts`, `src/setup-db-guard.ts`) — mọi override glob theo `packages/*/src/**` PHẢI mở rộng thêm `tooling/*/src/**` (đã sửa ở p0-02).
+- **`tooling/vitest-config` mới xuất hiện** (có source TS thật: `src/index.ts`, Testcontainers helpers) — mọi override glob theo `packages/*/src/**` PHẢI mở rộng thêm `tooling/*/src/**` (đã sửa ở p0-02).
 - **`tooling/class-arrangement` là thư mục RỖNG** (không có `package.json`) — dọn (xoá) trong p0-05 khi đụng vào `tooling/`.
 - Hầu hết package/app giờ có `vitest.config.ts` + thư mục `test/` riêng (`test/global-setup.ts`, `test/helpers/**`) — khớp override (7a) config + (7b) test của p0-02, không cần đổi glob.
 - Barrel `export * from`: 248 → **275**. Không đổi kết luận (vẫn OFF `noBarrelFile`).
@@ -142,7 +142,7 @@ Danh sách rủi ro đã rà soát ngày 07/08 — từng mục phải được 
 | 3 | **`useSortedClasses` đổi thứ tự class = đổi specificity conflict** — với Tailwind thuần thì an toàn, nhưng nếu có custom CSS class trộn với utility trong cùng `className`, thứ tự có thể ảnh hưởng render. | 🟡 | Sau commit 2 của p0-06: smoke test UI backoffice trên các trang chính (operations 4 game, config). Rule đã chạy sẵn ở backoffice từ trước nên rủi ro chủ yếu ở `packages/ui` (10 file — review tay được). |
 | 4 | **Số liệu khảo sát drift** (§3.1) — mọi con số trong plan là snapshot 01/08. | 🟡 | Bước 0 của p0-06: re-survey. |
 | 5 | **Type-aware (P1) là biến số hiệu năng lớn nhất** — full scan + index `node_modules`. Repo 43 package, `.d.ts` của aws-sdk/mongodb rất nặng. | 🟡 | p1-01 đã có quy trình đo bằng hyperfine + 3 ngưỡng quyết định. KHÔNG bật domain `project`/`types` trong P0 dù "tiện tay". |
-| 6 | **CI chạy test đụng DB staging** — db-guard sẽ chặn, nhưng tuyệt đối không lách bằng `ALLOW_DB_TESTS=true`. | 🔴 với P1 | Đã ghi phương án (a)/(b) trong p1-02. |
+| 6 | **CI chạy test integration** — cần Docker/Testcontainers (hoặc chỉ chạy unit Group A/C ở giai đoạn đầu). | 🔴 với P1 | Đã ghi phương án (a)/(b) trong p1-02. |
 | 7 | **GritQL plugin (P2) chưa kiểm chứng cú pháp** trên 2.5.7. | 🟢 | p2-01 đã có fallback: bỏ lớp lint nếu không match tin cậy, 2 lớp còn lại vẫn bảo vệ. |
 | 8 | **Thứ tự phase là cứng**: không nhảy cóc P1 khi P0 chưa có acceptance xanh; đặc biệt `verbatimModuleSyntax` (p1-01) phải chạy SAU `biome check --write` của p0-06 (nếu không sẽ sửa tay hàng trăm `import type`). | 🔴 | Tuân thủ mermaid §2. |
 | 9 | **Mỗi lần bump minor Biome sau này**: check mục "Promoted rules" trong changelog trước khi bump (bài học 2.5.0 — 73 rule đổi nhóm làm config cũ vỡ). | 🟢 | Đã ghi vào p1-03 (Cursor rule cho AI) + quy trình ở §5. |

@@ -136,9 +136,13 @@ export class ApplyPayoutCapsUseCase extends UseCase<SettleContext, ApplyPayoutCa
     for (const tier of tiers) {
       const winnerCount = countMap[tier.pickCount] ?? 0;
 
-      if (winnerCount === 0) continue;
+      if (winnerCount === 0) {
+        continue;
+      }
 
-      if (winnerCount <= tier.maxSetsForFixed) continue;
+      if (winnerCount <= tier.maxSetsForFixed) {
+        continue;
+      }
 
       // ── Vượt ngưỡng → tính giải chia đều ──
       const cappedPrize = calculateCappedPrize(tier.fixedPrize, winnerCount, tier.maxPerDraw, tier.maxSetsForFixed);
@@ -149,7 +153,9 @@ export class ApplyPayoutCapsUseCase extends UseCase<SettleContext, ApplyPayoutCa
       while (true) {
         const entries = await this.entryRepo.getCappableEntries(drawId, tier.pickCount, BATCH_SIZE, lastEntryId);
 
-        if (entries.length === 0) break;
+        if (entries.length === 0) {
+          break;
+        }
 
         const updateOps: Array<{
           entryId: string;

@@ -9,8 +9,7 @@
  * khi re-settle, vừa giữ `createdAt` immutable kể cả khi settle retry sau crash.
  */
 
-import type { TicketLineDoc } from "@megawin/game-mega645/entities";
-import { Mega645Collections, PrizeTier } from "@megawin/game-mega645/entities";
+import { Mega645Collections, PrizeTier, type TicketLineDoc } from "@megawin/game-mega645/entities";
 import { chunk } from "@megawin/shared/utils";
 import type { ObjectId } from "mongodb";
 
@@ -36,7 +35,9 @@ export class LineRepository extends BaseRepo<any> {
   private static readonly BULK_CHUNK_SIZE = 500;
 
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      return;
+    }
 
     const ops = lines.map((doc) => {
       // Tách createdAt khỏi $set: chỉ ghi khi insert mới (immutable timestamp).
@@ -154,7 +155,9 @@ export class LineRepository extends BaseRepo<any> {
       },
     );
 
-    if (jpLines.length === 0) return 0;
+    if (jpLines.length === 0) {
+      return 0;
+    }
 
     const ops = jpLines.map((line: any) => {
       const betCount = line.betCount as number;

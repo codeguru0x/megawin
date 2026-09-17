@@ -52,20 +52,20 @@ export function DashboardContent() {
     kpisQuery.isFetching || jackpotsQuery.isFetching || drawsQuery.isFetching || outstandingQuery.isFetching;
 
   function handleRefresh() {
-    qc.invalidateQueries({ queryKey: dashboardKeys.all });
+    void qc.invalidateQueries({ queryKey: dashboardKeys.all });
   }
 
   return (
     <div className="@container/main flex flex-col gap-6">
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-indigo-600 shadow-sm">
+        <div className="from-game-max3d to-info flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
           <LayoutDashboard className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Dashboard</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Dashboard</h1>
           <div className="flex items-center gap-1.5">
-            <p className="text-xs text-muted-foreground">Tổng quan hệ thống</p>
+            <p className="text-muted-foreground text-xs">Tổng quan hệ thống</p>
             {/* Live dot — click để force refresh, đang fetch → spinner */}
             <Tooltip>
               <TooltipTrigger asChild>
@@ -76,11 +76,11 @@ export function DashboardContent() {
                   className="group relative flex size-4 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-125 disabled:cursor-default disabled:hover:scale-100"
                 >
                   {isAnyFetching ? (
-                    <LoaderCircle className="size-3 animate-spin text-emerald-500" />
+                    <LoaderCircle className="text-profit size-3 animate-spin" />
                   ) : (
                     <span className="relative flex size-1.5">
-                      <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75 group-hover:opacity-100" />
-                      <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+                      <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-75 group-hover:opacity-100" />
+                      <span className="bg-profit relative inline-flex size-1.5 rounded-full" />
                     </span>
                   )}
                 </button>

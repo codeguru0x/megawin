@@ -15,11 +15,17 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { EntryPayout, EntryResult, EntryVoidInfo, TicketEntryEntity } from "@megawin/game-power655/entities";
-import { Power655Collections, PrizeTier } from "@megawin/game-power655/entities";
-import { type Long, ObjectId } from "mongodb";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
+import {
+  Power655Collections,
+  PrizeTier,
+  type EntryPayout,
+  type EntryResult,
+  type EntryVoidInfo,
+  type TicketEntryEntity,
+} from "@megawin/game-power655/entities";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -51,7 +57,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /** Insert nhiều entries — tự allocate version từ global sequence. */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
-    if (docs.length === 0) return 0;
+    if (docs.length === 0) {
+      return 0;
+    }
     const version = await this.nextVersion();
     const stamped = docs.map((doc) => ({ ...doc, version }));
     const result = await this.insertMany(stamped as any[]);
@@ -216,7 +224,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -409,7 +419,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     jackpotTier: string,
     perEntryAmounts: Map<string, { prizeAmount: number; jackpotPerUnit: number }>,
   ): Promise<number> {
-    if (perEntryAmounts.size === 0) return 0;
+    if (perEntryAmounts.size === 0) {
+      return 0;
+    }
 
     const filter = {
       drawId,
@@ -428,7 +440,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       projection: { _id: 1, "payout.tiers": 1 },
     });
 
-    if (matchingEntries.length === 0) return 0;
+    if (matchingEntries.length === 0) {
+      return 0;
+    }
 
     const ops: Array<{
       updateOne: {
@@ -488,7 +502,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       });
     }
 
-    if (ops.length === 0) return 0;
+    if (ops.length === 0) {
+      return 0;
+    }
 
     const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
@@ -720,7 +736,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async bulkVoidEntries(
     items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -836,7 +854,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   async aggregateTenantReport(
     drawId: string,
-    financialDate: string,
+    _financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;
@@ -883,7 +901,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   async aggregatePlayerReport(
     drawId: string,
-    financialDate: string,
+    _financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;

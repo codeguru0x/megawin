@@ -56,6 +56,8 @@ export function lookupBasicPrize(
   prizeTable: Record<string, Record<string, number>>,
 ): number {
   const tierPrizes = prizeTable[String(pickCount)];
-  if (!tierPrizes) return 0;
+  if (!tierPrizes) {
+    return 0;
+  }
   return tierPrizes[String(matchCount)] ?? 0;
 }

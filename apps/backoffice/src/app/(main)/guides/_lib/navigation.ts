@@ -52,10 +52,14 @@ export function getAdjacentDocs(
 ): { prev: FlatDoc | null; next: FlatDoc | null } {
   const game = STAFF_GUIDE_MANIFEST.find((g) => g.gameKey === gameKey);
   const topic = game?.topics.find((t) => t.key === topicKey);
-  if (!game || !topic) return { prev: null, next: null };
+  if (!game || !topic) {
+    return { prev: null, next: null };
+  }
 
   const idx = topic.docs.findIndex((d) => d.slug === slug);
-  if (idx === -1) return { prev: null, next: null };
+  if (idx === -1) {
+    return { prev: null, next: null };
+  }
 
   const toFlat = (doc: RunbookDoc): FlatDoc => ({
     game,

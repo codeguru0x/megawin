@@ -34,11 +34,9 @@ import type {
   OpsAlertsConfig,
   OpsStatsConfig,
 } from "@megawin/game-max3dpro/entities";
-import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
-import { computeMax3dproExposure, DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
+import { computeMax3dproExposure, DEFAULT_MAX3D_PRO_CONFIG, type Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { TickLoopWorker } from "@megawin/worker-core/workers";
+import { TickLoopWorker, type TickLoopResult, type TickOutcome } from "@megawin/worker-core/workers";
 
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";

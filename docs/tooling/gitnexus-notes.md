@@ -257,15 +257,17 @@ Nguyên tắc chung cho rule always-on: **không mô tả thứ Cursor đã tự
 file đang mở). Rule chỉ nên chứa thứ Cursor *không* thể tự biết — hành vi đo được của tool trên
 repo này, vùng graph mù, quy ước nội bộ.
 
-### Vì sao loại `.cursor/skills/**` khỏi Biome
+### Vì sao loại `.cursor/skills/**` khỏi lint
 
-`lint-staged` chạy `biome check --write` trên `*.mjs` sẽ **tự reformat** `evidence-provenance.mjs`
-(102 `useBlockStatements` + organizeImports) ngay lần commit đầu → file lệch khỏi upstream, khó
-update. Đã thêm `"!.cursor/skills/**"` vào `biome.json` `files.includes`. **Không hạ rule nào** —
-verify error count toàn repo giảm 199 → 197 (đúng 2 error của file vendored).
+`lint-staged` (thời Biome) chạy `biome check --write` trên `*.mjs` sẽ **tự reformat**
+`evidence-provenance.mjs` (102 `useBlockStatements` + organizeImports) ngay lần commit đầu → file
+lệch khỏi upstream, khó update. Đã thêm `"!.cursor/skills/**"` vào `biome.json` `files.includes`
+(nay tương đương `ignorePatterns` trong `.oxlintrc.json` + `.prettierignore`). **Không hạ rule nào**
+— verify error count toàn repo giảm 199 → 197 (đúng 2 error của file vendored).
 
-Lưu ý: `biome.json` **không nhận comment** — thêm `//` làm Biome fail toàn bộ config
-(`Biome exited because the configuration resulted in errors`). Vì vậy giải trình nằm ở đây.
+Lưu ý lịch sử: `biome.json` **không nhận comment** — thêm `//` làm Biome fail toàn bộ config.
+Giải trình nằm ở đây. Hiện tại lint/format là Oxlint + Prettier (P0-07 đã retire Biome).
+
 
 ---
 
@@ -350,7 +352,7 @@ augment` bằng đúng pattern mà từng nhánh sinh ra (đọc source `gitnexu
 const cleaned = base.replace(/[^a-zA-Z0-9_]/g, '');  // calculate-financials → calculatefinancials
 ```
 
-Repo 100% file kebab-case (Biome `style/useFilenamingConvention`) → basename thành chuỗi lowercase
+Repo 100% file kebab-case (linter `style/useFilenamingConvention`) → basename thành chuỗi lowercase
 liền, symbol thật là camelCase/PascalCase → **không bao giờ khớp**. Đốt ~250ms/lần Read, đổi 0
 thông tin. §6 đã đo đúng điều này năm trước và **upstream vẫn chưa sửa**.
 
@@ -395,7 +397,7 @@ không gọi được bằng tên trần; `/usr/bin/python3` (3.9.6) luôn có s
 `/opt/homebrew/bin:/usr/local/bin:/opt/local/bin` vào PATH trước mọi lần spawn.
 
 Slot lock (3 slot, stale 30s, fail-closed) port từ `hook-lock.cjs` của vendor sang Python thay vì
-vendor file `.cjs` — tránh lặp lại vấn đề §9 (file vendored bị Biome reformat).
+vendor file `.cjs` — tránh lặp lại vấn đề §9 (file vendored bị linter reformat).
 
 ### 11.5 Kết quả verify live (cùng session, không cần restart Cursor)
 

@@ -17,7 +17,7 @@
 
 import { NextResponse } from "next/server";
 
-import { APP_ERROR_CODES, type AppError, AppException, appErrorToStatusCode, isAppError } from "@megawin/shared/errors";
+import { APP_ERROR_CODES, appErrorToStatusCode, AppException, isAppError, type AppError } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 import { formatZodIssues, isZodErrorLike } from "@megawin/shared/validation";
 

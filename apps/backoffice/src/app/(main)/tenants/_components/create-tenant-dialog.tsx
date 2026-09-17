@@ -55,7 +55,7 @@ export function CreateTenantDialog() {
 
   function handleCopy() {
     if (createdApiKey) {
-      navigator.clipboard.writeText(createdApiKey);
+      void navigator.clipboard.writeText(createdApiKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -95,10 +95,10 @@ export function CreateTenantDialog() {
               Hãy sao chép API key này ngay. Sau khi đóng dialog bạn sẽ không thể xem lại key dưới dạng đầy đủ.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2 rounded-md border bg-muted/50 p-3">
-            <code className="flex-1 break-all text-sm font-mono">{createdApiKey}</code>
+          <div className="bg-muted/50 flex items-center gap-2 rounded-md border p-3">
+            <code className="flex-1 font-mono text-sm break-all">{createdApiKey}</code>
             <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
-              {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
+              {copied ? <Check className="text-profit size-4" /> : <Copy className="size-4" />}
             </Button>
           </div>
           <DialogFooter>

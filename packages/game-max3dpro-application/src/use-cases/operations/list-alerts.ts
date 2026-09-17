@@ -1,6 +1,9 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Max3dproOpsAlertEntity, Max3dproOpsAlertType } from "@megawin/game-max3dpro/entities";
-import { OpsAlertSeverity } from "@megawin/game-max3dpro/entities";
+import {
+  OpsAlertSeverity,
+  type Max3dproOpsAlertEntity,
+  type Max3dproOpsAlertType,
+} from "@megawin/game-max3dpro/entities";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";

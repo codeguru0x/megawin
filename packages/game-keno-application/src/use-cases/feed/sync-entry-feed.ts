@@ -6,9 +6,8 @@
  * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
-import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
-import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
+import { GameProduct, type EntryFeedDoc, type FeedVoidInfo } from "@megawin/game-core/entities";
 import type {
   EntryBoardSnapshot,
   EntryPayout,
@@ -95,7 +94,9 @@ function mapBetContent(boards: EntryBoardSnapshot[]): KenoFeedBetContent {
 }
 
 function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
-  if (!v) return undefined;
+  if (!v) {
+    return undefined;
+  }
   return {
     originalAmount: v.originalAmount,
     refundAmount: v.refundAmount,

@@ -83,9 +83,9 @@ export function GameTenantDrawList({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <CalendarRange className="size-4 text-muted-foreground" />
+          <CalendarRange className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Kỳ quay — {tenantId}</CardTitle>
         </div>
         <CardDescription className="text-xs">{totalCount ?? rows.length} kỳ quay</CardDescription>
@@ -115,11 +115,11 @@ export function GameTenantDrawList({
                 return (
                   <TableRow
                     key={row.drawId}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(row.drawId, row.tenantId)}
                   >
                     <TableCell className="text-sm">{row.financialDate}</TableCell>
-                    <TableCell className="text-sm font-mono">{row.drawId}</TableCell>
+                    <TableCell className="font-mono text-sm">{row.drawId}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     {showLineCount && (
@@ -137,7 +137,7 @@ export function GameTenantDrawList({
                       {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell
-                      className={cn("text-right text-sm tabular-nums font-medium", getNetProfitColor(rowNetProfit))}
+                      className={cn("text-right text-sm font-medium tabular-nums", getNetProfitColor(rowNetProfit))}
                     >
                       {formatNumber(rowNetProfit)}
                     </TableCell>
@@ -151,35 +151,35 @@ export function GameTenantDrawList({
                   {REPORT_COLUMN_LABELS.summary}
                 </TableCell>
                 {/* Bỏ tổng playerCount */}
-                <TableCell className="text-right text-sm tabular-nums font-semibold text-muted-foreground" />
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-muted-foreground text-right text-sm font-semibold tabular-nums" />
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.entryCount)}
                 </TableCell>
                 {showLineCount && (
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.lineCount)}
                   </TableCell>
                 )}
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalStake)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalPayout)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   <PayoutRatioCell
                     ratio={totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0}
                     className="font-semibold"
                   />
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.ggr)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
                 <TableCell
-                  className={cn("text-right text-sm tabular-nums font-semibold", getNetProfitColor(totals.netProfit))}
+                  className={cn("text-right text-sm font-semibold tabular-nums", getNetProfitColor(totals.netProfit))}
                 >
                   {formatNumber(totals.netProfit)}
                 </TableCell>

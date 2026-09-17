@@ -5,8 +5,7 @@ import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { defaultFilter, useCommandState } from "cmdk";
-import type { LucideIcon } from "lucide-react";
-import { BookOpenIcon, LayoutDashboardIcon, Search, SparklesIcon } from "lucide-react";
+import { BookOpenIcon, LayoutDashboardIcon, Search, SparklesIcon, type LucideIcon } from "lucide-react";
 import type { Route } from "next";
 
 import { STAFF_GUIDE_MANIFEST } from "@/app/(main)/guides/_lib/staff-manifest";
@@ -27,8 +26,7 @@ import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
 import { buildNavHref, NAV_REGISTRY, NavPage } from "@/lib/nav-registry";
 import { hasAnyRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
-import type { NavMainItem } from "@/navigation/sidebar/sidebar-items";
-import { operatorSidebarItems } from "@/navigation/sidebar/sidebar-items";
+import { operatorSidebarItems, type NavMainItem } from "@/navigation/sidebar/sidebar-items";
 
 /** Class list khớp `CommandDialog` registry — compose tay để truyền `filter` vào `Command`. */
 const COMMAND_PALETTE_CLASS =
@@ -204,7 +202,7 @@ function NoPageMatchHint() {
     return null;
   }
   return (
-    <p className="py-6 text-center text-muted-foreground text-sm">
+    <p className="text-muted-foreground py-6 text-center text-sm">
       Không có trang nào khớp — nhấn Enter để hỏi {AI_ASSISTANT_NAME}.
     </p>
   );
@@ -358,12 +356,12 @@ export function SearchDialog() {
     <>
       <Button
         variant="link"
-        className="px-0! font-normal text-muted-foreground hover:no-underline"
+        className="text-muted-foreground px-0! font-normal hover:no-underline"
         onClick={() => setOpen(true)}
       >
         <Search className="size-4" />
         Search
-        <kbd className="inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium text-[10px]">
+        <kbd className="bg-muted inline-flex h-5 items-center gap-1 rounded border px-1.5 text-xs font-medium select-none">
           <span className="text-xs">⌘</span>J
         </kbd>
       </Button>
@@ -401,7 +399,7 @@ export function SearchDialog() {
                         {entry.icon && <entry.icon />}
                         <span>{entry.title}</span>
                         {entry.comingSoon && (
-                          <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">
+                          <span className="bg-muted text-muted-foreground ml-auto rounded-md px-2 py-1 text-xs">
                             Soon
                           </span>
                         )}

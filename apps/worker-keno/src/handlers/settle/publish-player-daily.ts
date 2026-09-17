@@ -10,8 +10,7 @@
  * @output PublishPlayerDailyResult
  */
 
-import type { SettleContext } from "@megawin/game-keno-application/use-cases/settle";
-import { PublishPlayerDailyUseCase } from "@megawin/game-keno-application/use-cases/settle";
+import { PublishPlayerDailyUseCase, type SettleContext } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new PublishPlayerDailyUseCase();
 

@@ -4,8 +4,12 @@ import Link from "next/link";
 
 import { EntryStatus } from "@megawin/game-core/entities";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import type { EntryBoardPayout, EntryBoardSnapshot, TicketEntryEntity } from "@megawin/game-keno/entities";
-import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
+import {
+  KENO_SIDE_BET_PLAY_TYPE_SET,
+  type EntryBoardPayout,
+  type EntryBoardSnapshot,
+  type TicketEntryEntity,
+} from "@megawin/game-keno/entities";
 import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
 import {
   Banknote,
@@ -125,22 +129,22 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2.5 text-base">
           {isSettled ? (
-            <span className="inline-flex items-center justify-center rounded-full bg-emerald-500/15 p-1">
-              <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
+            <span className="bg-profit/15 inline-flex items-center justify-center rounded-full p-1">
+              <CheckCircle2 className="text-profit size-5 shrink-0" />
             </span>
           ) : isVoid ? (
-            <span className="inline-flex items-center justify-center rounded-full bg-destructive/15 p-1">
-              <XCircle className="size-5 shrink-0 text-destructive" />
+            <span className="bg-destructive/15 inline-flex items-center justify-center rounded-full p-1">
+              <XCircle className="text-destructive size-5 shrink-0" />
             </span>
           ) : (
-            <span className="inline-flex items-center justify-center rounded-full bg-amber-500/15 p-1">
-              <Timer className="size-5 shrink-0 text-amber-500" />
+            <span className="bg-warning/15 inline-flex items-center justify-center rounded-full p-1">
+              <Timer className="text-warning size-5 shrink-0" />
             </span>
           )}
           Phiếu cược — Keno
         </DialogTitle>
         <DialogDescription className="flex items-center gap-1.5 font-mono text-xs">
-          <Ticket className="size-3 shrink-0 text-muted-foreground" />
+          <Ticket className="text-muted-foreground size-3 shrink-0" />
           {entry.entrySummary?.ticketNo ?? entry.id} · {entry.drawId}
         </DialogDescription>
       </DialogHeader>
@@ -148,9 +152,9 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
       <ScrollArea className="max-h-[76vh]">
         <div className="space-y-4 pr-2">
           {/* ── 1. Metadata strip (gộp trạng thái) ──────────────── */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg bg-muted/50 px-4 py-3 text-sm">
+          <div className="bg-muted/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg px-4 py-3 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <User className="size-3.5 shrink-0" />
                 Người chơi
               </span>
@@ -174,21 +178,21 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Hash className="size-3.5 shrink-0" />
                 Lượt cược
               </span>
               <span className="font-semibold tabular-nums">{betUnitCount}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Building2 className="size-3.5 shrink-0" />
                 Đại lý
               </span>
               <span className="font-semibold">{entry.tenantId}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Clock className="size-3.5 shrink-0" />
                 Đặt lúc
               </span>
@@ -201,15 +205,15 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 2. Financial KPI — 2×2 grid ─────────────────────── */}
           {isScheduled ? (
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
-                  <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-profit flex size-8 shrink-0 items-center justify-center rounded-md">
+                  <Banknote className="text-profit size-4" />
                 </div>
                 <div>
-                  <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                     Tiền cược
                     {betUnitCount > 1 && (
-                      <span className="rounded bg-muted px-1 py-px text-[10px] font-medium text-muted-foreground">
+                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-xs font-medium">
                         ×{formatNumber(betUnitCount)}
                       </span>
                     )}
@@ -217,27 +221,27 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
-                  <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-warning flex size-8 shrink-0 items-center justify-center rounded-md">
+                  <HandCoins className="text-warning size-4" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Hoa hồng ĐL</p>
+                  <p className="text-muted-foreground text-xs">Hoa hồng ĐL</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
-                  <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-profit flex size-8 shrink-0 items-center justify-center rounded-md">
+                  <Banknote className="text-profit size-4" />
                 </div>
                 <div>
-                  <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                     Tiền cược
                     {betUnitCount > 1 && (
-                      <span className="rounded bg-muted px-1 py-px text-[10px] font-medium text-muted-foreground">
+                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-xs font-medium">
                         ×{formatNumber(betUnitCount)}
                       </span>
                     )}
@@ -245,45 +249,41 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
-                  <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-info flex size-8 shrink-0 items-center justify-center rounded-md">
+                  <Banknote className="text-info size-4" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Trả thưởng</p>
+                  <p className="text-muted-foreground text-xs">Trả thưởng</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
-                  <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
+              <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+                <div className="bg-warning flex size-8 shrink-0 items-center justify-center rounded-md">
+                  <HandCoins className="text-warning size-4" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">Hoa hồng ĐL</p>
+                  <p className="text-muted-foreground text-xs">Hoa hồng ĐL</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
               {playerNet !== null && (
-                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
                   <div
                     className={`flex size-8 shrink-0 items-center justify-center rounded-md ${
-                      playerNet > 0
-                        ? "bg-emerald-100 dark:bg-emerald-900/50"
-                        : playerNet < 0
-                          ? "bg-red-100 dark:bg-red-900/50"
-                          : "bg-muted"
+                      playerNet > 0 ? "bg-profit" : playerNet < 0 ? "bg-loss" : "bg-muted"
                     }`}
                   >
                     {playerNet > 0 ? (
-                      <TrendingUp className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <TrendingUp className="text-profit size-4" />
                     ) : playerNet < 0 ? (
-                      <TrendingDown className="size-4 text-red-600 dark:text-red-400" />
+                      <TrendingDown className="text-loss size-4" />
                     ) : (
-                      <Minus className="size-4 text-muted-foreground" />
+                      <Minus className="text-muted-foreground size-4" />
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
+                    <p className="text-muted-foreground text-xs">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
                         playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
@@ -302,7 +302,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {winningSet.size > 0 && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
               {/* Kết quả 20 số kỳ quay */}
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Kết quả</p>
+              <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">Kết quả</p>
               <div className="mb-4 flex flex-wrap justify-center gap-1.5">
                 {[...winningSet]
                   .sort((a, b) => Number(a) - Number(b))
@@ -315,10 +315,10 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="mb-3 border-t" />
 
               {/* Danh sách cược */}
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
                 Danh sách cược
                 {winBoardCount > 0 && (
-                  <span className="ml-2 text-profit">
+                  <span className="text-profit ml-2">
                     — {winBoardCount}/{boards.length} trúng
                   </span>
                 )}
@@ -335,7 +335,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   if (isSideBet) {
                     const betLabel = board.bet ? (KENO_BET_LABELS[board.bet] ?? board.bet) : "—";
                     selectionContent = (
-                      <span className="rounded bg-secondary px-2 py-0.5 text-xs font-semibold">{betLabel}</span>
+                      <span className="bg-secondary rounded px-2 py-0.5 text-xs font-semibold">{betLabel}</span>
                     );
                   } else {
                     const nums: string[] = board.numbers ?? [];
@@ -354,11 +354,11 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       outcomeContent = (
                         <div className="flex items-center justify-start gap-1.5">
                           {!isSideBet && (
-                            <span className="inline-flex items-center rounded-full bg-profit/15 px-2 py-0.5 text-[11px] font-bold tabular-nums text-profit">
+                            <span className="bg-profit/15 text-profit inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold tabular-nums">
                               {payout.matchCount ?? 0}/{payout.pickCount ?? 0}
                             </span>
                           )}
-                          <span className="text-sm font-bold text-profit tabular-nums">
+                          <span className="text-profit text-sm font-bold tabular-nums">
                             +{formatNumber(payout.winAmount)}
                           </span>
                         </div>
@@ -366,7 +366,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     } else {
                       outcomeContent = isSideBet ? (
                         <div className="flex items-center justify-start">
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-muted-foreground text-xs">—</span>
                         </div>
                       ) : null;
                     }
@@ -375,21 +375,21 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   return (
                     <div
                       key={board.boardNo + board.playType}
-                      className="grid items-start gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
+                      className="grid items-start gap-x-3 rounded-md border-l-3 py-2 pl-3"
                       style={{
                         borderLeftColor: boardColor,
                         gridTemplateColumns: "2rem 5.5rem 1fr",
                       }}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
+                        <span className="text-sm leading-none font-extrabold" style={{ color: boardColor }}>
                           {board.boardNo}
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5 pt-0.5">
-                        <span className="text-[11px] font-semibold leading-tight text-foreground">{pickLabel}</span>
+                        <span className="text-foreground text-xs leading-tight font-semibold">{pickLabel}</span>
                         {board.betCount > 1 && (
-                          <span className="text-[10px] leading-tight text-muted-foreground">×{board.betCount}</span>
+                          <span className="text-muted-foreground text-xs leading-tight">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -406,9 +406,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             boards.length > 0 && (
               <div className="rounded-lg border p-4">
                 <div className="mb-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Danh sách cược
-                  </p>
+                  <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Danh sách cược</p>
                 </div>
                 <div className="space-y-2">
                   {boards.map((board) => {
@@ -420,7 +418,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     if (isSideBet) {
                       const betLabel = board.bet ? (KENO_BET_LABELS[board.bet] ?? board.bet) : "—";
                       selectionContent = (
-                        <span className="rounded bg-secondary px-2 py-0.5 text-xs font-semibold">{betLabel}</span>
+                        <span className="bg-secondary rounded px-2 py-0.5 text-xs font-semibold">{betLabel}</span>
                       );
                     } else {
                       const nums: string[] = board.numbers ?? [];
@@ -436,21 +434,21 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     return (
                       <div
                         key={board.boardNo + board.playType}
-                        className="grid items-start gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
+                        className="grid items-start gap-x-3 rounded-md border-l-3 py-2 pl-3"
                         style={{
                           borderLeftColor: boardColor,
                           gridTemplateColumns: "2rem 5.5rem 1fr",
                         }}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
+                          <span className="text-sm leading-none font-extrabold" style={{ color: boardColor }}>
                             {board.boardNo}
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5 pt-0.5">
-                          <span className="text-[11px] font-semibold leading-tight text-foreground">{pickLabel}</span>
+                          <span className="text-foreground text-xs leading-tight font-semibold">{pickLabel}</span>
                           {board.betCount > 1 && (
-                            <span className="text-[10px] leading-tight text-muted-foreground">×{board.betCount}</span>
+                            <span className="text-muted-foreground text-xs leading-tight">×{board.betCount}</span>
                           )}
                         </div>
                         <div>{selectionContent}</div>

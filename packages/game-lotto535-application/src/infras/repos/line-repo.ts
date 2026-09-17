@@ -13,8 +13,7 @@
  * PatchJackpotPrize (step 4a) qua patchJackpotLineWinAmount().
  */
 
-import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
-import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PrizeTier, type TicketLineDoc } from "@megawin/game-lotto535/entities";
 import { chunk } from "@megawin/shared/utils";
 
 import { BaseRepo } from "./base-repo";
@@ -42,7 +41,9 @@ export class LineRepository extends BaseRepo<any> {
   private static readonly BULK_CHUNK_SIZE = 500;
 
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      return;
+    }
 
     const ops = lines.map((doc) => {
       // Tách createdAt khỏi $set: chỉ ghi khi insert mới (immutable timestamp).
@@ -144,7 +145,9 @@ export class LineRepository extends BaseRepo<any> {
       { projection: { _id: 1, betCount: 1 } },
     );
 
-    if (jpLines.length === 0) return 0;
+    if (jpLines.length === 0) {
+      return 0;
+    }
 
     const ops = jpLines.map((line) => {
       // betCount per line — luôn có giá trị (required field).

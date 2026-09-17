@@ -42,13 +42,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
-import { type TenantOption, useTenantOptions } from "@/hooks/use-tenant-options";
+import { useTenantOptions, type TenantOption } from "@/hooks/use-tenant-options";
 
 import {
-  type TenantConfig,
   useCreateTenantConfig,
   useTenantConfigs,
   useUpdateTenantConfig,
+  type TenantConfig,
 } from "./_lib/use-tenant-config";
 
 // ─────────────────────────────────────────────
@@ -85,8 +85,12 @@ export default function KenoTenantConfigPage() {
   );
 
   const filtered = useMemo(() => {
-    if (!tenantConfigs) return [];
-    if (!search.trim()) return tenantConfigs;
+    if (!tenantConfigs) {
+      return [];
+    }
+    if (!search.trim()) {
+      return tenantConfigs;
+    }
     const q = search.toLowerCase();
     return tenantConfigs.filter((c) => {
       const name = displayNameMap.get(c.tenantId) ?? "";
@@ -104,7 +108,9 @@ export default function KenoTenantConfigPage() {
 
   function handleCreateTenant(tenantId: string) {
     const alreadyExists = tenantConfigs?.some((c) => c.tenantId === tenantId);
-    if (alreadyExists) return;
+    if (alreadyExists) {
+      return;
+    }
     createMutation.mutate(tenantId, {
       onSuccess: () => setDialogOpen(false),
     });
@@ -115,18 +121,18 @@ export default function KenoTenantConfigPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+          <div className="from-warning to-loss flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Cấu hình đại lý</h1>
-            <p className="text-xs text-muted-foreground">Quản lý hoa hồng và trạng thái hoạt động của từng đại lý</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Keno — Cấu hình đại lý</h1>
+            <p className="text-muted-foreground text-xs">Quản lý hoa hồng và trạng thái hoạt động của từng đại lý</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {(tenantConfigs?.length ?? 0) > 1 && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 placeholder="Tìm theo tên hoặc ID đại lý…"
                 className="h-9 w-64 pl-9"
@@ -151,24 +157,24 @@ export default function KenoTenantConfigPage() {
       <div className="grid grid-cols-3 gap-4">
         <KpiCard
           icon={Users}
-          iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-          iconColor="text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-info"
+          iconColor="text-info"
           label="Tổng đại lý"
           value={stats.total}
           isLoading={isLoading}
         />
         <KpiCard
           icon={CircleCheck}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-profit"
+          iconColor="text-profit"
           label="Đang hoạt động"
           value={stats.active}
           isLoading={isLoading}
         />
         <KpiCard
           icon={CircleX}
-          iconBg="bg-red-100 dark:bg-red-900/50"
-          iconColor="text-red-500 dark:text-red-400"
+          iconBg="bg-loss"
+          iconColor="text-loss"
           label="Vô hiệu hoá"
           value={stats.inactive}
           isLoading={isLoading}
@@ -179,8 +185,8 @@ export default function KenoTenantConfigPage() {
       {isLoading && <CardListSkeleton />}
 
       {isError && (
-        <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-6">
-          <p className="text-sm text-destructive">
+        <div className="border-destructive/50 bg-destructive/10 rounded-xl border p-6">
+          <p className="text-destructive text-sm">
             Không thể tải danh sách: {error instanceof Error ? error.message : "Lỗi không xác định"}
           </p>
         </div>
@@ -220,16 +226,16 @@ function KpiCard({
   isLoading: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
         <Icon className={`size-5 ${iconColor}`} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
         {isLoading ? (
           <Skeleton className="mt-1 h-6 w-10" />
         ) : (
-          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
+          <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
         )}
       </div>
     </div>
@@ -261,28 +267,34 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
     const data: Record<string, unknown> = {};
     const newRate = values.commissionRate / 100;
 
-    if (newRate !== config.commissionRate) data.commissionRate = newRate;
-    if (values.isEnabled !== config.isEnabled) data.isEnabled = values.isEnabled;
+    if (newRate !== config.commissionRate) {
+      data.commissionRate = newRate;
+    }
+    if (values.isEnabled !== config.isEnabled) {
+      data.isEnabled = values.isEnabled;
+    }
 
-    if (Object.keys(data).length === 0) return;
+    if (Object.keys(data).length === 0) {
+      return;
+    }
     mutation.mutate(data);
   }
 
   return (
-    <Card className="overflow-hidden gap-0 py-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           {/* Card Header */}
           <CardHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                <Building2 className="size-4.5 text-muted-foreground" />
+              <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-xl">
+                <Building2 className="text-muted-foreground size-4.5" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="truncate text-sm font-semibold text-foreground">{displayName || config.tenantId}</h3>
+                  <h3 className="text-foreground truncate text-sm font-semibold">{displayName || config.tenantId}</h3>
                 </div>
-                {displayName && <p className="mt-0.5 truncate text-xs text-muted-foreground">{config.tenantId}</p>}
+                {displayName && <p className="text-muted-foreground mt-0.5 truncate text-xs">{config.tenantId}</p>}
               </div>
             </div>
 
@@ -303,12 +315,12 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                   render={({ field }) => (
                     <FormItem>
                       <div className="mb-4 flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/40">
-                          <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
+                        <div className="bg-info flex size-9 items-center justify-center rounded-lg">
+                          <TrendingUp className="text-info size-4" />
                         </div>
                         <div>
                           <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>
-                          <p className="text-xs text-muted-foreground">Tỷ lệ trên tổng doanh thu</p>
+                          <p className="text-muted-foreground text-xs">Tỷ lệ trên tổng doanh thu</p>
                         </div>
                       </div>
 
@@ -327,7 +339,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                               isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= 100}
                             />
                           </FormControl>
-                          <span className="text-lg font-semibold text-muted-foreground">%</span>
+                          <span className="text-muted-foreground text-lg font-semibold">%</span>
                         </div>
                         <FormMessage />
                       </div>
@@ -346,18 +358,14 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                       <div className="mb-4 flex items-center gap-3">
                         <div
                           className={`flex size-9 items-center justify-center rounded-lg ${
-                            isEnabled ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-red-100 dark:bg-red-950/40"
+                            isEnabled ? "bg-profit" : "bg-loss"
                           }`}
                         >
-                          <Power
-                            className={`size-4 ${
-                              isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
-                            }`}
-                          />
+                          <Power className={`size-4 ${isEnabled ? "text-profit" : "text-loss"}`} />
                         </div>
                         <div>
                           <FormLabel className="text-sm font-semibold">Trạng thái game</FormLabel>
-                          <p className="text-xs text-muted-foreground">Cho phép đại lý bán vé</p>
+                          <p className="text-muted-foreground text-xs">Cho phép đại lý bán vé</p>
                         </div>
                       </div>
 
@@ -365,11 +373,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                         <FormControl>
                           <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
-                        <span
-                          className={`text-sm font-medium ${
-                            isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
-                          }`}
-                        >
+                        <span className={`text-sm font-medium ${isEnabled ? "text-profit" : "text-loss"}`}>
                           {isEnabled ? "Đang hoạt động" : "Đã vô hiệu hoá"}
                         </span>
                       </div>
@@ -383,7 +387,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
 
           {/* Card Footer */}
           <CardFooter className="justify-between border-t px-5 py-3">
-            <p className="text-xs tabular-nums text-muted-foreground">
+            <p className="text-muted-foreground text-xs tabular-nums">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
             </p>
             <Button type="submit" size="sm" disabled={mutation.isPending || !form.formState.isDirty}>
@@ -424,12 +428,16 @@ function AddTenantDialog({
   const existingSet = new Set(existingIds);
 
   const available = useMemo(() => {
-    if (!tenantOptions) return [];
+    if (!tenantOptions) {
+      return [];
+    }
     return tenantOptions.filter((t) => !existingSet.has(t.tenantId));
   }, [tenantOptions, existingSet]);
 
   const filtered = useMemo(() => {
-    if (!dialogSearch.trim()) return available;
+    if (!dialogSearch.trim()) {
+      return available;
+    }
     const q = dialogSearch.toLowerCase();
     return available.filter((t) => t.tenantId.toLowerCase().includes(q) || t.displayName.toLowerCase().includes(q));
   }, [available, dialogSearch]);
@@ -443,7 +451,9 @@ function AddTenantDialog({
   }
 
   function handleCreate() {
-    if (!selected) return;
+    if (!selected) {
+      return;
+    }
     onCreateTenant(selected);
   }
 
@@ -458,7 +468,7 @@ function AddTenantDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+            <div className="from-warning to-loss flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
               <Building2 className="size-4.5 text-white" />
             </div>
             <div>
@@ -472,7 +482,7 @@ function AddTenantDialog({
 
         <div className="space-y-3 py-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo ID hoặc tên đại lý…"
               className="h-9 pl-8 text-sm"
@@ -492,8 +502,8 @@ function AddTenantDialog({
 
             {!isLoadingOptions && filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12">
-                <AlertCircle className="size-6 text-muted-foreground/40" />
-                <p className="mt-2 text-xs text-muted-foreground">
+                <AlertCircle className="text-muted-foreground/40 size-6" />
+                <p className="text-muted-foreground mt-2 text-xs">
                   {dialogSearch
                     ? "Không tìm thấy đại lý phù hợp"
                     : available.length === 0
@@ -509,16 +519,16 @@ function AddTenantDialog({
                   key={t.tenantId}
                   type="button"
                   onClick={() => setSelected(t.tenantId)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors hover:bg-muted/60 ${
-                    selected === t.tenantId ? "bg-primary/10 ring-1 ring-primary/30" : ""
+                  className={`hover:bg-muted/60 flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
+                    selected === t.tenantId ? "bg-primary/10 ring-primary/30 ring-1" : ""
                   }`}
                 >
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
-                    <Building2 className="size-4 text-muted-foreground" />
+                  <div className="bg-muted flex size-9 items-center justify-center rounded-lg">
+                    <Building2 className="text-muted-foreground size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{t.displayName}</p>
-                    <p className="truncate text-xs text-muted-foreground">{t.tenantId}</p>
+                    <p className="text-muted-foreground truncate text-xs">{t.tenantId}</p>
                   </div>
                   <Badge variant={t.status === "active" ? "default" : "secondary"} className="shrink-0 text-xs">
                     {t.status === "active" ? "Hoạt động" : t.status}
@@ -549,14 +559,14 @@ function AddTenantDialog({
 
 function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border bg-card py-20">
-      <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
-        <Building2 className="size-6 text-muted-foreground/50" />
+    <div className="bg-card flex flex-col items-center justify-center rounded-xl border py-20">
+      <div className="bg-muted flex size-14 items-center justify-center rounded-2xl">
+        <Building2 className="text-muted-foreground/50 size-6" />
       </div>
-      <p className="mt-4 text-sm font-medium text-foreground">
+      <p className="text-foreground mt-4 text-sm font-medium">
         {hasSearch ? "Không tìm thấy đại lý phù hợp" : "Chưa có đại lý nào được cấu hình"}
       </p>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="text-muted-foreground mt-1 text-xs">
         {hasSearch ? "Thử tìm kiếm với từ khoá khác" : 'Nhấn "Thêm đại lý" ở góc phải để bắt đầu'}
       </p>
     </div>
@@ -571,7 +581,7 @@ function CardListSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4">
       {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="rounded-xl border bg-card">
+        <div key={i} className="bg-card rounded-xl border">
           <div className="flex items-center gap-3 border-b px-6 py-4">
             <Skeleton className="size-10 rounded-xl" />
             <div className="space-y-1.5">

@@ -4,11 +4,11 @@ import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
 
 import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
-import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle/game-player-entry-list";
+import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle/game-player-entry-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { type PlayerSettledEntryResponse, usePlayerEntries, usePlayerEntryDetail } from "../../_shared/queries";
+import { usePlayerEntries, usePlayerEntryDetail, type PlayerSettledEntryResponse } from "../../_shared/queries";
 
 interface EntryListViewProps {
   accountId: string;
@@ -64,7 +64,7 @@ export function EntryListView({ accountId, financialDate, game, drawId, playerDi
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex h-40 items-center justify-center">
-          <p className="text-sm text-destructive">Không thể tải danh sách entries.</p>
+          <p className="text-destructive text-sm">Không thể tải danh sách entries.</p>
         </CardContent>
       </Card>
     );
@@ -74,7 +74,7 @@ export function EntryListView({ accountId, financialDate, game, drawId, playerDi
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex h-40 items-center justify-center">
-          <p className="text-sm text-muted-foreground">Không có entry nào cho kỳ quay này.</p>
+          <p className="text-muted-foreground text-sm">Không có entry nào cho kỳ quay này.</p>
         </CardContent>
       </Card>
     );

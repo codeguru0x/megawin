@@ -71,7 +71,7 @@ export function DispatchContent() {
       )}
 
       <Card className="gap-0 overflow-hidden py-0">
-        <CardContent className="px-0 pb-0 pt-0">
+        <CardContent className="px-0 pt-0 pb-0">
           <DispatchTable
             rows={rows}
             isLoading={listQuery.isLoading}
@@ -88,8 +88,11 @@ export function DispatchContent() {
         tx={drawerTx}
         onClose={() => {
           // Đóng drawer — nếu đang ở tx identity mode, clear identity hẳn.
-          if (f.tx) f.clearIdentity();
-          else f.closeDetail();
+          if (f.tx) {
+            f.clearIdentity();
+          } else {
+            f.closeDetail();
+          }
         }}
         onRequestCancel={(tx) => setCancelTx(tx)}
       />

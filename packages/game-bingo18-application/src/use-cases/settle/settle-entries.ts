@@ -23,20 +23,22 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-bingo18/entities";
 import {
   BINGO18_BASIC_PLAY_TYPE_SET,
-  type Bingo18BigSmallBet,
   Bingo18PlayType,
+  type Bingo18BigSmallBet,
   type Bingo18TripleKind,
+  type EntryBoardPayout,
+  type EntryPayout,
+  type EntryResult,
 } from "@megawin/game-bingo18/entities";
 import {
-  type DrawResultForMatch,
   matchBigSmallDraw,
   matchDoubleMatch,
   matchSingleNum,
   matchSumTotal,
   matchTripleMatch,
+  type DrawResultForMatch,
 } from "@megawin/game-bingo18/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { generateId, sumBy } from "@megawin/shared/utils";
@@ -174,6 +176,12 @@ export class SettleEntriesBatchUseCase extends UseCase<SettleContext, SettleEntr
 
                 break;
               }
+              case "bigSmallDraw": {
+                throw new Error('Not implemented yet: "bigSmallDraw" case');
+              }
+              case "sumTotal": {
+                throw new Error('Not implemented yet: "sumTotal" case');
+              }
             }
           } else {
             // ── Bổ sung (side bets): sumTotal / bigSmallDraw ────────────────
@@ -222,6 +230,15 @@ export class SettleEntriesBatchUseCase extends UseCase<SettleContext, SettleEntr
                   winAmount: unitWinAmount * board.betCount,
                 });
                 break;
+              }
+              case "doubleMatch": {
+                throw new Error('Not implemented yet: "doubleMatch" case');
+              }
+              case "singleNum": {
+                throw new Error('Not implemented yet: "singleNum" case');
+              }
+              case "tripleMatch": {
+                throw new Error('Not implemented yet: "tripleMatch" case');
               }
             }
           }

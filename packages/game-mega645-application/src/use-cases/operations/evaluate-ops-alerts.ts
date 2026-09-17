@@ -28,12 +28,19 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import type { Mega645DrawBettingStatsEntity, Mega645OpsAlertsConfig } from "@megawin/game-mega645/entities";
-import { Mega645OpsAlertType } from "@megawin/game-mega645/entities";
+import {
+  Mega645OpsAlertType,
+  type Mega645DrawBettingStatsEntity,
+  type Mega645OpsAlertsConfig,
+} from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+import {
+  LockTakenOverError,
+  TickLoopWorker,
+  type TickLoopResult,
+  type TickOutcome,
+} from "@megawin/worker-core/workers";
 
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";

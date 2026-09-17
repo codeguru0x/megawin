@@ -28,13 +28,13 @@
  */
 
 import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
-import type {
-  KenoDrawBettingStatsDoc,
-  KenoDrawBettingStatsEntity,
-  KenoPlayTypeStat,
-  OpsStatsConfig,
+import {
+  KenoCollections,
+  type KenoDrawBettingStatsDoc,
+  type KenoDrawBettingStatsEntity,
+  type KenoPlayTypeStat,
+  type OpsStatsConfig,
 } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
@@ -140,8 +140,7 @@ export class BettingStatsRepository extends BaseRepo<KenoDrawBettingStatsEntity,
       // `normalizeExposure` của `BettingStatsMapper` áp cho các đường đọc full-doc khác,
       // giữ đúng nguyên tắc "default 1 nơi duy nhất phía đọc" đã ghi trong `ensureDocs`.
       const totals = d.totals as
-        | { revenue: number; entries: number; sets: number; commission: number; largeBetCount: number }
-        | undefined;
+        { revenue: number; entries: number; sets: number; commission: number; largeBetCount: number } | undefined;
       const exposure = d.exposure as { worstCaseTotal: number } | undefined;
 
       return {

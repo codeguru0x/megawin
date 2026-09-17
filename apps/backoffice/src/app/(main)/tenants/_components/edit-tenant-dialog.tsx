@@ -76,7 +76,7 @@ export function EditTenantDialog({ tenant, open, onOpenChange }: EditTenantDialo
         <DialogHeader>
           <DialogTitle>Chỉnh sửa đối tác</DialogTitle>
           <DialogDescription>
-            Tenant ID: <code className="font-mono text-foreground">{tenant.tenantId}</code>
+            Tenant ID: <code className="text-foreground font-mono">{tenant.tenantId}</code>
           </DialogDescription>
         </DialogHeader>
 

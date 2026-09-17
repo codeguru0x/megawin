@@ -23,10 +23,10 @@ export default function AdminJackpotPage() {
           <Trophy className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">
             {GAME_LABELS[GameProduct.Lotto535]} — Jackpot
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Theo dõi tích luỹ Jackpot, tiến trình chia giải và lịch sử cycle.
           </p>
         </div>

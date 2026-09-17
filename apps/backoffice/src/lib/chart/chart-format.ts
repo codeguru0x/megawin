@@ -182,6 +182,15 @@ export function formatTooltipValue(value: number, type: ChartFieldType): string 
       return formatVND(value);
     case ChartFieldType.Percent:
       return formatPercent(value, 1);
+    case "category": {
+      throw new Error('Not implemented yet: "category" case');
+    }
+    case "number": {
+      throw new Error('Not implemented yet: "number" case');
+    }
+    case "time": {
+      throw new Error('Not implemented yet: "time" case');
+    }
     default:
       return formatNumber(value);
   }

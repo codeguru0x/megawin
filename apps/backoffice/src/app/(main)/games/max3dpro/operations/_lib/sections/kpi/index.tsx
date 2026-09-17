@@ -6,7 +6,6 @@
  * Đọc snapshot (timer 1) qua `select` slice `toKpi` → KPI strip; slice exposure +
  * thresholds riêng → ExposureCard (query dedupe 1 request; `select` chặn cross re-render).
  */
-
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import type { Max3dproExposureResult } from "@megawin/game-max3dpro/rules";
 import { formatNumber } from "@megawin/shared/utils";
@@ -32,16 +31,16 @@ interface KpiCardProps {
 
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, loading }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm flex-1 min-w-0">
+    <div className="bg-card flex min-w-0 flex-1 items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+        <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
         {loading ? (
-          <Skeleton className="h-7 w-24 mt-0.5" />
+          <Skeleton className="mt-0.5 h-7 w-24" />
         ) : (
-          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{value}</p>
+          <p className="text-foreground text-lg leading-tight font-bold tabular-nums">{value}</p>
         )}
       </div>
     </div>
@@ -74,50 +73,52 @@ export function KpiSection() {
       : null,
   );
 
-  if (!draw) return null;
+  if (!draw) {
+    return null;
+  }
 
   const loading = isLoading || !kpi;
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tổng quan</h2>
+      <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Tổng quan</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <KpiCard
           icon={CircleDollarSign}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-profit"
+          iconColor="text-profit"
           label={REPORT_COLUMN_LABELS.totalStake}
           value={kpi ? formatNumber(kpi.totalRevenue) : "—"}
           loading={loading}
         />
         <KpiCard
           icon={FileText}
-          iconBg="bg-blue-100 dark:bg-blue-900/50"
-          iconColor="text-blue-600 dark:text-blue-400"
+          iconBg="bg-info"
+          iconColor="text-info"
           label={REPORT_COLUMN_LABELS.entryCount}
           value={kpi ? formatNumber(kpi.totalEntries) : "—"}
           loading={loading}
         />
         <KpiCard
           icon={Hash}
-          iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-          iconColor="text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-info"
+          iconColor="text-info"
           label="Bet Units"
           value={kpi ? formatNumber(kpi.totalBetUnits) : "—"}
           loading={loading}
         />
         <KpiCard
           icon={Users}
-          iconBg="bg-violet-100 dark:bg-violet-900/50"
-          iconColor="text-violet-600 dark:text-violet-400"
+          iconBg="bg-game-max3d"
+          iconColor="text-game-max3d"
           label={REPORT_COLUMN_LABELS.playerCount}
           value={kpi && kpi.uniquePlayers !== null ? formatNumber(kpi.uniquePlayers) : "—"}
           loading={loading}
         />
         <KpiCard
           icon={Wallet}
-          iconBg="bg-amber-100 dark:bg-amber-900/50"
-          iconColor="text-amber-600 dark:text-amber-400"
+          iconBg="bg-warning"
+          iconColor="text-warning"
           label={REPORT_COLUMN_LABELS.totalCommission}
           value={kpi ? formatNumber(kpi.totalCommission) : "—"}
           loading={loading}

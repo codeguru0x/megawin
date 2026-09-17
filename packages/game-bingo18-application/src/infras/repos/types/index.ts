@@ -23,10 +23,7 @@ export type {
   WinningEntriesSummary,
   WinningEntryForDispatch,
 } from "./entry.types";
-export type {
-  OutstandingPlayerBreakdownRow,
-  OutstandingTenantBreakdownRow,
-} from "./entry-outstanding.types";
+export type { OutstandingPlayerBreakdownRow, OutstandingTenantBreakdownRow } from "./entry-outstanding.types";
 export type { VoidPlayerBreakdownRow, VoidTenantBreakdownRow } from "./entry-void.types";
 export type { HubAlertCounts, HubDrawRow, HubStatsRow } from "./hub.types";
 export type { OutstandingGameSummary } from "./outstanding.types";

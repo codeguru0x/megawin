@@ -39,13 +39,13 @@ export default function KenoConfigPage() {
   return (
     <div className="@container/main flex flex-col gap-2">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+        <div className="from-warning to-loss flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
           <Settings2 className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Cấu hình</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Keno — Cấu hình</h1>
           {config && (
-            <p className="text-xs tabular-nums text-muted-foreground">
+            <p className="text-muted-foreground text-xs tabular-nums">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
             </p>
           )}
@@ -55,8 +55,8 @@ export default function KenoConfigPage() {
       {isLoading && <ConfigSkeleton />}
 
       {isError && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">
+        <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-4">
+          <p className="text-destructive text-sm">
             Không thể tải cấu hình: {error instanceof Error ? error.message : "Lỗi không xác định"}
           </p>
         </div>
@@ -66,31 +66,31 @@ export default function KenoConfigPage() {
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
             <TabsTrigger value="prizes" className="gap-1.5">
-              <Trophy className="size-4 text-amber-500" />
+              <Trophy className="text-warning size-4" />
               Giải thưởng
             </TabsTrigger>
             <TabsTrigger value="sidebets" className="gap-1.5">
-              <Dices className="size-4 text-purple-500" />
+              <Dices className="text-game-max3d size-4" />
               Cược bổ sung
             </TabsTrigger>
             <TabsTrigger value="caps" className="gap-1.5">
-              <Shield className="size-4 text-red-500" />
+              <Shield className="text-loss size-4" />
               Giới hạn
             </TabsTrigger>
             <TabsTrigger value="rates" className="gap-1.5">
-              <Percent className="size-4 text-blue-500" />
+              <Percent className="text-info size-4" />
               Tài chính
             </TabsTrigger>
             <TabsTrigger value="play" className="gap-1.5">
-              <Settings2 className="size-4 text-violet-500" />
+              <Settings2 className="text-game-max3d size-4" />
               Luật chơi
             </TabsTrigger>
             <TabsTrigger value="ops" className="gap-1.5">
-              <Activity className="size-4 text-emerald-500" />
+              <Activity className="text-profit size-4" />
               Vận hành
             </TabsTrigger>
             <TabsTrigger value="vietlott" className="gap-1.5">
-              <ExternalLink className="size-4 text-blue-500" />
+              <ExternalLink className="text-info size-4" />
               Vietlott
             </TabsTrigger>
           </TabsList>

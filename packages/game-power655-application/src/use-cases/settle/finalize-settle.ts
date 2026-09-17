@@ -60,8 +60,7 @@
 
 import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
-import { JackpotCycleClosedReasons, JackpotType } from "@megawin/game-power655/entities";
+import { JackpotCycleClosedReasons, JackpotType, type JackpotCycleClosedReason } from "@megawin/game-power655/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
@@ -237,7 +236,9 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
       // ── JP2 winner only: reset JP2, KHÔNG đóng cycle ────────────────────────
       // JP1 tiếp tục tích lũy bình thường. JP2 reset về seed.
       const activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) return;
+      if (!activeCycle) {
+        return;
+      }
 
       await this.resetJp2WithinCycle(drawId, input, activeCycle.cycleNo);
 
@@ -248,7 +249,9 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
       // Dùng snapshot cycleDrawCountBefore từ PrepareSettle thay vì activeCycle.drawCount
       // → idempotent khi retry (không cộng dồn 2 lần).
       const activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) return;
+      if (!activeCycle) {
+        return;
+      }
 
       await this.cycleRepo.updateCycleStats({
         cycleNo: input.config.cycleNo,

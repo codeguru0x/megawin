@@ -91,30 +91,30 @@ export function getDrawLifecycleSteps(draw: DrawLifecycleFields): Step[] {
  */
 export function LifecycleStepper({ steps }: { steps: Step[] }) {
   return (
-    <div className="flex items-start w-full">
+    <div className="flex w-full items-start">
       {steps.map((step, i) => (
-        <div key={i} className="flex items-start flex-1 min-w-0">
-          <div className="flex flex-col items-center gap-1 shrink-0">
+        <div key={i} className="flex min-w-0 flex-1 items-start">
+          <div className="flex shrink-0 flex-col items-center gap-1">
             <div
               className={cn(
                 "flex size-6 items-center justify-center rounded-full border-2 transition-all",
-                step.state === "done" && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40",
+                step.state === "done" && "border-profit bg-profit",
                 step.state === "active" && "border-primary bg-primary/10",
                 step.state === "pending" && "border-border bg-background",
               )}
             >
               {step.state === "done" ? (
-                <CheckCircle2 className="size-3 text-emerald-500" />
+                <CheckCircle2 className="text-profit size-3" />
               ) : step.state === "active" ? (
-                <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="bg-primary size-1.5 animate-pulse rounded-full" />
               ) : (
-                <Circle className="size-3 text-muted-foreground/30" />
+                <Circle className="text-muted-foreground/30 size-3" />
               )}
             </div>
-            <div className="text-center w-16">
+            <div className="w-16 text-center">
               <p
                 className={cn(
-                  "text-xs font-medium leading-tight",
+                  "text-xs leading-tight font-medium",
                   step.state === "active" && "text-foreground font-semibold",
                   step.state === "done" && "text-muted-foreground",
                   step.state === "pending" && "text-muted-foreground/40",
@@ -123,16 +123,16 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
                 {step.label}
               </p>
               {step.time && (
-                <p className="text-[10px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">{step.time}</p>
+                <p className="text-muted-foreground/60 mt-0.5 font-mono text-xs tabular-nums">{step.time}</p>
               )}
             </div>
           </div>
           {i < steps.length - 1 && (
-            <div className="flex-1 mt-3 mx-1 min-w-4">
+            <div className="mx-1 mt-3 min-w-4 flex-1">
               <div
                 className={cn(
                   "h-0.5 w-full rounded-full",
-                  steps[i + 1]?.state !== "pending" ? "bg-emerald-400" : "bg-border/60",
+                  steps[i + 1]?.state !== "pending" ? "bg-profit" : "bg-border/60",
                 )}
               />
             </div>

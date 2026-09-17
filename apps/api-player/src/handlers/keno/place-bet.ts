@@ -32,10 +32,10 @@
 
 import { withPlayerAuth } from "@megawin/auth";
 import { TicketChannel } from "@megawin/game-core/entities";
+import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
 import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
 import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 import { kenoDrawIdSchema, kenoNumberSchema } from "@megawin/game-keno/schemas";
-import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";
 

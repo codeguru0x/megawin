@@ -6,7 +6,6 @@
  * Hiển thị N entries cược gần nhất của kỳ quay đang chạy.
  * Lotto 5/35: mainNumbers (01-35) + specialNumbers (01-12, chỉ khi SpecialCover).
  */
-
 import { displayVNTimeWithSeconds, formatNumber, toTenantUsername } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
 
@@ -33,14 +32,14 @@ const LARGE_BET_THRESHOLD = 5_000_000;
 
 export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntry[]; isSettled?: boolean }) {
   return (
-    <Card className="gap-0 py-0 shadow-sm flex flex-col">
-      <CardHeader className="px-5 pb-2 pt-4 shrink-0">
+    <Card className="flex flex-col gap-0 py-0 shadow-sm">
+      <CardHeader className="shrink-0 px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Activity className="size-4 text-muted-foreground shrink-0" />
+          <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
-            <span className="ml-auto flex items-center gap-1 text-xs text-amber-500 font-medium">
-              <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-warning ml-auto flex items-center gap-1 text-xs font-medium">
+              <span className="bg-warning size-1.5 animate-pulse rounded-full" />
               Live
             </span>
           )}
@@ -49,8 +48,8 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
       {/* Chiều cao cố định, scroll khi vượt */}
       <div className="overflow-y-auto px-5 pb-4" style={{ maxHeight: 950 }}>
         {entries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/50">
-            <Radio className="size-5 mb-1.5" />
+          <div className="text-muted-foreground/50 flex flex-col items-center justify-center py-8">
+            <Radio className="mb-1.5 size-5" />
             <p className="text-xs">Chưa có cược</p>
           </div>
         ) : (
@@ -64,9 +63,9 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                 <div
                   key={e.entryId}
                   className={cn(
-                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
+                    "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
                     i === 0 && "bg-muted/20",
-                    isLargeBet && "bg-red-500/5",
+                    isLargeBet && "bg-loss/5",
                   )}
                   style={{
                     borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
@@ -78,46 +77,46 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                       row3: footer          | time   */}
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play type label (left) — right cell empty */}
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
-                      <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
+                      <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>
                         {e.playTypeLabel}
                       </span>
                       {isLargeBet && (
-                        <span className="shrink-0 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                        <span className="bg-loss/10 text-loss shrink-0 rounded-full px-1.5 py-0.5 text-xs font-semibold">
                           Cược lớn
                         </span>
                       )}
                     </div>
                     <div /> {/* empty right cell for row 1 */}
                     {/* Row 2: number badges (left) | amount (right) */}
-                    <div className="min-w-0 overflow-hidden flex items-center gap-1">
+                    <div className="flex min-w-0 items-center gap-1 overflow-hidden">
                       <NumbersWithTooltip numbers={mainNumbers} variant="soft" ballVariant="main" />
-                      {suffix && <span className="text-xs text-muted-foreground shrink-0">{suffix}</span>}
+                      {suffix && <span className="text-muted-foreground shrink-0 text-xs">{suffix}</span>}
                       {specialNumbers.length > 0 && (
                         <>
-                          <span className="text-xs text-muted-foreground mx-0.5 shrink-0">+</span>
+                          <span className="text-muted-foreground mx-0.5 shrink-0 text-xs">+</span>
                           <NumbersWithTooltip numbers={specialNumbers} variant="soft" ballVariant="special" />
                         </>
                       )}
                     </div>
                     <div className="flex items-start justify-end">
-                      <span className="text-xs font-semibold tabular-nums text-foreground">
+                      <span className="text-foreground text-xs font-semibold tabular-nums">
                         {formatNumber(e.amount)}
                       </span>
                     </div>
                     {/* Row 3: username · tenant (left) | time (right) */}
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="text-muted-foreground truncate text-xs">
                       {e.username && (
                         <>
-                          <span className="font-medium text-foreground/70">{toTenantUsername(e.username)}</span>
+                          <span className="text-foreground/70 font-medium">{toTenantUsername(e.username)}</span>
                           <span className="mx-1">·</span>
                         </>
                       )}
                       {e.tenant}
                     </div>
                     <div className="flex items-start justify-end">
-                      <span className="text-xs font-mono tabular-nums text-muted-foreground">
+                      <span className="text-muted-foreground font-mono text-xs tabular-nums">
                         {displayVNTimeWithSeconds(e.time)}
                       </span>
                     </div>

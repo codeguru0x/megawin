@@ -16,7 +16,7 @@
  * 1. **Dải A full-width trên cùng** — gộp chặng + câu "vì sao" (`text-xs`, khớp bảng 5A) + tuổi
  *    trong chặng + NÚT hành động vào 1 dải, nút canh PHẢI. Trước đó nút nằm ở footer dưới cả 3
  *    khối, cách câu chẩn đoán ~120px, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm.
- *    `border-l-[3px]` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
+ *    `border-l-3` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
  *    panel cũ chuyển sang xám nên tín hiệu "đang đỏ" biến mất đúng lúc đọc kỹ nhất).
  * 2. **2 cột bất đối xứng 58/42**, mỗi cột bọc khung `border rounded-lg bg-card` riêng (fix vòng
  *    4, xem thêm bên dưới) — tách biệt khỏi nền `bg-muted/30` của panel.
@@ -79,7 +79,6 @@
  * Không animate chiều cao (plan §3.2 điểm 6) — hiện/ẩn thẳng, panel chỉ render khi đang mở
  * (component cha chỉ mount đúng 1 panel, KHÔNG render rồi `hidden`).
  */
-
 import { useState } from "react";
 
 import dynamic from "next/dynamic";
@@ -135,6 +134,21 @@ function bulkKindForStatus(status: DrawStatus): BulkDialogActionKind | null {
       return BulkActionKind.CloseSales;
     case DrawStatus.Published:
       return BulkActionKind.Settle;
+    case "salesClosed": {
+      throw new Error('Not implemented yet: "salesClosed" case');
+    }
+    case "settled": {
+      throw new Error('Not implemented yet: "settled" case');
+    }
+    case "settling": {
+      throw new Error('Not implemented yet: "settling" case');
+    }
+    case "void": {
+      throw new Error('Not implemented yet: "void" case');
+    }
+    case "voiding": {
+      throw new Error('Not implemented yet: "voiding" case');
+    }
     default:
       return null;
   }
@@ -192,12 +206,12 @@ function TimelineDot({ label, ms, emptyText }: TimelineDotProps) {
   // thời gian/vé/bộ/rủi ro). Trước dùng `text-sm` nên panel expand trông TO hơn bảng ngoài.
   return (
     <div className="flex items-baseline justify-between gap-2 text-xs">
-      <span className="flex min-w-0 items-baseline gap-2 text-muted-foreground">
+      <span className="text-muted-foreground flex min-w-0 items-baseline gap-2">
         <span
           className={
             ms !== null
-              ? "size-1.5 shrink-0 translate-y-[-2px] rounded-full bg-primary"
-              : "size-1.5 shrink-0 translate-y-[-2px] rounded-full border border-muted-foreground/40"
+              ? "bg-primary size-1.5 shrink-0 translate-y-[-2px] rounded-full"
+              : "border-muted-foreground/40 size-1.5 shrink-0 translate-y-[-2px] rounded-full border"
           }
         />
         <span className="truncate">{label}</span>
@@ -207,7 +221,7 @@ function TimelineDot({ label, ms, emptyText }: TimelineDotProps) {
           {fmtTime(ms)}
         </span>
       ) : (
-        <span className="shrink-0 whitespace-nowrap text-muted-foreground/60">{emptyText}</span>
+        <span className="text-muted-foreground/60 shrink-0 whitespace-nowrap">{emptyText}</span>
       )}
     </div>
   );
@@ -235,7 +249,7 @@ function FieldRow({ label, value, emphasize, valueClassName, title }: FieldRowPr
   // tránh panel expand "phình" so với dòng ngoài.
   return (
     <div className="flex items-baseline justify-between gap-2 text-xs" title={title}>
-      <span className="min-w-0 wrap-break-word text-muted-foreground leading-snug">{label}</span>
+      <span className="text-muted-foreground min-w-0 leading-snug wrap-break-word">{label}</span>
       <span
         className={cn("shrink-0 whitespace-nowrap tabular-nums", emphasize ? "font-medium" : undefined, valueClassName)}
       >
@@ -338,10 +352,10 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
         **đè lên chữ của cột khác** (bug §A1 đã đo được trên UI thật, đã fix).
         KHÔNG sửa primitive `table.tsx` — nó dùng ở >100 nơi và nowrap là hành vi đúng cho ô bảng.
       */}
-      <TableCell colSpan={QUEUE_TABLE_COLUMN_COUNT} className="whitespace-normal bg-muted/30 p-0">
+      <TableCell colSpan={QUEUE_TABLE_COLUMN_COUNT} className="bg-muted/30 p-0 whitespace-normal">
         {/* Header panel — drawId ĐẦY ĐỦ + chặng + nút đóng bằng icon X (KHÔNG phải nút text
             "Đóng" — đây chính là chỗ gây nhầm trong ảnh bạn chỉ ra: "Đóng" cạnh "Đóng bán"). */}
-        <div className="flex items-center justify-between gap-3 border-b bg-card px-4 py-2.5">
+        <div className="bg-card flex items-center justify-between gap-3 border-b px-4 py-2.5">
           {/* `text-xs` — cùng scale với `DrawIdLabel` / badge trạng thái ở dòng bảng ngoài. */}
           <div className="flex items-center gap-2 text-xs">
             <span className="font-mono font-semibold">{row.drawId}</span>
@@ -382,7 +396,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
             theo trục dọc, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm. Typography cả dải
             giữ `text-xs` để khớp dòng bảng 5A (không bump `text-sm` — panel sẽ "to" hơn dòng ngoài).
 
-            `border-l-[3px]` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
+            `border-l-3` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
             `stuck` có nền đỏ nhạt, panel cũ đổi sang xám `bg-muted/30` nên tín hiệu "kỳ này đang
             đỏ" BIẾN MẤT đúng lúc staff đọc kỹ nhất.
 
@@ -391,11 +405,11 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
           */}
           <div
             className={cn(
-              "mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-l-[3px] p-3",
+              "mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-l-3 p-3",
               row.health === StageHealth.Stuck
                 ? "border-l-destructive bg-destructive/5"
                 : row.health === StageHealth.Warn
-                  ? "border-l-amber-500 bg-amber-500/5"
+                  ? "bg-warning/5 border-l-warning"
                   : "border-l-primary/40 bg-card",
             )}
           >
@@ -425,7 +439,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
               </div>
               {/* `break-words` — `reason` có thể chứa mã kỳ/số dài không có dấu cách để ngắt.
                   `text-xs` — đồng bộ bảng ngoài; nhấn bằng `leading-snug`, không bump size. */}
-              <p className="mt-1 break-words text-xs leading-snug">{row.reason}</p>
+              <p className="mt-1 text-xs leading-snug break-words">{row.reason}</p>
             </div>
 
             {/* Nút hành động — CÙNG HÀNG với chẩn đoán, canh phải. `items-center` để nút thẳng
@@ -523,10 +537,10 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
             nhận diện nhanh không cần đọc chữ, cùng ngôn ngữ hình với heading `<h2>` các section
             khác của trang (`hub-selling-section.tsx`).
           */}
-          <div className="grid min-w-0 @lg/panel:grid-cols-2 grid-cols-1 gap-3">
-            <div className="flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3">
-              <p className="mb-0.5 flex items-center gap-1.5 font-semibold text-foreground text-xs uppercase tracking-wide">
-                <Clock className="size-3.5 text-muted-foreground" />
+          <div className="grid min-w-0 grid-cols-1 gap-3 @lg/panel:grid-cols-2">
+            <div className="bg-card flex min-w-0 flex-col gap-1.5 rounded-lg border p-3">
+              <p className="text-foreground mb-0.5 flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
+                <Clock className="text-muted-foreground size-3.5" />
                 Dòng thời gian
               </p>
               <TimelineDot label="Mở bán" ms={row.ts.openAtMs} emptyText="Chưa mở bán" />
@@ -557,12 +571,12 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                 // "Doanh thu") còn gần thẳng nhưng dòng 4 ("Công bố KQ" ~ "Rủi ro chi trả") lệch
                 // rõ ~6px, đúng hiện tượng ảnh chụp UI thật cho thấy. Số dòng 2 cột đã bằng nhau
                 // (fix vòng 5, 6) — chỉ cần gap bằng nhau nữa là mọi dòng thẳng hàng.
-                "flex min-w-0 flex-col gap-1.5 rounded-lg border bg-card p-3",
+                "bg-card flex min-w-0 flex-col gap-1.5 rounded-lg border p-3",
                 hasMoney ? undefined : "text-muted-foreground/60",
               )}
             >
-              <p className="mb-0.5 flex items-center gap-1.5 font-semibold text-foreground text-xs uppercase tracking-wide">
-                <Wallet className="size-3.5 text-muted-foreground" />
+              <p className="text-foreground mb-0.5 flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
+                <Wallet className="text-muted-foreground size-3.5" />
                 Tiền &amp; rủi ro
               </p>
               {/* Nhãn KHÔNG ghi "(VND)": dòng "Hoa hồng đại lý"/"Rủi ro chi trả" ngay dưới cũng là
@@ -584,7 +598,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
               <FieldRow
                 label="Rủi ro chi trả"
                 value={formatNumber(row.exposureRaw)}
-                valueClassName={row.exposureRaw > 0 ? "text-amber-600 dark:text-amber-500" : undefined}
+                valueClassName={row.exposureRaw > 0 ? "text-warning" : undefined}
               />
 
               {/* `Cược lớn` + `Cảnh báo` trước là 2 dòng LUÔN hiện, ở kỳ bình thường cả 2 đều `0`/
@@ -592,16 +606,16 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
               {row.largeBetCount > 0 || row.alertsOpen > 0 ? (
                 <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
                   {row.largeBetCount > 0 ? (
-                    <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-amber-700 dark:text-amber-500">
+                    <span className="bg-warning/10 text-warning rounded px-1.5 py-0.5">
                       {formatNumber(row.largeBetCount)} cược lớn
                     </span>
                   ) : null}
                   {row.alertsCritical > 0 ? (
-                    <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-destructive">
+                    <span className="bg-destructive/10 text-destructive rounded px-1.5 py-0.5">
                       {row.alertsCritical} cảnh báo nghiêm trọng
                     </span>
                   ) : row.alertsOpen > 0 ? (
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
+                    <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5">
                       {row.alertsOpen} cảnh báo mở
                     </span>
                   ) : null}

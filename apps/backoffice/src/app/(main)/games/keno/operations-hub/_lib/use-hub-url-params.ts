@@ -15,7 +15,6 @@
  * `history: "replace"` (mặc định của nuqs) — không tạo entry mới, không phải "làm rác history"
  * như lo ngại của plan cũ. `clearOnDefault: true` giữ URL sạch khi đang ở giá trị mặc định.
  */
-
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 
 export function useHubUrlParams() {

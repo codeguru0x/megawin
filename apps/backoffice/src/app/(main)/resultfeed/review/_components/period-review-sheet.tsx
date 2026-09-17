@@ -23,7 +23,7 @@ export function PeriodReviewSheet({ gameKey, drawPeriod, onClose }: PeriodReview
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-160">
         <SheetHeader className="border-b px-5 py-4">
-          <SheetTitle className="font-semibold text-lg">Chi tiết kỳ</SheetTitle>
+          <SheetTitle className="text-lg font-semibold">Chi tiết kỳ</SheetTitle>
           <SheetDescription className="text-muted-foreground text-xs">
             Chọn nguồn làm chuẩn, hoặc nhập tay khi không nguồn nào đúng.
           </SheetDescription>

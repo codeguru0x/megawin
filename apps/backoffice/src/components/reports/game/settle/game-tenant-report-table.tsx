@@ -91,47 +91,47 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <KpiCard
           icon={Building2}
-          iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-          iconColor="text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-info"
+          iconColor="text-info"
           label="Số đại lý"
           value={formatNumber(rows.length)}
           sub="đại lý hoạt động"
         />
         <KpiCard
           icon={DollarSign}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-profit"
+          iconColor="text-profit"
           label={REPORT_COLUMN_LABELS.totalStake}
           value={formatVNDCompact(totals.totalStake)}
           sub={`${formatNumber(totals.entryCount)} lượt cược`}
         />
         <KpiCard
           icon={TrendingDown}
-          iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
-          iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
+          iconBg={payoutColor ? "bg-loss" : "bg-warning"}
+          iconColor={payoutColor ? "text-loss" : "text-warning"}
           label={REPORT_COLUMN_LABELS.totalPayout}
           value={formatVNDCompact(totals.totalPayout)}
           subNode={<PayoutRatioKpiBadge ratio={payoutRatio} />}
         />
         <KpiCard
           icon={TrendingUp}
-          iconBg="bg-blue-100 dark:bg-blue-900/50"
-          iconColor="text-blue-600 dark:text-blue-400"
+          iconBg="bg-info"
+          iconColor="text-info"
           label={REPORT_COLUMN_LABELS.ggr}
           value={formatVNDCompact(totals.ggr)}
           valueClass={getNetProfitColor(totals.ggr)}
         />
         <KpiCard
           icon={Percent}
-          iconBg="bg-amber-100 dark:bg-amber-900/50"
-          iconColor="text-amber-600 dark:text-amber-400"
+          iconBg="bg-warning"
+          iconColor="text-warning"
           label={REPORT_COLUMN_LABELS.totalCommission}
           value={formatVNDCompact(totals.totalCommission)}
         />
         <KpiCard
           icon={totals.netProfit < 0 ? TrendingDown : TrendingUp}
-          iconBg={totals.netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
-          iconColor={totals.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
+          iconBg={totals.netProfit < 0 ? "bg-loss" : "bg-game-max3d"}
+          iconColor={totals.netProfit < 0 ? "text-loss" : "text-game-max3d"}
           label={REPORT_COLUMN_LABELS.netProfit}
           value={formatVNDCompact(totals.netProfit)}
           valueClass={getNetProfitColor(totals.netProfit)}
@@ -140,9 +140,9 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
 
       {/* ── Table ── */}
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-2">
-            <Building2 className="size-4 text-muted-foreground" />
+            <Building2 className="text-muted-foreground size-4" />
             <CardTitle className="text-sm font-semibold">Tổng hợp theo đại lý</CardTitle>
           </div>
           <CardDescription className="text-xs">{rows.length} đại lý</CardDescription>
@@ -172,7 +172,7 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
                   return (
                     <TableRow
                       key={row.tenantId}
-                      className="cursor-pointer hover:bg-muted/50"
+                      className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => onRowClick(row.tenantId)}
                     >
                       <TableCell className="text-sm font-medium">{row.tenantId}</TableCell>
@@ -194,7 +194,7 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
                         {formatNumber(row.totalCommission)}
                       </TableCell>
                       <TableCell
-                        className={cn("text-right text-sm tabular-nums font-medium", getNetProfitColor(rowNetProfit))}
+                        className={cn("text-right text-sm font-medium tabular-nums", getNetProfitColor(rowNetProfit))}
                       >
                         {formatNumber(rowNetProfit)}
                       </TableCell>
@@ -206,38 +206,38 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
                 <TableRow>
                   <TableCell className="text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                   {/* Bỏ tổng playerCount — không chính xác khi cùng player ở nhiều đại lý */}
-                  <TableCell className="text-right text-sm tabular-nums font-semibold text-muted-foreground" />
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-muted-foreground text-right text-sm font-semibold tabular-nums" />
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.drawCount)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.entryCount)}
                   </TableCell>
                   {showLineCount && (
-                    <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    <TableCell className="text-right text-sm font-semibold tabular-nums">
                       {formatNumber(totals.lineCount)}
                     </TableCell>
                   )}
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.totalStake)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.totalPayout)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     <PayoutRatioCell
                       ratio={totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0}
                       className="font-semibold"
                     />
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.ggr)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.totalCommission)}
                   </TableCell>
                   <TableCell
-                    className={cn("text-right text-sm tabular-nums font-semibold", getNetProfitColor(totals.netProfit))}
+                    className={cn("text-right text-sm font-semibold tabular-nums", getNetProfitColor(totals.netProfit))}
                   >
                     {formatNumber(totals.netProfit)}
                   </TableCell>

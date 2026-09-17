@@ -24,10 +24,10 @@ import { playerDetailKeys } from "@/lib/query-keys/player-detail";
 import { cn } from "@/lib/utils";
 
 import {
-  type PlayerOutstandingEntryResponse,
-  type PlayerOutstandingSummaryResponse,
   usePlayerEntryDetail,
   usePlayerOutstanding,
+  type PlayerOutstandingEntryResponse,
+  type PlayerOutstandingSummaryResponse,
 } from "../../_shared/queries";
 
 interface PlayerOutstandingContentProps {
@@ -70,20 +70,20 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
         <button
           type="button"
           onClick={onRefresh}
-          className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-muted/60 transition-colors"
+          className="hover:bg-muted/60 flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors"
           aria-label="Lấy dữ liệu mới nhất"
         >
           <span className="relative flex size-2">
             {isFetching ? (
-              <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="bg-warning size-2 animate-pulse rounded-full" />
             ) : (
               <>
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+                <span className="bg-profit relative inline-flex size-2 rounded-full" />
               </>
             )}
           </span>
-          <span className="text-xs text-muted-foreground">Live</span>
+          <span className="text-muted-foreground text-xs">Live</span>
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
@@ -119,7 +119,9 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
 
   // Group entries by gameProduct -- view 1
   const byGame = useMemo(() => {
-    if (!data?.entries) return [];
+    if (!data?.entries) {
+      return [];
+    }
     const map = new Map<
       string,
       {
@@ -157,7 +159,9 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
 
   // Group entries by drawId trong game dang chon -- view 2
   const byDraw = useMemo(() => {
-    if (!og || !data?.entries) return [];
+    if (!og || !data?.entries) {
+      return [];
+    }
     const gameEntries = data.entries.filter((e) => e.gameProduct === og);
     const map = new Map<
       string,
@@ -187,7 +191,9 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
 
   // Entries cho draw dang chon (view 3) -- paginated
   const entriesForDraw = useMemo(() => {
-    if (!od || !og || !data?.entries) return [];
+    if (!od || !og || !data?.entries) {
+      return [];
+    }
     return data.entries.filter((e) => e.gameProduct === og && e.drawId === od);
   }, [od, og, data?.entries]);
 
@@ -243,9 +249,9 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1 text-sm">
-            <Clock className="mr-1 size-4 shrink-0 text-muted-foreground" />
+            <Clock className="text-muted-foreground mr-1 size-4 shrink-0" />
             {view === "games" ? (
-              <span className="font-medium text-foreground">Đơn cược đang chờ</span>
+              <span className="text-foreground font-medium">Đơn cược đang chờ</span>
             ) : view === "draws" ? (
               <>
                 <button
@@ -255,8 +261,8 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
                 >
                   Đơn cược đang chờ
                 </button>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
-                <span className="font-semibold text-foreground">{gameLabel}</span>
+                <ChevronRight className="text-muted-foreground size-3.5" />
+                <span className="text-foreground font-semibold">{gameLabel}</span>
               </>
             ) : (
               <>
@@ -267,7 +273,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
                 >
                   Đơn cược đang chờ
                 </button>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
+                <ChevronRight className="text-muted-foreground size-3.5" />
                 <button
                   type="button"
                   className="text-muted-foreground hover:text-foreground"
@@ -275,14 +281,14 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
                 >
                   {gameLabel}
                 </button>
-                <ChevronRight className="size-3.5 text-muted-foreground" />
-                <span className="font-semibold text-foreground">Kỳ {od}</span>
+                <ChevronRight className="text-muted-foreground size-3.5" />
+                <span className="text-foreground font-semibold">Kỳ {od}</span>
               </>
             )}
           </div>
           {view === "games" && (
             <div className="flex items-center gap-1.5 pl-5">
-              <span className="text-xs text-muted-foreground">Phiếu cược đang chờ kết quả</span>
+              <span className="text-muted-foreground text-xs">Phiếu cược đang chờ kết quả</span>
               <LiveDot isFetching={isFetching} onRefresh={handleRefresh} />
             </div>
           )}
@@ -296,11 +302,11 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       {isLoading ? (
         <TableSkeleton cols={5} />
       ) : isError ? (
-        <div className="flex h-40 items-center justify-center text-sm text-destructive">Không thể tải dữ liệu.</div>
+        <div className="text-destructive flex h-40 items-center justify-center text-sm">Không thể tải dữ liệu.</div>
       ) : !data || data.entries.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
-          <p className="text-sm font-medium text-muted-foreground">Không có đơn cược đang chờ</p>
-          <p className="text-xs text-muted-foreground">Tất cả đơn cược đã được settle hoặc void.</p>
+          <p className="text-muted-foreground text-sm font-medium">Không có đơn cược đang chờ</p>
+          <p className="text-muted-foreground text-xs">Tất cả đơn cược đã được settle hoặc void.</p>
         </div>
       ) : view === "games" ? (
         <GamesView byGame={byGame} onSelectGame={handleSelectGame} />
@@ -359,9 +365,9 @@ function GamesView({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Ticket className="size-4 text-muted-foreground" />
+          <Ticket className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Đơn chờ theo game</CardTitle>
         </div>
       </CardHeader>
@@ -370,19 +376,19 @@ function GamesView({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground pl-5 text-xs font-medium tracking-wider uppercase">
                   Game
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   Số kỳ
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.entryCount}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.estimatedCommission}
                 </TableHead>
-                <TableHead className="pr-5 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground pr-5 text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.totalStake}
                 </TableHead>
               </TableRow>
@@ -394,7 +400,7 @@ function GamesView({
                 return (
                   <TableRow
                     key={group.gameProduct}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onSelectGame(group.gameProduct)}
                   >
                     <TableCell className="pl-5">
@@ -408,7 +414,7 @@ function GamesView({
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(group.totalCommission)}
                     </TableCell>
-                    <TableCell className="pr-5 text-right text-sm tabular-nums font-medium">
+                    <TableCell className="pr-5 text-right text-sm font-medium tabular-nums">
                       {formatNumber(group.totalStake)}
                     </TableCell>
                   </TableRow>
@@ -417,18 +423,18 @@ function GamesView({
             </TableBody>
             {byGame.length > 0 && (
               <tfoot>
-                <TableRow className="border-t bg-muted/30 font-semibold">
+                <TableRow className="bg-muted/30 border-t font-semibold">
                   <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.drawCount)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.entryCount)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.totalCommission)}
                   </TableCell>
-                  <TableCell className="pr-5 text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="pr-5 text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.totalStake)}
                   </TableCell>
                 </TableRow>
@@ -457,7 +463,7 @@ function DrawsView({
 }) {
   if (byDraw.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex h-40 items-center justify-center text-sm">
         Không có đơn chờ trong game này.
       </div>
     );
@@ -474,9 +480,9 @@ function DrawsView({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Clock className="size-4 text-muted-foreground" />
+          <Clock className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Đơn chờ theo kỳ quay</CardTitle>
         </div>
       </CardHeader>
@@ -485,16 +491,16 @@ function DrawsView({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground pl-5 text-xs font-medium tracking-wider uppercase">
                   Kỳ mở thưởng
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.entryCount}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.estimatedCommission}
                 </TableHead>
-                <TableHead className="pr-5 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground pr-5 text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.totalStake}
                 </TableHead>
               </TableRow>
@@ -503,7 +509,7 @@ function DrawsView({
               {byDraw.map((draw) => (
                 <TableRow
                   key={draw.drawId}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer"
                   onClick={() => onSelectDraw(draw.drawId)}
                 >
                   <TableCell className="pl-5 font-mono text-sm">{draw.drawId}</TableCell>
@@ -511,22 +517,22 @@ function DrawsView({
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(draw.totalCommission)}
                   </TableCell>
-                  <TableCell className="pr-5 text-right text-sm tabular-nums font-medium">
+                  <TableCell className="pr-5 text-right text-sm font-medium tabular-nums">
                     {formatNumber(draw.totalStake)}
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
             <tfoot>
-              <TableRow className="border-t bg-muted/30">
+              <TableRow className="bg-muted/30 border-t">
                 <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.entryCount)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
-                <TableCell className="pr-5 text-right text-sm tabular-nums font-semibold">
+                <TableCell className="pr-5 text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalStake)}
                 </TableCell>
               </TableRow>
@@ -543,7 +549,7 @@ function DrawsView({
 function EntriesView({
   drawId,
   tenantId,
-  game,
+  game: _game,
   rows,
   showLineCount,
   page,
@@ -583,7 +589,7 @@ function EntriesView({
       {/* Phân trang — chỉ hiện khi có nhiều trang */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-1">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Trang {page} / {totalPages} &middot; {totalCount} phiếu
           </p>
           <div className="flex items-center gap-1">
@@ -647,18 +653,18 @@ interface KpiCardProps {
 /** KPI card chuẩn — horizontal icon + value, pattern nhất quán với reports/outstanding. */
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, isLoading }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
         {isLoading ? (
           <Skeleton className="my-0.5 h-6 w-24" />
         ) : (
-          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
+          <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
         )}
-        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -673,7 +679,9 @@ function OutstandingKpiStrip({
 }) {
   // activeDrawCount tính từ entries — distinct drawIds cross-game
   const activeDrawCount = useMemo(() => {
-    if (!data?.entries) return 0;
+    if (!data?.entries) {
+      return 0;
+    }
     return new Set(data.entries.map((e) => e.drawId)).size;
   }, [data?.entries]);
 
@@ -685,8 +693,8 @@ function OutstandingKpiStrip({
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <KpiCard
         icon={CalendarClock}
-        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-        iconColor="text-indigo-600 dark:text-indigo-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Kỳ đang hoạt động"
         value={formatNumber(activeDrawCount)}
         sub=""
@@ -694,8 +702,8 @@ function OutstandingKpiStrip({
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label={REPORT_COLUMN_LABELS.entryCount}
         value={formatNumber(totalEntryCount)}
         sub=""
@@ -703,8 +711,8 @@ function OutstandingKpiStrip({
       />
       <KpiCard
         icon={HandCoins}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label={REPORT_COLUMN_LABELS.estimatedCommission}
         value={formatVNDCompact(totalCommission)}
         sub=""
@@ -712,8 +720,8 @@ function OutstandingKpiStrip({
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatVNDCompact(totalStake)}
         sub=""

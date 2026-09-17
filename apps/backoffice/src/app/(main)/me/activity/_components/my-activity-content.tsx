@@ -40,7 +40,7 @@ export function MyActivityContent() {
       <MyActivityFilterBar />
 
       <Card className="gap-0 overflow-hidden py-0">
-        <CardContent className="px-0 pb-0 pt-0">
+        <CardContent className="px-0 pt-0 pb-0">
           <AuditLogsTable
             rows={rows}
             isLoading={query.isLoading}

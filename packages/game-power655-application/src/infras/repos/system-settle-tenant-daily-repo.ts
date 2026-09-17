@@ -6,8 +6,8 @@
  */
 
 import {
-  type SettleTenantDailyAggregateResult,
   SystemSettleTenantDailyRepository,
+  type SettleTenantDailyAggregateResult,
 } from "@megawin/game-core-application/repos";
 import { POWER655_SETTLE_TENANT_REPORTS } from "@megawin/game-power655/entities";
 

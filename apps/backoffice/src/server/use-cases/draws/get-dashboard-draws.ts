@@ -25,8 +25,7 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawRepository as Bingo18DrawRepo } from "@megawin/game-bingo18-application/repos";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
+import { DrawStatus, GameProduct, type UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository as KenoDrawRepo } from "@megawin/game-keno-application/repos";
 import { DrawRepository as Lotto535DrawRepo } from "@megawin/game-lotto535-application/repos";
 import { DrawRepository as Max3dDrawRepo } from "@megawin/game-max3d-application/repos";
@@ -213,5 +212,4 @@ interface DrawLike {
 }
 
 type GameDrawResult =
-  | { type: "highFreq"; summary: HighFreqGameSummary }
-  | { type: "lowFreq"; events: DrawTimelineEvent[] };
+  { type: "highFreq"; summary: HighFreqGameSummary } | { type: "lowFreq"; events: DrawTimelineEvent[] };

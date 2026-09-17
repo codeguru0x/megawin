@@ -16,8 +16,8 @@ export default function AgentAccountsPage() {
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản đại lý</h1>
-            <p className="text-xs text-muted-foreground">Quản lý tài khoản đại lý (Agent) theo từng Tenant.</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Tài khoản đại lý</h1>
+            <p className="text-muted-foreground text-xs">Quản lý tài khoản đại lý (Agent) theo từng Tenant.</p>
           </div>
         </div>
         <CreateAgentAccountDialog />

@@ -6,8 +6,8 @@
  * - `gameKey` + `since?` + `size?` → batch, mới nhất trước.
  */
 
-import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { PullResultsUseCase } from "@megawin/resultfeed-application/use-cases/results";
+import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { z } from "zod";
 
 import { withResultFeedApiKeyAuth } from "../../lib/build-handler";

@@ -23,7 +23,7 @@
  */
 
 import { AccountStatus, CompanyRole, CompanyRoleLabel, SUPER_ROLES } from "@megawin/identity/entities";
-import { type AuthFn, localDev, vercelOidc } from "eve/channels/auth";
+import { localDev, vercelOidc, type AuthFn } from "eve/channels/auth";
 import { defaultEveAuth, eveChannel } from "eve/channels/eve";
 
 import { resolveAuthSession } from "@/lib/auth-session";
@@ -183,5 +183,4 @@ export default eveChannel({
     const auth = defaultEveAuth(ctx);
     return { auth, context: staffContext(auth) };
   },
-  
 });

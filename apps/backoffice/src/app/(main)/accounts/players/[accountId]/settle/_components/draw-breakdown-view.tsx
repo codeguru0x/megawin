@@ -32,7 +32,7 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
   if (isLoading) {
     return (
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <Skeleton className="h-4 w-48" />
         </CardHeader>
         <CardContent className="space-y-0 p-0">
@@ -52,7 +52,7 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex h-40 items-center justify-center">
-          <p className="text-sm text-destructive">Không thể tải dữ liệu.</p>
+          <p className="text-destructive text-sm">Không thể tải dữ liệu.</p>
         </CardContent>
       </Card>
     );
@@ -62,8 +62,8 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex h-40 flex-col items-center justify-center gap-1 text-center">
-          <p className="text-sm font-medium text-muted-foreground">Không có kỳ quay nào</p>
-          <p className="text-xs text-muted-foreground">Player không tham gia kỳ quay nào trong ngày này.</p>
+          <p className="text-muted-foreground text-sm font-medium">Không có kỳ quay nào</p>
+          <p className="text-muted-foreground text-xs">Player không tham gia kỳ quay nào trong ngày này.</p>
         </CardContent>
       </Card>
     );
@@ -84,9 +84,9 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Layers className="size-4 text-muted-foreground" />
+          <Layers className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Kỳ quay trong ngày — {rows.length} kỳ</CardTitle>
         </div>
       </CardHeader>
@@ -111,19 +111,19 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
                 return (
                   <TableRow
                     key={row.drawId}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(row.drawId)}
                   >
                     <TableCell className="pl-5 font-mono text-sm font-medium">{row.drawId}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums font-medium">
+                    <TableCell className="text-right text-sm font-medium tabular-nums">
                       {formatNumber(row.totalStake)}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums font-medium">
+                    <TableCell className="text-right text-sm font-medium tabular-nums">
                       {formatNumber(row.ggr)}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
@@ -131,7 +131,7 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "pr-5 text-right text-sm tabular-nums font-medium",
+                        "pr-5 text-right text-sm font-medium tabular-nums",
                         getNetProfitColor(row.netProfit),
                       )}
                     >
@@ -144,27 +144,27 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
             <TableFooter>
               <TableRow>
                 <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.entryCount)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalStake)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalPayout)}
                 </TableCell>
                 <TableCell className="text-right text-sm font-semibold">
                   <PayoutRatioCell ratio={totalPayoutRatio} className="font-semibold" />
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.ggr)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
                 <TableCell
                   className={cn(
-                    "pr-5 text-right text-sm tabular-nums font-semibold",
+                    "pr-5 text-right text-sm font-semibold tabular-nums",
                     getNetProfitColor(totals.netProfit),
                   )}
                 >

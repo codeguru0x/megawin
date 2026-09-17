@@ -23,7 +23,9 @@ import { TxLogTable } from "../../_components/tx-log-table";
 import { useTxLogsByBatch } from "../../_lib/use-queries";
 
 function shortId(value: string, head = 12): string {
-  if (value.length <= head) return value;
+  if (value.length <= head) {
+    return value;
+  }
   return `${value.slice(0, head)}…`;
 }
 
@@ -44,7 +46,9 @@ function BatchPageInner({ batchId }: { batchId: string }) {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link prefetch={false} href="/reports/transactions/api-logs">Nhật ký giao dịch</Link>
+              <Link prefetch={false} href="/reports/transactions/api-logs">
+                Nhật ký giao dịch
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -61,23 +65,23 @@ function BatchPageInner({ batchId }: { batchId: string }) {
           <Package2 className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Chi tiết batch</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Chi tiết batch</h1>
+          <p className="text-muted-foreground text-xs">
             Tất cả items cùng <span className="font-mono">batchId</span>.
           </p>
         </div>
       </div>
 
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-            <FileSearch className="size-4 text-muted-foreground" />
+            <FileSearch className="text-muted-foreground size-4" />
             Thông tin batch
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 px-5 pb-4 pt-0 sm:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="grid gap-3 px-5 pt-0 pb-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Batch ID">
-            <span className="break-all font-mono text-xs">{batchId}</span>
+            <span className="font-mono text-xs break-all">{batchId}</span>
           </Metric>
           <Metric label="Tenant">
             <span className="font-mono text-xs">{tenantId ?? (query.isLoading ? "…" : "—")}</span>
@@ -97,7 +101,7 @@ function BatchPageInner({ batchId }: { batchId: string }) {
       </Card>
 
       <Card className="gap-0 overflow-hidden py-0">
-        <CardContent className="px-0 pb-0 pt-0">
+        <CardContent className="px-0 pt-0 pb-0">
           <TxLogTable
             rows={rows}
             isLoading={query.isLoading}
@@ -118,7 +122,7 @@ function BatchPageInner({ batchId }: { batchId: string }) {
 function Metric({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{label}</span>
       <div className="min-w-0">{children}</div>
     </div>
   );

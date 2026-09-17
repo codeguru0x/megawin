@@ -14,8 +14,7 @@
  */
 
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
-import { Mega645Collections } from "@megawin/game-mega645/entities";
+import { Mega645Collections, type TicketEntryEntity } from "@megawin/game-mega645/entities";
 
 import { EntryMapper } from "../mappers/entry-mapper";
 import { BaseRepo } from "./base-repo";

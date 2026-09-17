@@ -7,8 +7,7 @@
  * Dùng $inc + upsert để đảm bảo race-safe.
  */
 
-import type { DrawCounterEntity } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections, type DrawCounterEntity } from "@megawin/game-bingo18/entities";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawCounterMapper } from "../mappers/draw-counter-mapper";

@@ -12,7 +12,6 @@
  * Data: TOÀN BỘ từ snapshot (timer 1) qua `select` slice + adapters — KHÔNG aggregation
  * on-demand. Live feed là timer 2, CHỈ chạy khi tab này mở && kỳ chưa settle.
  */
-
 import { useMemo } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -66,7 +65,9 @@ export function AnalyticsSection({ active }: { active: boolean }) {
   );
 
   const liveFeed: LiveFeedEntry[] = useMemo(() => {
-    if (!liveData) return [];
+    if (!liveData) {
+      return [];
+    }
     return liveData.entries.map((e) => {
       const firstBoard = e.boards[0];
       const playMode = (firstBoard?.playMode ?? PlayMode.MultiNumber) as PlayMode;
@@ -85,11 +86,13 @@ export function AnalyticsSection({ active }: { active: boolean }) {
     });
   }, [liveData]);
 
-  if (!draw || !ANALYTICS_SHOW.has(draw.status)) return null;
+  if (!draw || !ANALYTICS_SHOW.has(draw.status)) {
+    return null;
+  }
 
   if (!view) {
     return (
-      <p className="rounded-xl border border-dashed bg-muted/10 px-4 py-6 text-center text-xs text-muted-foreground">
+      <p className="bg-muted/10 text-muted-foreground rounded-xl border border-dashed px-4 py-6 text-center text-xs">
         Chưa có dữ liệu cược cho kỳ này.
       </p>
     );

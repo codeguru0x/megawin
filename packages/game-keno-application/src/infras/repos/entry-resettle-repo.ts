@@ -15,8 +15,7 @@
  */
 
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { EntryReversal, TicketEntryEntity } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
+import { KenoCollections, type EntryReversal, type TicketEntryEntity } from "@megawin/game-keno/entities";
 import { ObjectId } from "mongodb";
 
 import { EntryMapper } from "../mappers/entry-mapper";

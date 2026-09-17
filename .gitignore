@@ -48,6 +48,8 @@ yarn-error.log*
 
 .pnpm-store
 
+.tmp
+
 .agents
 
 # GitNexus — code knowledge graph (xem .cursor/rules/gitnexus-code-graph.mdc).

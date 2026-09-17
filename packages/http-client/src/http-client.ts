@@ -1,9 +1,7 @@
 /// <reference lib="dom" />
-import type { ApiResponse } from "@megawin/shared/api-types";
-import { ApiClientError } from "@megawin/shared/api-types";
+import { ApiClientError, type ApiResponse } from "@megawin/shared/api-types";
 
-import type { RetryConfig } from "./retry";
-import { resolveRetryConfig, withRetry } from "./retry";
+import { resolveRetryConfig, withRetry, type RetryConfig } from "./retry";
 
 // ============ Types ============
 
@@ -127,15 +125,21 @@ function buildUrl(
 ): string {
   const url = path.startsWith("http") ? path : `${baseUrl}${normalizePath(path)}`;
 
-  if (!params) return url;
+  if (!params) {
+    return url;
+  }
 
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) searchParams.append(key, String(value));
+    if (value !== undefined) {
+      searchParams.append(key, String(value));
+    }
   }
 
   const qs = searchParams.toString();
-  if (!qs) return url;
+  if (!qs) {
+    return url;
+  }
   return url.includes("?") ? `${url}&${qs}` : `${url}?${qs}`;
 }
 
@@ -286,7 +290,9 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
 
       return await parseResponse<T>(response, options?.rawResponse);
     } catch (err) {
-      if (err instanceof ApiClientError) throw err;
+      if (err instanceof ApiClientError) {
+        throw err;
+      }
 
       const isAbort = err instanceof DOMException && err.name === "AbortError";
       throw new ApiClientError(isAbort ? 408 : 0, {

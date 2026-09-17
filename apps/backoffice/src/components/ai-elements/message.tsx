@@ -1,7 +1,17 @@
 "use client";
 
-import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
-import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentProps,
+  type HTMLAttributes,
+  type ReactElement,
+} from "react";
 
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
@@ -49,10 +59,10 @@ export const MessageContent = ({ children, className, ...props }: MessageContent
       // làm đoạn văn và card dính vào nhau, đọc như một khối liền (p0-04 §4.13).
       // `text-sm` là baseline cho tool card / attachment (dữ liệu dày). Văn xuôi markdown không
       // bị nó chi phối vì `.chat-md` tự khai `font-size` (CSS unlayered > @layer utilities).
-      "is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-3 overflow-hidden text-sm",
+      "is-user:dark flex w-fit max-w-full min-w-0 flex-col gap-3 overflow-hidden text-sm",
       // `rounded-br-md` tạo đuôi bubble lệch góc dưới-phải — mềm hơn bubble bo đều 4 góc.
-      "group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:rounded-br-md group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-2.5 group-[.is-user]:text-foreground",
-      "group-[.is-assistant]:w-full group-[.is-assistant]:text-foreground",
+      "group-[.is-user]:bg-secondary group-[.is-user]:text-foreground group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:rounded-br-md group-[.is-user]:px-4 group-[.is-user]:py-2.5",
+      "group-[.is-assistant]:text-foreground group-[.is-assistant]:w-full",
       className,
     )}
     {...props}
@@ -262,7 +272,7 @@ export const MessageBranchPage = ({ className, ...props }: MessageBranchPageProp
 
   return (
     <ButtonGroupText
-      className={cn("border-none bg-transparent text-muted-foreground shadow-none", className)}
+      className={cn("text-muted-foreground border-none bg-transparent shadow-none", className)}
       {...props}
     >
       {currentBranch + 1} of {totalBranches}

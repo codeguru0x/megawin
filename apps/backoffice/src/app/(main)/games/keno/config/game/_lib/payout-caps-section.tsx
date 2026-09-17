@@ -39,19 +39,19 @@ const fmt = formatNumber;
 const CAP_ROWS = [
   {
     pick: 10,
-    badge: "bg-red-500",
+    badge: "bg-loss",
     maxPerDrawField: "pick10MaxPerDraw" as const,
     maxSetsField: "pick10MaxSetsForFixed" as const,
   },
   {
     pick: 9,
-    badge: "bg-orange-500",
+    badge: "bg-warning",
     maxPerDrawField: "pick9MaxPerDraw" as const,
     maxSetsField: "pick9MaxSetsForFixed" as const,
   },
   {
     pick: 8,
-    badge: "bg-amber-600",
+    badge: "bg-warning",
     maxPerDrawField: "pick8MaxPerDraw" as const,
     maxSetsField: "pick8MaxSetsForFixed" as const,
   },
@@ -70,38 +70,38 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
             <div className="p-6 pb-4">
-              <h3 className="text-sm font-semibold text-foreground">Giới hạn trả thưởng mỗi kỳ</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-foreground text-sm font-semibold">Giới hạn trả thưởng mỗi kỳ</h3>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 Giới hạn tổng giải thưởng cho bậc cao (8, 9, 10) khi có nhiều bộ trúng
               </p>
             </div>
 
-            <div className="border-t bg-amber-50/80 px-6 py-2.5 dark:bg-amber-950/20">
+            <div className="bg-warning/80 border-t px-6 py-2.5">
               <div className="flex items-start gap-2">
-                <Info className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
-                <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
+                <Info className="text-warning mt-0.5 size-3.5 shrink-0" />
+                <p className="text-warning text-xs leading-relaxed">
                   Nếu số bộ trúng vượt ngưỡng, tổng giải tối đa / kỳ sẽ được chia đều cho số bộ trúng thay vì trả giải
                   cố định.
                 </p>
               </div>
             </div>
 
-            <div className="border-t space-y-4 p-6">
+            <div className="space-y-4 border-t p-6">
               {CAP_ROWS.map((cap) => {
                 const maxPerDraw = form.watch(cap.maxPerDrawField);
                 const maxSets = form.watch(cap.maxSetsField);
                 const fixedPrize = config.basicPrizes[`pick${cap.pick}`]?.[cap.pick] ?? 0;
 
                 return (
-                  <div key={cap.pick} className="rounded-lg border p-4 space-y-3">
+                  <div key={cap.pick} className="space-y-3 rounded-lg border p-4">
                     <div className="flex items-center gap-2">
                       <Badge className={cn("text-white", cap.badge)}>Bậc {cap.pick}</Badge>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         Trùng {cap.pick}/{cap.pick} số · Giải cố định: <strong>{fmt(fixedPrize)} VND</strong>
                       </span>
                     </div>
@@ -112,7 +112,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                         name={cap.maxPerDrawField}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">Tổng giải tối đa / kỳ (VND)</FormLabel>
+                            <FormLabel className="text-muted-foreground text-xs">Tổng giải tối đa / kỳ (VND)</FormLabel>
                             <FormControl>
                               <MoneyInput
                                 className="font-semibold"
@@ -132,7 +132,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                         name={cap.maxSetsField}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">Ngưỡng số bộ trả cố định</FormLabel>
+                            <FormLabel className="text-muted-foreground text-xs">Ngưỡng số bộ trả cố định</FormLabel>
                             <FormControl>
                               <MoneyInput
                                 className="font-semibold"
@@ -150,7 +150,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                       />
                     </div>
 
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       ≤{maxSets} bộ: {fmt(fixedPrize)} VND/bộ &middot; &gt;
                       {maxSets} bộ: {fmt(maxPerDraw)} VND ÷ số bộ trúng
                     </p>

@@ -10,8 +10,7 @@
  * @output VoidEntriesBatchResult
  */
 
-import type { VoidContext } from "@megawin/game-bingo18-application/use-cases/void";
-import { VoidEntriesBatchUseCase } from "@megawin/game-bingo18-application/use-cases/void";
+import { VoidEntriesBatchUseCase, type VoidContext } from "@megawin/game-bingo18-application/use-cases/void";
 
 const useCase = new VoidEntriesBatchUseCase();
 

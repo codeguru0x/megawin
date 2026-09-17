@@ -23,7 +23,6 @@
  * `use-bulk-mutations.ts`) thay vì 1 request duy nhất. KHÔNG đổi gì ở API/schema — trần
  * request vẫn `BULK_MAX_DRAWS`, chỉ đổi cách CLIENT gọi.
  */
-
 import { useMemo, useState } from "react";
 
 import dynamic from "next/dynamic";
@@ -115,7 +114,7 @@ export function HubBulkActionBar() {
       label: "Đóng bán",
       icon: Lock,
       drawIds: partition.closable,
-      className: "bg-amber-600 text-white hover:bg-amber-700",
+      className: "bg-warning text-white hover:bg-warning",
     },
     {
       kind: BulkActionKind.OpenSales,
@@ -202,7 +201,7 @@ export function HubBulkActionBar() {
     <>
       {/* Thanh nổi rõ hơn `bg-background/95` cũ — card đặc + viền primary + bóng đậm hơn để
           không lẫn với đáy bảng khi chọn hàng trăm kỳ. */}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 border-primary/30 border-t-2 bg-card px-4 py-3 shadow-[0_-8px_28px_rgba(0,0,0,0.12)] dark:border-primary/40 dark:shadow-[0_-8px_28px_rgba(0,0,0,0.5)]">
+      <div className="border-primary/30 bg-card dark:border-primary/40 sticky bottom-0 z-20 flex items-center justify-between gap-4 border-t-2 px-4 py-3 shadow-[0_-8px_28px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_28px_rgba(0,0,0,0.5)]">
         {/* Trái: clear + action — sát cột checkbox để chọn xong bấm ngay, không kéo chuột ngang bảng. */}
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Button
@@ -238,7 +237,7 @@ export function HubBulkActionBar() {
           <span className="font-semibold tabular-nums">{validSelection.size} kỳ</span>{" "}
           <span className="text-muted-foreground">đã chọn</span>
           {totalRevenue > 0 ? (
-            <span className="ml-1.5 text-muted-foreground tabular-nums">· {formatNumber(totalRevenue)}</span>
+            <span className="text-muted-foreground ml-1.5 tabular-nums">· {formatNumber(totalRevenue)}</span>
           ) : null}
         </div>
       </div>

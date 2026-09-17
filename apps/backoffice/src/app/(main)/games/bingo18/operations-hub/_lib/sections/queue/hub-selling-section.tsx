@@ -20,7 +20,6 @@
  *   (`SellingFullTable`) đổi `max-h-96` cố định → `flex-1 min-h-0` lấp hết chiều cao còn dư của
  *   section (grid `align-items: stretch` đã kéo section cao bằng cột trái sẵn).
  */
-
 import { useMemo, useState } from "react";
 
 import Link from "next/link";
@@ -53,7 +52,7 @@ const OUTLIER_COPY: Record<
 
 const OUTLIER_TONE_CLASS: Record<"destructive" | "amber", string> = {
   destructive: "border-destructive/20 bg-destructive/5 hover:bg-destructive/10",
-  amber: "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10",
+  amber: "border-warning/20 bg-warning/5 hover:bg-warning/10",
 };
 
 /** Ngưỡng gộp cảnh báo Lớp 1 thành 1 dòng tổng — chốt user §10 mục 8: > 5 dòng thì gộp, tránh
@@ -86,7 +85,7 @@ function OutlierRow({ outlier }: { outlier: SellingOutlierRow }) {
     >
       <div className="flex min-w-0 items-center gap-2">
         <DrawIdLabel drawId={row.drawId} className="shrink-0" />
-        <span className="flex items-center gap-1 text-muted-foreground text-xs">
+        <span className="text-muted-foreground flex items-center gap-1 text-xs">
           <Icon className="size-3 shrink-0" />
           {copy.label}
         </span>
@@ -96,7 +95,7 @@ function OutlierRow({ outlier }: { outlier: SellingOutlierRow }) {
         <span className="text-muted-foreground">{formatNumber(row.entries)} vé</span>
         {/* Icon link chỉ hiện khi hover (p1-07 §3 câu cuối) — báo trước hành vi "click → mở
             trang vận hành chi tiết", không phải chỉ dựa vào con trỏ tay mặc định của `<Link>`. */}
-        <ExternalLink className="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+        <ExternalLink className="text-muted-foreground size-3 opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
     </Link>
   );
@@ -126,7 +125,7 @@ function SellingFullTable({ rows, nowMs }: { rows: readonly DerivedRow[]; nowMs:
   return (
     <div className="flex h-full min-h-0 flex-col gap-2 border-t pt-3">
       <div className="relative max-w-64 shrink-0">
-        <Search className="absolute top-2.5 left-2 size-3.5 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute top-2.5 left-2 size-3.5" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -163,17 +162,17 @@ function SellingFullTable({ rows, nowMs }: { rows: readonly DerivedRow[]; nowMs:
                     <DrawIdLabel drawId={row.drawId} />
                     {/* Icon link chỉ hiện khi hover dòng (p1-07 §3 — đồng bộ với `OutlierRow`
                         Lớp 1, cùng hành vi "click → mở trang vận hành chi tiết"). */}
-                    <ExternalLink className="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                    <ExternalLink className="text-muted-foreground size-3 opacity-0 transition-opacity group-hover:opacity-100" />
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs tabular-nums">
                   {new Date(row.ts.drawTimeMs).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                 </TableCell>
                 <TableCell className="text-right tabular-nums">{formatNumber(row.revenue)}</TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs tabular-nums">
+                <TableCell className="text-muted-foreground text-right text-xs tabular-nums">
                   {formatNumber(row.entries)}
                 </TableCell>
-                <TableCell className="text-right text-muted-foreground text-xs tabular-nums">
+                <TableCell className="text-muted-foreground text-right text-xs tabular-nums">
                   {formatNumber(row.sets)}
                 </TableCell>
                 {/* "Đóng bán sau" thay cho "Còn lại" cũ. KHÔNG dùng `row.remainingSec` — field
@@ -226,10 +225,10 @@ export function HubSellingSection() {
     // của 5B để bù đúng phần chrome-ngoài-ngân-sách mà 5A đang có, 2 bên ra cùng tổng chiều cao. */}
     <section
       id="hub-selling-section"
-      className="flex h-full max-h-[calc(70vh+47px)] flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm"
+      className="bg-card flex h-full max-h-[calc(70vh+47px)] flex-col gap-3 rounded-xl border p-4 shadow-sm"
     >
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-foreground text-sm">Đang bán · {selling.count} kỳ</h2>
+        <h2 className="text-foreground text-sm font-semibold">Đang bán · {selling.count} kỳ</h2>
         <span className="text-muted-foreground text-xs tabular-nums">
           {formatNumber(selling.revenue)} · {formatNumber(selling.entries)} vé
         </span>
@@ -253,7 +252,7 @@ export function HubSellingSection() {
             <button
               type="button"
               onClick={() => setShowAllOutliers(true)}
-              className="flex items-center gap-1.5 self-start rounded-md px-3 py-1.5 text-muted-foreground text-xs hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 self-start rounded-md px-3 py-1.5 text-xs"
             >
               <ChevronDown className="size-3.5" />
               và {hiddenOutlierCount} kỳ khác cần chú ý
@@ -262,7 +261,7 @@ export function HubSellingSection() {
             <button
               type="button"
               onClick={() => setShowAllOutliers(false)}
-              className="flex items-center gap-1.5 self-start rounded-md px-3 py-1.5 text-muted-foreground text-xs hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 self-start rounded-md px-3 py-1.5 text-xs"
             >
               <ChevronRight className="size-3.5 rotate-90" />
               Thu gọn
@@ -270,13 +269,13 @@ export function HubSellingSection() {
           ) : null}
         </div>
       ) : (
-        <p className="shrink-0 text-muted-foreground text-xs">Không có kỳ nào bất thường trong nhóm đang bán.</p>
+        <p className="text-muted-foreground shrink-0 text-xs">Không có kỳ nào bất thường trong nhóm đang bán.</p>
       )}
 
       <button
         type="button"
         onClick={() => setSellingTableExpanded(!sellingTableExpanded)}
-        className="flex shrink-0 items-center gap-1 self-start text-muted-foreground text-xs hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground flex shrink-0 items-center gap-1 self-start text-xs"
       >
         <ChevronRight className={cn("size-3.5 transition-transform", sellingTableExpanded && "rotate-90")} />
         {sellingTableExpanded ? "Ẩn" : "Xem"} toàn bộ {rows5B.length} kỳ đang bán · {formatNumber(selling.revenue)} ·{" "}

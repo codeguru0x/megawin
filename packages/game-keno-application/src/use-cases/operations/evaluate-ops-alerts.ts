@@ -28,11 +28,14 @@
  * health — worker này KHÔNG tự bắn alert vận hành nữa.
  */
 
-import type { KenoDrawBettingStatsEntity, OpsAlertsConfig, PayoutCaps } from "@megawin/game-keno/entities";
-import { KenoOpsAlertType } from "@megawin/game-keno/entities";
+import {
+  KenoOpsAlertType,
+  type KenoDrawBettingStatsEntity,
+  type OpsAlertsConfig,
+  type PayoutCaps,
+} from "@megawin/game-keno/entities";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { TickLoopWorker } from "@megawin/worker-core/workers";
+import { TickLoopWorker, type TickLoopResult, type TickOutcome } from "@megawin/worker-core/workers";
 
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { ComboStatsRepository } from "../../infras/repos/combo-stats-repo";

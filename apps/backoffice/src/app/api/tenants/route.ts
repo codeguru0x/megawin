@@ -1,9 +1,9 @@
-import { CompanyRole } from "@megawin/identity/entities";
 import {
   CreateTenantUseCase,
   ListTenantsUseCase,
   UpdateTenantUseCase,
 } from "@megawin/identity-application/use-cases/tenants";
+import { CompanyRole } from "@megawin/identity/entities";
 
 import { withApi } from "@/lib/api";
 

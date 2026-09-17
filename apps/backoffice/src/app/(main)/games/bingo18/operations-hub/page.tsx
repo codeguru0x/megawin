@@ -16,7 +16,6 @@
  * động từ bàn phím, không có element `<Link>` cụ thể để giữ Cmd/Ctrl+click (khác nút
  * "Chi tiết ↗" trong expand panel — nút đó PHẢI dùng `<Link>`, xem `hub-expand-panel.tsx`).
  */
-
 import { Suspense } from "react";
 
 import { GameProduct } from "@megawin/game-core/entities";
@@ -71,7 +70,7 @@ function HubPageContent() {
           lực. Rail đã chuyển full-width (trên) nên cột phải giờ chỉ chứa 5B — không còn nguồn
           đẩy `min-content` lớn, bug tự khỏi cả khi dùng `fr` trần, nhưng giữ `minmax(0,_)` để
           không tái phát nếu 5B thêm nội dung rộng trong tương lai. */}
-      <div className="grid @4xl/main:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4 @4xl/main:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <HubQueueTable />
         <HubSellingSection />
       </div>

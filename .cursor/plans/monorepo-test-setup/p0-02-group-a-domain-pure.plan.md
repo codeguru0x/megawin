@@ -1,8 +1,8 @@
 # p0-02 — Nhóm A: Domain packages (pure, không DB)
 
 Scaffold Vitest cho 7 domain package thuần logic. KHÔNG chạm DB → dùng `nodeConfig`, KHÔNG cần
-`db-guard`, KHÔNG cần `global-setup` build deps (domain package thường không phụ thuộc dist của
-package khác, chỉ dùng type-only).
+Testcontainers `globalSetup` (domain package thường không phụ thuộc dist của package khác, chỉ
+dùng type-only).
 
 ## Package trong nhóm
 

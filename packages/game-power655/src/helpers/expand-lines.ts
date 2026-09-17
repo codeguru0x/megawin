@@ -25,7 +25,7 @@
 
 import type { EntryBoardSnapshot } from "../entities/entry";
 import { PlayType } from "../entities/enums";
-import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue, POWER655_MAIN_COUNT } from "../entities/types";
+import { ALL_MAIN_NUMBERS, POWER655_MAIN_COUNT, type BoardSelection, type LineValue } from "../entities/types";
 
 /**
  * Sinh tất cả tổ hợp chập k từ mảng numbers (backtracking).
@@ -77,7 +77,9 @@ function expandBao5(selection: BoardSelection): LineValue[] {
   const lines: LineValue[] = [];
 
   for (const n of ALL_MAIN_NUMBERS) {
-    if (chosen.has(n)) continue;
+    if (chosen.has(n)) {
+      continue;
+    }
     // Ghép số bổ sung n vào 5 số đã chọn → 1 line 6 số (sorted canonical).
     const mainNums = [...selection.mainNumbers, n];
     lines.push({ main: mainNums.sort() });

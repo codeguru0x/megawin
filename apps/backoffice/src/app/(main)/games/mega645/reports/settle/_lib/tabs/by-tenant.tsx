@@ -18,10 +18,15 @@ function TenantSummaryTable() {
   const { from, to, navigateToTenantDrills } = useMega645ReportFilters();
   const { data, isLoading, error } = useMega645TenantList(from, to);
 
-  if (isLoading) return <TableSkeleton rows={6} />;
-  if (error) return <ErrorCard />;
-  if (!data?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={6} />;
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.length) {
     return <EmptyCard icon="building" message="Không có dữ liệu" description="Không tìm thấy dữ liệu đại lý." />;
+  }
 
   const rows = data.map((r) => ({ ...r, netProfit: r.totalStake - r.totalPayout - r.totalCommission }));
   return <GameTenantReportTable rows={rows} onRowClick={navigateToTenantDrills} showLineCount />;
@@ -31,10 +36,15 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
   const { from, to, navigateToDrawInTenant } = useMega645ReportFilters();
   const { data, isLoading, error } = useMega645TenantDraws(tenantId, from, to);
 
-  if (isLoading) return <TableSkeleton rows={8} />;
-  if (error) return <ErrorCard />;
-  if (!data?.data.length)
+  if (isLoading) {
+    return <TableSkeleton rows={8} />;
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.data.length) {
     return <EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có kỳ quay nào." />;
+  }
 
   const rows = data.data.map((r) => ({ ...r, netProfit: r.totalStake - r.totalPayout - r.totalCommission }));
   return (
@@ -52,9 +62,12 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
   const { navigateToEntriesFromTenant } = useMega645ReportFilters();
   const { data: players, isLoading } = useMega645Players(drawId, tenantId);
 
-  if (isLoading) return <TableSkeleton rows={5} />;
-  if (!players?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+  if (!players?.length) {
     return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
+  }
 
   const rows = players.map((p) => ({
     accountId: p.accountId,

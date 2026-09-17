@@ -220,9 +220,13 @@ export function getBigSmallDrawOdds(): {
 
   for (let s = BINGO18_SUM_MIN; s <= BINGO18_SUM_MAX; s++) {
     const w = SUM_WAYS.get(s) ?? 0;
-    if (s <= BINGO18_SMALL_MAX) smallWays += w;
-    else if (s >= BINGO18_BIG_MIN) bigWays += w;
-    else drawWays += w;
+    if (s <= BINGO18_SMALL_MAX) {
+      smallWays += w;
+    } else if (s >= BINGO18_BIG_MIN) {
+      bigWays += w;
+    } else {
+      drawWays += w;
+    }
   }
 
   const toOdds = (label: string, ways: number): BigSmallDrawOdds => ({

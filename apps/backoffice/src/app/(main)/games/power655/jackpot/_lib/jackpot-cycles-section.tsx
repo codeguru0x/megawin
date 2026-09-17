@@ -11,10 +11,10 @@ import { cn } from "@/lib/utils";
 
 import { Power655EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 import {
-  type JackpotCycleSummary,
-  type JackpotWinnerSummary,
   useJackpotCycles,
   useJackpotEntryDetail,
+  type JackpotCycleSummary,
+  type JackpotWinnerSummary,
 } from "./use-jackpot";
 
 const LATEST_COUNT = 3;
@@ -31,11 +31,11 @@ const CLOSE_REASON_MAP: Record<string, { label: string; variant: "winner" | "neu
 const JP_TYPE_BADGE: Record<string, { label: string; className: string }> = {
   jackpot1: {
     label: "Jackpot 1",
-    className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+    className: "bg-loss text-loss",
   },
   jackpot2: {
     label: "Jackpot 2",
-    className: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+    className: "bg-info text-info",
   },
 };
 
@@ -47,24 +47,24 @@ export function JackpotCyclesSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/50">
-          <Crown className="size-4 text-orange-600 dark:text-orange-400" />
+        <div className="bg-warning flex size-8 items-center justify-center rounded-lg">
+          <Crown className="text-warning size-4" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Lịch sử vòng tích lũy</h2>
-          <p className="text-xs text-muted-foreground">Danh sách các vòng tích luỹ jackpot gần nhất</p>
+          <h2 className="text-foreground text-sm font-semibold">Lịch sử vòng tích lũy</h2>
+          <p className="text-muted-foreground text-xs">Danh sách các vòng tích luỹ jackpot gần nhất</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {isLoading ? (
-          <div className="flex h-32 items-center justify-center rounded-xl border bg-card">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <div className="bg-card flex h-32 items-center justify-center rounded-xl border">
+            <Loader2 className="text-muted-foreground size-6 animate-spin" />
           </div>
         ) : cycles.length === 0 ? (
-          <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/20">
-            <Crown className="size-6 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Chưa có vòng tích lũy nào đã đóng.</p>
+          <div className="bg-muted/20 flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed">
+            <Crown className="text-muted-foreground/40 size-6" />
+            <p className="text-muted-foreground text-sm">Chưa có vòng tích lũy nào đã đóng.</p>
           </div>
         ) : (
           cycles.map((cycle) => <CycleCard key={cycle.id} cycle={cycle} />)
@@ -86,26 +86,26 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
       <div
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
-          isWinner && "border-orange-200 bg-orange-50/30 dark:border-orange-800/50 dark:bg-orange-950/10",
+          isWinner && "border-warning bg-warning/30",
           !isWinner && "bg-card",
         )}
       >
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-accent/30"
+            className="hover:bg-accent/30 flex w-full items-center gap-4 p-4 text-left transition-colors"
           >
             {/* Icon */}
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
-                isWinner ? "bg-linear-to-br from-orange-400 to-red-500 shadow-md shadow-orange-500/20" : "bg-muted",
+                isWinner ? "from-warning to-loss shadow-warning/20 bg-linear-to-br shadow-md" : "bg-muted",
               )}
             >
               {isWinner ? (
                 <Trophy className="size-5 text-white" />
               ) : (
-                <RefreshCcw className="size-5 text-muted-foreground" />
+                <RefreshCcw className="text-muted-foreground size-5" />
               )}
             </div>
 
@@ -115,7 +115,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                 <span className="font-mono text-sm font-bold">Vòng #{cycle.cycleNo}</span>
                 <CycleReasonBadge reason={cycle.closedReason} />
               </div>
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
                 <span className="tabular-nums">{displayVNDateTime(cycle.startedAt)}</span>
                 {cycle.closedAt && (
                   <>
@@ -129,23 +129,19 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
             {/* Dual jackpot amounts */}
             <div className="shrink-0 text-right">
               <div className="flex items-center justify-end gap-2">
-                <span className="text-xs font-bold tabular-nums text-red-600 dark:text-red-400">
-                  JP1: {formatVNDCompact(jp1)}
-                </span>
-                <span className="text-xs text-muted-foreground">+</span>
-                <span className="text-xs font-bold tabular-nums text-blue-600 dark:text-blue-400">
-                  JP2: {formatVNDCompact(jp2)}
-                </span>
+                <span className="text-loss text-xs font-bold tabular-nums">JP1: {formatVNDCompact(jp1)}</span>
+                <span className="text-muted-foreground text-xs">+</span>
+                <span className="text-info text-xs font-bold tabular-nums">JP2: {formatVNDCompact(jp2)}</span>
               </div>
-              <p className="mt-0.5 text-xs tabular-nums text-muted-foreground">Tổng: {formatNumber(jp1 + jp2)}</p>
+              <p className="text-muted-foreground mt-0.5 text-xs tabular-nums">Tổng: {formatNumber(jp1 + jp2)}</p>
             </div>
 
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+            <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform [[data-state=open]>&]:rotate-180" />
           </button>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="space-y-4 border-t px-4 pb-4 pt-4">
+          <div className="space-y-4 border-t px-4 pt-4 pb-4">
             <div className="grid gap-2 sm:grid-cols-3">
               <StatMini label="Số kỳ tích lũy" value={formatNumber(cycle.drawCount)} />
               <StatMini label="Kỳ bắt đầu" value={cycle.startDrawId || "—"} />
@@ -167,16 +163,12 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
 
 function StatMini({ label, value, highlight }: { label: string; value: string; highlight?: "red" | "blue" }) {
   return (
-    <div className="rounded-lg bg-muted/40 px-3 py-2.5">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+    <div className="bg-muted/40 rounded-lg px-3 py-2.5">
+      <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">{label}</p>
       <p
         className={cn(
           "mt-0.5 text-sm font-semibold tabular-nums",
-          highlight === "red"
-            ? "text-red-700 dark:text-red-400"
-            : highlight === "blue"
-              ? "text-blue-700 dark:text-blue-400"
-              : "text-foreground",
+          highlight === "red" ? "text-loss" : highlight === "blue" ? "text-info" : "text-foreground",
         )}
       >
         {value}
@@ -186,21 +178,25 @@ function StatMini({ label, value, highlight }: { label: string; value: string; h
 }
 
 function CycleReasonBadge({ reason }: { reason?: string }) {
-  if (!reason) return <Badge variant="outline">Reset thủ công</Badge>;
+  if (!reason) {
+    return <Badge variant="outline">Reset thủ công</Badge>;
+  }
 
   const info = CLOSE_REASON_MAP[reason];
-  if (!info) return <Badge variant="outline">{reason}</Badge>;
+  if (!info) {
+    return <Badge variant="outline">{reason}</Badge>;
+  }
 
   if (info.variant === "winner") {
     return (
-      <Badge className="gap-1 border-orange-500/30 bg-orange-500/15 text-orange-700 dark:text-orange-400">
+      <Badge className="border-warning/30 bg-warning/15 text-warning gap-1">
         <Sparkles className="size-3" />
         {info.label}
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="border-slate-400/40 text-slate-600 dark:text-slate-400">
+    <Badge variant="outline" className="border-border/40 text-muted-foreground">
       <RefreshCcw className="mr-1 size-3" />
       {info.label}
     </Badge>
@@ -215,7 +211,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Người trúng Jackpot</p>
+      <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Người trúng Jackpot</p>
       <div className="space-y-2">
         {winners.map((w, idx) => {
           const jpBadge = JP_TYPE_BADGE[w.jackpotType];
@@ -224,9 +220,9 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
               key={`${w.entryId}-${idx}`}
               type="button"
               onClick={() => setSelectedEntryId(w.entryId)}
-              className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-orange-200 bg-orange-50/50 p-3.5 text-left transition-colors hover:border-orange-400 hover:bg-orange-100/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 dark:border-orange-800/50 dark:bg-orange-950/20 dark:hover:border-orange-700 dark:hover:bg-orange-950/40"
+              className="group border-warning bg-warning/50 hover:border-warning hover:bg-warning/60 focus-visible:ring-warning/50 flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
             >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-orange-400 to-red-500 shadow-md shadow-orange-500/20">
+              <div className="from-warning to-loss shadow-warning/20 flex size-10 items-center justify-center rounded-lg bg-linear-to-br shadow-md">
                 <User className="size-4.5 text-white" />
               </div>
               <div className="min-w-0 flex-1">
@@ -238,14 +234,12 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Đại lý: {w.tenantId} · Kỳ: {w.drawId}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2.5">
-                <p className="text-lg font-bold tabular-nums text-orange-700 dark:text-orange-400">
-                  {formatNumber(w.prizeAmount)}
-                </p>
+                <p className="text-warning text-lg font-bold tabular-nums">{formatNumber(w.prizeAmount)}</p>
               </div>
             </button>
           );

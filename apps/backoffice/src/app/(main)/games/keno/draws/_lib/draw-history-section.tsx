@@ -10,7 +10,6 @@
  * Keno không có Jackpot: companyTake = profit.
  * Kết quả: 20 số (01-80) dùng KenoNumberBall.
  */
-
 import { useRouter } from "next/navigation";
 
 import type { DrawStatus } from "@megawin/game-core/entities";
@@ -18,13 +17,11 @@ import { Pagination } from "@megawin/shared/constants";
 import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
-import type { CommonDrawSummary } from "@/components/draws";
-import { DrawHistoryTable } from "@/components/draws";
+import { DrawHistoryTable, type CommonDrawSummary } from "@/components/draws";
 import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
 import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
 
-import type { DrawSummary } from "./use-draws";
-import { useKenoDrawsList } from "./use-draws";
+import { useKenoDrawsList, type DrawSummary } from "./use-draws";
 
 const OPS_BASE = "/games/keno/operations";
 
@@ -71,14 +68,14 @@ export function DrawHistorySection() {
   const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
-    setPage(null);
+    void setFromDate(from);
+    void setToDate(to);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
-    setPage(null);
+    void setStatusParam(value === "all" ? null : value);
+    void setPage(null);
   }
 
   return (
@@ -99,7 +96,9 @@ export function DrawHistorySection() {
       renderStatusBadge={(status) => <KenoDrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
         const result = draw.result as { winningNumbers?: string[] } | undefined;
-        if (!result?.winningNumbers?.length) return null;
+        if (!result?.winningNumbers?.length) {
+          return null;
+        }
         return (
           <div className="flex flex-wrap items-center gap-0.5">
             {[...result.winningNumbers]

@@ -5,9 +5,9 @@
  * (1 adapter phục vụ nhiều gameKey — mỗi Lambda = 1 nguồn × 1 game, xem plan §4).
  */
 
-import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { vietlottDetailAdapter } from "@megawin/resultfeed-application/sources";
 import { FetchAndParseUseCase } from "@megawin/resultfeed-application/use-cases/fetch";
+import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 
 const useCase = new FetchAndParseUseCase({
   sourceId: vietlottDetailAdapter.sourceId,

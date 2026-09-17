@@ -14,7 +14,6 @@
  *
  * Dùng cho cả Keno và Bingo18 (đặt ở `components/games/shared/` theo `frontend-dev.mdc` §2.3).
  */
-
 import { todayVN } from "@megawin/shared/utils";
 
 import { cn } from "@/lib/utils";
@@ -67,7 +66,7 @@ export function DrawIdLabel({ drawId, mode = "compact", className }: DrawIdLabel
     <span className={cn("inline-flex items-center gap-1.5 tabular-nums", className)}>
       <span className="font-medium">{noLabel}</span>
       {isToday ? null : (
-        <span className="rounded bg-amber-500/15 px-1 py-0.5 font-medium text-[10px] text-amber-700 leading-none dark:text-amber-400">
+        <span className="bg-warning/15 text-warning rounded px-1 py-0.5 text-xs leading-none font-medium">
           {dayLabel}
         </span>
       )}

@@ -27,8 +27,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { DrawSettleSummary, DrawSettleSummaryTier } from "@megawin/game-power655/entities";
-import { PrizeTier } from "@megawin/game-power655/entities";
+import { PrizeTier, type DrawSettleSummary, type DrawSettleSummaryTier } from "@megawin/game-power655/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-power655/rules";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -45,7 +44,7 @@ export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFin
 
   /** @inheritdoc */
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
-    const { drawId, config, jp1CurrentAmount, jp2CurrentAmount } = input;
+    const { drawId, config, jp1CurrentAmount } = input;
 
     // ── Bước 1: Aggregate dữ liệu từ DB ──────────────────────────────
     // tenantAgg: doanh thu + commission per tenant (snapshot lúc place-bet)

@@ -13,8 +13,11 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-bingo18/entities";
-import { BINGO18_SETTLE_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
+import {
+  BINGO18_SETTLE_DRAW_REPORTS,
+  type SettleDrawReport,
+  type SettleDrawReportEntity,
+} from "@megawin/game-bingo18/entities";
 
 import { SettleDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
@@ -122,7 +125,9 @@ export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity,
         },
       },
     ]);
-    if (!result.length) return null;
+    if (!result.length) {
+      return null;
+    }
     const r = result[0] as any;
     return {
       drawCount: r.drawCount,

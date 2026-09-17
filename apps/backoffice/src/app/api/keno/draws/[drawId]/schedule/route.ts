@@ -21,11 +21,15 @@ const scheduleSchema = z.object({
 
 const updateScheduleUseCase = new UpdateScheduleUseCase();
 
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const PATCH = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(scheduleSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     const result = await updateScheduleUseCase.run({
       drawId,
       ...body,

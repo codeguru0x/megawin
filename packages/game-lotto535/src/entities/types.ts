@@ -1,3 +1,7 @@
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+
+import type { Lotto535OpsAlertType } from "./ops-alert";
+
 /**
  * Lotto 5/35 – Shared Types
  *
@@ -16,10 +20,6 @@
 // ─────────────────────────────────────────────
 
 export type { ISODateString } from "@megawin/game-core/types";
-
-import type { OpsStatsConfig } from "@megawin/game-core/types";
-
-import type { Lotto535OpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Number (kỳ quay trong ngày)

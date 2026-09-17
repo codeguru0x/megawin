@@ -5,7 +5,7 @@ import type { AuditLogPage } from "@megawin/audit/use-cases";
 import { apiClient } from "@megawin/next/client";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { type MyAuditLogsListFilters, meKeys } from "@/lib/query-keys";
+import { meKeys, type MyAuditLogsListFilters } from "@/lib/query-keys";
 
 /**
  * List 1 trang "Nhật ký của tôi" theo `cursor` opaque — Prev/Next pagination.
@@ -20,16 +20,26 @@ import { type MyAuditLogsListFilters, meKeys } from "@/lib/query-keys";
  */
 export function useMyAuditLogList(filters: MyAuditLogsListFilters, cursor: string | null) {
   const qpBase: Record<string, string> = {};
-  if (filters.from) qpBase.from = filters.from;
-  if (filters.to) qpBase.to = filters.to;
-  if (filters.action) qpBase.action = filters.action;
-  if (filters.status) qpBase.status = filters.status;
+  if (filters.from) {
+    qpBase.from = filters.from;
+  }
+  if (filters.to) {
+    qpBase.to = filters.to;
+  }
+  if (filters.action) {
+    qpBase.action = filters.action;
+  }
+  if (filters.status) {
+    qpBase.status = filters.status;
+  }
 
   return useQuery({
     queryKey: meKeys.auditLogsList(filters, cursor),
     queryFn: () => {
       const params: Record<string, string> = { ...qpBase };
-      if (cursor) params.cursor = cursor;
+      if (cursor) {
+        params.cursor = cursor;
+      }
       return apiClient.get<AuditLogPage>("/me/audit-logs", { params });
     },
     placeholderData: keepPreviousData,

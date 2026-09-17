@@ -27,19 +27,18 @@
  * observation mới cho chính kỳ đó (không tự động retry nếu không có gì đổi).
  */
 
-import type { ResultFeedGameKey, SourceEntity } from "@megawin/resultfeed/entities";
 import {
   ConsensusState,
   IntrinsicState,
   ResultFeedAlertSeverity,
   ResultFeedAlertType,
+  type ResultFeedGameKey,
+  type SourceEntity,
 } from "@megawin/resultfeed/entities";
-import type { ConsensusCandidate } from "@megawin/resultfeed/rules";
-import { decideConsensus } from "@megawin/resultfeed/rules";
+import { decideConsensus, type ConsensusCandidate } from "@megawin/resultfeed/rules";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { TickLoopWorker } from "@megawin/worker-core/workers";
+import { TickLoopWorker, type TickLoopResult, type TickOutcome } from "@megawin/worker-core/workers";
 
 import { AlertRepository } from "../../infras/repos/alert-repo";
 import { ConsensusRepository } from "../../infras/repos/consensus-repo";

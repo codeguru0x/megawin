@@ -1,6 +1,5 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
+import { KenoCollections, type TenantConfigDoc, type TenantConfigEntity } from "@megawin/game-keno/entities";
 
 import { TenantConfigMapper } from "../mappers/game-config-mapper";
 import { BaseRepo } from "./base-repo";
@@ -35,13 +34,21 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
-    if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
+    if (fields.commissionRate !== undefined) {
+      $set.commissionRate = fields.commissionRate;
+    }
+    if (fields.isEnabled !== undefined) {
+      $set.isEnabled = fields.isEnabled;
+    }
 
     const $setOnInsert: Record<string, unknown> = { createdAt: now };
 
-    if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0.2;
-    if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;
+    if (fields.commissionRate === undefined) {
+      $setOnInsert.commissionRate = 0.2;
+    }
+    if (fields.isEnabled === undefined) {
+      $setOnInsert.isEnabled = true;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Tenant, tenantId },

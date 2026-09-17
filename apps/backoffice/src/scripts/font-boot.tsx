@@ -5,7 +5,6 @@
  * `useLayoutEffect` — chạy sau DOM commit, trước paint browser tiếp theo — giảm flash
  * Inter → font đã chọn. Always-on (inter / geistMono) là no-op.
  */
-
 import { useLayoutEffect } from "react";
 
 import { ensureFontLoaded } from "@/lib/fonts/ensure-font-loaded";

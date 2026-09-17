@@ -6,8 +6,8 @@
  */
 
 import {
-  type OutstandingPerGameAggregateResult,
   SystemOutstandingReportRepository,
+  type OutstandingPerGameAggregateResult,
 } from "@megawin/game-core-application/repos";
 import { MAX3DPRO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-max3dpro/entities";
 

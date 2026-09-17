@@ -1,7 +1,10 @@
-import type { EntryFeedDoc, EntryFeedEntity, GameProduct } from "@megawin/game-core/entities";
-import { GameCoreCollections } from "@megawin/game-core/entities";
-import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { Long } from "mongodb";
+import {
+  GameCoreCollections,
+  type EntryFeedDoc,
+  type EntryFeedEntity,
+  type GameProduct,
+} from "@megawin/game-core/entities";
+import { Long, type AnyBulkWriteOperation, type Document } from "mongodb";
 
 import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
 import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";

@@ -4,8 +4,6 @@
  * Collection: mega645_jackpot_cycles
  */
 
-import type { ISODateString } from "./types";
-
 export const JackpotCycleStatus = {
   Active: "active",
   Closed: "closed",

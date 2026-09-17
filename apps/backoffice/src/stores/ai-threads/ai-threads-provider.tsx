@@ -8,12 +8,11 @@
  * §2.1.1). Store khởi tạo rỗng, hydrate thật từ `localStorage` trong effect đầu tiên — xem
  * JSDoc `ai-threads-store.ts` về lý do (tránh hydration mismatch).
  */
-
 import { createContext, useContext, useEffect, useState } from "react";
 
-import { type StoreApi, useStore } from "zustand";
+import { useStore, type StoreApi } from "zustand";
 
-import { type AiThreadsState, createAiThreadsStore } from "./ai-threads-store";
+import { createAiThreadsStore, type AiThreadsState } from "./ai-threads-store";
 import { loadOrInitThreadRegistry } from "./thread-storage";
 
 const AiThreadsStoreContext = createContext<StoreApi<AiThreadsState> | null>(null);

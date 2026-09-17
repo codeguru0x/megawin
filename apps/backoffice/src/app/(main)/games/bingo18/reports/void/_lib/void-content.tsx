@@ -6,8 +6,13 @@ import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { toTenantUsername } from "@megawin/shared/utils/player-username";
 
-import type { VoidDrawRow, VoidEntryRow, VoidPlayerRow, VoidTenantRow } from "@/components/reports/game/void";
-import { VoidContent } from "@/components/reports/game/void";
+import {
+  VoidContent,
+  type VoidDrawRow,
+  type VoidEntryRow,
+  type VoidPlayerRow,
+  type VoidTenantRow,
+} from "@/components/reports/game/void";
 import { GAME_COLORS } from "@/lib/game-colors";
 
 import { Bingo18EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
@@ -168,7 +173,9 @@ export function Bingo18VoidReportsContent() {
         }}
         onEntryClick={(row) => {
           const entity = entryEntityMap.get(row.id);
-          if (entity) setSelectedEntry(entity);
+          if (entity) {
+            setSelectedEntry(entity);
+          }
         }}
         showLineCount={false}
       />

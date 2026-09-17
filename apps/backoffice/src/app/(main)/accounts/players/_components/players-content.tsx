@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { AccountStatusLabel, type AccountStatus } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { Loader2, Search, SearchX, UserSearch, X } from "lucide-react";
 import { parseAsString, useQueryStates } from "nuqs";
@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useTenantOptions } from "@/hooks/use-tenant-options";
 
 import { useSearchPlayerAccounts } from "../../_shared/queries";
-import type { PlayerAccount } from "../_lib/schema";
 import { PlayersTable } from "./players-table";
 
 export function PlayersContent() {
@@ -66,16 +65,19 @@ export function PlayersContent() {
   }, [isSearchOpen]);
 
   // Khởi tạo isSearchOpen từ URL khi mount lần đầu — chỉ chạy 1 lần, không theo activeSearch thay đổi sau đó.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: chỉ chạy 1 lần lúc mount, không muốn re-run khi activeSearch đổi.
   useEffect(() => {
-    if (activeSearch) setIsSearchOpen(true);
+    if (activeSearch) {
+      setIsSearchOpen(true);
+    }
   }, []);
 
   const handleOpenSearch = () => setIsSearchOpen(true);
 
   const handleSubmitSearch = () => {
     const keyword = inputValue.trim();
-    if (!keyword) return;
+    if (!keyword) {
+      return;
+    }
     void setUrlState({ search: keyword, tenantId: null, after: null, before: null });
   };
 
@@ -92,8 +94,12 @@ export function PlayersContent() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSubmitSearch();
-    if (e.key === "Escape") handleClearSearch();
+    if (e.key === "Enter") {
+      handleSubmitSearch();
+    }
+    if (e.key === "Escape") {
+      handleClearSearch();
+    }
   };
 
   const handleNext = (nextCursor: string) => {
@@ -110,14 +116,14 @@ export function PlayersContent() {
       {isSearchActive ? (
         /* Đang có kết quả search — hiện keyword pill + nút xoá */
         <>
-          <div className="flex items-center gap-1 rounded-md bg-muted px-2 py-1">
-            <Search className="size-3 text-muted-foreground" />
-            <span className="max-w-35 truncate font-mono text-xs text-foreground">{activeSearch}</span>
+          <div className="bg-muted flex items-center gap-1 rounded-md px-2 py-1">
+            <Search className="text-muted-foreground size-3" />
+            <span className="text-foreground max-w-35 truncate font-mono text-xs">{activeSearch}</span>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground size-7"
             onClick={handleClearSearch}
             title="Xoá tìm kiếm"
           >
@@ -147,7 +153,7 @@ export function PlayersContent() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 text-muted-foreground"
+            className="text-muted-foreground size-7"
             onClick={() => setIsSearchOpen(false)}
           >
             <X className="size-3.5" />
@@ -158,7 +164,7 @@ export function PlayersContent() {
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground size-7"
           onClick={handleOpenSearch}
           title="Tìm kiếm theo mã tài khoản hoặc tên tài khoản"
         >
@@ -178,11 +184,11 @@ export function PlayersContent() {
         {tenants.map((t) => (
           <SelectItem key={t.tenantId} value={t.tenantId}>
             <span className="font-medium">{t.displayName}</span>
-            <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">{t.tenantId}</span>
+            <span className="text-muted-foreground ml-1.5 font-mono text-xs">{t.tenantId}</span>
           </SelectItem>
         ))}
         {tenants.length === 0 && !isLoadingOptions && (
-          <div className="px-2 py-4 text-center text-sm text-muted-foreground">Chưa có đối tác nào.</div>
+          <div className="text-muted-foreground px-2 py-4 text-center text-sm">Chưa có đối tác nào.</div>
         )}
       </SelectContent>
     </Select>
@@ -225,14 +231,14 @@ function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolb
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-3">
+      <CardHeader className="px-5 pt-3 pb-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <UserSearch className="size-4 text-muted-foreground" />
+            <UserSearch className="text-muted-foreground size-4" />
             <CardTitle className="text-sm font-semibold">Kết quả tìm kiếm</CardTitle>
-            <span className="font-mono text-xs text-muted-foreground">{keyword}</span>
+            <span className="text-muted-foreground font-mono text-xs">{keyword}</span>
             {accounts.length > 0 && (
-              <Badge variant="secondary" className="tabular-nums text-[11px]">
+              <Badge variant="secondary" className="text-xs tabular-nums">
                 {accounts.length} kết quả
               </Badge>
             )}
@@ -240,18 +246,18 @@ function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolb
           <div className="flex items-center gap-1">{toolbarControls}</div>
         </div>
       </CardHeader>
-      <CardContent className="px-0 pb-0 pt-0">
-        {error && <p className="px-5 pb-2 text-sm text-destructive">{error.message}</p>}
+      <CardContent className="px-0 pt-0 pb-0">
+        {error && <p className="text-destructive px-5 pb-2 text-sm">{error.message}</p>}
         {isLoading ? (
-          <div className="flex h-30 items-center justify-center gap-2 text-muted-foreground">
+          <div className="text-muted-foreground flex h-30 items-center justify-center gap-2">
             <Loader2 className="size-4 animate-spin" />
             <span className="text-sm">Đang tìm kiếm...</span>
           </div>
         ) : accounts.length === 0 ? (
           <div className="flex h-30 flex-col items-center justify-center gap-1 text-center">
-            <SearchX className="size-8 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-muted-foreground">Không tìm thấy</p>
-            <p className="text-xs text-muted-foreground">
+            <SearchX className="text-muted-foreground/40 size-8" />
+            <p className="text-muted-foreground text-sm font-medium">Không tìm thấy</p>
+            <p className="text-muted-foreground text-xs">
               Không có tài khoản nào khớp với <span className="font-mono">{keyword}</span>
             </p>
           </div>
@@ -273,14 +279,14 @@ function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolb
                   return (
                     <TableRow
                       key={account.accountId}
-                      className="cursor-pointer hover:bg-muted/50"
+                      className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => router.push(`/accounts/players/${account.accountId}/settle`)}
                     >
                       <TableCell className="pl-5">
                         <span className="font-mono text-sm">{account.username}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-mono text-sm text-muted-foreground">{account.tenantId}</span>
+                        <span className="text-muted-foreground font-mono text-sm">{account.tenantId}</span>
                       </TableCell>
                       <TableCell className="text-sm">{account.displayName}</TableCell>
                       <TableCell>
@@ -288,7 +294,7 @@ function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolb
                           {AccountStatusLabel[status] ?? status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="pr-5 text-right text-sm tabular-nums text-muted-foreground">
+                      <TableCell className="text-muted-foreground pr-5 text-right text-sm tabular-nums">
                         {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}
                       </TableCell>
                     </TableRow>

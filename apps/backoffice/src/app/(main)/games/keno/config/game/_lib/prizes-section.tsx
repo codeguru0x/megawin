@@ -35,16 +35,16 @@ const PICK_MATCH_COUNTS: Record<number, number[]> = {
 const fmt = formatNumber;
 
 const PICK_BADGE_COLORS: Record<number, string> = {
-  10: "bg-red-500",
-  9: "bg-orange-500",
-  8: "bg-amber-600",
-  7: "bg-amber-500",
-  6: "bg-yellow-500",
-  5: "bg-lime-500",
-  4: "bg-emerald-500",
-  3: "bg-teal-500",
-  2: "bg-cyan-500",
-  1: "bg-slate-500",
+  10: "bg-loss",
+  9: "bg-warning",
+  8: "bg-warning",
+  7: "bg-warning",
+  6: "bg-warning",
+  5: "bg-game-bingo18",
+  4: "bg-profit",
+  3: "bg-game-mega645",
+  2: "bg-info",
+  1: "bg-muted",
 };
 
 function isCapped(pick: number, match: number): boolean {
@@ -61,9 +61,9 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
+        <span className={`inline-flex cursor-help items-center gap-1 ${className ?? ""}`}>
           {label}
-          <Info className="size-3 text-muted-foreground/60" />
+          <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-xs">
@@ -93,10 +93,10 @@ function PickPrizeGroup({
 
   const marginColor =
     profitAnalysis.grossMarginPercent >= 50
-      ? "text-emerald-600"
+      ? "text-profit"
       : profitAnalysis.grossMarginPercent >= 0
-        ? "text-amber-600"
-        : "text-red-600";
+        ? "text-warning"
+        : "text-loss";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -104,36 +104,36 @@ function PickPrizeGroup({
         <button
           type="button"
           className={cn(
-            "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
+            "hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors",
             open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className={cn("text-white text-xs", PICK_BADGE_COLORS[pick])}>Bậc {pick}</Badge>
-            <span className="text-sm text-muted-foreground">
+            <Badge className={cn("text-xs text-white", PICK_BADGE_COLORS[pick])}>Bậc {pick}</Badge>
+            <span className="text-muted-foreground text-sm">
               Chọn {pick} số &middot; {matchCounts.length} mức thưởng
             </span>
             {matchCounts.some((m) => isCapped(pick, m)) && (
-              <Badge variant="outline" className="text-xs border-red-300 text-red-600 dark:text-red-400">
+              <Badge variant="outline" className="border-loss text-loss text-xs">
                 Có giới hạn
               </Badge>
             )}
           </div>
           <div className="flex items-center gap-3">
-            <span className={cn("text-xs tabular-nums font-semibold", marginColor)}>
+            <span className={cn("text-xs font-semibold tabular-nums", marginColor)}>
               Biên: {profitAnalysis.grossMarginPercent.toFixed(1)}%
             </span>
             {open ? (
-              <ChevronUp className="size-4 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground size-4" />
             ) : (
-              <ChevronDown className="size-4 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground size-4" />
             )}
           </div>
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="bg-muted/40 text-muted-foreground grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-xs font-medium tracking-wider uppercase">
             <span>Mức trúng</span>
             <span className="text-right">Giá trị thưởng</span>
             <HeaderTooltip
@@ -163,11 +163,11 @@ function PickPrizeGroup({
                 key={match}
                 className={cn(
                   "grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 rounded-md px-2 py-1.5",
-                  capped && "bg-red-50 dark:bg-red-950/20",
+                  capped && "bg-loss",
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex size-6 items-center justify-center rounded bg-muted text-xs font-bold tabular-nums">
+                  <span className="bg-muted inline-flex size-6 items-center justify-center rounded text-xs font-bold tabular-nums">
                     {match}
                   </span>
                   <span className="text-xs">
@@ -176,13 +176,13 @@ function PickPrizeGroup({
                   </span>
                 </div>
                 <MoneyInput
-                  className="h-8 w-40 text-right tabular-nums text-sm font-semibold"
+                  className="h-8 w-40 text-right text-sm font-semibold tabular-nums"
                   value={prizes[match] ?? 0}
                   onValueChange={(v) => onChange(pick, match, v ?? 0)}
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                    <span className="text-muted-foreground cursor-help text-right text-xs tabular-nums">
                       {profit ? `1 : ${fmt(Math.round(profit.oneInN))}` : "–"}
                     </span>
                   </TooltipTrigger>
@@ -197,17 +197,17 @@ function PickPrizeGroup({
                     )}
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-right text-xs tabular-nums font-medium">
+                <span className="text-right text-xs font-medium tabular-nums">
                   {profit ? `${fmt(Math.round(profit.expectedPayout))}` : "–"}
                 </span>
                 <span
                   className={cn(
-                    "text-right text-xs tabular-nums font-semibold",
+                    "text-right text-xs font-semibold tabular-nums",
                     profit && profit.payoutRatio > 1
-                      ? "text-red-600"
+                      ? "text-loss"
                       : profit && profit.payoutRatio > 0.5
-                        ? "text-amber-600"
-                        : "text-emerald-600",
+                        ? "text-warning"
+                        : "text-profit",
                   )}
                 >
                   {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -215,7 +215,7 @@ function PickPrizeGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
                   )}
                 >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
@@ -223,8 +223,8 @@ function PickPrizeGroup({
               </div>
             );
           })}
-          <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
-            <span className="text-xs font-medium text-muted-foreground">Tổng bậc {pick}</span>
+          <div className="mt-1 flex items-center justify-between border-t px-2 py-2">
+            <span className="text-muted-foreground text-xs font-medium">Tổng bậc {pick}</span>
             <div className="flex items-center gap-4 text-xs">
               <span className="tabular-nums">
                 CP kỳ vọng: {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
@@ -289,24 +289,24 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   const avgMargin = allSummaries.reduce((s, r) => s + r.grossMarginPercent, 0) / allSummaries.length;
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <CardContent className="p-0">
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Giải thưởng cơ bản – Chọn số</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-foreground text-sm font-semibold">Giải thưởng cơ bản – Chọn số</h3>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 Cấu hình giá trị cho từng bậc (1-10 số) theo số trùng
                 {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
                 {" · "}Không gian mẫu: <strong>≈ 3.54 × 10¹⁸ (3,535,316,142,212,174,320)</strong>
               </p>
             </div>
-            <div className="text-right text-xs shrink-0">
+            <div className="shrink-0 text-right text-xs">
               <span className="text-muted-foreground">Biên LN trung bình</span>
               <div
                 className={cn(
                   "font-bold tabular-nums",
-                  avgMargin >= 50 ? "text-emerald-600" : avgMargin >= 0 ? "text-amber-600" : "text-red-600",
+                  avgMargin >= 50 ? "text-profit" : avgMargin >= 0 ? "text-warning" : "text-loss",
                 )}
               >
                 {avgMargin >= 0 ? (

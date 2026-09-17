@@ -9,15 +9,14 @@
  *
  * Auto-select: ưu tiên kỳ đang active, fallback kỳ future đầu tiên.
  */
-
-import { createContext, type ReactNode, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, type ReactNode } from "react";
 
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { useQueryState } from "nuqs";
 
 import { useAiPageContext } from "@/hooks/use-ai-page-context";
 
-import { type DrawSelectorItem, useDrawDetail, useDrawSelectorList } from "./use-operations";
+import { useDrawDetail, useDrawSelectorList, type DrawSelectorItem } from "./use-operations";
 
 // ─── Context shape ─────────────────────────────────────────────────────────
 
@@ -105,7 +104,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
         draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId ||
         draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Future)?.drawId ||
         draws[0]?.drawId;
-      setSelectedDrawId(drawId === activeDrawId ? null : drawId);
+      void setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],
   );
@@ -142,6 +141,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
 
 export function useDrawContext() {
   const ctx = useContext(DrawContext);
-  if (!ctx) throw new Error("useDrawContext must be used within DrawContextProvider");
+  if (!ctx) {
+    throw new Error("useDrawContext must be used within DrawContextProvider");
+  }
   return ctx;
 }

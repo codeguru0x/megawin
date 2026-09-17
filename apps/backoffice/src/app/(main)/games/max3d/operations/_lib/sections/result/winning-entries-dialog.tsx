@@ -10,7 +10,6 @@
  * - playType: straight / combo3 / combo6.
  * - tier là BasicPrizeTier hoặc PlusPrizeTier.
  */
-
 import { useCallback, useMemo, useState } from "react";
 
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
@@ -32,8 +31,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 
 import { Max3dEntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
-import type { WinningEntryItem } from "../../use-operations";
-import { useWinningEntries, useWinningEntryDetail, WINNING_ENTRIES_PAGE_SIZE } from "../../use-operations";
+import {
+  useWinningEntries,
+  useWinningEntryDetail,
+  WINNING_ENTRIES_PAGE_SIZE,
+  type WinningEntryItem,
+} from "../../use-operations";
 
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
@@ -43,18 +46,18 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
 
   return (
     <div className="flex items-start gap-2">
-      <span className="text-[10px] font-medium text-muted-foreground/50 w-4 shrink-0 mt-0.5 tabular-nums">
+      <span className="text-muted-foreground/50 mt-0.5 w-4 shrink-0 text-xs font-medium tabular-nums">
         {board.boardNo}
       </span>
       <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex flex-wrap items-center gap-1">
           {board.triplets.map((t, i) => (
             <TripletDisplay key={i} value={t} variant={winningSet.has(t) ? "matched" : "default"} size="sm" />
           ))}
         </div>
-        <span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium">
+        <span className="text-warning text-xs font-medium">
           {modeLabel} · {typeLabel}
-          {board.isDuplicate && <span className="ml-1 text-amber-600">(ĐB)</span>}
+          {board.isDuplicate && <span className="text-warning ml-1">(ĐB)</span>}
         </span>
       </div>
     </div>
@@ -64,14 +67,10 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
 // ─── Tier chips ───────────────────────────────────────────────────────────────
 
 const TIER_BADGE_COLORS: Record<string, string> = {
-  [BasicPrizeTier.Special]:
-    "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
-  [BasicPrizeTier.First]:
-    "border-yellow-300 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-700",
-  [BasicPrizeTier.Second]:
-    "border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-700",
-  [BasicPrizeTier.Third]:
-    "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
+  [BasicPrizeTier.Special]: "border-warning bg-warning text-warning",
+  [BasicPrizeTier.First]: "border-warning bg-warning text-warning",
+  [BasicPrizeTier.Second]: "border-warning bg-warning text-warning",
+  [BasicPrizeTier.Third]: "border-info bg-info text-info",
   [PlusPrizeTier.Fourth]: "border-border bg-muted/40 text-muted-foreground",
   [PlusPrizeTier.Fifth]: "border-border bg-muted/40 text-muted-foreground",
   [PlusPrizeTier.Sixth]: "border-border bg-muted/40 text-muted-foreground",
@@ -86,10 +85,10 @@ function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <Badge variant="outline" className={cn("text-[10px] py-0 h-4", badgeClass)}>
+      <Badge variant="outline" className={cn("h-4 py-0 text-xs", badgeClass)}>
         {label}
       </Badge>
-      <span className="text-xs tabular-nums text-amber-700 dark:text-amber-400">+{formatNumber(tier.amount)}</span>
+      <span className="text-warning text-xs tabular-nums">+{formatNumber(tier.amount)}</span>
     </div>
   );
 }
@@ -114,13 +113,13 @@ function KpiCard({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm flex-1 min-w-0">
+    <div className="bg-card flex min-w-0 flex-1 items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-        <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{value}</p>
+        <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
+        <p className="text-foreground text-lg leading-tight font-bold tabular-nums">{value}</p>
       </div>
     </div>
   );
@@ -128,18 +127,18 @@ function KpiCard({
 
 function KpiBar({ totalWinningEntries, totalWinAmount }: { totalWinningEntries: number; totalWinAmount: number }) {
   return (
-    <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
+    <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
@@ -154,20 +153,20 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
   const winningSet = new Set(entry.winningTriplets);
 
   return (
-    <TableRow onClick={onClick} className="align-top group transition-colors hover:bg-muted/30 cursor-pointer">
-      <TableCell className="pl-6 py-3 text-center">
-        <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">
+    <TableRow onClick={onClick} className="group hover:bg-muted/30 cursor-pointer align-top transition-colors">
+      <TableCell className="py-3 pl-6 text-center">
+        <span className="bg-muted text-muted-foreground inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums">
           {rowNo}
         </span>
       </TableCell>
       <TableCell className="py-3">
         <div>
-          <p className="text-sm text-foreground">{displayName}</p>
-          <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">@{entry.tenantId}</p>
+          <p className="text-foreground text-sm">{displayName}</p>
+          <p className="text-muted-foreground/50 mt-0.5 max-w-32 truncate font-mono text-xs">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
-        <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
+        <span className="text-foreground text-sm tabular-nums">{formatNumber(entry.amount)}</span>
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1.5">
@@ -184,8 +183,8 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         </div>
       </TableCell>
       <TableCell className="py-3 pr-6 text-right">
-        <p className="text-sm tabular-nums text-foreground font-medium">{formatNumber(entry.winAmount)}</p>
-        <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
+        <p className="text-foreground text-sm font-medium tabular-nums">{formatNumber(entry.winAmount)}</p>
+        <p className="text-muted-foreground/50 mt-0.5 text-xs tabular-nums">
           {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
         </p>
       </TableCell>
@@ -217,7 +216,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="flex flex-col p-0 gap-0 overflow-hidden rounded-2xl shadow-2xl sm:max-w-none border"
+        className="flex flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none"
         style={{
           width: "calc(100vw - 2rem)",
           maxWidth: "1400px",
@@ -225,15 +224,15 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
           maxHeight: "960px",
         }}
       >
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b bg-background shrink-0">
+        <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-orange-500/15 ring-1 ring-orange-500/30 shrink-0">
-              <Trophy className="size-5 text-orange-500" />
+            <div className="bg-warning/15 ring-warning/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+              <Trophy className="text-warning size-5" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Kỳ <span className="font-mono text-foreground">{drawId}</span>
+              <DialogDescription className="text-muted-foreground mt-0.5 text-xs">
+                Kỳ <span className="text-foreground font-mono">{drawId}</span>
               </DialogDescription>
             </div>
           </div>
@@ -243,34 +242,34 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
           <KpiBar totalWinningEntries={summary.totalWinningEntries} totalWinAmount={summary.totalWinAmount} />
         )}
 
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className="min-h-0 flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="size-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Đang tải dữ liệu...</p>
+                <Loader2 className="text-muted-foreground size-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">Đang tải dữ liệu...</p>
               </div>
             </div>
           ) : entries.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-4">
-              <div className="flex size-16 items-center justify-center rounded-2xl bg-muted/50">
-                <FileSearch className="size-7 text-muted-foreground/40" />
+              <div className="bg-muted/50 flex size-16 items-center justify-center rounded-2xl">
+                <FileSearch className="text-muted-foreground/40 size-7" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-foreground">Không có phiếu trúng thưởng</p>
-                <p className="mt-1 text-sm text-muted-foreground">Kỳ này không có phiếu cược nào trúng thưởng.</p>
+                <p className="text-foreground text-base font-semibold">Không có phiếu trúng thưởng</p>
+                <p className="text-muted-foreground mt-1 text-sm">Kỳ này không có phiếu cược nào trúng thưởng.</p>
               </div>
             </div>
           ) : (
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow className="hover:bg-muted/40">
-                  <TableHead className="pl-6 w-12 text-center">STT</TableHead>
+                  <TableHead className="w-12 pl-6 text-center">STT</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
                   <TableHead className="w-28 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="min-w-60">{REPORT_COLUMN_LABELS.tripletsPlayed}</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.prizeTier}</TableHead>
-                  <TableHead className="pr-6 w-40 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
+                  <TableHead className="w-40 pr-6 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -288,8 +287,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {entries.length > 0 && (
-          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">
+          <div className="bg-muted/20 flex shrink-0 items-center justify-between gap-2 border-t px-6 py-2.5">
+            <span className="text-muted-foreground text-xs">
               Hiển thị {formatNumber(entries.length)}
               {summary && ` / ${formatNumber(summary.totalWinningEntries)}`} phiếu trúng
             </span>

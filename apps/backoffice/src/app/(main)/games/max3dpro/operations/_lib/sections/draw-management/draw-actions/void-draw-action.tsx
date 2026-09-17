@@ -16,8 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { DrawSelectorItem } from "../../../use-operations";
-import { useVoidDraw } from "../../../use-operations";
+import { useVoidDraw, type DrawSelectorItem } from "../../../use-operations";
 
 export function VoidDrawAction({
   draw,
@@ -37,7 +36,9 @@ export function VoidDrawAction({
   const voidDraw = useVoidDraw();
 
   function handleSubmit() {
-    if (!reason.trim()) return;
+    if (!reason.trim()) {
+      return;
+    }
     voidDraw.mutate(
       { drawId: draw.drawId, body: { reason: reason.trim() } },
       {
@@ -60,7 +61,7 @@ export function VoidDrawAction({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-4">
-          <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Lý do huỷ kỳ *</Label>
+          <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Lý do huỷ kỳ *</Label>
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}

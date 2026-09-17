@@ -63,7 +63,9 @@ function fromBase64Url(b64url: string): string {
  * @returns Token opaque base64url, hoặc `null` nếu `cursor` null
  */
 export function encodeCursor<TCursor>(cursor: TCursor | null): string | null {
-  if (cursor === null || cursor === undefined) return null;
+  if (cursor === null || cursor === undefined) {
+    return null;
+  }
   return toBase64Url(Buffer.from(JSON.stringify(cursor), "utf8").toString("base64"));
 }
 

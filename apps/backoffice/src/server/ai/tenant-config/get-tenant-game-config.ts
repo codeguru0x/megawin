@@ -82,7 +82,7 @@ const listUseCases = {
 };
 
 /** Bắt compiler khi `GameProduct` thêm entry mới mà 2 map trên chưa có. */
-function assertKnownGame(game: GameProduct): asserts game is keyof typeof getUseCases & keyof typeof listUseCases {
+function assertKnownGame(game: GameProduct): asserts game is keyof typeof getUseCases {
   if (!(game in getUseCases) || !(game in listUseCases)) {
     throw AppException.internal(`Game không được hỗ trợ: ${String(game)}`);
   }

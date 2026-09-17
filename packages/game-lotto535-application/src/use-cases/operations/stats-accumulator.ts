@@ -22,13 +22,15 @@
  *   trước giờ quay.
  */
 
-import type {
-  Lotto535PlayTypeStat,
-  Lotto535TopPotential,
-  PlayType,
-  TenantBettingStat,
+import {
+  Lotto535NumberKind,
+  Lotto535StatsPlayKey,
+  toStatsPlayKey,
+  type Lotto535PlayTypeStat,
+  type Lotto535TopPotential,
+  type PlayType,
+  type TenantBettingStat,
 } from "@megawin/game-lotto535/entities";
-import { Lotto535NumberKind, Lotto535StatsPlayKey, toStatsPlayKey } from "@megawin/game-lotto535/entities";
 import { buildComboKey } from "@megawin/game-lotto535/rules";
 
 import type {

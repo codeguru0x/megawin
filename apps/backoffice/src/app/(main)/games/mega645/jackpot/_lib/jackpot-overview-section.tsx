@@ -18,8 +18,12 @@ import { useJackpotCurrent } from "./use-jackpot";
 export function JackpotHeroCard() {
   const { data, isLoading } = useJackpotCurrent();
 
-  if (isLoading) return <Skeleton className="h-55 rounded-2xl" />;
-  if (!data) return null;
+  if (isLoading) {
+    return <Skeleton className="h-55 rounded-2xl" />;
+  }
+  if (!data) {
+    return null;
+  }
 
   const { cycle, progress } = data;
 
@@ -36,31 +40,31 @@ export function JackpotHeroCard() {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border-2 p-6",
-        "bg-linear-to-br from-teal-50/90 via-cyan-50/70 to-emerald-50/50",
-        "dark:from-teal-950/50 dark:via-cyan-950/40 dark:to-emerald-950/30",
-        isHot ? "border-teal-400 dark:border-teal-700/70" : "border-teal-200 dark:border-teal-800/50",
+        "from-game-mega645/90 via-info/70 to-profit/50 bg-linear-to-br",
+        "from-game-mega645/50 via-info/40 to-profit/30",
+        isHot ? "border-game-mega645" : "border-game-mega645",
       )}
     >
       {/* Decorative glows */}
-      <div className="pointer-events-none absolute -right-10 -top-10 size-52 rounded-full bg-linear-to-br from-teal-300/25 to-cyan-300/15 blur-3xl dark:from-teal-500/10 dark:to-cyan-500/5" />
-      <div className="pointer-events-none absolute -left-8 bottom-0 size-36 rounded-full bg-linear-to-tr from-emerald-200/20 to-teal-200/10 blur-2xl dark:from-emerald-600/10 dark:to-teal-600/5" />
+      <div className="from-game-mega645/25 to-info/15 pointer-events-none absolute -top-10 -right-10 size-52 rounded-full bg-linear-to-br blur-3xl" />
+      <div className="from-profit/20 to-game-mega645/10 pointer-events-none absolute bottom-0 -left-8 size-36 rounded-full bg-linear-to-tr blur-2xl" />
 
       <div className="relative space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 shadow-lg shadow-teal-500/30">
+            <div className="from-game-mega645 to-profit shadow-game-mega645/30 flex size-12 items-center justify-center rounded-xl bg-linear-to-br shadow-lg">
               <Trophy className="size-6 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-teal-700/70 dark:text-teal-400/60">
+              <p className="text-game-mega645/70 text-xs font-medium tracking-wider uppercase">
                 Jackpot Mega 6/45 — Vòng #{cycle.cycleNo}
               </p>
-              <p className="mt-0.5 text-3xl font-extrabold tabular-nums tracking-tight text-teal-900 dark:text-teal-100">
+              <p className="text-game-mega645 mt-0.5 text-3xl font-extrabold tracking-tight tabular-nums">
                 {formatVND(cycle.currentAmount)}
               </p>
               {growthPct > 0 && (
-                <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700/80 dark:text-emerald-400/70">
+                <p className="text-profit/80 mt-0.5 flex items-center gap-1 text-xs font-medium">
                   <MoveUpRight className="size-3.5" />+{growthPct}% so với khởi điểm
                 </p>
               )}
@@ -69,15 +73,12 @@ export function JackpotHeroCard() {
 
           <div className="flex shrink-0 items-center gap-2">
             {isHot && (
-              <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
+              <Badge className="border-loss bg-loss text-loss gap-1">
                 <Flame className="size-3" />
                 Nóng
               </Badge>
             )}
-            <Badge
-              variant="outline"
-              className="border-teal-300/60 bg-teal-50/80 text-teal-700 dark:border-teal-700/60 dark:bg-teal-950/50 dark:text-teal-300"
-            >
+            <Badge variant="outline" className="border-game-mega645/60 bg-game-mega645/80 text-game-mega645">
               Tích lũy vô hạn
             </Badge>
           </div>
@@ -86,13 +87,13 @@ export function JackpotHeroCard() {
         {/* Milestone progress */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-teal-800/70 dark:text-teal-300/70">
+            <span className="text-game-mega645/70 font-medium">
               Tiến trình đến{" "}
               <span className="font-semibold">{formatVNDCompact(progress?.milestoneThreshold ?? 0)}</span>
             </span>
-            <span className="font-bold tabular-nums text-teal-900 dark:text-teal-200">{pct.toFixed(1)}%</span>
+            <span className="text-game-mega645 font-bold tabular-nums">{pct.toFixed(1)}%</span>
           </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-teal-200/60 dark:bg-teal-900/50">
+          <div className="bg-game-mega645/60 h-3 w-full overflow-hidden rounded-full">
             <div
               className="h-full rounded-full transition-all duration-700 ease-out"
               style={{
@@ -105,7 +106,7 @@ export function JackpotHeroCard() {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-teal-700/60 dark:text-teal-400/50">
+          <div className="text-game-mega645/60 flex items-center justify-between text-xs">
             <span>
               {(progress?.remaining ?? 0) > 0
                 ? `Còn thiếu ${formatVNDCompact(progress!.remaining)}`
@@ -142,7 +143,9 @@ export function JackpotKpiCards() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
 
   const { cycle, progress } = data;
 
@@ -153,22 +156,22 @@ export function JackpotKpiCards() {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         icon={Layers}
-        iconBg="bg-teal-100 dark:bg-teal-900/50"
-        iconColor="text-teal-600 dark:text-teal-400"
+        iconBg="bg-game-mega645"
+        iconColor="text-game-mega645"
         label="Tích luỹ liên tiếp"
         value={`${cycle.drawCount} kỳ`}
         sub={cycle.startDrawId ? `Từ ${cycle.startDrawId}` : "Chưa bắt đầu"}
       />
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Tổng tích lũy"
         value={formatVNDCompact(cycle.totalContribution)}
         sub={
           growthPct > 0 ? (
             <>
-              <span className="font-semibold text-profit">+{growthPct}%</span>
+              <span className="text-profit font-semibold">+{growthPct}%</span>
               {" so với khởi điểm"}
             </>
           ) : (
@@ -178,16 +181,16 @@ export function JackpotKpiCards() {
       />
       <KpiCard
         icon={Sigma}
-        iconBg="bg-cyan-100 dark:bg-cyan-900/50"
-        iconColor="text-cyan-600 dark:text-cyan-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Đỉnh cao nhất"
         value={formatVNDCompact(cycle.peakAmount)}
         sub={`Vòng #${cycle.cycleNo}`}
       />
       <KpiCard
         icon={Target}
-        iconBg="bg-teal-100 dark:bg-teal-900/50"
-        iconColor="text-teal-600 dark:text-teal-400"
+        iconBg="bg-game-mega645"
+        iconColor="text-game-mega645"
         label="Mốc tiếp theo"
         value={formatVNDCompact(progress?.milestoneThreshold ?? 0)}
         sub={`×${progress?.nextMultiple ?? "?"} khởi điểm — mốc tham chiếu`}
@@ -244,14 +247,14 @@ function KpiCard({
   sub?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-        {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
+        {sub && <p className="text-muted-foreground truncate text-xs">{sub}</p>}
       </div>
     </div>
   );

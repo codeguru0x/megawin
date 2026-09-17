@@ -8,7 +8,7 @@ const useCase = new ListVoidPlayerEntriesUseCase();
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async ({ params }) => {
-    const { drawId, tenantId, accountId } = await params;
+    const { drawId, tenantId, accountId } = params;
     return useCase.run({
       drawId: drawId as string,
       tenantId: tenantId as string,

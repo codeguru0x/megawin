@@ -10,10 +10,10 @@
 
 import { withPlayerAuth } from "@megawin/auth";
 import { TicketChannel } from "@megawin/game-core/entities";
+import { PlaceBetUseCase } from "@megawin/game-mega645-application/use-cases/place-bet";
 import { PlayType } from "@megawin/game-mega645/entities";
 import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
 import { mega645DrawIdSchema, mega645NumberSchema } from "@megawin/game-mega645/schemas";
-import { PlaceBetUseCase } from "@megawin/game-mega645-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";
@@ -61,100 +61,112 @@ export const mega645BoardSchema = z
 
     switch (playType) {
       case PlayType.Standard:
-        if (numLen !== 6)
+        if (numLen !== 6) {
           ctx.addIssue({
             code: "custom",
             message: "Chơi thường: cần chọn đúng 6 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao5:
-        if (numLen !== 5)
+        if (numLen !== 5) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 5: cần chọn đúng 5 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao7:
-        if (numLen !== 7)
+        if (numLen !== 7) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 7: cần chọn đúng 7 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao8:
-        if (numLen !== 8)
+        if (numLen !== 8) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 8: cần chọn đúng 8 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao9:
-        if (numLen !== 9)
+        if (numLen !== 9) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 9: cần chọn đúng 9 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao10:
-        if (numLen !== 10)
+        if (numLen !== 10) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 10: cần chọn đúng 10 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao11:
-        if (numLen !== 11)
+        if (numLen !== 11) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 11: cần chọn đúng 11 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao12:
-        if (numLen !== 12)
+        if (numLen !== 12) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 12: cần chọn đúng 12 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao13:
-        if (numLen !== 13)
+        if (numLen !== 13) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 13: cần chọn đúng 13 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao14:
-        if (numLen !== 14)
+        if (numLen !== 14) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 14: cần chọn đúng 14 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao15:
-        if (numLen !== 15)
+        if (numLen !== 15) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 15: cần chọn đúng 15 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
       case PlayType.Bao18:
-        if (numLen !== 18)
+        if (numLen !== 18) {
           ctx.addIssue({
             code: "custom",
             message: "Bao 18: cần chọn đúng 18 số.",
             path: ["selection", "numbers"],
           });
+        }
         break;
     }
   });

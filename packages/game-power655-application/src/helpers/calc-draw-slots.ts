@@ -16,8 +16,8 @@ import {
   getDay,
   isBefore,
   subtractMinutes,
-  TZDate,
   toVNDate,
+  TZDate,
   VN_TIMEZONE,
 } from "@megawin/shared/utils";
 
@@ -71,18 +71,24 @@ export function calcPower655DrawSlots(
     // addDays hoạt động đúng với TZDate, không bị lệch khi cộng ngày.
     const dayVN = offset === 0 ? todayVN : addDays(todayVN, offset);
 
-    if (!drawDaysOfWeek.includes(getDay(dayVN))) continue;
+    if (!drawDaysOfWeek.includes(getDay(dayVN))) {
+      continue;
+    }
 
     const dateStr = formatVNDate(dayVN);
 
     // Power 6/55: 1 kỳ/ngày, drawId = "YYYY-MM-DD.001".
-    if (existingDrawIds.has(`${dateStr}.001`)) continue;
+    if (existingDrawIds.has(`${dateStr}.001`)) {
+      continue;
+    }
 
     const drawTime = toVNDate(dateStr, drawTimeStr);
     const closeAt = subtractMinutes(drawTime, salesCloseBeforeMinutes);
 
     // Bỏ qua nếu thời điểm đóng bán đã qua — kỳ hôm nay không còn mua được.
-    if (!isBefore(now, closeAt)) continue;
+    if (!isBefore(now, closeAt)) {
+      continue;
+    }
 
     slots.push({
       drawDate: dateStr,

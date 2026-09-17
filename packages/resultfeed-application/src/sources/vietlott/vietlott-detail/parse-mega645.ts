@@ -19,8 +19,7 @@
 import { ResultFeedGameKey, ResultFeedSourceId } from "@megawin/resultfeed/entities";
 import type * as cheerio from "cheerio";
 
-import type { ParsedObservation } from "../../types";
-import { ParseError } from "../../types";
+import { ParseError, type ParsedObservation } from "../../types";
 import { assertNotUnavailable, readBongTronNumbers, readHeadingPeriodAndDate } from "./dom-helpers";
 
 const MEGA645_NUMBER_COUNT = 6;

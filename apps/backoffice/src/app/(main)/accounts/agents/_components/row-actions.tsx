@@ -13,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { SetPasswordDialog } from "../../_shared/set-password-dialog";
 import type { AgentAccount } from "../_lib/schema";
+import { SetPasswordDialog } from "../../_shared/set-password-dialog";
 
 export function AgentRowActions({ account }: { account: AgentAccount }) {
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -25,7 +25,7 @@ export function AgentRowActions({ account }: { account: AgentAccount }) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="size-8 text-muted-foreground data-[state=open]:bg-muted"
+            className="text-muted-foreground data-[state=open]:bg-muted size-8"
             size="icon"
             aria-label="Mở menu thao tác"
           >

@@ -10,8 +10,8 @@
  */
 
 import {
-  type SettleTenantDailyAggregateResult,
   SystemSettleTenantDailyRepository,
+  type SettleTenantDailyAggregateResult,
 } from "@megawin/game-core-application/repos";
 import { LOTTO535_SETTLE_TENANT_REPORTS } from "@megawin/game-lotto535/entities";
 

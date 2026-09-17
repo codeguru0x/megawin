@@ -7,13 +7,13 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type {
-  ResultFeedGameKey,
-  ResultFeedSourceId,
-  SubmissionDoc,
-  SubmissionEntity,
+import {
+  SubmissionState,
+  type ResultFeedGameKey,
+  type ResultFeedSourceId,
+  type SubmissionDoc,
+  type SubmissionEntity,
 } from "@megawin/resultfeed/entities";
-import { SubmissionState } from "@megawin/resultfeed/entities";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 

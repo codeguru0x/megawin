@@ -6,10 +6,7 @@
  *   PrepareResettle → EnqueueReversals → (nested Settle SFN)
  */
 
-export type {
-  DetectResettleBoundariesInput,
-  DetectResettleBoundariesOutput,
-} from "./detect-boundaries";
+export type { DetectResettleBoundariesInput, DetectResettleBoundariesOutput } from "./detect-boundaries";
 export { DetectResettleBoundariesUseCase } from "./detect-boundaries";
 export type { EnqueueReversalsInput, EnqueueReversalsOutput } from "./enqueue-reversals";
 export { EnqueueReversalsUseCase } from "./enqueue-reversals";

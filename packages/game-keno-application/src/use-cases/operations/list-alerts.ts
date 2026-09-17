@@ -1,6 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { KenoOpsAlertEntity, KenoOpsAlertType } from "@megawin/game-keno/entities";
-import { OpsAlertSeverity } from "@megawin/game-keno/entities";
+import { OpsAlertSeverity, type KenoOpsAlertEntity, type KenoOpsAlertType } from "@megawin/game-keno/entities";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";

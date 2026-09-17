@@ -5,14 +5,13 @@ import Link from "next/link";
 import { toTenantUsername } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
-import type { TenantDispatchOrderEntity } from "@megawin/tenant-dispatch/entities";
-import { DispatchOrderStatus } from "@megawin/tenant-dispatch/entities";
+import { DispatchOrderStatus, type TenantDispatchOrderEntity } from "@megawin/tenant-dispatch/entities";
 import {
   DISPATCH_ORDER_STATUS_LABELS,
   DISPATCH_ORDER_STATUS_VARIANT,
   DISPATCH_SOURCE_KIND_LABELS,
 } from "@megawin/tenant-dispatch/shared/labels";
-import { AlertCircle, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,9 @@ export interface DispatchDetailDrawerProps {
 
 /** Pretty-print JSON — null safe. */
 function prettyJSON(value: unknown): string {
-  if (value === undefined || value === null) return "";
+  if (value === undefined || value === null) {
+    return "";
+  }
   try {
     return JSON.stringify(value, null, 2);
   } catch {
@@ -47,14 +48,14 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-170">
         <SheetHeader className="border-b px-5 py-4">
           <SheetTitle className="text-lg font-semibold">Chi tiết dispatch order</SheetTitle>
-          <SheetDescription className="text-xs text-muted-foreground">
+          <SheetDescription className="text-muted-foreground text-xs">
             Outbox entry — payload gửi tenant + timeline retry.
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
-            <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+            <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
               <Loader2 className="size-4 animate-spin" />
               <span className="text-sm">Đang tải…</span>
             </div>
@@ -62,16 +63,16 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
 
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
-              <AlertCircle className="size-8 text-destructive/60" />
-              <p className="text-sm font-medium text-destructive">Không tải được chi tiết</p>
-              <p className="text-xs text-muted-foreground">{(error as Error).message}</p>
+              <AlertCircle className="text-destructive/60 size-8" />
+              <p className="text-destructive text-sm font-medium">Không tải được chi tiết</p>
+              <p className="text-muted-foreground text-xs">{(error as Error).message}</p>
             </div>
           )}
 
           {!isLoading && !error && !order && (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
-              <AlertCircle className="size-8 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-muted-foreground">Không tìm thấy order với Tx này.</p>
+              <AlertCircle className="text-muted-foreground/40 size-8" />
+              <p className="text-muted-foreground text-sm font-medium">Không tìm thấy order với Tx này.</p>
             </div>
           )}
 
@@ -85,8 +86,8 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                 <Badge variant="outline" className="text-xs">
                   {DISPATCH_SOURCE_KIND_LABELS[order.sourceKind]}
                 </Badge>
-                <span className="font-mono text-sm text-muted-foreground">{order.tenantId}</span>
-                <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
+                <span className="text-muted-foreground font-mono text-sm">{order.tenantId}</span>
+                <span className="text-muted-foreground ml-auto font-mono text-sm tabular-nums">
                   {displayVNDateTime(order.createdAt)}
                 </span>
               </div>
@@ -103,7 +104,10 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                     {order.batchKey}
                   </span>
                   <Button asChild size="sm" variant="link" className="h-6 shrink-0 px-1 text-xs">
-                    <Link prefetch={false} href={`/reports/transactions/dispatch/batches/${encodeURIComponent(order.batchKey)}`}>
+                    <Link
+                      prefetch={false}
+                      href={`/reports/transactions/dispatch/batches/${encodeURIComponent(order.batchKey)}`}
+                    >
                       Xem batch
                     </Link>
                   </Button>
@@ -120,13 +124,13 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                   <span className="truncate font-mono text-sm" title={order.username}>
                     {order.username}
                   </span>
-                  <span className="shrink-0 font-mono text-sm text-muted-foreground">({order.accountId})</span>
+                  <span className="text-muted-foreground shrink-0 font-mono text-sm">({order.accountId})</span>
                 </Field>
                 <Field label="Amount">
-                  <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+                  <span className="text-foreground font-mono text-sm font-semibold tabular-nums">
                     {formatNumber(order.amount)}
                   </span>
-                  <span className="shrink-0 font-mono text-sm text-muted-foreground">{order.currency}</span>
+                  <span className="text-muted-foreground shrink-0 font-mono text-sm">{order.currency}</span>
                 </Field>
               </div>
 
@@ -160,7 +164,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
         </div>
 
         {order && order.status === DispatchOrderStatus.Pending && (
-          <div className="flex items-center justify-end gap-2 border-t bg-muted/30 px-5 py-3">
+          <div className="bg-muted/30 flex items-center justify-end gap-2 border-t px-5 py-3">
             <Button size="sm" variant="outline" onClick={onClose}>
               Đóng
             </Button>
@@ -172,17 +176,17 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
         )}
         {order &&
           (order.status === DispatchOrderStatus.Dispatched || order.status === DispatchOrderStatus.Cancelled) && (
-            <div className="flex items-center justify-between gap-2 border-t bg-muted/30 px-5 py-3">
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <div className="bg-muted/30 flex items-center justify-between gap-2 border-t px-5 py-3">
+              <span className="text-muted-foreground flex items-center gap-1.5 text-sm">
                 {order.status === DispatchOrderStatus.Dispatched ? (
                   <>
-                    <CheckCircle2 className="size-3.5 text-profit" />
+                    <CheckCircle2 className="text-profit size-3.5" />
                     <span>
                       Đã dispatch thành công
                       {order.dispatchedAt && (
                         <>
                           {" lúc "}
-                          <span className="font-mono tabular-nums text-foreground">
+                          <span className="text-foreground font-mono tabular-nums">
                             {displayVNDateTime(order.dispatchedAt)}
                           </span>
                         </>
@@ -192,7 +196,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                   </>
                 ) : (
                   <>
-                    <XCircle className="size-3.5 text-muted-foreground" />
+                    <XCircle className="text-muted-foreground size-3.5" />
                     Order đã bị huỷ.
                   </>
                 )}
@@ -210,7 +214,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="w-[110px] shrink-0 whitespace-nowrap text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="text-muted-foreground w-[110px] shrink-0 text-xs font-medium tracking-wide whitespace-nowrap uppercase">
         {label}
       </span>
       <div className="flex min-w-0 flex-1 items-center gap-2">{children}</div>
@@ -235,11 +239,11 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
 
   if (isDispatched && !hasErrorOrRetry) {
     return (
-      <div className="flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2.5 text-sm">
-        <CheckCircle2 className="size-4 text-profit" />
+      <div className="border-profit/30 bg-profit/5 flex items-center gap-2 rounded-md border px-3 py-2.5 text-sm">
+        <CheckCircle2 className="text-profit size-4" />
         <span className="text-muted-foreground">Dispatch ngay lần đầu — không có retry.</span>
         {order.dispatchedAt && (
-          <span className="ml-auto font-mono tabular-nums text-foreground">
+          <span className="text-foreground ml-auto font-mono tabular-nums">
             {displayVNDateTime(order.dispatchedAt)}
           </span>
         )}
@@ -249,7 +253,7 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
 
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Retry timeline</h3>
+      <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">Retry timeline</h3>
       <Field label="Retry count">
         <span className="font-mono text-sm tabular-nums">{retryCount}</span>
       </Field>
@@ -267,12 +271,12 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
       )}
       {order.dispatchedAt && (
         <Field label="Dispatched">
-          <span className="font-mono text-sm tabular-nums text-profit">{displayVNDateTime(order.dispatchedAt)}</span>
+          <span className="text-profit font-mono text-sm tabular-nums">{displayVNDateTime(order.dispatchedAt)}</span>
         </Field>
       )}
       {order.lastError && (
-        <div className="mt-1 rounded-md border border-destructive/40 bg-destructive/5 p-2">
-          <p className="wrap-break-words text-sm text-destructive">{order.lastError}</p>
+        <div className="border-destructive/40 bg-destructive/5 mt-1 rounded-md border p-2">
+          <p className="wrap-break-words text-destructive text-sm">{order.lastError}</p>
         </div>
       )}
     </div>
@@ -282,13 +286,13 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
 function PayloadSection({ title, json }: { title: string; json: string }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+      <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">{title}</h3>
       {json ? (
-        <pre className="max-h-90 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-relaxed">
+        <pre className="bg-muted/40 max-h-90 overflow-auto rounded-md border p-3 font-mono text-xs leading-relaxed">
           {json}
         </pre>
       ) : (
-        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">—</p>
+        <p className="text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center text-xs">—</p>
       )}
     </div>
   );

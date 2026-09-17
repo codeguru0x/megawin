@@ -63,7 +63,7 @@ export function NumberHeatmapHoverLayer<T extends NumberHeatmapHoverItem>({
       <div
         role="tooltip"
         data-slot="number-heatmap-hover-surface"
-        className={cn(DATA_HOVER_SURFACE_CLASS, "fade-in-0 zoom-in-95 w-fit animate-in duration-100 ease-out")}
+        className={cn(DATA_HOVER_SURFACE_CLASS, "fade-in-0 zoom-in-95 animate-in w-fit duration-100 ease-out")}
       >
         {children(item)}
       </div>

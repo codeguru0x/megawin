@@ -13,10 +13,7 @@ export type { DrawReportRow, GameDrawReportTableProps } from "./game-draw-report
 export { GameDrawReportTable } from "./game-draw-report-table";
 export type { DrawTenantRow, GameDrawTenantTableProps } from "./game-draw-tenant-table";
 export { GameDrawTenantTable } from "./game-draw-tenant-table";
-export type {
-  GamePlayerBreakdownTableProps,
-  PlayerBreakdownRow,
-} from "./game-player-breakdown-table";
+export type { GamePlayerBreakdownTableProps, PlayerBreakdownRow } from "./game-player-breakdown-table";
 export { GamePlayerBreakdownTable } from "./game-player-breakdown-table";
 export type { EntryRow, GamePlayerEntryListProps } from "./game-player-entry-list";
 export { GamePlayerEntryList } from "./game-player-entry-list";

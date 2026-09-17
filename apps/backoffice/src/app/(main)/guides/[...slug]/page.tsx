@@ -91,7 +91,7 @@ async function GuideDocContent({ slug }: { slug: string[] }) {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl gap-10 px-4 py-8 md:px-8 md:py-10">
-      <article className="w-full min-w-0 max-w-[72ch] flex-1">
+      <article className="w-full max-w-[72ch] min-w-0 flex-1">
         <Breadcrumb className="mb-4">
           <BreadcrumbList>
             <BreadcrumbItem>

@@ -8,7 +8,7 @@ import type {
   GetCurrentDrawOutput,
   ListDrawsOutput,
 } from "@megawin/game-keno-application/use-cases/draws";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -69,7 +69,7 @@ function useKenoDrawAction<TBody = void>(
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: kenoKeys.all });
+      void qc.invalidateQueries({ queryKey: kenoKeys.all });
       const message = typeof successMessage === "function" ? successMessage(variables) : successMessage;
       toast.success(message);
     },
@@ -119,7 +119,7 @@ export function useKenoCreateDraw() {
   return useMutation({
     mutationFn: (data: { drawDate: string; count: number }) => apiClient.post<CreateDrawOutput>("/keno/draws", data),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: kenoKeys.all });
+      void qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {

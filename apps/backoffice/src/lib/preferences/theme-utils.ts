@@ -26,9 +26,13 @@ export function applyThemePreset(value: string) {
 }
 
 export function subscribeToSystemTheme(onChange: (mode: ResolvedThemeMode) => void): () => void {
-  if (typeof window === "undefined") return () => undefined;
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
   const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-  if (!media) return () => undefined;
+  if (!media) {
+    return () => undefined;
+  }
 
   const listener = (event: MediaQueryListEvent) => {
     onChange(event.matches ? "dark" : "light");

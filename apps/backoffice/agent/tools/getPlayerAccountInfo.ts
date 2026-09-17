@@ -25,8 +25,11 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { SearchPlayerAccountItem } from "@megawin/identity-application/use-cases/accounts";
-import { GetPlayerAccountUseCase, SearchPlayerAccountsUseCase } from "@megawin/identity-application/use-cases/accounts";
+import {
+  GetPlayerAccountUseCase,
+  SearchPlayerAccountsUseCase,
+  type SearchPlayerAccountItem,
+} from "@megawin/identity-application/use-cases/accounts";
 import { AppException } from "@megawin/shared/errors";
 import { defineTool } from "eve/tools";
 import { z } from "zod";

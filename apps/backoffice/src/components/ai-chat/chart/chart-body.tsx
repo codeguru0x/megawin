@@ -9,13 +9,11 @@
  * KHÔNG import file này trực tiếp từ nơi khác ngoài `chart-tool-view.tsx` — luôn qua
  * `next/dynamic` để giữ đúng code-splitting.
  */
-
 import {
   Area,
   AreaChart,
   Bar,
   BarChart,
-  type BarShapeProps,
   CartesianGrid,
   ComposedChart,
   Label,
@@ -23,7 +21,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  type PieSectorShapeProps,
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
@@ -38,23 +35,22 @@ import {
   usePlotArea,
   XAxis,
   YAxis,
+  type BarShapeProps,
+  type PieSectorShapeProps,
 } from "recharts";
 
-import type { ChartConfig } from "@/components/ui/chart";
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig,
 } from "@/components/ui/chart";
 import {
   CHART_HEIGHT_CLASS,
   ChartFieldType,
   ChartKind,
-  type ChartModel,
-  type ChartRow,
-  type ChartSeries,
   chartSeriesColor,
   formatAxisTick,
   formatShare,
@@ -65,6 +61,9 @@ import {
   prettifyLabel,
   scatterAxisPair,
   secondaryAxisKeys,
+  type ChartModel,
+  type ChartRow,
+  type ChartSeries,
 } from "@/lib/chart";
 import { cn } from "@/lib/utils";
 
@@ -189,11 +188,11 @@ function TooltipItem({ color, label, value }: { color: string | undefined; label
   return (
     <>
       {color !== undefined && (
-        <span className="mt-0.5 size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: color }} />
+        <span className="mt-0.5 size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
       )}
       <div className="flex flex-1 items-center justify-between gap-4 leading-none">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium font-mono text-foreground tabular-nums">{value}</span>
+        <span className="text-foreground font-mono font-medium tabular-nums">{value}</span>
       </div>
     </>
   );
@@ -709,7 +708,7 @@ function DonutCenterTotal({
   const maxTextWidth = Math.max(center.innerRadius * 2 - 8, 0);
   return (
     <text dominantBaseline="central" textAnchor="middle" x={center.cx} y={center.cy}>
-      <tspan className="fill-foreground font-semibold text-lg" dy="-8" x={center.cx}>
+      <tspan className="fill-foreground text-lg font-semibold" dy="-8" x={center.cx}>
         {value}
       </tspan>
       <tspan
@@ -888,7 +887,7 @@ function ScatterChartBody({
         type="number"
       >
         <Label
-          className="fill-muted-foreground text-[11px]"
+          className="fill-muted-foreground text-xs"
           offset={-14}
           position="insideBottom"
           value={prettifyLabel(pair.x.dataKey, reportLabels)}
@@ -906,7 +905,7 @@ function ScatterChartBody({
       >
         <Label
           angle={-90}
-          className="fill-muted-foreground text-[11px]"
+          className="fill-muted-foreground text-xs"
           position="insideLeft"
           style={{ textAnchor: "middle" }}
           value={prettifyLabel(pair.y.dataKey, reportLabels)}
@@ -955,7 +954,7 @@ function ScatterChartBody({
  */
 function ScatterLegend({ color, text }: { color: string; text: string }) {
   return (
-    <div className="flex items-center justify-center gap-1.5 pt-3 text-muted-foreground text-xs">
+    <div className="text-muted-foreground flex items-center justify-center gap-1.5 pt-3 text-xs">
       <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
       {text}
     </div>

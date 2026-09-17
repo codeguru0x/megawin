@@ -33,7 +33,9 @@ export function VoidBreadcrumb({
   onNavigateToDraw,
   onNavigateToTenant,
 }: VoidBreadcrumbProps) {
-  if (level === "list") return null;
+  if (level === "list") {
+    return null;
+  }
 
   const playerLabel = playerName || playerId;
 
@@ -42,7 +44,7 @@ export function VoidBreadcrumb({
       <Button
         variant="ghost"
         size="sm"
-        className="h-7 px-2 text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground h-7 px-2"
         onClick={onNavigateToList}
       >
         Kỳ huỷ
@@ -50,14 +52,14 @@ export function VoidBreadcrumb({
 
       {drawId && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3" />
           {level === "draw-tenants" ? (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-mono font-medium">{drawId}</span>
+            <span className="bg-secondary rounded-md px-2 py-1 font-mono text-xs font-medium">{drawId}</span>
           ) : (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 px-2 font-mono text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-7 px-2 font-mono"
               onClick={() => onNavigateToDraw(drawId)}
             >
               {drawId}
@@ -68,14 +70,14 @@ export function VoidBreadcrumb({
 
       {tenantId && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3" />
           {level === "players" ? (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
+            <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{tenantId}</span>
           ) : (
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 px-2 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-7 px-2"
               onClick={() => onNavigateToTenant(tenantId)}
             >
               {tenantId}
@@ -86,8 +88,8 @@ export function VoidBreadcrumb({
 
       {playerLabel && level === "entries" && (
         <>
-          <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerLabel}</span>
+          <ChevronRight className="text-muted-foreground size-3" />
+          <span className="bg-secondary rounded-md px-2 py-1 text-xs font-medium">{playerLabel}</span>
         </>
       )}
     </div>

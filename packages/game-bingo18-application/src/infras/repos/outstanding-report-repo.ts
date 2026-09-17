@@ -9,8 +9,11 @@
  * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
  */
 
-import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-bingo18/entities";
-import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
+import {
+  BINGO18_OUTSTANDING_DRAW_REPORTS,
+  type OutstandingDrawReport,
+  type OutstandingDrawReportEntity,
+} from "@megawin/game-bingo18/entities";
 
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";

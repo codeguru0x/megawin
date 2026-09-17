@@ -94,21 +94,21 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
         <button
           type="button"
           onClick={onRefresh}
-          className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-muted/60 transition-colors"
+          className="hover:bg-muted/60 flex items-center gap-1.5 rounded-md px-1.5 py-1 transition-colors"
           aria-label="Lấy dữ liệu mới nhất"
         >
           <span className="relative flex size-2">
             {isFetching ? (
-              <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="bg-warning size-2 animate-pulse rounded-full" />
             ) : (
               <>
                 {/* Ping animation — live indicator */}
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                <span className="bg-profit absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+                <span className="bg-profit relative inline-flex size-2 rounded-full" />
               </>
             )}
           </span>
-          <span className="text-xs text-muted-foreground">Live</span>
+          <span className="text-muted-foreground text-xs">Live</span>
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
@@ -195,9 +195,9 @@ export function OutstandingContent({
           <Clock className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">{gameName} — Outstanding</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">{gameName} — Outstanding</h1>
           <div className="flex items-center gap-1.5">
-            <p className="text-xs text-muted-foreground">Entries chưa settle</p>
+            <p className="text-muted-foreground text-xs">Entries chưa settle</p>
             <LiveDot isFetching={drawsData.isLoading} onRefresh={() => drawsData.refetch()} />
           </div>
         </div>
@@ -226,7 +226,7 @@ export function OutstandingContent({
       {!!drawsData.error && (
         <Card className="gap-0 py-0">
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <p className="text-sm text-muted-foreground">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
+            <p className="text-muted-foreground text-sm">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
             <Button variant="outline" size="sm" onClick={() => drawsData.refetch()}>
               <RefreshCw className="mr-2 size-4" />
               Thử lại

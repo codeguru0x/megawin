@@ -36,15 +36,15 @@
  * - plus: pairKey UNORDERED (2 triplet sort tăng) → `pairs` map (units/amount/accounts).
  */
 
-import type {
-  Max3dPlayTypeStat,
-  Max3dTopPotential,
-  Max3dTripletStake,
-  TenantBettingStat,
+import {
+  PlayMode,
+  PlayType,
+  type Max3dPlayTypeStat,
+  type Max3dTopPotential,
+  type Max3dTripletStake,
+  type TenantBettingStat,
 } from "@megawin/game-max3d/entities";
-import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
-import type { Max3dPrizeSet } from "@megawin/game-max3d/rules";
-import { getUniquePermutations, maxBoardUnitWin } from "@megawin/game-max3d/rules";
+import { getUniquePermutations, maxBoardUnitWin, type Max3dPrizeSet } from "@megawin/game-max3d/rules";
 
 import type {
   AccountStatsDelta,
@@ -138,7 +138,9 @@ export class Max3dDrawStatsAccumulator {
 
     // account concentration
     const acc = this.accounts.get(entry.accountId) ?? { username: "", amount: 0, entries: 0 };
-    if (entry.username) acc.username = entry.username;
+    if (entry.username) {
+      acc.username = entry.username;
+    }
     acc.amount += entry.amount;
     acc.entries += 1;
     this.accounts.set(entry.accountId, acc);
@@ -171,7 +173,9 @@ export class Max3dDrawStatsAccumulator {
     if (board.playMode === PlayMode.Plus) {
       this.applyStat("plus", boardAmount, board.betCount);
       const [t1, t2] = board.triplets;
-      if (t1 === undefined || t2 === undefined) return; // data hỏng — totals vẫn đếm.
+      if (t1 === undefined || t2 === undefined) {
+        return;
+      } // data hỏng — totals vẫn đếm.
       const { key, a, b } = toPairKey(t1, t2);
       const pair = this.pairs.get(key) ?? {
         triplet1: a,
@@ -189,7 +193,9 @@ export class Max3dDrawStatsAccumulator {
 
     // Basic — phân nhóm theo playType; stake per-triplet (combo expand hoán vị).
     const triplet = board.triplets[0];
-    if (triplet === undefined) return;
+    if (triplet === undefined) {
+      return;
+    }
 
     if (board.playType === PlayType.Straight) {
       this.applyStat("basicStraight", boardAmount, board.betCount);

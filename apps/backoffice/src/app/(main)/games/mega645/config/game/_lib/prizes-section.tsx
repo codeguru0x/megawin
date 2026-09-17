@@ -26,21 +26,21 @@ const PRIZE_FIELDS = [
     label: "Giải Nhất",
     desc: "5 số chính",
     badge: "1st",
-    color: "bg-orange-500 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "tier2" as const,
     label: "Giải Nhì",
     desc: "4 số chính",
     badge: "2nd",
-    color: "bg-slate-400 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "tier3" as const,
     label: "Giải Ba",
     desc: "3 số chính",
     badge: "3rd",
-    color: "bg-amber-700 text-white",
+    color: "bg-warning text-white",
   },
 ] as const;
 
@@ -67,9 +67,9 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
+        <span className={`inline-flex cursor-help items-center gap-1 ${className ?? ""}`}>
           {label}
-          <Info className="size-3 text-muted-foreground/60" />
+          <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-xs">
@@ -99,7 +99,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
@@ -109,14 +109,14 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                 <div className="mb-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground">Bảng giải thưởng cố định</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <h3 className="text-foreground text-sm font-semibold">Bảng giải thưởng cố định</h3>
+                      <p className="text-muted-foreground mt-0.5 text-xs">
                         Giá trị giải thưởng mặc định (VND) — Jackpot Độc Đắc là giải tích luỹ riêng
                         {" · "}Mẫu: <strong>{fmt(TOTAL_OUTCOMES)}</strong>
                         {" · "}Giá: <strong>{fmt(unitPrice)} VND</strong>
                       </p>
                     </div>
-                    <div className="flex items-center gap-4 text-xs shrink-0">
+                    <div className="flex shrink-0 items-center gap-4 text-xs">
                       <div className="text-right">
                         <span className="text-muted-foreground">Kỳ vọng trả / line (chỉ giải cố định)</span>
                         <div className="font-semibold tabular-nums">
@@ -127,7 +127,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
                         <div
                           className={`font-bold tabular-nums ${
-                            profitAnalysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"
+                            profitAnalysis.grossMarginPercent >= 0 ? "text-profit" : "text-loss"
                           }`}
                         >
                           {profitAnalysis.grossMarginPercent >= 0 ? (
@@ -136,7 +136,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                             <TrendingDown className="mr-1 inline size-3.5" />
                           )}
                           {profitAnalysis.grossMarginPercent.toFixed(2)}%
-                          <span className="ml-1 font-normal text-muted-foreground">
+                          <span className="text-muted-foreground ml-1 font-normal">
                             ({fmt(Math.round(profitAnalysis.grossMarginPerLine))} VND/line)
                           </span>
                         </div>
@@ -145,9 +145,9 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                   </div>
                 </div>
 
-                <div className="rounded-lg border overflow-hidden">
+                <div className="overflow-hidden rounded-lg border">
                   {/* Table header */}
-                  <div className="grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-205">
+                  <div className="bg-muted/40 text-muted-foreground grid min-w-205 grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-wider uppercase">
                     <span className="w-9" />
                     <span>Hạng giải</span>
                     <span className="text-right">Giá trị thưởng</span>
@@ -187,14 +187,14 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         render={({ field }) => (
                           <FormItem>
                             <div
-                              className={`grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/20 min-w-205 ${
+                              className={`hover:bg-muted/20 grid min-w-205 grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 px-6 py-3 transition-colors ${
                                 idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
                               }`}
                             >
                               <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
                               <div>
                                 <span className="text-sm font-medium">{p.label}</span>
-                                <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
+                                <span className="text-muted-foreground ml-2 text-xs">{p.desc}</span>
                               </div>
                               <FormControl>
                                 <MoneyInput
@@ -208,7 +208,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                               </FormControl>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                                  <span className="text-muted-foreground cursor-help text-right text-xs tabular-nums">
                                     {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
                                   </span>
                                 </TooltipTrigger>
@@ -222,16 +222,16 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                   )}
                                 </TooltipContent>
                               </Tooltip>
-                              <span className="text-right text-xs tabular-nums font-medium">
+                              <span className="text-right text-xs font-medium tabular-nums">
                                 {profit ? `${fmt(Math.round(profit.expectedPayout))}` : "–"}
                               </span>
                               <span
-                                className={`text-right text-xs tabular-nums font-semibold ${
+                                className={`text-right text-xs font-semibold tabular-nums ${
                                   profit && profit.payoutRatio > 1
-                                    ? "text-red-600"
+                                    ? "text-loss"
                                     : profit && profit.payoutRatio > 0.5
-                                      ? "text-amber-600"
-                                      : "text-emerald-600"
+                                      ? "text-warning"
+                                      : "text-profit"
                                 }`}
                               >
                                 {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -239,8 +239,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span
-                                    className={`text-right text-xs tabular-nums cursor-help ${
-                                      isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground"
+                                    className={`cursor-help text-right text-xs tabular-nums ${
+                                      isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground"
                                     }`}
                                   >
                                     {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
@@ -265,18 +265,18 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               </div>
 
               {/* ── Right: Full odds reference ────────────────── */}
-              <div className="border-t p-6 lg:border-l lg:border-t-0 overflow-x-auto">
+              <div className="overflow-x-auto border-t p-6 lg:border-t-0 lg:border-l">
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">Xác suất &amp; tỷ lệ trả thưởng</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Xác suất &amp; tỷ lệ trả thưởng</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Toàn bộ hạng giải bao gồm Jackpot (tính theo giá trị khởi điểm). Khác với cột trái chỉ tính giải cố
                     định.
                   </p>
                 </div>
 
-                <div className="rounded-lg border overflow-hidden">
+                <div className="overflow-hidden rounded-lg border">
                   {/* Header */}
-                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-130">
+                  <div className="bg-muted/40 text-muted-foreground grid min-w-130 grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 px-6 py-2.5 text-xs font-medium tracking-wider uppercase">
                     <span>Hạng giải</span>
                     <span className="text-right">Xác suất</span>
                     <span className="text-right">Giá trị</span>
@@ -304,25 +304,22 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     return (
                       <div
                         key={row.tier}
-                        className={`grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 px-6 py-3 text-xs transition-colors hover:bg-muted/20 min-w-130 ${
+                        className={`hover:bg-muted/20 grid min-w-130 grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 px-6 py-3 text-xs transition-colors ${
                           idx < oddsTable.length - 1 ? "border-b" : ""
                         }`}
                       >
                         <div className="flex items-center gap-1.5">
                           {isJackpot && (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                            >
+                            <Badge variant="secondary" className="bg-loss text-loss text-xs font-bold">
                               JP
                             </Badge>
                           )}
-                          <span className="font-medium text-foreground">{row.label}</span>
+                          <span className="text-foreground font-medium">{row.label}</span>
                         </div>
 
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="cursor-help text-right tabular-nums text-muted-foreground">
+                            <span className="text-muted-foreground cursor-help text-right tabular-nums">
                               1:{fmt(Math.round(row.oneInN))}
                             </span>
                           </TooltipTrigger>
@@ -333,11 +330,11 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                           </TooltipContent>
                         </Tooltip>
 
-                        <span className="text-right tabular-nums text-muted-foreground">{fmt(defaultPrize)}</span>
+                        <span className="text-muted-foreground text-right tabular-nums">{fmt(defaultPrize)}</span>
 
-                        <span className="text-right tabular-nums font-medium">{fmt(Math.round(expectedPayout))}</span>
+                        <span className="text-right font-medium tabular-nums">{fmt(Math.round(expectedPayout))}</span>
 
-                        <span className="text-right tabular-nums font-semibold text-muted-foreground">
+                        <span className="text-muted-foreground text-right font-semibold tabular-nums">
                           {payoutRate.toFixed(2)}%
                         </span>
                       </div>
@@ -345,7 +342,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                   })}
 
                   {/* Total row */}
-                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 rounded-b-md border-t-2 bg-muted/30 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider min-w-130">
+                  <div className="bg-muted/30 grid min-w-130 grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 rounded-b-md border-t-2 px-6 py-2.5 text-xs font-semibold tracking-wider uppercase">
                     <span>Tổng cộng</span>
                     <span />
                     <span />
@@ -362,7 +359,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         ),
                       )}
                     </span>
-                    <span className="text-right tabular-nums text-muted-foreground">
+                    <span className="text-muted-foreground text-right tabular-nums">
                       {oddsTable
                         .reduce((sum, row) => {
                           const isJP = row.tier === "jackpot";

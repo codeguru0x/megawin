@@ -48,18 +48,18 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
   const seedAmount = form.watch("seedAmount") || 0;
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
             <div className="p-6 pb-4">
               <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-950/40">
-                  <Trophy className="size-4 text-orange-600 dark:text-orange-400" />
+                <div className="bg-warning flex size-9 items-center justify-center rounded-lg">
+                  <Trophy className="text-warning size-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Cấu hình Jackpot</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Cấu hình Jackpot</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Mega 6/45 theo luật Vietlott — Jackpot tích luỹ (roll-over); không chia xuống hạng giải thấp hơn
                   </p>
                 </div>
@@ -72,7 +72,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                 name="seedAmount"
                 render={({ field }) => (
                   <FormItem className="max-w-md">
-                    <FormLabel className="text-xs text-muted-foreground">Giá trị khởi điểm</FormLabel>
+                    <FormLabel className="text-muted-foreground text-xs">Giá trị khởi điểm</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <MoneyInput
@@ -83,12 +83,12 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           name={field.name}
                           ref={field.ref}
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                        <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                           VND
                         </span>
                       </div>
                     </FormControl>
-                    <p className="text-xs tabular-nums text-muted-foreground">
+                    <p className="text-muted-foreground text-xs tabular-nums">
                       Quỹ Jackpot khởi điểm mỗi chu kỳ mới: {formatNumber(seedAmount)}đ
                     </p>
                     <FormMessage />
@@ -97,10 +97,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               />
             </div>
 
-            <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
+            <div className="bg-info/80 border-t px-6 py-3">
               <div className="flex items-start gap-2">
-                <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
-                <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
+                <Info className="text-info mt-0.5 size-3.5 shrink-0" />
+                <p className="text-info text-xs leading-relaxed">
                   Giá trị khởi điểm là số tiền của quỹ Jackpot khi bắt đầu một chu kỳ mới (sau khi có người trúng Độc
                   Đắc). Nếu không có người trúng, quỹ sẽ <strong>tích luỹ (roll-over)</strong> sang kỳ tiếp theo. Nhiều
                   người cùng trúng thì chia đều theo đơn vị dự thưởng — không chia xuống hạng giải thấp hơn. Vietlott

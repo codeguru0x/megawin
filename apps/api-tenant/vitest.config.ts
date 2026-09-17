@@ -6,10 +6,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["test/**/*.test.ts"],
+    include: ["test/unit/**/*.test.ts"],
     setupFiles: ["test/setup.ts"],
     testTimeout: 10_000,
-    // Cho phép scaffold config trước khi viết *.test.ts (test case viết sau) — tránh chặn CI.
     passWithNoTests: true,
   },
 });

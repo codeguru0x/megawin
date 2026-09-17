@@ -1,8 +1,7 @@
 "use client";
 
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
-import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, CheckCircle2, Clock, FileStack } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, FileStack, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -52,11 +51,11 @@ function DispatchKpiCard({
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1 text-left">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", dim && "text-muted-foreground", valueClass)}>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className={cn("text-foreground text-lg font-bold tabular-nums", dim && "text-muted-foreground", valueClass)}>
           {value}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </>
   );
@@ -71,8 +70,8 @@ function DispatchKpiCard({
         title={hint}
         className={cn(
           baseClass,
-          "cursor-pointer text-left hover:border-foreground/20 hover:bg-muted/40",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "hover:border-foreground/20 hover:bg-muted/40 cursor-pointer text-left",
+          "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
         )}
       >
         {content}
@@ -127,8 +126,8 @@ export function DispatchKpiStrip({
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <DispatchKpiCard
         icon={FileStack}
-        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-        iconColor="text-indigo-600 dark:text-indigo-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tổng orders"
         value={placeholder ? "—" : formatNumber(total)}
         dim={!placeholder && total === 0}
@@ -136,8 +135,8 @@ export function DispatchKpiStrip({
       />
       <DispatchKpiCard
         icon={Clock}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Đang chờ"
         value={placeholder ? "—" : formatNumber(pending)}
         valueClass={pending > 0 ? "text-warning" : ""}
@@ -154,8 +153,8 @@ export function DispatchKpiStrip({
       />
       <DispatchKpiCard
         icon={CheckCircle2}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Đã gửi"
         value={placeholder ? "—" : formatNumber(dispatched)}
         valueClass={dispatched > 0 ? "text-profit" : ""}
@@ -172,8 +171,8 @@ export function DispatchKpiStrip({
       />
       <DispatchKpiCard
         icon={AlertTriangle}
-        iconBg="bg-rose-100 dark:bg-rose-900/50"
-        iconColor="text-rose-600 dark:text-rose-400"
+        iconBg="bg-loss"
+        iconColor="text-loss"
         label="Cần chú ý"
         value={placeholder ? "—" : formatNumber(stuck)}
         valueClass={stuck > 0 ? "text-loss" : ""}

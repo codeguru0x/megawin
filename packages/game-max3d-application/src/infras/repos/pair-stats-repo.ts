@@ -26,8 +26,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { Max3dDrawPairStatsDoc, Max3dDrawPairStatsEntity } from "@megawin/game-max3d/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
+import {
+  Max3dCollections,
+  type Max3dDrawPairStatsDoc,
+  type Max3dDrawPairStatsEntity,
+} from "@megawin/game-max3d/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { PairStatsMapper } from "../mappers/pair-stats-mapper";
@@ -70,7 +73,9 @@ export class PairStatsRepository extends BaseRepo<Max3dDrawPairStatsEntity, Pair
    * @param batchMaxId - ObjectId hex entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: PairStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = deltas.map((delta) => ({
@@ -109,7 +114,9 @@ export class PairStatsRepository extends BaseRepo<Max3dDrawPairStatsEntity, Pair
    *   `PairAccountsRepository.countAccountsByPair`).
    */
   async syncAccountCounts(drawId: string, countsByPair: Map<string, number>): Promise<void> {
-    if (countsByPair.size === 0) return;
+    if (countsByPair.size === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = [];
     for (const [pairKey, accounts] of countsByPair) {

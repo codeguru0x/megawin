@@ -13,7 +13,6 @@
  * `mode` là derived state — tính lại mỗi lần measured viewport đổi, KHÔNG phải state riêng
  * (rule vercel-react-best-practices §5.1: derive trong render, không đồng bộ qua effect).
  */
-
 import { useEffect, useRef, useState } from "react";
 
 import { useSidebar } from "@/components/ui/sidebar";
@@ -104,7 +103,6 @@ export function useAiPanelMode({ panelOpen, panelWidth }: UseAiPanelModeInput): 
     }
 
     if (!panelOpen) {
-      // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome không track mutation runtime của ref.current qua các lần render — restoreSidebarRef.current thực sự có thể là true (set ở nhánh needsAutoCollapse dưới, ở lần chạy effect trước).
       if (restoreSidebarRef.current) {
         restoreSidebarRef.current = false;
         setSidebarOpen(true);

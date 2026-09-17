@@ -49,7 +49,9 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
     drawId?: string,
   ): Promise<PlayerSettledEntryRow[]> {
     const collName = ENTRY_COLLECTIONS[gameProduct];
-    if (!collName) return [];
+    if (!collName) {
+      return [];
+    }
 
     const db = await this.getDb();
     const coll = db.collection(collName);
@@ -139,7 +141,9 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
    */
   async getEntryById(gameProduct: GameProduct, entryId: string): Promise<unknown | null> {
     const collName = ENTRY_COLLECTIONS[gameProduct];
-    if (!collName) return null;
+    if (!collName) {
+      return null;
+    }
 
     let objectId: ObjectId;
     try {
@@ -152,7 +156,9 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
     const coll = db.collection(collName);
 
     const doc = await coll.findOne({ _id: objectId });
-    if (!doc) return null;
+    if (!doc) {
+      return null;
+    }
 
     // Map _id → id (string) để match TicketEntryEntity convention
     const { _id, ...rest } = doc;
@@ -175,7 +181,9 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
     gameProduct: GameProduct,
   ): Promise<PlayerDrawBreakdownRow[]> {
     const collName = ENTRY_COLLECTIONS[gameProduct];
-    if (!collName) return [];
+    if (!collName) {
+      return [];
+    }
 
     const db = await this.getDb();
     const coll = db.collection(collName);

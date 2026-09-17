@@ -19,9 +19,9 @@ import type {
   TicketDoc,
   TicketEntryDoc,
 } from "@megawin/game-bingo18/entities";
-import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { DebitPlayerService } from "@megawin/game-core-application/services";
+import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import { AppException } from "@megawin/shared/errors";
 import { Currency } from "@megawin/shared/types";
 import { getFinancialDate, nowVN } from "@megawin/shared/utils";
@@ -104,7 +104,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
 
     // ── 6. Load commission rate ──
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
-    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+    if (tenantConfig?.isEnabled !== true) {
       throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
     const commissionRate = tenantConfig.commissionRate;

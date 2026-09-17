@@ -19,7 +19,6 @@
  * tính là thất bại với `genericErrorMessage`, rồi tiếp tục lô kế (cùng triết lý partial-success
  * đã áp dụng ở tầng server, `bulk-runner.ts`).
  */
-
 import { useCallback, useState } from "react";
 
 /** Kết quả trả về từ `runChunk` cho 1 lô — adapter tự map response API của domain mình vào đây. */

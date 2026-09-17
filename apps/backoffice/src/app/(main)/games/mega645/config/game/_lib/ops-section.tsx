@@ -11,12 +11,11 @@
  *
  * Range PHẢI khớp Zod server (`api/mega645/config/_lib/schema.ts` §ops).
  */
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mega645OpsAlertType, OpsAlertSeverity } from "@megawin/game-mega645/entities";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import { BellOff, Coins, HelpCircle, Layers, type LucideIcon, Save, ShieldAlert, Users } from "lucide-react";
+import { BellOff, Coins, HelpCircle, Layers, Save, ShieldAlert, Users, type LucideIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -36,21 +35,21 @@ type AlertSeverity = (typeof OpsAlertSeverity)[keyof typeof OpsAlertSeverity];
 /** Style token severity — icon + accent của từng hàng alert. */
 const SEVERITY_STYLES: Record<AlertSeverity, { badge: string; icon: string; ring: string; label: string }> = {
   [OpsAlertSeverity.Critical]: {
-    badge: "bg-red-50 dark:bg-red-950/40",
-    icon: "text-red-600 dark:text-red-400",
-    ring: "ring-red-200/70 dark:ring-red-800/50",
+    badge: "bg-loss",
+    icon: "text-loss",
+    ring: "ring-loss/70",
     label: "Nghiêm trọng",
   },
   [OpsAlertSeverity.Warning]: {
-    badge: "bg-amber-50 dark:bg-amber-950/40",
-    icon: "text-amber-600 dark:text-amber-400",
-    ring: "ring-amber-200/70 dark:ring-amber-800/50",
+    badge: "bg-warning",
+    icon: "text-warning",
+    ring: "ring-warning/70",
     label: "Cảnh báo",
   },
   [OpsAlertSeverity.Info]: {
-    badge: "bg-sky-50 dark:bg-sky-950/40",
-    icon: "text-sky-600 dark:text-sky-400",
-    ring: "ring-sky-200/70 dark:ring-sky-800/50",
+    badge: "bg-info",
+    icon: "text-info",
+    ring: "ring-info/70",
     label: "Thông tin",
   },
 };
@@ -134,7 +133,7 @@ function LabelWithTooltip({ label, tip, className }: { label: string; tip: strin
       {label}
       <Tooltip>
         <TooltipTrigger asChild>
-          <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
+          <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-80 text-xs">
           {tip}
@@ -164,7 +163,7 @@ function IntField({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-xs text-muted-foreground">
+          <FormLabel className="text-muted-foreground text-xs">
             <LabelWithTooltip label={label} tip={tip} />
           </FormLabel>
           <FormControl>
@@ -178,7 +177,7 @@ function IntField({
                 ref={field.ref}
               />
               {suffix ? (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                   {suffix}
                 </span>
               ) : null}
@@ -209,8 +208,8 @@ function AlertToggleRow({
     <label
       htmlFor={rowId}
       className={cn(
-        "flex items-start gap-3 rounded-lg border p-3 transition-colors cursor-pointer",
-        checked ? "border-border/60 bg-card" : "border-dashed border-border/50 bg-muted/30",
+        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
+        checked ? "border-border/60 bg-card" : "border-border/50 bg-muted/30 border-dashed",
       )}
     >
       <span
@@ -234,19 +233,19 @@ function AlertToggleRow({
           >
             {meta.label}
           </span>
-          <span className={cn("rounded px-1.5 py-px text-[10px] font-medium leading-tight", style.badge, style.icon)}>
+          <span className={cn("rounded px-1.5 py-px text-xs leading-tight font-medium", style.badge, style.icon)}>
             {style.label}
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
+              <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-80 text-xs">
               {meta.tip}
             </TooltipContent>
           </Tooltip>
         </div>
-        <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{meta.summary}</p>
+        <p className="text-muted-foreground mt-0.5 text-xs leading-snug">{meta.summary}</p>
       </div>
 
       <Switch id={rowId} className="mt-1.5" checked={checked} onCheckedChange={onToggle} />
@@ -300,7 +299,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   const enabledCount = ALERT_META.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
@@ -308,8 +307,8 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
               {/* Cột trái — Ngưỡng cảnh báo */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Ngưỡng cảnh báo rủi ro</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Ngưỡng cảnh báo rủi ro</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Worker so ngưỡng này mỗi chu kỳ để sinh alert. Đổi có hiệu lực trong ~1 chu kỳ worker (không cần
                     deploy).
                   </p>
@@ -347,13 +346,13 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                   tip="Ý nghĩa: số account distinct cùng cược 1 bộ số ≥ giá trị này → alert combo_concentration (nghi syndicate). · Hợp lệ: số nguyên ≥ 2. · Mặc định: 5. · Tác động: giảm → nhạy hơn với hành vi mua chung."
                 />
 
-                <div className="space-y-3 rounded-lg border border-border/60 bg-muted/20 p-4">
+                <div className="border-border/60 bg-muted/20 space-y-3 rounded-lg border p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <p className="text-muted-foreground inline-flex items-center gap-1.5 text-xs font-medium tracking-wider uppercase">
                       Bật / tắt loại alert
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
+                          <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-80 text-xs">
                           Chọn loại rủi ro worker sẽ giám sát và sinh alert mỗi chu kỳ. Tắt một loại nghĩa là ngưng theo
@@ -362,13 +361,13 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                         </TooltipContent>
                       </Tooltip>
                     </p>
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
                       {enabledCount}/{ALERT_META.length} đang bật
                     </span>
                   </div>
 
                   {enabledCount === 0 ? (
-                    <div className="flex items-center gap-2 rounded-md border border-amber-200/70 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
+                    <div className="border-warning/70 bg-warning text-warning flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
                       <BellOff className="size-4 shrink-0" />
                       Tất cả alert đang tắt — worker sẽ không sinh cảnh báo rủi ro nào.
                     </div>
@@ -390,10 +389,10 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
               </div>
 
               {/* Cột phải — Nhịp & Top-K */}
-              <div className="border-t p-6 lg:border-l lg:border-t-0 space-y-5">
+              <div className="space-y-5 border-t p-6 lg:border-t-0 lg:border-l">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Nhịp worker & Top-K</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Nhịp worker & Top-K</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Điều chỉnh tần suất cập nhật stats và số bản ghi top lưu mỗi kỳ. Ảnh hưởng chi phí worker và độ
                     'tươi' của dashboard.
                   </p>

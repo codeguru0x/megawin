@@ -11,7 +11,6 @@
  * - settled: có payout (nếu win), result, outcome. Dialog hiển thị đầy đủ.
  * - void: có voidInfo. Dialog có thể hiển thị thông tin hoàn trả (xử lý bởi dialog game-specific).
  */
-
 import { Bingo18EntryDetailDialog } from "@/app/(main)/games/bingo18/reports/settle/_lib/sections/entry-detail-dialog";
 import { KenoEntryDetailDialog } from "@/app/(main)/games/keno/reports/settle/_lib/sections/entry-detail-dialog";
 import { Lotto535EntryDetailDialog } from "@/app/(main)/games/lotto535/reports/settle/_lib/sections/entry-detail-dialog";
@@ -31,7 +30,6 @@ export interface GameEntryDetailDialogProps {
    * bộ số đặt cược + thông tin kỳ, KHÔNG hiển thị kết quả.
    * Với settled entries: hiển thị đầy đủ.
    */
-  // biome-ignore lint/suspicious/noExplicitAny: wrapper dùng chung cho TicketEntryEntity của 7 game khác nhau — mỗi game-specific dialog con tự narrow type.
   entry: any | null;
   open: boolean;
   onClose: () => void;

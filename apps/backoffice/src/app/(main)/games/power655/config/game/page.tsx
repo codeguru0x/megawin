@@ -37,13 +37,13 @@ export default function Power655ConfigPage() {
   return (
     <div className="@container/main flex flex-col gap-2">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
+        <div className="from-loss to-warning flex size-8 items-center justify-center rounded-lg bg-linear-to-br shadow-sm">
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">Power 6/55 — Cấu hình</h1>
+          <h1 className="text-foreground text-base font-semibold tracking-tight">Power 6/55 — Cấu hình</h1>
           {config && (
-            <p className="text-xs tabular-nums text-muted-foreground">
+            <p className="text-muted-foreground text-xs tabular-nums">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
             </p>
           )}
@@ -53,8 +53,8 @@ export default function Power655ConfigPage() {
       {isLoading && <ConfigSkeleton />}
 
       {isError && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-          <p className="text-sm text-destructive">
+        <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-4">
+          <p className="text-destructive text-sm">
             Không thể tải cấu hình: {error instanceof Error ? error.message : "Lỗi không xác định"}
           </p>
         </div>
@@ -64,27 +64,27 @@ export default function Power655ConfigPage() {
         <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
             <TabsTrigger value="jackpot" className="gap-1.5">
-              <Trophy className="size-4 text-red-500" />
+              <Trophy className="text-loss size-4" />
               Jackpot kép
             </TabsTrigger>
             <TabsTrigger value="prizes" className="gap-1.5">
-              <DollarSign className="size-4 text-emerald-500" />
+              <DollarSign className="text-profit size-4" />
               Giải thưởng
             </TabsTrigger>
             <TabsTrigger value="rates" className="gap-1.5">
-              <Percent className="size-4 text-blue-500" />
+              <Percent className="text-info size-4" />
               Tài chính
             </TabsTrigger>
             <TabsTrigger value="play" className="gap-1.5">
-              <Settings2 className="size-4 text-violet-500" />
+              <Settings2 className="text-game-max3d size-4" />
               Luật chơi
             </TabsTrigger>
             <TabsTrigger value="ops" className="gap-1.5">
-              <ShieldAlert className="size-4 text-amber-500" />
+              <ShieldAlert className="text-warning size-4" />
               Vận hành
             </TabsTrigger>
             <TabsTrigger value="vietlott" className="gap-1.5">
-              <ExternalLink className="size-4 text-blue-500" />
+              <ExternalLink className="text-info size-4" />
               Vietlott
             </TabsTrigger>
           </TabsList>

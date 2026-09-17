@@ -19,69 +19,69 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { DrawResult as Bingo18DrawResult } from "@megawin/game-bingo18/entities";
 import {
   GetCurrentDrawUseCase as Bingo18CurrentUseCase,
   GetDrawDetailUseCase as Bingo18DetailUseCase,
   GetVietlottResultUseCase as Bingo18ResultUseCase,
   GetVietlottSuggestionUseCase as Bingo18SuggestionUseCase,
 } from "@megawin/game-bingo18-application/use-cases/draws";
+import type { DrawResult as Bingo18DrawResult } from "@megawin/game-bingo18/entities";
 import { GameProduct } from "@megawin/game-core/entities";
 import { GAME_LABELS } from "@megawin/game-core/labels";
 import type { VietlottSuggestionUnavailableReason } from "@megawin/game-core/utils";
-import type { DrawResult as KenoDrawResult } from "@megawin/game-keno/entities";
 import {
   GetCurrentDrawUseCase as KenoCurrentUseCase,
   GetDrawDetailUseCase as KenoDetailUseCase,
   GetVietlottResultUseCase as KenoResultUseCase,
   GetVietlottSuggestionUseCase as KenoSuggestionUseCase,
 } from "@megawin/game-keno-application/use-cases/draws";
-import type { DrawResult as Lotto535DrawResult } from "@megawin/game-lotto535/entities";
+import type { DrawResult as KenoDrawResult } from "@megawin/game-keno/entities";
 import {
   GetCurrentDrawUseCase as Lotto535CurrentUseCase,
   GetDrawDetailUseCase as Lotto535DetailUseCase,
   GetVietlottResultUseCase as Lotto535ResultUseCase,
   GetVietlottSuggestionUseCase as Lotto535SuggestionUseCase,
 } from "@megawin/game-lotto535-application/use-cases/draws";
-import type { DrawResult as Max3dDrawResult } from "@megawin/game-max3d/entities";
+import type { DrawResult as Lotto535DrawResult } from "@megawin/game-lotto535/entities";
 import {
   GetCurrentDrawUseCase as Max3dCurrentUseCase,
   GetDrawDetailUseCase as Max3dDetailUseCase,
   GetVietlottResultUseCase as Max3dResultUseCase,
   GetVietlottSuggestionUseCase as Max3dSuggestionUseCase,
 } from "@megawin/game-max3d-application/use-cases/draws";
-import type { DrawResult as Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
+import type { DrawResult as Max3dDrawResult } from "@megawin/game-max3d/entities";
 import {
   GetCurrentDrawUseCase as Max3dproCurrentUseCase,
   GetDrawDetailUseCase as Max3dproDetailUseCase,
   GetVietlottResultUseCase as Max3dproResultUseCase,
   GetVietlottSuggestionUseCase as Max3dproSuggestionUseCase,
 } from "@megawin/game-max3dpro-application/use-cases/draws";
-import type { DrawResult as Mega645DrawResult } from "@megawin/game-mega645/entities";
+import type { DrawResult as Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import {
   GetCurrentDrawUseCase as Mega645CurrentUseCase,
   GetDrawDetailUseCase as Mega645DetailUseCase,
   GetVietlottResultUseCase as Mega645ResultUseCase,
   GetVietlottSuggestionUseCase as Mega645SuggestionUseCase,
 } from "@megawin/game-mega645-application/use-cases/draws";
-import type { DrawResult as Power655DrawResult } from "@megawin/game-power655/entities";
+import type { DrawResult as Mega645DrawResult } from "@megawin/game-mega645/entities";
 import {
   GetCurrentDrawUseCase as Power655CurrentUseCase,
   GetDrawDetailUseCase as Power655DetailUseCase,
   GetVietlottResultUseCase as Power655ResultUseCase,
   GetVietlottSuggestionUseCase as Power655SuggestionUseCase,
 } from "@megawin/game-power655-application/use-cases/draws";
+import type { DrawResult as Power655DrawResult } from "@megawin/game-power655/entities";
 import { AppException } from "@megawin/shared/errors";
 import type { WireType } from "@megawin/shared/types";
 
 import { resultFeedClient } from "@/lib/resultfeed-client";
 
-import type {
-  GetVietlottResultComparisonInput,
-  GetVietlottResultComparisonOutput,
-  VietlottNumberPositionDiff,
+import {
+  VietlottPeriodSource,
+  type GetVietlottResultComparisonInput,
+  type GetVietlottResultComparisonOutput,
+  type VietlottNumberPositionDiff,
 } from "./types";
-import { VietlottPeriodSource } from "./types";
 
 const detailUseCases = {
   [GameProduct.Keno]: new KenoDetailUseCase(),

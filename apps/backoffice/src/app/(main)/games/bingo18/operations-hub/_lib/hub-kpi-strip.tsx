@@ -36,7 +36,6 @@
  * **không có** `payoutCaps`, nên nhãn KPI chỉ "Rủi ro chi trả" (KHÔNG gắn "(chưa cap)" như Keno).
  * Cảnh báo dùng `exposureWarnRevenuePct` (% doanh thu kỳ), không phải ngưỡng sau-cap.
  */
-
 import { useMemo } from "react";
 
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
@@ -130,14 +129,14 @@ interface KpiCardProps {
 /** Card TĨNH — KHÔNG `onClick`/`active` (quyết định §10: dữ liệu tổng hợp, không phải bộ lọc). */
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, tooltip }: KpiCardProps) {
   const card = (
-    <div className="flex h-[72px] items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex h-[72px] items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
         <Icon className={`size-5 ${iconColor}`} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-muted-foreground text-xs">{label}</p>
-        <p className="truncate font-bold text-lg tabular-nums leading-tight">{value}</p>
-        <p className="truncate text-muted-foreground text-xs">{sub}</p>
+        <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
+        <p className="truncate text-lg leading-tight font-bold tabular-nums">{value}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -178,8 +177,8 @@ export function HubKpiStrip() {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <KpiCard
         icon={Wallet}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Tổng tiền cược"
         value={formatVNDCompact(stats.revenue.total)}
         sub={pendingSub(stats.revenue.pending, formatVNDCompact, "")}
@@ -195,8 +194,8 @@ export function HubKpiStrip() {
           `formatNumber` (KPI count) — KHÔNG dùng `formatMoneyCompact`/`formatNumberVN`. */}
       <KpiCard
         icon={Percent}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Hoa hồng đại lý"
         value={formatVNDCompact(stats.commission.total)}
         sub={pendingSub(stats.commission.pending, formatVNDCompact, "")}
@@ -204,16 +203,16 @@ export function HubKpiStrip() {
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tổng số vé"
         value={`${formatNumber(stats.entries.total)} vé`}
         sub={pendingSub(stats.entries.pending, formatNumber, " vé")}
       />
       <KpiCard
         icon={AlertTriangle}
-        iconBg="bg-rose-100 dark:bg-rose-900/50"
-        iconColor="text-rose-600 dark:text-rose-400"
+        iconBg="bg-loss"
+        iconColor="text-loss"
         label="Rủi ro chi trả"
         value={formatVNDCompact(stats.exposure.total)}
         sub={stats.alertsCritical > 0 ? `${stats.alertsCritical} cảnh báo nghiêm trọng` : "Bình thường"}
@@ -224,8 +223,8 @@ export function HubKpiStrip() {
           (đang diễn ra, không phải tồn đọng) nên `sub` không dùng `pendingSub`. */}
       <KpiCard
         icon={Radio}
-        iconBg="bg-violet-100 dark:bg-violet-900/50"
-        iconColor="text-violet-600 dark:text-violet-400"
+        iconBg="bg-game-max3d"
+        iconColor="text-game-max3d"
         label="Đang bán"
         value={`${formatNumber(selling.count)} kỳ`}
         sub={
@@ -242,7 +241,7 @@ export function HubKpiStripSkeleton() {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {[0, 1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-[72px] animate-pulse rounded-xl border bg-card p-4 shadow-sm" />
+        <div key={i} className="bg-card h-[72px] animate-pulse rounded-xl border p-4 shadow-sm" />
       ))}
     </div>
   );

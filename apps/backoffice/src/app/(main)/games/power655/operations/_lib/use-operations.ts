@@ -87,7 +87,9 @@ export function useDrawDetail(drawId: string | undefined) {
     queryKey: power655Keys.drawDetail(drawId ?? ""),
     queryFn: async () => {
       const data = await apiClient.get<GetDrawDetailOutput>(`/power655/draws/${drawId}`);
-      if (!data) throw new Error(`Không tìm thấy chi tiết kỳ quay: ${drawId}`);
+      if (!data) {
+        throw new Error(`Không tìm thấy chi tiết kỳ quay: ${drawId}`);
+      }
       return data;
     },
     enabled: !!drawId,
@@ -128,7 +130,9 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
     enabled: !!drawId,
     // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
     refetchInterval: (query) => {
-      if (isSettled) return false;
+      if (isSettled) {
+        return false;
+      }
       const s = query.state.data?.pollSeconds ?? 10;
       return s * 1000;
     },
@@ -169,7 +173,7 @@ export function useAckAlert() {
   return useMutation({
     mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: power655Keys.all });
+      void qc.invalidateQueries({ queryKey: power655Keys.all });
       toast.success("Đã xác nhận cảnh báo.");
     },
     onError: (err) => {
@@ -296,7 +300,9 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
   });
 
   useEffect(() => {
-    if (!entryId) return;
+    if (!entryId) {
+      return;
+    }
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
@@ -362,7 +368,7 @@ function useDrawAction<TBody = void>(
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: power655Keys.all });
+      void qc.invalidateQueries({ queryKey: power655Keys.all });
       toast.success(successMessage);
     },
     onError: (err) => {
@@ -490,7 +496,7 @@ export function useCreateDraw() {
       }>;
     }) => apiClient.post<{ draws: { drawId: string }[] }>("/power655/draws", data),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: power655Keys.all });
+      void qc.invalidateQueries({ queryKey: power655Keys.all });
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {

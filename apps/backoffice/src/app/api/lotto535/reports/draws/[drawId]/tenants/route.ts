@@ -1,11 +1,16 @@
 import { ListDrawTenantsUseCase } from "@megawin/game-lotto535-application/use-cases/reports";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
+  .params(paramsSchema)
   .handler(async ({ params }) => {
-    const drawId = (await params).drawId as string;
+    const drawId = params.drawId;
     return new ListDrawTenantsUseCase().run({ drawId });
   });

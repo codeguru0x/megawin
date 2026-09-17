@@ -6,8 +6,7 @@ import Link from "next/link";
 
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
-import type { LucideIcon } from "lucide-react";
-import { ArrowLeft, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Loader2, Send, type LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,8 +61,8 @@ export default function DispatchBatchPage({ params }: { params: Promise<{ batchI
             <Send className="size-4.5 text-white" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Tiến độ batch</h1>
-            <p className="break-all font-mono text-xs text-muted-foreground">{batchKey}</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Tiến độ batch</h1>
+            <p className="text-muted-foreground font-mono text-xs break-all">{batchKey}</p>
           </div>
         </div>
       </div>
@@ -71,7 +70,7 @@ export default function DispatchBatchPage({ params }: { params: Promise<{ batchI
       <BatchProgressCard data={progress ?? null} isLoading={progressLoading} />
 
       <Card className="gap-0 overflow-hidden py-0">
-        <CardContent className="px-0 pb-0 pt-0">
+        <CardContent className="px-0 pt-0 pb-0">
           <DispatchTable
             rows={rows}
             isLoading={listQuery.isLoading}
@@ -122,7 +121,7 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
   if (!data) {
     return (
       <Card>
-        <CardContent className="flex h-30 items-center justify-center text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground flex h-30 items-center justify-center text-sm">
           Không có dữ liệu batch.
         </CardContent>
       </Card>
@@ -155,16 +154,16 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         icon={Send}
-        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-        iconColor="text-indigo-600 dark:text-indigo-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tổng orders"
         value={formatNumber(data.total)}
         sub={data.firstCreatedAt ? `Từ ${displayVNDateTime(data.firstCreatedAt)}` : "—"}
       />
       <KpiCard
         icon={Clock}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Đang chờ"
         value={formatNumber(data.pending)}
         valueClass={data.pending > 0 ? "text-warning" : ""}
@@ -173,8 +172,8 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
       />
       <KpiCard
         icon={CheckCircle2}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Đã dispatched"
         value={formatNumber(data.dispatched)}
         valueClass={data.dispatched > 0 ? "text-profit" : ""}
@@ -185,8 +184,8 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
       {isComplete ? (
         <KpiCard
           icon={CheckCircle2}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-profit"
+          iconColor="text-profit"
           label="Thời gian hoàn tất"
           value={durationLabel ?? "—"}
           valueClass="text-profit"
@@ -195,8 +194,8 @@ function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; is
       ) : hasStarted ? (
         <KpiCard
           icon={Loader2}
-          iconBg="bg-amber-100 dark:bg-amber-900/50"
-          iconColor="text-amber-600 dark:text-amber-400"
+          iconBg="bg-warning"
+          iconColor="text-warning"
           iconSpin
           label="Dispatch gần nhất"
           value={data.lastDispatchedAt ? displayVNDateTime(data.lastDispatchedAt) : "—"}
@@ -247,15 +246,15 @@ function KpiCard({
   dim,
 }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg, dim && "opacity-50")}>
         <Icon className={cn("size-5", iconColor, iconSpin && "animate-spin")} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
         <p
           className={cn(
-            "font-bold tabular-nums text-foreground",
+            "text-foreground font-bold tabular-nums",
             valueSmall ? "font-mono text-sm" : "text-lg",
             dim && "text-muted-foreground",
             valueClass,
@@ -263,7 +262,7 @@ function KpiCard({
         >
           {value}
         </p>
-        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );

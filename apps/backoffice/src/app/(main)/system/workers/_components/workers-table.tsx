@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { calcRelativeTime } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { WORKER_RUN_STATE_LABELS, WORKER_RUN_STATE_VARIANT } from "@megawin/worker-core/shared/labels";
-import type { WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
-import { WorkerRunState } from "@megawin/worker-core/use-cases/admin/types";
+import { WorkerRunState, type WorkerHealthRow } from "@megawin/worker-core/use-cases/admin/types";
 import { STALLED_ALERT_THRESHOLD } from "@megawin/worker-core/use-cases/health";
 import { AlertTriangle, Inbox, Loader2 } from "lucide-react";
 
@@ -48,7 +47,7 @@ function WorkerLastSuccessCell({ lastSuccessAt }: { lastSuccessAt: string | null
   const label = useRelativeTime(lastSuccessAt);
 
   if (!lastSuccessAt) {
-    return <span className="text-sm text-muted-foreground">Chưa từng</span>;
+    return <span className="text-muted-foreground text-sm">Chưa từng</span>;
   }
 
   return (
@@ -66,7 +65,9 @@ function sortRows(rows: WorkerHealthRow[]): WorkerHealthRow[] {
   return rows.toSorted((a, b) => {
     const aBad = a.state === WorkerRunState.Crashed || a.stalledItems.length > 0;
     const bBad = b.state === WorkerRunState.Crashed || b.stalledItems.length > 0;
-    if (aBad !== bBad) return aBad ? -1 : 1;
+    if (aBad !== bBad) {
+      return aBad ? -1 : 1;
+    }
     return a.lockKey.localeCompare(b.lockKey);
   });
 }
@@ -81,7 +82,7 @@ export function WorkersTable({
 }: WorkersTableProps) {
   if (isLoading) {
     return (
-      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải trạng thái worker…</span>
       </div>
@@ -91,9 +92,9 @@ export function WorkersTable({
   if (rows.length === 0) {
     return (
       <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
-        <Inbox className="size-8 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">Chưa có worker nào ghi nhận</p>
-        <p className="text-xs text-muted-foreground">Worker tạo bản ghi ở lần chạy đầu tiên.</p>
+        <Inbox className="text-muted-foreground/40 size-8" />
+        <p className="text-muted-foreground text-sm font-medium">Chưa có worker nào ghi nhận</p>
+        <p className="text-muted-foreground text-xs">Worker tạo bản ghi ở lần chạy đầu tiên.</p>
       </div>
     );
   }
@@ -125,7 +126,7 @@ export function WorkersTable({
                   <div className="flex flex-col gap-0.5">
                     <span className="text-sm font-medium">{row.description}</span>
                     {row.description !== row.lockKey && (
-                      <span className="font-mono text-xs text-muted-foreground">{row.lockKey}</span>
+                      <span className="text-muted-foreground font-mono text-xs">{row.lockKey}</span>
                     )}
                   </div>
                 </TableCell>
@@ -162,14 +163,14 @@ export function WorkersTable({
                   {row.lastError ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="block truncate text-sm text-destructive" title={row.lastError}>
+                        <span className="text-destructive block truncate text-sm" title={row.lastError}>
                           {row.lastError}
                         </span>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-sm break-words">{row.lastError}</TooltipContent>
                     </Tooltip>
                   ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
+                    <span className="text-muted-foreground text-sm">—</span>
                   )}
                 </TableCell>
 

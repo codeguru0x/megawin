@@ -9,8 +9,7 @@
  * @output SettleFinancials
  */
 
-import type { SettleContext } from "@megawin/game-keno-application/use-cases/settle";
-import { CalculateFinancialsUseCase } from "@megawin/game-keno-application/use-cases/settle";
+import { CalculateFinancialsUseCase, type SettleContext } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 

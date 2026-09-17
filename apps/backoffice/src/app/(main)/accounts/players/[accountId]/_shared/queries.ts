@@ -190,9 +190,7 @@ export function usePlayerEntries(accountId: string, financialDate: string, game:
 export function usePlayerEntryDetail(accountId: string, entryId: string, game: string) {
   return useQuery({
     queryKey: playerDetailKeys.entryDetail(accountId, entryId, game),
-    queryFn: () =>
-      // biome-ignore lint/suspicious/noExplicitAny: response shape phụ thuộc `game` — mỗi game trả TicketEntryEntity khác nhau, không thể siết type tĩnh ở đây.
-      apiClient.get<{ data: any }>(`/accounts/players/${accountId}/entries/${entryId}?game=${game}`),
+    queryFn: () => apiClient.get<{ data: any }>(`/accounts/players/${accountId}/entries/${entryId}?game=${game}`),
     enabled: !!accountId && !!entryId && !!game,
     select: (res) => res.data,
   });

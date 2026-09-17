@@ -30,7 +30,7 @@ export class ListAllJackpotCycleOptionsUseCase extends UseCase<void, ListAllJack
 
     // active cycle là phần tử đầu tiên nếu tồn tại (listAllCycles đặt active trước).
     const firstOption = options[0];
-    const activeCycleNo = firstOption != null && firstOption.status === "active" ? firstOption.cycleNo : null;
+    const activeCycleNo = firstOption?.status === "active" ? firstOption.cycleNo : null;
 
     return { cycles: options, activeCycleNo };
   }

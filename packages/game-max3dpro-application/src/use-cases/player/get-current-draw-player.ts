@@ -9,8 +9,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, type UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 import { sortBy } from "@megawin/shared/utils";
 

@@ -36,7 +36,9 @@ export function formatCurrency(
     trillion = "T",
   }: FormatCompactCurrencyOptions = {},
 ): string {
-  if (!Number.isFinite(value)) return String(value);
+  if (!Number.isFinite(value)) {
+    return String(value);
+  }
 
   const sign = value < 0 ? "-" : "";
   const n = Math.abs(value);
@@ -53,16 +55,24 @@ export function formatCurrency(
   };
 
   // Nghìn tỷ
-  if (n >= 1_000_000_000_000) return `${sign}${format(n / 1_000_000_000_000, decimals)}${trillion}`;
+  if (n >= 1_000_000_000_000) {
+    return `${sign}${format(n / 1_000_000_000_000, decimals)}${trillion}`;
+  }
 
   // Tỷ
-  if (n >= 1_000_000_000) return `${sign}${format(n / 1_000_000_000, decimals)}${billion}`;
+  if (n >= 1_000_000_000) {
+    return `${sign}${format(n / 1_000_000_000, decimals)}${billion}`;
+  }
 
   // Triệu
-  if (n >= 1_000_000) return `${sign}${format(n / 1_000_000, decimals)}${million}`;
+  if (n >= 1_000_000) {
+    return `${sign}${format(n / 1_000_000, decimals)}${million}`;
+  }
 
   // Nghìn
-  if (n >= 1_000) return `${sign}${format(n / 1_000, decimals)}${thousand}`;
+  if (n >= 1_000) {
+    return `${sign}${format(n / 1_000, decimals)}${thousand}`;
+  }
 
   // < 1,000: giữ nguyên, vẫn có thể cắt thập phân nếu muốn
   return `${sign}${format(n, 0)}`;
@@ -166,7 +176,9 @@ export function formatNumber(
   value: number,
   { decimals = 0, trimTrailingZeros = true }: FormatNumberOptions = {},
 ): string {
-  if (!Number.isFinite(value)) return String(value);
+  if (!Number.isFinite(value)) {
+    return String(value);
+  }
 
   const d = Math.max(0, decimals);
 
@@ -177,7 +189,9 @@ export function formatNumber(
 
   const formatted = formatter.format(value);
 
-  if (!trimTrailingZeros || d === 0) return formatted;
+  if (!trimTrailingZeros || d === 0) {
+    return formatted;
+  }
 
   // Trim 0 dư ở cuối phần thập phân (nếu có)
   return formatted.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "");

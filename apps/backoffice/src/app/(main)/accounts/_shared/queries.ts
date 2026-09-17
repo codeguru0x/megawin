@@ -35,8 +35,12 @@ export function useAgentAccounts() {
  */
 export function usePlayerAccountsCursor(tenantId: string, cursor?: { after?: string; before?: string }) {
   const params = new URLSearchParams({ tenantId, limit: String(ACCOUNTS_PAGE_SIZE) });
-  if (cursor?.after) params.set("after", cursor.after);
-  if (cursor?.before) params.set("before", cursor.before);
+  if (cursor?.after) {
+    params.set("after", cursor.after);
+  }
+  if (cursor?.before) {
+    params.set("before", cursor.before);
+  }
 
   return useQuery({
     queryKey: accountsKeys.players(tenantId, cursor),

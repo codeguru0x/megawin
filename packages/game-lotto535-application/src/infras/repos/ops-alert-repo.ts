@@ -16,14 +16,14 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type {
-  Lotto535OpsAlertDoc,
-  Lotto535OpsAlertEntity,
-  OpsAlertStatus as OpsAlertStatusType,
+import {
+  Lotto535Collections,
+  OpsAlertStatus,
+  type Lotto535OpsAlertDoc,
+  type Lotto535OpsAlertEntity,
+  type OpsAlertStatus as OpsAlertStatusType,
 } from "@megawin/game-lotto535/entities";
-import { Lotto535Collections, OpsAlertStatus } from "@megawin/game-lotto535/entities";
-import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type Document } from "mongodb";
 
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
 import { BaseRepo } from "./base-repo";
@@ -49,7 +49,9 @@ export class OpsAlertRepository extends BaseRepo<Lotto535OpsAlertEntity, OpsAler
    * @param alerts - Alert cần upsert (không có `_id`; Mongo tự sinh).
    */
   async bulkUpsertByDedupe(alerts: Omit<Lotto535OpsAlertDoc, "_id">[]): Promise<void> {
-    if (alerts.length === 0) return;
+    if (alerts.length === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = alerts.map((a) => ({
       updateOne: {

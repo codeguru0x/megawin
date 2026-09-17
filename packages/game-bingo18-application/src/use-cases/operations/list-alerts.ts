@@ -1,6 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Bingo18OpsAlertEntity, Bingo18OpsAlertType } from "@megawin/game-bingo18/entities";
-import { OpsAlertSeverity } from "@megawin/game-bingo18/entities";
+import { OpsAlertSeverity, type Bingo18OpsAlertEntity, type Bingo18OpsAlertType } from "@megawin/game-bingo18/entities";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";

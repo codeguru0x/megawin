@@ -20,7 +20,7 @@ function ResultFeedDashboardPageInner() {
             <Radar className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="font-semibold text-foreground text-lg tracking-tight">ResultFeed Dashboard</h1>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">ResultFeed Dashboard</h1>
             <p className="text-muted-foreground text-xs">
               Tổng quan thu thập &amp; đồng thuận kết quả Vietlott theo game &amp; trạng thái.
             </p>

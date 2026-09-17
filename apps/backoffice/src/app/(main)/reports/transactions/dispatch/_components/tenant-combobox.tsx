@@ -52,7 +52,9 @@ export function TenantCombobox({
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
-    if (!search) return options;
+    if (!search) {
+      return options;
+    }
     const lower = search.toLowerCase();
     return options.filter((o) => o.value.toLowerCase().includes(lower));
   }, [options, search]);
@@ -105,13 +107,13 @@ export function TenantCombobox({
           />
           <CommandList>
             {isLoading ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">Đang tải…</div>
+              <div className="text-muted-foreground py-6 text-center text-xs">Đang tải…</div>
             ) : (
               <>
                 <CommandEmpty>
                   {allowFreeType && search.trim() ? (
-                    <div className="px-2 py-3 text-xs text-muted-foreground">
-                      Nhấn <kbd className="rounded border bg-muted px-1">Enter</kbd> để dùng{" "}
+                    <div className="text-muted-foreground px-2 py-3 text-xs">
+                      Nhấn <kbd className="bg-muted rounded border px-1">Enter</kbd> để dùng{" "}
                       <span className="font-mono">{search.trim()}</span>
                     </div>
                   ) : (
@@ -138,7 +140,7 @@ export function TenantCombobox({
                           {opt.value}
                         </span>
                         {opt.count !== undefined && (
-                          <span className="text-xs tabular-nums text-muted-foreground">{opt.count}</span>
+                          <span className="text-muted-foreground text-xs tabular-nums">{opt.count}</span>
                         )}
                       </CommandItem>
                     ))}

@@ -37,7 +37,6 @@
  * PHÂN LOẠI ở {@link isInternalPart} — sửa ở đó, không rải điều kiện ra chỗ khác. Tool nào được
  * hiện thẳng thì khai ở `AI_TOOL_CARD_PLACEMENT` (`tool-renderers/registry.tsx`).
  */
-
 import type { ReactNode } from "react";
 
 import type { EveMessagePart } from "eve/react";
@@ -259,12 +258,12 @@ export function describeInternalChunk(items: readonly IndexedPart[]): string {
 export function InternalSteps({ children, items }: { children: ReactNode; items: readonly IndexedPart[] }) {
   return (
     <Collapsible className="not-prose w-full">
-      <CollapsibleTrigger className="group flex items-center gap-1.5 text-muted-foreground/70 text-xs transition-colors hover:text-foreground">
+      <CollapsibleTrigger className="group text-muted-foreground/70 hover:text-foreground flex items-center gap-1.5 text-xs transition-colors">
         <SettingsIcon className="size-3.5" />
         <span>{describeInternalChunk(items)}</span>
         <ChevronDownIcon className="size-3.5 transition-transform group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
-      <CollapsibleContent className="data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-1 mt-2 space-y-2 border-muted border-l-2 pl-3 data-[state=closed]:animate-out data-[state=open]:animate-in">
+      <CollapsibleContent className="data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-1 border-muted data-[state=closed]:animate-out data-[state=open]:animate-in mt-2 space-y-2 border-l-2 pl-3">
         {children}
       </CollapsibleContent>
     </Collapsible>

@@ -144,7 +144,7 @@ if (hasJackpot1Winner && jp1PerEntryAmounts.size > 0) {
 
 ## 4. Cách test
 
-Thêm `packages/game-power655-application/test/use-cases/patch-jackpot-prize.test.ts` — integration test theo pattern `stats-repos-idempotency.test.ts` (DB thật + `setup-db-guard.ts` + `TEST_DRAW_ID` riêng có prefix test, cleanup `beforeAll`/`afterAll` CHỈ theo drawId test — tuyệt đối không `deleteMany({})`):
+Thêm `packages/game-power655-application/test/use-cases/patch-jackpot-prize.test.ts` — integration test theo pattern `stats-repos-idempotency.test.ts` (Mongo qua Testcontainers + `TEST_DRAW_ID` riêng có prefix test, cleanup `beforeAll`/`afterAll` CHỈ theo drawId test — tuyệt đối không `deleteMany({})`):
 
 1. **Case chuẩn (regression)**: 2 entry × 1 line JP1, betCount 3 và 1 → `totalBetUnits = 4`; entry A nhận `perUnit × 3`; `Σ line.winAmount = entry.amount`; `unitAmount = perUnit`.
 2. **Case multi-line (bao)**: 1 entry có 2 line JP1 (betCount 2 + 5) + 1 entry 1 line (betCount 1) → `totalBetUnits = 8`; entry 1 nhận `perUnit × 7`; line-level = `perUnit × 2` và `perUnit × 5`. (Khẳng định thuật toán hiện tại đã đúng — regression cho phần KHÔNG đổi.)
@@ -164,4 +164,4 @@ Chạy: `pnpm --filter @megawin/game-power655-application test` + `check-types`.
 | Đổi gate `settleSummary` sang `perEntryAmounts.size` làm ghi lại khi retry | — | `patchSettleSummaryJackpot` là `$set` giá trị tuyệt đối → ghi lại vô hại; test 5 cover |
 | Xoá 2 dead method làm vỡ caller ẩn | Rất thấp | Grep 0 caller (06/08); `check-types` toàn package là chốt chặn |
 | Lotto 5/35 nghi ngờ dính cùng lỗ hổng | ĐÃ LOẠI TRỪ | Đã review 06/08: `getJackpotLinesForDraw` không filter `winAmount: 0` → mẫu số + `betUnitsByEntry` deterministic sẵn. Không cần plan riêng |
-| Test integration chạy trên DB thật | Trung bình | `setup-db-guard.ts` đã chặn URI non-local; test CHỈ cleanup theo `TEST_DRAW_ID` prefix riêng, không `deleteMany({})` (bài học sự cố tenant config 06/08) |
+| Test integration chạy trên DB thật | Trung bình | Mongo qua Testcontainers ephemeral; test CHỈ cleanup theo `TEST_DRAW_ID` prefix riêng, không `deleteMany({})` (bài học sự cố tenant config 06/08) |

@@ -13,10 +13,10 @@ import { cn } from "@/lib/utils";
 
 import { Lotto535EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 import {
-  type JackpotCycleSummary,
-  type JackpotWinnerSummary,
   useJackpotCycles,
   useJackpotEntryDetail,
+  type JackpotCycleSummary,
+  type JackpotWinnerSummary,
 } from "./use-jackpot";
 
 const LATEST_COUNT = 3;
@@ -30,24 +30,24 @@ export function JackpotCyclesSection() {
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/50">
-          <Crown className="size-4 text-violet-600 dark:text-violet-400" />
+        <div className="bg-game-max3d flex size-8 items-center justify-center rounded-lg">
+          <Crown className="text-game-max3d size-4" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Lịch sử chia giải / Trúng Jackpot</h2>
-          <p className="text-xs text-muted-foreground">Danh sách các vòng tích luỹ jackpot gần nhất</p>
+          <h2 className="text-foreground text-sm font-semibold">Lịch sử chia giải / Trúng Jackpot</h2>
+          <p className="text-muted-foreground text-xs">Danh sách các vòng tích luỹ jackpot gần nhất</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {isLoading ? (
-          <div className="flex h-32 items-center justify-center rounded-xl border bg-card">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <div className="bg-card flex h-32 items-center justify-center rounded-xl border">
+            <Loader2 className="text-muted-foreground size-6 animate-spin" />
           </div>
         ) : cycles.length === 0 ? (
-          <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/20">
-            <Crown className="size-6 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Chưa có lịch sử chia giải hoặc trúng Jackpot.</p>
+          <div className="bg-muted/20 flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed">
+            <Crown className="text-muted-foreground/40 size-6" />
+            <p className="text-muted-foreground text-sm">Chưa có lịch sử chia giải hoặc trúng Jackpot.</p>
           </div>
         ) : (
           cycles.map((cycle) => <CycleCard key={cycle.id} cycle={cycle} />)
@@ -66,24 +66,24 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
       <div
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
-          isSplit && "border-amber-200 bg-amber-50/30 dark:border-amber-800/50 dark:bg-amber-950/10",
-          isWinner && "border-green-200 bg-green-50/30 dark:border-green-800/50 dark:bg-green-950/10",
+          isSplit && "border-warning bg-warning/30",
+          isWinner && "border-profit bg-profit/30",
           !isSplit && !isWinner && "bg-card",
         )}
       >
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-accent/30"
+            className="hover:bg-accent/30 flex w-full items-center gap-4 p-4 text-left transition-colors"
           >
             {/* Icon */}
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
                 isWinner
-                  ? "bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20"
+                  ? "from-profit to-game-mega645 shadow-profit/20 bg-linear-to-br shadow-md"
                   : isSplit
-                    ? "bg-linear-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/20"
+                    ? "from-warning to-loss shadow-warning/20 bg-linear-to-br shadow-md"
                     : "bg-muted",
               )}
             >
@@ -92,7 +92,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
               ) : isSplit ? (
                 <Split className="size-5 text-white" />
               ) : (
-                <Split className="size-5 text-muted-foreground" />
+                <Split className="text-muted-foreground size-5" />
               )}
             </div>
 
@@ -102,7 +102,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                 <span className="font-mono text-sm font-bold">Vòng #{cycle.cycleNo}</span>
                 <CycleReasonBadge reason={cycle.closeReason} />
               </div>
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
                 <span className="tabular-nums">{displayVNDateTime(cycle.startedAt)}</span>
                 {cycle.closedAt && (
                   <>
@@ -115,25 +115,20 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
 
             {/* Amount */}
             <div className="text-right">
-              <p
-                className={cn(
-                  "text-lg font-bold tabular-nums",
-                  isWinner ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400",
-                )}
-              >
+              <p className={cn("text-lg font-bold tabular-nums", isWinner ? "text-profit" : "text-warning")}>
                 {formatVNDCompact(cycle.currentAmount)}
               </p>
-              <p className="text-xs tabular-nums text-muted-foreground">
+              <p className="text-muted-foreground text-xs tabular-nums">
                 Tích lũy: {formatNumber(cycle.totalContribution)}
               </p>
             </div>
 
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+            <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform [[data-state=open]>&]:rotate-180" />
           </button>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="space-y-4 border-t px-4 pb-4 pt-4">
+          <div className="space-y-4 border-t px-4 pt-4 pb-4">
             {/* Summary stats */}
             <div className="grid gap-2 sm:grid-cols-5">
               <StatMini label="Số kỳ" value={formatNumber(cycle.drawCount)} />
@@ -157,9 +152,9 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
 
 function StatMini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-muted/40 px-3 py-2.5">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    <div className="bg-muted/40 rounded-lg px-3 py-2.5">
+      <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">{label}</p>
+      <p className="text-foreground mt-0.5 text-sm font-semibold tabular-nums">{value}</p>
     </div>
   );
 }
@@ -167,7 +162,7 @@ function StatMini({ label, value }: { label: string; value: string }) {
 function CycleReasonBadge({ reason }: { reason?: string }) {
   if (reason === JackpotCycleCloseReason.Winner) {
     return (
-      <Badge className="gap-1 border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
+      <Badge className="border-profit/30 bg-profit/15 text-profit gap-1">
         <Sparkles className="size-3" />
         Trúng Jackpot
       </Badge>
@@ -175,7 +170,7 @@ function CycleReasonBadge({ reason }: { reason?: string }) {
   }
   if (reason === JackpotCycleCloseReason.Split) {
     return (
-      <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
+      <Badge className="border-warning/30 bg-warning/15 text-warning gap-1">
         <Split className="size-3" />
         Chia giải
       </Badge>
@@ -189,21 +184,21 @@ function SplitDetailTable({ detail }: { detail: NonNullable<JackpotCycleSummary[
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Chi tiết chia giải</p>
+      <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Chi tiết chia giải</p>
       <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="pl-5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <TableHead className="text-muted-foreground pl-5 text-xs font-medium tracking-wider uppercase">
                 Tier
               </TableHead>
-              <TableHead className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                 Số người trúng
               </TableHead>
-              <TableHead className="text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                 Tổng phân bổ
               </TableHead>
-              <TableHead className="pr-5 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <TableHead className="text-muted-foreground pr-5 text-right text-xs font-medium tracking-wider uppercase">
                 Bonus / người
               </TableHead>
             </TableRow>
@@ -214,7 +209,7 @@ function SplitDetailTable({ detail }: { detail: NonNullable<JackpotCycleSummary[
                 <TableCell className="pl-5 font-medium capitalize">{tier}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatNumber(d.winnerCount)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatNumber(d.totalAmount)}</TableCell>
-                <TableCell className="pr-5 text-right tabular-nums font-semibold text-amber-700 dark:text-amber-400">
+                <TableCell className="text-warning pr-5 text-right font-semibold tabular-nums">
                   {formatNumber(d.bonusPerWinner)}
                 </TableCell>
               </TableRow>
@@ -240,28 +235,26 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Người trúng Jackpot</p>
+      <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Người trúng Jackpot</p>
       <div className="space-y-2">
         {winners.map((w, idx) => (
           <button
             key={`${w.entryId}-${idx}`}
             type="button"
             onClick={() => setSelectedEntryId(w.entryId)}
-            className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3.5 text-left transition-colors hover:border-green-400 hover:bg-green-100/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50 dark:border-green-800/50 dark:bg-green-950/20 dark:hover:border-green-700 dark:hover:bg-green-950/40"
+            className="group border-profit bg-profit/50 hover:border-profit hover:bg-profit/60 focus-visible:ring-profit/50 flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
-            <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20">
+            <div className="from-profit to-game-mega645 shadow-profit/20 flex size-10 items-center justify-center rounded-lg bg-linear-to-br shadow-md">
               <User className="size-4.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{toTenantUsername(w.username ?? "")}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Đại lý: {w.tenantId} · Kỳ: {w.drawId}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2.5">
-              <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-400">
-                {formatNumber(w.prizeAmount)}
-              </p>
+              <p className="text-profit text-lg font-bold tabular-nums">{formatNumber(w.prizeAmount)}</p>
             </div>
           </button>
         ))}

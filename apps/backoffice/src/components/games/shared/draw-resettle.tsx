@@ -28,9 +28,15 @@ export interface DrawResettleFields {
  * → KHÔNG cho phép Resettle (chống staff bấm nhầm; backend cũng có guard tương ứng).
  */
 export function shouldShowResettle(draw: DrawResettleFields): boolean {
-  if (draw.status !== DrawStatus.Published) return false;
-  if (!draw.settledAt) return false;
-  if (!draw.drawResultAt) return false;
+  if (draw.status !== DrawStatus.Published) {
+    return false;
+  }
+  if (!draw.settledAt) {
+    return false;
+  }
+  if (!draw.drawResultAt) {
+    return false;
+  }
   return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
 }
 
@@ -44,7 +50,11 @@ export function shouldShowResettle(draw: DrawResettleFields): boolean {
  * mới hơn lần settle trước → phiên này là Resettle.
  */
 export function isResettleSession(draw: DrawResettleFields): boolean {
-  if (!draw.settledAt) return false;
-  if (!draw.drawResultAt) return false;
+  if (!draw.settledAt) {
+    return false;
+  }
+  if (!draw.drawResultAt) {
+    return false;
+  }
   return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
 }

@@ -47,7 +47,7 @@ const STANDARD_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "2 bộ khớp 2 bộ ĐB, ĐÚNG thứ tự quay",
     badge: "ĐB",
-    color: "bg-red-600 text-white",
+    color: "bg-loss text-white",
   },
   {
     key: "specialSub" as const,
@@ -55,7 +55,7 @@ const STANDARD_FIELDS = [
     label: "Giải phụ Đặc Biệt",
     desc: "2 bộ khớp 2 bộ ĐB, NGƯỢC thứ tự quay",
     badge: "pĐB",
-    color: "bg-red-500 text-white",
+    color: "bg-loss text-white",
   },
   {
     key: "first" as const,
@@ -63,7 +63,7 @@ const STANDARD_FIELDS = [
     label: "Giải Nhất",
     desc: "2 bộ khớp 2 bộ Nhất riêng biệt",
     badge: "1st",
-    color: "bg-amber-500 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "second" as const,
@@ -71,7 +71,7 @@ const STANDARD_FIELDS = [
     label: "Giải Nhì",
     desc: "2 bộ khớp 2 bộ Nhì riêng biệt",
     badge: "2nd",
-    color: "bg-slate-400 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "third" as const,
@@ -79,7 +79,7 @@ const STANDARD_FIELDS = [
     label: "Giải Ba",
     desc: "2 bộ khớp 2 bộ Ba riêng biệt",
     badge: "3rd",
-    color: "bg-amber-700 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "fourth" as const,
@@ -87,7 +87,7 @@ const STANDARD_FIELDS = [
     label: "Giải Tư",
     desc: "2 bộ khớp 2 kết quả bất kỳ trong 20 bộ",
     badge: "4th",
-    color: "bg-slate-500 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "fifth" as const,
@@ -95,7 +95,7 @@ const STANDARD_FIELDS = [
     label: "Giải Năm",
     desc: "mỗi bộ khớp 1 bộ ĐB (xét riêng từng bộ)",
     badge: "5th",
-    color: "bg-slate-600 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "sixth" as const,
@@ -103,7 +103,7 @@ const STANDARD_FIELDS = [
     label: "Giải Sáu",
     desc: "mỗi bộ khớp 1 bộ Nhất/Nhì/Ba (xét riêng)",
     badge: "6th",
-    color: "bg-emerald-600 text-white",
+    color: "bg-profit text-white",
   },
 ] as const;
 
@@ -111,9 +111,9 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
+        <span className={`inline-flex cursor-help items-center gap-1 ${className ?? ""}`}>
           {label}
-          <Info className="size-3 text-muted-foreground/60" />
+          <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-xs">
@@ -141,29 +141,27 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, note }: Prof
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="text-foreground text-sm font-semibold">{modeLabel}</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
             Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
             {" · "}Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
           </p>
         </div>
-        <div className="flex items-center gap-4 text-xs shrink-0">
+        <div className="flex shrink-0 items-center gap-4 text-xs">
           <div className="text-right">
             <span className="text-muted-foreground">CP kỳ vọng / line</span>
             <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
           </div>
           <div className="text-right">
             <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-            <div
-              className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
-            >
+            <div className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-profit" : "text-loss"}`}>
               {analysis.grossMarginPercent >= 0 ? (
                 <TrendingUp className="mr-1 inline size-3.5" />
               ) : (
                 <TrendingDown className="mr-1 inline size-3.5" />
               )}
               {analysis.grossMarginPercent.toFixed(2)}%
-              <span className="ml-1 font-normal text-muted-foreground">
+              <span className="text-muted-foreground ml-1 font-normal">
                 ({fmt(Math.round(analysis.grossMarginPerLine))} VND/line)
               </span>
             </div>
@@ -171,7 +169,7 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, note }: Prof
         </div>
       </div>
       {note ? (
-        <div className="text-xs text-muted-foreground/80 mt-2 leading-snug">
+        <div className="text-muted-foreground/80 mt-2 text-xs leading-snug">
           {Array.isArray(note) ? (
             <ul className="list-disc space-y-0.5 pl-4">
               {note.map((line) => (
@@ -243,7 +241,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
             <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
             <div>
               <span className="text-sm font-medium">{p.label}</span>
-              <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
+              <span className="text-muted-foreground ml-2 text-xs">{p.desc}</span>
             </div>
             <FormControl>
               <MoneyInput
@@ -257,7 +255,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
             </FormControl>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                <span className="text-muted-foreground cursor-help text-right text-xs tabular-nums">
                   {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
                 </span>
               </TooltipTrigger>
@@ -271,16 +269,16 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
                 )}
               </TooltipContent>
             </Tooltip>
-            <span className="text-right text-xs tabular-nums font-medium">
+            <span className="text-right text-xs font-medium tabular-nums">
               {profit ? `${fmt(Math.round(profit.expectedPayout))} VND` : "–"}
             </span>
             <span
-              className={`text-right text-xs tabular-nums font-semibold ${
+              className={`text-right text-xs font-semibold tabular-nums ${
                 profit && profit.payoutRatio > 1
-                  ? "text-red-600"
+                  ? "text-loss"
                   : profit && profit.payoutRatio > 0.5
-                    ? "text-amber-600"
-                    : "text-emerald-600"
+                    ? "text-warning"
+                    : "text-profit"
               }`}
             >
               {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -288,7 +286,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
-                  className={`text-right text-xs tabular-nums cursor-help ${isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground"}`}
+                  className={`cursor-help text-right text-xs tabular-nums ${isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground"}`}
                 >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
                 </span>
@@ -370,7 +368,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
@@ -387,7 +385,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                 ]}
               />
             </div>
-            <div className="border-t overflow-x-auto">
+            <div className="overflow-x-auto border-t">
               <TableHeader />
               {STANDARD_FIELDS.map((p, idx) => (
                 <OddsRow

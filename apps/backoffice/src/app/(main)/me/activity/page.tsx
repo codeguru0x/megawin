@@ -10,8 +10,8 @@ function MyActivityPageInner() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-base font-semibold tracking-tight text-foreground">Nhật ký của tôi</h2>
-        <p className="text-xs text-muted-foreground">
+        <h2 className="text-foreground text-base font-semibold tracking-tight">Nhật ký của tôi</h2>
+        <p className="text-muted-foreground text-xs">
           Nhật ký bảo mật tài khoản của bạn — đăng nhập, đăng xuất, đổi mật khẩu, xác thực 2 lớp. Lưu trữ 90 ngày.
         </p>
       </div>

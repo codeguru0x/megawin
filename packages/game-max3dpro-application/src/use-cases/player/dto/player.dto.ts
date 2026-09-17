@@ -6,7 +6,7 @@
  */
 
 import type { EntryOutcome } from "@megawin/game-core/entities";
-import type { EntryPayoutTier, EntrySummary, PrizeTier } from "@megawin/game-max3dpro/entities";
+import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary, PrizeTier } from "@megawin/game-max3dpro/entities";
 
 // ─── Get Current Draw (Player) ───
 
@@ -287,8 +287,6 @@ export interface PlayerGetEntryLinesOutput {
   /** Kích thước trang. */
   size: number;
 }
-
-import type { DrawSettleSummaryTier } from "@megawin/game-max3dpro/entities";
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 

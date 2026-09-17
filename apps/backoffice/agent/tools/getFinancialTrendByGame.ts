@@ -14,9 +14,9 @@
  * model tự đọc. `toToolResult` bọc `serializeDatesVN` + xử lý lỗi ở biên.
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
 import { GAME_PERIOD_METRIC_KEYS } from "@megawin/game-core-application/repos";
 import { GetGamePeriodTrendByGameUseCase } from "@megawin/game-core-application/use-cases/reports";
+import { GameProduct } from "@megawin/game-core/entities";
 import { FinancialPeriod } from "@megawin/shared/utils";
 import { defineTool } from "eve/tools";
 import { z } from "zod";

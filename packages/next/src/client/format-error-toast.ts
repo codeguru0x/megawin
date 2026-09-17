@@ -33,12 +33,16 @@ export interface ErrorToast {
  * - Nhiều lỗi                     → description = bullet list "• field: message".
  */
 export function formatErrorToast(err: unknown, fallback: string): ErrorToast {
-  if (!(err instanceof ApiClientError)) return { title: fallback };
+  if (!(err instanceof ApiClientError)) {
+    return { title: fallback };
+  }
 
   const details = err.details as { errors?: Array<{ field: string; message: string }> } | undefined;
   const errors = details?.errors;
 
-  if (!errors || errors.length === 0) return { title: err.message };
+  if (!errors || errors.length === 0) {
+    return { title: err.message };
+  }
 
   if (errors.length === 1) {
     const e = errors[0]!;

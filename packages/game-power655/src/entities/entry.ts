@@ -23,7 +23,6 @@ import type { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
 
 import type { PlayType, PrizeTier } from "./enums";
-import type { Board } from "./ticket";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────

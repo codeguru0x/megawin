@@ -1,5 +1,7 @@
-import type { OpsHubSnapshotOutput } from "@megawin/game-bingo18-application/use-cases/operations";
-import { GetOpsHubSnapshotUseCase } from "@megawin/game-bingo18-application/use-cases/operations";
+import {
+  GetOpsHubSnapshotUseCase,
+  type OpsHubSnapshotOutput,
+} from "@megawin/game-bingo18-application/use-cases/operations";
 
 const useCase = new GetOpsHubSnapshotUseCase();
 
@@ -25,10 +27,10 @@ let pendingFetch: Promise<OpsHubSnapshotOutput> | null = null;
  */
 export async function getSnapshotCached(limit: number): Promise<OpsHubSnapshotOutput> {
   const now = Date.now();
-  if (bingo18HubSnapshotCache && bingo18HubSnapshotCache.limit === limit && bingo18HubSnapshotCache.expiresAt > now) {
+  if (bingo18HubSnapshotCache?.limit === limit && bingo18HubSnapshotCache.expiresAt > now) {
     return bingo18HubSnapshotCache.data;
   }
-  // So sánh tường minh với `null` — Biome `noMisusedPromises` coi Promise trong điều kiện
+  // So sánh tường minh với `null` — Oxlint `typescript/no-misused-promises` coi Promise trong điều kiện
   // là khả năng quên `await`; ở đây chủ đích kiểm tra "đang có fetch pending hay không".
   if (pendingFetch !== null) {
     return pendingFetch;

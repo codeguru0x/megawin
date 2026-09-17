@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -46,7 +46,7 @@ export function useCreateTenantConfig() {
       apiClient.put<{ config: TenantConfig; version: number }>(`/max3d/tenant-config/${tenantId}`, { isEnabled: true }),
     onSuccess: (res, tenantId) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: LIST_KEY });
+      void queryClient.invalidateQueries({ queryKey: LIST_KEY });
       toast.success(`Đã tạo cấu hình cho đại lý "${tenantId}".`);
     },
     onError: (err) => {
@@ -63,7 +63,7 @@ export function useUpdateTenantConfig(tenantId: string) {
       apiClient.put<{ config: TenantConfig; version: number }>(`/max3d/tenant-config/${tenantId}`, data),
     onSuccess: (res) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: LIST_KEY });
+      void queryClient.invalidateQueries({ queryKey: LIST_KEY });
       toast.success(`Đã lưu cấu hình tenant "${tenantId}" (v${res.version}).`);
     },
     onError: (err) => {

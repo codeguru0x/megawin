@@ -21,7 +21,6 @@
  * KHÁC biệt duy nhất: KHÔNG toast per-lô (gây spam nếu 4-6 lô liên tiếp) — chỉ 1 toast tổng
  * sau khi TOÀN BỘ job xong.
  */
-
 import { useCallback } from "react";
 
 import type {
@@ -34,8 +33,7 @@ import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { BatchChunkResult } from "@/hooks/use-batch-runner";
-import { useBatchRunner } from "@/hooks/use-batch-runner";
+import { useBatchRunner, type BatchChunkResult } from "@/hooks/use-batch-runner";
 import { bingo18Keys } from "@/lib/query-keys";
 
 import { useHubContext } from "../../use-hub-context";

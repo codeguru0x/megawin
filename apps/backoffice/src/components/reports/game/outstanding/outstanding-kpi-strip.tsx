@@ -19,14 +19,14 @@ interface KpiCardProps {
 
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-        <p className="truncate text-[11px] text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -59,16 +59,16 @@ export function OutstandingKpiStrip({ data, showLineCount = false, lineCountLabe
     <div className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3", cols)}>
       <KpiCard
         icon={CalendarClock}
-        iconBg="bg-indigo-100 dark:bg-indigo-900/50"
-        iconColor="text-indigo-600 dark:text-indigo-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Kỳ đang hoạt động"
         value={formatNumber(data.activeDrawCount)}
         sub="Kỳ quay chưa có kết quả"
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label={REPORT_COLUMN_LABELS.entryCount}
         value={formatNumber(data.totalEntries)}
         sub="Số phiếu cược đang chờ"
@@ -76,8 +76,8 @@ export function OutstandingKpiStrip({ data, showLineCount = false, lineCountLabe
       {showLineCount && (
         <KpiCard
           icon={Rows3}
-          iconBg="bg-violet-100 dark:bg-violet-900/50"
-          iconColor="text-violet-600 dark:text-violet-400"
+          iconBg="bg-game-max3d"
+          iconColor="text-game-max3d"
           label={lineLabel}
           value={formatNumber(data.totalLines ?? 0)}
           sub="Đang chờ kết quả"
@@ -85,16 +85,16 @@ export function OutstandingKpiStrip({ data, showLineCount = false, lineCountLabe
       )}
       <KpiCard
         icon={HandCoins}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label={REPORT_COLUMN_LABELS.estimatedCommission}
         value={formatVNDCompact(data.totalCommission)}
         sub="Hoa hồng đại lý"
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatVNDCompact(data.totalStake)}
         sub="Tiền cược chưa có kết quả"

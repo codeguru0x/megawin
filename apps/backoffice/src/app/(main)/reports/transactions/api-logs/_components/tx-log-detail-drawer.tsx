@@ -33,7 +33,9 @@ export interface TxLogDetailDrawerProps {
  * Return `""` khi không có payload hoặc là `"null"` — FE sẽ render empty state.
  */
 function formatPayload(payload: string | undefined): string {
-  if (!payload || payload === "null") return "";
+  if (!payload || payload === "null") {
+    return "";
+  }
   try {
     return JSON.stringify(JSON.parse(payload), null, 2);
   } catch {
@@ -51,14 +53,14 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-160">
         <SheetHeader className="border-b px-5 py-4">
           <SheetTitle className="text-lg font-semibold">Chi tiết giao dịch</SheetTitle>
-          <SheetDescription className="text-xs text-muted-foreground">
+          <SheetDescription className="text-muted-foreground text-xs">
             Audit trail — request/response gửi đến tenant.
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
-            <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+            <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
               <Loader2 className="size-4 animate-spin" />
               <span className="text-sm">Đang tải…</span>
             </div>
@@ -66,9 +68,9 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
 
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
-              <AlertCircle className="size-8 text-destructive/60" />
-              <p className="text-sm font-medium text-destructive">Không tải được chi tiết</p>
-              <p className="text-xs text-muted-foreground">{(error as Error).message}</p>
+              <AlertCircle className="text-destructive/60 size-8" />
+              <p className="text-destructive text-sm font-medium">Không tải được chi tiết</p>
+              <p className="text-muted-foreground text-xs">{(error as Error).message}</p>
             </div>
           )}
 
@@ -82,8 +84,8 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
                 <Badge variant="outline" className="text-xs">
                   {TX_LOG_EVENT_TYPE_LABELS[log.eventType]}
                 </Badge>
-                <span className="font-mono text-sm text-muted-foreground">{log.tenantId}</span>
-                <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
+                <span className="text-muted-foreground font-mono text-sm">{log.tenantId}</span>
+                <span className="text-muted-foreground ml-auto font-mono text-sm tabular-nums">
                   {displayVNDateTime(log.createdAt)}
                 </span>
               </div>
@@ -91,14 +93,16 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
               {/* Identity */}
               <div className="flex flex-col gap-2 rounded-md border p-3">
                 <Field label="Tx ID">
-                  <span className="break-all font-mono text-sm">{log.tx}</span>
+                  <span className="font-mono text-sm break-all">{log.tx}</span>
                 </Field>
                 <Field label="Batch ID">
                   <div className="flex items-center gap-2">
-                    <span className="break-all font-mono text-sm">{log.batchId}</span>
+                    <span className="font-mono text-sm break-all">{log.batchId}</span>
                     {log.eventType === TxLogEventType.BatchTransaction && (
                       <Button asChild size="sm" variant="link" className="h-6 px-1 text-xs">
-                        <Link prefetch={false} href={`/reports/transactions/api-logs/batches/${log.batchId}`}>Xem batch</Link>
+                        <Link prefetch={false} href={`/reports/transactions/api-logs/batches/${log.batchId}`}>
+                          Xem batch
+                        </Link>
                       </Button>
                     )}
                   </div>
@@ -107,23 +111,23 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
 
               {/* Error box — chỉ hiện khi failed */}
               {log.status === TxLogStatus.Failed && log.error && (
-                <div className="flex flex-col gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3">
+                <div className="border-destructive/40 bg-destructive/5 flex flex-col gap-2 rounded-md border p-3">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="rounded bg-destructive/15 px-2 py-0.5 font-mono text-xs font-semibold text-destructive">
+                    <span className="bg-destructive/15 text-destructive rounded px-2 py-0.5 font-mono text-xs font-semibold">
                       {log.error.code}
                     </span>
                     {log.error.httpStatus !== undefined && (
-                      <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
+                      <span className="bg-muted text-muted-foreground rounded px-2 py-0.5 font-mono text-xs">
                         HTTP {log.error.httpStatus}
                       </span>
                     )}
                     {log.error.batchOuterRejected && (
-                      <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      <span className="bg-warning/15 text-warning rounded px-2 py-0.5 text-xs font-medium">
                         Batch bị reject toàn bộ
                       </span>
                     )}
                   </div>
-                  <p className="wrap-break-words text-sm text-destructive">{log.error.message}</p>
+                  <p className="wrap-break-words text-destructive text-sm">{log.error.message}</p>
                 </div>
               )}
 
@@ -147,7 +151,7 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="w-[70px] shrink-0 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="text-muted-foreground w-[70px] shrink-0 text-xs font-medium tracking-wide uppercase">
         {label}
       </span>
       <div className="min-w-0 flex-1">{children}</div>
@@ -158,13 +162,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function PayloadSection({ title, json, emptyHint }: { title: string; json: string; emptyHint?: string }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
+      <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">{title}</h3>
       {json ? (
-        <pre className="max-h-90 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-relaxed">
+        <pre className="bg-muted/40 max-h-90 overflow-auto rounded-md border p-3 font-mono text-xs leading-relaxed">
           {json}
         </pre>
       ) : (
-        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center text-xs">
           {emptyHint ?? "—"}
         </p>
       )}

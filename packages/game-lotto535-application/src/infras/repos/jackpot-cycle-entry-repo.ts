@@ -17,8 +17,11 @@
  * 4. Audit/đối soát: `listByCycle(cycleNo)` → toàn bộ kỳ trong cycle.
  */
 
-import type { JackpotCycleEntryDoc, JackpotCycleEntryEntity } from "@megawin/game-lotto535/entities";
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+import {
+  Lotto535Collections,
+  type JackpotCycleEntryDoc,
+  type JackpotCycleEntryEntity,
+} from "@megawin/game-lotto535/entities";
 
 import { JackpotCycleEntryMapper } from "../mappers/jackpot-cycle-entry-mapper";
 import { BaseRepo } from "./base-repo";

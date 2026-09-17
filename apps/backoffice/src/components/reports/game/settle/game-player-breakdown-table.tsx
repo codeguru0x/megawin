@@ -51,9 +51,9 @@ export function GamePlayerBreakdownTable({
 }: GamePlayerBreakdownTableProps) {
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground" />
+          <Users className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">
             Người chơi — {tenantId} · {drawId}
           </CardTitle>
@@ -80,7 +80,7 @@ export function GamePlayerBreakdownTable({
                 return (
                   <TableRow
                     key={row.accountId}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(row.accountId, row.displayName)}
                   >
                     <TableCell className="text-sm font-medium">{row.displayName}</TableCell>
@@ -93,7 +93,7 @@ export function GamePlayerBreakdownTable({
                     <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalStake)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell
-                      className={`text-right text-sm tabular-nums font-medium ${playerNet > 0 ? "text-profit" : ""}`}
+                      className={`text-right text-sm font-medium tabular-nums ${playerNet > 0 ? "text-profit" : ""}`}
                     >
                       {playerNet > 0 ? "+" : ""}
                       {formatNumber(playerNet)}

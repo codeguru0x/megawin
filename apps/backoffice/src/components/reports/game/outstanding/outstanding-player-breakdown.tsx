@@ -46,11 +46,11 @@ export function OutstandingPlayerBreakdown({
   if (isLoading) {
     return (
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <Skeleton className="h-4 w-48" />
           <Skeleton className="mt-1 h-3 w-72" />
         </CardHeader>
-        <CardContent className="space-y-2 px-5 pb-4 pt-0">
+        <CardContent className="space-y-2 px-5 pt-0 pb-4">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
@@ -63,7 +63,7 @@ export function OutstandingPlayerBreakdown({
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-sm text-muted-foreground">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
+          <p className="text-muted-foreground text-sm">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
           <Button variant="outline" size="sm" onClick={onRefetch}>
             <RefreshCw className="mr-2 size-4" />
             Thử lại
@@ -80,19 +80,19 @@ export function OutstandingPlayerBreakdown({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground" />
+          <Users className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">
             Tài khoản — Kỳ {drawId} / {tenantId}
           </CardTitle>
         </div>
         <CardDescription className="text-xs">{rows.length} tài khoản · Click để xem phiếu cược</CardDescription>
       </CardHeader>
-      <CardContent className="px-0 pb-4 pt-0">
+      <CardContent className="px-0 pt-0 pb-4">
         {rows.length === 0 ? (
           <div className="flex h-30 items-center justify-center">
-            <p className="text-sm text-muted-foreground">Không có dữ liệu.</p>
+            <p className="text-muted-foreground text-sm">Không có dữ liệu.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -110,7 +110,7 @@ export function OutstandingPlayerBreakdown({
                 {rows.map((row) => (
                   <TableRow
                     key={row.accountId}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(row.accountId, row.displayName)}
                   >
                     <TableCell className="pl-5 text-sm font-medium">{row.displayName}</TableCell>
@@ -123,7 +123,7 @@ export function OutstandingPlayerBreakdown({
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.commissionAmount)}
                     </TableCell>
-                    <TableCell className="pr-5 text-right text-sm tabular-nums font-medium">
+                    <TableCell className="pr-5 text-right text-sm font-medium tabular-nums">
                       {formatNumber(row.totalStake)}
                     </TableCell>
                   </TableRow>
@@ -132,20 +132,20 @@ export function OutstandingPlayerBreakdown({
 
               {rows.length > 1 && (
                 <tfoot>
-                  <TableRow className="border-t bg-muted/50">
+                  <TableRow className="bg-muted/50 border-t">
                     <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    <TableCell className="text-right text-sm font-semibold tabular-nums">
                       {formatNumber(totalEntries)}
                     </TableCell>
                     {showLineCount && (
-                      <TableCell className="text-right text-sm tabular-nums font-semibold">
+                      <TableCell className="text-right text-sm font-semibold tabular-nums">
                         {formatNumber(totalLines)}
                       </TableCell>
                     )}
-                    <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    <TableCell className="text-right text-sm font-semibold tabular-nums">
                       {formatNumber(totalCommission)}
                     </TableCell>
-                    <TableCell className="pr-5 text-right text-sm tabular-nums font-semibold">
+                    <TableCell className="pr-5 text-right text-sm font-semibold tabular-nums">
                       {formatNumber(totalStake)}
                     </TableCell>
                   </TableRow>

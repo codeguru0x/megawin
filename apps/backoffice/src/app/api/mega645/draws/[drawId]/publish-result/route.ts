@@ -1,6 +1,6 @@
+import { PublishResultUseCase } from "@megawin/game-mega645-application/use-cases/draws";
 import { MEGA645_NUMBER_COUNT } from "@megawin/game-mega645/entities";
 import { mega645NumberSchema } from "@megawin/game-mega645/schemas";
-import { PublishResultUseCase } from "@megawin/game-mega645-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
 import { z } from "zod";
 
@@ -26,10 +26,14 @@ const publishResultSchema = z
 
 const publishResultUseCase = new PublishResultUseCase();
 
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(publishResultSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return publishResultUseCase.run({ drawId, ...body, actor: actorFromSession(session!, request) });
   });

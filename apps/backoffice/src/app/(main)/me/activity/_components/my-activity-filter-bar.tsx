@@ -66,7 +66,7 @@ export function MyActivityFilterBar() {
         <Button
           size="sm"
           variant="ghost"
-          className="h-8 px-2 text-xs text-muted-foreground"
+          className="text-muted-foreground h-8 px-2 text-xs"
           onClick={resetFilters}
           title="Xoá tất cả bộ lọc"
         >

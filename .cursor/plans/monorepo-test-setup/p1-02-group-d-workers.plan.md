@@ -1,9 +1,12 @@
 # p1-02 — Nhóm D: Workers (`apps/worker-*`) — GIẢI PHÁP CÓ DB
 
-Workers gọi trực tiếp use-case tầng application (đọc/ghi Mongo staging). Handler gần như 100% là
-passthrough (`return useCase.run(event)`) → test worker THỰC CHẤT là smoke/integration test chạy
-qua handler xuống use-case và chạm DB thật. Do đó nhóm D dùng **`integrationConfig` + `db-guard`**
-(giống nhóm B), KHÔNG dùng `nodeConfig` pure.
+> **SUPERSEDED (17/09/2026):** Runtime connection guard đã retire — integration test dùng
+> Testcontainers (`testcontainers-setup/`). Không còn cơ chế mở khóa URI staging. Xem
+> `.cursor/rules/test-data-safety.mdc` + `.cursor/plans/testcontainers-setup/`.
+
+Workers gọi trực tiếp use-case tầng application. Handler gần như 100% là passthrough
+(`return useCase.run(event)`). Smoke/integration (nếu chạm DB) dùng **`integrationConfig`** +
+Testcontainers; unit glue handler dùng `nodeConfig`.
 
 ## Bằng chứng khảo sát
 
@@ -29,7 +32,7 @@ Handler chỉ khởi tạo use-case + forward event. Mọi I/O (Mongo, tenant di
 flowchart TD
   event["Event (SFN input)"] --> handler["handler(event) - passthrough"]
   handler --> uc["UseCase.run() - tang application"]
-  uc --> mongo["Mongo staging (qua db-guard)"]
+  uc --> mongo["Mongo Testcontainers"]
 ```
 
 - **Smoke/integration qua handler**: seed input + state DB (scoped, có marker), gọi `handler(event)`,
@@ -44,20 +47,19 @@ flowchart TD
 
 1. devDeps mirror nhóm B (`@megawin/vitest-config`, `vitest`, `vite`, `@types/node`, `next` nếu
    use-case kéo `next`).
-2. `vitest.config.ts` dùng `integrationConfig`; khai báo `globalSetup: ["test/global-setup.ts"]`
-   (turbo build deps theo tên worker), `setupFiles` trỏ `@megawin/vitest-config/setup-db-guard`.
+2. `vitest.config.ts` dùng `nodeConfig` (unit) hoặc `integrationConfig` + Testcontainers
+   `globalSetup` khi smoke chạm DB.
 3. `test/global-setup.ts` + sample smoke test cho 1 handler tiêu biểu (VD `settle/finalize-settle`
    hoặc `feed/feed-sync`) + `test/**/helpers/seed-*.ts`.
 4. `package.json` scripts: `pretest`=`build:deps`, `test`, `test:watch`.
 5. Thêm vào [vitest.workspace.ts](../../../vitest.workspace.ts).
 
-## QUY TẮC BẢO VỆ DỮ LIỆU (bắt buộc — DB staging chung)
+## QUY TẮC BẢO VỆ DỮ LIỆU (bắt buộc khi chạm DB)
 
 Giống nhóm B: mọi record test có MARKER, cleanup SCOPED mirror seed, CẤM filter rỗng. Tuân
-`.cursor/rules/test-data-safety.mdc`. `db-guard` (p0-01) bắt buộc, `ALLOW_DB_TESTS=true` set 1 lần
-trong `.env.test.local` để cho phép chạy trên staging.
+`.cursor/rules/test-data-safety.mdc`. DB qua Testcontainers ephemeral.
 
 ## Verify
 
 - `pnpm --filter @megawin/worker-power655 test`.
-- Xác nhận smoke test tạo/dọn đúng record test, không đụng data khác trên staging.
+- Xác nhận smoke test tạo/dọn đúng record test (scoped), không `deleteMany({})`.

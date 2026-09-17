@@ -11,11 +11,10 @@
 
 import { withPlayerAuth } from "@megawin/auth";
 import { TicketChannel } from "@megawin/game-core/entities";
+import { PlaceBetUseCase, type PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
 import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 import { max3dDrawIdSchema, max3dTripletSchema } from "@megawin/game-max3d/schemas";
-import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
-import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";

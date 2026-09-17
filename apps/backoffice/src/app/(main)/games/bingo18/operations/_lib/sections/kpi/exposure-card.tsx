@@ -10,7 +10,6 @@
  *   snapshot — KHÔNG hardcode client; dưới sàn `exposureWarnMinAmount` → luôn xanh).
  * - Collapse "Top 5 outcome trả nặng".
  */
-
 import { useState } from "react";
 
 import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
@@ -28,7 +27,7 @@ function DiceBadges({ numbers }: { numbers: [number, number, number] }) {
       {numbers.map((n, i) => (
         <span
           key={i}
-          className="inline-flex size-5 items-center justify-center rounded bg-red-500/10 text-[11px] font-bold tabular-nums text-red-700 dark:text-red-300"
+          className="bg-loss/10 text-loss inline-flex size-5 items-center justify-center rounded text-xs font-bold tabular-nums"
         >
           {n}
         </span>
@@ -62,40 +61,40 @@ export function ExposureCard({
   // ≥ ngưỡng % → đỏ; ≥ 1/2 ngưỡng → amber; còn lại xanh.
   const underFloor = worst < warnMinAmount;
   const gaugeColor = underFloor
-    ? "bg-emerald-500"
+    ? "bg-profit"
     : pct >= warnRevenuePct
-      ? "bg-red-500"
+      ? "bg-loss"
       : pct >= warnRevenuePct / 2
-        ? "bg-amber-500"
-        : "bg-emerald-500";
+        ? "bg-warning"
+        : "bg-profit";
   // Gauge scale: 100% thanh = ngưỡng cảnh báo (worst chạm ngưỡng % = full bar).
   const gaugeWidth = Math.min(100, warnRevenuePct > 0 ? (pct / warnRevenuePct) * 100 : 0);
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50 shrink-0">
-              <ShieldAlert className="size-3.5 text-red-600 dark:text-red-400" />
+            <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <ShieldAlert className="text-loss size-3.5" />
             </div>
             <div>
               <p className="text-sm font-semibold">Rủi ro chi trả</p>
-              <p className="text-xs text-muted-foreground">Chính xác trên 216 kết quả có thể xảy ra</p>
+              <p className="text-muted-foreground text-xs">Chính xác trên 216 kết quả có thể xảy ra</p>
             </div>
           </div>
 
           {/* Worst-case + outcome đạt max */}
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Worst-case</p>
-              <p className="text-base font-bold tabular-nums text-red-600 dark:text-red-400">{formatNumber(worst)}</p>
+              <p className="text-muted-foreground text-xs">Worst-case</p>
+              <p className="text-loss text-base font-bold tabular-nums">{formatNumber(worst)}</p>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex flex-col items-center gap-0.5 cursor-help">
+                <div className="flex cursor-help flex-col items-center gap-0.5">
                   <DiceBadges numbers={exposure.worstCase.numbers} />
-                  <span className="text-[10px] text-muted-foreground tabular-nums">Tổng {exposure.worstCase.sum}</span>
+                  <span className="text-muted-foreground text-xs tabular-nums">Tổng {exposure.worstCase.sum}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-72 text-xs">
@@ -107,13 +106,11 @@ export function ExposureCard({
 
           {/* Expected + margin dự kiến */}
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Kỳ vọng trả · Margin dự kiến</p>
+            <p className="text-muted-foreground text-xs">Kỳ vọng trả · Margin dự kiến</p>
             <p className="text-sm font-semibold tabular-nums">
               {formatNumber(expected)}
-              <span className="mx-1 text-muted-foreground">·</span>
-              <span
-                className={cn(margin < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}
-              >
+              <span className="text-muted-foreground mx-1">·</span>
+              <span className={cn(margin < 0 ? "text-loss" : "text-profit")}>
                 {margin >= 0 ? "+" : ""}
                 {formatNumber(margin)}
               </span>
@@ -123,18 +120,18 @@ export function ExposureCard({
 
         {/* Gauge worst-case / doanh thu */}
         <div className="space-y-1">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
+          <div className="text-muted-foreground flex items-center justify-between text-xs tabular-nums">
             <span>
-              Worst-case / Doanh thu: <span className="font-semibold text-foreground">{Math.round(pct)}%</span>
+              Worst-case / Doanh thu: <span className="text-foreground font-semibold">{Math.round(pct)}%</span>
               {underFloor && (
-                <span className="ml-1.5 text-muted-foreground/70">
+                <span className="text-muted-foreground/70 ml-1.5">
                   (dưới sàn {formatNumber(warnMinAmount)} — chưa xét cảnh báo)
                 </span>
               )}
             </span>
             <span>Ngưỡng cảnh báo {warnRevenuePct}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+          <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
             <div className={cn("h-full rounded-full transition-all", gaugeColor)} style={{ width: `${gaugeWidth}%` }} />
           </div>
         </div>
@@ -144,7 +141,7 @@ export function ExposureCard({
           <button
             type="button"
             onClick={() => setShowTop((v) => !v)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
           >
             <ChevronDown className={cn("size-3.5 transition-transform", showTop && "rotate-180")} />
             Top 5 kết quả trả nặng nhất
@@ -154,15 +151,13 @@ export function ExposureCard({
               {exposure.topOutcomes.map((o, i) => (
                 <div
                   key={`${o.numbers.join("-")}`}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-muted/10 px-2.5 py-1.5"
+                  className="border-border/50 bg-muted/10 flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-muted-foreground/60 tabular-nums">#{i + 1}</span>
+                    <span className="text-muted-foreground/60 text-xs tabular-nums">#{i + 1}</span>
                     <DiceBadges numbers={o.numbers} />
                   </span>
-                  <span className="text-xs font-semibold tabular-nums text-red-600/90 dark:text-red-400">
-                    {formatNumber(o.amount)}
-                  </span>
+                  <span className="text-loss/90 text-xs font-semibold tabular-nums">{formatNumber(o.amount)}</span>
                 </div>
               ))}
             </div>

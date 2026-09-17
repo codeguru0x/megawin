@@ -1,6 +1,5 @@
 /// <reference lib="dom" />
-import type { ApiResponse } from "./api-types";
-import { ApiClientError } from "./api-types";
+import { ApiClientError, type ApiResponse } from "./api-types";
 
 // ============ Types ============
 
@@ -58,15 +57,21 @@ function buildUrl(
 ): string {
   const url = path.startsWith("http") ? path : `${baseUrl}${normalizePath(path)}`;
 
-  if (!params) return url;
+  if (!params) {
+    return url;
+  }
 
   const searchParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) searchParams.append(key, String(value));
+    if (value !== undefined) {
+      searchParams.append(key, String(value));
+    }
   }
 
   const qs = searchParams.toString();
-  if (!qs) return url;
+  if (!qs) {
+    return url;
+  }
   return url.includes("?") ? `${url}&${qs}` : `${url}?${qs}`;
 }
 
@@ -165,7 +170,9 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
       return await parseResponse<T>(response);
     } catch (err) {
       if (err instanceof ApiClientError) {
-        if (config.onError) await config.onError(err);
+        if (config.onError) {
+          await config.onError(err);
+        }
         throw err;
       }
 
@@ -178,7 +185,9 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
             ? err.message
             : "Network error",
       });
-      if (config.onError) await config.onError(clientError);
+      if (config.onError) {
+        await config.onError(clientError);
+      }
       throw clientError;
     } finally {
       clearTimeout(timeoutId);

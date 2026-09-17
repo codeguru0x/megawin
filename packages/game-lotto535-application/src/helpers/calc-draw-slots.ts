@@ -9,7 +9,7 @@
 
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayRules } from "@megawin/game-lotto535/entities";
-import { addDays, formatVNDate, isBefore, subtractMinutes, TZDate, toVNDate, VN_TIMEZONE } from "@megawin/shared/utils";
+import { addDays, formatVNDate, isBefore, subtractMinutes, toVNDate, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
 
 export interface Lotto535DrawSlot {
   /** "YYYY-MM-DD" theo giờ VN. */
@@ -58,18 +58,24 @@ export function calcLotto535DrawSlots(
     const dateStr = formatVNDate(dayVN);
 
     for (let drawNo = 1; drawNo <= drawsPerDay; drawNo++) {
-      if (slots.length >= count) break;
+      if (slots.length >= count) {
+        break;
+      }
 
       const drawTimeStr = drawTimes[drawNo - 1]!;
       const drawId = `${dateStr}.${String(drawNo).padStart(3, "0")}`;
 
-      if (existingDrawIds.has(drawId)) continue;
+      if (existingDrawIds.has(drawId)) {
+        continue;
+      }
 
       const drawTime = toVNDate(dateStr, drawTimeStr);
       const closeAt = subtractMinutes(drawTime, salesCloseBeforeMinutes);
 
       // Bỏ qua nếu thời điểm đóng bán đã qua — kỳ này không còn mua được.
-      if (!isBefore(now, closeAt)) continue;
+      if (!isBefore(now, closeAt)) {
+        continue;
+      }
 
       slots.push({
         drawDate: dateStr,

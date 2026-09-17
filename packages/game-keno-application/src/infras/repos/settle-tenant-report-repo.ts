@@ -12,8 +12,11 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-keno/entities";
-import { KENO_SETTLE_TENANT_REPORTS } from "@megawin/game-keno/entities";
+import {
+  KENO_SETTLE_TENANT_REPORTS,
+  type SettleTenantReport,
+  type SettleTenantReportEntity,
+} from "@megawin/game-keno/entities";
 
 import { SettleTenantReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
@@ -39,7 +42,9 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
    * Idempotent: chạy lại overwrite.
    */
   async upsertTenantReports(reports: Omit<SettleTenantReport, "createdAt" | "updatedAt">[]): Promise<void> {
-    if (reports.length === 0) return;
+    if (reports.length === 0) {
+      return;
+    }
     const now = new Date();
     const ops = reports.map((report) => ({
       updateOne: {

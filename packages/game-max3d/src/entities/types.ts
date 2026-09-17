@@ -1,3 +1,7 @@
+import type { OpsStatsConfig } from "@megawin/game-core/types";
+
+import type { Max3dOpsAlertType } from "./ops-alert";
+
 /**
  * Max 3D – Shared Types
  *
@@ -8,10 +12,6 @@
  */
 
 export type { ISODateString } from "@megawin/game-core/types";
-
-import type { OpsStatsConfig } from "@megawin/game-core/types";
-
-import type { Max3dOpsAlertType } from "./ops-alert";
 
 // ─────────────────────────────────────────────
 // Draw Number (kỳ quay trong tuần)

@@ -11,7 +11,6 @@
  * theo dõi + số kỳ cần xử lý) — không hứa hẹn "hôm nay" vì `rows` có thể còn sót vài kỳ chưa
  * hoàn tất từ trước đó (`listUnfinishedDrawRows`, không lọc theo ngày).
  */
-
 import { useEffect, useRef, useState } from "react";
 
 import dynamic from "next/dynamic";
@@ -84,14 +83,12 @@ function RefreshButton() {
       const stale = elapsedSec > 3 * pollSecondsRef.current;
       const dot = dotRef.current;
       const label = labelRef.current;
-      // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome suy luận nhầm `current` luôn non-null vì đọc qua closure lồng trong `tick()` — `tsc --noEmit` xác nhận type thật là `HTMLSpanElement | null`.
       if (dot) {
-        dot.className = `size-1.5 rounded-full animate-pulse ${stale ? "bg-amber-500" : "bg-emerald-500"}`;
+        dot.className = `size-1.5 rounded-full animate-pulse ${stale ? "bg-warning" : "bg-profit"}`;
       }
-      // biome-ignore lint/suspicious/noUnnecessaryConditions: Tương tự — Biome không theo dõi đúng qua closure lồng, `tsc` xác nhận `label` có thể `null`.
       if (label) {
         label.textContent = stale ? "Chậm" : "Live";
-        label.className = `font-medium text-xs ${stale ? "text-amber-600" : "text-emerald-600"}`;
+        label.className = `font-medium text-xs ${stale ? "text-warning" : "text-profit"}`;
       }
     }
     tick();
@@ -109,8 +106,8 @@ function RefreshButton() {
           disabled={state.isFetching}
           onClick={actions.refresh}
         >
-          <span ref={dotRef} className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-          <span ref={labelRef} className="font-medium text-emerald-600 text-xs">
+          <span ref={dotRef} className="bg-profit size-1.5 animate-pulse rounded-full" />
+          <span ref={labelRef} className="text-profit text-xs font-medium">
             Live
           </span>
         </Button>
@@ -151,14 +148,14 @@ export function HubPageHeader() {
           <Layers className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="font-semibold text-foreground text-lg tracking-tight">Bingo18 — Trung tâm vận hành</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Bingo18 — Trung tâm vận hành</h1>
           {/* "Live" chuyển từ cụm nút bên phải xuống ngay cạnh subtitle (p1-08 §1.5/§9 Q5) —
               trước đó tách xa dòng "N kỳ đang theo dõi", không liên quan trực quan. */}
           <div className="flex items-center gap-2">
             <p className="text-muted-foreground text-xs">
               {totalRows} kỳ đang theo dõi
               {needsActionCount > 0 ? (
-                <span className="font-medium text-rose-600 dark:text-rose-400"> · {needsActionCount} kỳ cần xử lý</span>
+                <span className="text-loss font-medium"> · {needsActionCount} kỳ cần xử lý</span>
               ) : null}
               <RefreshButton />
             </p>
@@ -193,14 +190,14 @@ export function HubPageHeaderSkeleton() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <div className="size-9 animate-pulse rounded-xl bg-muted" />
+        <div className="bg-muted size-9 animate-pulse rounded-xl" />
         <div className="flex flex-col gap-1.5">
-          <div className="h-5 w-56 animate-pulse rounded bg-muted" />
-          <div className="h-3.5 w-40 animate-pulse rounded bg-muted" />
+          <div className="bg-muted h-5 w-56 animate-pulse rounded" />
+          <div className="bg-muted h-3.5 w-40 animate-pulse rounded" />
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <div className="h-8 w-24 animate-pulse rounded-md bg-muted" />
+        <div className="bg-muted h-8 w-24 animate-pulse rounded-md" />
       </div>
     </div>
   );

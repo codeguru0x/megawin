@@ -21,7 +21,7 @@ import { GAME_LABELS } from "@megawin/game-core/labels";
 
 import { GetCurrentJackpotsUseCase } from "../../use-cases/jackpot/get-current-jackpots";
 import type { Lotto535JackpotOutput, Mega645JackpotOutput, Power655JackpotOutput } from "../../use-cases/jackpot/types";
-import { type ConfigItem, item } from "../payload";
+import { item, type ConfigItem } from "../payload";
 import type { GetGameJackpotInput, GetGameJackpotOutput, JackpotBlock } from "./types";
 
 function mapMega645Block(data: Mega645JackpotOutput, asOf: string): JackpotBlock {

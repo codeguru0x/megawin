@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation } from "@tanstack/react-query";
 import { Check, CheckCircle2, Copy, Dices, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -39,22 +39,34 @@ interface SetPasswordDialogProps {
 
 /** Tính độ mạnh password 0–4 dựa trên length + complexity. */
 function getPasswordStrength(pwd: string): number {
-  if (pwd.length === 0) return 0;
+  if (pwd.length === 0) {
+    return 0;
+  }
   let score = 0;
-  if (pwd.length >= 8) score++;
-  if (pwd.length >= 12) score++;
-  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
-  if (/[0-9]/.test(pwd)) score++;
-  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  if (pwd.length >= 8) {
+    score++;
+  }
+  if (pwd.length >= 12) {
+    score++;
+  }
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) {
+    score++;
+  }
+  if (/[0-9]/.test(pwd)) {
+    score++;
+  }
+  if (/[^A-Za-z0-9]/.test(pwd)) {
+    score++;
+  }
   return Math.min(score, 4);
 }
 
 const STRENGTH_CONFIG = [
-  { label: "Rất yếu", color: "bg-red-500" },
-  { label: "Yếu", color: "bg-orange-500" },
-  { label: "Trung bình", color: "bg-yellow-500" },
-  { label: "Mạnh", color: "bg-emerald-500" },
-  { label: "Rất mạnh", color: "bg-emerald-600" },
+  { label: "Rất yếu", color: "bg-loss" },
+  { label: "Yếu", color: "bg-warning" },
+  { label: "Trung bình", color: "bg-warning" },
+  { label: "Mạnh", color: "bg-profit" },
+  { label: "Rất mạnh", color: "bg-profit" },
 ] as const;
 
 export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordDialogProps) {
@@ -115,7 +127,7 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
+              <div className="from-profit to-game-mega645 flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
                 <CheckCircle2 className="size-4.5 text-white" />
               </div>
               <div>
@@ -127,14 +139,14 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
             </div>
           </DialogHeader>
 
-          <div className="space-y-2 rounded-lg border bg-muted/40 p-4">
+          <div className="bg-muted/40 space-y-2 rounded-lg border p-4">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-xs font-medium text-muted-foreground">Tài khoản</span>
+              <span className="text-muted-foreground text-xs font-medium">Tài khoản</span>
               <span className="font-mono text-sm font-semibold">{username}</span>
             </div>
             <div className="border-t" />
             <div className="flex items-center justify-between gap-4">
-              <span className="text-xs font-medium text-muted-foreground">Mật khẩu mới</span>
+              <span className="text-muted-foreground text-xs font-medium">Mật khẩu mới</span>
               <span className="font-mono text-sm font-semibold tracking-wider">{successPassword}</span>
             </div>
           </div>
@@ -167,13 +179,13 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 shadow-sm">
+            <div className="from-info to-primary flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
               <KeyRound className="size-4.5 text-white" />
             </div>
             <div>
               <DialogTitle>Đặt mật khẩu mới</DialogTitle>
               <DialogDescription className="text-xs">
-                Đặt mật khẩu tạm thời cho <span className="font-semibold text-foreground">{username}</span>.
+                Đặt mật khẩu tạm thời cho <span className="text-foreground font-semibold">{username}</span>.
               </DialogDescription>
             </div>
           </div>
@@ -189,13 +201,13 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
                   <FormLabel className="text-xs font-medium">Mật khẩu mới</FormLabel>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Lock className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                      <Lock className="text-muted-foreground absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
                       <FormControl>
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Tối thiểu 8 ký tự"
                           autoComplete="new-password"
-                          className="pr-10 pl-8.5 text-sm font-mono"
+                          className="pr-10 pl-8.5 font-mono text-sm"
                           {...field}
                         />
                       </FormControl>
@@ -207,9 +219,9 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeOff className="size-3.5 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground size-3.5" />
                         ) : (
-                          <Eye className="size-3.5 text-muted-foreground" />
+                          <Eye className="text-muted-foreground size-3.5" />
                         )}
                       </Button>
                     </div>
@@ -238,7 +250,7 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
                           />
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
+                      <p className="text-muted-foreground text-xs">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
                     </div>
                   )}
                   <FormMessage className="text-xs" />

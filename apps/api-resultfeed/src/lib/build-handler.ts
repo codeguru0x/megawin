@@ -15,10 +15,10 @@
  */
 
 import {
-  type ApiGatewayZodSchemas,
   httpErrorHandlerUseCaseFormat,
   successEnvelopeMiddleware,
   validatorZodMiddleware,
+  type ApiGatewayZodSchemas,
 } from "@megawin/app-core/lambda/middleware";
 import middy, { type MiddlewareObj } from "@middy/core";
 import type { APIGatewayProxyEventV2 } from "aws-lambda/trigger/api-gateway-proxy";
@@ -32,7 +32,6 @@ import { apiKeyAuthMiddleware } from "./api-key-auth";
  * generic khác nhau (auth đọc headers, validator đọc body/path/query) — không narrow được
  * (mirror `packages/auth/src/handler-wrappers.ts`, không import package đó).
  */
-// biome-ignore lint/suspicious/noExplicitAny: MiddlewareObj generic theo event/result/context; mỗi middleware trong chain có shape khác nhau nên không narrow được.
 type AnyMiddleware = MiddlewareObj<any, any, any, any, any>;
 
 /** Infer `event.schema` từ Zod schemas đã khai báo — field không khai báo → `never`. */

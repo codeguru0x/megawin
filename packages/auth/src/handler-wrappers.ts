@@ -28,10 +28,10 @@
  */
 
 import {
-  type ApiGatewayZodSchemas,
   httpErrorHandlerUseCaseFormat,
   successEnvelopeMiddleware,
   validatorZodMiddleware,
+  type ApiGatewayZodSchemas,
 } from "@megawin/app-core/lambda/middleware";
 import middy, { type MiddlewareObj } from "@middy/core";
 import type { APIGatewayProxyEventV2 } from "aws-lambda/trigger/api-gateway-proxy";
@@ -39,10 +39,10 @@ import type { z } from "zod";
 
 import {
   agentAuth,
-  type CompanyAuthOptions,
-  type CompanyUserEvent,
   companyAuth,
   playerAuth,
+  type CompanyAuthOptions,
+  type CompanyUserEvent,
   type TenantUserEvent,
   type UserAuthOptions,
 } from "./authorization-middleware";
@@ -55,14 +55,12 @@ export type { CompanyUserEvent, TenantUserEvent };
  * Middleware bất kỳ của middy. Dùng `MiddlewareObj` chính thống của middy thay vì tự khai báo
  * lại shape `{ before?, after?, onError? }` — tránh lệch khi middy nâng version.
  */
-// biome-ignore lint/suspicious/noExplicitAny: `MiddlewareObj` generic theo event/result/context; ở layer wrapper này mỗi middleware có shape khác nhau (auth đọc authorizer claims, validator đọc body/path/query) nên không narrow được — `any` là đúng cách middy tự type các generic param này.
 type AnyMiddleware = MiddlewareObj<any, any, any, any, any>;
 
 /**
  * Handler thô truyền vào middy — event type thật do generic ở từng hàm `with*` quyết định
  * (typed tại signature public, xem `WithSchema`).
  */
-// biome-ignore lint/suspicious/noExplicitAny: PHẢI là `any`, KHÔNG được siết thành `never` hay concrete event type — middy infer `TEvent` của handler trả về từ chính param này. Dùng `never` khiến handler kết quả chỉ nhận `never` → mọi call-site vỡ (đã đo: 27 lỗi TS2345 ở test api-player khi thử `never`).
 type RawHandler = (event: any) => Promise<unknown>;
 
 /**

@@ -10,15 +10,6 @@
  * mỗi tick). Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
-import type {
-  KenoCappablePlayType,
-  KenoDrawBettingStatsEntity,
-  KenoDrawComboStatsEntity,
-  KenoOpsAlertDoc,
-  KenoSideBetPlayType,
-  OpsAlertsConfig,
-  PayoutCaps,
-} from "@megawin/game-keno/entities";
 import {
   KenoBigSmallBet,
   KenoEvenOddBet,
@@ -26,6 +17,13 @@ import {
   KenoPlayType,
   OpsAlertSeverity,
   OpsAlertStatus,
+  type KenoCappablePlayType,
+  type KenoDrawBettingStatsEntity,
+  type KenoDrawComboStatsEntity,
+  type KenoOpsAlertDoc,
+  type KenoSideBetPlayType,
+  type OpsAlertsConfig,
+  type PayoutCaps,
 } from "@megawin/game-keno/entities";
 import { capExposureByPlayType } from "@megawin/game-keno/rules";
 import { sumBy } from "@megawin/shared/utils/array";
@@ -182,7 +180,9 @@ function evaluateSidebetSkew(
     directions: Array<{ dir: KenoBigSmallBet | KenoEvenOddBet; amount: number }>,
   ): void => {
     const total = sumBy(directions, (d) => d.amount);
-    if (total <= 0) return;
+    if (total <= 0) {
+      return;
+    }
 
     let top = directions[0]!;
 

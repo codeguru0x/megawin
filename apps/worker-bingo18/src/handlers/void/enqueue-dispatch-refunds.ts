@@ -10,8 +10,7 @@
  * IDEMPOTENT: replay an toàn, duplicate `tx` bị skip.
  */
 
-import type { VoidContext } from "@megawin/game-bingo18-application/use-cases/void";
-import { EnqueueDispatchRefundsUseCase } from "@megawin/game-bingo18-application/use-cases/void";
+import { EnqueueDispatchRefundsUseCase, type VoidContext } from "@megawin/game-bingo18-application/use-cases/void";
 
 const useCase = new EnqueueDispatchRefundsUseCase();
 

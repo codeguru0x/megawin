@@ -17,14 +17,18 @@
  * MỌI status trong 1 query (không thêm round-trip), lọc hiển thị ở client. Không
  * timer riêng, badge count đọc từ snapshot. Ack → invalidate cả panel lẫn badge.
  */
-
 import { useState } from "react";
 
 import Link from "next/link";
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import type { KenoOpsAlertEntity, KenoTopPotential } from "@megawin/game-keno/entities";
-import { KenoOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-keno/entities";
+import {
+  KenoOpsAlertType,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type KenoOpsAlertEntity,
+  type KenoTopPotential,
+} from "@megawin/game-keno/entities";
 import { displayVNTimeWithSeconds, formatNumber } from "@megawin/shared/utils";
 import { AlertTriangle, BellRing, Check, ChevronDown, ExternalLink, ShieldCheck } from "lucide-react";
 
@@ -49,23 +53,23 @@ const SEVERITY_LABEL: Record<string, string> = {
 
 function severityBadgeClass(severity: string): string {
   if (severity === OpsAlertSeverity.Critical) {
-    return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+    return "bg-loss text-loss";
   }
   if (severity === OpsAlertSeverity.Warning) {
-    return "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+    return "bg-warning text-warning";
   }
-  return "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300";
+  return "bg-info text-info";
 }
 
 /** Màu chấm + viền trái item theo severity — dấu hiệu quét mắt nhanh. */
 function severityAccent(severity: string): { dot: string; border: string } {
   if (severity === OpsAlertSeverity.Critical) {
-    return { dot: "bg-red-500", border: "border-l-red-500" };
+    return { dot: "bg-loss", border: "border-l-loss" };
   }
   if (severity === OpsAlertSeverity.Warning) {
-    return { dot: "bg-amber-500", border: "border-l-amber-500" };
+    return { dot: "bg-warning", border: "border-l-warning" };
   }
-  return { dot: "bg-sky-500", border: "border-l-sky-500" };
+  return { dot: "bg-info", border: "border-l-info" };
 }
 
 // ─── Mô tả alert dạng người-đọc (thay JSON payload thô) ───────────────────────
@@ -165,7 +169,9 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
       // Fallback: liệt kê field primitive (bỏ object/array để tránh "[object Object]").
       const chips: AlertChip[] = [];
       for (const [k, v] of Object.entries(payload)) {
-        if (v === null || v === undefined || typeof v === "object") continue;
+        if (v === null || v === undefined || typeof v === "object") {
+          continue;
+        }
         chips.push({ label: k, value: typeof v === "number" ? formatNumber(v) : String(v) });
       }
       return { summary: "", chips };
@@ -178,7 +184,9 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
 /** Đọc `payload.top` (mảng KenoTopPotential) an toàn — chỉ large_bet có. */
 function readTopEntries(payload: Record<string, unknown>): KenoTopPotential[] {
   const top = payload.top;
-  if (!Array.isArray(top)) return [];
+  if (!Array.isArray(top)) {
+    return [];
+  }
   return top as KenoTopPotential[];
 }
 
@@ -189,22 +197,24 @@ function readTopEntries(payload: Record<string, unknown>): KenoTopPotential[] {
  */
 function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<string, unknown> }) {
   const entries = readTopEntries(payload);
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="mt-1 rounded-md border border-border/50 divide-y divide-border/40 overflow-hidden">
+    <div className="border-border/50 divide-border/40 mt-1 divide-y overflow-hidden rounded-md border">
       {entries.map((e) => {
         const href = buildOutstandingHref(GameProduct.Keno, drawId, e.accountId, e.username);
         return (
-          <div key={e.entryId} className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-muted/20">
+          <div key={e.entryId} className="hover:bg-muted/20 flex items-center gap-2 px-2.5 py-1.5">
             <div className="min-w-0 flex-1">
               <PlayerName username={e.username} accountId={e.accountId} className="text-xs" />
             </div>
-            <span className="text-xs font-semibold tabular-nums text-foreground shrink-0">
+            <span className="text-foreground shrink-0 text-xs font-semibold tabular-nums">
               {formatNumber(e.amount)}
             </span>
             {e.potentialWin > 0 && (
-              <span className="text-[11px] tabular-nums text-red-500/80 shrink-0" title="Rủi ro chi trả nếu trúng">
+              <span className="text-loss/80 shrink-0 text-xs tabular-nums" title="Rủi ro chi trả nếu trúng">
                 ⚠ {formatNumber(e.potentialWin)}
               </span>
             )}
@@ -212,7 +222,7 @@ function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<
               <Link
                 prefetch={false}
                 href={href}
-                className="inline-flex items-center text-muted-foreground/60 hover:text-foreground shrink-0"
+                className="text-muted-foreground/60 hover:text-foreground inline-flex shrink-0 items-center"
                 title="Xem outstanding player ở kỳ này"
               >
                 <ExternalLink className="size-3.5" />
@@ -236,7 +246,7 @@ function AlertItemRow({ alert }: { alert: KenoOpsAlertEntity }) {
   return (
     <div
       className={cn(
-        "rounded-lg border border-l-2 bg-card px-3 py-2.5 transition-colors",
+        "bg-card rounded-lg border border-l-2 px-3 py-2.5 transition-colors",
         accent.border,
         isAcked ? "opacity-60" : "hover:bg-muted/20",
       )}
@@ -244,7 +254,7 @@ function AlertItemRow({ alert }: { alert: KenoOpsAlertEntity }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-1.5">
           {/* Câu tóm tắt — nội dung chính, đọc là hiểu */}
-          {summary && <p className="text-xs font-medium text-foreground leading-snug wrap-break-word">{summary}</p>}
+          {summary && <p className="text-foreground text-xs leading-snug font-medium wrap-break-word">{summary}</p>}
           {/* Chip số liệu nổi bật */}
           {chips.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
@@ -252,8 +262,8 @@ function AlertItemRow({ alert }: { alert: KenoOpsAlertEntity }) {
                 <span
                   key={c.label}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] tabular-nums",
-                    c.danger ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground",
+                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs tabular-nums",
+                    c.danger ? "bg-loss/10 text-loss" : "bg-muted text-muted-foreground",
                   )}
                 >
                   <span className="opacity-70">{c.label}</span>
@@ -265,12 +275,12 @@ function AlertItemRow({ alert }: { alert: KenoOpsAlertEntity }) {
           {/* Danh sách người/entry liên quan (large_bet) — minh bạch ai/cược gì/bao nhiêu,
               link tới outstanding player kỳ này để drill xem entry detail. */}
           <AlertTopEntries drawId={alert.drawId} payload={alert.payload} />
-          <p className="text-[11px] text-muted-foreground/70 tabular-nums">
+          <p className="text-muted-foreground/70 text-xs tabular-nums">
             {displayVNTimeWithSeconds(new Date(alert.createdAt))}
           </p>
         </div>
         {isAcked ? (
-          <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 shrink-0">
+          <span className="text-profit flex shrink-0 items-center gap-1 text-xs">
             <ShieldCheck className="size-3.5" />
             Đã xử lý
           </span>
@@ -278,7 +288,7 @@ function AlertItemRow({ alert }: { alert: KenoOpsAlertEntity }) {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 gap-1 shrink-0"
+            className="h-7 shrink-0 gap-1"
             onClick={() => ack.mutate(alert.id)}
             disabled={ack.isPending}
           >
@@ -295,12 +305,14 @@ function AlertItemRow({ alert }: { alert: KenoOpsAlertEntity }) {
 
 /** Nút thu gọn "N đã xử lý ▾" cuối 1 nhóm — bấm để mở xem lịch sử ack trong nhóm đó. */
 function AckedDisclosure({ count, open, onToggle }: { count: number; open: boolean; onToggle: () => void }) {
-  if (count === 0) return null;
+  if (count === 0) {
+    return null;
+  }
   return (
     <button
       type="button"
       onClick={onToggle}
-      className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+      className="text-muted-foreground hover:bg-muted/30 hover:text-foreground flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs"
     >
       <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       <ShieldCheck className="size-3.5" />
@@ -328,7 +340,7 @@ function AlertGroupContent({ items }: { items: KenoOpsAlertEntity[] }) {
       ))}
       {/* Không còn alert cần xử lý nhưng nhóm vẫn có lịch sử ack — báo yên tâm. */}
       {activeItems.length === 0 && ackedItems.length > 0 && (
-        <p className="px-1 py-1 text-xs text-muted-foreground">Đã xử lý hết cảnh báo mới của nhóm này.</p>
+        <p className="text-muted-foreground px-1 py-1 text-xs">Đã xử lý hết cảnh báo mới của nhóm này.</p>
       )}
       <AckedDisclosure count={ackedItems.length} open={showAcked} onToggle={() => setShowAcked((v) => !v)} />
       {showAcked && ackedItems.map((item) => <AlertItemRow key={item.id} alert={item} />)}
@@ -360,9 +372,9 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
   // Không có cảnh báo → 1 dòng mảnh (đứng đầu tab, không chiếm chỗ vô ích).
   if (groups.length === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-dashed bg-muted/10 px-4 py-2.5">
-        <ShieldCheck className="size-4 text-emerald-500/70 shrink-0" />
-        <span className="text-xs text-muted-foreground">Không có cảnh báo cho kỳ này.</span>
+      <div className="bg-muted/10 flex items-center gap-2 rounded-xl border border-dashed px-4 py-2.5">
+        <ShieldCheck className="text-profit/70 size-4 shrink-0" />
+        <span className="text-muted-foreground text-xs">Không có cảnh báo cho kỳ này.</span>
       </div>
     );
   }
@@ -372,18 +384,18 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50 shrink-0">
-            <BellRing className="size-3.5 text-red-600 dark:text-red-400" />
+          <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <BellRing className="text-loss size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Cảnh báo vận hành</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Gộp theo loại · Ack từng cảnh báo</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Gộp theo loại · Ack từng cảnh báo</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         <Accordion type="multiple" defaultValue={defaultOpen} className="w-full">
           {groups.map((g) => {
             const activeCount = g.items.filter((it) => it.status === OpsAlertStatus.New).length;
@@ -392,21 +404,21 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
             return (
               <AccordionItem key={g.type} value={g.type} className="border-b last:border-b-0">
                 <AccordionTrigger className="py-3 hover:no-underline">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className={cn("size-2 rounded-full shrink-0", accent.dot)} />
-                    {isCritical && activeCount > 0 && <AlertTriangle className="size-3.5 text-red-500 shrink-0" />}
-                    <span className="text-sm font-semibold truncate">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className={cn("size-2 shrink-0 rounded-full", accent.dot)} />
+                    {isCritical && activeCount > 0 && <AlertTriangle className="text-loss size-3.5 shrink-0" />}
+                    <span className="truncate text-sm font-semibold">
                       {KENO_OPS_ALERT_TYPE_LABELS[g.type] ?? g.type}
                     </span>
                     {/* Badge đếm CHỈ alert cần xử lý — khớp ý nghĩa với badge header (mới/critical),
                         KHÔNG cộng cả phần đã ack (dễ hiểu lầm còn nhiều việc phải làm). */}
-                    <Badge variant={activeCount > 0 ? "secondary" : "outline"} className="tabular-nums shrink-0">
+                    <Badge variant={activeCount > 0 ? "secondary" : "outline"} className="shrink-0 tabular-nums">
                       {formatNumber(activeCount)}
                     </Badge>
                     {activeCount > 0 && (
                       <span
                         className={cn(
-                          "rounded-full px-2 py-0.5 text-[11px] font-medium shrink-0",
+                          "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
                           severityBadgeClass(g.severity),
                         )}
                       >
@@ -440,7 +452,9 @@ export function AlertHeaderBadge({
   counts: { new: number; critical: number };
   onClick?: () => void;
 }) {
-  if (counts.new === 0 && counts.critical === 0) return null;
+  if (counts.new === 0 && counts.critical === 0) {
+    return null;
+  }
 
   const isCritical = counts.critical > 0;
 
@@ -450,9 +464,7 @@ export function AlertHeaderBadge({
       onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-        isCritical
-          ? "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-300"
-          : "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-300",
+        isCritical ? "bg-loss text-loss hover:bg-loss" : "bg-warning text-warning hover:bg-warning",
       )}
     >
       <BellRing className="size-3.5" />

@@ -23,11 +23,11 @@ export function ErrorCard({ message = "Lỗi tải dữ liệu" }: { message?: s
   return (
     <Card className="gap-0 py-0">
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <AlertCircle className="size-6 text-muted-foreground" />
+        <div className="bg-muted flex size-12 items-center justify-center rounded-full">
+          <AlertCircle className="text-muted-foreground size-6" />
         </div>
         <h3 className="mt-4 text-sm font-semibold">{message}</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
+        <p className="text-muted-foreground mt-1 text-xs">Vui lòng tải lại trang và thử lại.</p>
       </CardContent>
     </Card>
   );
@@ -46,11 +46,11 @@ export function EmptyCard({
   return (
     <Card className="gap-0 py-0">
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <Icon className="size-6 text-muted-foreground" />
+        <div className="bg-muted flex size-12 items-center justify-center rounded-full">
+          <Icon className="text-muted-foreground size-6" />
         </div>
         <h3 className="mt-4 text-sm font-semibold">{message}</h3>
-        {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+        {description && <p className="text-muted-foreground mt-1 text-xs">{description}</p>}
       </CardContent>
     </Card>
   );

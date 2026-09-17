@@ -67,7 +67,7 @@ export function StalledItemsDialog({ row, onClose }: StalledItemsDialogProps) {
                     <TableCell>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="block max-w-52 truncate text-xs text-muted-foreground">
+                          <span className="text-muted-foreground block max-w-52 truncate text-xs">
                             {item.lastError}
                           </span>
                         </TooltipTrigger>

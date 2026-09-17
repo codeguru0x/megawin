@@ -1,5 +1,6 @@
 import { TriggerResettleUseCase } from "@megawin/game-max3d-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { env } from "@/env";
 import { withApi } from "@/lib/api";
@@ -7,10 +8,14 @@ import { actorFromSession } from "@/lib/audit-actor";
 
 const triggerResettleUseCase = new TriggerResettleUseCase();
 
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
+  .params(paramsSchema)
   .handler(async ({ params, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return triggerResettleUseCase.run({
       drawId,
       RESETTLE_SFN_ARN: env.MAX3D_RESETTLE_SFN_ARN!,

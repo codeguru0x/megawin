@@ -1,9 +1,8 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 
-import type { WorkerLockEntity } from "../../entities";
-import { WorkerLockKind } from "../../entities";
+import { WorkerLockKind, type WorkerLockEntity } from "../../entities";
 import { WorkerLockRepository } from "../../infras/repos";
-import { type WorkerHealthRow, WorkerRunState } from "./types";
+import { WorkerRunState, type WorkerHealthRow } from "./types";
 
 export type ListWorkersHealthOutput = WorkerHealthRow[];
 

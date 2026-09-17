@@ -12,8 +12,8 @@
  */
 
 import {
-  type EnqueueDispatchPayoutsInput,
   EnqueueDispatchPayoutsUseCase,
+  type EnqueueDispatchPayoutsInput,
 } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new EnqueueDispatchPayoutsUseCase();

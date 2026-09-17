@@ -21,8 +21,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { Mega645DrawAccountStatsDoc, Mega645DrawAccountStatsEntity } from "@megawin/game-mega645/entities";
-import { Mega645Collections } from "@megawin/game-mega645/entities";
+import {
+  Mega645Collections,
+  type Mega645DrawAccountStatsDoc,
+  type Mega645DrawAccountStatsEntity,
+} from "@megawin/game-mega645/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { AccountStatsMapper } from "../mappers/account-stats-mapper";
@@ -76,7 +79,9 @@ export class AccountStatsRepository extends BaseRepo<Mega645DrawAccountStatsEnti
    * @param batchMaxId - ObjectId hex entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: AccountStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = deltas.map((delta) => ({

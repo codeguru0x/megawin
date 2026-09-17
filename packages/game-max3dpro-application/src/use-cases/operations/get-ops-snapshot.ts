@@ -1,6 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Max3dproTopPair, TopAccountStat } from "@megawin/game-max3dpro/entities";
-import { OpsAlertStatus } from "@megawin/game-max3dpro/entities";
+import { OpsAlertStatus, type Max3dproTopPair, type TopAccountStat } from "@megawin/game-max3dpro/entities";
 import { computeMax3dproExposure, DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
 
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";

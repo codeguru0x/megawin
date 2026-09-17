@@ -9,8 +9,7 @@
 
 import { createStore } from "zustand/vanilla";
 
-import type { AiThread } from "./thread-storage";
-import { createAndPersistThread, persistThreadRegistry } from "./thread-storage";
+import { createAndPersistThread, persistThreadRegistry, type AiThread } from "./thread-storage";
 
 export interface AiThreadsState {
   /** `false` cho tới khi effect đọc xong `localStorage` — UI dựa vào cờ này để tránh flash/mismatch. */
@@ -98,7 +97,7 @@ export const createAiThreadsStore = () =>
       // Đang ở hội thoại RỖNG (chưa gửi gì) → không tạo thêm, giữ nguyên. Giống ChatGPT: bấm "New
       // chat" khi đang ở chat trắng thì không sinh thêm hội thoại. Bản trước tạo mới vô điều kiện nên
       // mỗi lần staff bấm là +1 "Hội thoại mới" rỗng — verify 17/08 sinh 16 item rác trong registry.
-      if (active && active.title === "" && active.events.length === 0) {
+      if (active?.title === "" && active.events.length === 0) {
         return;
       }
       // Dọn luôn các hội thoại rỗng cũ còn sót (chỉ là vỏ, không có nội dung đã gửi) — nếu không,

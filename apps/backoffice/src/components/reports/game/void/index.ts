@@ -6,14 +6,7 @@
  * ```
  */
 
-export type {
-  VoidDrawRow,
-  VoidDrillLevel,
-  VoidEntryRow,
-  VoidKpiData,
-  VoidPlayerRow,
-  VoidTenantRow,
-} from "./types";
+export type { VoidDrawRow, VoidDrillLevel, VoidEntryRow, VoidKpiData, VoidPlayerRow, VoidTenantRow } from "./types";
 export type { VoidBreadcrumbProps } from "./void-breadcrumb";
 export { VoidBreadcrumb } from "./void-breadcrumb";
 export type { VoidContentProps } from "./void-content";

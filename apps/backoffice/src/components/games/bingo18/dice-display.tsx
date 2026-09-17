@@ -32,10 +32,10 @@ export function Bingo18NumberBall({ number, size = "md", highlight = false, clas
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none leading-none shrink-0 transition-all duration-150",
+        "inline-flex shrink-0 items-center justify-center rounded-full leading-none font-bold tabular-nums transition-all duration-150 select-none",
         ball,
         text,
-        highlight ? "bg-amber-500 text-white ring-2 ring-amber-400 ring-offset-1" : "bg-amber-500 text-white",
+        highlight ? "bg-warning ring-warning text-white ring-2 ring-offset-1" : "bg-warning text-white",
         className,
       )}
     >
@@ -129,9 +129,9 @@ export function DiceDisplay({ numbers, size = "md", showSum = true, className }:
         <Bingo18NumberBall key={i} number={n} size={size} highlight={hasDuplicates && (counts[n] ?? 0) >= 2} />
       ))}
       {showSum && numbers.length > 0 && (
-        <div className="flex items-center gap-1 ml-1">
+        <div className="ml-1 flex items-center gap-1">
           <span className="text-muted-foreground">=</span>
-          <span className={cn("font-bold tabular-nums text-amber-600 dark:text-amber-400", SUM_SIZE[size])}>{sum}</span>
+          <span className={cn("text-warning font-bold tabular-nums", SUM_SIZE[size])}>{sum}</span>
         </div>
       )}
     </div>

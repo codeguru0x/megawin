@@ -32,11 +32,9 @@
  */
 
 import type { Bingo18DrawBettingStatsEntity, OpsAlertsConfig } from "@megawin/game-bingo18/entities";
-import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
-import { computeBingo18Exposure, DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
+import { computeBingo18Exposure, DEFAULT_BINGO18_CONFIG, type Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { TickLoopWorker } from "@megawin/worker-core/workers";
+import { TickLoopWorker, type TickLoopResult, type TickOutcome } from "@megawin/worker-core/workers";
 
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";

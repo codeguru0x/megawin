@@ -32,10 +32,8 @@
  * - `rowErrors` (`Map<drawId, string>`) — lỗi bulk action per-dòng, xoá khi dòng rời `rows`
  *   hoặc staff bỏ chọn lại (plan §8.5).
  */
-
 import {
   createContext,
-  type ReactNode,
   startTransition,
   use,
   useCallback,
@@ -43,6 +41,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 
 import type { OpsHubSnapshotOutput } from "@megawin/game-bingo18-application/use-cases/operations";
@@ -51,8 +50,7 @@ import { deriveHubSummary } from "./derive-hub-summary";
 import type { DayFlowColumn, DerivedRow, OpsFunnel, SellingSummary } from "./hub-types";
 import { buildQueueTables, countRowsByTab, defaultSortForTab } from "./sections/queue/filter-sort-rows";
 import { HUB_GATE_TAB_ORDER, HubGateTab, QueueSortDir, QueueSortKey } from "./sections/queue/queue-types";
-import type { SellingOutlierRow } from "./sections/queue/selling-outliers";
-import { findSellingOutliers } from "./sections/queue/selling-outliers";
+import { findSellingOutliers, type SellingOutlierRow } from "./sections/queue/selling-outliers";
 import { useHubQuery } from "./use-hub-query";
 import { useHubUrlParams } from "./use-hub-url-params";
 
@@ -198,7 +196,7 @@ export function HubProvider({ children }: { children: ReactNode }) {
   const derived = useMemo(() => {
     // `boundaryTick` cố ý làm TRIGGER re-run (không dùng giá trị) — mốc hẹn giờ theo đúng
     // thời điểm đổi trạng thái, không phải tick đều mỗi giây (guideline §5.3). Đọc `void` để
-    // Biome nhận diện là dependency có dùng, tránh bị coi "dependency dư".
+    // Linter nhận diện là dependency có dùng, tránh bị coi "dependency dư".
     void boundaryTick;
     if (!rows || !thresholds) {
       return {

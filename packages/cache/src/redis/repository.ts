@@ -22,7 +22,7 @@
  */
 
 import { DEFAULT_REDIS_ENV_KEY, DELETE_BATCH_SIZE } from "../constants";
-import getRedisClient from "./client";
+import { getRedisClient } from "./client";
 import type {
   ExpireMode,
   RedisClient,
@@ -89,7 +89,9 @@ export class RedisRepository {
    */
   public async getJson<T>(key: string, commandOptions?: RedisCommandOptions): Promise<T | null> {
     const raw = await this.get(key, commandOptions);
-    if (raw === null) return null;
+    if (raw === null) {
+      return null;
+    }
 
     try {
       return JSON.parse(raw) as T;
@@ -139,7 +141,9 @@ export class RedisRepository {
    */
   public async delete(keys: string | string[], commandOptions?: RedisCommandOptions): Promise<number> {
     const list = Array.isArray(keys) ? keys : [keys];
-    if (list.length === 0) return 0;
+    if (list.length === 0) {
+      return 0;
+    }
 
     const client = await this.getClient(commandOptions);
     return await client.del(list);
@@ -276,7 +280,8 @@ export class RedisRepository {
   /** SISMEMBER — member có trong set không. */
   public async sIsMember(key: string, member: string): Promise<boolean> {
     const client = await this.getClient();
-    return (await client.sIsMember(key, member)) === 1;
+    // node-redis type khai number (0|1); runtime một số bản trả boolean — Boolean() cover cả hai.
+    return Boolean(await client.sIsMember(key, member));
   }
 
   // ── Sorted Set ─────────────────────────────────────────────────────────────

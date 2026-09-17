@@ -1,7 +1,7 @@
 "use client";
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -110,7 +110,7 @@ function useDrawAction<TBody = void>(
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: max3dKeys.all });
+      void qc.invalidateQueries({ queryKey: max3dKeys.all });
       toast.success(successMessage);
     },
     onError: (err) => {

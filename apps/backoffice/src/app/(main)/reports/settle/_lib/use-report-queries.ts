@@ -1,6 +1,5 @@
 "use client";
 
-import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
 import type { TenantGameBreakdownRow, TenantSummaryRow } from "@megawin/game-core-application/repos";
 import type {
   GetDailyOverviewOutput,
@@ -8,8 +7,9 @@ import type {
   GetSystemOutstandingOutput,
   GetTenantSummaryOutput,
 } from "@megawin/game-core-application/use-cases/reports";
+import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
 import { apiClient } from "@megawin/next/client";
-import { noop, type QueryClient, useQuery } from "@tanstack/react-query";
+import { noop, useQuery, type QueryClient } from "@tanstack/react-query";
 
 import { reportsKeys } from "@/lib/query-keys";
 

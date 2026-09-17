@@ -6,13 +6,13 @@ import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { TicketEntryEntity } from "@megawin/game-max3dpro/entities";
 import { toTenantUsername } from "@megawin/shared/utils/player-username";
 
-import type {
-  OutstandingDrawRow,
-  OutstandingEntryRow,
-  OutstandingPlayerRow,
-  OutstandingTenantRow,
+import {
+  OutstandingContent,
+  type OutstandingDrawRow,
+  type OutstandingEntryRow,
+  type OutstandingPlayerRow,
+  type OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
 import { GAME_COLORS } from "@/lib/game-colors";
 
 import { Max3dproEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
@@ -194,7 +194,9 @@ export function Max3DProOutstandingContent() {
         }}
         onEntryClick={(row) => {
           const entity = entryEntityMap.get(row.id);
-          if (entity) setSelectedEntry(entity);
+          if (entity) {
+            setSelectedEntry(entity);
+          }
         }}
         showLineCount={true}
         lineCountLabel="Bộ số"

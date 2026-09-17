@@ -5,7 +5,7 @@
  * đếm consensus theo `state` (toàn cục + breakdown mỗi game) và số alert `New` chưa xử lý.
  */
 
-import { type ConsensusState, ResultFeedGameKey } from "@megawin/resultfeed/entities";
+import { ResultFeedGameKey, type ConsensusState } from "@megawin/resultfeed/entities";
 
 import { AlertRepository } from "../../infras/repos/alert-repo";
 import { ConsensusRepository } from "../../infras/repos/consensus-repo";

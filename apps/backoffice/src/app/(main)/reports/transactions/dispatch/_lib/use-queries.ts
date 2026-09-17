@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import type {
   CancelOrderOutput,
   GetBatchProgressOutput,
@@ -19,7 +19,9 @@ import { tenantDispatchKeys } from "@/lib/query-keys";
  * Serialize cursor object → `"{iso}|{id}"` để server parse lại.
  */
 function serializeCursor(cursor: { createdAt: string; id: string } | null): string | undefined {
-  if (!cursor) return undefined;
+  if (!cursor) {
+    return undefined;
+  }
   return `${cursor.createdAt}|${cursor.id}`;
 }
 
@@ -60,17 +62,37 @@ export function useDispatchList(filters: DispatchListFilters) {
 
   const qpBase: Record<string, string> = {};
   if (isIdentityMode) {
-    if (filters.tx) qpBase.tx = filters.tx;
-    if (filters.batchKey) qpBase.batchKey = filters.batchKey;
-    if (filters.accountId) qpBase.accountId = filters.accountId;
-    if (filters.username) qpBase.username = filters.username;
+    if (filters.tx) {
+      qpBase.tx = filters.tx;
+    }
+    if (filters.batchKey) {
+      qpBase.batchKey = filters.batchKey;
+    }
+    if (filters.accountId) {
+      qpBase.accountId = filters.accountId;
+    }
+    if (filters.username) {
+      qpBase.username = filters.username;
+    }
   } else {
-    if (filters.tenantId) qpBase.tenantId = filters.tenantId;
-    if (filters.status) qpBase.status = filters.status;
-    if (filters.sourceKind) qpBase.sourceKind = filters.sourceKind;
-    if (filters.retryMode) qpBase.retryMode = filters.retryMode;
-    if (filters.from) qpBase.from = filters.from;
-    if (filters.to) qpBase.to = filters.to;
+    if (filters.tenantId) {
+      qpBase.tenantId = filters.tenantId;
+    }
+    if (filters.status) {
+      qpBase.status = filters.status;
+    }
+    if (filters.sourceKind) {
+      qpBase.sourceKind = filters.sourceKind;
+    }
+    if (filters.retryMode) {
+      qpBase.retryMode = filters.retryMode;
+    }
+    if (filters.from) {
+      qpBase.from = filters.from;
+    }
+    if (filters.to) {
+      qpBase.to = filters.to;
+    }
   }
 
   // Polling 30s chỉ khi range mode + live filter (pending/stuck).
@@ -94,7 +116,9 @@ export function useDispatchList(filters: DispatchListFilters) {
     queryFn: ({ pageParam }) => {
       const params: Record<string, string> = { ...qpBase };
       const serialized = serializeCursor(pageParam);
-      if (serialized) params.cursor = serialized;
+      if (serialized) {
+        params.cursor = serialized;
+      }
       return apiClient.get<ListDispatchOrdersOutput>("/tenant-dispatch/list", { params });
     },
     getNextPageParam: (last) => last.nextCursor,
@@ -117,12 +141,24 @@ export interface DispatchSummaryFilters {
 
 export function useDispatchSummary(filters: DispatchSummaryFilters) {
   const qp: Record<string, string> = {};
-  if (filters.tenantId) qp.tenantId = filters.tenantId;
-  if (filters.gameId) qp.gameId = filters.gameId;
-  if (filters.batchKey) qp.batchKey = filters.batchKey;
-  if (filters.from) qp.from = filters.from;
-  if (filters.to) qp.to = filters.to;
-  if (filters.stuckMinRetry) qp.stuckMinRetry = String(filters.stuckMinRetry);
+  if (filters.tenantId) {
+    qp.tenantId = filters.tenantId;
+  }
+  if (filters.gameId) {
+    qp.gameId = filters.gameId;
+  }
+  if (filters.batchKey) {
+    qp.batchKey = filters.batchKey;
+  }
+  if (filters.from) {
+    qp.from = filters.from;
+  }
+  if (filters.to) {
+    qp.to = filters.to;
+  }
+  if (filters.stuckMinRetry) {
+    qp.stuckMinRetry = String(filters.stuckMinRetry);
+  }
 
   return useQuery({
     queryKey: tenantDispatchKeys.summary({
@@ -175,8 +211,12 @@ export function useBatchProgress(batchKey: string | null) {
  */
 export function useDispatchFacets(filters: { from?: string; to?: string }) {
   const qp: Record<string, string> = {};
-  if (filters.from) qp.from = filters.from;
-  if (filters.to) qp.to = filters.to;
+  if (filters.from) {
+    qp.from = filters.from;
+  }
+  if (filters.to) {
+    qp.to = filters.to;
+  }
 
   return useQuery({
     queryKey: tenantDispatchKeys.facets(filters),

@@ -1,7 +1,7 @@
 "use client";
 
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { Building2, DollarSign, Receipt, TrendingDown, TrendingUp } from "lucide-react";
 
@@ -12,13 +12,17 @@ import { cn } from "@/lib/utils";
 /** Badge background tương ứng ngưỡng payout ratio. */
 function payoutBadgeClass(ratio: number): string {
   const color = getPayoutRatioColor(ratio);
-  if (color === "text-loss") return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400";
-  if (color === "text-warning") return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400";
-  return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400";
+  if (color === "text-loss") {
+    return "bg-loss text-loss";
+  }
+  if (color === "text-warning") {
+    return "bg-warning text-warning";
+  }
+  return "bg-profit text-profit";
 }
 
 /** Badge background cho win rate (luôn dùng tông xanh dương nhẹ). */
-const WIN_RATE_BADGE = "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400";
+const WIN_RATE_BADGE = "bg-info text-info";
 
 interface SettleKpiStripProps {
   data: PlayerOverviewResult | undefined;
@@ -64,12 +68,12 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Tổng đơn cược — tất cả entries trong báo cáo settle đều đã kết sổ */}
       <KpiCard
         icon={Receipt}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tổng đơn cược"
         value={formatNumber(totalEntryCount)}
         subNode={
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
             Thắng {formatNumber(totalWinCount)}
             <span
               className={cn("inline-flex items-center rounded px-1 py-0.5 font-semibold tabular-nums", WIN_RATE_BADGE)}
@@ -83,8 +87,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Tiền cược */}
       <KpiCard
         icon={DollarSign}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label={REPORT_COLUMN_LABELS.totalStake}
         value={formatVNDCompact(totalStake)}
         sub={`TB ${formatNumber(avgBet)} ₫/đơn`}
@@ -93,12 +97,12 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Trả thưởng + Tỷ lệ TT */}
       <KpiCard
         icon={TrendingDown}
-        iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
-        iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
+        iconBg={payoutColor ? "bg-loss" : "bg-warning"}
+        iconColor={payoutColor ? "text-loss" : "text-warning"}
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={
-          <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+          <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
             Tỷ lệ TT{" "}
             <span
               className={cn(
@@ -115,8 +119,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Doanh thu thuần */}
       <KpiCard
         icon={TrendingUp}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label={REPORT_COLUMN_LABELS.ggr}
         value={formatVNDCompact(ggr)}
       />
@@ -124,8 +128,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Hoa hồng đại lý */}
       <KpiCard
         icon={Building2}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label={REPORT_COLUMN_LABELS.totalCommission}
         value={formatVNDCompact(totalCommission)}
       />
@@ -133,8 +137,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={TrendingUp}
-        iconBg={netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
-        iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
+        iconBg={netProfit < 0 ? "bg-loss" : "bg-game-max3d"}
+        iconColor={netProfit < 0 ? "text-loss" : "text-game-max3d"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
         valueClass={getNetProfitColor(netProfit)}
@@ -158,15 +162,15 @@ interface KpiCardProps {
 
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, valueClass, sub, subNode }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>{value}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className={cn("text-foreground text-lg font-bold tabular-nums", valueClass ?? "")}>{value}</p>
         {subNode}
-        {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
+        {sub && <p className="text-muted-foreground truncate text-xs">{sub}</p>}
       </div>
     </div>
   );

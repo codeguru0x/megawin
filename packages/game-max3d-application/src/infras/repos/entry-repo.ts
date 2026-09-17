@@ -1,15 +1,14 @@
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import {
-  type EntryPayout,
-  type EntryVoidInfo,
   Max3dCollections,
   PlayMode,
-  type TicketEntryDoc,
+  type EntryPayout,
+  type EntryVoidInfo,
+  type Max3dDrawResult,
   type TicketEntryEntity,
 } from "@megawin/game-max3d/entities";
-import { type Long, ObjectId } from "mongodb";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -52,7 +51,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /** Insert nhiều entries cùng 1 batch, dùng cùng version. Trả về insertedCount. */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
-    if (docs.length === 0) return 0;
+    if (docs.length === 0) {
+      return 0;
+    }
     const version = await this.nextVersion();
     const stamped = docs.map((doc) => ({ ...doc, version }));
     const result = await this.insertMany(stamped as any[]);
@@ -187,7 +188,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       result: Max3dDrawResult & { publishedAt: Date };
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();

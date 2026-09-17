@@ -67,26 +67,26 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       href={href}
       className={cn(
         "group flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors",
-        "hover:bg-muted/60 dark:hover:bg-muted/30",
-        isActive && "bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-100/60 dark:hover:bg-blue-950/30",
+        "hover:bg-muted/60",
+        isActive && "bg-info/50 hover:bg-info/60",
       )}
     >
       <span className="size-2 shrink-0 rounded-full" style={{ background: c.hex }} />
-      <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
+      <span className="text-foreground min-w-0 flex-1 truncate text-xs font-medium">
         {getGameLabel(event.gameProduct)}
       </span>
-      <span className="shrink-0 font-mono text-xs text-muted-foreground">
+      <span className="text-muted-foreground shrink-0 font-mono text-xs">
         {formatDrawLabel(event.drawDate, event.drawNo)}
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
         {isActive && event.pendingEntries != null && (
-          <span className="text-xs tabular-nums text-blue-600 dark:text-blue-400">
+          <span className="text-info text-xs tabular-nums">
             {formatNumber(event.pendingEntries)} vé
             {event.pendingStake != null && event.pendingStake > 0 && <> · {formatVNDCompact(event.pendingStake)}</>}
           </span>
         )}
-        <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">{relTime}</span>
-        <ExternalLink className="size-3 shrink-0 text-muted-foreground/0 transition-opacity group-hover:text-muted-foreground/60" />
+        <span className="text-muted-foreground w-16 text-right text-xs tabular-nums">{relTime}</span>
+        <ExternalLink className="text-muted-foreground/0 group-hover:text-muted-foreground/60 size-3 shrink-0 transition-opacity" />
       </div>
     </Link>
   );
@@ -111,15 +111,15 @@ interface ColumnProps {
  */
 function Column({ title, icon, count, accent, children, emptyText }: ColumnProps) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col rounded-lg border border-border/50 bg-muted/20">
+    <div className="border-border/50 bg-muted/20 flex min-w-0 flex-1 flex-col rounded-lg border">
       {/* Column header */}
       <div className="flex items-center gap-1.5 border-b px-3 py-2">
         {icon}
         <span
           className={cn(
             "text-xs font-semibold",
-            accent === "blue" && "text-blue-700 dark:text-blue-400",
-            accent === "emerald" && "text-emerald-700 dark:text-emerald-400",
+            accent === "blue" && "text-info",
+            accent === "emerald" && "text-profit",
             accent === "muted" && "text-muted-foreground",
           )}
         >
@@ -128,9 +128,9 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         <Badge
           variant="secondary"
           className={cn(
-            "ml-auto h-4 min-w-5 justify-center px-1.5 text-[10px] font-bold",
-            accent === "blue" && "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
-            accent === "emerald" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+            "ml-auto h-4 min-w-5 justify-center px-1.5 text-xs font-bold",
+            accent === "blue" && "bg-info text-info",
+            accent === "emerald" && "bg-profit text-profit",
             accent === "muted" && "bg-muted text-muted-foreground",
           )}
         >
@@ -142,7 +142,7 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         {count > 0 ? (
           children
         ) : (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">{emptyText ?? "Không có"}</p>
+          <p className="text-muted-foreground px-2 py-6 text-center text-xs">{emptyText ?? "Không có"}</p>
         )}
       </div>
     </div>
@@ -154,13 +154,13 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
 export function DrawTimelineSkeleton() {
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <Skeleton className="h-4 w-32" />
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         <div className="grid grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, c) => (
-            <div key={c} className="space-y-2 rounded-lg border border-border/50 p-3">
+            <div key={c} className="border-border/50 space-y-2 rounded-lg border p-3">
               <Skeleton className="h-4 w-24" />
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-7 rounded-md" />
@@ -190,8 +190,12 @@ export function DrawTimelineSkeleton() {
  * - "Sắp diễn ra" = scheduled — chưa mở bao giờ
  */
 export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
-  if (isLoading) return <DrawTimelineSkeleton />;
-  if (!data) return null;
+  if (isLoading) {
+    return <DrawTimelineSkeleton />;
+  }
+  if (!data) {
+    return null;
+  }
 
   const active = data.events.filter((e) => e.status === "active");
   const settled = data.events.filter((e) => e.status === "settled");
@@ -200,19 +204,19 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <CalendarClock className="size-4 text-muted-foreground" />
+          <CalendarClock className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Lịch quay số</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 px-5 pb-4 pt-0">
+      <CardContent className="space-y-3 px-5 pt-0 pb-4">
         {/* ── High-freq games — compact inline ─────────────────────── */}
         {hasHighFreq && (
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1">
-              <Zap className="size-3 text-amber-500" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quay nhanh</span>
+              <Zap className="text-warning size-3" />
+              <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">Quay nhanh</span>
             </div>
             {data.highFreqGames.map((g) => {
               const c = getGameColors(g.gameProduct);
@@ -221,20 +225,18 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
                   key={g.gameProduct}
                   prefetch={false}
                   href={`/games/${g.gameProduct}/operations`}
-                  className="flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/30 px-2 py-1 transition-colors hover:bg-muted/60"
+                  className="border-border/50 bg-muted/30 hover:bg-muted/60 flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors"
                 >
                   <span className="size-1.5 rounded-full" style={{ background: c.hex }} />
                   <span className="text-xs font-medium">{getGameLabel(g.gameProduct)}</span>
-                  <span className="text-xs text-muted-foreground">·</span>
+                  <span className="text-muted-foreground text-xs">·</span>
                   {g.activeCount > 0 && (
-                    <span className="text-xs tabular-nums text-blue-600 dark:text-blue-400">
-                      {g.activeCount} kỳ đang diễn ra
-                    </span>
+                    <span className="text-info text-xs tabular-nums">{g.activeCount} kỳ đang diễn ra</span>
                   )}
                   {g.scheduledCount > 0 && (
                     <>
-                      <span className="text-xs text-muted-foreground">·</span>
-                      <span className="text-xs tabular-nums text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">·</span>
+                      <span className="text-muted-foreground text-xs tabular-nums">
                         {g.scheduledCount} kỳ sắp diễn ra
                       </span>
                     </>
@@ -252,11 +254,11 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
             icon={
               active.length > 0 ? (
                 <span className="relative flex size-2">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
-                  <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+                  <span className="bg-info absolute inline-flex size-full animate-ping rounded-full opacity-75" />
+                  <span className="bg-info relative inline-flex size-2 rounded-full" />
                 </span>
               ) : (
-                <Play className="size-3.5 fill-blue-500 text-blue-500" />
+                <Play className="fill-info text-info size-3.5" />
               )
             }
             count={active.length}
@@ -270,7 +272,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
 
           <Column
             title="Vừa hoàn thành"
-            icon={<CheckCircle2 className="size-3.5 text-emerald-500" />}
+            icon={<CheckCircle2 className="text-profit size-3.5" />}
             count={settled.length}
             accent="emerald"
             emptyText="Chưa có kỳ nào hoàn thành"
@@ -282,7 +284,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
 
           <Column
             title="Sắp diễn ra"
-            icon={<Clock3 className="size-3.5 text-muted-foreground" />}
+            icon={<Clock3 className="text-muted-foreground size-3.5" />}
             count={scheduled.length}
             accent="muted"
             emptyText="Không có kỳ sắp tới"

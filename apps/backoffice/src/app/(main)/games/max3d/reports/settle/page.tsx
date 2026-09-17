@@ -19,12 +19,12 @@ function Max3DFinancialContent() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-violet-600 shadow-sm">
+          <div className="from-game-max3d to-game-max3d-muted flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D — Báo cáo tài chính</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Max 3D — Báo cáo tài chính</h1>
+            <p className="text-muted-foreground text-xs">
               Doanh thu, trả thưởng, hoa hồng theo kỳ quay và đại lý · T2, T4, T6
             </p>
           </div>
@@ -41,14 +41,14 @@ function Max3DFinancialContent() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => void setTab(v as "draws" | "tenants")}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "draws" | "tenants")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="draws" className="gap-1.5">
-            <CalendarRange className="size-4 text-red-500" />
+            <CalendarRange className="text-loss size-4" />
             Theo kỳ quay
           </TabsTrigger>
           <TabsTrigger value="tenants" className="gap-1.5">
-            <Building2 className="size-4 text-blue-500" />
+            <Building2 className="text-info size-4" />
             Theo đại lý
           </TabsTrigger>
         </TabsList>

@@ -19,7 +19,7 @@ export interface SourcesTableProps {
 export function SourcesTable({ rows, isLoading, onEdit }: SourcesTableProps) {
   if (isLoading) {
     return (
-      <div className="flex h-40 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-40 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải danh sách nguồn…</span>
       </div>
@@ -44,8 +44,8 @@ export function SourcesTable({ rows, isLoading, onEdit }: SourcesTableProps) {
             <TableRow key={row.id}>
               <TableCell className="pl-5">
                 <div className="flex flex-col">
-                  <span className="font-medium text-sm">{row.name}</span>
-                  <span className="font-mono text-muted-foreground text-xs">{row.sourceId}</span>
+                  <span className="text-sm font-medium">{row.name}</span>
+                  <span className="text-muted-foreground font-mono text-xs">{row.sourceId}</span>
                 </div>
               </TableCell>
               <TableCell>

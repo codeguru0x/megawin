@@ -1,8 +1,14 @@
 import { AuditRepo } from "@megawin/data/mongo";
-import { type Document, type Filter, ObjectId } from "mongodb";
+import { ObjectId, type Document, type Filter } from "mongodb";
 
-import type { AuditLogDoc, AuditLogEntity, AuditLogInsertDoc } from "../../entities";
-import { AuditTargetType, SELF_ACTIVITY_ACTIONS, SELF_ACTIVITY_TARGET_ACTIONS } from "../../entities";
+import {
+  AuditTargetType,
+  SELF_ACTIVITY_ACTIONS,
+  SELF_ACTIVITY_TARGET_ACTIONS,
+  type AuditLogDoc,
+  type AuditLogEntity,
+  type AuditLogInsertDoc,
+} from "../../entities";
 import { AUDIT_LOG_COLLECTION } from "../../indexes";
 import { AuditLogMapper } from "../mappers";
 import type { AuditLogCursor, AuditLogCursorPage, AuditLogFilter, AuditLogPageOptions } from "./types";
@@ -102,8 +108,12 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
 
     if (filter.from || filter.to) {
       const range: { $gte?: Date; $lte?: Date } = {};
-      if (filter.from) range.$gte = filter.from;
-      if (filter.to) range.$lte = filter.to;
+      if (filter.from) {
+        range.$gte = filter.from;
+      }
+      if (filter.to) {
+        range.$lte = filter.to;
+      }
       conditions.push({ ts: range } as Filter<AuditLogDoc>);
     }
 

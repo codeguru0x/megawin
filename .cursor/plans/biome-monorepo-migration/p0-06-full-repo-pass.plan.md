@@ -79,7 +79,7 @@ Ghi kết quả vào chính file này thành bảng backlog (cập nhật khi th
 | `suspicious/noArrayIndexKey` | 194 | warning | Backlog | Chủ yếu backoffice list render |
 | `suspicious/noExplicitAny` | 179 | warning | Backlog dài hạn (giảm từ 505 khảo sát 07/08 nhờ override `infras/**` off) | Đưa `any` ở `use-cases/**` về type thật, ưu tiên code tính tiền |
 | `suspicious/noGlobalIsNan` | 68 | warning | Sửa ngay được (đổi `isNaN`→`Number.isNaN`) | Backlog ngắn hạn |
-| `style/noProcessEnv` | 29 | warning | Sửa ngay được | Dồn về `env.ts`/config tập trung; bao gồm `tooling/vitest-config/src/setup-db-guard.ts` (2) |
+| `style/noProcessEnv` | 29 | warning | Sửa ngay được | Dồn về `env.ts`/config tập trung; bao gồm helpers env trong `tooling/vitest-config` |
 | `correctness/noUnusedVariables` | 16 | warning | Sửa ngay | |
 | `correctness/noUnusedFunctionParameters` | 10 | warning | Sửa ngay | |
 | `suspicious/noConfusingVoidType` | 25 | warning | Backlog | `undefined as void` pattern — cần đổi type |
@@ -141,7 +141,7 @@ Nguyên tắc: **không hạ rule xuống `off` để làm sạch output**. Nế
 |---|---|---|
 | `biome check .` → 0 error | ❌ **Không đạt** | Còn 107 error, toàn bộ đã phân loại vào backlog (bảng trên) với lý do rõ ràng — chủ yếu do commit 3 (unsafe) bị huỷ theo đúng điều khoản "diff quá lớn" của chính plan này |
 | `pnpm check-types` xanh | ⚠️ Xanh trừ 1 lỗi tiền tồn | `apps/api-tenant/test/list-players.test.ts` — xác nhận KHÔNG do format/autofix gây ra (file không nằm trong diff commit 1/2), tồn tại từ trước migration |
-| `pnpm test` xanh | ⚠️ Xanh trừ lỗi tiền tồn | (a) nhiều package thiếu `MONGODB_URI` local trong `.env.test.local` → db-guard chặn hợp lệ; (b) `apps/api-player` có 3 assertion fail thật (đã verify diff format/autofix không đụng logic); (c) `player-sdk` 3 test fail đã biết trước theo `player-sdk-jsdoc.mdc`. Không có failure MỚI do format/autofix |
+| `pnpm test` xanh | ⚠️ Xanh trừ lỗi tiền tồn | (a) một số package integration cần Docker/Testcontainers; (b) `apps/api-player` có 3 assertion fail thật (đã verify diff format/autofix không đụng logic); (c) `player-sdk` 3 test fail đã biết trước theo `player-sdk-jsdoc.mdc`. Không có failure MỚI do format/autofix |
 | 2-3 commit tách biệt | ❌ **Không thực hiện** | Theo quyết định của user: KHÔNG tự tạo git commit trong phiên này. Toàn bộ thay đổi (format-only + safe autofix) đang nằm chung, CHƯA commit, trong working tree. User tự chia commit khi review |
 | `.git-blame-ignore-revs` | ❌ **Chưa tạo** | Phụ thuộc SHA của commit format-only — chỉ tạo được sau khi user tự commit. Xem hướng dẫn ở cuối file |
 | Bảng backlog điền số thật | ✅ Đã điền | Xem bảng trên |

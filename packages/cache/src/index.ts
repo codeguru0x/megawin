@@ -17,11 +17,5 @@ export { createCachedFetcher } from "./cached-fetcher";
 export { cacheKey, hashKeyPart } from "./keys";
 export { CacheNamespace } from "./namespaces";
 export type { MemoryCacheStoreOptions, RedisCacheStoreOptions, TieredCacheOptions } from "./stores";
-export {
-  getDefaultCacheStore,
-  MemoryCacheStore,
-  NoopCacheStore,
-  RedisCacheStore,
-  TieredCache,
-} from "./stores";
+export { getDefaultCacheStore, MemoryCacheStore, NoopCacheStore, RedisCacheStore, TieredCache } from "./stores";
 export type { CachedFetcher, CachedFetcherOptions, CacheFetchEvent, CacheStore } from "./types";

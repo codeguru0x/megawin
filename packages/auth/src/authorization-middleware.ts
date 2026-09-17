@@ -14,20 +14,25 @@
  * Sau khi verify → gán event.user (AuthContext).
  */
 
-import type { CompanyRole as CompanyRoleType } from "@megawin/identity/entities";
-import { AccountType, AgentRole, CompanyRole, PlayerRole } from "@megawin/identity/entities";
+import {
+  AccountType,
+  AgentRole,
+  CompanyRole,
+  PlayerRole,
+  type CompanyRole as CompanyRoleType,
+} from "@megawin/identity/entities";
 import type { ApiErrorResponse } from "@megawin/shared/api-types";
 import { appErrorToStatusCode } from "@megawin/shared/errors";
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda/trigger/api-gateway-proxy";
 
 import {
+  checkAuthorization,
+  getAuthContextFromApiGatewayEvent,
   type ApiGatewayEventWithAuthorizer,
   type AuthContext,
   type AuthContextAdapterOptions,
   type AuthRequirements,
   type CompanyAuthContext,
-  checkAuthorization,
-  getAuthContextFromApiGatewayEvent,
   type TenantAuthContext,
 } from "./authorization-api-gateway";
 

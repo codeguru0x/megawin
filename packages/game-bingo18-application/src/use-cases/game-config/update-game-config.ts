@@ -73,15 +73,33 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     }
 
     const cleanMerged: Record<string, unknown> = {};
-    if (merged.rates) cleanMerged.rates = merged.rates;
-    if (merged.singleNumPrizes) cleanMerged.singleNumPrizes = merged.singleNumPrizes;
-    if (merged.doubleMatchPrizes) cleanMerged.doubleMatchPrizes = merged.doubleMatchPrizes;
-    if (merged.tripleMatchPrizes) cleanMerged.tripleMatchPrizes = merged.tripleMatchPrizes;
-    if (merged.sumTotalPrizes) cleanMerged.sumTotalPrizes = merged.sumTotalPrizes;
-    if (merged.bigSmallDrawPrizes) cleanMerged.bigSmallDrawPrizes = merged.bigSmallDrawPrizes;
-    if (merged.play) cleanMerged.play = merged.play;
-    if (merged.ops) cleanMerged.ops = merged.ops;
-    if (merged.vietlott) cleanMerged.vietlott = merged.vietlott;
+    if (merged.rates) {
+      cleanMerged.rates = merged.rates;
+    }
+    if (merged.singleNumPrizes) {
+      cleanMerged.singleNumPrizes = merged.singleNumPrizes;
+    }
+    if (merged.doubleMatchPrizes) {
+      cleanMerged.doubleMatchPrizes = merged.doubleMatchPrizes;
+    }
+    if (merged.tripleMatchPrizes) {
+      cleanMerged.tripleMatchPrizes = merged.tripleMatchPrizes;
+    }
+    if (merged.sumTotalPrizes) {
+      cleanMerged.sumTotalPrizes = merged.sumTotalPrizes;
+    }
+    if (merged.bigSmallDrawPrizes) {
+      cleanMerged.bigSmallDrawPrizes = merged.bigSmallDrawPrizes;
+    }
+    if (merged.play) {
+      cleanMerged.play = merged.play;
+    }
+    if (merged.ops) {
+      cleanMerged.ops = merged.ops;
+    }
+    if (merged.vietlott) {
+      cleanMerged.vietlott = merged.vietlott;
+    }
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 

@@ -6,13 +6,13 @@ import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { toTenantUsername } from "@megawin/shared/utils/player-username";
 
-import type {
-  OutstandingDrawRow,
-  OutstandingEntryRow,
-  OutstandingPlayerRow,
-  OutstandingTenantRow,
+import {
+  OutstandingContent,
+  type OutstandingDrawRow,
+  type OutstandingEntryRow,
+  type OutstandingPlayerRow,
+  type OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
 import { GAME_COLORS } from "@/lib/game-colors";
 
 import { Bingo18EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
@@ -194,7 +194,9 @@ export function Bingo18OutstandingContent() {
         }}
         onEntryClick={(row) => {
           const entity = entryEntityMap.get(row.id);
-          if (entity) setSelectedEntry(entity);
+          if (entity) {
+            setSelectedEntry(entity);
+          }
         }}
         showLineCount={false}
       />

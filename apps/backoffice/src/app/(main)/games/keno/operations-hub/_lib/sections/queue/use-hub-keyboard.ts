@@ -13,7 +13,6 @@
  * Bỏ qua toàn bộ phím tắt khi đang gõ trong `input`/`textarea` (ô search 5B, ô `reason` dialog)
  * — nếu không, gõ chữ `r` trong ô lý do huỷ sẽ refetch giữa lúc đang nhập.
  */
-
 import { useEffect, useRef } from "react";
 
 import { toast } from "sonner";

@@ -19,16 +19,16 @@ export function NumberHeatmapCellDetail({ item, badge }: { item: NumberHeatmapHo
         <span className="text-xs font-semibold">Số {item.number}</span>
       </div>
       {isEmpty ? (
-        <p className="text-xs text-muted-foreground">Chưa có cược</p>
+        <p className="text-muted-foreground text-xs">Chưa có cược</p>
       ) : (
         <div className="min-w-37 space-y-1">
           <div className="flex justify-between gap-8">
-            <span className="text-xs text-muted-foreground">Số bộ cược chứa số</span>
-            <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(item.sets)}</span>
+            <span className="text-muted-foreground text-xs">Số bộ cược chứa số</span>
+            <span className="text-foreground text-xs font-semibold tabular-nums">{formatNumber(item.sets)}</span>
           </div>
           <div className="flex justify-between gap-8">
-            <span className="text-xs text-muted-foreground">Tổng cược</span>
-            <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(item.amount)}</span>
+            <span className="text-muted-foreground text-xs">Tổng cược</span>
+            <span className="text-foreground text-xs font-semibold tabular-nums">{formatNumber(item.amount)}</span>
           </div>
         </div>
       )}

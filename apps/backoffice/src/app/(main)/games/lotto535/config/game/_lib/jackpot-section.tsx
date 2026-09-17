@@ -36,11 +36,11 @@ interface JackpotSectionProps {
 }
 
 const TIER_LABELS: Record<string, { label: string; badge: string; color: string }> = {
-  tier1: { label: "Giải Nhất", badge: "1st", color: "bg-amber-500 text-white" },
-  tier2: { label: "Giải Nhì", badge: "2nd", color: "bg-slate-400 text-white" },
-  tier3: { label: "Giải Ba", badge: "3rd", color: "bg-amber-700 text-white" },
-  tier4: { label: "Giải Tư", badge: "4th", color: "bg-slate-500 text-white" },
-  tier5: { label: "Giải Năm", badge: "5th", color: "bg-slate-600 text-white" },
+  tier1: { label: "Giải Nhất", badge: "1st", color: "bg-warning text-white" },
+  tier2: { label: "Giải Nhì", badge: "2nd", color: "bg-muted text-white" },
+  tier3: { label: "Giải Ba", badge: "3rd", color: "bg-warning text-white" },
+  tier4: { label: "Giải Tư", badge: "4th", color: "bg-muted text-white" },
+  tier5: { label: "Giải Năm", badge: "5th", color: "bg-muted text-white" },
 };
 
 export function JackpotSection({ config, onSave, isPending }: JackpotSectionProps) {
@@ -83,7 +83,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
         {label}
         <Tooltip>
           <TooltipTrigger asChild>
-            <HelpCircle className="size-3.5 text-muted-foreground/60 cursor-help" />
+            <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
           </TooltipTrigger>
           <TooltipContent side="top" className="max-w-72 text-xs">
             {tip}
@@ -101,7 +101,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
     (form.watch("tier5") || 0);
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
@@ -109,8 +109,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               {/* Left: Seed & Threshold */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Cấu hình Jackpot</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Cấu hình Jackpot</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Giá trị khởi điểm khi bắt đầu chu kỳ mới và ngưỡng kích hoạt chia
                   </p>
                 </div>
@@ -120,7 +120,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   name="seedAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
+                      <FormLabel className="text-muted-foreground text-xs">
                         <LabelWithTooltip
                           label="Giá trị khởi điểm"
                           tip="Số tiền khởi điểm của Jackpot khi bắt đầu chu kỳ mới (sau khi có người trúng Jackpot hoặc reset). Đây là giá trị tối thiểu người chơi có thể trúng Jackpot."
@@ -136,7 +136,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                             name={field.name}
                             ref={field.ref}
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                             VND
                           </span>
                         </div>
@@ -152,7 +152,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   name="splitThreshold"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
+                      <FormLabel className="text-muted-foreground text-xs">
                         <LabelWithTooltip
                           label="Ngưỡng kích hoạt chia (Ngưỡng chia)"
                           tip="Khi quỹ Jackpot vượt ngưỡng này, hệ thống sẽ kích hoạt cơ chế chia (split) — phân bổ phần vượt vào các giải cố định theo tỷ lệ chia bên phải. Mục đích: hạn chế Jackpot tích luỹ quá lớn."
@@ -168,12 +168,12 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                             name={field.name}
                             ref={field.ref}
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                             VND
                           </span>
                         </div>
                       </FormControl>
-                      <p className="text-xs text-muted-foreground tabular-nums">
+                      <p className="text-muted-foreground text-xs tabular-nums">
                         Kích hoạt chia khi Jackpot &ge; {fmt(field.value || 0)}đ
                       </p>
                       <FormMessage />
@@ -183,10 +183,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               </div>
 
               {/* Right: Split Ratios (Ngưỡng chia) */}
-              <div className="border-t p-6 lg:border-l lg:border-t-0">
+              <div className="border-t p-6 lg:border-t-0 lg:border-l">
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">Tỷ lệ phân bổ khi chia (Ngưỡng chia)</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Tỷ lệ phân bổ khi chia (Ngưỡng chia)</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ phần dưới đây
                   </p>
                 </div>
@@ -203,7 +203,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                         name={t}
                         render={({ field }) => (
                           <FormItem>
-                            <div className="group flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50">
+                            <div className="group bg-muted/30 hover:bg-muted/50 flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors">
                               <Badge className={`${tier.color} w-9 justify-center text-xs font-bold`}>
                                 {tier.badge}
                               </Badge>
@@ -219,7 +219,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                                   thousandSeparator={false}
                                 />
                               </FormControl>
-                              <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">{pct}%</span>
+                              <span className="text-muted-foreground w-14 text-right text-xs tabular-nums">{pct}%</span>
                             </div>
                             <FormMessage />
                           </FormItem>
@@ -232,8 +232,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     <Badge variant="outline" className="w-9 justify-center text-xs">
                       KK
                     </Badge>
-                    <span className="flex-1 text-sm text-muted-foreground">Khuyến Khích</span>
-                    <span className="text-xs text-muted-foreground italic">Không tham gia</span>
+                    <span className="text-muted-foreground flex-1 text-sm">Khuyến Khích</span>
+                    <span className="text-muted-foreground text-xs italic">Không tham gia</span>
                   </div>
                 </div>
 
@@ -242,18 +242,18 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                 <div className="flex items-center gap-3 px-0">
                   <div className="w-9 shrink-0" />
                   <span className="flex-1 text-sm font-medium">Tổng phần</span>
-                  <div className="h-8 w-16 flex items-center justify-center">
-                    <span className="font-bold tabular-nums text-sm">{total}</span>
+                  <div className="flex h-8 w-16 items-center justify-center">
+                    <span className="text-sm font-bold tabular-nums">{total}</span>
                   </div>
-                  <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">100%</span>
+                  <span className="text-muted-foreground w-14 text-right text-xs tabular-nums">100%</span>
                 </div>
               </div>
             </div>
 
-            <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
+            <div className="bg-info/80 border-t px-6 py-3">
               <div className="flex items-start gap-2">
-                <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
-                <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
+                <Info className="text-info mt-0.5 size-3.5 shrink-0" />
+                <p className="text-info text-xs leading-relaxed">
                   Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do làm tròn sẽ cộng vào hạng cao nhất có
                   người trúng. Giải Nhất luôn nhận phần dư nếu có.
                 </p>

@@ -12,17 +12,17 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { TicketEntryEntity } from "@megawin/game-keno/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import {
+  KENO_SIDE_BET_PLAY_TYPES,
+  KenoCollections,
   type EntryPayout,
   type EntryResult,
   type EntryVoidInfo,
-  KENO_SIDE_BET_PLAY_TYPES,
-  KenoCollections,
+  type TicketEntryEntity,
 } from "@megawin/game-keno/entities";
-import { type Long, ObjectId } from "mongodb";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -57,7 +57,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tất cả entries trong batch nhận cùng 1 version (atomic batch).
    */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
-    if (docs.length === 0) return 0;
+    if (docs.length === 0) {
+      return 0;
+    }
     const version = await this.nextVersion();
     const stamped = docs.map((doc) => ({ ...doc, version }));
     const result = await this.insertMany(stamped as any[]);
@@ -159,7 +161,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const boards: OwnedBoard[] = [];
     for (const d of docs as any[]) {
       for (const b of d.entrySummary?.boards ?? []) {
-        if (b.numbers) boards.push({ playType: b.playType, numbers: b.numbers });
+        if (b.numbers) {
+          boards.push({ playType: b.playType, numbers: b.numbers });
+        }
       }
     }
     return boards;
@@ -464,9 +468,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const counts = { pick8Match8: 0, pick9Match9: 0, pick10Match10: 0 };
     for (const row of result) {
       const r = row as any;
-      if (r._id === 8) counts.pick8Match8 = r.count;
-      else if (r._id === 9) counts.pick9Match9 = r.count;
-      else if (r._id === 10) counts.pick10Match10 = r.count;
+      if (r._id === 8) {
+        counts.pick8Match8 = r.count;
+      } else if (r._id === 9) {
+        counts.pick9Match9 = r.count;
+      } else if (r._id === 10) {
+        counts.pick10Match10 = r.count;
+      }
     }
     return counts;
   }
@@ -536,7 +544,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       }>;
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -633,7 +643,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async bulkVoidEntries(
     items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();

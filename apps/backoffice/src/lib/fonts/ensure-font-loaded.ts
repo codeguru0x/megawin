@@ -6,7 +6,6 @@
  * Mỗi family nằm file riêng — dynamic `import()` chỉ kéo woff2/CSS của font được chọn.
  * Gắn `font.variable` lên `document.body` để `html[data-font=…]` map `--font-sans` hoạt động.
  */
-
 import { ALWAYS_LOADED_FONT_KEYS, type FontKey } from "./registry";
 
 type FontModule = { variable: string };

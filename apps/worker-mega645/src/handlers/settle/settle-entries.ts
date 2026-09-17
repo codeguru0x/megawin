@@ -10,7 +10,7 @@
  * @output SettleEntriesBatchResult
  */
 
-import { type SettleContext, SettleEntriesBatchUseCase } from "@megawin/game-mega645-application/use-cases/settle";
+import { SettleEntriesBatchUseCase, type SettleContext } from "@megawin/game-mega645-application/use-cases/settle";
 
 const useCase = new SettleEntriesBatchUseCase();
 

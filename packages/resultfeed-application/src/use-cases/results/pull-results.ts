@@ -19,8 +19,7 @@
  * của MegaWin core.
  */
 
-import type { ConsensusEntity, ResultFeedGameKey } from "@megawin/resultfeed/entities";
-import { ConsensusState } from "@megawin/resultfeed/entities";
+import { ConsensusState, type ConsensusEntity, type ResultFeedGameKey } from "@megawin/resultfeed/entities";
 
 import { ConsensusRepository } from "../../infras/repos/consensus-repo";
 

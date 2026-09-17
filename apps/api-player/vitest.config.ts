@@ -6,8 +6,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["test/**/*.test.ts"],
+    include: ["test/unit/**/*.test.ts"],
     setupFiles: ["test/setup.ts"],
     testTimeout: 10_000,
+    passWithNoTests: true,
   },
 });

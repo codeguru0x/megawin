@@ -87,9 +87,9 @@ export function GamePlayerEntryList({
   return (
     <>
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-2">
-            <Ticket className="size-4 text-muted-foreground" />
+            <Ticket className="text-muted-foreground size-4" />
             <CardTitle className="text-sm font-semibold">Phiếu cược — {playerLabel}</CardTitle>
           </div>
           <CardDescription className="text-xs">
@@ -101,22 +101,22 @@ export function GamePlayerEntryList({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="text-muted-foreground pl-5 text-xs font-medium tracking-wider uppercase">
                     Mã vé
                   </TableHead>
-                  <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                     {hasLines ? REPORT_COLUMN_LABELS.boardsLines : REPORT_COLUMN_LABELS.board}
                   </TableHead>
-                  <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                     {REPORT_COLUMN_LABELS.betUnitCount}
                   </TableHead>
-                  <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                     {REPORT_COLUMN_LABELS.totalStake}
                   </TableHead>
-                  <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                     {REPORT_COLUMN_LABELS.totalPayout}
                   </TableHead>
-                  <TableHead className="pr-5 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="text-muted-foreground pr-5 text-right text-xs font-medium tracking-wider uppercase">
                     {REPORT_COLUMN_LABELS.playerNetProfit}
                   </TableHead>
                 </TableRow>
@@ -128,7 +128,7 @@ export function GamePlayerEntryList({
                   return (
                     <TableRow
                       key={entry.id}
-                      className="cursor-pointer hover:bg-muted/50"
+                      className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => setSelectedEntryId(entry.id)}
                     >
                       <TableCell className="pl-5 font-mono text-sm">{entry.ticketNo}</TableCell>
@@ -153,7 +153,7 @@ export function GamePlayerEntryList({
                         )}
                       </TableCell>
                       <TableCell
-                        className={`pr-5 text-right text-sm tabular-nums font-medium ${
+                        className={`pr-5 text-right text-sm font-medium tabular-nums ${
                           playerNet !== null ? getNetProfitColor(playerNet) : ""
                         }`}
                       >

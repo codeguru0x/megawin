@@ -14,7 +14,7 @@
  */
 
 import type { ApiClientError } from "./api-types";
-import { type Bingo18Api, createBingo18Api } from "./apis/bingo18";
+import { createBingo18Api, type Bingo18Api } from "./apis/bingo18";
 import { createGameApi, type GameApi } from "./apis/game";
 import { createKenoApi, type KenoApi } from "./apis/keno";
 import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
@@ -22,7 +22,7 @@ import { createMax3dApi, type Max3dApi } from "./apis/max3d";
 import { createMax3dproApi, type Max3dproApi } from "./apis/max3dpro";
 import { createMega645Api, type Mega645Api } from "./apis/mega645";
 import { createPower655Api, type Power655Api } from "./apis/power655";
-import { type AuthApi, createAuthApi } from "./auth/auth-api";
+import { createAuthApi, type AuthApi } from "./auth/auth-api";
 import { SessionStorageTokenStorage, TokenManager } from "./auth/token-manager";
 import type { AuthTokens, TokenStorage } from "./auth/types";
 /// <reference lib="dom" />
@@ -307,7 +307,9 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
       await tokenManager.clearTokens();
       onSessionExpired?.();
     }
-    if (onError) await onError(error);
+    if (onError) {
+      await onError(error);
+    }
   }
 
   // ---- Build API modules ----

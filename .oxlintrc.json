@@ -1,0 +1,442 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "unicorn", "typescript", "oxc", "import", "nextjs", "node"],
+  "jsPlugins": ["@shadcn/lint"],
+  "options": {
+    "typeAware": true
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/.serverless/**",
+    "**/coverage/**",
+    "**/*.tsbuildinfo",
+    ".cursor/skills/**",
+    ".tmp/**",
+    "apps/backoffice/src/components/ui/**",
+    "packages/*/test/html/**",
+    "docs/**",
+    "release/**",
+    ".gitnexus/**"
+  ],
+  "rules": {
+    "curly": ["error", "all"],
+    "typescript/prefer-as-const": "error",
+    "typescript/consistent-type-imports": [
+      "error",
+      {
+        "disallowTypeAnnotations": false
+      }
+    ],
+    "typescript/consistent-type-exports": "off",
+    "typescript/no-namespace": "error",
+    "typescript/no-inferrable-types": "error",
+    "no-else-return": "error",
+    "no-param-reassign": "error",
+    "typescript/no-non-null-assertion": "warn",
+    "node/no-process-env": "off",
+    "unicorn/filename-case": [
+      "warn",
+      {
+        "case": "kebabCase"
+      }
+    ],
+    "typescript/no-explicit-any": "warn",
+    "no-constant-binary-expression": "error",
+    "no-empty": "error",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "no-console": "off",
+    "import/no-cycle": "error",
+    "typescript/no-unnecessary-condition": "warn",
+    "no-unused-vars": [
+      "error",
+      {
+        "args": "after-used",
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+    "oxc/no-barrel-file": "off",
+    "no-unneeded-ternary": "error",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/no-floating-promises": [
+      "error",
+      {
+        "allowForKnownSafeCalls": [
+          {
+            "from": "package",
+            "name": "invalidateQueries",
+            "package": "@tanstack/react-query"
+          },
+          {
+            "from": "package",
+            "name": "prefetchQuery",
+            "package": "@tanstack/react-query"
+          },
+          {
+            "from": "package",
+            "name": "setQueryData",
+            "package": "@tanstack/react-query"
+          }
+        ]
+      }
+    ],
+    "typescript/no-misused-promises": [
+      "error",
+      {
+        "checksConditionals": true,
+        "checksSpreads": true,
+        "checksVoidReturn": {
+          "arguments": true,
+          "attributes": false,
+          "inheritedMethods": true,
+          "properties": true,
+          "returns": true,
+          "variables": false
+        }
+      }
+    ],
+    "typescript/await-thenable": "error",
+    "typescript/switch-exhaustiveness-check": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.config.ts", "**/*.config.mts", "**/*.config.js", "**/*.config.mjs", "**/next.config.ts"],
+      "rules": {
+        "import/no-default-export": "off",
+        "unicorn/filename-case": "off"
+      }
+    },
+    {
+      "files": ["**/test/**", "**/*.test.ts", "**/*.test.tsx", "**/*.type-test.ts"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "typescript/no-non-null-assertion": "off",
+        "unicorn/filename-case": "off"
+      }
+    },
+    {
+      "files": ["packages/*/src/**", "tooling/*/src/**"],
+      "rules": {
+        "import/no-default-export": "error"
+      }
+    },
+    {
+      "files": ["packages/*-application/src/infras/**"],
+      "rules": {
+        "typescript/no-explicit-any": "off"
+      }
+    },
+    {
+      "files": ["apps/api-*/**", "apps/worker-*/**"],
+      "rules": {
+        "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["apps/backoffice/src/app/**"],
+      "rules": {
+        "import/no-default-export": "off",
+        "unicorn/filename-case": "off"
+      }
+    },
+    {
+      "files": ["apps/backoffice/**"],
+      "rules": {
+        "nextjs/no-img-element": "warn",
+        "nextjs/no-head-element": "warn",
+        "import/no-commonjs": "error",
+        "react/no-array-index-key": "warn",
+        "typescript/no-floating-promises": "warn",
+        "typescript/no-misused-promises": [
+          "error",
+          {
+            "checksConditionals": true,
+            "checksSpreads": true,
+            "checksVoidReturn": {
+              "arguments": true,
+              "attributes": false,
+              "inheritedMethods": true,
+              "properties": false,
+              "returns": true,
+              "variables": false
+            }
+          }
+        ],
+        "shadcn/no-restyle": [
+          "warn",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Card$|^(Card)?(Content|Header|Footer)$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^CardTitle$|^DialogTitle$|^SheetTitle$|^DrawerTitle$|^AlertTitle$",
+                "allow": ["layout", "typography"]
+              },
+              {
+                "pattern": "^CardDescription$|^DialogDescription$|^SheetDescription$|^AlertDescription$",
+                "allow": ["layout", "typography"]
+              },
+              {
+                "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
+                "allow": ["layout", "typography", "spacing"]
+              },
+              {
+                "pattern": "^Skeleton$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^Label$|^FormLabel$|^SelectLabel$",
+                "allow": ["layout", "typography", "color"]
+              },
+              {
+                "pattern": "^Badge$",
+                "allow": ["layout", "color"]
+              },
+              {
+                "pattern": "^Alert$",
+                "allow": ["layout", "spacing", "color"]
+              },
+              {
+                "pattern": "^Tabs(List|Content|Trigger)$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^DialogContent$|^SheetContent$|^DrawerContent$|^PopoverContent$|^HoverCardContent$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^TooltipContent$",
+                "allow": ["layout"]
+              },
+              {
+                "pattern": "^Avatar$|^AvatarImage$|^AvatarFallback$",
+                "allow": ["layout", "size-*"]
+              },
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "w-full",
+                  "w-*",
+                  "min-w-*",
+                  "max-w-*",
+                  "mt-*",
+                  "mb-*",
+                  "ml-*",
+                  "mr-*",
+                  "mx-*",
+                  "my-*",
+                  "m-*"
+                ]
+              },
+              {
+                "pattern": "^Input$|^Textarea$|^SelectTrigger$|^MoneyInput$",
+                "allow": ["layout", "w-full", "w-*", "min-w-*", "max-w-*", "flex-1"]
+              },
+              {
+                "pattern": "^Spinner$",
+                "allow": ["layout", "size-*"]
+              },
+              {
+                "pattern": "^Separator$",
+                "allow": ["layout"]
+              },
+              {
+                "pattern": "^ScrollArea$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^(FormItem|FormControl|FormMessage|Field|FieldGroup|FieldSet|FieldContent)$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^Empty$|^Empty(Header|Title|Description|Content|Media)$",
+                "allow": ["layout", "spacing", "typography"]
+              },
+              {
+                "pattern": "^Sidebar.*$",
+                "allow": ["layout", "spacing"]
+              }
+            ],
+            "message": {
+              "spacing": "Dùng size/variant của component hoặc gap/margin trên parent — không tự padding trên primitive.",
+              "color": "Chỉ dùng semantic token (text-muted-foreground, text-profit, text-loss, text-warning, text-info, bg-primary, text-destructive, text-game-*). Không raw palette Tailwind.",
+              "typography": "Dùng variant/size có sẵn; chỉ đổi typography khi contract cho phép (Title/Description/Label).",
+              "shape": "Không override rounded/border trên component đã có shape — sửa variant trong components/ui nếu cần."
+            }
+          }
+        ],
+        "shadcn/no-raw-colors": [
+          "warn",
+          {
+            "message": "Dùng theme token từ apps/backoffice/src/app/globals.css (profit/loss/warning/info/game-*/muted/primary/destructive) — không raw palette."
+          }
+        ],
+        "shadcn/no-arbitrary-values": [
+          "warn",
+          {
+            "allow": ["layout"]
+          }
+        ],
+        "shadcn/no-inline-styles": "warn",
+        "shadcn/require-static-classes": "warn"
+      }
+    },
+    {
+      "files": ["apps/backoffice/src/components/ui/**"],
+      "rules": {
+        "shadcn/no-restyle": "off",
+        "shadcn/no-raw-colors": "off",
+        "shadcn/no-arbitrary-values": "off",
+        "shadcn/no-inline-styles": "off",
+        "shadcn/require-static-classes": "off"
+      }
+    },
+    {
+      "files": ["apps/*/agent/**"],
+      "rules": {
+        "import/no-default-export": "off",
+        "unicorn/filename-case": "off",
+        "no-unused-vars": "warn"
+      }
+    },
+    {
+      "files": ["packages/ui/**"],
+      "rules": {
+        "shadcn/no-restyle": [
+          "warn",
+          {
+            "allow": ["layout"],
+            "contracts": [
+              {
+                "pattern": "^Card$|^(Card)?(Content|Header|Footer)$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^CardTitle$|^DialogTitle$|^SheetTitle$|^DrawerTitle$|^AlertTitle$",
+                "allow": ["layout", "typography"]
+              },
+              {
+                "pattern": "^CardDescription$|^DialogDescription$|^SheetDescription$|^AlertDescription$",
+                "allow": ["layout", "typography"]
+              },
+              {
+                "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
+                "allow": ["layout", "typography", "spacing"]
+              },
+              {
+                "pattern": "^Skeleton$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^Label$|^FormLabel$|^SelectLabel$",
+                "allow": ["layout", "typography", "color"]
+              },
+              {
+                "pattern": "^Badge$",
+                "allow": ["layout", "color"]
+              },
+              {
+                "pattern": "^Alert$",
+                "allow": ["layout", "spacing", "color"]
+              },
+              {
+                "pattern": "^Tabs(List|Content|Trigger)$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^DialogContent$|^SheetContent$|^DrawerContent$|^PopoverContent$|^HoverCardContent$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^TooltipContent$",
+                "allow": ["layout"]
+              },
+              {
+                "pattern": "^Avatar$|^AvatarImage$|^AvatarFallback$",
+                "allow": ["layout", "size-*"]
+              },
+              {
+                "pattern": "^Button$",
+                "allow": [
+                  "layout",
+                  "w-full",
+                  "w-*",
+                  "min-w-*",
+                  "max-w-*",
+                  "mt-*",
+                  "mb-*",
+                  "ml-*",
+                  "mr-*",
+                  "mx-*",
+                  "my-*",
+                  "m-*"
+                ]
+              },
+              {
+                "pattern": "^Input$|^Textarea$|^SelectTrigger$|^MoneyInput$",
+                "allow": ["layout", "w-full", "w-*", "min-w-*", "max-w-*", "flex-1"]
+              },
+              {
+                "pattern": "^Spinner$",
+                "allow": ["layout", "size-*"]
+              },
+              {
+                "pattern": "^Separator$",
+                "allow": ["layout"]
+              },
+              {
+                "pattern": "^ScrollArea$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^(FormItem|FormControl|FormMessage|Field|FieldGroup|FieldSet|FieldContent)$",
+                "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^Empty$|^Empty(Header|Title|Description|Content|Media)$",
+                "allow": ["layout", "spacing", "typography"]
+              },
+              {
+                "pattern": "^Sidebar.*$",
+                "allow": ["layout", "spacing"]
+              }
+            ],
+            "message": {
+              "spacing": "Dùng size/variant của component hoặc gap/margin trên parent — không tự padding trên primitive.",
+              "color": "Chỉ dùng semantic token (text-muted-foreground, text-profit, text-loss, text-warning, text-info, bg-primary, text-destructive, text-game-*). Không raw palette Tailwind.",
+              "typography": "Dùng variant/size có sẵn; chỉ đổi typography khi contract cho phép (Title/Description/Label).",
+              "shape": "Không override rounded/border trên component đã có shape — sửa variant trong components/ui nếu cần."
+            }
+          }
+        ],
+        "shadcn/no-raw-colors": [
+          "warn",
+          {
+            "message": "Dùng theme token từ apps/backoffice/src/app/globals.css (profit/loss/warning/info/game-*/muted/primary/destructive) — không raw palette."
+          }
+        ],
+        "shadcn/no-arbitrary-values": [
+          "warn",
+          {
+            "allow": ["layout"]
+          }
+        ],
+        "shadcn/no-inline-styles": "warn",
+        "shadcn/require-static-classes": "warn"
+      }
+    }
+  ]
+}

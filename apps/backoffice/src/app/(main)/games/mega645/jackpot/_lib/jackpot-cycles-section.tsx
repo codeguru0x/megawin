@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 
 import { Mega645EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 import {
-  type JackpotCycleSummary,
-  type JackpotWinnerSummary,
   useJackpotCycles,
   useJackpotEntryDetail,
+  type JackpotCycleSummary,
+  type JackpotWinnerSummary,
 } from "./use-jackpot";
 
 const LATEST_COUNT = 3;
@@ -28,24 +28,24 @@ export function JackpotCyclesSection() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900/50">
-          <Crown className="size-4 text-teal-600 dark:text-teal-400" />
+        <div className="bg-game-mega645 flex size-8 items-center justify-center rounded-lg">
+          <Crown className="text-game-mega645 size-4" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Lịch sử vòng tích lũy</h2>
-          <p className="text-xs text-muted-foreground">Danh sách các vòng tích luỹ jackpot gần nhất</p>
+          <h2 className="text-foreground text-sm font-semibold">Lịch sử vòng tích lũy</h2>
+          <p className="text-muted-foreground text-xs">Danh sách các vòng tích luỹ jackpot gần nhất</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {isLoading ? (
-          <div className="flex h-32 items-center justify-center rounded-xl border bg-card">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <div className="bg-card flex h-32 items-center justify-center rounded-xl border">
+            <Loader2 className="text-muted-foreground size-6 animate-spin" />
           </div>
         ) : cycles.length === 0 ? (
-          <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/20">
-            <Crown className="size-6 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Chưa có vòng tích lũy nào đã đóng.</p>
+          <div className="bg-muted/20 flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed">
+            <Crown className="text-muted-foreground/40 size-6" />
+            <p className="text-muted-foreground text-sm">Chưa có vòng tích lũy nào đã đóng.</p>
           </div>
         ) : (
           cycles.map((cycle) => <CycleCard key={cycle.id} cycle={cycle} />)
@@ -64,27 +64,27 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
       <div
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
-          isWinner && "border-teal-200 bg-teal-50/30 dark:border-teal-800/50 dark:bg-teal-950/10",
-          isManual && "border-slate-200 bg-slate-50/30 dark:border-slate-700/40 dark:bg-slate-950/10",
+          isWinner && "border-game-mega645 bg-game-mega645/30",
+          isManual && "border-border bg-muted/30",
           !isWinner && !isManual && "bg-card",
         )}
       >
         <CollapsibleTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-accent/30"
+            className="hover:bg-accent/30 flex w-full items-center gap-4 p-4 text-left transition-colors"
           >
             {/* Icon */}
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
-                isWinner ? "bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/20" : "bg-muted",
+                isWinner ? "from-game-mega645 to-profit shadow-game-mega645/20 bg-linear-to-br shadow-md" : "bg-muted",
               )}
             >
               {isWinner ? (
                 <Trophy className="size-5 text-white" />
               ) : (
-                <RefreshCcw className="size-5 text-muted-foreground" />
+                <RefreshCcw className="text-muted-foreground size-5" />
               )}
             </div>
 
@@ -94,7 +94,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                 <span className="font-mono text-sm font-bold">Vòng #{cycle.cycleNo}</span>
                 <CycleReasonBadge reason={cycle.closeReason} />
               </div>
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
                 <span className="tabular-nums">{displayVNDateTime(cycle.startedAt)}</span>
                 {cycle.closedAt && (
                   <>
@@ -107,25 +107,20 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
 
             {/* Amount */}
             <div className="text-right">
-              <p
-                className={cn(
-                  "text-lg font-bold tabular-nums",
-                  isWinner ? "text-teal-700 dark:text-teal-400" : "text-foreground",
-                )}
-              >
+              <p className={cn("text-lg font-bold tabular-nums", isWinner ? "text-game-mega645" : "text-foreground")}>
                 {formatVNDCompact(cycle.currentAmount)}
               </p>
-              <p className="text-xs tabular-nums text-muted-foreground">
+              <p className="text-muted-foreground text-xs tabular-nums">
                 Tích lũy: {formatNumber(cycle.totalContribution)}
               </p>
             </div>
 
-            <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+            <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform [[data-state=open]>&]:rotate-180" />
           </button>
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="space-y-4 border-t px-4 pb-4 pt-4">
+          <div className="space-y-4 border-t px-4 pt-4 pb-4">
             <div className="grid gap-2 sm:grid-cols-5">
               <StatMini label="Số kỳ" value={formatNumber(cycle.drawCount)} />
               <StatMini label="Kỳ bắt đầu" value={cycle.startDrawId} />
@@ -144,9 +139,9 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
 
 function StatMini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-muted/40 px-3 py-2.5">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    <div className="bg-muted/40 rounded-lg px-3 py-2.5">
+      <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">{label}</p>
+      <p className="text-foreground mt-0.5 text-sm font-semibold tabular-nums">{value}</p>
     </div>
   );
 }
@@ -154,7 +149,7 @@ function StatMini({ label, value }: { label: string; value: string }) {
 function CycleReasonBadge({ reason }: { reason?: string }) {
   if (reason === JackpotCycleCloseReason.Winner) {
     return (
-      <Badge className="gap-1 border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
+      <Badge className="border-game-mega645/30 bg-game-mega645/15 text-game-mega645 gap-1">
         <Sparkles className="size-3" />
         Trúng Jackpot
       </Badge>
@@ -162,7 +157,7 @@ function CycleReasonBadge({ reason }: { reason?: string }) {
   }
   if (reason === "manual_reset") {
     return (
-      <Badge variant="outline" className="border-slate-400/40 text-slate-600 dark:text-slate-400">
+      <Badge variant="outline" className="border-border/40 text-muted-foreground">
         <RefreshCcw className="mr-1 size-3" />
         Reset thủ công
       </Badge>
@@ -179,28 +174,26 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Người trúng Jackpot</p>
+      <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Người trúng Jackpot</p>
       <div className="space-y-2">
         {winners.map((w, idx) => (
           <button
             key={`${w.entryId}-${idx}`}
             type="button"
             onClick={() => setSelectedEntryId(w.entryId)}
-            className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/50 p-3.5 text-left transition-colors hover:border-teal-400 hover:bg-teal-100/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 dark:border-teal-800/50 dark:bg-teal-950/20 dark:hover:border-teal-700 dark:hover:bg-teal-950/40"
+            className="group border-game-mega645 bg-game-mega645/50 hover:border-game-mega645 hover:bg-game-mega645/60 focus-visible:ring-game-mega645/50 flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
           >
-            <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/20">
+            <div className="from-game-mega645 to-profit shadow-game-mega645/20 flex size-10 items-center justify-center rounded-lg bg-linear-to-br shadow-md">
               <User className="size-4.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{toTenantUsername(w.username ?? "")}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Đại lý: {w.tenantId} · Kỳ: {w.drawId}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2.5">
-              <p className="text-lg font-bold tabular-nums text-teal-700 dark:text-teal-400">
-                {formatNumber(w.prizeAmount)}
-              </p>
+              <p className="text-game-mega645 text-lg font-bold tabular-nums">{formatNumber(w.prizeAmount)}</p>
             </div>
           </button>
         ))}

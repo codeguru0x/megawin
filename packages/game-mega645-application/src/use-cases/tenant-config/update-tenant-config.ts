@@ -22,8 +22,12 @@ export class UpdateTenantConfigUseCase extends UseCase<UpdateTenantConfigInput, 
       fields.commissionRate = input.commissionRate ?? globalConfig?.rates.defaultCommissionRate ?? 0.2;
       fields.isEnabled = input.isEnabled ?? true;
     } else {
-      if (input.commissionRate !== undefined) fields.commissionRate = input.commissionRate;
-      if (input.isEnabled !== undefined) fields.isEnabled = input.isEnabled;
+      if (input.commissionRate !== undefined) {
+        fields.commissionRate = input.commissionRate;
+      }
+      if (input.isEnabled !== undefined) {
+        fields.isEnabled = input.isEnabled;
+      }
     }
 
     const updated = await this.repo.upsertTenantConfig(input.tenantId, fields as any);

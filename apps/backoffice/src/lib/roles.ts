@@ -6,8 +6,7 @@
  * và client component (`hooks/use-user-roles.ts`) đều import được.
  */
 
-import type { AccountRole } from "@megawin/identity/entities";
-import { ALL_ROLE_VALUES } from "@megawin/identity/entities";
+import { ALL_ROLE_VALUES, type AccountRole } from "@megawin/identity/entities";
 
 /**
  * Chuẩn hoá roles từ Cognito custom claim về `AccountRole[]`.

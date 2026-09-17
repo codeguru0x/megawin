@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dices, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -27,8 +27,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTenantOptions } from "@/hooks/use-tenant-options";
 import { accountsKeys } from "@/lib/query-keys/accounts";
 
-import { generatePassword } from "../../_shared/generate-password";
 import type { CreateAgentAccountResponse } from "../_lib/types";
+import { generatePassword } from "../../_shared/generate-password";
 
 const createAgentSchema = z.object({
   username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
@@ -58,7 +58,7 @@ export function CreateAgentAccountDialog() {
   const mutation = useMutation({
     mutationFn: (values: CreateAgentValues) => apiClient.post<CreateAgentAccountResponse>("/accounts/agents", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: accountsKeys.agents });
+      void queryClient.invalidateQueries({ queryKey: accountsKeys.agents });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản đại lý thành công.", {
@@ -118,7 +118,7 @@ export function CreateAgentAccountDialog() {
                         </SelectItem>
                       ))}
                       {tenants.length === 0 && !isLoadingTenants && (
-                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">Chưa có Tenant nào.</div>
+                        <div className="text-muted-foreground px-2 py-4 text-center text-sm">Chưa có Tenant nào.</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -166,9 +166,9 @@ export function CreateAgentAccountDialog() {
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground h-4 w-4" />
                         ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
+                          <Eye className="text-muted-foreground h-4 w-4" />
                         )}
                       </Button>
                     </div>

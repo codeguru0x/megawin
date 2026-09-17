@@ -19,12 +19,12 @@ function Max3dproFinancialContent() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 to-pink-600 shadow-sm">
+          <div className="from-game-max3dpro to-game-max3dpro-muted flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D Pro — Báo cáo tài chính</h1>
-            <p className="text-xs text-muted-foreground">Doanh thu, trả thưởng, hoa hồng · T3, T5, T7</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Max 3D Pro — Báo cáo tài chính</h1>
+            <p className="text-muted-foreground text-xs">Doanh thu, trả thưởng, hoa hồng · T3, T5, T7</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -39,14 +39,14 @@ function Max3dproFinancialContent() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => void setTab(v as "draws" | "tenants")}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "draws" | "tenants")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="draws" className="gap-1.5">
-            <CalendarRange className="size-4 text-pink-500" />
+            <CalendarRange className="text-game-max3dpro size-4" />
             Theo kỳ quay
           </TabsTrigger>
           <TabsTrigger value="tenants" className="gap-1.5">
-            <Building2 className="size-4 text-blue-500" />
+            <Building2 className="text-info size-4" />
             Theo đại lý
           </TabsTrigger>
         </TabsList>

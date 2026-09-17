@@ -27,7 +27,9 @@ export class GetDispatchFacetsUseCase extends UseCase<GetDispatchFacetsInput, Ge
   protected async execute(input: GetDispatchFacetsInput): Promise<GetDispatchFacetsOutput> {
     const from = input.from ? this.parseBoundary(input.from, "start") : undefined;
     const to = input.to ? this.parseBoundary(input.to, "end") : undefined;
-    if (from && to) this.validateRange(from, to);
+    if (from && to) {
+      this.validateRange(from, to);
+    }
 
     return await this.repo.aggregateFacets({ from, to });
   }

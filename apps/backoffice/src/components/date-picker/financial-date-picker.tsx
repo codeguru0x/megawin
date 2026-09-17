@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { formatVN, formatVNDate, TZDate, todayVN, toVNStartOfDay, VN_TIMEZONE } from "@megawin/shared/utils";
+import { formatVN, formatVNDate, todayVN, toVNStartOfDay, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
 import { subDays } from "date-fns";
 import { CalendarIcon, Check } from "lucide-react";
 
@@ -48,7 +48,9 @@ function getPresets(): Preset[] {
 }
 
 function displayDate(dateStr: string): string {
-  if (!dateStr) return "--";
+  if (!dateStr) {
+    return "--";
+  }
   try {
     return formatVN(toVNStartOfDay(dateStr), "dd/MM/yyyy");
   } catch {
@@ -84,7 +86,9 @@ export function FinancialDatePicker({
   }, [value]);
 
   function handleDaySelect(date: Date | undefined) {
-    if (!date) return;
+    if (!date) {
+      return;
+    }
     onChange(formatVNDate(date));
     setOpen(false);
   }
@@ -96,7 +100,7 @@ export function FinancialDatePicker({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {label && <span className="text-sm font-medium text-muted-foreground">{label}</span>}
+      {label && <span className="text-muted-foreground text-sm font-medium">{label}</span>}
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -104,13 +108,13 @@ export function FinancialDatePicker({
             variant="outline"
             className={cn("h-9 gap-2 px-3 text-sm tabular-nums", !value && "text-muted-foreground")}
           >
-            <CalendarIcon className="size-4 text-muted-foreground" />
+            <CalendarIcon className="text-muted-foreground size-4" />
             <span className="font-medium">{displayDate(value)}</span>
           </Button>
         </PopoverTrigger>
 
         <PopoverContent className="w-auto p-0" align="end">
-          <div className="flex divide-x divide-border">
+          <div className="divide-border flex divide-x">
             {/* ── Cột trái: Calendar 1 tháng ── */}
             <Calendar
               mode="single"
@@ -123,7 +127,7 @@ export function FinancialDatePicker({
 
             {/* ── Cột phải: Preset nhanh ── */}
             <div className="flex w-36 shrink-0 flex-col gap-0.5 p-2">
-              <p className="px-2 pb-1 pt-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              <p className="text-muted-foreground px-2 pt-0.5 pb-1 text-xs font-semibold tracking-widest uppercase">
                 Nhanh
               </p>
               {presets.map((preset) => {
@@ -135,11 +139,11 @@ export function FinancialDatePicker({
                     onClick={() => handlePreset(preset)}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-sm transition-colors",
-                      isActive ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-accent",
+                      isActive ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-accent",
                     )}
                   >
                     {preset.label}
-                    {isActive && <Check className="size-3.5 shrink-0 text-primary" />}
+                    {isActive && <Check className="text-primary size-3.5 shrink-0" />}
                   </button>
                 );
               })}

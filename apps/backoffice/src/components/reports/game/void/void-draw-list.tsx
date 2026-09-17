@@ -21,8 +21,6 @@ export interface VoidDrawListProps {
  * Click row → drill vào Tenant Breakdown (Level 2).
  */
 export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
-  const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
-  const totalPlayers = data.reduce((s, r) => s + r.playerCount, 0);
   const totalTenants = data.reduce((s, r) => s + r.tenantCount, 0);
   const totalOriginal = data.reduce((s, r) => s + r.totalOriginalStake, 0);
   const totalRefund = data.reduce((s, r) => s + r.totalRefundAmount, 0);
@@ -31,7 +29,7 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex h-50 flex-col items-center justify-center text-center">
-          <p className="text-sm text-muted-foreground">Không có kỳ quay void nào trong khoảng thời gian đã chọn.</p>
+          <p className="text-muted-foreground text-sm">Không có kỳ quay void nào trong khoảng thời gian đã chọn.</p>
         </CardContent>
       </Card>
     );
@@ -39,13 +37,13 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Ban className="size-4 text-muted-foreground" />
+          <Ban className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Danh sách kỳ quay đã huỷ · Click để xem theo đại lý</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="px-0 pb-4 pt-0">
+      <CardContent className="px-0 pt-0 pb-4">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -62,7 +60,7 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
               {data.map((row) => (
                 <TableRow
                   key={row.drawId}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer"
                   onClick={() => onRowClick(row.drawId)}
                 >
                   <TableCell className="pl-5 text-sm">{row.drawId}</TableCell>
@@ -73,7 +71,7 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(row.totalOriginalStake)}
                   </TableCell>
-                  <TableCell className="pr-5 text-right text-sm tabular-nums font-medium text-amber-600 dark:text-amber-400">
+                  <TableCell className="text-warning pr-5 text-right text-sm font-medium tabular-nums">
                     {formatNumber(row.totalRefundAmount)}
                   </TableCell>
                 </TableRow>
@@ -82,17 +80,17 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
 
             {data.length > 1 && (
               <tfoot>
-                <TableRow className="border-t bg-muted/50">
+                <TableRow className="bg-muted/50 border-t">
                   <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold" />
-                  <TableCell className="text-right text-sm tabular-nums font-semibold" />
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums" />
+                  <TableCell className="text-right text-sm font-semibold tabular-nums" />
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalTenants)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalOriginal)}
                   </TableCell>
-                  <TableCell className="pr-5 text-right text-sm tabular-nums font-semibold text-amber-600 dark:text-amber-400">
+                  <TableCell className="text-warning pr-5 text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalRefund)}
                   </TableCell>
                 </TableRow>

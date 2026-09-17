@@ -8,8 +8,11 @@
  * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
  */
 
-import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-lotto535/entities";
-import { LOTTO535_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+import {
+  LOTTO535_OUTSTANDING_DRAW_REPORTS,
+  type OutstandingDrawReport,
+  type OutstandingDrawReportEntity,
+} from "@megawin/game-lotto535/entities";
 
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";

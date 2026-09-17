@@ -345,7 +345,7 @@ Ba lý do, xếp theo mức độ quyết định:
    Sản phẩm này giữ tiền thật của player — không nên gánh thêm rủi ro framework chưa ổn định.
 
 2. **Chi phí "framework thứ hai":** repo đã chuẩn hoá **Next.js 16** cho `backoffice`, đã có sẵn
-   `@megawin/next`, `@megawin/ui`, `better-auth`, `@tanstack/react-query`, `@tanstack/react-table`, biome.
+   `@megawin/next`, `@megawin/ui`, `better-auth`, `@tanstack/react-query`, `@tanstack/react-table`, linter.
    Thêm TanStack Start = nhân đôi khuôn mẫu auth/build/lint/CI, chia đôi kiến thức của team ít người.
 
 3. **"AI ứng dụng vào có nhanh, không cần học không?" — Câu trả lời thẳng: KHÔNG với TanStack Start.**

@@ -106,7 +106,9 @@ export function useJackpotEntryDetail(entryId: string | null, { onNotFound }: { 
   });
 
   useEffect(() => {
-    if (!entryId) return;
+    if (!entryId) {
+      return;
+    }
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",

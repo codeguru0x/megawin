@@ -1,5 +1,6 @@
 import { DetectResettleBoundariesUseCase } from "@megawin/game-power655-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 
@@ -19,11 +20,16 @@ const detectBoundariesUseCase = new DetectResettleBoundariesUseCase();
  *   - `TYPE_B2`: cascade step-wise — auto payout từng kỳ, Quản trị hệ thống chốt cycle giữa mỗi bước.
  *   - `LEDGER_MISSING`: kỳ cũ trước khi có Cycle Ledger — Quản trị hệ thống thủ công.
  */
+
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(resettlePreflightSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return detectBoundariesUseCase.run({
       drawId,
       proposedWinningMain: body.proposedWinningMain,

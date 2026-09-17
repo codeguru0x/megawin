@@ -4,10 +4,9 @@
  * Ops Hub — Query DUY NHẤT của trang. Mọi zone `select` slice từ context (`use-hub-context.tsx`),
  * KHÔNG zone nào tự fetch riêng (`p1-01-hub-page-shell-kpi.plan.md` §4, ràng buộc số 1).
  */
-
 import type { OpsHubSnapshotOutput } from "@megawin/game-bingo18-application/use-cases/operations";
 import { apiClient } from "@megawin/next/client";
-import { keepPreviousData, noop, type QueryClient, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, noop, useQuery, type QueryClient } from "@tanstack/react-query";
 
 import { bingo18Keys } from "@/lib/query-keys";
 

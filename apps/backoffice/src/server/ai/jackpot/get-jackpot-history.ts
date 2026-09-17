@@ -54,9 +54,7 @@ const listHistoryByCycleUseCases = {
 };
 
 /** Bắt compiler khi `JackpotGameProduct` thêm entry mới mà 2 map trên chưa có. */
-function assertKnownGame(
-  game: JackpotGameProduct,
-): asserts game is keyof typeof listCyclesUseCases & keyof typeof listHistoryByCycleUseCases {
+function assertKnownGame(game: JackpotGameProduct): asserts game is keyof typeof listCyclesUseCases {
   if (!(game in listCyclesUseCases) || !(game in listHistoryByCycleUseCases)) {
     throw AppException.internal(`Game không được hỗ trợ: ${String(game)}`);
   }

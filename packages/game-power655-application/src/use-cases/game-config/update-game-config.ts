@@ -58,12 +58,24 @@ export class UpdateGameConfigUseCase extends UseCase<UpdateGameConfigInput, Upda
     }
 
     const cleanMerged: Record<string, unknown> = {};
-    if (merged.jackpot) cleanMerged.jackpot = merged.jackpot;
-    if (merged.rates) cleanMerged.rates = merged.rates;
-    if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
-    if (merged.play) cleanMerged.play = merged.play;
-    if (merged.ops) cleanMerged.ops = merged.ops;
-    if (merged.vietlott) cleanMerged.vietlott = merged.vietlott;
+    if (merged.jackpot) {
+      cleanMerged.jackpot = merged.jackpot;
+    }
+    if (merged.rates) {
+      cleanMerged.rates = merged.rates;
+    }
+    if (merged.defaultPrizes) {
+      cleanMerged.defaultPrizes = merged.defaultPrizes;
+    }
+    if (merged.play) {
+      cleanMerged.play = merged.play;
+    }
+    if (merged.ops) {
+      cleanMerged.ops = merged.ops;
+    }
+    if (merged.vietlott) {
+      cleanMerged.vietlott = merged.vietlott;
+    }
 
     const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 

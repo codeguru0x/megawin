@@ -11,9 +11,9 @@
  * khi site vừa publish, xem `09-power-mega-max3d-family.plan.md §1.4`.
  */
 
-import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { vietlottDetailAdapter } from "@megawin/resultfeed-application/sources";
 import { FetchAndParseUseCase } from "@megawin/resultfeed-application/use-cases/fetch";
+import { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 
 const useCase = new FetchAndParseUseCase({
   sourceId: vietlottDetailAdapter.sourceId,

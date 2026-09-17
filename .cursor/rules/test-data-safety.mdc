@@ -12,10 +12,13 @@ alwaysApply: false
 
 Quy tắc SỐNG CÒN cho mọi file test trong monorepo này.
 
-> **Bối cảnh bắt buộc phải nhớ:** DB test dùng **CHUNG với staging website**. Test integration
-> chạy trực tiếp trên DB thật của staging. Một lệnh ghi/xoá sai scope = phá dữ liệu thật.
-> Sự cố 05/08/2026: một test gọi `deleteMany({})` không scope đã **XOÁ SẠCH tenant config thật**.
-> Đây là lý do quy tắc này tồn tại và tại sao nó tuyệt đối, không có ngoại lệ.
+> **Bối cảnh:** DB test là **container Testcontainers ephemeral** (Mongo/Redis), start 1 lần
+> trong Vitest `globalSetup`, tự dọn cuối session (Ryuk reaper) — KHÔNG còn nối Atlas staging
+> chung. Pattern sentinel/scoped filter dưới đây vẫn bắt buộc vì Vitest chạy đa-worker song
+> song: nhiều FILE test trong CÙNG 1 package/collection có thể chạm cùng dữ liệu cùng lúc.
+> `deleteMany({})` không scope ở 1 file có thể xoá data file khác đang chạy.
+> Sự cố 05/08/2026 (xoá sạch tenant config trên staging) là lý do quy tắc này tồn tại —
+> Testcontainers loại bỏ rủi ro staging, nhưng KHÔNG loại bỏ rủi ro race giữa file test.
 
 ---
 
@@ -26,8 +29,9 @@ Test **CHỈ** được xoá/cập nhật những record mà **chính nó đã t
 data test".
 
 > **Cách đơn giản nhất để an toàn tuyệt đối: MOCK DB** (`vi.mock` repo/collection) — không chạm
-> DB thật thì không thể xoá nhầm. Ưu tiên mock cho unit test logic. Chỉ dùng DB thật khi thực sự
-> cần verify tầng repo/infra — và khi đó tuân thủ đầy đủ quy tắc dưới đây (seed-trước-rồi-mutate).
+> DB thật thì không thể xoá nhầm. Ưu tiên mock cho unit test logic. Chỉ dùng DB thật (qua
+> Testcontainers) khi thực sự cần verify tầng repo/infra — và khi đó tuân thủ đầy đủ quy tắc
+> dưới đây (seed-trước-rồi-mutate).
 
 - Mọi record test tạo ra PHẢI mang **MARKER nhận diện** để cleanup chỉ chạm đúng nó:
   - `_id` cụ thể do test giữ lại, HOẶC
@@ -53,8 +57,8 @@ afterAll(async () => {
 ```typescript
 /** SAI — cleanup rộng hơn seed, chạm data không do test sinh ra */
 afterAll(async () => {
-  await drawRepo.deleteMany({}); // XOÁ SẠCH — phá staging
-  await drawRepo.deleteMany({ status: "settled" }); // xoá cả draw thật đã settled
+  await drawRepo.deleteMany({}); // XOÁ SẠCH — phá data file test khác đang chạy song song
+  await drawRepo.deleteMany({ status: "settled" }); // xoá cả draw không thuộc test này
 });
 ```
 
@@ -70,7 +74,7 @@ Không bao giờ, trong bất kỳ file test hay test helper nào, được vi�
 - `findOneAndDelete({})`, `findOneAndUpdate({}, ...)`
 - `collection.drop()`, `db.dropDatabase()`, `db.dropCollection(...)`
 - Bất kỳ filter nào **không định danh chính xác** record do test tạo (VD chỉ theo `status`,
-  `type`, `createdAt`, hay range thời gian — vì có thể trùng data thật).
+  `type`, `createdAt`, hay range thời gian — vì có thể trùng data của file test khác).
 
 Nếu cần "reset về trạng thái sạch", KHÔNG xoá toàn collection. Thay vào đó: seed idempotent
 (upsert) đúng record test, và cleanup đúng record đó.
@@ -79,9 +83,12 @@ Nếu cần "reset về trạng thái sạch", KHÔNG xoá toàn collection. Tha
 
 ## 3. Seed helper phải idempotent và đặt đúng chỗ
 
-- Seed helper đặt tại `test/**/helpers/seed-*.ts`.
+- Seed helper đặt tại `test/**/helpers/seed-*.ts` (thường dưới `test/integration/`).
 - Dùng **upsert** để gọi nhiều lần vẫn an toàn (nhiều test file chạy chung process).
-- Mẫu: `packages/game-power655-application/test/use-cases/helpers/seed-global-config.ts`.
+- Mẫu: `packages/game-power655-application/test/integration/use-cases/helpers/seed-global-config.ts`.
+- Container lifecycle (Mongo/Redis start) thuộc `globalSetup` của `@megawin/vitest-config` —
+  KHÔNG start container trong `beforeAll`/`it()`. Seed data là concern TÁCH BIỆT khỏi lifecycle
+  container.
 
 ```typescript
 /** ĐÚNG — idempotent, dùng upsert */
@@ -114,18 +121,19 @@ Sau khi sửa doc trực tiếp ngoài luồng use-case → nhớ **invalidate c
 
 ---
 
-## 5. Ba lớp phòng thủ (hiểu để không phá nhầm)
+## 5. Một lớp phòng thủ (Cursor rule tĩnh) — không còn GritQL
 
-Quy tắc này (Cursor rule) là **lớp tĩnh** — ngăn code sai từ lúc viết. Ngoài ra hệ thống có:
+Quy tắc này (Cursor rule) là **lớp tĩnh** — ngăn code sai từ lúc viết. Ngoài ra:
 
-- **`db-guard` runtime** (`@megawin/vitest-config/setup-db-guard`): chạy đầu mỗi test worker.
-  - KHÔNG có `MONGODB_URI` → hiểu là test **mock/pure** (không chạm DB) → cho chạy bình thường.
-  - CÓ `MONGODB_URI` remote mà không set `ALLOW_DB_TESTS=true` → **từ chối chạy**.
-  - Đồng thời chặn động lệnh xoá/sửa filter rỗng (`deleteMany({})`, `drop`, `dropDatabase`) ở tầng driver.
-- **Biome GritQL** (kế hoạch `.cursor/plans/biome-monorepo-migration/p2-01-test-data-safety-guard.plan.md`):
-  chặn ở CI/lint các anti-pattern ở §2.
+- **Biome GritQL đã bị xoá** (migration Oxlint, `.cursor/plans/oxlint-migration/p0-07-retire-biome.plan.md`)
+  — không có JS plugin Oxlint thay thế. Từ giờ CHỈ còn lớp Cursor rule tĩnh này ngăn anti-pattern ở
+  §2 — không có enforcement tự động ở lint/CI. Review PR test integration phải tự kiểm tra kỹ hơn.
 
-KHÔNG dựa vào 2 lớp kia để bỏ qua quy tắc này. Viết test đúng ngay từ đầu.
+Không còn lớp máy nào backstop — viết test đúng ngay từ đầu, review PR kỹ khi có `delete*`/
+`update*` trong file test.
+
+> Runtime connection guard đã retire — `MONGODB_URI`/`REDIS_URI` luôn do Testcontainers
+> `globalSetup` set tới container ephemeral, không còn đường nối Atlas staging từ vitest.
 
 ---
 
@@ -136,4 +144,5 @@ KHÔNG dựa vào 2 lớp kia để bỏ qua quy tắc này. Viết test đúng 
 - [ ] Cleanup `afterAll`/`afterEach` mirror đúng filter seed, không dọn rộng.
 - [ ] Seed helper idempotent (upsert), đặt tại `test/**/helpers/`.
 - [ ] Không có `deleteMany({})`, `drop()`, `dropDatabase()` ở bất kỳ đâu trong file.
-- [ ] Test pure (không DB) thì không cần các mục trên — ghi rõ `PURE — không DB` ở đầu file.
+- [ ] Không start Mongo/Redis container trong `beforeAll`/`it()` — chỉ qua `globalSetup`.
+- [ ] Test pure (không DB) nằm ở `test/unit/` — ghi rõ `PURE — không DB` ở đầu file.

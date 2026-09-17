@@ -8,7 +8,9 @@
     "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "ignoreDeprecations": "6.0"
+    "isolatedDeclarations": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

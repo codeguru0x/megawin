@@ -8,7 +8,6 @@
  *   phải state riêng, staff KHÔNG sửa được ngày/giờ. Sai lịch thì phải sửa ở game config.
  * - Staff chỉ chọn SỐ KỲ muốn tạo (`count`) và bật/tắt "Mở bán" từng kỳ (`isOpen`).
  */
-
 import { useMemo, useState } from "react";
 
 import { generateDrawId } from "@megawin/game-power655/helpers";
@@ -153,7 +152,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CalendarPlus className="size-4.5 text-purple-500" />
+            <CalendarPlus className="text-game-max3d size-4.5" />
             Tạo kỳ quay Power 6/55
           </DialogTitle>
           <DialogDescription>
@@ -165,9 +164,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           {/* Row 1: Số kỳ + summary badges — invisible label ở cột badge để `items-end` canh
               đáy khớp input, rồi `items-center` + `h-9` bên trong canh giữa badge theo đúng
               chiều cao input. */}
-          <div className="flex items-end gap-4 flex-wrap">
+          <div className="flex flex-wrap items-end gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Số kỳ tạo</Label>
+              <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Số kỳ tạo</Label>
               <Input
                 type="number"
                 min={1}
@@ -184,18 +183,18 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider invisible">
+              <Label className="text-muted-foreground invisible text-xs font-medium tracking-wider uppercase">
                 Trạng thái
               </Label>
               <div className="flex h-9 flex-wrap items-center gap-1.5">
                 {preview.isLoading && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="text-muted-foreground flex items-center gap-1 text-xs">
                     <Loader2 className="size-3 animate-spin" />
                     Đang lấy gợi ý...
                   </span>
                 )}
                 {openCount > 0 && (
-                  <Badge className="bg-purple-600 hover:bg-purple-600 text-white text-xs">{openCount} mở bán</Badge>
+                  <Badge className="bg-game-max3d hover:bg-game-max3d text-xs text-white">{openCount} mở bán</Badge>
                 )}
                 {scheduledCount > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -203,12 +202,12 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </Badge>
                 )}
                 {hasFewerPreviewSlots && (
-                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                  <Badge variant="outline" className="border-warning text-warning text-xs">
                     Chỉ tạo được {rows.length}/{count} kỳ
                   </Badge>
                 )}
                 {preview.isError && (
-                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                  <Badge variant="outline" className="border-warning text-warning text-xs">
                     Lỗi tải gợi ý — thử lại
                   </Badge>
                 )}
@@ -217,30 +216,28 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           </div>
 
           {/* Bảng preview — read-only, chỉ toggle mở bán/chờ lịch */}
-          <div className="rounded-xl border overflow-hidden">
+          <div className="overflow-hidden rounded-xl border">
             {/* Table header */}
             <div
-              className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
+              className="bg-muted/40 grid items-center gap-x-3 border-b px-4 py-2"
               style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
             >
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">#</span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-center">
+              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">#</span>
+              <span className="text-muted-foreground text-center text-xs font-medium tracking-wider uppercase">
                 Thứ
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Mã kỳ</span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
+              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Mã kỳ</span>
+              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ quay</span>
               <div className="flex items-center justify-end">
                 <button
                   type="button"
                   onClick={toggleAll}
                   disabled={rows.length === 0}
-                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
+                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium transition-colors disabled:opacity-40"
                   title={allOpen ? "Tắt tất cả" : "Mở bán tất cả"}
                 >
-                  {allOpen ? <Unlock className="size-3 text-purple-600" /> : <Lock className="size-3" />}
-                  <span className={cn(allOpen && "text-purple-600 dark:text-purple-400")}>
-                    {allOpen ? "Đóng" : "Mở"}
-                  </span>
+                  {allOpen ? <Unlock className="text-game-max3d size-3" /> : <Lock className="size-3" />}
+                  <span className={cn(allOpen && "text-game-max3d")}>{allOpen ? "Đóng" : "Mở"}</span>
                 </button>
               </div>
             </div>
@@ -250,9 +247,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 bằng 1 dòng placeholder, data về là bung ra ⇒ dialog nhảy kích thước ngay trước mắt
                 staff (đo 16/09/2026 trên bản Keno: 379px → 863px). Khoá cứng ⇒ mở ra đã đúng cỡ
                 cuối, danh sách cuộn bên trong. `min(20rem,40vh)` để không tràn laptop nhỏ. */}
-            <div className="divide-y divide-border/50 h-[min(20rem,40vh)] overflow-y-auto">
+            <div className="divide-border/50 h-[min(20rem,40vh)] divide-y overflow-y-auto">
               {rows.length === 0 && (
-                <p className="flex h-full items-center justify-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                <p className="text-muted-foreground flex h-full items-center justify-center gap-2 px-4 text-center text-xs">
                   {preview.isLoading ? (
                     <>
                       <Loader2 className="size-3.5 animate-spin" />
@@ -268,15 +265,15 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   key={row.previewDrawId}
                   className={cn(
                     "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
-                    row.isOpen ? "bg-purple-50/50 dark:bg-purple-950/15" : "hover:bg-muted/20",
+                    row.isOpen ? "bg-game-max3d/50" : "hover:bg-muted/20",
                   )}
                   style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
                 >
                   {/* Số thứ tự */}
                   <span
                     className={cn(
-                      "tabular-nums text-xs font-semibold",
-                      row.isOpen ? "text-purple-700 dark:text-purple-300" : "text-foreground",
+                      "text-xs font-semibold tabular-nums",
+                      row.isOpen ? "text-game-max3d" : "text-foreground",
                     )}
                   >
                     {i + 1}
@@ -285,8 +282,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   {/* Thứ */}
                   <span
                     className={cn(
-                      "text-xs font-semibold tabular-nums text-center",
-                      row.isOpen ? "text-purple-700 dark:text-purple-300" : "text-foreground",
+                      "text-center text-xs font-semibold tabular-nums",
+                      row.isOpen ? "text-game-max3d" : "text-foreground",
                     )}
                   >
                     {row.weekday}
@@ -296,7 +293,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       config, không sửa tay từng kỳ ở đây. */}
                   <span
                     title="Mã kỳ tính từ game config — không thể chỉnh sửa"
-                    className="flex h-8 items-center rounded-md border border-dashed border-input bg-muted/30 px-2.5 font-mono text-xs tabular-nums text-muted-foreground"
+                    className="border-input bg-muted/30 text-muted-foreground flex h-8 items-center rounded-md border border-dashed px-2.5 font-mono text-xs tabular-nums"
                   >
                     {row.previewDrawId}
                   </span>
@@ -304,7 +301,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   {/* Giờ quay: read-only, lấy từ lưới giờ trong game config. */}
                   <span
                     title="Giờ quay theo cấu hình game — không thể chỉnh sửa"
-                    className="flex h-8 items-center rounded-md border border-dashed border-input bg-muted/30 px-2.5 font-mono text-xs tabular-nums text-foreground"
+                    className="border-input bg-muted/30 text-foreground flex h-8 items-center rounded-md border border-dashed px-2.5 font-mono text-xs tabular-nums"
                   >
                     {row.drawTime}
                   </span>
@@ -313,23 +310,23 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
                   <label
                     htmlFor={`power655-slot-toggle-${i}`}
-                    className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
+                    className="flex cursor-pointer items-center justify-end gap-1.5 select-none"
                   >
                     {row.isOpen ? (
-                      <Unlock className="size-3 text-purple-500 shrink-0" />
+                      <Unlock className="text-game-max3d size-3 shrink-0" />
                     ) : (
-                      <Lock className="size-3 text-muted-foreground/40 shrink-0" />
+                      <Lock className="text-muted-foreground/40 size-3 shrink-0" />
                     )}
                     <Switch
                       id={`power655-slot-toggle-${i}`}
                       checked={row.isOpen}
                       onCheckedChange={() => toggleSlot(i)}
-                      className="scale-75 origin-right pointer-events-none"
+                      className="pointer-events-none origin-right scale-75"
                     />
                     <span
                       className={cn(
-                        "text-[11px] font-medium min-w-12 text-left",
-                        row.isOpen ? "text-purple-600 dark:text-purple-400" : "text-muted-foreground",
+                        "min-w-12 text-left text-xs font-medium",
+                        row.isOpen ? "text-game-max3d" : "text-muted-foreground",
                       )}
                     >
                       {row.isOpen ? "Mở bán" : "Chờ lịch"}
@@ -348,7 +345,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <Button
             onClick={handleCreate}
             disabled={!canSubmit}
-            className={cn(openCount > 0 && "bg-purple-600 hover:bg-purple-700 text-white")}
+            className={cn(openCount > 0 && "bg-game-max3d hover:bg-game-max3d text-white")}
           >
             {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Tạo {rows.length} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}

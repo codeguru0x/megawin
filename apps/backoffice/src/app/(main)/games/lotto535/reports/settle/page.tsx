@@ -20,12 +20,12 @@ function Lotto535FinancialContent() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-sm">
+          <div className="from-warning to-loss flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lotto 5/35 — Báo cáo tài chính</h1>
-            <p className="text-xs text-muted-foreground">Doanh thu, trả thưởng, hoa hồng theo kỳ quay và đại lý</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Lotto 5/35 — Báo cáo tài chính</h1>
+            <p className="text-muted-foreground text-xs">Doanh thu, trả thưởng, hoa hồng theo kỳ quay và đại lý</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -41,14 +41,14 @@ function Lotto535FinancialContent() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onValueChange={(v) => void setTab(v as "draws" | "tenants")}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "draws" | "tenants")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="draws" className="gap-1.5">
-            <CalendarRange className="size-4 text-emerald-500" />
+            <CalendarRange className="text-profit size-4" />
             Theo kỳ quay
           </TabsTrigger>
           <TabsTrigger value="tenants" className="gap-1.5">
-            <Building2 className="size-4 text-blue-500" />
+            <Building2 className="text-info size-4" />
             Theo đại lý
           </TabsTrigger>
         </TabsList>

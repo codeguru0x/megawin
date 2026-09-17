@@ -1,5 +1,5 @@
-import { CompanyRole } from "@megawin/identity/entities";
 import { RegenerateApiKeyUseCase } from "@megawin/identity-application/use-cases/tenants";
+import { CompanyRole } from "@megawin/identity/entities";
 
 import { withApi } from "@/lib/api";
 

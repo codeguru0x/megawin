@@ -11,13 +11,12 @@
  * Checkbox header ("chọn tất cả đang hiện") chỉ chọn trong PHẠM VI `canSelectRows` (dòng có
  * ≥1 action khả dụng) — chọn dòng không action nào được là vô nghĩa (plan §5.3).
  */
-
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import dynamic from "next/dynamic";
 
 import { DrawStatus } from "@megawin/game-core/entities";
-import { type AlertTriangle, ArrowDown, ArrowUp, Calculator, List, Lock, Radio, Unlock } from "lucide-react";
+import { ArrowDown, ArrowUp, Calculator, List, Lock, Radio, Unlock, type AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 import { PublishResultAction } from "@/app/(main)/games/keno/operations/_lib/sections/draw-management/draw-actions/publish-result-action";
@@ -74,7 +73,7 @@ function SortHeader({ label, sortKey, activeSortKey, activeSortDir, align = "lef
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          "inline-flex items-center gap-1 hover:text-foreground",
+          "hover:text-foreground inline-flex items-center gap-1",
           isActive ? "text-foreground" : "text-muted-foreground",
         )}
       >
@@ -302,9 +301,9 @@ export function HubQueueTable() {
 
   function handleSort(key: QueueSortKey) {
     if (key === sortKey) {
-      setUrlParams({ sort: key, dir: sortDir === QueueSortDir.Desc ? QueueSortDir.Asc : QueueSortDir.Desc });
+      void setUrlParams({ sort: key, dir: sortDir === QueueSortDir.Desc ? QueueSortDir.Asc : QueueSortDir.Desc });
     } else {
-      setUrlParams({ sort: key, dir: QueueSortDir.Desc });
+      void setUrlParams({ sort: key, dir: QueueSortDir.Desc });
     }
   }
 
@@ -333,13 +332,13 @@ export function HubQueueTable() {
               className={cn(
                 "flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition-colors",
                 activeTab === tab
-                  ? "border-primary font-medium text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
+                  ? "border-primary text-foreground font-medium"
+                  : "text-muted-foreground hover:text-foreground border-transparent",
               )}
             >
               <Icon className="size-3.5" />
               {HUB_GATE_TAB_LABELS[tab]}
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums">{tabCounts[tab]}</span>
+              <span className="bg-muted rounded-full px-1.5 py-0.5 text-xs tabular-nums">{tabCounts[tab]}</span>
             </button>
           );
         })}
@@ -356,7 +355,7 @@ export function HubQueueTable() {
             {/* `sticky top-0 z-10 bg-card` (guideline §1.7) — header dính khi cuộn bảng dài
               (100+ dòng, tab "Tất cả"). `bg-card` KHÔNG trong suốt để dòng dữ liệu không lộ
               qua header khi cuộn. */}
-            <TableHeader className="sticky top-0 z-10 bg-card">
+            <TableHeader className="bg-card sticky top-0 z-10">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-8 pl-2">
                   {canSelectRows.length > 0 ? (
@@ -402,7 +401,7 @@ export function HubQueueTable() {
             <TableBody>
               {rows5A.length === 0 ? (
                 <TableRow>
-                  <td colSpan={10} className="py-8 text-center text-muted-foreground text-sm">
+                  <td colSpan={10} className="text-muted-foreground py-8 text-center text-sm">
                     Không có kỳ nào ở tab này.
                   </td>
                 </TableRow>

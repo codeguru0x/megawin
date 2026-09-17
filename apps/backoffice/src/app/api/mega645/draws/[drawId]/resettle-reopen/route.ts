@@ -1,5 +1,6 @@
 import { ReopenForCascadeUseCase } from "@megawin/game-mega645-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 import { actorFromSession } from "@/lib/audit-actor";
@@ -32,11 +33,16 @@ const reopenForCascadeUseCase = new ReopenForCascadeUseCase();
  *   - `DRAW_INVALID_TRANSITION`: kỳ không ở status `settled`.
  *   - `RESETTLE_REQUIRES_DBA`: thiếu `dbaConfirmed`.
  */
+
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(reopenForCascadeSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return reopenForCascadeUseCase.run({
       drawId,
       dbaConfirmed: body.dbaConfirmed,

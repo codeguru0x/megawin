@@ -36,7 +36,7 @@ export default async function PlayerDetailLayout({ children, params }: PlayerDet
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Sidebar: nav + profile card bên dưới */}
         <div className="shrink-0 lg:w-52">
-          <div className="rounded-xl border bg-card p-3 shadow-sm lg:sticky lg:top-20">
+          <div className="bg-card rounded-xl border p-3 shadow-sm lg:sticky lg:top-20">
             <PlayerDetailNav accountId={accountId} />
             {/* Profile tĩnh — luôn hiển thị, không phụ thuộc tab đang active */}
             <PlayerSidebarProfile accountId={accountId} />

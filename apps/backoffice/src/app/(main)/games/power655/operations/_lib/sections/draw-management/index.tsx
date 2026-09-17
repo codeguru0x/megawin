@@ -10,7 +10,6 @@
  *
  * Power 6/55 khác Mega 6/45: có bonusNumber trong kết quả, jackpot kép (JP1 + JP2).
  */
-
 import { useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -40,9 +39,9 @@ import {
 import {
   EditScheduleAction,
   PublishResultAction,
-  type PublishResultCurrentValues,
   ResettleAction,
   VoidDrawAction,
+  type PublishResultCurrentValues,
 } from "./draw-actions";
 import { DrawCommandCenter } from "./draw-command-center";
 
@@ -74,7 +73,9 @@ export function DrawManagementSection() {
   // Chuyển đổi draw detail → DrawResult cho CommandCenter
   const result: DrawResult | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     // Power 6/55: 5 tiers (JP1, JP2, tier1-3)
     const tierOrder: PrizeTier[] = [
@@ -136,7 +137,9 @@ export function DrawManagementSection() {
 
   const currentResult: PublishResultCurrentValues | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     return {
       winningMain: (d.result.winningMain as string[]) ?? [],
       bonusNumber: d.result.bonusNumber ?? "",
@@ -151,7 +154,9 @@ export function DrawManagementSection() {
 
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.voidInfo) return undefined;
+    if (!d?.voidInfo) {
+      return undefined;
+    }
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "",
@@ -161,7 +166,9 @@ export function DrawManagementSection() {
     };
   })();
 
-  if (!draw) return null;
+  if (!draw) {
+    return null;
+  }
 
   return (
     <>
@@ -205,7 +212,7 @@ export function DrawManagementSection() {
                   cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này đưa kỳ về trạng thái{" "}
                   <strong>Published</strong> để vào lại luồng kết sổ lại — số trúng được giữ nguyên.
                 </p>
-                <p className="font-medium text-orange-600 dark:text-orange-400">
+                <p className="text-warning font-medium">
                   Chỉ thực hiện khi DBA đã xác nhận cập nhật jackpot cycle thủ công.
                 </p>
               </div>

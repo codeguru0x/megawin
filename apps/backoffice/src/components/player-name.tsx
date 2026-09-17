@@ -15,7 +15,6 @@
  * `accountId`/`playerName`) tại `/games/{gameProduct}/reports/outstanding` — xem
  * `use-outstanding-filters.ts` của từng game.
  */
-
 import Link from "next/link";
 
 import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
@@ -46,9 +45,9 @@ export function PlayerName({
 }) {
   const { primary, tenantId } = splitBackofficeUsername(username || accountId || "");
   return (
-    <span className={cn("inline-flex items-baseline gap-1 min-w-0", className)}>
-      <span className="font-medium text-foreground truncate">{primary}</span>
-      {showTenant && tenantId && <span className="text-muted-foreground/70 text-[11px] shrink-0">· {tenantId}</span>}
+    <span className={cn("inline-flex min-w-0 items-baseline gap-1", className)}>
+      <span className="text-foreground truncate font-medium">{primary}</span>
+      {showTenant && tenantId && <span className="text-muted-foreground/70 shrink-0 text-xs">· {tenantId}</span>}
     </span>
   );
 }
@@ -71,7 +70,9 @@ export function buildOutstandingHref(
   username: string,
 ): Route | null {
   const { primary, tenantId } = splitBackofficeUsername(username);
-  if (!tenantId) return null;
+  if (!tenantId) {
+    return null;
+  }
   const params = new URLSearchParams({
     drawId,
     tenantId,
@@ -100,12 +101,14 @@ export function PlayerOutstandingLink({
   className?: string;
 }) {
   const href = buildOutstandingHref(gameProduct, drawId, accountId, username);
-  if (!href) return <PlayerName username={username} accountId={accountId} className={className} />;
+  if (!href) {
+    return <PlayerName username={username} accountId={accountId} className={className} />;
+  }
   return (
     <Link
       prefetch={false}
       href={href}
-      className={cn("hover:underline underline-offset-2 decoration-dotted", className)}
+      className={cn("decoration-dotted underline-offset-2 hover:underline", className)}
       title="Xem outstanding player ở kỳ này"
     >
       <PlayerName username={username} accountId={accountId} />

@@ -16,16 +16,13 @@ export function DualJackpotDisplay({ jp1Amount, jp2Amount, size = "md", classNam
     <div className={cn("flex flex-col gap-1", className)}>
       <div className="flex items-center gap-2">
         <span
-          className={cn(
-            "rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
-            size === "sm" && "text-[9px]",
-          )}
+          className={cn("bg-loss text-loss rounded-md px-1.5 py-0.5 text-xs font-bold", size === "sm" && "text-xs")}
         >
           Jackpot 1
         </span>
         <span
           className={cn(
-            "font-bold tabular-nums text-red-600 dark:text-red-400",
+            "text-loss font-bold tabular-nums",
             size === "sm" && "text-sm",
             size === "md" && "text-lg",
             size === "lg" && "text-3xl",
@@ -36,16 +33,13 @@ export function DualJackpotDisplay({ jp1Amount, jp2Amount, size = "md", classNam
       </div>
       <div className="flex items-center gap-2">
         <span
-          className={cn(
-            "rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
-            size === "sm" && "text-[9px]",
-          )}
+          className={cn("bg-info text-info rounded-md px-1.5 py-0.5 text-xs font-bold", size === "sm" && "text-xs")}
         >
           Jackpot 2
         </span>
         <span
           className={cn(
-            "font-bold tabular-nums text-blue-600 dark:text-blue-400",
+            "text-info font-bold tabular-nums",
             size === "sm" && "text-sm",
             size === "md" && "text-lg",
             size === "lg" && "text-3xl",

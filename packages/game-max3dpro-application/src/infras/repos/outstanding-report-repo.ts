@@ -14,8 +14,11 @@
  * Max 3D Pro CÓ lineCount (pairs per board).
  */
 
-import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-max3dpro/entities";
-import { MAX3DPRO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-max3dpro/entities";
+import {
+  MAX3DPRO_OUTSTANDING_DRAW_REPORTS,
+  type OutstandingDrawReport,
+  type OutstandingDrawReportEntity,
+} from "@megawin/game-max3dpro/entities";
 
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
@@ -71,7 +74,9 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
   async bulkUpsertDrawReports(
     reports: Array<Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">>,
   ): Promise<void> {
-    if (reports.length === 0) return;
+    if (reports.length === 0) {
+      return;
+    }
 
     const now = new Date();
     await this.bulkWrite(

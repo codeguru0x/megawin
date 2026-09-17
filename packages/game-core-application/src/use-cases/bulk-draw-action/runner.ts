@@ -20,8 +20,8 @@ import { BULK_CONCURRENCY } from "./limits";
  * chính, không transaction, không rollback.
  *
  * `Promise.all` trong hàm này là chỗ DUY NHẤT được phép trong toàn bộ luồng bulk — mọi
- * promise khác phải `await`/`void` tường minh (`biome-lint-conventions.mdc` §d cấm tuyệt
- * đối `biome-ignore` cho `noFloatingPromises` trong code tài chính, settle là đường tiền).
+ * promise khác phải `await`/`void` tường minh (`oxlint-lint-conventions.mdc` §d cấm tuyệt
+ * đối `linter-ignore` cho `noFloatingPromises` trong code tài chính, settle là đường tiền).
  *
  * LƯU Ý CHO CALLER khi ghi audit cấp lô: dùng `output.results.map((r) => r.drawId)`, KHÔNG
  * dùng `input.drawIds` — hàm này dedupe nội bộ nên `input.drawIds` có thể dài hơn

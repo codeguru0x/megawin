@@ -119,7 +119,7 @@ export class CreateDrawsUseCase extends UseCase<CreateDrawsInput, CreateDrawsOut
     // Guard kỳ đã tồn tại trong DB — 1 query cho cả lô, thay cho `getDrawById` mỗi vòng lặp
     // (N round-trip) vốn còn âm thầm `continue` khiến staff tưởng đã tạo đủ.
     const existing = await this.drawRepo.getDrawsByIds(docs.map((d) => d.drawId));
-  
+
     if (existing.length > 0) {
       throw AppException.conflict(`Kỳ đã tồn tại: ${existing.map((d) => d.drawId).join(", ")}.`);
     }

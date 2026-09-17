@@ -6,7 +6,7 @@
  * (kể cả invalidate ở identity-application) tự đồng bộ vì import từ file này.
  */
 
-import { CacheNamespace, cacheKey } from "@megawin/cache";
+import { cacheKey, CacheNamespace } from "@megawin/cache";
 
 const NS = CacheNamespace.TenantGw;
 

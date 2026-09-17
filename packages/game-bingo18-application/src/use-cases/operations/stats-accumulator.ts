@@ -37,10 +37,14 @@
  * seed đủ 38 bucket rồi lọc sau (F2-a) — tránh tốn RAM + vòng lặp vô ích mỗi tick × D kỳ.
  */
 
-import type { Bingo18BucketStat, Bingo18TopPotential, TenantBettingStat } from "@megawin/game-bingo18/entities";
-import { Bingo18PlayType, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
-import type { Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
-import { computeBingo18EntryPotentialWin } from "@megawin/game-bingo18/rules";
+import {
+  Bingo18PlayType,
+  Bingo18TripleKind,
+  type Bingo18BucketStat,
+  type Bingo18TopPotential,
+  type TenantBettingStat,
+} from "@megawin/game-bingo18/entities";
+import { computeBingo18EntryPotentialWin, type Bingo18PrizeSet } from "@megawin/game-bingo18/rules";
 
 import type { AccountStatsDelta, DrawStatsDelta, EntryBoardForStats, EntryForStats } from "../../infras/repos/types";
 
@@ -157,7 +161,9 @@ export class Bingo18DrawStatsAccumulator {
     this.sets += board.betCount;
 
     const bucket = this.resolveBucket(board);
-    if (!bucket) return; // board shape lạ (data hỏng) — bỏ qua bucket, totals vẫn đếm.
+    if (!bucket) {
+      return;
+    } // board shape lạ (data hỏng) — bỏ qua bucket, totals vẫn đếm.
 
     bucket.amount += board.betCount * unitPrice;
     bucket.sets += board.betCount;
@@ -178,7 +184,9 @@ export class Bingo18DrawStatsAccumulator {
         if (board.tripleKind === Bingo18TripleKind.Specific) {
           return this.lazyRecordBucket(this.tripleSpecific, board.number);
         }
-        if (!this.tripleAny) this.tripleAny = emptyBucket();
+        if (!this.tripleAny) {
+          this.tripleAny = emptyBucket();
+        }
         return this.tripleAny;
       case Bingo18PlayType.SumTotal:
         return this.lazyRecordBucket(this.sumTotal, board.sum);
@@ -191,7 +199,9 @@ export class Bingo18DrawStatsAccumulator {
 
   /** Lazy-get-or-create bucket trong 1 record theo key số (undefined key → invalid). */
   private lazyRecordBucket(map: Map<string, Bingo18BucketStat>, key: number | undefined): Bingo18BucketStat | null {
-    if (key === undefined) return null;
+    if (key === undefined) {
+      return null;
+    }
     const k = String(key);
     let bucket = map.get(k);
     if (!bucket) {
@@ -204,14 +214,23 @@ export class Bingo18DrawStatsAccumulator {
   private resolveBigSmallDraw(bet: EntryBoardForStats["bet"]): Bingo18BucketStat | null {
     switch (bet) {
       case "big":
-        if (!this.big) this.big = emptyBucket();
+        if (!this.big) {
+          this.big = emptyBucket();
+        }
         return this.big;
       case "draw":
-        if (!this.draw) this.draw = emptyBucket();
+        if (!this.draw) {
+          this.draw = emptyBucket();
+        }
         return this.draw;
       case "small":
-        if (!this.small) this.small = emptyBucket();
+        if (!this.small) {
+          this.small = emptyBucket();
+        }
         return this.small;
+      case undefined: {
+        throw new Error("Not implemented yet: undefined case");
+      }
       default:
         return null;
     }

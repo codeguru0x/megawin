@@ -1,5 +1,5 @@
-import { CompanyRole } from "@megawin/identity/entities";
 import { GetMyMfaStatusUseCase } from "@megawin/identity-application/use-cases/accounts";
+import { CompanyRole } from "@megawin/identity/entities";
 
 import { withApi } from "@/lib/api";
 

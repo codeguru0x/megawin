@@ -11,8 +11,8 @@
  */
 
 import {
-  type EnqueueDispatchPayoutsInput,
   EnqueueDispatchPayoutsUseCase,
+  type EnqueueDispatchPayoutsInput,
 } from "@megawin/game-max3d-application/use-cases/settle";
 
 const useCase = new EnqueueDispatchPayoutsUseCase();

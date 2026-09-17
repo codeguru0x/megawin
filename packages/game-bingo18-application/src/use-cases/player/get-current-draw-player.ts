@@ -8,8 +8,7 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import type { DrawEntity } from "@megawin/game-bingo18/entities";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, type UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { sortBy } from "@megawin/shared/utils";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";

@@ -1,10 +1,6 @@
 export type { GetEntryFeedInput } from "./get-entry-feed";
 export { GetEntryFeedUseCase } from "./get-entry-feed";
-export type {
-  PlayerDailyPublisher,
-  PublishPlayerDailyInput,
-  PublishPlayerDailyResult,
-} from "./publish-player-daily";
+export type { PlayerDailyPublisher, PublishPlayerDailyInput, PublishPlayerDailyResult } from "./publish-player-daily";
 export { SystemPublishPlayerDailyUseCase } from "./publish-player-daily";
 export type {
   PublishSettleDailyInput,

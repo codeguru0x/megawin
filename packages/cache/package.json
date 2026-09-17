@@ -11,9 +11,16 @@
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration"
   },
-  "keywords": ["megawin", "cache", "redis", "lru"],
+  "keywords": [
+    "megawin",
+    "cache",
+    "redis",
+    "lru"
+  ],
   "author": "",
   "license": "ISC",
   "exports": {
@@ -42,7 +49,7 @@
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.6",
-    "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   }
 }

@@ -15,8 +15,7 @@
  */
 
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { EntryReversal, TicketEntryEntity } from "@megawin/game-mega645/entities";
-import { Mega645Collections } from "@megawin/game-mega645/entities";
+import { Mega645Collections, type EntryReversal, type TicketEntryEntity } from "@megawin/game-mega645/entities";
 import { ObjectId } from "mongodb";
 
 import { EntryMapper } from "../mappers/entry-mapper";

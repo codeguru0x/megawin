@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
-    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
+    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod",
+    "test:unit": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -32,8 +33,8 @@
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.9.6",
     "serverless-offline": "^14.7.3",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   }
 }

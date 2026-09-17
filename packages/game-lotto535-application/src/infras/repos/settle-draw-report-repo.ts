@@ -13,8 +13,11 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-lotto535/entities";
-import { LOTTO535_SETTLE_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+import {
+  LOTTO535_SETTLE_DRAW_REPORTS,
+  type SettleDrawReport,
+  type SettleDrawReportEntity,
+} from "@megawin/game-lotto535/entities";
 
 import { SettleDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
@@ -143,7 +146,9 @@ export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity,
       },
     ]);
 
-    if (result.length === 0) return null;
+    if (result.length === 0) {
+      return null;
+    }
 
     const r = result[0] as any;
     return {

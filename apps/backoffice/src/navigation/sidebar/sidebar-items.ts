@@ -1,5 +1,4 @@
-import type { AccountRole } from "@megawin/identity/entities";
-import { CompanyRole } from "@megawin/identity/entities";
+import { CompanyRole, type AccountRole } from "@megawin/identity/entities";
 import {
   Activity,
   AlertTriangle,
@@ -20,7 +19,6 @@ import {
   Gauge,
   History,
   LayoutDashboard,
-  type LucideIcon,
   Radar,
   Send,
   Settings2,
@@ -28,6 +26,7 @@ import {
   Trophy,
   Tv,
   User,
+  type LucideIcon,
 } from "lucide-react";
 
 export interface NavSubItem {

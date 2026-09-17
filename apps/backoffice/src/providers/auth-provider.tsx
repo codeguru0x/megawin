@@ -11,8 +11,7 @@
  * route bảo vệ, provider sẽ tự redirect sang `/login?callbackUrl=...` thay vì
  * để UI âm thầm fallback sang trạng thái "User" không đầy đủ thông tin.
  */
-
-import { createContext, type ReactNode, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 
 import { usePathname, useRouter } from "next/navigation";
 
@@ -45,9 +44,15 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (isPending) return;
-    if (session) return;
-    if (isPublicRoute(pathname)) return;
+    if (isPending) {
+      return;
+    }
+    if (session) {
+      return;
+    }
+    if (isPublicRoute(pathname)) {
+      return;
+    }
 
     const callbackUrl = encodeURIComponent(pathname);
     router.replace(`/login?callbackUrl=${callbackUrl}`);

@@ -36,8 +36,11 @@
 
 import { AppException, UseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { ResettleScenario as ResettleScenarioType } from "@megawin/game-lotto535/rules";
-import { isSplitCycleDraw, ResettleScenario } from "@megawin/game-lotto535/rules";
+import {
+  isSplitCycleDraw,
+  ResettleScenario,
+  type ResettleScenario as ResettleScenarioType,
+} from "@megawin/game-lotto535/rules";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";

@@ -47,7 +47,7 @@ export function AccountSwitcher({ user }: Readonly<{ user: AccountDisplayUser }>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">{user.name}</span>
-            <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+            <span className="text-muted-foreground truncate text-xs">{user.email}</span>
           </div>
         </div>
         <DropdownMenuSeparator />

@@ -29,79 +29,73 @@ const STATUS_VISUALS: Record<
 > = {
   [DrawStatus.Scheduled]: {
     border: "border-border",
-    accent: "from-slate-300 to-slate-400",
+    accent: "from-muted to-background",
     cardBg: "",
-    iconBg: "bg-slate-100 dark:bg-slate-800",
-    iconColor: "text-slate-500 dark:text-slate-400",
+    iconBg: "bg-muted",
+    iconColor: "text-muted-foreground",
     pingColor: "",
     dotColor: "",
   },
   [DrawStatus.SalesOpen]: {
-    border: "border-violet-200 dark:border-violet-800",
-    accent: "from-violet-400 via-violet-500 to-purple-500",
-    cardBg:
-      "bg-linear-to-br from-violet-50/60 via-card to-purple-50/30 dark:from-violet-950/20 dark:via-card dark:to-purple-950/10",
-    iconBg: "bg-violet-100 dark:bg-violet-900/60",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    pingColor: "bg-violet-400",
-    dotColor: "bg-violet-500",
+    border: "border-game-max3d",
+    accent: "from-game-max3d via-game-max3d to-game-max3d",
+    cardBg: "bg-linear-to-br from-game-max3d/60 via-card to-game-max3d/30 dark:via-card",
+    iconBg: "bg-game-max3d",
+    iconColor: "text-game-max3d",
+    pingColor: "bg-game-max3d",
+    dotColor: "bg-game-max3d",
   },
   [DrawStatus.SalesClosed]: {
-    border: "border-amber-200 dark:border-amber-800",
-    accent: "from-amber-500 to-orange-500",
-    cardBg:
-      "bg-linear-to-br from-amber-50/60 via-card to-orange-50/30 dark:from-amber-950/20 dark:via-card dark:to-orange-950/10",
-    iconBg: "bg-amber-100 dark:bg-amber-900/60",
-    iconColor: "text-amber-600 dark:text-amber-400",
-    pingColor: "bg-amber-400",
-    dotColor: "bg-amber-500",
+    border: "border-warning",
+    accent: "from-warning to-loss",
+    cardBg: "bg-linear-to-br from-warning/60 via-card to-warning/30 dark:via-card",
+    iconBg: "bg-warning",
+    iconColor: "text-warning",
+    pingColor: "bg-warning",
+    dotColor: "bg-warning",
   },
   [DrawStatus.Published]: {
-    border: "border-purple-200 dark:border-purple-800",
-    accent: "from-purple-500 via-fuchsia-500 to-pink-500",
-    cardBg:
-      "bg-linear-to-br from-purple-50/60 via-card to-fuchsia-50/30 dark:from-purple-950/20 dark:via-card dark:to-fuchsia-950/10",
-    iconBg: "bg-purple-100 dark:bg-purple-900/60",
-    iconColor: "text-purple-600 dark:text-purple-400",
-    pingColor: "bg-purple-400",
-    dotColor: "bg-purple-500",
+    border: "border-game-max3d",
+    accent: "from-game-max3d via-game-max3dpro to-game-max3dpro",
+    cardBg: "bg-linear-to-br from-game-max3d/60 via-card to-game-max3dpro/30 dark:via-card",
+    iconBg: "bg-game-max3d",
+    iconColor: "text-game-max3d",
+    pingColor: "bg-game-max3d",
+    dotColor: "bg-game-max3d",
   },
   [DrawStatus.Settling]: {
-    border: "border-orange-200 dark:border-orange-800",
-    accent: "from-orange-500 to-red-500",
-    cardBg:
-      "bg-linear-to-br from-orange-50/60 via-card to-red-50/30 dark:from-orange-950/20 dark:via-card dark:to-red-950/10",
-    iconBg: "bg-orange-100 dark:bg-orange-900/60",
-    iconColor: "text-orange-600 dark:text-orange-400",
-    pingColor: "bg-orange-400",
-    dotColor: "bg-orange-500",
+    border: "border-warning",
+    accent: "from-warning to-loss",
+    cardBg: "bg-linear-to-br from-warning/60 via-card to-loss/30 dark:via-card",
+    iconBg: "bg-warning",
+    iconColor: "text-warning",
+    pingColor: "bg-warning",
+    dotColor: "bg-warning",
   },
   [DrawStatus.Voiding]: {
-    border: "border-red-200 dark:border-red-800",
-    accent: "from-red-500 to-rose-600",
-    cardBg:
-      "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
-    iconBg: "bg-red-100 dark:bg-red-900/60",
-    iconColor: "text-red-600 dark:text-red-400",
-    pingColor: "bg-red-400",
-    dotColor: "bg-red-500",
+    border: "border-loss",
+    accent: "from-loss to-warning",
+    cardBg: "bg-linear-to-br from-loss/60 via-card to-loss/30 dark:via-card",
+    iconBg: "bg-loss",
+    iconColor: "text-loss",
+    pingColor: "bg-loss",
+    dotColor: "bg-loss",
   },
   [DrawStatus.Settled]: {
-    border: "border-slate-200 dark:border-slate-700",
-    accent: "from-slate-400 to-slate-500",
+    border: "border-border border-border",
+    accent: "from-muted to-background",
     cardBg: "",
-    iconBg: "bg-slate-100 dark:bg-slate-800",
-    iconColor: "text-slate-500 dark:text-slate-400",
+    iconBg: "bg-muted",
+    iconColor: "text-muted-foreground",
     pingColor: "",
     dotColor: "",
   },
   [DrawStatus.Void]: {
-    border: "border-red-200 dark:border-red-800",
-    accent: "from-red-600 to-rose-700",
-    cardBg:
-      "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
-    iconBg: "bg-red-100 dark:bg-red-900/60",
-    iconColor: "text-red-600 dark:text-red-400",
+    border: "border-loss",
+    accent: "from-loss to-warning",
+    cardBg: "bg-linear-to-br from-loss/60 via-card to-loss/30 dark:via-card",
+    iconBg: "bg-loss",
+    iconColor: "text-loss",
     pingColor: "",
     dotColor: "",
   },
@@ -109,7 +103,7 @@ const STATUS_VISUALS: Record<
 
 const DEFAULT_VISUAL: (typeof STATUS_VISUALS)[string] = {
   border: "border-border",
-  accent: "from-border to-border",
+  accent: "from-border to-muted",
   cardBg: "",
   iconBg: "bg-muted/40",
   iconColor: "text-muted-foreground",
@@ -132,9 +126,15 @@ const SHOW_PING = new Set([
 ]);
 
 function getStatusIcon(status: string) {
-  if (status === DrawStatus.Settled) return CalendarCheck;
-  if (status === DrawStatus.Void || status === DrawStatus.Voiding) return Ban;
-  if (status === DrawStatus.Settling) return Loader2;
+  if (status === DrawStatus.Settled) {
+    return CalendarCheck;
+  }
+  if (status === DrawStatus.Void || status === DrawStatus.Voiding) {
+    return Ban;
+  }
+  if (status === DrawStatus.Settling) {
+    return Loader2;
+  }
   return Radio;
 }
 
@@ -152,22 +152,22 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
     [DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled].includes(status as any);
 
   return (
-    <div className={cn("rounded-xl border overflow-hidden", vis.border, vis.cardBg)}>
+    <div className={cn("overflow-hidden rounded-xl border", vis.border, vis.cardBg)}>
       <div className={cn("h-1 w-full bg-linear-to-r", vis.accent)} />
 
-      <div className="px-5 py-4 space-y-4">
+      <div className="space-y-4 px-5 py-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-start gap-3 min-w-0">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-3">
             <div
               className={cn(
-                "relative flex size-9 items-center justify-center rounded-lg shrink-0 mt-0.5 shadow-sm",
+                "relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg shadow-sm",
                 vis.iconBg,
               )}
             >
               <StatusIcon className={cn("size-4", vis.iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
-                <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
+                <span className="absolute -top-0.5 -right-0.5 flex size-2.5">
                   <span
                     className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", vis.pingColor)}
                   />
@@ -176,30 +176,30 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               )}
             </div>
             <div className="min-w-0 space-y-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
                   prefetch={false}
                   href={opsLink(draw.drawId)}
-                  className="text-sm font-semibold tracking-tight hover:underline underline-offset-2"
+                  className="text-sm font-semibold tracking-tight underline-offset-2 hover:underline"
                 >
                   Kỳ {draw.drawNo} — {draw.drawDate}
                 </Link>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="text-[11px] text-muted-foreground font-mono">{draw.drawId}</p>
+              <p className="text-muted-foreground font-mono text-xs">{draw.drawId}</p>
             </div>
           </div>
         </div>
 
         {/* Schedule chips */}
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex flex-wrap items-center gap-4">
           {draw.sales.openAt && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div title={undefined} className="flex items-center gap-1.5 cursor-default select-none">
-                  <Unlock className="size-3.5 text-emerald-500" />
-                  <span className="text-xs text-muted-foreground">Mở bán</span>
-                  <span className="text-xs font-mono font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                <div title={undefined} className="flex cursor-default items-center gap-1.5 select-none">
+                  <Unlock className="text-profit size-3.5" />
+                  <span className="text-muted-foreground text-xs">Mở bán</span>
+                  <span className="text-profit font-mono text-xs font-bold tabular-nums">
                     {displayVNTime(draw.sales.openAt)}
                   </span>
                 </div>
@@ -211,10 +211,10 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           )}
           <Tooltip>
             <TooltipTrigger asChild>
-              <div title={undefined} className="flex items-center gap-1.5 cursor-default select-none">
-                <Lock className="size-3.5 text-amber-500" />
-                <span className="text-xs text-muted-foreground">Đóng bán</span>
-                <span className="text-xs font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400">
+              <div title={undefined} className="flex cursor-default items-center gap-1.5 select-none">
+                <Lock className="text-warning size-3.5" />
+                <span className="text-muted-foreground text-xs">Đóng bán</span>
+                <span className="text-warning font-mono text-xs font-bold tabular-nums">
                   {displayVNTime(draw.sales.closeAt)}
                 </span>
               </div>
@@ -225,12 +225,10 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div title={undefined} className="flex items-center gap-1.5 cursor-default select-none">
-                <Clock className="size-3.5 text-violet-500" />
-                <span className="text-xs text-muted-foreground">Quay số</span>
-                <span className="text-xs font-mono font-bold tabular-nums text-violet-600 dark:text-violet-400">
-                  {drawTime}
-                </span>
+              <div title={undefined} className="flex cursor-default items-center gap-1.5 select-none">
+                <Clock className="text-game-max3d size-3.5" />
+                <span className="text-muted-foreground text-xs">Quay số</span>
+                <span className="text-game-max3d font-mono text-xs font-bold tabular-nums">{drawTime}</span>
               </div>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="font-mono text-xs">
@@ -242,23 +240,23 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
         {/* Metrics */}
         {showStats && (
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex items-center gap-3 rounded-xl border bg-white/80 dark:bg-card p-3">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
-                <Ticket className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="dark:bg-card flex items-center gap-3 rounded-xl border bg-white/80 p-3">
+              <div className="bg-info flex size-8 items-center justify-center rounded-lg">
+                <Ticket className="text-info size-3.5" />
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Vé đã bán</p>
+                <p className="text-muted-foreground text-xs">Vé đã bán</p>
                 <p className="text-sm font-semibold tabular-nums">
                   {draw.stats!.ticketEntryCount.toLocaleString("vi-VN")}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border bg-white/80 dark:bg-card p-3">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
-                <CircleDollarSign className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            <div className="dark:bg-card flex items-center gap-3 rounded-xl border bg-white/80 p-3">
+              <div className="bg-profit flex size-8 items-center justify-center rounded-lg">
+                <CircleDollarSign className="text-profit size-3.5" />
               </div>
               <div>
-                <p className="text-[11px] text-muted-foreground">Doanh thu</p>
+                <p className="text-muted-foreground text-xs">Doanh thu</p>
                 <p className="text-sm font-semibold tabular-nums">{formatVND(draw.stats!.totalSalesAmount)}</p>
               </div>
             </div>
@@ -279,17 +277,17 @@ export function Max3dQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const showPing = SHOW_PING.has(status as any);
 
   return (
-    <div className={cn("rounded-xl border overflow-hidden", vis.border)}>
+    <div className={cn("overflow-hidden rounded-xl border", vis.border)}>
       <div className={cn("h-0.5 w-full bg-linear-to-r", vis.accent)} />
 
-      <div className="p-4 space-y-3">
+      <div className="space-y-3 p-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className={cn("relative flex size-7 items-center justify-center rounded-lg shrink-0", vis.iconBg)}>
+            <div className={cn("relative flex size-7 shrink-0 items-center justify-center rounded-lg", vis.iconBg)}>
               <StatusIcon className={cn("size-3", vis.iconColor)} />
               {showPing && (
-                <span className="absolute -right-0.5 -top-0.5 flex size-2">
+                <span className="absolute -top-0.5 -right-0.5 flex size-2">
                   <span
                     className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", vis.pingColor)}
                   />
@@ -302,23 +300,23 @@ export function Max3dQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 <Link
                   prefetch={false}
                   href={opsLink(draw.drawId)}
-                  className="text-sm font-semibold text-foreground hover:underline underline-offset-2"
+                  className="text-foreground text-sm font-semibold underline-offset-2 hover:underline"
                 >
                   Kỳ {draw.drawNo}
                 </Link>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="font-mono text-[11px] text-muted-foreground">{draw.drawId}</p>
+              <p className="text-muted-foreground font-mono text-xs">{draw.drawId}</p>
             </div>
           </div>
         </div>
 
         {/* Schedule compact */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-3 text-xs">
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex items-center gap-1 cursor-default select-none">
-                <Lock className="size-3 text-amber-400" />
+              <span className="flex cursor-default items-center gap-1 select-none">
+                <Lock className="text-warning size-3" />
                 {displayVNTime(draw.sales.closeAt)}
               </span>
             </TooltipTrigger>
@@ -328,16 +326,16 @@ export function Max3dQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex items-center gap-1 cursor-default select-none">
-                <Clock className="size-3 text-violet-400" />
-                <span className="font-semibold text-foreground">{drawTime}</span>
+              <span className="flex cursor-default items-center gap-1 select-none">
+                <Clock className="text-game-max3d size-3" />
+                <span className="text-foreground font-semibold">{drawTime}</span>
               </span>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="font-mono text-xs">
               {displayVNDateTime(draw.drawTime)}
             </TooltipContent>
           </Tooltip>
-          <span className="ml-auto text-[10px] text-muted-foreground/60">{draw.drawDate}</span>
+          <span className="text-muted-foreground/60 ml-auto text-xs">{draw.drawDate}</span>
         </div>
       </div>
     </div>

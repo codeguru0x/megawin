@@ -1,5 +1,4 @@
-import type { TicketLineDoc } from "@megawin/game-max3dpro/entities";
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
+import { Max3dproCollections, type TicketLineDoc } from "@megawin/game-max3dpro/entities";
 import { chunk } from "@megawin/shared/utils";
 
 import { BaseRepo } from "./base-repo";
@@ -45,7 +44,9 @@ export class LineRepository extends BaseRepo<any> {
    * cùng filter `(entryId, lineIndex)` → kết quả deterministic theo input cuối.
    */
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      return;
+    }
 
     const ops = lines.map((doc) => {
       // Tách createdAt khỏi $set: chỉ ghi khi insert mới.

@@ -8,8 +8,8 @@ import {
   analyzeEvenOddProfitability,
   getBigSmallOdds,
   getEvenOddOdds,
-  type SideBetProfitAnalysis,
   TOTAL_OUTCOMES,
+  type SideBetProfitAnalysis,
 } from "@megawin/game-keno/rules";
 import { formatNumber } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
@@ -32,9 +32,9 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
+        <span className={`inline-flex cursor-help items-center gap-1 ${className ?? ""}`}>
           {label}
-          <Info className="size-3 text-muted-foreground/60" />
+          <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-xs">
@@ -135,18 +135,18 @@ function buildBetSummaries(
 /** Dải hiển thị RTP theo từng cửa cược — con số staff cần nhìn để quyết định giá giải. */
 function BetRtpStrip({ summaries }: { summaries: BetSummary[] }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-muted/30 px-2 py-1.5 text-xs">
+    <div className="bg-muted/30 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md px-2 py-1.5 text-xs">
       <HeaderTooltip
         label="Tỷ lệ TT theo cửa cược"
         tip="Người chơi đặt theo CỬA (Lớn / Nhỏ / Hoà / Chẵn / Lẻ…), không đặt theo từng mức kết quả. Một cửa thắng ở nhiều mức nên RTP thật = TỔNG tỷ lệ các mức đó. Đây là con số quyết định lãi/lỗ, > 100% = LỖ."
-        className="font-medium text-muted-foreground"
+        className="text-muted-foreground font-medium"
       />
       {summaries.map((b) => (
         <span
           key={b.label}
           className={cn(
-            "tabular-nums font-semibold",
-            b.payoutRatio > 1 ? "text-red-600" : b.payoutRatio > 0.8 ? "text-amber-600" : "text-emerald-600",
+            "font-semibold tabular-nums",
+            b.payoutRatio > 1 ? "text-loss" : b.payoutRatio > 0.8 ? "text-warning" : "text-profit",
           )}
         >
           {b.label}: {(b.payoutRatio * 100).toFixed(1)}%
@@ -178,7 +178,7 @@ function BigSmallGroup({
   const bestMargin = Math.max(...betSummaries.map((b) => b.marginPercent));
   const allSafe = overBetCount === 0;
 
-  const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
+  const marginColor = worstMargin >= 50 ? "text-profit" : worstMargin >= 0 ? "text-warning" : "text-loss";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -186,16 +186,16 @@ function BigSmallGroup({
         <button
           type="button"
           className={cn(
-            "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
+            "hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors",
             open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className="bg-amber-500 text-white text-xs">Lớn/Nhỏ</Badge>
-            <span className="text-sm text-muted-foreground">{BS_FIELDS.length} mức thưởng</span>
+            <Badge className="bg-warning text-xs text-white">Lớn/Nhỏ</Badge>
+            <span className="text-muted-foreground text-sm">{BS_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="size-3.5 text-muted-foreground cursor-help" />
+                <Info className="text-muted-foreground size-3.5 cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs text-xs">
                 Dựa vào 20 số quay: đếm số lượng số "lớn" (41-80) và "nhỏ" (1-40).
@@ -203,7 +203,7 @@ function BigSmallGroup({
             </Tooltip>
           </div>
           <div className="flex items-center gap-3">
-            <span className={cn("text-xs tabular-nums font-semibold", marginColor)}>
+            <span className={cn("text-xs font-semibold tabular-nums", marginColor)}>
               {allSafe ? (
                 <TrendingUp className="mr-0.5 inline size-3" />
               ) : (
@@ -212,9 +212,9 @@ function BigSmallGroup({
               Biên thấp nhất theo cửa: {worstMargin.toFixed(1)}%
             </span>
             {open ? (
-              <ChevronUp className="size-4 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground size-4" />
             ) : (
-              <ChevronDown className="size-4 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground size-4" />
             )}
           </div>
         </button>
@@ -222,7 +222,7 @@ function BigSmallGroup({
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
           <BetRtpStrip summaries={betSummaries} />
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="bg-muted/40 text-muted-foreground grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-xs font-medium tracking-wider uppercase">
             {" "}
             <span>Kết quả</span>
             <span className="text-right">Giá trị thưởng</span>
@@ -258,13 +258,13 @@ function BigSmallGroup({
               >
                 <span className="text-xs">{f.label}</span>
                 <MoneyInput
-                  className="h-8 w-40 text-right tabular-nums text-sm font-semibold"
+                  className="h-8 w-40 text-right text-sm font-semibold tabular-nums"
                   value={prizes[f.key]}
                   onValueChange={(v) => onChange(f.key, v ?? 0)}
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                    <span className="text-muted-foreground cursor-help text-right text-xs tabular-nums">
                       {`1 : ${fmt(Math.round(1 / odds.probability))}`}
                     </span>
                   </TooltipTrigger>
@@ -274,17 +274,17 @@ function BigSmallGroup({
                     Xác suất: {(odds.probability * 100).toFixed(4)}%
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-right text-xs tabular-nums font-medium">
+                <span className="text-right text-xs font-medium tabular-nums">
                   {fmt(Math.round(odds.probability * prizes[f.key]))}
                 </span>
                 <span
                   className={cn(
-                    "text-right text-xs tabular-nums font-semibold",
+                    "text-right text-xs font-semibold tabular-nums",
                     tier && tier.payoutRatio > 1
-                      ? "text-red-600"
+                      ? "text-loss"
                       : tier && tier.payoutRatio > 0.5
-                        ? "text-amber-600"
-                        : "text-emerald-600",
+                        ? "text-warning"
+                        : "text-profit",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -292,7 +292,7 @@ function BigSmallGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
                   )}
                 >
                   {tier ? fmt(Math.round(tier.breakEvenPrize)) : "–"}
@@ -300,8 +300,8 @@ function BigSmallGroup({
               </div>
             );
           })}
-          <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
-            <span className="text-xs font-medium text-muted-foreground">
+          <div className="mt-1 flex items-center justify-between border-t px-2 py-2">
+            <span className="text-muted-foreground text-xs font-medium">
               Tổng Lớn/Nhỏ · {overBetCount > 0 ? `${overBetCount} cửa cược vượt hoà vốn` : "Tất cả cửa cược an toàn"}
             </span>
             <span className={cn("text-xs font-bold tabular-nums", marginColor)}>
@@ -342,7 +342,7 @@ function EvenOddGroup({
   const bestMargin = Math.max(...betSummaries.map((b) => b.marginPercent));
   const allSafe = overBetCount === 0;
 
-  const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
+  const marginColor = worstMargin >= 50 ? "text-profit" : worstMargin >= 0 ? "text-warning" : "text-loss";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -350,16 +350,16 @@ function EvenOddGroup({
         <button
           type="button"
           className={cn(
-            "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
+            "hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors",
             open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className="bg-teal-500 text-white text-xs">Chẵn/Lẻ</Badge>
-            <span className="text-sm text-muted-foreground">{EO_FIELDS.length} mức thưởng</span>
+            <Badge className="bg-game-mega645 text-xs text-white">Chẵn/Lẻ</Badge>
+            <span className="text-muted-foreground text-sm">{EO_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="size-3.5 text-muted-foreground cursor-help" />
+                <Info className="text-muted-foreground size-3.5 cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs text-xs">
                 Dựa vào 20 số quay: đếm số chẵn và số lẻ trong 20 số.
@@ -367,7 +367,7 @@ function EvenOddGroup({
             </Tooltip>
           </div>
           <div className="flex items-center gap-3">
-            <span className={cn("text-xs tabular-nums font-semibold", marginColor)}>
+            <span className={cn("text-xs font-semibold tabular-nums", marginColor)}>
               {allSafe ? (
                 <TrendingUp className="mr-0.5 inline size-3" />
               ) : (
@@ -376,9 +376,9 @@ function EvenOddGroup({
               Biên thấp nhất theo cửa: {worstMargin.toFixed(1)}%
             </span>
             {open ? (
-              <ChevronUp className="size-4 text-muted-foreground" />
+              <ChevronUp className="text-muted-foreground size-4" />
             ) : (
-              <ChevronDown className="size-4 text-muted-foreground" />
+              <ChevronDown className="text-muted-foreground size-4" />
             )}
           </div>
         </button>
@@ -386,7 +386,7 @@ function EvenOddGroup({
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
           <BetRtpStrip summaries={betSummaries} />
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="bg-muted/40 text-muted-foreground grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-xs font-medium tracking-wider uppercase">
             {" "}
             <span>Kết quả</span>
             <span className="text-right">Giá trị thưởng</span>
@@ -422,13 +422,13 @@ function EvenOddGroup({
               >
                 <span className="text-xs">{f.label}</span>
                 <MoneyInput
-                  className="h-8 w-40 text-right tabular-nums text-sm font-semibold"
+                  className="h-8 w-40 text-right text-sm font-semibold tabular-nums"
                   value={prizes[f.key]}
                   onValueChange={(v) => onChange(f.key, v ?? 0)}
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                    <span className="text-muted-foreground cursor-help text-right text-xs tabular-nums">
                       {`1 : ${fmt(Math.round(1 / odds.probability))}`}
                     </span>
                   </TooltipTrigger>
@@ -438,17 +438,17 @@ function EvenOddGroup({
                     Xác suất: {(odds.probability * 100).toFixed(4)}%
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-right text-xs tabular-nums font-medium">
+                <span className="text-right text-xs font-medium tabular-nums">
                   {fmt(Math.round(odds.probability * prizes[f.key]))}
                 </span>
                 <span
                   className={cn(
-                    "text-right text-xs tabular-nums font-semibold",
+                    "text-right text-xs font-semibold tabular-nums",
                     tier && tier.payoutRatio > 1
-                      ? "text-red-600"
+                      ? "text-loss"
                       : tier && tier.payoutRatio > 0.5
-                        ? "text-amber-600"
-                        : "text-emerald-600",
+                        ? "text-warning"
+                        : "text-profit",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -456,7 +456,7 @@ function EvenOddGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
+                    isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground",
                   )}
                 >
                   {tier ? fmt(Math.round(tier.breakEvenPrize)) : "–"}
@@ -464,8 +464,8 @@ function EvenOddGroup({
               </div>
             );
           })}
-          <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
-            <span className="text-xs font-medium text-muted-foreground">
+          <div className="mt-1 flex items-center justify-between border-t px-2 py-2">
+            <span className="text-muted-foreground text-xs font-medium">
               Tổng Chẵn/Lẻ · {overBetCount > 0 ? `${overBetCount} cửa cược vượt hoà vốn` : "Tất cả cửa cược an toàn"}
             </span>
             <span className={cn("text-xs font-bold tabular-nums", marginColor)}>
@@ -506,11 +506,11 @@ export function SideBetsSection({ config, onSave, isPending }: SideBetsSectionPr
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <CardContent className="p-0">
         <div className="p-6 pb-4">
-          <h3 className="text-sm font-semibold text-foreground">Giải thưởng bổ sung – Lớn/Nhỏ & Chẵn/Lẻ</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="text-foreground text-sm font-semibold">Giải thưởng bổ sung – Lớn/Nhỏ & Chẵn/Lẻ</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
             Giải thưởng cho cách chơi bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
             {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
           </p>

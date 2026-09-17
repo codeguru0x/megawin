@@ -57,7 +57,9 @@ function extractApiKey(event: {
 }): string | undefined {
   const headers = event.headers ?? {};
   const fromHeader = headers["x-api-key"] ?? headers["X-Api-Key"] ?? undefined;
-  if (fromHeader) return fromHeader;
+  if (fromHeader) {
+    return fromHeader;
+  }
 
   const qs = event.queryStringParameters ?? {};
   return qs["apiKey"] ?? qs["api_key"] ?? undefined;

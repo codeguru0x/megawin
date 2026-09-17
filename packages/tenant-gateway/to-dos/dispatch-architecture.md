@@ -71,6 +71,7 @@ FinalizeVoid → DispatchRefunds (loop 5s) → CheckRefundDone → RefundComplet
 ```typescript
 // apps/worker-mega645/src/handlers/settle/dispatch-payouts.ts
 import { DispatchPayoutBatchUseCase } from "@megawin/game-mega645-application/use-cases/payout";
+
 const useCase = new DispatchPayoutBatchUseCase();
 export async function handler(event: DispatchPayoutBatchInput) {
   return useCase.run(event);
@@ -273,10 +274,7 @@ export interface DispatchConfig {
 ```typescript
 // packages/game-core-application/src/use-cases/dispatch/generic-dispatch-payout.ts
 
-export class GenericDispatchPayoutUseCase extends InternalUseCase<
-  DispatchPayoutBatchInput,
-  DispatchPayoutBatchResult
-> {
+export class GenericDispatchPayoutUseCase extends InternalUseCase<DispatchPayoutBatchInput, DispatchPayoutBatchResult> {
   constructor(
     private readonly entryRepo: DispatchableEntryRepository,
     private readonly config: DispatchConfig,
@@ -297,8 +295,9 @@ export class GenericDispatchPayoutUseCase extends InternalUseCase<
 // packages/game-mega645-application/src/use-cases/payout/dispatch-payout.ts (SAU refactor)
 
 import { GenericDispatchPayoutUseCase } from "@megawin/game-core-application/use-cases/dispatch";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GameProduct } from "@megawin/game-core/entities";
+
+import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export class DispatchPayoutBatchUseCase extends GenericDispatchPayoutUseCase {
   constructor() {
@@ -394,6 +393,7 @@ interface DispatchMessage {
 
 import { KenoEntryRepository } from "@megawin/game-keno-application/infras/repos";
 import { Mega645EntryRepository } from "@megawin/game-mega645-application/infras/repos";
+
 // ... 7 games
 
 const entryRepoRegistry: Record<GameKey, () => DispatchableEntryRepository> = {

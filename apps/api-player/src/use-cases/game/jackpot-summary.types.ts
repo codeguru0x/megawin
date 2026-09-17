@@ -22,8 +22,7 @@
  * tay, TS im lặng và endpoint gộp âm thầm tụt hậu so với endpoint riêng.
  */
 
-// biome-ignore lint/style/useImportType: typeof JackpotGameProduct.* trong interface cần value import — không thể import type-only.
-import { JackpotGameProduct, type JackpotGameProduct as JackpotGameProductType } from "@megawin/game-core/entities";
+import type { JackpotGameProduct } from "@megawin/game-core/entities";
 import type { PlayerGetJackpotOutput as Lotto535JackpotOutput } from "@megawin/game-lotto535-application/use-cases/player";
 import type { PlayerGetJackpotOutput as Mega645JackpotOutput } from "@megawin/game-mega645-application/use-cases/player";
 import type { PlayerGetJackpotOutput as Power655JackpotOutput } from "@megawin/game-power655-application/use-cases/player";

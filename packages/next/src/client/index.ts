@@ -9,11 +9,5 @@ export {
   createAccountGuard,
   type UseAccountGuardOptions,
 } from "./account-guard";
-export {
-  type ApiClient,
-  type ApiClientConfig,
-  apiClient,
-  createApiClient,
-  type RequestOptions,
-} from "./api-client";
+export { type ApiClient, type ApiClientConfig, apiClient, createApiClient, type RequestOptions } from "./api-client";
 export { type ErrorToast, formatErrorToast } from "./format-error-toast";

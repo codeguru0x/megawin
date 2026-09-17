@@ -70,8 +70,4 @@ export { stepFunctionParserMiddleware } from "./step-function-parser";
 /** Success envelope — HTTP-ONLY (bọc `{ success, data }`; xem cảnh báo đầu file). */
 export { successEnvelopeMiddleware } from "./success-envelope";
 /** Zod validator — HTTP-ONLY (parse body/path/query của API Gateway). */
-export {
-  type ApiGatewayZodSchemas,
-  type SchemaOf,
-  validatorZodMiddleware,
-} from "./validator-zod";
+export { type ApiGatewayZodSchemas, type SchemaOf, validatorZodMiddleware } from "./validator-zod";

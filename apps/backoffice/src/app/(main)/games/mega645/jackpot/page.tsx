@@ -11,12 +11,12 @@ export default function AdminJackpotPage() {
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-sm">
+        <div className="from-game-mega645 to-game-mega645-muted flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
           <Trophy className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Mega 6/45 — Jackpot</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Mega 6/45 — Jackpot</h1>
+          <p className="text-muted-foreground text-xs">
             Jackpot tích lũy vô hạn (roll-over) — không có trần, không có chia giải. Khởi điểm mặc định 12 tỷ VND.
           </p>
         </div>

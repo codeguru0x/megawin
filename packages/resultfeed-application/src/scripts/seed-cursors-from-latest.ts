@@ -25,12 +25,13 @@
  * Chạy: `pnpm --filter @megawin/resultfeed-application seed:cursors`.
  */
 
+import path from "node:path";
+
 import { incrementPeriod } from "@megawin/resultfeed/rules";
 
 import { ConsensusRepository } from "../infras/repos/consensus-repo";
 import { SourceCursorRepository } from "../infras/repos/source-cursor-repo";
 import { SOURCE_ADAPTERS } from "../sources/registry";
-import path from "node:path";
 
 // ── Load .env.test.local (đọc thôi, KHÔNG tạo/ghi đè — quy tắc no-env-file-modification) ──
 const ENV_FILE_CANDIDATES = [".env.test.local", ".env.test"];

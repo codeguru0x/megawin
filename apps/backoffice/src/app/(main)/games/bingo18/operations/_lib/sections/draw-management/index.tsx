@@ -11,7 +11,6 @@
  *
  * Bingo 18: không có jackpot — kết quả là 3 xúc xắc (1-6) + sum.
  */
-
 import { useMemo, useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -33,8 +32,8 @@ import { useCloseSales, useDrawDetail, useOpenSales, useTriggerResettle, useTrig
 import {
   EditScheduleAction,
   PublishResultAction,
-  type PublishResultCurrentValues,
   VoidDrawAction,
+  type PublishResultCurrentValues,
 } from "./draw-actions";
 import { DrawCommandCenter } from "./draw-command-center";
 
@@ -84,7 +83,9 @@ export function DrawManagementSection() {
   // Chuyển đổi draw detail → Bingo18DrawResult
   const result: Bingo18DrawResult | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     const r = d.result as any;
     return {
       diceNumbers: r.numbers ?? r.diceNumbers ?? [],
@@ -95,7 +96,9 @@ export function DrawManagementSection() {
 
   const currentResult: PublishResultCurrentValues | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     const r = d.result as any;
     const nums = (r.numbers ?? r.diceNumbers) as number[] | undefined;
     if (nums?.length !== 3) {
@@ -114,7 +117,9 @@ export function DrawManagementSection() {
 
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.voidInfo) return undefined;
+    if (!d?.voidInfo) {
+      return undefined;
+    }
     const v = d.voidInfo as any;
     return {
       reason: v.reason,
@@ -125,7 +130,9 @@ export function DrawManagementSection() {
     };
   })();
 
-  if (!draw) return null;
+  if (!draw) {
+    return null;
+  }
 
   return (
     <>
@@ -250,7 +257,7 @@ export function DrawManagementSection() {
             <AlertDialogAction
               onClick={() => triggerResettle.mutate({ drawId: effectiveDrawId })}
               disabled={triggerResettle.isPending}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
+              className="bg-warning hover:bg-warning text-white"
             >
               Xác nhận kết sổ lại
             </AlertDialogAction>

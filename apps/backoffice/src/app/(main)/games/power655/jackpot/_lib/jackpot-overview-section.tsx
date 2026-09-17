@@ -20,10 +20,14 @@ import { useJackpotCurrent } from "./use-jackpot";
 export function JackpotHeroCard() {
   const { data, isLoading } = useJackpotCurrent();
 
-  if (isLoading) return <Skeleton className="h-70 rounded-2xl" />;
-  if (!data) return null;
+  if (isLoading) {
+    return <Skeleton className="h-70 rounded-2xl" />;
+  }
+  if (!data) {
+    return null;
+  }
 
-  const { cycle, config, jackpot1Progress, jackpot2Progress } = data;
+  const { cycle, config } = data;
 
   const jp1 = cycle.jackpot1CurrentAmount;
   const jp2 = cycle.jackpot2CurrentAmount;
@@ -44,47 +48,35 @@ export function JackpotHeroCard() {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border-2 p-6",
-        "bg-linear-to-br from-red-50/90 via-orange-50/70 to-amber-50/50",
-        "dark:from-red-950/50 dark:via-orange-950/40 dark:to-amber-950/30",
-        isOverflow
-          ? "border-violet-300 dark:border-violet-700/60"
-          : isHot
-            ? "border-red-300 dark:border-red-800/60"
-            : "border-red-200 dark:border-red-800/50",
+        "from-loss/90 via-warning/70 to-warning/50 bg-linear-to-br",
+        "from-loss/50 via-warning/40 to-warning/30",
+        isOverflow ? "border-game-max3d" : isHot ? "border-loss" : "border-loss",
       )}
     >
       {/* Decorative orbs */}
-      <div className="pointer-events-none absolute -right-10 -top-10 size-52 rounded-full bg-linear-to-br from-red-300/20 to-orange-300/10 blur-3xl dark:from-red-500/8 dark:to-orange-500/4" />
-      <div className="pointer-events-none absolute -left-8 bottom-0 size-36 rounded-full bg-linear-to-tr from-amber-200/15 to-yellow-200/8 blur-2xl" />
+      <div className="from-loss/20 to-warning/10 pointer-events-none absolute -top-10 -right-10 size-52 rounded-full bg-linear-to-br blur-3xl" />
+      <div className="from-warning/15 to-warning/8 pointer-events-none absolute bottom-0 -left-8 size-36 rounded-full bg-linear-to-tr blur-2xl" />
 
       <div className="relative space-y-5">
         {/* ── Top row ── */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
+            <div className="from-loss to-warning shadow-loss/30 flex size-12 items-center justify-center rounded-xl bg-linear-to-br shadow-lg">
               <Trophy className="size-6 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-red-700/70 dark:text-red-400/60">
+              <p className="text-loss/70 text-xs font-medium tracking-wider uppercase">
                 Power 6/55 Dual Jackpot — Vòng #{cycle.cycleNo}
               </p>
               {/* JP1 primary — dòng lớn */}
               <div className="mt-0.5 flex items-baseline gap-2">
-                <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                  Jackpot 1
-                </span>
-                <span className="text-3xl font-extrabold tabular-nums tracking-tight text-red-900 dark:text-red-100">
-                  {formatVND(jp1)}
-                </span>
+                <span className="bg-loss text-loss rounded-md px-1.5 py-0.5 text-xs font-bold">Jackpot 1</span>
+                <span className="text-loss text-3xl font-extrabold tracking-tight tabular-nums">{formatVND(jp1)}</span>
               </div>
               {/* JP2 secondary — dòng nhỏ */}
               <div className="mt-1 flex items-center gap-2">
-                <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                  Jackpot 2
-                </span>
-                <span className="text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-300">
-                  {formatVND(jp2)}
-                </span>
+                <span className="bg-info text-info rounded-md px-1.5 py-0.5 text-xs font-bold">Jackpot 2</span>
+                <span className="text-info text-sm font-semibold tabular-nums">{formatVND(jp2)}</span>
               </div>
             </div>
           </div>
@@ -92,13 +84,13 @@ export function JackpotHeroCard() {
           {/* Badges */}
           <div className="flex shrink-0 flex-col items-end gap-1.5">
             {isOverflow && (
-              <Badge className="gap-1 border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
+              <Badge className="border-game-max3d bg-game-max3d text-game-max3d gap-1">
                 <Zap className="size-3" />
                 Overflow
               </Badge>
             )}
             {!isOverflow && isHot && (
-              <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
+              <Badge className="border-loss bg-loss text-loss gap-1">
                 <Flame className="size-3" />
                 Nóng
               </Badge>
@@ -109,12 +101,12 @@ export function JackpotHeroCard() {
         {/* ── JP1 overflow progress bar ── */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-red-800/70 dark:text-red-300/70">
+            <span className="text-loss/70 font-medium">
               Tiến trình đến overflow — <span className="font-semibold">{formatVNDCompact(overflowThreshold)}</span>
             </span>
-            <span className="font-bold tabular-nums text-red-900 dark:text-red-200">{jp1Pct.toFixed(1)}%</span>
+            <span className="text-loss font-bold tabular-nums">{jp1Pct.toFixed(1)}%</span>
           </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-red-200/50 dark:bg-red-900/40">
+          <div className="bg-loss/50 h-3 w-full overflow-hidden rounded-full">
             <div
               className="h-full rounded-full transition-all duration-700 ease-out"
               style={{
@@ -129,20 +121,16 @@ export function JackpotHeroCard() {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
+          <div className="text-loss/60 flex items-center justify-between text-xs">
             <span>
               {isOverflow
                 ? `Đã vượt +${formatVNDCompact(jp1 - overflowThreshold)}`
                 : `Còn thiếu ${formatVNDCompact(jp1Remaining)}`}
             </span>
             <span className="flex items-center gap-1">
-              <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                JP1 {jp1ContribPct}%
-              </span>
+              <span className="bg-loss text-loss rounded-md px-1.5 py-0.5 text-xs font-bold">JP1 {jp1ContribPct}%</span>
               <span className="text-muted-foreground/50">·</span>
-              <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                JP2 {jp2ContribPct}%
-              </span>
+              <span className="bg-info text-info rounded-md px-1.5 py-0.5 text-xs font-bold">JP2 {jp2ContribPct}%</span>
             </span>
           </div>
         </div>
@@ -170,7 +158,9 @@ export function JackpotKpiCards() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
 
   const { cycle, jackpot1Progress, jackpot2Progress } = data;
 
@@ -190,8 +180,8 @@ export function JackpotKpiCards() {
       {/* Card 1: Số kỳ tích luỹ liên tiếp */}
       <KpiCard
         icon={Layers}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tích luỹ liên tiếp"
         value={`${cycle.drawCount} kỳ`}
         sub={`Từ ${cycle.startDrawId || "—"}`}
@@ -199,14 +189,14 @@ export function JackpotKpiCards() {
       {/* Card 2: Tổng tích luỹ JP1 + % tăng so với khởi điểm */}
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-red-100 dark:bg-red-900/50"
-        iconColor="text-red-600 dark:text-red-400"
+        iconBg="bg-loss"
+        iconColor="text-loss"
         label="Tổng tích luỹ JP1"
         value={formatVNDCompact(jp1Contribution)}
         sub={
           jp1GrowthPct > 0 ? (
             <>
-              <span className="font-semibold text-profit">+{jp1GrowthPct}%</span>
+              <span className="text-profit font-semibold">+{jp1GrowthPct}%</span>
               {" so với khởi điểm"}
             </>
           ) : (
@@ -217,14 +207,14 @@ export function JackpotKpiCards() {
       {/* Card 3: Tổng tích luỹ JP2 + % tăng so với khởi điểm */}
       <KpiCard
         icon={TrendingUp}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tổng tích luỹ JP2"
         value={formatVNDCompact(jp2Contribution)}
         sub={
           jp2GrowthPct > 0 ? (
             <>
-              <span className="font-semibold text-profit">+{jp2GrowthPct}%</span>
+              <span className="text-profit font-semibold">+{jp2GrowthPct}%</span>
               {" so với khởi điểm"}
             </>
           ) : (
@@ -235,8 +225,8 @@ export function JackpotKpiCards() {
       {/* Card 4: Số lần JP2 đã trao thưởng và reset trong vòng tích luỹ hiện tại */}
       <KpiCard
         icon={Hash}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Số lần JP2 trao thưởng"
         value={`${cycle.jackpot2ResetCount} lần`}
         sub={cycle.jackpot2ResetCount > 0 ? "JP2 đã reset, JP1 vẫn tích luỹ" : "JP2 chưa trao thưởng vòng này"}
@@ -293,14 +283,14 @@ function KpiCard({
   sub?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-        {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
+        {sub && <p className="text-muted-foreground truncate text-xs">{sub}</p>}
       </div>
     </div>
   );

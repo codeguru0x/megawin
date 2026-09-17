@@ -12,7 +12,6 @@
  * Giữ SHELL TỐI THIỂU (không cần khớp layout đầy đủ như `loading.tsx`) — đây là trạng thái lỗi,
  * không phải trạng thái tải, không cần đánh lừa mắt bằng skeleton khớp pixel.
  */
-
 import { useEffect } from "react";
 
 import { AlertTriangle, RotateCw } from "lucide-react";
@@ -27,11 +26,11 @@ export default function AiError({ error, retry }: { error: Error & { digest?: st
 
   return (
     <div className="flex h-[calc(100svh-3rem-1rem)] min-h-0 flex-col items-center justify-center gap-3 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
-        <AlertTriangle className="size-6 text-destructive" />
+      <div className="bg-destructive/10 flex size-12 items-center justify-center rounded-full">
+        <AlertTriangle className="text-destructive size-6" />
       </div>
       <div className="space-y-1">
-        <p className="font-medium text-foreground text-sm">{AI_ASSISTANT_NAME} gặp lỗi khi tải trang chat</p>
+        <p className="text-foreground text-sm font-medium">{AI_ASSISTANT_NAME} gặp lỗi khi tải trang chat</p>
         <p className="text-muted-foreground text-xs">Thử lại, hoặc quay lại sau nếu lỗi vẫn còn.</p>
       </div>
       <Button onClick={() => retry()} size="sm" variant="outline">

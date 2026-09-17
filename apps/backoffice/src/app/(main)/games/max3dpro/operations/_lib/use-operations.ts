@@ -79,7 +79,7 @@ export function useCreateDraw() {
     mutationFn: (data: { draws: { drawDate: string; drawTime: string; openNow: boolean }[] }) =>
       apiClient.post<CreateDrawsOutput>("/max3dpro/draws", data),
     onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: max3dproKeys.all });
+      void qc.invalidateQueries({ queryKey: max3dproKeys.all });
       toast.success(`Đã tạo ${result.draws.length} kỳ quay Max 3D Pro.`);
     },
     onError: (err) => {
@@ -190,7 +190,9 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
     enabled: !!drawId,
     // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
     refetchInterval: (query) => {
-      if (isSettled) return false;
+      if (isSettled) {
+        return false;
+      }
       const s = query.state.data?.pollSeconds ?? 30;
       return s * 1000;
     },
@@ -232,7 +234,7 @@ export function useAckAlert() {
   return useMutation({
     mutationFn: (alertId: string) => apiClient.post(`${BASE}/alerts/${alertId}/ack`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: max3dproKeys.all });
+      void qc.invalidateQueries({ queryKey: max3dproKeys.all });
       toast.success("Đã xác nhận cảnh báo.");
     },
     onError: (err) => {
@@ -334,7 +336,9 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
   });
 
   useEffect(() => {
-    if (!entryId) return;
+    if (!entryId) {
+      return;
+    }
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
@@ -366,7 +370,7 @@ function useDrawAction<TBody = void>(
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
       method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: max3dproKeys.all });
+      void qc.invalidateQueries({ queryKey: max3dproKeys.all });
       toast.success(successMessage);
     },
     onError: (err) => {

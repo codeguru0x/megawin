@@ -6,7 +6,7 @@
 
 import type { GlobalConfigEntity } from "@megawin/game-lotto535-application/use-cases/game-config";
 
-import { type ConfigItem, item } from "../../payload";
+import { item, type ConfigItem } from "../../payload";
 import { GameConfigSection } from "../types";
 
 export const APPLICABLE_SECTIONS: readonly GameConfigSection[] = [

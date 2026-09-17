@@ -84,7 +84,9 @@ export class ApplySplitBonusesUseCase extends UseCase<SettleContext, ApplySplitB
     // splitDetails key = tier name (tier1-tier5), value = { bonusPerWinner (= bonusPerUnit), winnerCount, ... }
     for (const [tier, detail] of Object.entries(splitDetails)) {
       // Skip tier không có winner hoặc bonus = 0 (có thể do làm tròn)
-      if (detail.bonusPerWinner <= 0 || detail.winnerCount <= 0) continue;
+      if (detail.bonusPerWinner <= 0 || detail.winnerCount <= 0) {
+        continue;
+      }
 
       // Lấy winning lines cho tier này để build betUnitsByEntry map.
       // betUnits per entry = Σ betCount của các lines thuộc entry trúng tier đó.
@@ -93,7 +95,9 @@ export class ApplySplitBonusesUseCase extends UseCase<SettleContext, ApplySplitB
       const betUnitsByEntry = new Map<string, number>();
       for (const line of tierLines) {
         const entryIdStr = line.entryId?.toString() ?? "";
-        if (!entryIdStr) continue;
+        if (!entryIdStr) {
+          continue;
+        }
         betUnitsByEntry.set(entryIdStr, (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount);
       }
 

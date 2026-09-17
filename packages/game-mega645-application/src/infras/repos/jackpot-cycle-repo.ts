@@ -7,13 +7,13 @@
  * Không có Split Cycle — không lưu splitDetail.
  */
 
-import type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
 import {
+  JackpotCycleStatus,
+  Mega645Collections,
   type JackpotCycleCloseReason,
   type JackpotCycleDoc,
-  JackpotCycleStatus,
+  type JackpotCycleEntity,
   type JackpotWinnerInfo,
-  Mega645Collections,
 } from "@megawin/game-mega645/entities";
 
 import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
@@ -36,7 +36,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
   async createCycle(input: { startDrawId: string; seedAmount: number }): Promise<void> {
     // Guard: nếu đã có active cycle (crash sau create, retry lại) → skip.
     const existing = await this.findOne({ status: JackpotCycleStatus.Active });
-    if (existing) return;
+    if (existing) {
+      return;
+    }
 
     const maxCycle = await this.findOne({}, { sort: { cycleNo: -1 } });
     const cycleNo = (maxCycle?.cycleNo ?? 0) + 1;
@@ -120,7 +122,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       updatedAt: now,
     };
 
-    if (input.winners) $set.winners = input.winners;
+    if (input.winners) {
+      $set.winners = input.winners;
+    }
 
     await this.updateOne(
       {

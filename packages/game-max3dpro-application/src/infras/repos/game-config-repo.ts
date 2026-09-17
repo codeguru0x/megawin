@@ -1,13 +1,13 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type {
-  FinancialRates,
-  GlobalConfigEntity,
-  Max3dproPrizeConfig,
-  OpsConfig,
-  PlayRules,
-  VietlottPeriodAnchor,
+import {
+  Max3dproCollections,
+  type FinancialRates,
+  type GlobalConfigEntity,
+  type Max3dproPrizeConfig,
+  type OpsConfig,
+  type PlayRules,
+  type VietlottPeriodAnchor,
 } from "@megawin/game-max3dpro/entities";
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 
 import { GameConfigMapper } from "../mappers/global-config-mapper";
 import { BaseRepo } from "./base-repo";
@@ -52,11 +52,21 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (config.rates) $set.rates = config.rates;
-    if (config.defaultPrizes) $set.defaultPrizes = config.defaultPrizes;
-    if (config.play) $set.play = config.play;
-    if (config.ops) $set.ops = config.ops;
-    if (config.vietlott) $set.vietlott = config.vietlott;
+    if (config.rates) {
+      $set.rates = config.rates;
+    }
+    if (config.defaultPrizes) {
+      $set.defaultPrizes = config.defaultPrizes;
+    }
+    if (config.play) {
+      $set.play = config.play;
+    }
+    if (config.ops) {
+      $set.ops = config.ops;
+    }
+    if (config.vietlott) {
+      $set.vietlott = config.vietlott;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

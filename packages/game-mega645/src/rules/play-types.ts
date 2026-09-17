@@ -22,7 +22,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import { type BoardSelection, VALID_NUMBER_SET } from "../entities/types";
+import { VALID_NUMBER_SET, type BoardSelection } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Play Rule Hard Caps (chống abuse — độc lập với config động)
@@ -45,8 +45,12 @@ export const MEGA645_MAX_BOARDS = 100;
 // ─────────────────────────────────────────────
 
 export function combination(n: number, k: number): number {
-  if (k < 0 || k > n) return 0;
-  if (k === 0 || k === n) return 1;
+  if (k < 0 || k > n) {
+    return 0;
+  }
+  if (k === 0 || k === n) {
+    return 1;
+  }
   const kk = Math.min(k, n - k);
   let result = 1;
   for (let i = 0; i < kk; i++) {

@@ -15,7 +15,6 @@
  * KHÔNG setState mỗi giây để tránh re-render toàn command center
  * (react-best-practices §5.12). State chỉ đổi khi vượt ngưỡng boolean.
  */
-
 import { useEffect, useRef, useState } from "react";
 
 import { GameProduct } from "@megawin/game-core/entities";
@@ -132,7 +131,9 @@ export function Countdown({ target, prefix, className }: CountdownProps) {
 
   useEffect(() => {
     const targetMs = new Date(target).getTime();
-    if (Number.isNaN(targetMs)) return;
+    if (Number.isNaN(targetMs)) {
+      return;
+    }
 
     function tick() {
       const remaining = targetMs - Date.now();
@@ -174,7 +175,9 @@ export function useOverdue(target: string | undefined, graceMs: number): boolean
       return;
     }
     const thresholdMs = new Date(target).getTime() + graceMs;
-    if (Number.isNaN(thresholdMs)) return;
+    if (Number.isNaN(thresholdMs)) {
+      return;
+    }
 
     function tick() {
       // Functional update: chỉ trigger re-render khi giá trị thực sự đổi
@@ -198,9 +201,9 @@ export function useOverdue(target: string | undefined, graceMs: number): boolean
  */
 export function OverdueBanner({ message }: { message: string }) {
   return (
-    <div className="mt-4 flex items-center gap-2.5 rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-950/30 px-3 py-2.5">
-      <TriangleAlert className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
-      <p className="text-xs font-medium text-amber-800 dark:text-amber-300">{message}</p>
+    <div className="border-warning bg-warning/80 mt-4 flex items-center gap-2.5 rounded-lg border px-3 py-2.5">
+      <TriangleAlert className="text-warning size-4 shrink-0" />
+      <p className="text-warning text-xs font-medium">{message}</p>
     </div>
   );
 }

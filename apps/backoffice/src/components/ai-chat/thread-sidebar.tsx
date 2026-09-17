@@ -12,7 +12,6 @@
  * lệch hẳn sang phải. Đặt lịch sử sang phải cho bố cục 3 vùng cân: điều hướng app | hội thoại giữa |
  * lịch sử. Thu/mở bằng nút trong `PageChatHeader`; dưới `md` hiện dạng `Sheet` (xem `_lib/ai-workspace.tsx`).
  */
-
 import { useMemo, useState } from "react";
 
 import { todayVN, yesterdayVN } from "@megawin/shared/utils";
@@ -145,7 +144,7 @@ function ThreadItem({ thread, isActive, onSelect }: { thread: AiThread; isActive
     <div
       className={cn(
         "group flex items-center gap-0.5 rounded-lg py-1.5 pr-1 pl-2.5 text-sm transition-colors",
-        isActive ? "bg-accent font-medium text-accent-foreground" : "hover:bg-accent/60",
+        isActive ? "bg-accent text-accent-foreground font-medium" : "hover:bg-accent/60",
       )}
     >
       {isEditing ? (
@@ -229,7 +228,7 @@ export function ThreadSidebar({ className }: { className?: string }) {
   const isEmpty = hydrated && filtered.length === 0;
 
   return (
-    <div className={cn("flex h-full min-h-0 w-full flex-col bg-sidebar/40", className)}>
+    <div className={cn("bg-sidebar/40 flex h-full min-h-0 w-full flex-col", className)}>
       <div className="flex flex-col gap-2 p-3">
         {/* Trong danh sách thì GIỮ chữ "Chat mới" (staff feedback 17/08): đây là hành động chính của
             panel, nhãn chữ rõ hơn icon trần. Header trang mới là chỗ chỉ dùng icon. */}
@@ -238,9 +237,9 @@ export function ThreadSidebar({ className }: { className?: string }) {
           Chat mới
         </Button>
         <div className="relative">
-          <SearchIcon className="absolute top-2.5 left-2.5 size-3.5 text-muted-foreground" />
+          <SearchIcon className="text-muted-foreground absolute top-2.5 left-2.5 size-3.5" />
           <Input
-            className="h-8 bg-background pl-8 text-sm"
+            className="bg-background h-8 pl-8 text-sm"
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Tìm hội thoại…"
             value={search}
@@ -249,7 +248,7 @@ export function ThreadSidebar({ className }: { className?: string }) {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
         {!hydrated ? null : isEmpty ? (
-          <p className="px-2 py-6 text-center text-muted-foreground text-xs">
+          <p className="text-muted-foreground px-2 py-6 text-center text-xs">
             {search.trim() === "" ? "Chưa có hội thoại nào." : "Không tìm thấy hội thoại phù hợp."}
           </p>
         ) : (
@@ -260,9 +259,7 @@ export function ThreadSidebar({ className }: { className?: string }) {
             }
             return (
               <div className="mb-3" key={label}>
-                <p className="px-2 py-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
-                  {label}
-                </p>
+                <p className="text-muted-foreground px-2 py-1 text-xs font-medium tracking-wide uppercase">{label}</p>
                 <div className="flex flex-col gap-0.5">
                   {bucket.map((thread) => (
                     <ThreadItem

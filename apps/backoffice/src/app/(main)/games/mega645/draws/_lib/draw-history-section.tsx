@@ -7,7 +7,6 @@
  * fetch data, inject render props (kết quả 6 số, draw status badge)
  * vào DrawHistoryTable chung.
  */
-
 import { useRouter } from "next/navigation";
 
 import type { DrawStatus } from "@megawin/game-core/entities";
@@ -15,13 +14,11 @@ import { Pagination } from "@megawin/shared/constants";
 import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
-import type { CommonDrawSummary } from "@/components/draws";
-import { DrawHistoryTable } from "@/components/draws";
+import { DrawHistoryTable, type CommonDrawSummary } from "@/components/draws";
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
 
-import type { DrawSummary } from "./use-draws";
-import { useDrawsList } from "./use-draws";
+import { useDrawsList, type DrawSummary } from "./use-draws";
 
 const OPS_BASE = "/games/mega645/operations";
 
@@ -69,14 +66,14 @@ export function DrawHistorySection() {
   const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
-    setPage(null);
+    void setFromDate(from);
+    void setToDate(to);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
-    setPage(null);
+    void setStatusParam(value === "all" ? null : value);
+    void setPage(null);
   }
 
   return (
@@ -96,7 +93,9 @@ export function DrawHistorySection() {
       onRowClick={(draw) => router.push(`${OPS_BASE}?drawId=${draw.drawId}`)}
       renderStatusBadge={(status) => <DrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
-        if (!draw.result) return null;
+        if (!draw.result) {
+          return null;
+        }
         return (
           <div className="flex flex-wrap items-center gap-1">
             {draw.result.winningNumbers.map((n) => (

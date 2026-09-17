@@ -16,7 +16,9 @@ import { txLogsKeys } from "@/lib/query-keys";
  * Serialize cursor object → string `"{iso}|{id}"` để server parse.
  */
 function serializeCursor(cursor: { createdAt: string; id: string } | null): string | undefined {
-  if (!cursor) return undefined;
+  if (!cursor) {
+    return undefined;
+  }
   return `${cursor.createdAt}|${cursor.id}`;
 }
 
@@ -43,10 +45,18 @@ export function useTxLogList(filters: TxLogListFilters) {
   if (filters.tx) {
     qpBase.tx = filters.tx;
   } else {
-    if (filters.from) qpBase.from = filters.from;
-    if (filters.to) qpBase.to = filters.to;
-    if (filters.status) qpBase.status = filters.status;
-    if (filters.eventType) qpBase.eventType = filters.eventType;
+    if (filters.from) {
+      qpBase.from = filters.from;
+    }
+    if (filters.to) {
+      qpBase.to = filters.to;
+    }
+    if (filters.status) {
+      qpBase.status = filters.status;
+    }
+    if (filters.eventType) {
+      qpBase.eventType = filters.eventType;
+    }
   }
 
   return useInfiniteQuery({
@@ -62,7 +72,9 @@ export function useTxLogList(filters: TxLogListFilters) {
     queryFn: ({ pageParam }) => {
       const params: Record<string, string> = { ...qpBase };
       const serialized = serializeCursor(pageParam);
-      if (serialized) params.cursor = serialized;
+      if (serialized) {
+        params.cursor = serialized;
+      }
       return apiClient.get<ListTxLogsOutput>("/transactions/api-logs", { params });
     },
     getNextPageParam: (last) => last.nextCursor,
@@ -96,7 +108,9 @@ export function useTxLogsByBatch(batchId: string | null) {
     queryFn: ({ pageParam }) => {
       const params: Record<string, string> = {};
       const serialized = serializeCursor(pageParam);
-      if (serialized) params.cursor = serialized;
+      if (serialized) {
+        params.cursor = serialized;
+      }
       return apiClient.get<ListTxLogsByBatchOutput>(`/transactions/api-logs/batches/${encodeURIComponent(batchId!)}`, {
         params,
       });

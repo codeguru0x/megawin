@@ -17,20 +17,18 @@
  * Component cha (`ChatPanel`) neo composer bằng `absolute inset-x-0 bottom-0` — mọi khoảng chừa
  * cho vùng cuộn nằm ở `ConversationContent` (`pb-32`), KHÔNG ở đây.
  */
-
-import type { Ref } from "react";
-import { useCallback, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useImperativeHandle, useRef, useState, type Ref } from "react";
 
 import type { ChatStatus } from "ai";
 import type { UseEveAgentStatus } from "eve/react";
 import { AlertCircleIcon } from "lucide-react";
 
-import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
 import {
   PromptInput,
   PromptInputBody,
   PromptInputSubmit,
   PromptInputTextarea,
+  type PromptInputMessage,
 } from "@/components/ai-elements/prompt-input";
 import { Button } from "@/components/ui/button";
 import { InputGroupAddon } from "@/components/ui/input-group";
@@ -144,7 +142,6 @@ export function AiComposer({
   );
 
   const handleRetry = useCallback(() => {
-    // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome không track mutation runtime của ref.current qua các lần render — lastSentTextRef.current thực sự có thể là string (set ở handleSubmit).
     if (lastSentTextRef.current) {
       onSend(lastSentTextRef.current);
     }
@@ -166,9 +163,9 @@ export function AiComposer({
       {/* Fade phía trên bubble: nội dung cuộn mờ dần thay vì bị `border-t` cắt ngang. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -top-10 h-10 bg-linear-to-t from-background to-transparent"
+        className="from-background pointer-events-none absolute inset-x-0 -top-10 h-10 bg-linear-to-t to-transparent"
       />
-      <div className="space-y-2 bg-background px-3 pb-3">
+      <div className="bg-background space-y-2 px-3 pb-3">
         <div className="mx-auto w-full max-w-3xl space-y-2">
           {status === "error" && (
             // Layout XẾP DỌC (message trên, hành động thành dải riêng dưới) — theo đúng khối HITL
@@ -176,14 +173,14 @@ export function AiComposer({
             // cạnh đây (`chat-panel.tsx`) cho CÙNG hành động "Bắt đầu chat mới". Bản cũ nhồi nút vào
             // MỘT HÀNG với message rồi bóp `h-6 px-2 text-xs variant="ghost"` — ở cỡ đó nút chìm hẳn
             // vào nền đỏ, staff không nhận ra đây là nút bấm được (feedback 15/09).
-            <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs">
-              <span className="flex min-w-0 items-start gap-1.5 text-destructive">
+            <div className="border-destructive/30 bg-destructive/5 space-y-2 rounded-xl border px-3 py-2.5 text-xs">
+              <span className="text-destructive flex min-w-0 items-start gap-1.5">
                 <AlertCircleIcon className="mt-px size-3.5 shrink-0" />
                 <span className="min-w-0">
                   {errorDisplay.message}
                   {/* Chi tiết kỹ thuật CHỈ ở môi trường development (xem `describeAgentError`). */}
                   {errorDisplay.devDetail !== undefined && (
-                    <span className="wrap-break-word mt-1 block font-mono text-[10px] opacity-70">
+                    <span className="mt-1 block font-mono text-xs wrap-break-word opacity-70">
                       dev: {errorDisplay.devDetail}
                     </span>
                   )}

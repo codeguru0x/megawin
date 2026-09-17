@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import type { AuditAction } from "@megawin/audit/entities";
 import {
   AUDIT_ACTIONS,
   AuditActionLabel,
@@ -14,6 +13,7 @@ import {
   AuditStatusLabel,
   AuditTargetType,
   AuditTargetTypeLabel,
+  type AuditAction,
 } from "@megawin/audit/entities";
 import { RotateCcw, Search, Target } from "lucide-react";
 
@@ -74,7 +74,9 @@ export function AuditLogsFilterBar() {
 
   // Action options phụ thuộc category: chọn category → chỉ show action nhóm đó.
   const actionOptions = useMemo(() => {
-    if (!category) return ALL_ACTIONS;
+    if (!category) {
+      return ALL_ACTIONS;
+    }
     return ALL_ACTIONS.filter((a) => ACTION_TO_CATEGORY.get(a) === category);
   }, [category]);
 
@@ -93,12 +95,14 @@ export function AuditLogsFilterBar() {
 
       {/* Ô search actor — khớp accountId chính xác HOẶC username (chứa). */}
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
         <Input
           value={actorInput}
           onChange={(e) => setActorInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") setActor(actorInput);
+            if (e.key === "Enter") {
+              setActor(actorInput);
+            }
             if (e.key === "Escape") {
               setActorInput("");
               setActor("");
@@ -112,12 +116,14 @@ export function AuditLogsFilterBar() {
 
       {/* Ô search đối tượng theo ID (drawId, accountId…). */}
       <div className="relative">
-        <Target className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Target className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
         <Input
           value={targetInput}
           onChange={(e) => setTargetInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") setTargetId(targetInput);
+            if (e.key === "Enter") {
+              setTargetId(targetInput);
+            }
             if (e.key === "Escape") {
               setTargetInput("");
               setTargetId("");
@@ -223,7 +229,7 @@ export function AuditLogsFilterBar() {
         <Button
           size="sm"
           variant="ghost"
-          className="h-8 px-2 text-xs text-muted-foreground"
+          className="text-muted-foreground h-8 px-2 text-xs"
           onClick={() => {
             setActorInput("");
             setTargetInput("");

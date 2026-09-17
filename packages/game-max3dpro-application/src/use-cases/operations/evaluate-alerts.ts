@@ -11,13 +11,15 @@
  * theo pairKey) để staff track từng cặp riêng.
  */
 
-import type {
-  Max3dproDrawBettingStatsDoc,
-  Max3dproOpsAlertDoc,
-  Max3dproTopPair,
-  OpsAlertsConfig,
+import {
+  Max3dproOpsAlertType,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type Max3dproDrawBettingStatsDoc,
+  type Max3dproOpsAlertDoc,
+  type Max3dproTopPair,
+  type OpsAlertsConfig,
 } from "@megawin/game-max3dpro/entities";
-import { Max3dproOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3dpro/entities";
 import type { Max3dproExposureResult } from "@megawin/game-max3dpro/rules";
 
 /** Snapshot stats + exposure cần cho evaluate (đã có in-memory ở worker). */
@@ -102,7 +104,9 @@ export function evaluateMax3dproAlerts(input: EvaluateAlertsInput): NewAlert[] {
   // units/liability mới nhất mỗi tick. Critical LUÔN (1 tỷ/unit, không cap).
   if (alerts.enabled[Max3dproOpsAlertType.PairLiability]) {
     for (const p of exposure.topPairLiabilities) {
-      if (p.liability < alerts.pairLiabilityWarnAmount) break; // đã sort desc.
+      if (p.liability < alerts.pairLiabilityWarnAmount) {
+        break;
+      } // đã sort desc.
       push(
         Max3dproOpsAlertType.PairLiability,
         OpsAlertSeverity.Critical,
@@ -126,7 +130,9 @@ export function evaluateMax3dproAlerts(input: EvaluateAlertsInput): NewAlert[] {
   // Quét topPairs (K đủ lớn — cặp ngoài top có units nhỏ, khó là syndicate đáng kể).
   if (alerts.enabled[Max3dproOpsAlertType.ComboConcentration]) {
     for (const p of topPairs) {
-      if (p.accounts < alerts.comboAccountsWarn) continue;
+      if (p.accounts < alerts.comboAccountsWarn) {
+        continue;
+      }
       push(
         Max3dproOpsAlertType.ComboConcentration,
         // Gấp đôi ngưỡng account → critical.

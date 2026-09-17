@@ -7,6 +7,6 @@ export default defineConfig({
   plugins: [react()],
   test: {
     ...jsdomConfig.test,
-    include: ["test/**/*.test.{ts,tsx}"],
+    include: ["test/unit/**/*.test.{ts,tsx}"],
   },
 });

@@ -17,13 +17,17 @@
  * thực nghiệm cho quy tắc plan §2.2: `nocatche` phải LUÔN có giá trị biến thiên.
  */
 
-import type { SourceCursorEntity } from "@megawin/resultfeed/entities";
-import { ResultFeedGameKey, ResultFeedSourceId } from "@megawin/resultfeed/entities";
+import { ResultFeedGameKey, ResultFeedSourceId, type SourceCursorEntity } from "@megawin/resultfeed/entities";
 import { incrementPeriod } from "@megawin/resultfeed/rules";
 import * as cheerio from "cheerio";
 
-import type { FetchPlan, ParsedObservation, SourceAdapter } from "../../types";
-import { ParseError, parsedObservationSchema } from "../../types";
+import {
+  parsedObservationSchema,
+  ParseError,
+  type FetchPlan,
+  type ParsedObservation,
+  type SourceAdapter,
+} from "../../types";
 import { normalizeVietlottDetailForHash } from "./dom-helpers";
 import { parseBingo18 } from "./parse-bingo18";
 import { parseKeno } from "./parse-keno";

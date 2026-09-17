@@ -24,10 +24,13 @@
  */
 
 import { isDuplicateKeyError, ReportRepo } from "@megawin/data/mongo";
-import type { GameProduct, SystemSettleGameDaily, SystemSettleGameDailyEntity } from "@megawin/game-core/entities";
-import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
-import type { FinancialPeriod } from "@megawin/shared/utils";
-import { financialPeriodKey } from "@megawin/shared/utils";
+import {
+  SYSTEM_SETTLE_GAME_DAILY,
+  type GameProduct,
+  type SystemSettleGameDaily,
+  type SystemSettleGameDailyEntity,
+} from "@megawin/game-core/entities";
+import { financialPeriodKey, type FinancialPeriod } from "@megawin/shared/utils";
 
 import { SystemSettleGameDailyMapper } from "../mappers";
 import type {
@@ -142,7 +145,7 @@ export class SystemSettleGameDailyRepository extends ReportRepo<
       if (result === null) {
         return null;
       }
-      
+
       // Sau `$inc` field luôn có; thiếu = bug pipeline (không fallback cộng tay).
       if (typeof result.version !== "number") {
         throw new Error(

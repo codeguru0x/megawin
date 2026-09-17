@@ -28,8 +28,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { KenoDrawAccountStatsDoc, KenoDrawAccountStatsEntity } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
+import {
+  KenoCollections,
+  type KenoDrawAccountStatsDoc,
+  type KenoDrawAccountStatsEntity,
+} from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { AccountStatsMapper } from "../mappers/account-stats-mapper";
@@ -84,7 +87,9 @@ export class AccountStatsRepository extends BaseRepo<KenoDrawAccountStatsEntity,
    * @param batchMaxId - ObjectId hex entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: AccountStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = deltas.map((delta) => ({

@@ -28,8 +28,8 @@ function SystemFinancialReportsContent() {
             <BarChart3 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Báo cáo tài chính hệ thống</h1>
-            <p className="text-xs text-muted-foreground">Tổng hợp doanh thu, trả thưởng, lợi nhuận toàn hệ thống</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Báo cáo tài chính hệ thống</h1>
+            <p className="text-muted-foreground text-xs">Tổng hợp doanh thu, trả thưởng, lợi nhuận toàn hệ thống</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -37,8 +37,8 @@ function SystemFinancialReportsContent() {
             from={from}
             to={to}
             onChange={(f, t) => {
-              void setFrom(f);
-              void setTo(t);
+              setFrom(f);
+              setTo(t);
             }}
           />
         </div>
@@ -53,15 +53,15 @@ function SystemFinancialReportsContent() {
       >
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="daily" className="gap-1.5">
-            <CalendarDays className="size-4 text-indigo-500" />
+            <CalendarDays className="text-info size-4" />
             Tổng quan ngày
           </TabsTrigger>
           <TabsTrigger value="by-game" className="gap-1.5">
-            <Gamepad2 className="size-4 text-emerald-500" />
+            <Gamepad2 className="text-profit size-4" />
             Theo game
           </TabsTrigger>
           <TabsTrigger value="by-tenant" className="gap-1.5">
-            <Building2 className="size-4 text-blue-500" />
+            <Building2 className="text-info size-4" />
             Theo đại lý
           </TabsTrigger>
         </TabsList>

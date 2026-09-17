@@ -17,7 +17,6 @@
  * Thêm tool mới chỉ cần khai spec — KHÔNG chạm file này. Chỉ sửa đây khi thêm primitive
  * (`kind`) mới, và trước khi thêm phải đọc ranh giới cứng ở đầu `view-spec.ts`.
  */
-
 import type { ReactNode } from "react";
 
 import Link from "next/link";
@@ -32,7 +31,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 
 import { CellFormat, formatCell } from "./format-cell";
-import { type ColumnSpec, DEFAULT_MAX_ROWS, type KpiSpec, type ToolView, type ToolViewSpec } from "./view-spec";
+import { DEFAULT_MAX_ROWS, type ColumnSpec, type KpiSpec, type ToolView, type ToolViewSpec } from "./view-spec";
 
 const DEFAULT_EMPTY_TEXT = "Không có dữ liệu cho yêu cầu này.";
 
@@ -53,7 +52,7 @@ function signedClassName(value: unknown, signed: boolean | undefined): string | 
   if (signed !== true || typeof value !== "number") {
     return undefined;
   }
-  return value < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400";
+  return value < 0 ? "text-destructive" : "text-profit";
 }
 
 /** Export — dùng lại ở renderer bespoke (Tier 2, VD `daily-ops-cards.tsx`) để giữ cùng khung card. */
@@ -83,11 +82,11 @@ export function CardShell({ children }: { children: React.ReactNode }) {
 export function ToolResultLine({ children, title }: { children: ReactNode; title: string }) {
   return (
     <Collapsible className="not-prose w-full">
-      <CollapsibleTrigger className="group flex w-full items-center gap-1.5 text-left text-muted-foreground/80 text-xs transition-colors hover:text-foreground">
+      <CollapsibleTrigger className="group text-muted-foreground/80 hover:text-foreground flex w-full items-center gap-1.5 text-left text-xs transition-colors">
         <ChevronRightIcon className="size-3.5 shrink-0 transition-transform group-data-[state=open]:rotate-90" />
         <span className="truncate">{title}</span>
       </CollapsibleTrigger>
-      <CollapsibleContent className="data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-1 mt-1.5 data-[state=closed]:animate-out data-[state=open]:animate-in">
+      <CollapsibleContent className="data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-1 data-[state=closed]:animate-out data-[state=open]:animate-in mt-1.5">
         {children}
       </CollapsibleContent>
     </Collapsible>
@@ -97,8 +96,8 @@ export function ToolResultLine({ children, title }: { children: ReactNode; title
 /** Export — dùng lại ở renderer bespoke khi cần báo lỗi ngoài luồng `resolveToolViewData`. */
 export function ToolErrorCard({ message }: { message: string }) {
   return (
-    <Card className="w-full max-w-full gap-2 border-destructive/30 py-3">
-      <CardContent className="flex items-start gap-2 px-3 text-destructive text-sm">
+    <Card className="border-destructive/30 w-full max-w-full gap-2 py-3">
+      <CardContent className="text-destructive flex items-start gap-2 px-3 text-sm">
         <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" />
         {message}
       </CardContent>
@@ -110,7 +109,7 @@ export function ToolErrorCard({ message }: { message: string }) {
 export function EmptyCard({ text }: { text: string }) {
   return (
     <CardShell>
-      <CardContent className="px-3 text-muted-foreground text-sm">{text}</CardContent>
+      <CardContent className="text-muted-foreground px-3 text-sm">{text}</CardContent>
     </CardShell>
   );
 }
@@ -118,9 +117,9 @@ export function EmptyCard({ text }: { text: string }) {
 /** Export — dùng lại ở renderer bespoke cho ô KPI đơn lẻ ngoài `KpiGrid`. */
 export function KpiTile({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
-    <div className="rounded-md bg-muted/50 px-2 py-1.5">
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      <p className={cn("font-semibold text-sm tabular-nums", valueClassName)}>{value}</p>
+    <div className="bg-muted/50 rounded-md px-2 py-1.5">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className={cn("text-sm font-semibold tabular-nums", valueClassName)}>{value}</p>
     </div>
   );
 }
@@ -137,7 +136,11 @@ export function DeepLink({ href, label }: { href: string; label: string }) {
   return (
     // `href` dựng động từ `DeepLinkSpec.href(rows)` — không qua nav-registry (khác `navigateTo`
     // tool card), nhưng luôn trỏ về path tĩnh đã biết trong `app/`. Cast an toàn.
-    <Link prefetch={false} className="inline-flex items-center gap-1 text-primary text-xs hover:underline" href={href as Route}>
+    <Link
+      prefetch={false}
+      className="text-primary inline-flex items-center gap-1 text-xs hover:underline"
+      href={href as Route}
+    >
       {label}
       <ArrowRightIcon className="size-3" />
     </Link>
@@ -195,7 +198,6 @@ export function DataTable<Row>({ columns, rows }: { columns: readonly ColumnSpec
           {rows.map((row, rowIndex) => (
             // Không có id ổn định chung cho mọi Row → dùng index. An toàn vì list này TĨNH
             // (render 1 lần từ output tool đã hoàn tất, không thêm/xoá/sắp lại dòng).
-            // biome-ignore lint/suspicious/noArrayIndexKey: output tool bất biến, không reorder.
             <TableRow key={rowIndex}>
               {columns.map((column) => {
                 const value = (row as Record<string, unknown>)[column.key];

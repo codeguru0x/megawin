@@ -1,14 +1,17 @@
-import type {
-  AccountEntity,
-  AgentAccountEntity,
-  CompanyAccountEntity,
-  CompanyRole,
-  MfaStatus,
-  PlayerAccountEntity,
+import {
+  AccountStatus,
+  AccountType,
+  PlayerRole,
+  type AccountEntity,
+  type AgentAccountEntity,
+  type AgentRole,
+  type CompanyAccountEntity,
+  type CompanyRole,
+  type MfaStatus,
+  type PlayerAccountEntity,
 } from "@megawin/identity/entities";
-import { AccountStatus, AccountType, type AgentRole, PlayerRole } from "@megawin/identity/entities";
 import { generateULID, nowVN } from "@megawin/shared/utils";
-import { type Document, ObjectId } from "mongodb";
+import { ObjectId, type Document } from "mongodb";
 
 import { AccountMapper } from "../mappers/account-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";

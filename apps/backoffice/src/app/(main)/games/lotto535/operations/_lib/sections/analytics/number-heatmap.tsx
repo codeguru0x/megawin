@@ -15,7 +15,6 @@
  * Export dùng chung: `NumberBadge` (filled/soft/outlined), `NumbersWithTooltip`
  * (collapse > 7 số) — analytics-panels + live-feed import.
  */
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PlayType } from "@megawin/game-lotto535/entities";
@@ -71,36 +70,46 @@ const LOTTO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES_MAIN: Record<HeatLevel, string> = {
-  cold: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200",
-  low: "bg-amber-300 text-amber-900 dark:bg-amber-800 dark:text-amber-100",
-  mid: "bg-amber-400 text-white dark:bg-amber-700",
-  warm: "bg-amber-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+  cold: "bg-warning/80 text-warning",
+  low: "bg-warning text-warning",
+  mid: "bg-warning text-white",
+  warm: "bg-warning text-white",
+  hot: "bg-warning text-white ring-2 ring-warning/50",
 };
 
 const HEAT_BADGE_STYLES_SPECIAL: Record<HeatLevel, string> = {
-  cold: "bg-orange-200/80 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200",
-  low: "bg-orange-300 text-orange-900 dark:bg-orange-800 dark:text-orange-100",
-  mid: "bg-orange-400 text-white dark:bg-orange-700",
-  warm: "bg-orange-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+  cold: "bg-warning/80 text-warning",
+  low: "bg-warning text-warning",
+  mid: "bg-warning text-white",
+  warm: "bg-warning text-white",
+  hot: "bg-warning text-white ring-2 ring-warning/50",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-amber-50/40 dark:bg-amber-950/10",
-  warm: "bg-amber-50/70 dark:bg-amber-950/20",
-  hot: "bg-amber-50/60 dark:bg-amber-950/15",
+  mid: "bg-warning/40",
+  warm: "bg-warning/70",
+  hot: "bg-warning/60",
 };
 
 function getHeatLevel(amount: number, maxAmount: number): HeatLevel {
-  if (amount === 0 || maxAmount === 0) return "cold";
+  if (amount === 0 || maxAmount === 0) {
+    return "cold";
+  }
   const ratio = amount / maxAmount;
-  if (ratio >= 0.8) return "hot";
-  if (ratio >= 0.55) return "warm";
-  if (ratio >= 0.3) return "mid";
-  if (ratio >= 0.1) return "low";
+  if (ratio >= 0.8) {
+    return "hot";
+  }
+  if (ratio >= 0.55) {
+    return "warm";
+  }
+  if (ratio >= 0.3) {
+    return "mid";
+  }
+  if (ratio >= 0.1) {
+    return "low";
+  }
   return "cold";
 }
 
@@ -137,30 +146,27 @@ export function NumberBadge({
   if (selected) {
     colorClass =
       ballVariant === "special"
-        ? "bg-orange-600 text-white ring-2 ring-orange-300/60"
-        : "bg-amber-600 text-white ring-2 ring-amber-300/60";
+        ? "bg-warning text-white ring-2 ring-warning/60"
+        : "bg-warning text-white ring-2 ring-warning/60";
   } else if (muted) {
     colorClass = LOTTO_MUTED_BG;
   } else if (variant === "outlined") {
     colorClass =
       ballVariant === "special"
-        ? "border border-orange-400/70 text-orange-600 bg-transparent dark:border-orange-600 dark:text-orange-400"
-        : "border border-amber-400/70 text-amber-600 bg-transparent dark:border-amber-600 dark:text-amber-400";
+        ? "border border-warning/70 text-warning bg-transparent"
+        : "border border-warning/70 text-warning bg-transparent";
   } else if (variant === "soft") {
-    colorClass =
-      ballVariant === "special"
-        ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
-        : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+    colorClass = ballVariant === "special" ? "bg-warning text-warning" : "bg-warning text-warning";
   } else {
     // filled — heat intensity
     const styles = ballVariant === "special" ? HEAT_BADGE_STYLES_SPECIAL : HEAT_BADGE_STYLES_MAIN;
-    colorClass = heatLevel ? styles[heatLevel] : "bg-amber-600 text-white";
+    colorClass = heatLevel ? styles[heatLevel] : "bg-warning text-white";
   }
 
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0",
+        "inline-flex shrink-0 items-center justify-center rounded-full leading-none font-bold tabular-nums",
         HEATMAP_BADGE_SIZE,
         HEATMAP_BADGE_TEXT,
         colorClass,
@@ -189,20 +195,20 @@ export function NumbersWithTooltip({
   const hidden = needsCollapse ? numbers.slice(NUMBERS_VISIBLE_LIMIT) : [];
 
   return (
-    <div className="flex items-center gap-1 flex-nowrap overflow-hidden">
+    <div className="flex flex-nowrap items-center gap-1 overflow-hidden">
       {visible.map((n) => (
         <NumberBadge key={n} num={n} variant={variant} ballVariant={ballVariant} />
       ))}
       {needsCollapse && (
         <HoverCard openDelay={100} closeDelay={100}>
           <HoverCardTrigger asChild>
-            <span className="inline-flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 text-muted-foreground text-xs font-semibold tabular-nums px-1.5 h-6 shrink-0 cursor-default transition-colors">
+            <span className="bg-muted hover:bg-muted-foreground/20 text-muted-foreground inline-flex h-6 shrink-0 cursor-default items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums transition-colors">
               +{hidden.length}
             </span>
           </HoverCardTrigger>
           <HoverCardContent side="top" sideOffset={6} className={cn(DATA_HOVER_SURFACE_CLASS, "w-auto p-3")}>
-            <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
-            <div className="flex items-center gap-1 flex-wrap max-w-50">
+            <p className="text-muted-foreground mb-1.5 text-xs">Tất cả {numbers.length} số</p>
+            <div className="flex max-w-50 flex-wrap items-center gap-1">
               {numbers.map((n) => (
                 <NumberBadge key={n} num={n} variant={variant} ballVariant={ballVariant} />
               ))}
@@ -246,22 +252,19 @@ function NumberCell({
   const isLastCol = col === totalCols - 1;
   const isLastRow = row === totalRows - 1;
   const cellBg = isEmpty ? "" : HEAT_CELL_BG[heatLevel];
-  const hoverBg =
-    ballVariant === "special"
-      ? "hover:bg-orange-100/50 dark:hover:bg-orange-950/30"
-      : "hover:bg-amber-100/50 dark:hover:bg-amber-950/30";
+  const hoverBg = ballVariant === "special" ? "hover:bg-warning/50" : "hover:bg-warning/50";
   const selectedBg =
     ballVariant === "special"
-      ? "bg-orange-100/80 ring-2 ring-inset ring-orange-500 dark:bg-orange-900/40"
-      : "bg-amber-100/80 ring-2 ring-inset ring-amber-500 dark:bg-amber-900/40";
+      ? "bg-warning/80 ring-2 ring-inset ring-warning"
+      : "bg-warning/80 ring-2 ring-inset ring-warning";
 
   const cellClass = cn(
-    "relative select-none transition-colors text-left w-full",
-    "border-r border-b border-border/50",
+    "relative w-full text-left transition-colors select-none",
+    "border-border/50 border-r border-b",
     isLastCol && "border-r-0",
     isLastRow && "border-b-0",
     HEATMAP_CELL_PT,
-    "pb-1.5 px-1",
+    "px-1 pb-1.5",
     cellBg || "bg-card",
     "cursor-pointer",
     hoverBg,
@@ -291,14 +294,14 @@ function NumberCell({
       </span>
       <div className="flex flex-col items-center gap-0.5">
         {isEmpty ? (
-          <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
+          <span className="text-muted-foreground/20 text-xs tabular-nums">–</span>
         ) : (
           <>
             {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
-            <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
+            <span className={cn(HEATMAP_CELL_DATA_SIZE, "text-foreground leading-tight font-bold tabular-nums")}>
               {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
             </span>
-            <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
+            <span className={cn(HEATMAP_CELL_SUB_SIZE, "text-muted-foreground leading-none tabular-nums")}>
               {formatNumber(n.sets)}x
             </span>
           </>
@@ -335,30 +338,30 @@ function MainGrid({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex items-center justify-center size-4 rounded-full shrink-0"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full"
             style={{ background: LOTTO_MAIN_HEX }}
           >
             <Star className="size-2.5 text-white" />
           </span>
-          <span className="text-xs font-semibold text-foreground">Số chính (01–35)</span>
+          <span className="text-foreground text-xs font-semibold">Số chính (01–35)</span>
         </div>
         <div className="flex items-center gap-3 text-xs tabular-nums">
           <span className="text-muted-foreground">
-            Số bộ <span className="font-semibold text-foreground">{formatNumber(totalSets)}</span>
+            Số bộ <span className="text-foreground font-semibold">{formatNumber(totalSets)}</span>
           </span>
           <span className="text-muted-foreground">
             Dòng tiền{" "}
-            <span className="font-semibold text-foreground">
+            <span className="text-foreground font-semibold">
               {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
             </span>
           </span>
         </div>
       </div>
       <div
-        className="rounded-md overflow-hidden border border-border/50"
+        className="border-border/50 overflow-hidden rounded-md border"
         style={{ display: "grid", gridTemplateColumns: `repeat(${MAIN_COLS}, 1fr)` }}
       >
         {Array.from({ length: MAIN_TOTAL }, (_, i) => {
@@ -391,7 +394,7 @@ function MainGrid({
         )}
       </NumberHeatmapHoverLayer>
       {isSparse && (
-        <p className="text-[11px] text-muted-foreground/60 italic">
+        <p className="text-muted-foreground/60 text-xs italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.
         </p>
       )}
@@ -423,30 +426,30 @@ function SpecialGrid({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex items-center justify-center size-4 rounded-full shrink-0"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full"
             style={{ background: LOTTO_SPECIAL_HEX }}
           >
             <Star className="size-2.5 text-white" />
           </span>
-          <span className="text-xs font-semibold text-foreground">Số đặc biệt (01–12)</span>
+          <span className="text-foreground text-xs font-semibold">Số đặc biệt (01–12)</span>
         </div>
         <div className="flex items-center gap-3 text-xs tabular-nums">
           <span className="text-muted-foreground">
-            Số bộ <span className="font-semibold text-foreground">{formatNumber(totalSets)}</span>
+            Số bộ <span className="text-foreground font-semibold">{formatNumber(totalSets)}</span>
           </span>
           <span className="text-muted-foreground">
             Dòng tiền{" "}
-            <span className="font-semibold text-foreground">
+            <span className="text-foreground font-semibold">
               {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
             </span>
           </span>
         </div>
       </div>
       <div
-        className="rounded-md overflow-hidden border border-border/50"
+        className="border-border/50 overflow-hidden rounded-md border"
         style={{ display: "grid", gridTemplateColumns: `repeat(${SPECIAL_COLS}, 1fr)` }}
       >
         {Array.from({ length: SPECIAL_TOTAL }, (_, i) => {
@@ -493,10 +496,18 @@ function SpecialGrid({
  * validate lại độc lập, KHÔNG tin tưởng riêng hint này.
  */
 function suggestPlayType(mainCount: number, specialCount: number): PlayType | null {
-  if (specialCount === 1 && mainCount === 4) return PlayType.MainCover4;
-  if (specialCount === 1 && mainCount === 5) return PlayType.Standard;
-  if (specialCount === 1 && mainCount >= 6 && mainCount <= 15) return PlayType.MainCover;
-  if (mainCount === 5 && specialCount >= 2 && specialCount <= 12) return PlayType.SpecialCover;
+  if (specialCount === 1 && mainCount === 4) {
+    return PlayType.MainCover4;
+  }
+  if (specialCount === 1 && mainCount === 5) {
+    return PlayType.Standard;
+  }
+  if (specialCount === 1 && mainCount >= 6 && mainCount <= 15) {
+    return PlayType.MainCover;
+  }
+  if (mainCount === 5 && specialCount >= 2 && specialCount <= 12) {
+    return PlayType.SpecialCover;
+  }
   return null;
 }
 
@@ -557,7 +568,7 @@ function ComboLookupDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">
-            <Search className="size-4 text-muted-foreground" />
+            <Search className="text-muted-foreground size-4" />
             Tra cứu bộ số dồn cược
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -568,12 +579,7 @@ function ComboLookupDialog({
 
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "text-xs font-medium tabular-nums",
-                isValid ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
-              )}
-            >
+            <span className={cn("text-xs font-medium tabular-nums", isValid ? "text-profit" : "text-muted-foreground")}>
               {selectedMain.length} số chính + {selectedSpecial.length} số ĐB
               {isValid ? " · hợp lệ" : ` · ${validation.errors[0] ?? "chưa hợp lệ"}`}
             </span>
@@ -581,7 +587,7 @@ function ComboLookupDialog({
               <button
                 type="button"
                 onClick={onClearAll}
-                className="text-xs text-muted-foreground/60 hover:text-muted-foreground underline underline-offset-2"
+                className="text-muted-foreground/60 hover:text-muted-foreground text-xs underline underline-offset-2"
               >
                 Xoá hết
               </button>
@@ -589,13 +595,13 @@ function ComboLookupDialog({
           </div>
 
           {selectedMain.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
+            <div className="flex flex-wrap items-center gap-1">
               {[...selectedMain].sort().map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => onToggleMain(n)}
-                  className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 pl-2 pr-1 h-6 text-xs font-bold tabular-nums hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors"
+                  className="bg-warning text-warning hover:bg-warning inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
                   title="Bỏ chọn"
                 >
                   {n}
@@ -605,13 +611,13 @@ function ComboLookupDialog({
             </div>
           )}
           {selectedSpecial.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
+            <div className="flex flex-wrap items-center gap-1">
               {[...selectedSpecial].sort().map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => onToggleSpecial(n)}
-                  className="inline-flex items-center gap-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 pl-2 pr-1 h-6 text-xs font-bold tabular-nums hover:bg-orange-200 dark:hover:bg-orange-900/60 transition-colors"
+                  className="bg-warning text-warning hover:bg-warning inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
                   title="Bỏ chọn"
                 >
                   {n}
@@ -621,44 +627,44 @@ function ComboLookupDialog({
             </div>
           )}
 
-          {lookup.isError && <p className="text-xs text-destructive">Không tra cứu được — kiểm tra lại bộ số.</p>}
+          {lookup.isError && <p className="text-destructive text-xs">Không tra cứu được — kiểm tra lại bộ số.</p>}
 
           {result &&
             (result.found ? (
-              <div className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 border-b bg-muted/20 text-xs">
+              <div className="border-border/60 bg-muted/10 overflow-hidden rounded-lg border">
+                <div className="bg-muted/20 flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-3 py-2 text-xs">
                   <span className="text-muted-foreground">
                     Người chơi:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.players)}</span>
+                    <span className="text-foreground font-semibold tabular-nums">{formatNumber(result.players)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Số bộ:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.sets)}</span>
+                    <span className="text-foreground font-semibold tabular-nums">{formatNumber(result.sets)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Tổng tiền:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.amount)}</span>
+                    <span className="text-foreground font-semibold tabular-nums">{formatNumber(result.amount)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Giá 1 bộ:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">
+                    <span className="text-foreground font-semibold tabular-nums">
                       {formatNumber(result.boardPrice)}
                     </span>
                   </span>
                 </div>
-                <div className="divide-y divide-border/50 max-h-64 overflow-y-auto">
+                <div className="divide-border/50 max-h-64 divide-y overflow-y-auto">
                   {result.accounts.map((a) => (
                     <div key={a.accountId} className="grid grid-cols-[1fr_4rem_6rem] items-center gap-2 px-3 py-1.5">
                       <div className="min-w-0" title={a.accountId}>
-                        <p className="text-xs font-medium truncate">{a.username || a.accountId}</p>
+                        <p className="truncate text-xs font-medium">{a.username || a.accountId}</p>
                         {a.username && (
-                          <p className="text-xs text-muted-foreground/60 truncate tabular-nums">{a.accountId}</p>
+                          <p className="text-muted-foreground/60 truncate text-xs tabular-nums">{a.accountId}</p>
                         )}
                       </div>
-                      <span className="text-xs tabular-nums text-muted-foreground text-right">
+                      <span className="text-muted-foreground text-right text-xs tabular-nums">
                         {formatNumber(a.sets)} bộ
                       </span>
-                      <span className="text-xs tabular-nums font-semibold text-foreground text-right">
+                      <span className="text-foreground text-right text-xs font-semibold tabular-nums">
                         {formatNumber(a.amount)}
                       </span>
                     </div>
@@ -666,7 +672,7 @@ function ComboLookupDialog({
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic">Chưa có ai cược bộ này.</p>
+              <p className="text-muted-foreground text-xs italic">Chưa có ai cược bộ này.</p>
             ))}
         </div>
 
@@ -725,7 +731,6 @@ export function NumberHeatmap({
   }, []);
 
   // Đổi kỳ (drawId) → reset lựa chọn cũ, tránh tra cứu nhầm kỳ khác.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: drawId là trigger reset (không đọc trong body); biome coi dependency "unnecessary" nếu chỉ dùng làm signal.
   useEffect(() => {
     setSelectedMain([]);
     setSelectedSpecial([]);
@@ -736,13 +741,13 @@ export function NumberHeatmap({
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+      <CardHeader className="px-5 pt-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <BarChart2 className="size-4 text-muted-foreground shrink-0" />
+            <BarChart2 className="text-muted-foreground size-4 shrink-0" />
             <div>
               <CardTitle className="text-sm font-semibold">Phân tích số cược</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
+              <CardDescription className="mt-0.5 text-xs">
                 {formatNumber(totalSets)} bộ cược · Chọn số trên bảng để tra cứu
               </CardDescription>
             </div>
@@ -750,12 +755,12 @@ export function NumberHeatmap({
           <div className="flex items-center gap-1.5">
             {totalSelected > 0 && (
               <>
-                <span className="text-xs tabular-nums text-muted-foreground">Đã chọn {totalSelected} số</span>
+                <span className="text-muted-foreground text-xs tabular-nums">Đã chọn {totalSelected} số</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground size-7"
                   onClick={clearAll}
                   aria-label="Bỏ chọn tất cả"
                   title="Bỏ chọn tất cả"
@@ -770,7 +775,7 @@ export function NumberHeatmap({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 text-muted-foreground"
+                  className="text-muted-foreground size-7"
                   aria-label="Thao tác bảng số"
                 >
                   <MoreHorizontal className="size-4" />
@@ -788,12 +793,12 @@ export function NumberHeatmap({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0 space-y-4">
-        <div className="flex gap-4 items-start">
-          <div className="flex-[7_7_0%] min-w-0">
+      <CardContent className="space-y-4 px-5 pt-0 pb-4">
+        <div className="flex items-start gap-4">
+          <div className="min-w-0 flex-[7_7_0%]">
             <MainGrid numbers={mainNumbers} selected={selectedMainSet} onToggle={toggleMain} />
           </div>
-          <div className="flex-[4_4_0%] min-w-0">
+          <div className="min-w-0 flex-[4_4_0%]">
             <SpecialGrid numbers={specialNumbers} selected={selectedSpecialSet} onToggle={toggleSpecial} />
           </div>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type EditScheduleInput, editScheduleSchema } from "@megawin/game-keno/schemas";
+import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-keno/schemas";
 import { formatVNDate, formatVNTimeWithSeconds, toVNDateWithSeconds } from "@megawin/shared/utils";
 import { Check, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -20,8 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import type { DrawSelectorItem } from "../../../use-operations";
-import { useUpdateSchedule } from "../../../use-operations";
+import { useUpdateSchedule, type DrawSelectorItem } from "../../../use-operations";
 
 function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
   // salesOpenAt optional → fallback "" nếu chưa có
@@ -111,13 +110,13 @@ export function EditScheduleAction({
         <form onSubmit={rhfSubmit(handleSubmit)} className="space-y-4 py-2">
           {/* Mở bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ mở bán</Label>
+            <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ mở bán</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesOpenDate")} />
               <Input type="time" step="1" className="w-32" {...register("salesOpenTime")} />
             </div>
             {(errors.salesOpenDate ?? errors.salesOpenTime) && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-destructive text-sm font-medium">
                 {errors.salesOpenDate?.message ?? errors.salesOpenTime?.message}
               </p>
             )}
@@ -125,13 +124,13 @@ export function EditScheduleAction({
 
           {/* Đóng bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ đóng bán</Label>
+            <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ đóng bán</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesCloseDate")} />
               <Input type="time" step="1" className="w-32" {...register("salesCloseTime")} />
             </div>
             {(errors.salesCloseDate ?? errors.salesCloseTime) && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-destructive text-sm font-medium">
                 {errors.salesCloseDate?.message ?? errors.salesCloseTime?.message}
               </p>
             )}
@@ -139,23 +138,23 @@ export function EditScheduleAction({
 
           {/* Quay số */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ quay số</Label>
+            <Label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Giờ quay số</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("drawDate")} />
               <Input type="time" step="1" className="w-32" {...register("drawTime")} />
             </div>
             {(errors.drawDate ?? errors.drawTime) && (
-              <p className="text-sm font-medium text-destructive">
+              <p className="text-destructive text-sm font-medium">
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-[11px] text-muted-foreground/70">
+            <p className="text-muted-foreground/70 text-xs">
               Keno quay cố định theo chu kỳ 8 phút. Chỉ sửa khi có lý do đặc biệt.
             </p>
           </div>
 
           {/* Root-level error (cross-field từ superRefine) */}
-          {errors.root && <p className="text-sm font-medium text-destructive">{errors.root.message}</p>}
+          {errors.root && <p className="text-destructive text-sm font-medium">{errors.root.message}</p>}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>

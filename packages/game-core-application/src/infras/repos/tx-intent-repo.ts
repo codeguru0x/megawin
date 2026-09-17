@@ -1,5 +1,4 @@
-import type { TxIntentEntity } from "@megawin/game-core/entities";
-import { TxIntentPhase } from "@megawin/game-core/entities";
+import { TxIntentPhase, type TxIntentEntity } from "@megawin/game-core/entities";
 
 import { TxIntentMapper } from "../mappers/tx-intent-mapper";
 import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";

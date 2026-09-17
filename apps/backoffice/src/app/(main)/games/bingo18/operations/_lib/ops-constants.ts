@@ -34,7 +34,9 @@ export const BINGO18_DIRECTION_LABELS = BINGO18_BIG_SMALL_BET_LABELS;
  * VD: (sumTotal, "18") → "Tổng 18"; (tripleMatch, "6") → "Bộ ba số 6".
  */
 export function describeHighBucket(playType: string, bucketKey: string): string {
-  if (playType === Bingo18PlayType.SumTotal) return `Tổng ${bucketKey}`;
+  if (playType === Bingo18PlayType.SumTotal) {
+    return `Tổng ${bucketKey}`;
+  }
   return `Bộ ba số ${bucketKey}`;
 }
 

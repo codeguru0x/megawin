@@ -7,7 +7,7 @@
 import type { GlobalConfigEntity } from "@megawin/game-power655-application/use-cases/game-config";
 import { WEEKDAY_LABELS_FULL } from "@megawin/shared/utils";
 
-import { type ConfigItem, item } from "../../payload";
+import { item, type ConfigItem } from "../../payload";
 import { GameConfigSection } from "../types";
 
 export const APPLICABLE_SECTIONS: readonly GameConfigSection[] = [

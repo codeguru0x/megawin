@@ -17,8 +17,7 @@
  * KHÔNG phải nguồn authoritative duy nhất cho đường tiền.
  */
 
-import type { HttpClient } from "@megawin/http-client";
-import { ApiClientError, createHttpClient } from "@megawin/http-client";
+import { ApiClientError, createHttpClient, type HttpClient } from "@megawin/http-client";
 import { ResultFeedProviderId } from "@megawin/resultfeed/entities";
 
 import type { FetchProvider, FetchRequest, FetchResult } from "./types";

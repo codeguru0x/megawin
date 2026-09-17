@@ -7,8 +7,11 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { Lotto535OpsAlertEntity, Lotto535OpsAlertType } from "@megawin/game-lotto535/entities";
-import { OpsAlertSeverity } from "@megawin/game-lotto535/entities";
+import {
+  OpsAlertSeverity,
+  type Lotto535OpsAlertEntity,
+  type Lotto535OpsAlertType,
+} from "@megawin/game-lotto535/entities";
 
 import { OpsAlertRepository } from "../../infras/repos/ops-alert-repo";
 import type { ListAlertsInput, ListAlertsOutput, Lotto535AlertGroup } from "./dto/ops.dto";

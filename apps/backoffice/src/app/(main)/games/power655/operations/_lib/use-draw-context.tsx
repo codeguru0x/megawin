@@ -8,15 +8,14 @@
  *
  * Power 6/55: 3 kỳ/tuần (thứ 3, 5, 7), drawNo = 1 cố định.
  */
-
-import { createContext, type ReactNode, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, type ReactNode } from "react";
 
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { useQueryState } from "nuqs";
 
 import { useAiPageContext } from "@/hooks/use-ai-page-context";
 
-import { type DrawSelectorItem, type OpsQueryParams, useDrawDetail, useDrawSelectorList } from "./use-operations";
+import { useDrawDetail, useDrawSelectorList, type DrawSelectorItem, type OpsQueryParams } from "./use-operations";
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -106,7 +105,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     (drawId: string) => {
       // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
       const activeDrawId = draws.find((d) => d.group === DrawSelectorGroup.Active)?.drawId || draws[0]?.drawId;
-      setSelectedDrawId(drawId === activeDrawId ? null : drawId);
+      void setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],
   );
@@ -145,6 +144,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
 
 export function useDrawContext() {
   const ctx = useContext(DrawContext);
-  if (!ctx) throw new Error("useDrawContext must be used within DrawContextProvider");
+  if (!ctx) {
+    throw new Error("useDrawContext must be used within DrawContextProvider");
+  }
   return ctx;
 }

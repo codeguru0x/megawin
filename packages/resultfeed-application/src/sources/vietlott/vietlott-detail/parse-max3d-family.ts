@@ -29,8 +29,7 @@
 import { ResultFeedGameKey, ResultFeedSourceId } from "@megawin/resultfeed/entities";
 import type * as cheerio from "cheerio";
 
-import type { ParsedObservation } from "../../types";
-import { ParseError } from "../../types";
+import { ParseError, type ParsedObservation } from "../../types";
 import { assertNotUnavailable, readHeadingPeriodAndDate } from "./dom-helpers";
 
 const MAX3D_TRIPLET_COUNT = 20;

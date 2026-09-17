@@ -1,5 +1,5 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { JackpotCycleDoc, JackpotCycleEntity } from "@megawin/game-mega645/entities";
+import type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
 import type { Document } from "mongodb";
 
 export class JackpotCycleMapper extends MongoMapper<Document, JackpotCycleEntity> {

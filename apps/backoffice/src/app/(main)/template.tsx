@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { ViewTransition } from "react";
+import { ViewTransition, type ReactNode } from "react";
 
 /**
  * Remount theo route segment — bọc content bằng ViewTransition để enter/exit fire đúng.

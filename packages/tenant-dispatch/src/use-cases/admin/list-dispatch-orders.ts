@@ -108,17 +108,25 @@ export class ListDispatchOrdersUseCase extends UseCase<ListDispatchOrdersInput, 
 
   private normalizeLimit(raw: number | undefined): number {
     const size = raw ?? DEFAULT_LIMIT;
-    if (!Number.isFinite(size) || size <= 0) return DEFAULT_LIMIT;
+    if (!Number.isFinite(size) || size <= 0) {
+      return DEFAULT_LIMIT;
+    }
     return Math.min(size, MAX_LIMIT);
   }
 
   /** Parse cursor `"{iso}|{hexId}"` → object hoặc null (degrade on error). */
   private parseCursor(raw: string | undefined): { createdAt: Date; id: string } | null {
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const [iso, id] = raw.split("|");
-    if (!iso || !id) return null;
+    if (!iso || !id) {
+      return null;
+    }
     const createdAt = new Date(iso);
-    if (Number.isNaN(createdAt.getTime())) return null;
+    if (Number.isNaN(createdAt.getTime())) {
+      return null;
+    }
     return { createdAt, id };
   }
 

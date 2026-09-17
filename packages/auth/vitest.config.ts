@@ -1,13 +1,10 @@
-import { integrationConfig } from "@megawin/vitest-config/dist";
-import { loadEnv } from "vite";
+import { nodeConfig } from "@megawin/vitest-config";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig(({ mode }) => ({
-  ...integrationConfig,
+export default defineConfig({
+  ...nodeConfig,
   test: {
-    ...integrationConfig.test,
-    env: loadEnv(mode, import.meta.dirname, ""),
-    include: ["test/**/*.test.ts"],
-    globalSetup: ["test/global-setup.ts"],
+    ...nodeConfig.test,
+    include: ["test/unit/**/*.test.ts"],
   },
-}));
+});

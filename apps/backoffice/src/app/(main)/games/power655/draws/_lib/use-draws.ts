@@ -7,7 +7,6 @@
  * Các mutations (open-sales, close-sales, publish-result, ...) đã chuyển
  * sang trang Vận hành (operations page).
  */
-
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type {
   DrawSummary,

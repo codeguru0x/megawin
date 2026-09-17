@@ -23,14 +23,17 @@
 import type { Bingo18BucketStat, Bingo18ByPlayType } from "../entities/betting-stats";
 import type { EntryBoardSnapshot } from "../entities/entry";
 import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "../entities/enums";
-import type {
-  BigSmallDrawPrizes,
-  DoubleMatchPrizes,
-  SingleNumPrizes,
-  SumTotalPrizes,
-  TripleMatchPrizes,
+import {
+  BINGO18_BIG_MIN,
+  BINGO18_DICE_MAX,
+  BINGO18_DICE_MIN,
+  BINGO18_SMALL_MAX,
+  type BigSmallDrawPrizes,
+  type DoubleMatchPrizes,
+  type SingleNumPrizes,
+  type SumTotalPrizes,
+  type TripleMatchPrizes,
 } from "../entities/types";
-import { BINGO18_BIG_MIN, BINGO18_DICE_MAX, BINGO18_DICE_MIN, BINGO18_SMALL_MAX } from "../entities/types";
 import { TOTAL_OUTCOMES } from "./odds";
 import { lookupSingleNumPrize, lookupSumTotalPrize } from "./prize-tables";
 
@@ -104,8 +107,12 @@ function setsOf(rec: Record<string, Bingo18BucketStat>, key: string): number {
 
 /** Phân loại tổng → hướng bigSmallDraw (cùng biên với matchBigSmallDraw). */
 function dirOfSum(sum: number): Bingo18BigSmallBet {
-  if (sum <= BINGO18_SMALL_MAX) return Bingo18BigSmallBet.Small;
-  if (sum >= BINGO18_BIG_MIN) return Bingo18BigSmallBet.Big;
+  if (sum <= BINGO18_SMALL_MAX) {
+    return Bingo18BigSmallBet.Small;
+  }
+  if (sum >= BINGO18_BIG_MIN) {
+    return Bingo18BigSmallBet.Big;
+  }
   return Bingo18BigSmallBet.Draw;
 }
 
@@ -124,9 +131,15 @@ function bigSmallPrize(dir: Bingo18BigSmallBet, prizes: BigSmallDrawPrizes): num
 /** Đếm số lần n xuất hiện trong (a,b,c) — cùng logic matchSingleNum/matchDoubleMatch. */
 function countOf(n: number, a: number, b: number, c: number): number {
   let count = 0;
-  if (a === n) count++;
-  if (b === n) count++;
-  if (c === n) count++;
+  if (a === n) {
+    count++;
+  }
+  if (b === n) {
+    count++;
+  }
+  if (c === n) {
+    count++;
+  }
   return count;
 }
 
@@ -169,7 +182,9 @@ export function computeBingo18Exposure(byPlayType: Bingo18ByPlayType, prizes: Bi
     // specific trả khi cả 3 mặt = n (count = 3).
     for (let n = BINGO18_DICE_MIN; n <= BINGO18_DICE_MAX; n++) {
       const count = countOf(n, a, b, c);
-      if (count === 0) continue;
+      if (count === 0) {
+        continue;
+      }
       const key = String(n);
       amount += setsOf(byPlayType.singleNum, key) * lookupSingleNumPrize(count, prizes.singleNum);
       if (count >= 2) {
@@ -240,14 +255,20 @@ export function computeBingo18EntryPotentialWin(
         }
         case Bingo18PlayType.DoubleMatch: {
           const count = countOf(board.number ?? 0, a, b, c);
-          if (count >= 2) amount += prizes.doubleMatch.win * board.betCount;
+          if (count >= 2) {
+            amount += prizes.doubleMatch.win * board.betCount;
+          }
           break;
         }
         case Bingo18PlayType.TripleMatch: {
           const allSame = a === b && b === c;
-          if (!allSame) break;
+          if (!allSame) {
+            break;
+          }
           if (board.tripleKind === Bingo18TripleKind.Specific) {
-            if (a === board.number) amount += prizes.tripleMatch.specific * board.betCount;
+            if (a === board.number) {
+              amount += prizes.tripleMatch.specific * board.betCount;
+            }
           } else {
             amount += prizes.tripleMatch.any * board.betCount;
           }
@@ -268,7 +289,9 @@ export function computeBingo18EntryPotentialWin(
       }
     }
 
-    if (amount > max) max = amount;
+    if (amount > max) {
+      max = amount;
+    }
   });
 
   return max;

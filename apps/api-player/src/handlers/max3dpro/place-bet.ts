@@ -13,6 +13,7 @@
 
 import { withPlayerAuth } from "@megawin/auth";
 import { TicketChannel } from "@megawin/game-core/entities";
+import { PlaceBetUseCase, type PlaceBetBoardInput } from "@megawin/game-max3dpro-application/use-cases/place-bet";
 import {
   MAX3D_PRO_MULTI_NUMBER_MAX,
   MAX3D_PRO_MULTI_NUMBER_MIN,
@@ -21,7 +22,6 @@ import {
 } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
 import { max3dproDigitSchema, max3dproDrawIdSchema, max3dproTripletSchema } from "@megawin/game-max3dpro/schemas";
-import { type PlaceBetBoardInput, PlaceBetUseCase } from "@megawin/game-max3dpro-application/use-cases/place-bet";
 import { isUnique } from "@megawin/shared/utils";
 import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 import z from "zod";

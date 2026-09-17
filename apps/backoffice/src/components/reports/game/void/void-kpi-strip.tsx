@@ -19,14 +19,14 @@ interface KpiCardProps {
 
 function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, valueClassName }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClassName)}>{value}</p>
-        <p className="truncate text-xs text-muted-foreground">{sub}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className={cn("text-foreground text-lg font-bold tabular-nums", valueClassName)}>{value}</p>
+        <p className="text-muted-foreground truncate text-xs">{sub}</p>
       </div>
     </div>
   );
@@ -46,36 +46,36 @@ export function VoidKpiStrip({ data }: VoidKpiStripProps) {
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         icon={Ban}
-        iconBg="bg-rose-100 dark:bg-rose-900/50"
-        iconColor="text-rose-600 dark:text-rose-400"
+        iconBg="bg-loss"
+        iconColor="text-loss"
         label="Tổng kỳ huỷ"
         value={formatNumber(data.totalVoidedDraws)}
         sub="Kỳ quay đã void"
       />
       <KpiCard
         icon={Ticket}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Phiếu cược"
         value={formatNumber(data.totalEntries)}
         sub="Phiếu cược bị huỷ"
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Tiền cược"
         value={formatVNDCompact(data.totalOriginalStake)}
         sub=""
       />
       <KpiCard
         icon={Undo2}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Hoàn trả"
         value={formatVNDCompact(data.totalRefundAmount)}
         sub="Đã hoàn cho khách"
-        valueClassName="text-amber-600 dark:text-amber-400"
+        valueClassName="text-warning"
       />
     </div>
   );

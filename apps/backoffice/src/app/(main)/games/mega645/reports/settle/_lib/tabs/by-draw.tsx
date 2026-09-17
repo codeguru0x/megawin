@@ -30,15 +30,18 @@ function DrawList() {
   const { data, isLoading, error } = useMega645DrawList(from, to, page);
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <GameDrawKpiStripSkeleton />
         <TableSkeleton />
       </div>
     );
-  if (error) return <ErrorCard />;
-  if (!data?.data.length)
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.data.length) {
     return (
       <EmptyCard
         icon="calendar"
@@ -46,6 +49,7 @@ function DrawList() {
         description="Không tìm thấy kỳ quay nào trong khoảng thời gian đã chọn."
       />
     );
+  }
 
   return (
     <div className="space-y-4">
@@ -67,11 +71,14 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
   const { navigateToPlayersInDraw } = useMega645ReportFilters();
   const { data, isLoading } = useMega645DrawTenants(drawId);
 
-  if (isLoading) return <TableSkeleton rows={6} />;
-  if (!data?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={6} />;
+  }
+  if (!data?.length) {
     return (
       <EmptyCard icon="building" message="Không có dữ liệu" description="Không có đại lý nào tham gia kỳ quay này." />
     );
+  }
 
   return <GameDrawTenantTable drawId={drawId} rows={data} onRowClick={navigateToPlayersInDraw} showLineCount />;
 }
@@ -80,9 +87,12 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
   const { navigateToEntries } = useMega645ReportFilters();
   const { data: players, isLoading } = useMega645Players(drawId, tenantId);
 
-  if (isLoading) return <TableSkeleton rows={5} />;
-  if (!players?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+  if (!players?.length) {
     return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
+  }
 
   const rows = players.map((p) => ({
     accountId: p.accountId,

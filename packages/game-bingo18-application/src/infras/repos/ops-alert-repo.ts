@@ -13,14 +13,15 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type {
-  Bingo18OpsAlertDoc,
-  Bingo18OpsAlertEntity,
-  OpsAlertStatus as OpsAlertStatusType,
+import {
+  Bingo18Collections,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type Bingo18OpsAlertDoc,
+  type Bingo18OpsAlertEntity,
+  type OpsAlertStatus as OpsAlertStatusType,
 } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
-import type { AnyBulkWriteOperation, Document } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type Document } from "mongodb";
 
 import { OpsAlertMapper } from "../mappers/ops-alert-mapper";
 import { BaseRepo } from "./base-repo";
@@ -48,7 +49,9 @@ export class OpsAlertRepository extends BaseRepo<Bingo18OpsAlertEntity, OpsAlert
    * @param alerts - Alert cần upsert (không có `_id`; Mongo tự sinh).
    */
   async bulkUpsertByDedupe(alerts: Omit<Bingo18OpsAlertDoc, "_id">[]): Promise<void> {
-    if (alerts.length === 0) return;
+    if (alerts.length === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = alerts.map((a) => ({
       updateOne: {

@@ -67,9 +67,7 @@ const listVoidDrawTenantsUseCases = {
 };
 
 /** Bắt compiler khi `GameProduct` thêm entry mới mà 2 map trên chưa có. */
-function assertKnownGame(
-  game: GameProduct,
-): asserts game is keyof typeof listVoidUseCases & keyof typeof listVoidDrawTenantsUseCases {
+function assertKnownGame(game: GameProduct): asserts game is keyof typeof listVoidUseCases {
   if (!(game in listVoidUseCases) || !(game in listVoidDrawTenantsUseCases)) {
     throw AppException.internal(`Game không được hỗ trợ: ${String(game)}`);
   }

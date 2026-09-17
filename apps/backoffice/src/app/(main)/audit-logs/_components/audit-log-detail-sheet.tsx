@@ -1,6 +1,5 @@
 "use client";
 
-import type { AuditLogEntity } from "@megawin/audit/entities";
 import {
   AuditActionLabel,
   AuditActorTypeLabel,
@@ -8,6 +7,7 @@ import {
   AuditStatus,
   AuditStatusLabel,
   AuditTargetTypeLabel,
+  type AuditLogEntity,
 } from "@megawin/audit/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -41,8 +41,12 @@ export interface AuditLogDetailSheetProps {
  * - Primitive → `String`.
  */
 function formatValue(value: unknown): string {
-  if (value === undefined || value === null) return "";
-  if (Array.isArray(value)) return value.join(", ");
+  if (value === undefined || value === null) {
+    return "";
+  }
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
   if (typeof value === "object") {
     try {
       return JSON.stringify(value, null, 2);
@@ -61,9 +65,13 @@ function changedKeys(before: unknown, after: unknown): Set<string> {
   const keys = new Set<string>();
   const b = (before ?? {}) as Record<string, unknown>;
   const a = (after ?? {}) as Record<string, unknown>;
-  if (typeof b !== "object" || typeof a !== "object") return keys;
+  if (typeof b !== "object" || typeof a !== "object") {
+    return keys;
+  }
   for (const k of new Set([...Object.keys(b), ...Object.keys(a)])) {
-    if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) keys.add(k);
+    if (JSON.stringify(b[k]) !== JSON.stringify(a[k])) {
+      keys.add(k);
+    }
   }
   return keys;
 }
@@ -77,14 +85,14 @@ export function AuditLogDetailSheet({ id, onClose, query }: AuditLogDetailSheetP
       <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-160">
         <SheetHeader className="border-b px-5 py-4">
           <SheetTitle className="text-lg font-semibold">Chi tiết thao tác</SheetTitle>
-          <SheetDescription className="text-xs text-muted-foreground">
+          <SheetDescription className="text-muted-foreground text-xs">
             Bản ghi audit — ai làm gì, lên đối tượng nào, kết quả ra sao.
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
-            <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+            <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
               <Loader2 className="size-4 animate-spin" />
               <span className="text-sm">Đang tải…</span>
             </div>
@@ -92,9 +100,9 @@ export function AuditLogDetailSheet({ id, onClose, query }: AuditLogDetailSheetP
 
           {!isLoading && error && (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
-              <AlertCircle className="size-8 text-destructive/60" />
-              <p className="text-sm font-medium text-destructive">Không tải được chi tiết</p>
-              <p className="text-xs text-muted-foreground">{error.message}</p>
+              <AlertCircle className="text-destructive/60 size-8" />
+              <p className="text-destructive text-sm font-medium">Không tải được chi tiết</p>
+              <p className="text-muted-foreground text-xs">{error.message}</p>
             </div>
           )}
 
@@ -131,23 +139,23 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           >
             {AuditStatusLabel[log.status]}
           </span>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
             {AuditCategoryLabel[log.category]}
           </span>
-          <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+          <span className="text-muted-foreground ml-auto font-mono text-xs tabular-nums">
             {displayVNDateTime(log.ts)}
           </span>
         </div>
-        <h2 className="text-base font-semibold leading-tight">{actionLabel}</h2>
+        <h2 className="text-base leading-tight font-semibold">{actionLabel}</h2>
       </div>
 
       {/* Actor + target — 2 khối gọn, mã ID inline nhỏ dưới tên */}
       <div className="grid gap-3 rounded-md border p-3 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Thực hiện bởi</span>
+          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Thực hiện bởi</span>
           <div className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-sm font-medium">{log.actorName}</span>
-            <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tracking-wide uppercase">
               {AuditActorTypeLabel[log.actorType]}
             </span>
           </div>
@@ -158,13 +166,13 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           {(log.actorRoles.length > 0 || ip) && (
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               {log.actorRoles.length > 0 && (
-                <span className="min-w-0 truncate text-xs text-muted-foreground" title={log.actorRoles.join(", ")}>
+                <span className="text-muted-foreground min-w-0 truncate text-xs" title={log.actorRoles.join(", ")}>
                   {log.actorRoles.join(", ")}
                 </span>
               )}
               {ip && (
                 <span
-                  className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground"
+                  className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 font-mono text-xs font-medium"
                   title="Địa chỉ IP"
                 >
                   {ip}
@@ -174,32 +182,32 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Đối tượng</span>
+          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">Đối tượng</span>
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-sm">{AuditTargetTypeLabel[log.targetType]}</span>
             {log.game && <GameBadge gameProduct={log.game} />}
           </div>
           {(log.targetLabel || log.targetId) && (
             <span
-              className="truncate font-mono text-[11px] text-muted-foreground/70"
+              className="text-muted-foreground/70 truncate font-mono text-xs"
               title={log.targetLabel || log.targetId}
             >
               {log.targetLabel || log.targetId}
             </span>
           )}
-          {log.tenantId && <span className="truncate text-xs text-muted-foreground">Tenant: {log.tenantId}</span>}
+          {log.tenantId && <span className="text-muted-foreground truncate text-xs">Tenant: {log.tenantId}</span>}
         </div>
       </div>
 
       {/* Error box — chỉ hiện khi failure */}
       {!isSuccess && (log.errorCode || log.errorMessage) && (
-        <div className="flex flex-col gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3">
+        <div className="border-destructive/40 bg-destructive/5 flex flex-col gap-2 rounded-md border p-3">
           {log.errorCode && (
-            <span className="w-fit rounded bg-destructive/15 px-2 py-0.5 font-mono text-xs font-semibold text-destructive">
+            <span className="bg-destructive/15 text-destructive w-fit rounded px-2 py-0.5 font-mono text-xs font-semibold">
               {log.errorCode}
             </span>
           )}
-          {log.errorMessage && <p className="wrap-break-words text-sm text-destructive">{log.errorMessage}</p>}
+          {log.errorMessage && <p className="wrap-break-words text-destructive text-sm">{log.errorMessage}</p>}
         </div>
       )}
 
@@ -207,10 +215,10 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           transition có cả before/after → 2 cột so sánh. */}
       {hasChanges && (
         <div className="flex flex-col gap-2">
-          <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
             Thay đổi
             {diffKeys.size > 0 && (
-              <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-amber-700 dark:text-amber-300">
+              <span className="bg-warning/15 text-warning rounded-full px-1.5 py-0.5 text-xs font-medium tabular-nums">
                 {diffKeys.size}
               </span>
             )}
@@ -230,16 +238,16 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           hiển thị cạnh actor nên KHÔNG lặp ở đây. */}
       {(http?.userAgent || http?.requestId || worker || extra) && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nội dung</h3>
+          <h3 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">Nội dung</h3>
           <div className="flex flex-col gap-2 rounded-md border p-3">
             {http?.userAgent && (
               <Field label="Thiết bị">
-                <span className="break-all text-xs">{http.userAgent}</span>
+                <span className="text-xs break-all">{http.userAgent}</span>
               </Field>
             )}
             {http?.requestId && (
               <Field label="Request ID">
-                <span className="break-all font-mono text-xs">{http.requestId}</span>
+                <span className="font-mono text-xs break-all">{http.requestId}</span>
               </Field>
             )}
             {worker && (
@@ -256,14 +264,14 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
                 )}
                 {worker.executionId && (
                   <Field label="Execution">
-                    <span className="break-all font-mono text-xs">{worker.executionId}</span>
+                    <span className="font-mono text-xs break-all">{worker.executionId}</span>
                   </Field>
                 )}
               </>
             )}
             {extra && Object.keys(extra).length > 0 && (
               <Field label="Bổ sung">
-                <pre className="max-h-50 overflow-auto rounded bg-muted/40 p-2 font-mono text-xs leading-relaxed">
+                <pre className="bg-muted/40 max-h-50 overflow-auto rounded p-2 font-mono text-xs leading-relaxed">
                   {formatValue(extra)}
                 </pre>
               </Field>
@@ -278,7 +286,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="w-[90px] shrink-0 pt-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <span className="text-muted-foreground w-[90px] shrink-0 pt-0.5 text-xs font-medium tracking-wide uppercase">
         {label}
       </span>
       <div className="min-w-0 flex-1">{children}</div>
@@ -292,27 +300,24 @@ function DiffPane({ title, value, highlight }: { title: string; value: unknown; 
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{title}</span>
+      <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">{title}</span>
       {formatted ? (
         isObject ? (
-          <div className="flex flex-col gap-0.5 rounded-md border bg-muted/40 p-2 font-mono text-xs">
+          <div className="bg-muted/40 flex flex-col gap-0.5 rounded-md border p-2 font-mono text-xs">
             {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
               <div
                 key={k}
-                className={cn(
-                  "wrap-break-words",
-                  highlight.has(k) && "rounded bg-amber-500/15 px-1 text-amber-800 dark:text-amber-300",
-                )}
+                className={cn("wrap-break-words", highlight.has(k) && "bg-warning/15 text-warning rounded px-1")}
               >
                 <span className="text-muted-foreground">{k}:</span> {formatValue(v)}
               </div>
             ))}
           </div>
         ) : (
-          <pre className="wrap-break-words rounded-md border bg-muted/40 p-2 font-mono text-xs">{formatted}</pre>
+          <pre className="wrap-break-words bg-muted/40 rounded-md border p-2 font-mono text-xs">{formatted}</pre>
         )
       ) : (
-        <p className="rounded-md border border-dashed px-2 py-3 text-center text-xs text-muted-foreground">—</p>
+        <p className="text-muted-foreground rounded-md border border-dashed px-2 py-3 text-center text-xs">—</p>
       )}
     </div>
   );

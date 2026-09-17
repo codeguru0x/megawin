@@ -44,7 +44,7 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 
-import { buildChartModel, CHART_KIND_VALUES, type ChartRow, getChartLabel } from "@/lib/chart";
+import { buildChartModel, CHART_KIND_VALUES, getChartLabel, type ChartRow } from "@/lib/chart";
 
 /** Giới hạn số dòng model có thể gửi ở chế độ `rows` — FE vẫn tự tỉa về `MAX_POINTS` (60) khi vẽ, giới hạn này chỉ chặn payload input quá khổ. */
 const MAX_INPUT_ROWS = 200;

@@ -17,15 +17,15 @@ export default function AccountLayout({ children }: Readonly<{ children: ReactNo
           <UserCog className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản</h1>
-          <p className="text-xs text-muted-foreground">Quản lý tài khoản và bảo mật</p>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Tài khoản</h1>
+          <p className="text-muted-foreground text-xs">Quản lý tài khoản và bảo mật</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Sidebar nav — card riêng */}
         <div className="shrink-0 lg:w-52">
-          <div className="rounded-xl border bg-card p-3 shadow-sm lg:sticky lg:top-20">
+          <div className="bg-card rounded-xl border p-3 shadow-sm lg:sticky lg:top-20">
             <AccountNav />
           </div>
         </div>

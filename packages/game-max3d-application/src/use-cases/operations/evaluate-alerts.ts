@@ -11,13 +11,15 @@
  * theo pairKey) để staff track từng cặp riêng.
  */
 
-import type {
-  Max3dDrawBettingStatsDoc,
-  Max3dOpsAlertDoc,
-  Max3dTopPair,
-  OpsAlertsConfig,
+import {
+  Max3dOpsAlertType,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type Max3dDrawBettingStatsDoc,
+  type Max3dOpsAlertDoc,
+  type Max3dTopPair,
+  type OpsAlertsConfig,
 } from "@megawin/game-max3d/entities";
-import { Max3dOpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-max3d/entities";
 import type { Max3dExposureResult } from "@megawin/game-max3d/rules";
 
 /** Snapshot stats + exposure cần cho evaluate (đã có in-memory ở worker). */
@@ -103,7 +105,9 @@ export function evaluateMax3dAlerts(input: EvaluateAlertsInput): NewAlert[] {
   // units/liability mới nhất mỗi tick. Critical LUÔN (1 tỷ/unit, không cap).
   if (alerts.enabled[Max3dOpsAlertType.PairLiability]) {
     for (const p of exposure.topPairLiabilities) {
-      if (p.liability < alerts.pairLiabilityWarnAmount) break; // đã sort desc.
+      if (p.liability < alerts.pairLiabilityWarnAmount) {
+        break;
+      } // đã sort desc.
       push(
         Max3dOpsAlertType.PairLiability,
         OpsAlertSeverity.Critical,
@@ -126,7 +130,9 @@ export function evaluateMax3dAlerts(input: EvaluateAlertsInput): NewAlert[] {
   // Quét topPairs (K đủ lớn — cặp ngoài top có units nhỏ, khó là syndicate đáng kể).
   if (alerts.enabled[Max3dOpsAlertType.ComboConcentration]) {
     for (const p of topPairs) {
-      if (p.accounts < alerts.comboAccountsWarn) continue;
+      if (p.accounts < alerts.comboAccountsWarn) {
+        continue;
+      }
       push(
         Max3dOpsAlertType.ComboConcentration,
         // Gấp đôi ngưỡng account → critical.

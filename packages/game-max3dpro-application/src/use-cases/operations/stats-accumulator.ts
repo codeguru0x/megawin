@@ -31,16 +31,20 @@
  * KHÔNG giữ watermark ở đây: worker lấy `batchMaxId` từ entry cuối của batch (đã sort `_id`).
  */
 
-import type {
-  Max3dproByPlayType,
-  Max3dproPlayTypeStat,
-  Max3dproTopPotential,
-  Max3dproTripletStake,
-  TenantBettingStat,
+import {
+  PlayMode,
+  type Max3dproByPlayType,
+  type Max3dproPlayTypeStat,
+  type Max3dproTopPotential,
+  type Max3dproTripletStake,
+  type TenantBettingStat,
 } from "@megawin/game-max3dpro/entities";
-import { PlayMode } from "@megawin/game-max3dpro/entities";
-import type { Max3dproPrizeSet } from "@megawin/game-max3dpro/rules";
-import { expandSelectionToPairs, maxProBoardUnitWin, toOrderedPairKey } from "@megawin/game-max3dpro/rules";
+import {
+  expandSelectionToPairs,
+  maxProBoardUnitWin,
+  toOrderedPairKey,
+  type Max3dproPrizeSet,
+} from "@megawin/game-max3dpro/rules";
 
 import type {
   EntryBoardForStats,

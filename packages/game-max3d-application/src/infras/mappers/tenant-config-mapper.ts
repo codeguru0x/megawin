@@ -1,5 +1,5 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-max3d/entities";
+import type { TenantConfigEntity } from "@megawin/game-max3d/entities";
 import type { Document } from "mongodb";
 
 export class TenantConfigMapper extends MongoMapper<Document, TenantConfigEntity> {

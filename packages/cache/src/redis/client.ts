@@ -11,6 +11,7 @@ import { isDevNextJs, logError } from "@megawin/shared/utils";
 import { createClient, type RedisClientType } from "redis";
 
 import { DEFAULT_REDIS_ENV_KEY } from "../constants";
+
 import "../types/declarations/global";
 
 // Global `__nextJsRedisClients` khai tập trung ở src/types/declarations/global.ts.
@@ -50,39 +51,37 @@ function getClientCache(): Map<string, RedisClientType> {
  * @returns Redis client đã connect, sẵn sàng chạy command.
  * @throws {Error} Khi thiếu env `redisEnvKey` hoặc connect thất bại (fail-fast).
  */
-const getRedisClient = async (redisEnvKey?: string): Promise<RedisClientType> => {
+export const getRedisClient = async (redisEnvKey?: string): Promise<RedisClientType> => {
   // Không truyền → dùng env mặc định chung (DRY, không hard-code chuỗi rời rạc).
-  redisEnvKey = redisEnvKey ?? DEFAULT_REDIS_ENV_KEY;
+  const envKey = redisEnvKey ?? DEFAULT_REDIS_ENV_KEY;
 
   const clientCache = getClientCache();
 
-  const cached = clientCache.get(redisEnvKey);
+  const cached = clientCache.get(envKey);
 
   if (cached) {
     return cached;
   }
 
   // Lấy URI từ env — thiếu là lỗi cấu hình, fail sớm để dễ phát hiện.
-  const url = process.env[redisEnvKey];
+  const url = process.env[envKey];
 
   if (!url) {
-    throw new Error(`Missing env ${redisEnvKey}`);
+    throw new Error(`Missing env ${envKey}`);
   }
 
   try {
     // Listener "error" bắt lỗi runtime SAU connect (mất kết nối giữa chừng…) —
     // không throw ở đây để client tự reconnect theo cơ chế của node-redis.
     const client = await createClient({ url })
-      .on("error", (err) => logError("RedisClient", err, { redisEnvKey }))
+      .on("error", (err) => logError("RedisClient", err, { redisEnvKey: envKey }))
       .connect();
 
-    clientCache.set(redisEnvKey, client);
+    clientCache.set(envKey, client);
 
     return client;
   } catch (error) {
-    logError("RedisClient", error, { redisEnvKey, phase: "connect" });
+    logError("RedisClient", error, { redisEnvKey: envKey, phase: "connect" });
     throw new Error("Connect to redis server error");
   }
 };
-
-export default getRedisClient;

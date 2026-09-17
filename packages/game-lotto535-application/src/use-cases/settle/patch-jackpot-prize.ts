@@ -114,7 +114,9 @@ export class PatchJackpotPrizeUseCase extends UseCase<SettleContext, PatchJackpo
     const betUnitsByEntry = new Map<string, number>();
     for (const line of jpLinesData) {
       const entryIdStr = line.entryId?.toString() ?? "";
-      if (!entryIdStr) continue;
+      if (!entryIdStr) {
+        continue;
+      }
       betUnitsByEntry.set(entryIdStr, (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount);
     }
 

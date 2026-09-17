@@ -12,16 +12,18 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import type { Bingo18BigSmallBet, Bingo18TripleKind, TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import {
   Bingo18Collections,
+  type Bingo18BigSmallBet,
+  type Bingo18TripleKind,
   type EntryPayout,
   type EntryResult,
   type EntryVoidInfo,
+  type TicketEntryEntity,
 } from "@megawin/game-bingo18/entities";
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import { type Long, ObjectId } from "mongodb";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -136,7 +138,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();

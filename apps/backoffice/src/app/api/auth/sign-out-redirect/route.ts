@@ -1,6 +1,6 @@
-import { CompanyRole } from "@megawin/identity/entities";
 import { auditLogout } from "@megawin/identity-application/services";
 import { GetSignOutRedirectUrlUseCase } from "@megawin/identity-application/use-cases/security";
+import { CompanyRole } from "@megawin/identity/entities";
 
 import { env } from "@/env";
 import { withApi } from "@/lib/api";

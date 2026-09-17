@@ -5,7 +5,7 @@
  * entity + version quản tại đây. Đổi tên/bump version chỉ sửa 1 chỗ.
  */
 
-import { CacheNamespace, cacheKey } from "@megawin/cache";
+import { cacheKey, CacheNamespace } from "@megawin/cache";
 
 const NS = CacheNamespace.Mega645;
 

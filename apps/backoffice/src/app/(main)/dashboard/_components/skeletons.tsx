@@ -8,7 +8,7 @@ export function HeroKpisSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+        <div key={i} className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
           <Skeleton className="size-10 shrink-0 rounded-lg" />
           <div className="flex-1 space-y-1.5">
             <Skeleton className="h-3 w-20" />
@@ -25,10 +25,10 @@ export function HeroKpisSkeleton() {
 export function GameTableSkeleton() {
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <Skeleton className="h-4 w-40" />
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         <div className="space-y-2.5">
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4">
@@ -48,10 +48,10 @@ export function GameTableSkeleton() {
 export function ChartSkeleton({ height = 240 }: { height?: number }) {
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <Skeleton className="h-4 w-32" />
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         <Skeleton className="w-full rounded" style={{ height }} />
       </CardContent>
     </Card>

@@ -11,8 +11,8 @@
  * được log server-side và trả payload sạch cho model (xem `server/ai/tool-result.ts`).
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
 import { GetGameSummaryUseCase } from "@megawin/game-core-application/use-cases/reports";
+import { GameProduct } from "@megawin/game-core/entities";
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 

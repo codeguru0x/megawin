@@ -1,7 +1,12 @@
 "use client";
 
-import type { AuditLogEntity } from "@megawin/audit/entities";
-import { AuditActionLabel, AuditActorTypeLabel, AuditCategoryLabel, AuditStatus } from "@megawin/audit/entities";
+import {
+  AuditActionLabel,
+  AuditActorTypeLabel,
+  AuditCategoryLabel,
+  AuditStatus,
+  type AuditLogEntity,
+} from "@megawin/audit/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { CheckCircle2, ChevronLeft, ChevronRight, Inbox, Loader2, XCircle } from "lucide-react";
 
@@ -39,7 +44,7 @@ export function AuditLogsTable({
 }: AuditLogsTableProps) {
   if (isLoading) {
     return (
-      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải lịch sử…</span>
       </div>
@@ -49,9 +54,9 @@ export function AuditLogsTable({
   if (rows.length === 0) {
     return (
       <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
-        <Inbox className="size-8 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">Không có dữ liệu</p>
-        <p className="text-xs text-muted-foreground">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
+        <Inbox className="text-muted-foreground/40 size-8" />
+        <p className="text-muted-foreground text-sm font-medium">Không có dữ liệu</p>
+        <p className="text-muted-foreground text-xs">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
       </div>
     );
   }
@@ -78,7 +83,7 @@ export function AuditLogsTable({
               return (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer hover:bg-muted/40"
+                  className="hover:bg-muted/40 cursor-pointer"
                   onClick={() => onOpenDetail(row.id)}
                 >
                   <TableCell className="pl-5 font-mono text-sm tabular-nums">{displayVNDateTime(row.ts)}</TableCell>
@@ -87,11 +92,11 @@ export function AuditLogsTable({
                   <TableCell>
                     <div className="flex min-w-0 items-center gap-1.5">
                       <span className="truncate text-sm font-medium">{row.actorName}</span>
-                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      <span className="bg-muted text-muted-foreground shrink-0 rounded px-1.5 py-0.5 text-xs font-medium tracking-wide uppercase">
                         {AuditActorTypeLabel[row.actorType]}
                       </span>
                       {row.actorRoles.length > 0 && (
-                        <span className="truncate text-xs text-muted-foreground" title={row.actorRoles.join(", ")}>
+                        <span className="text-muted-foreground truncate text-xs" title={row.actorRoles.join(", ")}>
                           · {row.actorRoles.join(", ")}
                         </span>
                       )}
@@ -102,7 +107,7 @@ export function AuditLogsTable({
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-sm">{actionLabel}</span>
-                      <span className="w-fit rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                      <span className="bg-primary/10 text-primary w-fit rounded px-1.5 py-0.5 text-xs font-medium">
                         {AuditCategoryLabel[row.category]}
                       </span>
                     </div>
@@ -120,11 +125,11 @@ export function AuditLogsTable({
                   {/* Kết quả — icon + errorCode nếu fail */}
                   <TableCell className="pr-5 text-center">
                     {isSuccess ? (
-                      <CheckCircle2 className="inline-block size-4 text-profit" aria-label="Thành công" />
+                      <CheckCircle2 className="text-profit inline-block size-4" aria-label="Thành công" />
                     ) : (
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1 rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-medium text-destructive",
+                          "bg-destructive/10 text-destructive inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium",
                         )}
                         title={row.errorMessage}
                       >
@@ -142,7 +147,7 @@ export function AuditLogsTable({
 
       {(hasPrev || hasNext) && (
         <div className="flex items-center justify-between border-t px-5 py-3">
-          <span className="text-xs text-muted-foreground tabular-nums">Trang {pageIndex + 1}</span>
+          <span className="text-muted-foreground text-xs tabular-nums">Trang {pageIndex + 1}</span>
           <div className="flex items-center gap-2">
             <Button
               size="sm"

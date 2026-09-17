@@ -46,7 +46,7 @@ export function OutstandingDrawList({
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex h-50 flex-col items-center justify-center text-center">
-          <p className="text-sm text-muted-foreground">Không có kỳ quay outstanding hiện tại.</p>
+          <p className="text-muted-foreground text-sm">Không có kỳ quay outstanding hiện tại.</p>
         </CardContent>
       </Card>
     );
@@ -54,13 +54,13 @@ export function OutstandingDrawList({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Clock className="size-4 text-muted-foreground" />
+          <Clock className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Kỳ quay đang hoạt động · Click để xem theo đại lý</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="px-0 pb-4 pt-0">
+      <CardContent className="px-0 pt-0 pb-4">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -79,7 +79,7 @@ export function OutstandingDrawList({
               {data.map((row) => (
                 <TableRow
                   key={row.drawId}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="hover:bg-muted/50 cursor-pointer"
                   onClick={() => onRowClick(row.drawId)}
                 >
                   <TableCell className="pl-5 text-sm tabular-nums">{row.financialDate}</TableCell>
@@ -95,7 +95,7 @@ export function OutstandingDrawList({
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(row.estimatedCommission)}
                   </TableCell>
-                  <TableCell className="pr-5 text-right text-sm tabular-nums font-medium">
+                  <TableCell className="pr-5 text-right text-sm font-medium tabular-nums">
                     {formatNumber(row.totalStake)}
                   </TableCell>
                 </TableRow>
@@ -104,22 +104,22 @@ export function OutstandingDrawList({
 
             {data.length > 1 && (
               <tfoot>
-                <TableRow className="border-t bg-muted/50">
+                <TableRow className="bg-muted/50 border-t">
                   <TableCell className="pl-5 text-sm font-semibold" colSpan={showLineCount ? 4 : 4}>
                     {REPORT_COLUMN_LABELS.summary}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalEntries)}
                   </TableCell>
                   {showLineCount && (
-                    <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    <TableCell className="text-right text-sm font-semibold tabular-nums">
                       {formatNumber(totalLines)}
                     </TableCell>
                   )}
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalCommission)}
                   </TableCell>
-                  <TableCell className="pr-5 text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="pr-5 text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totalStake)}
                   </TableCell>
                 </TableRow>

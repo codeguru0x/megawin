@@ -64,8 +64,12 @@ export function serializeError(err: unknown): SerializedError {
       code: err.code,
       stack: err.stack,
     };
-    if (err.details !== undefined) result.details = err.details;
-    if (err.statusCode !== undefined) result.statusCode = err.statusCode;
+    if (err.details !== undefined) {
+      result.details = err.details;
+    }
+    if (err.statusCode !== undefined) {
+      result.statusCode = err.statusCode;
+    }
     return result;
   }
 

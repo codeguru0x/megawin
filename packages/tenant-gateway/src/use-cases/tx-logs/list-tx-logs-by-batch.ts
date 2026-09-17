@@ -10,7 +10,7 @@ import { Pagination } from "@megawin/shared/constants/pagination";
 import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 
 import type { TxLogEntity } from "../../entities/tx-log";
-import { type ListTxLogsResult, TxLogRepository } from "../../infras/repos";
+import { TxLogRepository, type ListTxLogsResult } from "../../infras/repos";
 
 export interface ListTxLogsByBatchInput {
   batchId: string;
@@ -39,16 +39,24 @@ export class ListTxLogsByBatchUseCase extends UseCase<ListTxLogsByBatchInput, Li
 
   private normalizeLimit(raw: number | undefined): number {
     const size = raw ?? Pagination.Default.Size;
-    if (!Number.isFinite(size) || size <= 0) return Pagination.Default.Size;
+    if (!Number.isFinite(size) || size <= 0) {
+      return Pagination.Default.Size;
+    }
     return Math.min(size, Pagination.Max.Size);
   }
 
   private parseCursor(raw: string | undefined): { createdAt: Date; id: string } | null {
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const [iso, id] = raw.split("|");
-    if (!iso || !id) return null;
+    if (!iso || !id) {
+      return null;
+    }
     const createdAt = new Date(iso);
-    if (Number.isNaN(createdAt.getTime())) return null;
+    if (Number.isNaN(createdAt.getTime())) {
+      return null;
+    }
     return { createdAt, id };
   }
 

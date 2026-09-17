@@ -1,19 +1,26 @@
 "use client";
 
-import type {
-  ChangeEvent,
-  ChangeEventHandler,
-  ClipboardEventHandler,
-  ComponentProps,
-  FormEvent,
-  FormEventHandler,
-  HTMLAttributes,
-  KeyboardEventHandler,
-  PropsWithChildren,
-  ReactNode,
-  RefObject,
+import {
+  Children,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ChangeEventHandler,
+  type ClipboardEventHandler,
+  type ComponentProps,
+  type FormEvent,
+  type FormEventHandler,
+  type HTMLAttributes,
+  type KeyboardEventHandler,
+  type PropsWithChildren,
+  type ReactNode,
+  type RefObject,
 } from "react";
-import { Children, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from "ai";
 import { CornerDownLeftIcon, ImageIcon, Monitor, PlusIcon, SquareIcon, XIcon } from "lucide-react";
@@ -199,7 +206,6 @@ export const PromptInputProvider = ({ initialInput: initialTextInput = "", child
   // ----- attachments state (global when wrapped)
   const [attachmentFiles, setAttachmentFiles] = useState<(FileUIPart & { id: string })[]>([]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: giá trị khởi tạo placeholder, được gán thật trong FileUIPart component (setter thay ref.current bằng hàm mở dialog chọn file thật).
   const openRef = useRef<() => void>(() => {});
 
   const add = useCallback((files: File[] | FileList) => {
@@ -630,7 +636,6 @@ export const PromptInput = ({
   // Attach drop handlers on nearest form and document (opt-in)
   useEffect(() => {
     const form = formRef.current;
-    // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome suy ra type ref luôn non-null từ generic, nhưng formRef.current thực tế có thể null nếu effect chạy trước khi DOM attach ref.
     if (!form) {
       return;
     }
@@ -1000,7 +1005,7 @@ export const PromptInputButton = ({
       <TooltipTrigger asChild>{button}</TooltipTrigger>
       <TooltipContent side={side}>
         {tooltipContent}
-        {shortcut && <span className="ml-2 text-muted-foreground">{shortcut}</span>}
+        {shortcut && <span className="text-muted-foreground ml-2">{shortcut}</span>}
       </TooltipContent>
     </Tooltip>
   );
@@ -1103,7 +1108,7 @@ export type PromptInputSelectTriggerProps = ComponentProps<typeof SelectTrigger>
 export const PromptInputSelectTrigger = ({ className, ...props }: PromptInputSelectTriggerProps) => (
   <SelectTrigger
     className={cn(
-      "border-none bg-transparent font-medium text-muted-foreground shadow-none transition-colors",
+      "text-muted-foreground border-none bg-transparent font-medium shadow-none transition-colors",
       "hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground",
       className,
     )}
@@ -1162,7 +1167,7 @@ export type PromptInputTabLabelProps = HTMLAttributes<HTMLHeadingElement>;
 export const PromptInputTabLabel = ({ className, ...props }: PromptInputTabLabelProps) => (
   // Content provided via children in props
   // oxlint-disable-next-line eslint-plugin-jsx-a11y(heading-has-content)
-  <h3 className={cn("mb-2 px-3 font-medium text-muted-foreground text-xs", className)} {...props} />
+  <h3 className={cn("text-muted-foreground mb-2 px-3 text-xs font-medium", className)} {...props} />
 );
 
 export type PromptInputTabBodyProps = HTMLAttributes<HTMLDivElement>;
@@ -1174,7 +1179,7 @@ export const PromptInputTabBody = ({ className, ...props }: PromptInputTabBodyPr
 export type PromptInputTabItemProps = HTMLAttributes<HTMLDivElement>;
 
 export const PromptInputTabItem = ({ className, ...props }: PromptInputTabItemProps) => (
-  <div className={cn("flex items-center gap-2 px-3 py-2 text-xs hover:bg-accent", className)} {...props} />
+  <div className={cn("hover:bg-accent flex items-center gap-2 px-3 py-2 text-xs", className)} {...props} />
 );
 
 export type PromptInputCommandProps = ComponentProps<typeof Command>;

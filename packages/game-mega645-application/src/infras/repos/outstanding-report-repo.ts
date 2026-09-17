@@ -8,8 +8,11 @@
  * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
  */
 
-import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-mega645/entities";
-import { MEGA645_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-mega645/entities";
+import {
+  MEGA645_OUTSTANDING_DRAW_REPORTS,
+  type OutstandingDrawReport,
+  type OutstandingDrawReportEntity,
+} from "@megawin/game-mega645/entities";
 
 import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
@@ -68,7 +71,9 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
   async bulkUpsertDrawReports(
     reports: Array<Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">>,
   ): Promise<void> {
-    if (reports.length === 0) return;
+    if (reports.length === 0) {
+      return;
+    }
 
     const now = new Date();
     await this.bulkWrite(

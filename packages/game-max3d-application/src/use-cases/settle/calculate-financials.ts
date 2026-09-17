@@ -18,7 +18,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import { BASIC_PRIZE_TIER_VALUES, type DrawSettleSummary, PLUS_PRIZE_TIER_VALUES } from "@megawin/game-max3d/entities";
+import { BASIC_PRIZE_TIER_VALUES, PLUS_PRIZE_TIER_VALUES, type DrawSettleSummary } from "@megawin/game-max3d/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-max3d/rules/financials";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";

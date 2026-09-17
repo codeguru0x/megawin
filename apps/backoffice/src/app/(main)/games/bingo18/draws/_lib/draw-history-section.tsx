@@ -10,7 +10,6 @@
  * Bingo 18 không có Jackpot: companyTake = profit.
  * Kết quả: 3 xúc xắc (1-6) dùng DiceDisplay.
  */
-
 import { useRouter } from "next/navigation";
 
 import type { DrawStatus } from "@megawin/game-core/entities";
@@ -18,13 +17,11 @@ import { Pagination } from "@megawin/shared/constants";
 import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
-import type { CommonDrawSummary } from "@/components/draws";
-import { DrawHistoryTable } from "@/components/draws";
+import { DrawHistoryTable, type CommonDrawSummary } from "@/components/draws";
 import { DiceDisplay } from "@/components/games/bingo18/dice-display";
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
 
-import type { Bingo18DrawSummary } from "./use-draws";
-import { useBingo18DrawsList } from "./use-draws";
+import { useBingo18DrawsList, type Bingo18DrawSummary } from "./use-draws";
 
 const OPS_BASE = "/games/bingo18/operations";
 
@@ -70,14 +67,14 @@ export function Bingo18DrawHistorySection() {
   const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
-    setPage(null);
+    void setFromDate(from);
+    void setToDate(to);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
-    setPage(null);
+    void setStatusParam(value === "all" ? null : value);
+    void setPage(null);
   }
 
   return (
@@ -98,7 +95,9 @@ export function Bingo18DrawHistorySection() {
       renderStatusBadge={(status) => <Bingo18DrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
         const result = draw.result as { diceNumbers?: number[] } | undefined;
-        if (!result?.diceNumbers?.length) return null;
+        if (!result?.diceNumbers?.length) {
+          return null;
+        }
         return <DiceDisplay numbers={result.diceNumbers} size="sm" showSum />;
       }}
     />

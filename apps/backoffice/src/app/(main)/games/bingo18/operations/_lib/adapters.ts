@@ -10,8 +10,12 @@
  * seed lại chính xác trong doc).
  */
 
-import type { Bingo18BucketStat, Bingo18DrawBettingStatsEntity, TopAccountStat } from "@megawin/game-bingo18/entities";
-import { Bingo18BigSmallBet } from "@megawin/game-bingo18/entities";
+import {
+  Bingo18BigSmallBet,
+  type Bingo18BucketStat,
+  type Bingo18DrawBettingStatsEntity,
+  type TopAccountStat,
+} from "@megawin/game-bingo18/entities";
 import {
   BINGO18_BIG_SMALL_BET_LABELS,
   BINGO18_PLAY_TYPE_LABELS,
@@ -124,7 +128,9 @@ export function toDiceCells(stats: Stats): DiceCellItem[] {
     let amount = 0;
     let sets = 0;
     for (const p of parts) {
-      if (!p) continue;
+      if (!p) {
+        continue;
+      }
       amount += p.amount;
       sets += p.sets;
     }

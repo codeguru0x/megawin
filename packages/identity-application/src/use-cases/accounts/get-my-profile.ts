@@ -1,6 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { MfaStatus } from "@megawin/identity/entities";
-import { MfaStatus as MfaStatusEnum } from "@megawin/identity/entities";
+import { MfaStatus as MfaStatusEnum, type MfaStatus } from "@megawin/identity/entities";
 import { AppException } from "@megawin/shared/errors";
 
 import { AccountRepository } from "../../infras/repos/account-repo";

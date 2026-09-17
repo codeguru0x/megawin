@@ -27,7 +27,7 @@ export function PlayerBackLink({ accountId }: PlayerBackLinkProps) {
     <Link
       prefetch={false}
       href={href}
-      className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs transition-colors"
     >
       <ChevronLeft className="size-3.5" />
       Danh sách người chơi

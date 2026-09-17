@@ -7,7 +7,7 @@
  * @see https://better-auth.com/docs/integrations/next#nextjs-16-proxy
  */
 
-import { type NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 import { AccountType } from "@megawin/identity/entities";
 import { getSessionCookie } from "better-auth/cookies";
@@ -33,7 +33,9 @@ function isPublicRoute(pathname: string): boolean {
 function parseSessionData(request: NextRequest): Record<string, unknown> | null {
   const raw = request.cookies.get(SESSION_DATA_COOKIE)?.value;
 
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
 
   try {
     return JSON.parse(raw) as Record<string, unknown>;

@@ -19,7 +19,7 @@ function PeriodsPageInner() {
           <FileSearch className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="font-semibold text-foreground text-lg tracking-tight">Tra cứu kỳ</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Tra cứu kỳ</h1>
           <p className="text-muted-foreground text-xs">
             Xem chi tiết consensus + toàn bộ observations của 1 kỳ (view-only).
           </p>

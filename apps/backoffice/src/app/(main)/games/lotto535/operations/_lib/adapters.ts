@@ -18,14 +18,14 @@
 
 import { DrawStatus } from "@megawin/game-core/entities";
 import type {
+  Lotto535SnapshotExposure,
+  Lotto535TopCombo,
+} from "@megawin/game-lotto535-application/use-cases/operations";
+import type {
   Lotto535DrawBettingStatsEntity,
   Lotto535DrawNumberStatsEntity,
   TopAccountStat,
 } from "@megawin/game-lotto535/entities";
-import type {
-  Lotto535SnapshotExposure,
-  Lotto535TopCombo,
-} from "@megawin/game-lotto535-application/use-cases/operations";
 
 import { describeStatsPlayKey, LOTTO535_STATS_PLAY_KEY_ORDER } from "./ops-constants";
 import type {

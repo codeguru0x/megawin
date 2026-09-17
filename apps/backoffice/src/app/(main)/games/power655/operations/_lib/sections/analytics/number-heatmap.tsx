@@ -11,7 +11,6 @@
  * Export dùng chung: `NumberBadge` (filled/soft/outlined + selected), `NumbersWithTooltip`
  * (collapse > 7 số) — analytics-panels + live-feed import.
  */
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
@@ -69,28 +68,38 @@ const POWER_MUTED_BG = "bg-muted/40 text-muted-foreground";
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-red-200/80 text-red-900 dark:bg-red-900/40 dark:text-red-200",
-  low: "bg-red-300 text-red-900 dark:bg-red-800 dark:text-red-100",
-  mid: "bg-red-400 text-white dark:bg-red-700",
-  warm: "bg-red-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+  cold: "bg-loss/80 text-loss",
+  low: "bg-loss text-loss",
+  mid: "bg-loss text-white",
+  warm: "bg-loss text-white",
+  hot: "bg-warning text-white ring-2 ring-warning/50",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-red-50/40 dark:bg-red-950/10",
-  warm: "bg-red-50/70 dark:bg-red-950/20",
-  hot: "bg-amber-50/60 dark:bg-amber-950/15",
+  mid: "bg-loss/40",
+  warm: "bg-loss/70",
+  hot: "bg-warning/60",
 };
 
 function getHeatLevel(count: number, maxCount: number): HeatLevel {
-  if (count === 0 || maxCount === 0) return "cold";
+  if (count === 0 || maxCount === 0) {
+    return "cold";
+  }
   const ratio = count / maxCount;
-  if (ratio >= 0.8) return "hot";
-  if (ratio >= 0.55) return "warm";
-  if (ratio >= 0.3) return "mid";
-  if (ratio >= 0.1) return "low";
+  if (ratio >= 0.8) {
+    return "hot";
+  }
+  if (ratio >= 0.55) {
+    return "warm";
+  }
+  if (ratio >= 0.3) {
+    return "mid";
+  }
+  if (ratio >= 0.1) {
+    return "low";
+  }
   return "cold";
 }
 
@@ -124,22 +133,22 @@ export function NumberBadge({
 }) {
   let colorClass: string;
   if (selected) {
-    colorClass = "bg-red-600 text-white ring-2 ring-red-300/60";
+    colorClass = "bg-loss text-white ring-2 ring-loss/60";
   } else if (muted) {
     colorClass = POWER_MUTED_BG;
   } else if (variant === "outlined") {
-    colorClass = "border border-red-400/70 text-red-600 bg-transparent dark:border-red-600 dark:text-red-400";
+    colorClass = "border border-loss/70 text-loss bg-transparent";
   } else if (variant === "soft") {
-    colorClass = "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+    colorClass = "bg-loss text-loss";
   } else {
     // filled — heat intensity
-    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-red-600 text-white";
+    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-loss text-white";
   }
 
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0",
+        "inline-flex shrink-0 items-center justify-center rounded-full leading-none font-bold tabular-nums",
         HEATMAP_BADGE_SIZE,
         HEATMAP_BADGE_TEXT,
         colorClass,
@@ -164,20 +173,20 @@ export function NumbersWithTooltip({ numbers, variant = "soft" }: { numbers: str
   const hidden = needsCollapse ? numbers.slice(NUMBERS_VISIBLE_LIMIT) : [];
 
   return (
-    <div className="flex items-center gap-1 flex-nowrap overflow-hidden">
+    <div className="flex flex-nowrap items-center gap-1 overflow-hidden">
       {visible.map((n) => (
         <NumberBadge key={n} num={n} variant={variant} />
       ))}
       {needsCollapse && (
         <HoverCard openDelay={100} closeDelay={100}>
           <HoverCardTrigger asChild>
-            <span className="inline-flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 text-muted-foreground text-xs font-semibold tabular-nums px-1.5 h-6 shrink-0 cursor-default transition-colors">
+            <span className="bg-muted hover:bg-muted-foreground/20 text-muted-foreground inline-flex h-6 shrink-0 cursor-default items-center justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums transition-colors">
               +{hidden.length}
             </span>
           </HoverCardTrigger>
           <HoverCardContent side="top" sideOffset={6} className={cn(DATA_HOVER_SURFACE_CLASS, "w-auto p-3")}>
-            <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
-            <div className="flex items-center gap-1 flex-wrap max-w-50">
+            <p className="text-muted-foreground mb-1.5 text-xs">Tất cả {numbers.length} số</p>
+            <div className="flex max-w-50 flex-wrap items-center gap-1">
               {numbers.map((n) => (
                 <NumberBadge key={n} num={n} variant={variant} />
               ))}
@@ -221,15 +230,15 @@ function NumberCell({
   const cellBg = isEmpty ? "" : HEAT_CELL_BG[heatLevel];
 
   const cellClass = cn(
-    "relative select-none transition-colors text-left w-full",
-    "border-r border-b border-border/50",
+    "relative w-full text-left transition-colors select-none",
+    "border-border/50 border-r border-b",
     isLastCol && "border-r-0",
     isLastRow && "border-b-0",
     HEATMAP_CELL_PT,
-    "pb-1.5 px-1",
+    "px-1 pb-1.5",
     cellBg || "bg-card",
-    "cursor-pointer hover:bg-red-100/50 dark:hover:bg-red-950/30",
-    selected && "bg-red-100/80 ring-2 ring-inset ring-red-500 dark:bg-red-900/40",
+    "hover:bg-loss/50 cursor-pointer",
+    selected && "bg-loss/80 ring-loss ring-2 ring-inset",
   );
 
   return (
@@ -249,14 +258,14 @@ function NumberCell({
       </span>
       <div className="flex flex-col items-center gap-0.5">
         {isEmpty ? (
-          <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
+          <span className="text-muted-foreground/20 text-xs tabular-nums">–</span>
         ) : (
           <>
             {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
-            <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
+            <span className={cn(HEATMAP_CELL_DATA_SIZE, "text-foreground leading-tight font-bold tabular-nums")}>
               {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
             </span>
-            <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
+            <span className={cn(HEATMAP_CELL_SUB_SIZE, "text-muted-foreground leading-none tabular-nums")}>
               {formatNumber(n.sets)}x
             </span>
           </>
@@ -299,30 +308,30 @@ function MainGrid({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex items-center justify-center size-4 rounded-full shrink-0 text-white text-[9px] font-bold"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
             style={{ background: POWER_HEX }}
           >
             P
           </span>
-          <span className="text-xs font-semibold text-foreground">Số chính (01–55)</span>
+          <span className="text-foreground text-xs font-semibold">Số chính (01–55)</span>
         </div>
         <div className="flex items-center gap-3 text-xs tabular-nums">
           <span className="text-muted-foreground">
-            Số bộ <span className="font-semibold text-foreground">{formatNumber(totalSets)}</span>
+            Số bộ <span className="text-foreground font-semibold">{formatNumber(totalSets)}</span>
           </span>
           <span className="text-muted-foreground">
             Dòng tiền{" "}
-            <span className="font-semibold text-foreground">
+            <span className="text-foreground font-semibold">
               {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
             </span>
           </span>
         </div>
       </div>
       <div
-        className="rounded-md overflow-hidden border border-border/50"
+        className="border-border/50 overflow-hidden rounded-md border"
         style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 1fr)` }}
       >
         {Array.from({ length: TOTAL }, (_, i) => {
@@ -351,7 +360,7 @@ function MainGrid({
         )}
       </NumberHeatmapHoverLayer>
       {isSparse && (
-        <p className="text-[11px] text-muted-foreground/60 italic">
+        <p className="text-muted-foreground/60 text-xs italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.
         </p>
       )}
@@ -427,7 +436,9 @@ function ComboLookupDialog({
       .map((n) => n.trim())
       .filter(Boolean);
     const valid = parsed.every((n) => VALID_MAIN_NUMBER_SET.has(n));
-    if (valid && new Set(parsed).size === parsed.length) onReplace(parsed);
+    if (valid && new Set(parsed).size === parsed.length) {
+      onReplace(parsed);
+    }
   };
 
   // Grid/chip đổi selection → phản ánh vào ô CSV.
@@ -436,7 +447,9 @@ function ComboLookupDialog({
   }, [selected]);
 
   const handleLookup = () => {
-    if (pt) lookup.mutate({ playType: pt, numbers: selected });
+    if (pt) {
+      lookup.mutate({ playType: pt, numbers: selected });
+    }
   };
 
   const result = lookup.data;
@@ -446,7 +459,7 @@ function ComboLookupDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-sm">
-            <Search className="size-4 text-muted-foreground" />
+            <Search className="text-muted-foreground size-4" />
             Tra cứu bộ số dồn cược
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -461,15 +474,12 @@ function ComboLookupDialog({
             value={raw}
             onChange={(e) => handleCsvChange(e.target.value)}
             placeholder="Nhập số, vd 01,05,12,... (hoặc chọn trên bảng)"
-            className="h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-3"
           />
 
           <div className="flex flex-wrap items-center gap-2">
             <span
-              className={cn(
-                "text-xs font-medium tabular-nums",
-                isValidCount ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
-              )}
+              className={cn("text-xs font-medium tabular-nums", isValidCount ? "text-profit" : "text-muted-foreground")}
             >
               Đã chọn {selected.length} số
               {isValidCount && pt ? ` · ${POWER655_PLAY_TYPE_LABELS[pt]}` : " · cần 5, 6, 7–15 hoặc 18"}
@@ -478,20 +488,20 @@ function ComboLookupDialog({
               <button
                 type="button"
                 onClick={onClear}
-                className="text-xs text-muted-foreground/60 hover:text-muted-foreground underline underline-offset-2"
+                className="text-muted-foreground/60 hover:text-muted-foreground text-xs underline underline-offset-2"
               >
                 Xoá hết
               </button>
             )}
           </div>
           {selected.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
+            <div className="flex flex-wrap items-center gap-1">
               {[...selected].sort().map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => onToggleNumber(n)}
-                  className="inline-flex items-center gap-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 pl-2 pr-1 h-6 text-xs font-bold tabular-nums hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+                  className="bg-loss text-loss hover:bg-loss inline-flex h-6 items-center gap-0.5 rounded-full pr-1 pl-2 text-xs font-bold tabular-nums transition-colors"
                   title="Bỏ chọn"
                 >
                   {n}
@@ -501,44 +511,44 @@ function ComboLookupDialog({
             </div>
           )}
 
-          {lookup.isError && <p className="text-xs text-destructive">Không tra cứu được — kiểm tra lại bộ số.</p>}
+          {lookup.isError && <p className="text-destructive text-xs">Không tra cứu được — kiểm tra lại bộ số.</p>}
 
           {result &&
             (result.found ? (
-              <div className="rounded-lg border border-border/60 bg-muted/10 overflow-hidden">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 border-b bg-muted/20 text-xs">
+              <div className="border-border/60 bg-muted/10 overflow-hidden rounded-lg border">
+                <div className="bg-muted/20 flex flex-wrap items-center gap-x-4 gap-y-1 border-b px-3 py-2 text-xs">
                   <span className="text-muted-foreground">
                     Người chơi:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.players)}</span>
+                    <span className="text-foreground font-semibold tabular-nums">{formatNumber(result.players)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Số bộ:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.sets)}</span>
+                    <span className="text-foreground font-semibold tabular-nums">{formatNumber(result.sets)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Tổng tiền:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">{formatNumber(result.amount)}</span>
+                    <span className="text-foreground font-semibold tabular-nums">{formatNumber(result.amount)}</span>
                   </span>
                   <span className="text-muted-foreground">
                     Giá 1 bộ:{" "}
-                    <span className="font-semibold tabular-nums text-foreground">
+                    <span className="text-foreground font-semibold tabular-nums">
                       {formatNumber(result.boardPrice)}
                     </span>
                   </span>
                 </div>
-                <div className="divide-y divide-border/50 max-h-64 overflow-y-auto">
+                <div className="divide-border/50 max-h-64 divide-y overflow-y-auto">
                   {result.accounts.map((a) => (
                     <div key={a.accountId} className="grid grid-cols-[1fr_4rem_6rem] items-center gap-2 px-3 py-1.5">
                       <div className="min-w-0" title={a.accountId}>
-                        <p className="text-xs font-medium truncate">{a.username || a.accountId}</p>
+                        <p className="truncate text-xs font-medium">{a.username || a.accountId}</p>
                         {a.username && (
-                          <p className="text-xs text-muted-foreground/60 truncate tabular-nums">{a.accountId}</p>
+                          <p className="text-muted-foreground/60 truncate text-xs tabular-nums">{a.accountId}</p>
                         )}
                       </div>
-                      <span className="text-xs tabular-nums text-muted-foreground text-right">
+                      <span className="text-muted-foreground text-right text-xs tabular-nums">
                         {formatNumber(a.sets)} bộ
                       </span>
-                      <span className="text-xs tabular-nums font-semibold text-foreground text-right">
+                      <span className="text-foreground text-right text-xs font-semibold tabular-nums">
                         {formatNumber(a.amount)}
                       </span>
                     </div>
@@ -546,7 +556,7 @@ function ComboLookupDialog({
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground italic">Chưa có ai cược bộ này.</p>
+              <p className="text-muted-foreground text-xs italic">Chưa có ai cược bộ này.</p>
             ))}
         </div>
 
@@ -594,13 +604,13 @@ export function NumberHeatmap({ numbers, drawId }: { numbers: NumberFreqItem[]; 
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+      <CardHeader className="px-5 pt-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <BarChart2 className="size-4 text-muted-foreground shrink-0" />
+            <BarChart2 className="text-muted-foreground size-4 shrink-0" />
             <div>
               <CardTitle className="text-sm font-semibold">Phân tích số cược</CardTitle>
-              <CardDescription className="text-xs mt-0.5">
+              <CardDescription className="mt-0.5 text-xs">
                 {formatNumber(totalSets)} bộ cược · Chọn số trên bảng để tra cứu
               </CardDescription>
             </div>
@@ -608,12 +618,12 @@ export function NumberHeatmap({ numbers, drawId }: { numbers: NumberFreqItem[]; 
           <div className="flex items-center gap-1.5">
             {selected.length > 0 && (
               <>
-                <span className="text-xs tabular-nums text-muted-foreground">Đã chọn {selected.length} số</span>
+                <span className="text-muted-foreground text-xs tabular-nums">Đã chọn {selected.length} số</span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground size-7"
                   onClick={clearSelected}
                   aria-label="Bỏ chọn tất cả"
                   title="Bỏ chọn tất cả"
@@ -628,7 +638,7 @@ export function NumberHeatmap({ numbers, drawId }: { numbers: NumberFreqItem[]; 
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-7 text-muted-foreground"
+                  className="text-muted-foreground size-7"
                   aria-label="Thao tác bảng số"
                 >
                   <MoreHorizontal className="size-4" />
@@ -646,7 +656,7 @@ export function NumberHeatmap({ numbers, drawId }: { numbers: NumberFreqItem[]; 
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0 space-y-4">
+      <CardContent className="space-y-4 px-5 pt-0 pb-4">
         <MainGrid numbers={numbers} selected={selectedSet} onToggle={toggleNumber} />
       </CardContent>
 

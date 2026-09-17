@@ -46,11 +46,15 @@ export function DispatchCancelDialog({ tx, label, onClose, onSuccess }: Dispatch
   });
 
   useEffect(() => {
-    if (isOpen) form.reset({ confirm: false as unknown as true });
+    if (isOpen) {
+      form.reset({ confirm: false as unknown as true });
+    }
   }, [isOpen, form]);
 
   async function onSubmit() {
-    if (!tx) return;
+    if (!tx) {
+      return;
+    }
     await mutateAsync(tx);
     onSuccess?.();
     onClose();
@@ -61,7 +65,7 @@ export function DispatchCancelDialog({ tx, label, onClose, onSuccess }: Dispatch
       <DialogContent className="sm:max-w-110">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-sm">
+            <div className="from-loss to-warning flex size-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm">
               <XCircle className="size-5" />
             </div>
             <div className="flex flex-col gap-0.5">
@@ -73,10 +77,10 @@ export function DispatchCancelDialog({ tx, label, onClose, onSuccess }: Dispatch
           </div>
         </DialogHeader>
 
-        <div className="rounded-md border border-dashed bg-muted/40 px-3 py-2 font-mono text-xs">
+        <div className="bg-muted/40 rounded-md border border-dashed px-3 py-2 font-mono text-xs">
           <span className="text-muted-foreground">Tx: </span>
           <span className="break-all">{tx}</span>
-          {label && <div className="mt-1 font-sans text-muted-foreground">{label}</div>}
+          {label && <div className="text-muted-foreground mt-1 font-sans">{label}</div>}
         </div>
 
         <Form {...form}>
@@ -85,7 +89,7 @@ export function DispatchCancelDialog({ tx, label, onClose, onSuccess }: Dispatch
               control={form.control}
               name="confirm"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start gap-3 rounded-md border bg-muted/30 px-3 py-2.5">
+                <FormItem className="bg-muted/30 flex flex-row items-start gap-3 rounded-md border px-3 py-2.5">
                   <FormControl>
                     <Checkbox checked={!!field.value} onCheckedChange={(v) => field.onChange(v === true)} />
                   </FormControl>

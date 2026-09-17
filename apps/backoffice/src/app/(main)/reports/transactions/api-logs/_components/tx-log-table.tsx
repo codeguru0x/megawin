@@ -6,8 +6,7 @@ import { TRANSACTION_ACTION_LABELS, TRANSACTION_REASON_LABELS } from "@megawin/g
 import type { TransactionAction, TransactionReason } from "@megawin/shared/types";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
-import type { TxLogEntity } from "@megawin/tenant-gateway/entities";
-import { TxLogEventType, TxLogStatus } from "@megawin/tenant-gateway/entities";
+import { TxLogEventType, TxLogStatus, type TxLogEntity } from "@megawin/tenant-gateway/entities";
 import { TX_LOG_EVENT_TYPE_LABELS, TX_LOG_STATUS_LABELS } from "@megawin/tenant-gateway/shared/labels";
 import { CheckCircle2, Inbox, Loader2, XCircle } from "lucide-react";
 
@@ -39,10 +38,14 @@ interface RequestPayloadSummary {
  * Defensive — truncated / malformed payload → trả object rỗng, cell hiển thị "—".
  */
 function parseRequestSummary(raw: string | undefined): RequestPayloadSummary {
-  if (!raw) return {};
+  if (!raw) {
+    return {};
+  }
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (parsed.__truncated) return {};
+    if (parsed.__truncated) {
+      return {};
+    }
     return {
       action: parsed.action as TransactionAction | undefined,
       reason: parsed.reason as TransactionReason | undefined,
@@ -61,7 +64,9 @@ function parseRequestSummary(raw: string | undefined): RequestPayloadSummary {
  * Dùng cho batchId để hiển thị 8 ký tự đầu.
  */
 function shortId(value: string, head = 8): string {
-  if (value.length <= head) return value;
+  if (value.length <= head) {
+    return value;
+  }
   return `${value.slice(0, head)}…`;
 }
 
@@ -90,7 +95,7 @@ export function TxLogTable({
 
   if (isLoading) {
     return (
-      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải nhật ký…</span>
       </div>
@@ -100,9 +105,9 @@ export function TxLogTable({
   if (rows.length === 0) {
     return (
       <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
-        <Inbox className="size-8 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">Không có dữ liệu</p>
-        <p className="text-xs text-muted-foreground">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
+        <Inbox className="text-muted-foreground/40 size-8" />
+        <p className="text-muted-foreground text-sm font-medium">Không có dữ liệu</p>
+        <p className="text-muted-foreground text-xs">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
       </div>
     );
   }
@@ -138,7 +143,7 @@ export function TxLogTable({
               return (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer hover:bg-muted/40"
+                  className="hover:bg-muted/40 cursor-pointer"
                   onClick={() => onOpenDetail(row.tx)}
                 >
                   <TableCell className="pl-5 font-mono text-sm tabular-nums">
@@ -147,18 +152,18 @@ export function TxLogTable({
                   <TableCell className="text-center">
                     {isSuccess ? (
                       <CheckCircle2
-                        className="inline-block size-4 text-profit"
+                        className="text-profit inline-block size-4"
                         aria-label={TX_LOG_STATUS_LABELS[row.status]}
                       />
                     ) : (
                       <XCircle
-                        className="inline-block size-4 text-loss"
+                        className="text-loss inline-block size-4"
                         aria-label={TX_LOG_STATUS_LABELS[row.status]}
                       />
                     )}
                     <span className="sr-only">{TX_LOG_STATUS_LABELS[row.status]}</span>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-sm">
                     {TX_LOG_EVENT_TYPE_LABELS[row.eventType]}
                   </TableCell>
                   <TableCell className="font-mono text-sm">{row.tenantId}</TableCell>
@@ -169,9 +174,7 @@ export function TxLogTable({
                       <span
                         className={cn(
                           "inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium",
-                          req.action === "debit"
-                            ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
-                            : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                          req.action === "debit" ? "bg-loss/10 text-loss" : "bg-profit/10 text-profit",
                         )}
                       >
                         {TRANSACTION_ACTION_LABELS[req.action]}
@@ -181,7 +184,7 @@ export function TxLogTable({
                     )}
                   </TableCell>
 
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-sm">
                     {req.reason ? TRANSACTION_REASON_LABELS[req.reason] : "—"}
                   </TableCell>
 
@@ -210,7 +213,7 @@ export function TxLogTable({
                       {isBatch ? (
                         <button
                           type="button"
-                          className="font-mono text-sm text-primary underline-offset-2 hover:underline"
+                          className="text-primary font-mono text-sm underline-offset-2 hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/reports/transactions/api-logs/batches/${row.batchId}`);
@@ -220,14 +223,14 @@ export function TxLogTable({
                           {shortId(row.batchId)}
                         </button>
                       ) : (
-                        <span className="text-sm text-muted-foreground">—</span>
+                        <span className="text-muted-foreground text-sm">—</span>
                       )}
                     </TableCell>
                   )}
-                  <TableCell className="pr-5 text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground pr-5 text-sm">
                     {errCode ? (
                       <div className="flex items-center gap-1.5">
-                        <span className="shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 font-mono text-xs text-destructive">
+                        <span className="bg-destructive/10 text-destructive shrink-0 rounded px-1.5 py-0.5 font-mono text-xs">
                           {errCode}
                         </span>
                         <span className="truncate">{errMsg}</span>

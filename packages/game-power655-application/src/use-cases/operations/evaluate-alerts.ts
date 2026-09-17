@@ -20,18 +20,16 @@
  * nhiều doc trùng loại/scope trong 1 kỳ. Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
-import type {
-  Power655DrawBettingStatsEntity,
-  Power655DrawComboStatsEntity,
-  Power655OpsAlertDoc,
-  Power655OpsAlertsConfig,
-} from "@megawin/game-power655/entities";
 import {
   BAO_COMBINATIONS,
   OpsAlertSeverity,
   OpsAlertStatus,
   PlayType,
   Power655OpsAlertType,
+  type Power655DrawBettingStatsEntity,
+  type Power655DrawComboStatsEntity,
+  type Power655OpsAlertDoc,
+  type Power655OpsAlertsConfig,
 } from "@megawin/game-power655/entities";
 
 /** Snapshot stats + combo cần cho evaluate. */

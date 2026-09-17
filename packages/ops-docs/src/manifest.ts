@@ -218,10 +218,16 @@ export function findRunbookDoc(
   slug: string,
 ): { game: RunbookGame; topic: RunbookTopic; doc: RunbookDoc } | null {
   const game = RUNBOOK_MANIFEST.find((g) => g.gameKey === gameKey);
-  if (!game) return null;
+  if (!game) {
+    return null;
+  }
   const topic = game.topics.find((t) => t.key === topicKey);
-  if (!topic) return null;
+  if (!topic) {
+    return null;
+  }
   const doc = topic.docs.find((d) => d.slug === slug);
-  if (!doc) return null;
+  if (!doc) {
+    return null;
+  }
   return { game, topic, doc };
 }

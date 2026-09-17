@@ -1,6 +1,5 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { KenoTopCombo, TopAccountStat } from "@megawin/game-keno/entities";
-import { OpsAlertStatus } from "@megawin/game-keno/entities";
+import { OpsAlertStatus, type KenoTopCombo, type TopAccountStat } from "@megawin/game-keno/entities";
 import { capExposureByPlayType } from "@megawin/game-keno/rules";
 
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
@@ -86,23 +85,19 @@ export class GetOpsSnapshotUseCase extends UseCase<GetOpsSnapshotInput, GetOpsSn
       drawId,
       drawStatus: drawStatuses.get(drawId) ?? null,
       stats,
-      topCombos: topCombos.map(
-        (c): KenoTopCombo => ({
-          playType: c.playType,
-          numbers: c.numbers,
-          sets: c.sets,
-          accounts: c.accountCount,
-          amount: c.amount,
-        }),
-      ),
-      topAccounts: topAccounts.map(
-        (a): TopAccountStat => ({
-          accountId: a.accountId,
-          username: a.username,
-          amount: a.amount,
-          entries: a.entries,
-        }),
-      ),
+      topCombos: topCombos.map((c): KenoTopCombo => ({
+        playType: c.playType,
+        numbers: c.numbers,
+        sets: c.sets,
+        accounts: c.accountCount,
+        amount: c.amount,
+      })),
+      topAccounts: topAccounts.map((a): TopAccountStat => ({
+        accountId: a.accountId,
+        username: a.username,
+        amount: a.amount,
+        entries: a.entries,
+      })),
       uniquePlayers,
       cappedExposure,
       alertCounts: { new: newCount, critical: criticalCount },

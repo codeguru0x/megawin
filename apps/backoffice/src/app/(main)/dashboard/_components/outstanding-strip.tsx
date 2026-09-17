@@ -21,7 +21,7 @@ interface OutstandingStripProps {
 
 export function OutstandingStripSkeleton() {
   return (
-    <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-5 dark:border-blue-800/30 dark:bg-blue-950/20">
+    <div className="border-info/50 bg-info/30 rounded-xl border p-5">
       <div className="flex items-center gap-2">
         <Skeleton className="h-4 w-32" />
       </div>
@@ -58,29 +58,28 @@ function MetricCard({ icon: Icon, label, value, color }: MetricCardProps) {
     <div
       className={cn(
         "flex items-center gap-2.5 rounded-lg border px-3 py-2.5",
-        color === "blue" && "border-blue-200/70 bg-blue-50/60 dark:border-blue-800/40 dark:bg-blue-950/30",
-        color === "amber" && "border-amber-200/70 bg-amber-50/60 dark:border-amber-800/40 dark:bg-amber-950/30",
-        color === "indigo" && "border-indigo-200/70 bg-indigo-50/60 dark:border-indigo-800/40 dark:bg-indigo-950/30",
-        color === "violet" && "border-violet-200/70 bg-violet-50/60 dark:border-violet-800/40 dark:bg-violet-950/30",
-        color === "rose" && "border-rose-200/70 bg-rose-50/60 dark:border-rose-800/40 dark:bg-rose-950/30",
-        color === "emerald" &&
-          "border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-800/40 dark:bg-emerald-950/30",
+        color === "blue" && "border-info/70 bg-info/60",
+        color === "amber" && "border-warning/70 bg-warning/60",
+        color === "indigo" && "border-info/70 bg-info/60",
+        color === "violet" && "border-game-max3d/70 bg-game-max3d/60",
+        color === "rose" && "border-loss/70 bg-loss/60",
+        color === "emerald" && "border-profit/70 bg-profit/60",
       )}
     >
       <Icon
         className={cn(
           "size-4 shrink-0",
-          color === "blue" && "text-blue-600 dark:text-blue-400",
-          color === "amber" && "text-amber-600 dark:text-amber-400",
-          color === "indigo" && "text-indigo-600 dark:text-indigo-400",
-          color === "violet" && "text-violet-600 dark:text-violet-400",
-          color === "rose" && "text-rose-600 dark:text-rose-400",
-          color === "emerald" && "text-emerald-600 dark:text-emerald-400",
+          color === "blue" && "text-info",
+          color === "amber" && "text-warning",
+          color === "indigo" && "text-info",
+          color === "violet" && "text-game-max3d",
+          color === "rose" && "text-loss",
+          color === "emerald" && "text-profit",
         )}
       />
       <div className="min-w-0">
-        <p className="text-[10px] font-medium text-muted-foreground">{label}</p>
-        <p className="text-sm font-bold tabular-nums text-foreground">{value}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className="text-foreground text-sm font-bold tabular-nums">{value}</p>
       </div>
     </div>
   );
@@ -123,7 +122,7 @@ function GameCard({
     <Link
       prefetch={false}
       href={`/games/${gameProduct}/outstanding`}
-      className="group relative flex gap-2 overflow-hidden rounded-lg border border-border/50 bg-background/80 p-2.5 transition-all hover:border-border hover:shadow-sm"
+      className="group border-border/50 bg-background/80 hover:border-border relative flex gap-2 overflow-hidden rounded-lg border p-2.5 transition-all hover:shadow-sm"
     >
       {/* Color indicator bar bên trái */}
       <div className="w-1 shrink-0 rounded-full" style={{ background: hex }} />
@@ -131,9 +130,9 @@ function GameCard({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         {/* Tên game + % */}
         <div className="flex items-center justify-between gap-1">
-          <span className="truncate text-xs font-semibold text-foreground">{getGameLabel(gameProduct)}</span>
+          <span className="text-foreground truncate text-xs font-semibold">{getGameLabel(gameProduct)}</span>
           <span
-            className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white"
+            className="shrink-0 rounded px-1.5 py-0.5 text-xs font-bold text-white tabular-nums"
             style={{ background: hex }}
           >
             {pct.toFixed(1)}%
@@ -141,10 +140,10 @@ function GameCard({
         </div>
 
         {/* Tiền pending — nổi bật */}
-        <span className="text-sm font-bold tabular-nums text-foreground">{formatVNDCompact(stake)}</span>
+        <span className="text-foreground text-sm font-bold tabular-nums">{formatVNDCompact(stake)}</span>
 
         {/* Chi tiết: kỳ · vé · NC · đại lý */}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] tabular-nums text-muted-foreground">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0 text-xs tabular-nums">
           <span>{activeDrawCount} kỳ</span>
           <span>{formatNumber(entryCount)} vé</span>
           <span>{formatNumber(playerCount)} NC</span>
@@ -153,13 +152,11 @@ function GameCard({
 
         {/* Ước tính commission nếu có */}
         {estimatedCommission > 0 && (
-          <span className="text-[10px] tabular-nums text-amber-600 dark:text-amber-400">
-            ~{formatVNDCompact(estimatedCommission)} HH
-          </span>
+          <span className="text-warning text-xs tabular-nums">~{formatVNDCompact(estimatedCommission)} HH</span>
         )}
 
         {/* Progress bar — visual tỷ lệ % stake */}
-        <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-muted/60">
+        <div className="bg-muted/60 mt-0.5 h-1 w-full overflow-hidden rounded-full">
           <div
             className="h-full rounded-full transition-all"
             style={{ width: `${Math.min(pct, 100)}%`, background: hex }}
@@ -168,7 +165,7 @@ function GameCard({
       </div>
 
       {/* Hover arrow indicator */}
-      <ArrowUpRight className="absolute right-1.5 top-1.5 size-3 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/60" />
+      <ArrowUpRight className="text-muted-foreground/0 group-hover:text-muted-foreground/60 absolute top-1.5 right-1.5 size-3 transition-colors" />
     </Link>
   );
 }
@@ -194,8 +191,12 @@ function GameCard({
  * Live indicator = pulse dot animation, không dùng text timestamp.
  */
 export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
-  if (isLoading) return <OutstandingStripSkeleton />;
-  if (!data || data.length === 0) return null;
+  if (isLoading) {
+    return <OutstandingStripSkeleton />;
+  }
+  if (!data || data.length === 0) {
+    return null;
+  }
 
   // ── Aggregate totals ────────────────────────────────────────────────────────
   let totalDraws = 0;
@@ -215,7 +216,9 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
   }
 
   // Không có outstanding → ẩn strip
-  if (totalStake === 0 && totalEntries === 0) return null;
+  if (totalStake === 0 && totalEntries === 0) {
+    return null;
+  }
 
   // Sort games by stake descending — game lớn nhất hiện trước
   const sorted = [...data]
@@ -223,17 +226,15 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
     .sort((a, b) => b.totalOutstandingStake - a.totalOutstandingStake);
 
   return (
-    <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-5 dark:border-blue-800/30 dark:bg-blue-950/20">
+    <div className="border-info/50 bg-info/30 rounded-xl border p-5">
       {/* ── Row 1: Header + live pulse dot ─────────────────────────── */}
       <div className="flex items-center gap-2">
-        <Activity className="size-4 text-blue-600 dark:text-blue-400" />
-        <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-          Outstanding
-        </span>
+        <Activity className="text-info size-4" />
+        <span className="text-info text-xs font-semibold tracking-wider uppercase">Outstanding</span>
         {/* Live pulse dot — animation nhẹ thay cho text timestamp */}
         <span className="relative flex size-2">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+          <span className="bg-info absolute inline-flex size-full animate-ping rounded-full opacity-75" />
+          <span className="bg-info relative inline-flex size-2 rounded-full" />
         </span>
       </div>
 
@@ -249,10 +250,12 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
 
       {/* ── Row 3: Stacked bar — phân bổ % stake theo game ──────── */}
       <div className="group/bar relative mt-3">
-        <div className="flex h-4 w-full overflow-hidden rounded-full bg-blue-100/60 dark:bg-blue-900/30">
+        <div className="bg-info/60 flex h-4 w-full overflow-hidden rounded-full">
           {sorted.map((g) => {
             const pct = totalStake > 0 ? (g.totalOutstandingStake / totalStake) * 100 : 0;
-            if (pct < 0.5) return null;
+            if (pct < 0.5) {
+              return null;
+            }
             return (
               <Link
                 key={g.gameProduct}
@@ -272,10 +275,12 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
         <div className="pointer-events-none absolute inset-0 flex h-4 items-center overflow-hidden rounded-full">
           {sorted.map((g) => {
             const pct = totalStake > 0 ? (g.totalOutstandingStake / totalStake) * 100 : 0;
-            if (pct < 8) return <div key={g.gameProduct} style={{ width: `${Math.max(pct, 0)}%` }} />;
+            if (pct < 8) {
+              return <div key={g.gameProduct} style={{ width: `${Math.max(pct, 0)}%` }} />;
+            }
             return (
               <div key={g.gameProduct} className="flex h-full items-center justify-center" style={{ width: `${pct}%` }}>
-                <span className="text-[9px] font-bold text-white drop-shadow-sm">{pct.toFixed(0)}%</span>
+                <span className="text-xs font-bold text-white drop-shadow-sm">{pct.toFixed(0)}%</span>
               </div>
             );
           })}

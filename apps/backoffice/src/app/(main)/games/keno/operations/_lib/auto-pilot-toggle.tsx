@@ -15,7 +15,6 @@
  * thêm dialog xác nhận trước khi BẬT (giao quyền tự động cho AI trên đường tiền cần staff xác nhận
  * rõ ràng, không phải 1 click).
  */
-
 import { useState } from "react";
 
 import { Sparkles } from "lucide-react";
@@ -32,10 +31,10 @@ export function AutoPilotToggle() {
       <TooltipTrigger asChild>
         <div
           className={cn(
-            "flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-all",
+            "flex items-center gap-2 rounded-full py-1 pr-2 pl-1 transition-all",
             enabled
-              ? "bg-linear-to-r from-violet-600 to-fuchsia-600 shadow-md shadow-violet-500/30 ring-1 ring-violet-400/50"
-              : "bg-muted/50 ring-1 ring-border",
+              ? "from-game-max3d to-game-max3dpro shadow-game-max3d/30 ring-game-max3d/50 bg-linear-to-r shadow-md ring-1"
+              : "bg-muted/50 ring-border ring-1",
           )}
         >
           <span

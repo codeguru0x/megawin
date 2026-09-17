@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { formatVN, formatVNDate, TZDate, todayVN, toVNStartOfDay, VN_TIMEZONE } from "@megawin/shared/utils";
+import { formatVN, formatVNDate, todayVN, toVNStartOfDay, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
 import {
   differenceInCalendarDays,
   endOfMonth,
@@ -96,35 +96,57 @@ function getPresets(): Preset[] {
 }
 
 function displayDate(dateStr: string): string {
-  if (!dateStr) return "--";
+  if (!dateStr) {
+    return "--";
+  }
   const d = parseISO(dateStr);
-  if (!isValid(d)) return "--";
+  if (!isValid(d)) {
+    return "--";
+  }
   return formatVN(toVNStartOfDay(dateStr), "dd/MM/yyyy");
 }
 
 function dayCount(from: string, to: string): number {
-  if (!from || !to) return 0;
+  if (!from || !to) {
+    return 0;
+  }
   const a = parseISO(from);
   const b = parseISO(to);
-  if (!isValid(a) || !isValid(b)) return 0;
+  if (!isValid(a) || !isValid(b)) {
+    return 0;
+  }
   return differenceInCalendarDays(b, a) + 1;
 }
 
 function dayCountLabel(n: number): string {
-  if (n <= 0) return "";
-  if (n === 1) return "1 ngày";
-  if (n === 7) return "1 tuần";
-  if (n >= 28 && n <= 31) return "~1 tháng";
+  if (n <= 0) {
+    return "";
+  }
+  if (n === 1) {
+    return "1 ngày";
+  }
+  if (n === 7) {
+    return "1 tuần";
+  }
+  if (n >= 28 && n <= 31) {
+    return "~1 tháng";
+  }
   return `${n} ngày`;
 }
 
 /** Parse "dd/MM/yyyy" → "YYYY-MM-DD". Trả undefined nếu không hợp lệ. */
 function parseInputDate(input: string): string | undefined {
-  if (input.length !== 10) return undefined;
+  if (input.length !== 10) {
+    return undefined;
+  }
   const d = parse(input, "dd/MM/yyyy", new Date());
-  if (!isValid(d)) return undefined;
+  if (!isValid(d)) {
+    return undefined;
+  }
   const y = d.getFullYear();
-  if (y < 2000 || y > 2100) return undefined;
+  if (y < 2000 || y > 2100) {
+    return undefined;
+  }
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${y}-${mm}-${dd}`;
@@ -182,7 +204,9 @@ export function FinancialDateRangePicker({
 
   /** Step-based: click 1 = new start → focus ô "Đến", click 2 = end (auto-swap). */
   function handleCalendarSelect(range: DateRange | undefined) {
-    if (!range?.from) return;
+    if (!range?.from) {
+      return;
+    }
 
     if (selectStep === "start") {
       const newRange: DateRange = { from: range.from, to: undefined };
@@ -196,7 +220,9 @@ export function FinancialDateRangePicker({
       const clickedDate = range.to ?? range.from;
       let start = pendingRange?.from ?? range.from;
       let end = clickedDate;
-      if (isBefore(end, start)) [start, end] = [end, start];
+      if (isBefore(end, start)) {
+        [start, end] = [end, start];
+      }
 
       const newRange: DateRange = { from: start, to: end };
       setPendingRange(newRange);
@@ -284,7 +310,9 @@ export function FinancialDateRangePicker({
 
   /** Kiểm tra preset có đang active (khớp pending) không. */
   function isPresetActive(preset: Preset) {
-    if (!pendingRange?.from) return false;
+    if (!pendingRange?.from) {
+      return false;
+    }
     const pFrom = toDateStr(pendingRange.from);
     const pTo = pendingRange.to ? toDateStr(pendingRange.to) : pFrom;
     return preset.from === pFrom && preset.to === pTo;
@@ -292,7 +320,7 @@ export function FinancialDateRangePicker({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
-      {label && <span className="text-sm font-medium text-foreground">{label}</span>}
+      {label && <span className="text-foreground text-sm font-medium">{label}</span>}
 
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
@@ -300,10 +328,10 @@ export function FinancialDateRangePicker({
             variant="outline"
             className={cn("h-9 gap-2 px-3 text-sm tabular-nums", !from && "text-muted-foreground")}
           >
-            <CalendarIcon className="size-4 text-muted-foreground" />
+            <CalendarIcon className="text-muted-foreground size-4" />
             <span className="font-medium">{buttonLabel}</span>
             {numDays > 0 && (
-              <span className="ml-0.5 inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+              <span className="bg-muted text-muted-foreground ml-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums">
                 {dayCountLabel(numDays)}
               </span>
             )}
@@ -311,7 +339,7 @@ export function FinancialDateRangePicker({
         </PopoverTrigger>
 
         <PopoverContent className="w-auto p-0" align="start" onKeyDown={handleKeyDown}>
-          <div className="flex divide-x divide-border">
+          <div className="divide-border flex divide-x">
             {/* ── Cột trái: Calendar + Footer ── */}
             <div className="flex flex-col">
               <Calendar
@@ -323,12 +351,12 @@ export function FinancialDateRangePicker({
                 disabled={{ after: new Date() }}
               />
 
-              <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+              <div className="border-border flex items-center justify-between gap-3 border-t px-4 py-3">
                 {/* ── Inputs + badge ── */}
                 <div className="flex items-center gap-2">
                   {/* Ô "Từ" — highlight khi đang ở step start */}
                   <div className="flex flex-col gap-0.5">
-                    <span className="px-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="text-muted-foreground px-0.5 text-xs font-semibold tracking-wide uppercase">
                       Từ
                     </span>
                     <input
@@ -343,19 +371,19 @@ export function FinancialDateRangePicker({
                       onBlur={handleFromInputBlur}
                       onFocus={() => setSelectStep("start")}
                       className={cn(
-                        "h-7 w-24 rounded-md border bg-transparent px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-colors",
+                        "text-foreground placeholder:text-muted-foreground/50 h-7 w-24 rounded-md border bg-transparent px-2 text-xs tabular-nums transition-colors focus:ring-1 focus:outline-none",
                         selectStep === "start"
-                          ? "border-primary ring-1 ring-primary/30"
+                          ? "border-primary ring-primary/30 ring-1"
                           : "border-input focus:border-primary focus:ring-primary/30",
                       )}
                     />
                   </div>
 
-                  <span className="mt-4 text-xs text-muted-foreground">—</span>
+                  <span className="text-muted-foreground mt-4 text-xs">—</span>
 
                   {/* Ô "Đến" — highlight khi đang ở step end */}
                   <div className="flex flex-col gap-0.5">
-                    <span className="px-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <span className="text-muted-foreground px-0.5 text-xs font-semibold tracking-wide uppercase">
                       Đến
                     </span>
                     <input
@@ -370,9 +398,9 @@ export function FinancialDateRangePicker({
                       onBlur={handleToInputBlur}
                       onFocus={() => setSelectStep("end")}
                       className={cn(
-                        "h-7 w-24 rounded-md border bg-transparent px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-colors",
+                        "text-foreground placeholder:text-muted-foreground/50 h-7 w-24 rounded-md border bg-transparent px-2 text-xs tabular-nums transition-colors focus:ring-1 focus:outline-none",
                         selectStep === "end"
-                          ? "border-primary ring-1 ring-primary/30"
+                          ? "border-primary ring-primary/30 ring-1"
                           : "border-input focus:border-primary focus:ring-primary/30",
                       )}
                     />
@@ -380,7 +408,7 @@ export function FinancialDateRangePicker({
 
                   {/* Badge số ngày — hiện cả khi = 1 ngày */}
                   {pendingDays > 0 && (
-                    <span className="mt-4 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                    <span className="bg-muted text-muted-foreground mt-4 shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold tabular-nums">
                       {dayCountLabel(pendingDays)}
                     </span>
                   )}
@@ -400,7 +428,7 @@ export function FinancialDateRangePicker({
 
             {/* ── Cột phải: 8 Presets, 2 nhóm đều 4 ── */}
             <div className="flex w-40 shrink-0 flex-col gap-2 p-1.5">
-              <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Phổ biến</p>
+              <p className="text-muted-foreground px-2 text-xs font-semibold tracking-widest uppercase">Phổ biến</p>
               <div className="flex flex-col gap-0.5">
                 {commonPresets.map((preset) => (
                   <PresetButton
@@ -412,9 +440,9 @@ export function FinancialDateRangePicker({
                 ))}
               </div>
 
-              <div className="h-px bg-border" />
+              <div className="bg-border h-px" />
 
-              <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Chu kỳ</p>
+              <p className="text-muted-foreground px-2 text-xs font-semibold tracking-widest uppercase">Chu kỳ</p>
               <div className="flex flex-col gap-0.5">
                 {periodPresets.map((preset) => (
                   <PresetButton
@@ -443,11 +471,11 @@ function PresetButton({ label, active, onClick }: { label: string; active: boole
       aria-pressed={active}
       className={cn(
         "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition-all duration-150",
-        active ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-accent",
+        active ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-accent",
       )}
     >
       {label}
-      {active && <Check className="size-3.5 shrink-0 text-primary" />}
+      {active && <Check className="text-primary size-3.5 shrink-0" />}
     </button>
   );
 }

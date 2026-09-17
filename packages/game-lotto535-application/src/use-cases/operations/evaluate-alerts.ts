@@ -22,15 +22,17 @@
  * nhiều doc trùng loại/scope trong 1 kỳ. Severity map theo mức vượt ngưỡng (warning/critical).
  */
 
-import type {
-  Lotto535DrawBettingStatsEntity,
-  Lotto535DrawComboStatsEntity,
-  Lotto535DrawNumberStatsEntity,
-  Lotto535OpsAlertDoc,
-  Lotto535OpsAlertsConfig,
-  Lotto535StatsPlayKey,
+import {
+  Lotto535OpsAlertType,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type Lotto535DrawBettingStatsEntity,
+  type Lotto535DrawComboStatsEntity,
+  type Lotto535DrawNumberStatsEntity,
+  type Lotto535OpsAlertDoc,
+  type Lotto535OpsAlertsConfig,
+  type Lotto535StatsPlayKey,
 } from "@megawin/game-lotto535/entities";
-import { Lotto535OpsAlertType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-lotto535/entities";
 import { combination } from "@megawin/game-lotto535/rules";
 
 /** Snapshot stats + combo + number cần cho evaluate. */

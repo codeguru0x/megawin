@@ -7,20 +7,20 @@
 
 ## Mục tiêu
 
-Chốt chặn TĨNH ở lint/CI cho quy tắc "không xoá/sửa dữ liệu không do test sinh ra". Đây là lớp thứ
-2 trong mô hình 3 lớp phòng thủ (đặc biệt quan trọng vì DB test = staging chung):
+Chốt chặn TĨNH ở lint/CI cho quy tắc "không xoá/sửa dữ liệu không do test sinh ra". Kết hợp
+Cursor rule + GritQL; DB integration là Testcontainers ephemeral (không staging chung):
 
 ```mermaid
 flowchart LR
   ai["Cursor rule test-data-safety.mdc (luc viet code)"] --> tinh[Tinh]
   lint["Biome GritQL (luc lint / CI) - PLAN NAY"] --> tinh
-  guard["db-guard runtime (luc chay test)"] --> dong[Dong]
+  tc["Testcontainers ephemeral DB"] --> dong[Dong]
 ```
 
 - Cursor rule: ngăn AI/người sinh code sai từ đầu (đã có).
 - Biome GritQL (plan này): chặn khi lint/CI kể cả code viết tay không đọc rule.
-- db-guard runtime (`@megawin/vitest-config/setup-db-guard`): chốt cuối lúc chạy, chặn cả filter
-  build động thành `{}`.
+- Testcontainers (`global-setup-mongo` / `global-setup-redis`): DB ephemeral — không còn đường
+  nối Atlas staging từ vitest.
 
 ## Phụ thuộc
 
@@ -103,8 +103,8 @@ Dùng `plugins[].includes` (Biome 2.4+, [PR #6117](https://github.com/biomejs/bi
 **Quét toàn repo:** `biome check .` → **0 hit** `test-data-safety` trên file test thật hiện có (không false-positive). Plugin load & fire xác nhận qua probe. `await` wrapper không cản match (GritQL match subtree call-expression). Total errors toàn repo giữ nguyên backlog p0-06 (plugin không thêm lỗi mới ở code hiện hữu).
 
 **Hạn chế GritQL phát hiện:**
-- Pattern `$coll.drop()` match MỌI `.drop()` (kể cả `.drop()` không phải Mongo). Chấp nhận vì đã scope test-only + lớp db-guard runtime bù. Rất hiếm trong file test.
-- Chỉ bắt **empty-object literal `{}`** hoặc **thiếu đối số**. Filter build động thành rỗng lúc runtime (VD `deleteMany(buildFilter())` → `{}`) GritQL KHÔNG thấy — đúng như thiết kế, lớp 3 **db-guard runtime** chịu trách nhiệm case này. Không hạ chuẩn db-guard để bù.
+- Pattern `$coll.drop()` match MỌI `.drop()` (kể cả `.drop()` không phải Mongo). Chấp nhận vì đã scope test-only. Rất hiếm trong file test.
+- Chỉ bắt **empty-object literal `{}`** hoặc **thiếu đối số**. Filter build động thành rỗng lúc runtime (VD `deleteMany(buildFilter())` → `{}`) GritQL KHÔNG thấy — Cursor rule `test-data-safety.mdc` + review bắt case này.
 
 ## Phương án review sau thực thi
 
@@ -123,12 +123,11 @@ Dùng `plugins[].includes` (Biome 2.4+, [PR #6117](https://github.com/biomejs/bi
 
 **3. Kiểm tra tương thích version:** plugin viết cho GritQL của đúng bản Biome đang pin (2.5.7) — chạy `pnpm exec biome check --verbose` xem plugin được load, không warning parse.
 
-**4. Đối chiếu lớp runtime:** chạy 1 test cố tình vi phạm với db-guard bật — cả 2 lớp (lint + runtime) cùng chặn. Nếu GritQL miss case nào mà db-guard bắt được → ghi vào "hạn chế GritQL" bên trên.
+**4. Đối chiếu:** chạy Biome trên file test cố tình `deleteMany({})` → GritQL phải fail.
 
-**5. Rollback:** xoá field `plugins` khỏi `biome.json` — 2 lớp còn lại (Cursor rule + db-guard) vẫn bảo vệ, đúng thiết kế 3 lớp.
+**5. Rollback:** xoá field `plugins` khỏi `biome.json` — Cursor rule `test-data-safety.mdc` vẫn bảo vệ.
 
 ## Ghi chú
 
 Nếu GritQL của bản Biome đang dùng chưa match được empty-object argument đủ tin cậy, chấp nhận
-tạm dừng lớp lint này — 2 lớp còn lại (Cursor rule + db-guard runtime) vẫn bảo vệ. Không hạ chuẩn
-db-guard để bù.
+tạm dừng lớp lint này — Cursor rule `test-data-safety.mdc` vẫn bảo vệ.

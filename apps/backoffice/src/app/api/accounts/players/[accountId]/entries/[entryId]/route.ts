@@ -1,5 +1,6 @@
 import { GetPlayerEntryDetailUseCase } from "@megawin/game-core-application/use-cases/reports";
 import { CompanyRole } from "@megawin/identity/entities";
+import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 
@@ -17,11 +18,17 @@ const getPlayerEntryDetailUseCase = new GetPlayerEntryDetailUseCase();
  * Settled: có payout (nếu win), result, outcome — dialog hiển thị đầy đủ.
  * Voided: có voidInfo — dialog hiển thị thông tin hoàn trả.
  */
+
+const paramsSchema = z.object({
+  accountId: z.string().min(1),
+  entryId: z.string().min(1),
+});
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .query(playerEntryDetailQuerySchema)
+  .params(paramsSchema)
   .handler(async ({ query, params }) => {
-    const { entryId } = params as { accountId: string; entryId: string };
+    const { entryId } = params;
     return getPlayerEntryDetailUseCase.run({
       game: query.game,
       entryId,

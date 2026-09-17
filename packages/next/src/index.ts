@@ -8,11 +8,5 @@
  */
 
 // Shared types – safe for both server and client
-export type {
-  ApiErrorDetail,
-  ApiErrorResponse,
-  ApiResponse,
-  ApiResponseMeta,
-  ApiSuccessResponse,
-} from "./types";
+export type { ApiErrorDetail, ApiErrorResponse, ApiResponse, ApiResponseMeta, ApiSuccessResponse } from "./types";
 export { ApiClientError, isApiError, isApiSuccess } from "./types";

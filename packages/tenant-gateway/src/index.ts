@@ -28,12 +28,7 @@ export type { TenantGatewayClient } from "./client";
 export { TxLoggingPolicy } from "./entities/enums";
 // ── Main facade — cached, self-contained ─────────────────────────────────────
 export { tenantGateway } from "./gateway";
-export type {
-  CallbackErrorInfo,
-  CallbackResponse,
-  TenantGatewayConfig,
-  TransactionStatusErrorCode,
-} from "./shared";
+export type { CallbackErrorInfo, CallbackResponse, TenantGatewayConfig, TransactionStatusErrorCode } from "./shared";
 // ── Shared types — CallbackResponse envelope, error codes ────────────────────
 export { BalanceErrorCode, TransactionErrorCode } from "./shared";
 // ── Transaction types ────────────────────────────────────────────────────────

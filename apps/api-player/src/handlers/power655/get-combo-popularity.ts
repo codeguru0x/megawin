@@ -10,8 +10,8 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
-import { power655MainNumberSchema } from "@megawin/game-power655/schemas";
 import { GetComboPopularityPlayerUseCase } from "@megawin/game-power655-application/use-cases/player";
+import { power655MainNumberSchema } from "@megawin/game-power655/schemas";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
 import { multiValueQuery } from "@megawin/shared/validation";
 import { z } from "zod";

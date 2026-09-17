@@ -16,9 +16,8 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { SyncSystemOutstandingUseCase } from "@megawin/game-core-application/use-cases";
+import { DrawStatus, GameProduct, type UnfinishedDrawStatus } from "@megawin/game-core/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";

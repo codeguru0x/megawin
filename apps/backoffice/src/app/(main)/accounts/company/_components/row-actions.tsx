@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/lib/auth-client";
 
-import { SetPasswordDialog } from "../../_shared/set-password-dialog";
 import type { CompanyAccount } from "../_lib/schema";
+import { SetPasswordDialog } from "../../_shared/set-password-dialog";
 
 export function AccountRowActions({ account }: { account: CompanyAccount }) {
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -36,7 +36,7 @@ export function AccountRowActions({ account }: { account: CompanyAccount }) {
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="size-8 text-muted-foreground data-[state=open]:bg-muted"
+            className="text-muted-foreground data-[state=open]:bg-muted size-8"
             size="icon"
             aria-label="Mở menu thao tác"
           >

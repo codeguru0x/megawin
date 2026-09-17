@@ -3,9 +3,13 @@
 Chuẩn hoá hạ tầng test Vitest cho toàn monorepo MegaWin. Tài liệu này là điểm vào (index)
 cho toàn bộ plan; đọc trước khi thực thi bất kỳ sub-plan nào.
 
-> Ràng buộc SỐNG CÒN: **DB test dùng CHUNG với staging website**. Mọi test integration chạy
-> trên DB thật của staging. Do đó KHÔNG được có bất kỳ lệnh ghi/xoá không-scope nào trong test.
-> Đây là lý do tồn tại của `db-guard` và Cursor rule `test-data-safety.mdc`.
+> **SUPERSEDED (17/09/2026):** Runtime connection guard đã retire — integration test dùng
+> Testcontainers (`testcontainers-setup/`). Không còn cơ chế mở khóa URI staging. Xem
+> `.cursor/rules/test-data-safety.mdc` + `.cursor/plans/testcontainers-setup/`.
+
+> **Cập nhật:** Integration test chạy trên Mongo/Redis **Testcontainers ephemeral** (không
+> còn staging chung). Cursor rule `test-data-safety.mdc` vẫn bắt buộc (chống race giữa file
+> test song song cùng collection).
 
 ---
 
@@ -29,7 +33,7 @@ cho toàn bộ plan; đọc trước khi thực thi bất kỳ sub-plan nào.
 ### Nguồn chân lý dùng chung hiện có
 
 - `@megawin/vitest-config` — [tooling/vitest-config/src/index.ts](../../../tooling/vitest-config/src/index.ts) (hiện chỉ export `sharedConfig` trần).
-- `db-guard` — [packages/game-power655-application/test/setup-db-guard.ts](../../../packages/game-power655-application/test/setup-db-guard.ts) (copy-paste per-package, cần tập trung).
+- Testcontainers global-setup — `@megawin/vitest-config/global-setup-mongo` / `global-setup-redis` (xem `testcontainers-setup/`).
 - Root workspace — [vitest.workspace.ts](../../../vitest.workspace.ts) (liệt kê 12 config).
 - Turbo task — [turbo.json](../../../turbo.json) task `test` depend `^build` + `@megawin/vitest-config#build`.
 
@@ -65,7 +69,7 @@ flowchart LR
     d1[apps/worker-*]
   end
   NA --> pNode[preset nodeConfig]
-  NB --> pInteg[preset integrationConfig + db-guard]
+  NB --> pInteg[preset integrationConfig + Testcontainers]
   NC --> pJsdom[preset jsdomConfig + RTL]
   ND --> pInteg
 ```
@@ -95,23 +99,24 @@ Library + jsdom (đã chốt với người dùng). Ưu tiên test pure logic (`
 ### Nhóm D — Workers (DÙNG DB)
 
 `apps/worker-*` (`worker-power655`, `worker-mega645`, ...). Handler Step Functions gần như 100%
-passthrough gọi use-case tầng application → chạm Mongo staging. Vì vậy nhóm D dùng
-**`integrationConfig` + `db-guard`** (giống nhóm B), test smoke/integration qua handler xuống
-use-case. KHÔNG dùng nodeConfig pure. Chi tiết: [p1-02](p1-02-group-d-workers.plan.md).
+passthrough gọi use-case tầng application. Nhóm D dùng **`integrationConfig`** (giống nhóm B)
+khi smoke chạm DB qua Testcontainers; phần lớn worker hiện chỉ có unit glue. Chi tiết:
+[p1-02](p1-02-group-d-workers.plan.md).
 
 ---
 
 ## 3. Thứ tự thực thi (ưu tiên)
 
-1. **p0-01** — Tập trung `@megawin/vitest-config` + `db-guard` (nền tảng cho mọi nhóm).
-2. **p0-03** — Nhóm B (rủi ro DB staging cao nhất — cần db-guard trước tiên).
-3. **p1-02** — Nhóm D workers (cũng dùng DB, chung db-guard với nhóm B).
+1. **p0-01** — Tập trung `@megawin/vitest-config` (3 preset) — nền tảng cho mọi nhóm.
+2. **p0-03** — Nhóm B application/infra (integration qua Testcontainers sau này).
+3. **p1-02** — Nhóm D workers.
 4. **p0-02** — Nhóm A (pure, nhanh, không rủi ro).
 5. **p1-01** — Nhóm C (UI/Next.js).
 
 > Lớp chặn lint GritQL (cấm lệnh xoá không-scope trong test) KHÔNG thuộc plan này nữa — đã chuyển
-> sang [.cursor/plans/biome-monorepo-migration/p2-01-test-data-safety-guard.plan.md](../biome-monorepo-migration/p2-01-test-data-safety-guard.plan.md)
-> (làm sau khi Biome migration xong). Hai lớp còn lại (Cursor rule + db-guard runtime) thuộc plan này.
+> sang [.cursor/plans/biome-monorepo-migration/p2-01-test-data-safety-guard.plan.md](../biome-monorepo-migration/p2-01-test-data-safety-guard.plan.md).
+> Cursor rule `test-data-safety.mdc` vẫn thuộc plan này; runtime connection guard đã retire
+> (xem `testcontainers-setup/`).
 
 ---
 
@@ -128,3 +133,10 @@ Rule này áp dụng cho mọi file test bất kể nhóm.
 
 - **Đợt này (đã chốt):** plan docs (toàn bộ file trong thư mục này) + Cursor rule `test-data-safety.mdc`.
 - **Đợt sau:** scaffold `vitest.config.ts` + `test/` + sample test theo từng sub-plan.
+
+## 6. Cập nhật 17/09/2026 — convention thư mục theo loại test
+
+Quyết định mới, **supersede** cách gom phẳng `test/` mô tả ở mục 2-4 phía trên (không rewrite các
+mục đó — giữ nguyên record lịch sử tại thời điểm viết). Từ nay mọi package/app chia `test/` thành
+subfolder `unit/` / `integration/` / `e2e/` theo loại — chi tiết, bằng chứng, heuristic phân loại,
+và thứ tự migrate ở [p2-01](p2-01-test-type-folder-convention.plan.md).

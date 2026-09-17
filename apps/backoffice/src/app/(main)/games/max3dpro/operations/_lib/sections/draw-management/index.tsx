@@ -14,7 +14,6 @@
  * Max 3D Pro: không có Jackpot, 8 PrizeTier (bao gồm specialSub),
  * kết quả gồm 20 bộ ba số.
  */
-
 import { useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -38,8 +37,8 @@ import { useCloseSales, useDrawDetail, useOpenSales, useTriggerResettle, useTrig
 import {
   EditScheduleAction,
   PublishResultAction,
-  type PublishResultCurrentValues,
   VoidDrawAction,
+  type PublishResultCurrentValues,
 } from "./draw-actions";
 import { DrawCommandCenter } from "./draw-command-center";
 
@@ -69,7 +68,9 @@ export function DrawManagementSection() {
 
   const result: DrawResult | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier, t]));
     const tiers = Object.values(PrizeTier).map((tier) => {
@@ -109,7 +110,9 @@ export function DrawManagementSection() {
 
   const currentResult: PublishResultCurrentValues | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     const r = d.result;
     return {
       special: r.special as [string, string],
@@ -127,7 +130,9 @@ export function DrawManagementSection() {
 
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.voidInfo) return undefined;
+    if (!d?.voidInfo) {
+      return undefined;
+    }
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
@@ -137,7 +142,9 @@ export function DrawManagementSection() {
     };
   })();
 
-  if (!draw) return null;
+  if (!draw) {
+    return null;
+  }
 
   return (
     <>
@@ -246,7 +253,7 @@ export function DrawManagementSection() {
             <AlertDialogAction
               onClick={() => triggerResettle.mutate({ drawId: effectiveDrawId })}
               disabled={triggerResettle.isPending}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
+              className="bg-warning hover:bg-warning text-white"
             >
               Xác nhận kết sổ lại
             </AlertDialogAction>

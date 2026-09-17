@@ -1,4 +1,4 @@
-import { type TenantEntity, type TenantOption, TenantStatus } from "@megawin/identity/entities";
+import { TenantStatus, type TenantEntity, type TenantOption } from "@megawin/identity/entities";
 
 import { TenantMapper } from "../mappers/tenant-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";
@@ -102,9 +102,15 @@ export class TenantRepository extends IdentityBaseRepo<TenantEntity, TenantMappe
   ): Promise<TenantEntity | null> {
     const $set: Record<string, unknown> = { updatedAt: new Date() };
 
-    if (fields.displayName !== undefined) $set.displayName = fields.displayName;
-    if (fields.description !== undefined) $set.description = fields.description;
-    if (fields.callbackBaseUrl !== undefined) $set.callbackBaseUrl = fields.callbackBaseUrl;
+    if (fields.displayName !== undefined) {
+      $set.displayName = fields.displayName;
+    }
+    if (fields.description !== undefined) {
+      $set.description = fields.description;
+    }
+    if (fields.callbackBaseUrl !== undefined) {
+      $set.callbackBaseUrl = fields.callbackBaseUrl;
+    }
 
     return await this.findOneAndUpdate({ tenantId }, { $set }, { returnDocument: "after" });
   }

@@ -18,7 +18,9 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
   const [activeId, setActiveId] = useState<string>("");
 
   useEffect(() => {
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -32,12 +34,16 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
 
     for (const item of items) {
       const el = document.getElementById(item.id);
-      if (el) observer.observe(el);
+      if (el) {
+        observer.observe(el);
+      }
     }
     return () => observer.disconnect();
   }, [items]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <div>

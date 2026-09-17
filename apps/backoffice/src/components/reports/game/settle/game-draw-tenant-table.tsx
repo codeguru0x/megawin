@@ -62,9 +62,9 @@ export function GameDrawTenantTable({ drawId, rows, onRowClick, showLineCount = 
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Building2 className="size-4 text-muted-foreground" />
+          <Building2 className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Đại lý — {drawId}</CardTitle>
         </div>
         <CardDescription className="text-xs">{rows.length} đại lý</CardDescription>
@@ -91,7 +91,7 @@ export function GameDrawTenantTable({ drawId, rows, onRowClick, showLineCount = 
                 return (
                   <TableRow
                     key={row.tenantId}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(row.tenantId)}
                   >
                     <TableCell className="text-sm font-medium">{row.tenantId}</TableCell>
@@ -118,31 +118,31 @@ export function GameDrawTenantTable({ drawId, rows, onRowClick, showLineCount = 
             <TableFooter>
               <TableRow>
                 <TableCell className="text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold text-muted-foreground" />
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-muted-foreground text-right text-sm font-semibold tabular-nums" />
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.entryCount)}
                 </TableCell>
                 {showLineCount && (
-                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  <TableCell className="text-right text-sm font-semibold tabular-nums">
                     {formatNumber(totals.lineCount)}
                   </TableCell>
                 )}
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalStake)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalPayout)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   <PayoutRatioCell
                     ratio={totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0}
                     className="font-semibold"
                   />
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.ggr)}
                 </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                <TableCell className="text-right text-sm font-semibold tabular-nums">
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
               </TableRow>

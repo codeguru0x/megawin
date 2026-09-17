@@ -121,7 +121,7 @@ function deriveSaleGate(status: DrawStatus, nowMs: number, closeAtMs: number): S
     case DrawStatus.Settled:
       // Phòng thủ: về lý thuyết không xảy ra khi `now < closeAt` (pipeline đã đi xa hơn cả lúc
       // còn nhận cược) — Hub chỉ query `DRAW_UNFINISHED_STATUSES` nên `Settled` không lọt vào,
-      // nhưng exhaustive switch trên `DrawStatus` (Biome `useExhaustiveSwitchCases`) buộc handle
+      // nhưng exhaustive switch trên `DrawStatus` (Oxlint `typescript/switch-exhaustiveness-check`) buộc handle
       // đủ 8 giá trị. Coi như "đã ngắt bán" để không hiện sai action Mở bán.
       return SaleGate.Halted;
     default: {

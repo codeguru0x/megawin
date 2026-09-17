@@ -19,7 +19,7 @@ function ReviewPageInner() {
           <ClipboardCheck className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="font-semibold text-foreground text-lg tracking-tight">Hàng đợi duyệt</h1>
+          <h1 className="text-foreground text-lg font-semibold tracking-tight">Hàng đợi duyệt</h1>
           <p className="text-muted-foreground text-xs">Các kỳ có nguồn lệch nhau — cần người xác nhận kết quả.</p>
         </div>
       </div>

@@ -17,11 +17,11 @@
  * Exit code != 0 nếu lệch → dùng trong CI chặn merge tài liệu lệch registry.
  */
 
-import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
-
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative } from "node:path";
+
+import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
 
 const require = createRequire(import.meta.url);
 

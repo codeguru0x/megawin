@@ -6,11 +6,11 @@
  * thẳng vào `observations` + `consensus` (bypass `ConsensusTickUseCase` — script tự quyết
  * `Agreed`, xem `ConsensusRepository.bulkUpsertPublished`).
  *
- * ⚠️ BẮT BUỘC set `RESULTFEED_IMPORT_MONGODB_URI` (env RIÊNG, xem `.env.test.example §3.1.1`)
- * — KHÔNG dùng chung `MONGODB_URI` của vitest (bị `setup-db-guard.ts` ép local-only). Script
- * fail-fast nếu thiếu, sau đó gán `process.env.MONGODB_URI` TRƯỚC khi gọi bất kỳ repo nào —
- * mọi repo (`ObservationRepository`, …) kế thừa `ResultFeedRepo` đọc key `MONGODB_URI` mặc
- * định, không cần sửa gì ở `@megawin/data`.
+ * ⚠️ BẮT BUỘC set `RESULTFEED_IMPORT_MONGODB_URI` (env RIÊNG)
+ * — KHÔNG dùng chung `MONGODB_URI` của vitest (vitest giờ lấy URI từ Testcontainers
+ * ephemeral). Script fail-fast nếu thiếu, sau đó gán `process.env.MONGODB_URI` TRƯỚC khi gọi
+ * bất kỳ repo nào — mọi repo (`ObservationRepository`, …) kế thừa `ResultFeedRepo` đọc key
+ * `MONGODB_URI` mặc định, không cần sửa gì ở `@megawin/data`.
  *
  * IDEMPOTENT: chạy lại nhiều lần trên CÙNG file (kể cả sau khi sửa data lỗi, hoặc đổi
  * `RESULTFEED_IMPORT_MONGODB_URI` từ DB test sang production) an toàn — mọi write đều là
@@ -24,7 +24,13 @@
  * khác ngoài fixture test).
  */
 
-import type { ConsensusAgreement, ObservationDoc } from "@megawin/resultfeed/entities";
+import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
+import { appendFile, mkdir } from "node:fs/promises";
+import path from "node:path";
+import { createInterface } from "node:readline";
+import { gzipSync } from "node:zlib";
+
 import {
   ConflictPolicy,
   IntrinsicState,
@@ -33,6 +39,8 @@ import {
   ResultFeedSourceId,
   SourceRole,
   SubmissionState,
+  type ConsensusAgreement,
+  type ObservationDoc,
 } from "@megawin/resultfeed/entities";
 import { canonicalizeNumbers, checkIntrinsic, computeDisplayHash, computePayoutHash } from "@megawin/resultfeed/rules";
 import { Binary } from "mongodb";
@@ -41,17 +49,9 @@ import { ConsensusRepository } from "../infras/repos/consensus-repo";
 import { ObservationRepository } from "../infras/repos/observation-repo";
 import { SourceRepository } from "../infras/repos/source-repo";
 import { SubmissionRepository } from "../infras/repos/submission-repo";
-import type { Max3dRawRow } from "../sources/historical-import/parse-max3d";
-import { parseMax3dRow } from "../sources/historical-import/parse-max3d";
-import type { SimpleNumbersRawRow } from "../sources/historical-import/parse-simple-numbers";
-import { parseSimpleNumbersRow } from "../sources/historical-import/parse-simple-numbers";
+import { parseMax3dRow, type Max3dRawRow } from "../sources/historical-import/parse-max3d";
+import { parseSimpleNumbersRow, type SimpleNumbersRawRow } from "../sources/historical-import/parse-simple-numbers";
 import { parsedObservationSchema } from "../sources/types";
-import { createHash } from "node:crypto";
-import { createReadStream } from "node:fs";
-import { appendFile, mkdir } from "node:fs/promises";
-import path from "node:path";
-import { createInterface } from "node:readline";
-import { gzipSync } from "node:zlib";
 
 // ── Load .env.test.local (đọc thôi, KHÔNG tạo/ghi đè — quy tắc no-env-file-modification) ──
 // Script chạy độc lập qua `tsx`, KHÔNG đi qua `vite.loadEnv()` như `vitest.config.ts` — phải

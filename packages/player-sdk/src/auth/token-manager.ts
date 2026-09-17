@@ -44,13 +44,15 @@ export class SessionStorageTokenStorage implements TokenStorage {
   /**
    * @param key - Key lưu trong sessionStorage. Mặc định: `"mw_tokens"`
    */
-  constructor(key = SESSION_STORAGE_KEY) {
+  constructor(key: string = SESSION_STORAGE_KEY) {
     this.key = key;
   }
 
   getTokens(): AuthTokens | null {
     const raw = sessionStorage.getItem(this.key);
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     try {
       return JSON.parse(raw) as AuthTokens;
     } catch {
@@ -136,7 +138,9 @@ export class TokenManager {
    */
   async getIdToken(): Promise<string | null> {
     const tokens = await this.storage.getTokens();
-    if (!tokens) return null;
+    if (!tokens) {
+      return null;
+    }
 
     if (!this.isExpired(tokens)) {
       // idToken là bắt buộc — không fallback sang accessToken vì access token
@@ -145,7 +149,9 @@ export class TokenManager {
     }
 
     const refreshed = await this.refreshIfNeeded(tokens);
-    if (!refreshed) return null;
+    if (!refreshed) {
+      return null;
+    }
     return refreshed.idToken ?? null;
   }
 
@@ -171,7 +177,9 @@ export class TokenManager {
    * dù nhiều request đồng thời trigger.
    */
   private async refreshIfNeeded(tokens: AuthTokens): Promise<AuthTokens | null> {
-    if (!this.refreshFn) return null;
+    if (!this.refreshFn) {
+      return null;
+    }
 
     if (this.refreshPromise !== null) {
       return this.refreshPromise;

@@ -53,7 +53,9 @@ function expandMainCover4(sel: BoardSelection): LineValue[] {
   const lines: LineValue[] = [];
 
   for (const n of ALL_MAIN_NUMBERS) {
-    if (chosen.has(n)) continue;
+    if (chosen.has(n)) {
+      continue;
+    }
     const mainNums = [...sel.mainNumbers, n];
     lines.push({ main: mainNums.sort(), special });
   }

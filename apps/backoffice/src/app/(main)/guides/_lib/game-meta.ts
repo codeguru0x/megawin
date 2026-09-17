@@ -1,5 +1,4 @@
-import type { LucideIcon } from "lucide-react";
-import { ChessBishop, ChessKing, ChessKnight, ChessPawn, ChessQueen, ChessRook } from "lucide-react";
+import { ChessBishop, ChessKing, ChessKnight, ChessPawn, ChessQueen, ChessRook, type LucideIcon } from "lucide-react";
 
 /**
  * Metadata hiển thị cho từng game trong knowledge base: icon + class màu brand.

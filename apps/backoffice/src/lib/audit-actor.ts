@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { AuditActorType } from "@megawin/audit/entities";
 import type { AuditActor } from "@megawin/audit/logger";
-import { type AccountRole, AccountType } from "@megawin/identity/entities";
+import { AccountType, type AccountRole } from "@megawin/identity/entities";
 import type { RouteSession } from "@megawin/next/server";
 import { extractClientIpFromWebHeaders, extractHttpContextFromWebHeaders } from "@megawin/shared/utils/ip";
 
@@ -36,7 +36,9 @@ interface AuditActorSource {
 
 /** Parse roles về mảng — chấp nhận array (RouteSession) hoặc CSV (Cognito claim). */
 function normalizeRoles(roles: readonly string[] | string | undefined): string[] {
-  if (Array.isArray(roles)) return [...roles];
+  if (Array.isArray(roles)) {
+    return [...roles];
+  }
   if (typeof roles === "string" && roles.length > 0) {
     return roles.split(",").map((s) => s.trim());
   }

@@ -42,8 +42,12 @@ export class AppException extends Error {
   /** Chuyển thành AppError object (dùng trong response / serialize). */
   toError(): AppError {
     const error: AppError = { code: this.code, message: this.message };
-    if (this.details !== undefined) error.details = this.details;
-    if (this.statusCode !== undefined) error.statusCode = this.statusCode;
+    if (this.details !== undefined) {
+      error.details = this.details;
+    }
+    if (this.statusCode !== undefined) {
+      error.statusCode = this.statusCode;
+    }
     return error;
   }
 

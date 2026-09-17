@@ -37,8 +37,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { KenoDrawComboStatsDoc, KenoDrawComboStatsEntity } from "@megawin/game-keno/entities";
-import { KenoCollections } from "@megawin/game-keno/entities";
+import {
+  KenoCollections,
+  type KenoDrawComboStatsDoc,
+  type KenoDrawComboStatsEntity,
+} from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { ComboStatsMapper } from "../mappers/combo-stats-mapper";
@@ -106,7 +109,9 @@ export class ComboStatsRepository extends BaseRepo<KenoDrawComboStatsEntity, Com
    * @param batchMaxId - ObjectId hex entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: ComboStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = deltas.map((delta) => ({
@@ -150,7 +155,9 @@ export class ComboStatsRepository extends BaseRepo<KenoDrawComboStatsEntity, Com
    *   `ComboAccountsRepository.countAccountsByCombo`).
    */
   async syncAccountCounts(drawId: string, countsByCombo: Map<string, number>): Promise<void> {
-    if (countsByCombo.size === 0) return;
+    if (countsByCombo.size === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = [];
     for (const [comboKey, accounts] of countsByCombo) {

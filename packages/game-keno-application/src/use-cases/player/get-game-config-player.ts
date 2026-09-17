@@ -92,7 +92,9 @@ function mapBasicPrizes(prizes: BasicPrizes): PlayerBasicPrizes {
   const result: PlayerBasicPrizes = {};
   for (const [pickKey, matchMap] of Object.entries(prizes)) {
     const pickCount = parseInt(pickKey.replace("pick", ""), 10);
-    if (isNaN(pickCount)) continue;
+    if (isNaN(pickCount)) {
+      continue;
+    }
     result[pickCount] = {};
     for (const [matchStr, amount] of Object.entries(matchMap)) {
       result[pickCount][Number(matchStr)] = amount;

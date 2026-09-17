@@ -35,16 +35,17 @@
  * Exit code != 0 nếu vi phạm → dùng trong CI.
  */
 
+import { dirname, join } from "node:path";
+
 import {
   NAV_REGISTRY,
-  type NavPageDefinition,
   NavParamKind,
-  type NavSegmentDef,
   resolveEntryParams,
+  type NavPageDefinition,
+  type NavSegmentDef,
 } from "@/lib/nav-registry";
 
 import { collectRouteConsumers, type RouteInfo } from "./_lib/route-query-collector";
-import { dirname, join } from "node:path";
 
 /** `src/scripts/check-nav-registry.ts` -> `src`. */
 const srcRoot = dirname(dirname(new URL(import.meta.url).pathname));

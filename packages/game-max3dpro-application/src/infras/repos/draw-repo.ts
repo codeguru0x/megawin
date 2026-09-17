@@ -1,7 +1,16 @@
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DRAW_COMPLETED_STATUSES, DRAW_UNFINISHED_STATUSES, DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc, DrawEntity, DrawVietlottRef, Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
+import {
+  DRAW_COMPLETED_STATUSES,
+  DRAW_UNFINISHED_STATUSES,
+  DrawStatus,
+  type UnfinishedDrawStatus,
+} from "@megawin/game-core/entities";
+import {
+  Max3dproCollections,
+  type DrawDoc,
+  type DrawEntity,
+  type DrawVietlottRef,
+  type Max3dproDrawResult,
+} from "@megawin/game-max3dpro/entities";
 import { AppException } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 import type { AnyBulkWriteOperation, Document, FindOptions } from "mongodb";
@@ -121,7 +130,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /** Lấy nhiều draws theo danh sách drawId, sort by drawDate asc. */
   async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
-    if (drawIds.length === 0) return [];
+    if (drawIds.length === 0) {
+      return [];
+    }
     return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
@@ -172,11 +183,17 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     size: number,
   ): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {};
-    if (filter.status) query.status = filter.status;
+    if (filter.status) {
+      query.status = filter.status;
+    }
     if (filter.fromDate || filter.toDate) {
       const dateRange: Record<string, unknown> = {};
-      if (filter.fromDate) dateRange.$gte = filter.fromDate;
-      if (filter.toDate) dateRange.$lte = filter.toDate;
+      if (filter.fromDate) {
+        dateRange.$gte = filter.fromDate;
+      }
+      if (filter.toDate) {
+        dateRange.$lte = filter.toDate;
+      }
       query.drawDate = dateRange;
     }
     return await this.paging(query, page, size, {
@@ -190,7 +207,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(DrawStatus.SalesOpen)) return null;
+    if (!allowed?.has(DrawStatus.SalesOpen)) {
+      return null;
+    }
 
     const $set: Record<string, unknown> = {
       status: DrawStatus.SalesOpen,
@@ -218,7 +237,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async closeSales(drawId: string, salesCloseAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
-    if (!allowed?.has(DrawStatus.SalesClosed)) return null;
+    if (!allowed?.has(DrawStatus.SalesClosed)) {
+      return null;
+    }
 
     const $set: Record<string, unknown> = {
       status: DrawStatus.SalesClosed,
@@ -409,7 +430,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async triggerSettle(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
-    if (!allowed?.has(DrawStatus.Settling)) return null;
+    if (!allowed?.has(DrawStatus.Settling)) {
+      return null;
+    }
 
     return await this.findOneAndUpdate(
       {
@@ -434,7 +457,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async settleComplete(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
-    if (!allowed?.has(DrawStatus.Settled)) return null;
+    if (!allowed?.has(DrawStatus.Settled)) {
+      return null;
+    }
 
     const now = new Date();
     return await this.findOneAndUpdate(
@@ -461,7 +486,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async voidDraw(drawId: string, fromStatus: string, voidInfo: VoidInfo): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(DrawStatus.Voiding)) return null;
+    if (!allowed?.has(DrawStatus.Voiding)) {
+      return null;
+    }
 
     return await this.findOneAndUpdate(
       {
@@ -487,7 +514,9 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async voidComplete(drawId: string, voidSummary: DrawDocBaseVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
-    if (!allowed?.has(DrawStatus.Void)) return null;
+    if (!allowed?.has(DrawStatus.Void)) {
+      return null;
+    }
 
     const now = new Date();
     return await this.findOneAndUpdate(

@@ -10,9 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import { usePeriodLookupFilters } from "../_lib/use-filters";
 import { PeriodDetailContent } from "../../_components/period-detail-content";
 import { RESULTFEED_GAME_LABELS } from "../../_lib/labels";
-import { usePeriodLookupFilters } from "../_lib/use-filters";
 
 /** Trang "Tra cứu kỳ" — nhập game + mã kỳ, hiển thị chi tiết view-only (không action ghi). */
 export function PeriodLookupContent() {
@@ -33,7 +33,7 @@ export function PeriodLookupContent() {
       <Card>
         <CardContent className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1.5">
-            <span className="font-medium text-muted-foreground text-xs">Game</span>
+            <span className="text-muted-foreground text-xs font-medium">Game</span>
             <Select value={gameInput} onValueChange={(v) => setGameInput(v as ResultFeedGameKey)}>
               <SelectTrigger size="sm" className="h-9 w-44 text-sm">
                 <SelectValue placeholder="Chọn game" />
@@ -49,7 +49,7 @@ export function PeriodLookupContent() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="font-medium text-muted-foreground text-xs">Mã kỳ (drawPeriod)</span>
+            <span className="text-muted-foreground text-xs font-medium">Mã kỳ (drawPeriod)</span>
             <Input
               value={periodInput}
               onChange={(e) => setPeriodInput(e.target.value)}

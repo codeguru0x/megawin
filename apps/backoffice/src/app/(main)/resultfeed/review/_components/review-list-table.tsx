@@ -37,7 +37,7 @@ export function ReviewListTable({
 }: ReviewListTableProps) {
   if (isLoading) {
     return (
-      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải hàng đợi…</span>
       </div>
@@ -47,8 +47,8 @@ export function ReviewListTable({
   if (rows.length === 0) {
     return (
       <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
-        <Inbox className="size-8 text-muted-foreground/40" />
-        <p className="font-medium text-muted-foreground text-sm">Không có kỳ nào đang chờ duyệt</p>
+        <Inbox className="text-muted-foreground/40 size-8" />
+        <p className="text-muted-foreground text-sm font-medium">Không có kỳ nào đang chờ duyệt</p>
         <p className="text-muted-foreground text-xs">Mọi kỳ lệch nguồn sẽ hiện ở đây.</p>
       </div>
     );

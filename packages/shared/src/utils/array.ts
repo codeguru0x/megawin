@@ -57,7 +57,9 @@ export function isUniqueBy<T, K>(arr: readonly T[], keyFn: (item: T) => K): bool
   const seen = new Set<K>();
   for (const item of arr) {
     const key = keyFn(item);
-    if (seen.has(key)) return false;
+    if (seen.has(key)) {
+      return false;
+    }
     seen.add(key);
   }
   return true;

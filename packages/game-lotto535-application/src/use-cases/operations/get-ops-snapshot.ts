@@ -104,17 +104,15 @@ export class GetOpsSnapshotUseCase extends UseCase<GetOpsSnapshotInput, GetOpsSn
       // Tách 2 mảng theo `kind` ngay tại use-case — UI vẽ 2 lưới không phải tự phân loại.
       mainNumberStats: numberStats.filter((n) => n.kind === Lotto535NumberKind.Main),
       specialNumberStats: numberStats.filter((n) => n.kind === Lotto535NumberKind.Special),
-      topCombos: topCombos.map(
-        (c): Lotto535TopCombo => ({
-          comboKey: c.comboKey,
-          playType: c.playType,
-          mainNumbers: c.mainNumbers,
-          specialNumbers: c.specialNumbers,
-          sets: c.sets,
-          accounts: c.accountCount,
-          amount: c.amount,
-        }),
-      ),
+      topCombos: topCombos.map((c): Lotto535TopCombo => ({
+        comboKey: c.comboKey,
+        playType: c.playType,
+        mainNumbers: c.mainNumbers,
+        specialNumbers: c.specialNumbers,
+        sets: c.sets,
+        accounts: c.accountCount,
+        amount: c.amount,
+      })),
       topAccounts: topAccounts.map((a) => ({
         accountId: a.accountId,
         username: a.username,

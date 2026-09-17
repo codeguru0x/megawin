@@ -11,7 +11,7 @@ pnpm install
 ## Development
 
 ```bash
-pnpm dev            # Watch mode (tsup rebuild on change)
+pnpm dev            # Watch mode (tsdown rebuild on change)
 pnpm check-types    # Type check
 pnpm test           # Chạy tests
 pnpm test:watch     # Watch mode tests
@@ -226,7 +226,7 @@ src/apis/power655.ts
 
 ### 3. Thêm vào `client.ts` facade
 
-### 4. Thêm vào `tsup.config.ts` entry
+### 4. Thêm vào `tsdown.config.ts` entry (config library đầu tiên)
 
 ```typescript
 entry: {

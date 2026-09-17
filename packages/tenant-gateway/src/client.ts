@@ -49,7 +49,7 @@
 
 import { createHttpClient, type HttpClient } from "@megawin/http-client";
 
-import { type BalanceApi, createBalanceApi } from "./balance";
+import { createBalanceApi, type BalanceApi } from "./balance";
 import type { TenantGatewayConfig } from "./shared/types";
 import { createTransactionApi, type TransactionApi } from "./transaction";
 

@@ -20,9 +20,13 @@ function TenantSummaryTable() {
   const { from, to, navigateToTenantDrills } = useLotto535ReportFilters();
   const { data, isLoading, error } = useLotto535TenantList(from, to);
 
-  if (isLoading) return <TableSkeleton rows={6} />;
-  if (error) return <ErrorCard />;
-  if (!data?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={6} />;
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.length) {
     return (
       <EmptyCard
         icon="building"
@@ -30,6 +34,7 @@ function TenantSummaryTable() {
         description="Không tìm thấy dữ liệu đại lý trong khoảng thời gian đã chọn."
       />
     );
+  }
 
   const rows = data.map((r) => ({
     ...r,
@@ -45,10 +50,15 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
   const { from, to, navigateToDrawInTenant } = useLotto535ReportFilters();
   const { data, isLoading, error } = useLotto535TenantDraws(tenantId, from, to);
 
-  if (isLoading) return <TableSkeleton rows={8} />;
-  if (error) return <ErrorCard />;
-  if (!data?.data.length)
+  if (isLoading) {
+    return <TableSkeleton rows={8} />;
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.data.length) {
     return <EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có kỳ quay nào." />;
+  }
 
   const rows = data.data.map((r) => ({
     ...r,
@@ -72,9 +82,12 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
   const { navigateToEntriesFromTenant } = useLotto535ReportFilters();
   const { data: players, isLoading } = useLotto535Players(drawId, tenantId);
 
-  if (isLoading) return <TableSkeleton rows={5} />;
-  if (!players?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+  if (!players?.length) {
     return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
+  }
 
   const rows = players.map((p) => ({
     accountId: p.accountId,

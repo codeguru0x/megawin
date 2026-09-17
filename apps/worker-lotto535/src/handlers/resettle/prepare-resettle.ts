@@ -1,6 +1,6 @@
 import {
-  type PrepareResettleInput,
   PrepareResettleUseCase,
+  type PrepareResettleInput,
 } from "@megawin/game-lotto535-application/use-cases/resettle";
 
 const useCase = new PrepareResettleUseCase();

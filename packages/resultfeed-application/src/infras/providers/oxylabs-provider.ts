@@ -18,7 +18,7 @@
 import { withRetry } from "@megawin/http-client";
 import { ResultFeedProviderId } from "@megawin/resultfeed/entities";
 import { ApiClientError } from "@megawin/shared/api-types";
-import { type Dispatcher, ProxyAgent, fetch as undiciFetch } from "undici";
+import { ProxyAgent, fetch as undiciFetch, type Dispatcher } from "undici";
 
 import type { FetchProvider, FetchRequest, FetchResult } from "./types";
 

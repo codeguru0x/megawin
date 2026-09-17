@@ -8,8 +8,7 @@
  * @output ApplyPayoutCapsResult
  */
 
-import type { SettleContext } from "@megawin/game-keno-application/use-cases/settle";
-import { ApplyPayoutCapsUseCase } from "@megawin/game-keno-application/use-cases/settle";
+import { ApplyPayoutCapsUseCase, type SettleContext } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new ApplyPayoutCapsUseCase();
 

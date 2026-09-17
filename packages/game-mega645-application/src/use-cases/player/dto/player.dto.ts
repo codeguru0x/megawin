@@ -10,7 +10,6 @@ import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary } from "@mega
 
 export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 
-import { PrizeTier } from "@megawin/game-mega645/entities/enums";
 // ─── Get Current Draw (Player) ───
 
 export interface PlayerGetCurrentDrawOutput {

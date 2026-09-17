@@ -1,7 +1,6 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import { useCallback } from "react";
+import { useCallback, type ComponentProps } from "react";
 
 import type { UIMessage } from "ai";
 import { ArrowDownIcon, DownloadIcon } from "lucide-react";
@@ -59,7 +58,7 @@ export const ConversationEmptyState = ({
       <>
         {icon && <div className="text-muted-foreground">{icon}</div>}
         <div className="space-y-1">
-          <h3 className="font-semibold text-base">{title}</h3>
+          <h3 className="text-base font-semibold">{title}</h3>
           {description && <p className="text-muted-foreground text-sm">{description}</p>}
         </div>
       </>
@@ -80,7 +79,7 @@ export const ConversationScrollButton = ({ className, ...props }: ConversationSc
     !isAtBottom && (
       <Button
         className={cn(
-          "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full dark:bg-background dark:hover:bg-muted",
+          "dark:bg-background hover:bg-muted absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full",
           className,
         )}
         onClick={handleScrollToBottom}
@@ -140,7 +139,7 @@ export const ConversationDownload = ({
 
   return (
     <Button
-      className={cn("absolute top-4 right-4 rounded-full dark:bg-background dark:hover:bg-muted", className)}
+      className={cn("dark:bg-background hover:bg-muted absolute top-4 right-4 rounded-full", className)}
       onClick={handleDownload}
       size="icon"
       type="button"

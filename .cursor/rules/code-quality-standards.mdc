@@ -353,10 +353,9 @@ if (!config) {
 }
 ```
 
-**Lưu ý hạ tầng:** Biome rule `style/useBlockStatements` (root `biome.json`) đã enforce đúng điều
-này trên **toàn bộ 3.122 file** của monorepo (không còn giới hạn ở vài package như thời ESLint) —
-xem `.cursor/plans/biome-monorepo-migration/`. Coi mục này là nguồn chân lý khi viết code, tooling
-đã đồng bộ đầy đủ.
+**Lưu ý hạ tầng:** Oxlint rule `curly` (`"all"`, root `.oxlintrc.json`) đã enforce đúng điều
+này trên toàn monorepo — xem `.cursor/plans/oxlint-migration/`. Coi mục này là nguồn chân lý khi
+viết code, tooling đã đồng bộ đầy đủ.
 
 ## 7. Vị Trí Import — LUÔN Ở ĐẦU FILE, Ngay Sau Header Comment
 

@@ -10,6 +10,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
+
 export interface AutoEnrollInput {
   drawId: string;
 }

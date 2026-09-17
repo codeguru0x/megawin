@@ -1,17 +1,11 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type {
-  GetWinningEntriesInput,
-  GetWinningEntriesOutput,
-  WinningEntriesSummary,
-  WinningEntryItem,
-} from "./dto/winning-entries.dto";
+import type { GetWinningEntriesInput, GetWinningEntriesOutput, WinningEntryItem } from "./dto/winning-entries.dto";
 
 const TIER_LABELS: Record<string, string> = {
   [PrizeTier.Jackpot]: "Độc đắc",

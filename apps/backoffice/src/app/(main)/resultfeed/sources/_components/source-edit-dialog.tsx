@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { ResultFeedGameKey, ResultFeedProviderId, type SourceEntity, SourceRole } from "@megawin/resultfeed/entities";
+import { ResultFeedGameKey, ResultFeedProviderId, SourceRole, type SourceEntity } from "@megawin/resultfeed/entities";
 import { AlertTriangle } from "lucide-react";
 
 import {
@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 
 import { PROVIDER_ID_LABELS, RESULTFEED_GAME_LABELS, SOURCE_ROLE_LABELS } from "../../_lib/labels";
-import { type UpdateSourceInput, useUpdateSource } from "../../_lib/use-queries";
+import { useUpdateSource, type UpdateSourceInput } from "../../_lib/use-queries";
 
 export interface SourceEditDialogProps {
   source: SourceEntity | null;
@@ -163,7 +163,7 @@ export function SourceEditDialog({ source, onClose }: SourceEditDialogProps) {
                           checked={form.gameKeys.includes(key)}
                           onCheckedChange={() => toggleGameKey(key)}
                         />
-                        <Label htmlFor={`gk-${key}`} className="font-normal text-xs">
+                        <Label htmlFor={`gk-${key}`} className="text-xs font-normal">
                           {RESULTFEED_GAME_LABELS[key]}
                         </Label>
                       </div>
@@ -248,10 +248,10 @@ export function SourceEditDialog({ source, onClose }: SourceEditDialogProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm">
+              <div className="from-warning to-loss flex size-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm">
                 <AlertTriangle className="size-5" />
               </div>
-              <AlertDialogTitle className="font-semibold text-base">Xác nhận thay đổi cấu hình nguồn?</AlertDialogTitle>
+              <AlertDialogTitle className="text-base font-semibold">Xác nhận thay đổi cấu hình nguồn?</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="pt-1">
               Đổi vai trò/trạng thái nguồn ảnh hưởng trực tiếp tới việc chốt kết quả. Kiểm tra kỹ trước khi lưu.

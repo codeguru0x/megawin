@@ -11,7 +11,6 @@
  * mỗi giây. Gọi ở tầng cao (`ChatPanel`) sẽ re-render toàn bộ hội thoại 1 lần/giây — với thread dài
  * là hàng chục `Streamdown` cùng render lại. Chỉ gọi trong component nhỏ chỉ chứa cái nhãn.
  */
-
 import { useEffect, useState } from "react";
 
 const MS_IN_S = 1000;

@@ -17,7 +17,7 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 
 import type { AuditAction, AuditStatus } from "../entities";
-import { type AuditLogCursor, type AuditLogFilter, AuditLogRepository } from "../infras/repos";
+import { AuditLogRepository, type AuditLogCursor, type AuditLogFilter } from "../infras/repos";
 import { encodeAuditCursor } from "./audit-cursor-codec";
 import type { AuditLogPage } from "./list-audit-logs";
 

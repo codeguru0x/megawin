@@ -9,7 +9,6 @@
  * - Side bet (bigSmall/evenOdd): nhãn cược + outcome diễn giải mức giải.
  * - Board bị payout cap (bậc 8/9/10) được đánh dấu [cap].
  */
-
 import { useCallback, useMemo, useState } from "react";
 
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
@@ -26,8 +25,13 @@ import { boardColorVar } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import { KenoEntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
-import type { WinningEntryBoardDetail, WinningEntryItem } from "../../use-operations";
-import { useWinningEntries, useWinningEntryDetail, WINNING_ENTRIES_PAGE_SIZE } from "../../use-operations";
+import {
+  useWinningEntries,
+  useWinningEntryDetail,
+  WINNING_ENTRIES_PAGE_SIZE,
+  type WinningEntryBoardDetail,
+  type WinningEntryItem,
+} from "../../use-operations";
 
 // ─── Labels ────────────────────────────────────────────────────────────────────
 
@@ -62,29 +66,29 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningEntryBoardDetai
   const numbers = board.numbers ?? [];
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
+      className="grid items-center gap-x-2 rounded-md border-l-3 py-1.5 pl-2"
       style={{
         borderLeftColor: boardColor,
         gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
       }}
     >
-      <span className="text-xs font-extrabold leading-none" style={{ color: boardColor }}>
+      <span className="text-xs leading-none font-extrabold" style={{ color: boardColor }}>
         {board.boardNo}
       </span>
-      <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex min-w-0 flex-col gap-1">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+          <span className="text-foreground text-xs font-semibold whitespace-nowrap">
             Pick {board.pickCount ?? 0}/{board.matchCount ?? 0}
-            {board.isCapped && <span className="ml-1 text-amber-600">[cap]</span>}
+            {board.isCapped && <span className="text-warning ml-1">[cap]</span>}
           </span>
-          <div className="flex items-center gap-0.5 flex-wrap">
+          <div className="flex flex-wrap items-center gap-0.5">
             {numbers.map((n) => (
               <KenoMatchBall key={n} n={n} variant={winningSet.has(n) ? "matched" : "default"} />
             ))}
           </div>
         </div>
       </div>
-      <span className="text-xs tabular-nums font-semibold text-primary whitespace-nowrap justify-self-end">
+      <span className="text-primary justify-self-end text-xs font-semibold whitespace-nowrap tabular-nums">
         +{formatNumber(board.winAmount)}
       </span>
     </div>
@@ -98,22 +102,22 @@ function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
   const outcomeLabel = board.outcome ? KENO_OUTCOME_LABELS[board.outcome] : undefined;
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
+      className="grid items-center gap-x-2 rounded-md border-l-3 py-1.5 pl-2"
       style={{
         borderLeftColor: boardColor,
         gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
       }}
     >
-      <span className="text-xs font-extrabold leading-none" style={{ color: boardColor }}>
+      <span className="text-xs leading-none font-extrabold" style={{ color: boardColor }}>
         {board.boardNo}
       </span>
-      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-        <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900 whitespace-nowrap">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span className="border-info bg-info text-info rounded border px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap">
           {typeLabel} · {betLabel}
         </span>
-        {outcomeLabel && <span className="text-xs text-muted-foreground whitespace-nowrap">{outcomeLabel}</span>}
+        {outcomeLabel && <span className="text-muted-foreground text-xs whitespace-nowrap">{outcomeLabel}</span>}
       </div>
-      <span className="text-xs tabular-nums font-semibold text-cyan-700 dark:text-cyan-400 whitespace-nowrap justify-self-end">
+      <span className="text-info justify-self-end text-xs font-semibold whitespace-nowrap tabular-nums">
         +{formatNumber(board.winAmount)}
       </span>
     </div>
@@ -142,13 +146,13 @@ function KpiCard({
   valueColor?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm flex-1 min-w-0">
+    <div className="bg-card flex min-w-0 flex-1 items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums leading-tight", valueColor ?? "text-foreground")}>{value}</p>
+        <p className="text-muted-foreground truncate text-xs font-medium">{label}</p>
+        <p className={cn("text-lg leading-tight font-bold tabular-nums", valueColor ?? "text-foreground")}>{value}</p>
       </div>
     </div>
   );
@@ -164,29 +168,29 @@ function KpiBar({
   cappedEntries: number;
 }) {
   return (
-    <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
+    <div className="bg-muted/20 flex shrink-0 gap-3 border-b px-6 py-3">
       <KpiCard
         icon={Users}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label={REPORT_COLUMN_LABELS.winningEntryCount}
         value={formatNumber(totalWinningEntries)}
       />
       <KpiCard
         icon={Banknote}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label={REPORT_COLUMN_LABELS.totalWinningPayout}
         value={formatNumber(totalWinAmount)}
       />
       {cappedEntries > 0 && (
         <KpiCard
           icon={AlertCircle}
-          iconBg="bg-amber-100 dark:bg-amber-900/50"
-          iconColor="text-amber-600 dark:text-amber-400"
+          iconBg="bg-warning"
+          iconColor="text-warning"
           label="Bị Payout Cap"
           value={formatNumber(cappedEntries)}
-          valueColor="text-amber-600 dark:text-amber-400"
+          valueColor="text-warning"
         />
       )}
     </div>
@@ -208,17 +212,17 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
     <TableRow
       onClick={onClick}
       className={cn(
-        "align-top group transition-colors hover:bg-muted/30 cursor-pointer",
+        "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
         // Entry bị payout cap: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Nhãn [cap] đã có trong board detail.
-        hasCapped && "border-l-[3px] border-l-amber-400",
+        hasCapped && "border-l-3 border-l-warning",
       )}
     >
-      <TableCell className="pl-6 py-3 text-center">
+      <TableCell className="py-3 pl-6 text-center">
         <span
           className={cn(
             "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            hasCapped ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground",
+            hasCapped ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground",
           )}
         >
           {rowNo}
@@ -226,12 +230,12 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
       </TableCell>
       <TableCell className="py-3">
         <div>
-          <p className="text-sm text-foreground">{displayName}</p>
-          <p className="text-xs text-muted-foreground/60 font-mono mt-0.5 truncate max-w-32">@{entry.tenantId}</p>
+          <p className="text-foreground text-sm">{displayName}</p>
+          <p className="text-muted-foreground/60 mt-0.5 max-w-32 truncate font-mono text-xs">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
-        <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
+        <span className="text-foreground text-sm tabular-nums">{formatNumber(entry.amount)}</span>
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1.5">
@@ -244,8 +248,8 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         </div>
       </TableCell>
       <TableCell className="py-3 pr-6 text-right">
-        <p className="text-sm tabular-nums text-foreground font-semibold">{formatNumber(entry.winAmount)}</p>
-        <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
+        <p className="text-foreground text-sm font-semibold tabular-nums">{formatNumber(entry.winAmount)}</p>
+        <p className="text-muted-foreground/50 mt-0.5 text-xs tabular-nums">
           {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
         </p>
       </TableCell>
@@ -277,7 +281,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="flex flex-col p-0 gap-0 overflow-hidden rounded-2xl shadow-2xl sm:max-w-none border"
+        className="flex flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none"
         style={{
           width: "calc(100vw - 2rem)",
           maxWidth: "1400px",
@@ -285,15 +289,15 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
           maxHeight: "960px",
         }}
       >
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b bg-background shrink-0">
+        <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-orange-500/15 ring-1 ring-orange-500/30 shrink-0">
-              <Trophy className="size-5 text-orange-500" />
+            <div className="bg-warning/15 ring-warning/30 flex size-10 shrink-0 items-center justify-center rounded-xl ring-1">
+              <Trophy className="text-warning size-5" />
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Kỳ <span className="font-mono text-foreground">{drawId}</span>
+              <DialogDescription className="text-muted-foreground mt-0.5 text-xs">
+                Kỳ <span className="text-foreground font-mono">{drawId}</span>
               </DialogDescription>
             </div>
           </div>
@@ -307,33 +311,33 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
           />
         )}
 
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className="min-h-0 flex-1 overflow-auto">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="size-8 animate-spin text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Đang tải dữ liệu...</p>
+                <Loader2 className="text-muted-foreground size-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">Đang tải dữ liệu...</p>
               </div>
             </div>
           ) : entries.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-4">
-              <div className="flex size-16 items-center justify-center rounded-2xl bg-muted/50">
-                <FileSearch className="size-7 text-muted-foreground/40" />
+              <div className="bg-muted/50 flex size-16 items-center justify-center rounded-2xl">
+                <FileSearch className="text-muted-foreground/40 size-7" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-foreground">Không có phiếu trúng thưởng</p>
-                <p className="mt-1 text-sm text-muted-foreground">Kỳ này không có phiếu cược nào trúng thưởng.</p>
+                <p className="text-foreground text-base font-semibold">Không có phiếu trúng thưởng</p>
+                <p className="text-muted-foreground mt-1 text-sm">Kỳ này không có phiếu cược nào trúng thưởng.</p>
               </div>
             </div>
           ) : (
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow className="hover:bg-muted/40">
-                  <TableHead className="pl-6 w-12 text-center">STT</TableHead>
+                  <TableHead className="w-12 pl-6 text-center">STT</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
                   <TableHead className="w-28 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="min-w-96">{REPORT_COLUMN_LABELS.winningDetail}</TableHead>
-                  <TableHead className="pr-6 w-40 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
+                  <TableHead className="w-40 pr-6 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -351,8 +355,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {entries.length > 0 && (
-          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">
+          <div className="bg-muted/20 flex shrink-0 items-center justify-between gap-2 border-t px-6 py-2.5">
+            <span className="text-muted-foreground text-xs">
               Hiển thị {formatNumber(entries.length)}
               {summary && ` / ${formatNumber(summary.totalWinningEntries)}`} phiếu trúng
             </span>

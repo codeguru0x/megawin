@@ -26,7 +26,9 @@ type WithoutUndefined<T extends object> = { [K in keyof T]: Exclude<T[K], undefi
 export function omitUndefined<T extends object>(obj: T): WithoutUndefined<T> {
   const out = {} as WithoutUndefined<T>;
   for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) out[k as keyof T] = v as WithoutUndefined<T>[keyof T];
+    if (v !== undefined) {
+      out[k as keyof T] = v as WithoutUndefined<T>[keyof T];
+    }
   }
   return out;
 }

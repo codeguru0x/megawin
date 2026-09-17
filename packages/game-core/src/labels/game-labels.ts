@@ -7,7 +7,39 @@
  * Import: `import { GAME_LABELS, getGameLabel } from "@megawin/game-core/labels"`
  */
 
-import { GameProduct } from "../entities/game-core.enums";
+// ─────────────────────────────────────────────
+// Transaction Action / Reason Labels (ví tenant — dùng chung backoffice)
+// ─────────────────────────────────────────────
+
+import { TransactionAction, TransactionReason } from "@megawin/shared/types";
+
+// ─────────────────────────────────────────────
+// Draw Status Labels
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+// Entry Status Labels
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+// Ticket Status Labels
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+// Entry Outcome Labels
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+// Ticket Channel Labels
+// ─────────────────────────────────────────────
+import {
+  DrawStatus,
+  EntryOutcome,
+  EntryStatus,
+  GameProduct,
+  TicketChannel,
+  TicketStatus,
+} from "../entities/game-core.enums";
 
 // ─────────────────────────────────────────────
 // Game Display Labels
@@ -39,12 +71,6 @@ export function getGameLabel(game: GameProduct): string {
   return GAME_LABELS[game] ?? game;
 }
 
-// ─────────────────────────────────────────────
-// Draw Status Labels
-// ─────────────────────────────────────────────
-
-import { DrawStatus } from "../entities/game-core.enums";
-
 /**
  * Tên hiển thị trạng thái kỳ quay.
  * Dùng chung cho tất cả game.
@@ -69,12 +95,6 @@ export function getDrawStatusLabel(status: DrawStatus): string {
   return DRAW_STATUS_LABELS[status] ?? status;
 }
 
-// ─────────────────────────────────────────────
-// Entry Status Labels
-// ─────────────────────────────────────────────
-
-import { EntryStatus } from "../entities/game-core.enums";
-
 /**
  * Tên hiển thị trạng thái đơn cược (entry).
  * Dùng chung cho tất cả game.
@@ -93,12 +113,6 @@ export const ENTRY_STATUS_LABELS: Record<EntryStatus, string> = {
 export function getEntryStatusLabel(status: EntryStatus): string {
   return ENTRY_STATUS_LABELS[status] ?? status;
 }
-
-// ─────────────────────────────────────────────
-// Ticket Status Labels
-// ─────────────────────────────────────────────
-
-import { TicketStatus } from "../entities/game-core.enums";
 
 /**
  * Tên hiển thị trạng thái vé.
@@ -120,12 +134,6 @@ export function getTicketStatusLabel(status: TicketStatus): string {
   return TICKET_STATUS_LABELS[status] ?? status;
 }
 
-// ─────────────────────────────────────────────
-// Entry Outcome Labels
-// ─────────────────────────────────────────────
-
-import { EntryOutcome } from "../entities/game-core.enums";
-
 /**
  * Tên hiển thị kết quả đơn cược (outcome).
  * Dùng chung cho tất cả game.
@@ -145,12 +153,6 @@ export function getEntryOutcomeLabel(outcome: EntryOutcome): string {
   return ENTRY_OUTCOME_LABELS[outcome] ?? outcome;
 }
 
-// ─────────────────────────────────────────────
-// Ticket Channel Labels
-// ─────────────────────────────────────────────
-
-import { TicketChannel } from "../entities/game-core.enums";
-
 /**
  * Tên hiển thị kênh bán vé.
  * Dùng chung cho tất cả game.
@@ -169,12 +171,6 @@ export const TICKET_CHANNEL_LABELS: Record<TicketChannel, string> = {
 export function getTicketChannelLabel(channel: TicketChannel): string {
   return TICKET_CHANNEL_LABELS[channel] ?? channel;
 }
-
-// ─────────────────────────────────────────────
-// Transaction Action / Reason Labels (ví tenant — dùng chung backoffice)
-// ─────────────────────────────────────────────
-
-import { TransactionAction, TransactionReason } from "@megawin/shared/types";
 
 /**
  * Nhãn hiển thị cho `TransactionAction` — thao tác lên ví player tại tenant.

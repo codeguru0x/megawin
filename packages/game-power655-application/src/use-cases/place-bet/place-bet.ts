@@ -21,9 +21,9 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { DebitPlayerService } from "@megawin/game-core-application/services";
+import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import type { Board, EntrySummary, PlayType, TicketDoc, TicketEntryDoc } from "@megawin/game-power655/entities";
 import { getLineCount } from "@megawin/game-power655/rules/play-types";
 import { AppException } from "@megawin/shared/errors";
@@ -131,7 +131,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
 
     // ── 6. Load tenant commission rate ──
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
-    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+    if (tenantConfig?.isEnabled !== true) {
       throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
 

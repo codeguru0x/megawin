@@ -21,8 +21,11 @@
  */
 
 import { ReportRepo } from "@megawin/data/mongo";
-import type { PlayerSettleGameDaily, PlayerSettleGameDailyEntity } from "@megawin/game-core/entities";
-import { PLAYER_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
+import {
+  PLAYER_SETTLE_GAME_DAILY,
+  type PlayerSettleGameDaily,
+  type PlayerSettleGameDailyEntity,
+} from "@megawin/game-core/entities";
 
 import { PlayerSettleGameDailyMapper } from "../mappers";
 import type { PlayerGameBreakdownRow, PlayerOverviewResult } from "./types";
@@ -83,7 +86,9 @@ export class PlayerSettleGameDailyRepository extends ReportRepo<
    * Noop-safe: nếu reports rỗng thì không gọi DB.
    */
   async bulkUpsertPlayerDaily(reports: Omit<PlayerSettleGameDaily, "createdAt" | "updatedAt">[]): Promise<void> {
-    if (reports.length === 0) return;
+    if (reports.length === 0) {
+      return;
+    }
 
     const now = new Date();
     await this.bulkWrite(

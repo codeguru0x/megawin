@@ -3,7 +3,6 @@
 /**
  * Login client component – hiển thị UI và trigger Cognito sign-in.
  */
-
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Crown, Loader2, LogIn } from "lucide-react";
@@ -11,8 +10,8 @@ import { Crown, Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { APP_CONFIG } from "@/config/app-config";
-import { saveAuthCallbackUrl } from "@/lib/auth/callback-url-storage";
 import { signIn } from "@/lib/auth-client";
+import { saveAuthCallbackUrl } from "@/lib/auth/callback-url-storage";
 
 const AUTO_REDIRECT_SECONDS = 1;
 
@@ -131,18 +130,18 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
   }, []);
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background p-4">
+    <div className="bg-background flex min-h-dvh items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-            <Crown className="h-6 w-6 text-primary" />
+          <div className="bg-primary/10 mx-auto flex h-12 w-12 items-center justify-center rounded-lg">
+            <Crown className="text-primary h-6 w-6" />
           </div>
           <CardTitle className="text-2xl font-bold">{APP_CONFIG.name}</CardTitle>
           <CardDescription>Đăng nhập vào hệ thống quản trị để tiếp tục sử dụng.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-center text-destructive text-sm">{error}</div>
+            <div className="bg-destructive/10 text-destructive rounded-md p-3 text-center text-sm">{error}</div>
           )}
           <Button onClick={handleSignIn} disabled={isLoading} className="w-full" size="lg">
             {isLoading ? (
@@ -158,11 +157,11 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
             )}
           </Button>
           {!isLoading && (
-            <p className="text-center text-muted-foreground text-sm">
-              Tự động chuyển hướng sau <span className="font-semibold text-primary">{countdown}</span> giây
+            <p className="text-muted-foreground text-center text-sm">
+              Tự động chuyển hướng sau <span className="text-primary font-semibold">{countdown}</span> giây
             </p>
           )}
-          <p className="text-center text-muted-foreground text-xs">{APP_CONFIG.copyright}</p>
+          <p className="text-muted-foreground text-center text-xs">{APP_CONFIG.copyright}</p>
         </CardContent>
       </Card>
     </div>

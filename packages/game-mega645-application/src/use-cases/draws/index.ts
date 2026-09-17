@@ -1,7 +1,4 @@
-export type {
-  DetectResettleBoundariesInput,
-  DetectResettleBoundariesOutput,
-} from "../resettle/detect-boundaries";
+export type { DetectResettleBoundariesInput, DetectResettleBoundariesOutput } from "../resettle/detect-boundaries";
 // Re-export để backoffice import qua use-cases/draws (không cần subpath riêng).
 export { DetectResettleBoundariesUseCase } from "../resettle/detect-boundaries";
 export { CloseSalesUseCase } from "./close-sales";

@@ -16,9 +16,16 @@
     "clean": "rm -rf dist",
     "docs:preview": "redocly preview-docs openapi.yaml",
     "docs:lint": "redocly lint openapi.yaml",
-    "docs:build": "rm -rf docs && redocly build-docs openapi.yaml -o docs/index.html"
+    "docs:build": "rm -rf docs && redocly build-docs openapi.yaml -o docs/index.html",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration"
   },
-  "keywords": ["megawin", "tenant", "gateway", "outbound"],
+  "keywords": [
+    "megawin",
+    "tenant",
+    "gateway",
+    "outbound"
+  ],
   "author": "",
   "license": "ISC",
   "exports": {
@@ -64,8 +71,8 @@
     "@redocly/cli": "^2.26.0",
     "@types/node": "^25.9.6",
     "next": "^16.3.5",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   }
 }

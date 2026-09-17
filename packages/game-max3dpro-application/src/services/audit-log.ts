@@ -1,11 +1,11 @@
 import {
   AUDIT_ACTIONS,
-  type AuditAction,
   AuditCategory,
-  type AuditScalar,
   AuditTargetType,
+  type AuditAction,
+  type AuditScalar,
 } from "@megawin/audit/entities";
-import { type AuditActor, dropUndefined, flattenChanges, record } from "@megawin/audit/logger";
+import { dropUndefined, flattenChanges, record, type AuditActor } from "@megawin/audit/logger";
 import { GameProduct } from "@megawin/game-core/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 

@@ -4,7 +4,7 @@
  */
 
 import type { ApiErrorResponse } from "@megawin/shared/api-types";
-import { APP_ERROR_CODES, type AppError, AppException, appErrorToStatusCode, isAppError } from "@megawin/shared/errors";
+import { APP_ERROR_CODES, appErrorToStatusCode, AppException, isAppError, type AppError } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };

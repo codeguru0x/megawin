@@ -42,8 +42,8 @@ import * as mega645Descriptor from "./descriptors/mega645";
 import * as power655Descriptor from "./descriptors/power655";
 import {
   DEFAULT_GAME_CONFIG_SECTIONS,
-  type GameConfigMeta,
   GameConfigSection,
+  type GameConfigMeta,
   type GetGameConfigInput,
   type GetGameConfigOutput,
 } from "./types";

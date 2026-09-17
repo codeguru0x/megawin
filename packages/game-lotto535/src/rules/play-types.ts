@@ -28,10 +28,10 @@
 
 import { PlayType } from "../entities/enums";
 import {
-  type BoardSelection,
   LOTTO535_MAIN_COUNT,
   VALID_MAIN_NUMBER_SET,
   VALID_SPECIAL_NUMBER_SET,
+  type BoardSelection,
 } from "../entities/types";
 
 // ─────────────────────────────────────────────
@@ -56,8 +56,12 @@ export const LOTTO535_MAX_BOARDS = 100;
 
 /** Tính C(n, k) – tổ hợp chập k từ n. */
 export function combination(n: number, k: number): number {
-  if (k < 0 || k > n) return 0;
-  if (k === 0 || k === n) return 1;
+  if (k < 0 || k > n) {
+    return 0;
+  }
+  if (k === 0 || k === n) {
+    return 1;
+  }
 
   // Tối ưu: C(n,k) = C(n, n-k)
   const kk = Math.min(k, n - k);
@@ -209,9 +213,17 @@ export function validateSelection(playType: PlayType, selection: BoardSelection)
  * @param specialCount - Số lượng số đặc biệt đã chọn.
  */
 export function inferPlayType(mainCount: number, specialCount: number): PlayType | null {
-  if (specialCount === 1 && mainCount === 4) return PlayType.MainCover4;
-  if (specialCount === 1 && mainCount === 5) return PlayType.Standard;
-  if (specialCount === 1 && mainCount >= 6 && mainCount <= 15) return PlayType.MainCover;
-  if (mainCount === 5 && specialCount >= 2 && specialCount <= 12) return PlayType.SpecialCover;
+  if (specialCount === 1 && mainCount === 4) {
+    return PlayType.MainCover4;
+  }
+  if (specialCount === 1 && mainCount === 5) {
+    return PlayType.Standard;
+  }
+  if (specialCount === 1 && mainCount >= 6 && mainCount <= 15) {
+    return PlayType.MainCover;
+  }
+  if (mainCount === 5 && specialCount >= 2 && specialCount <= 12) {
+    return PlayType.SpecialCover;
+  }
   return null;
 }

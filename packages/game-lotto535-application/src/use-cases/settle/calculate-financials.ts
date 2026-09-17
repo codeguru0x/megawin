@@ -51,7 +51,7 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import { type DrawTierPrizeSummary, PrizeTier } from "@megawin/game-lotto535/entities";
+import { PrizeTier, type DrawTierPrizeSummary } from "@megawin/game-lotto535/entities";
 import {
   calculateDrawFinancials,
   calculateSplitDistribution,
@@ -122,8 +122,12 @@ export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFin
       // tierBetUnitCounts = Σ(hitCount × betCount) per tier — tổng đơn vị tham gia thực tế.
       const winnerCountPerTier = new Map<PrizeTier, number>();
       for (const [tierStr, betUnitCount] of Object.entries(settleSummary.tierBetUnitCounts)) {
-        if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) continue;
-        if ((betUnitCount ?? 0) > 0) winnerCountPerTier.set(tierStr as PrizeTier, betUnitCount!);
+        if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) {
+          continue;
+        }
+        if ((betUnitCount ?? 0) > 0) {
+          winnerCountPerTier.set(tierStr as PrizeTier, betUnitCount!);
+        }
       }
 
       // calculateSplitDistribution:
@@ -159,7 +163,9 @@ export class CalculateFinancialsUseCase extends UseCase<SettleContext, SettleFin
 
     for (const tier of Object.values(PrizeTier)) {
       const winnerCount = settleSummary.tierWinnerCounts[tier] ?? 0;
-      if (winnerCount === 0) continue;
+      if (winnerCount === 0) {
+        continue;
+      }
 
       const totalAmount = settleSummary.tierTotalAmounts[tier] ?? 0;
       tiers.push({

@@ -1,9 +1,14 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { DebitPlayerService } from "@megawin/game-core-application/services";
-import type { Board, EntryBoardSnapshot, TicketDoc, TicketEntryDoc } from "@megawin/game-mega645/entities";
-import { PlayType } from "@megawin/game-mega645/entities";
+import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
+import {
+  PlayType,
+  type Board,
+  type EntryBoardSnapshot,
+  type TicketDoc,
+  type TicketEntryDoc,
+} from "@megawin/game-mega645/entities";
 import { calculateLineCount, getRequiredNumberCount } from "@megawin/game-mega645/rules/play-types";
 import { AppException } from "@megawin/shared/errors";
 import { Currency } from "@megawin/shared/types";
@@ -99,7 +104,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
 
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
 
-    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+    if (tenantConfig?.isEnabled !== true) {
       throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
 

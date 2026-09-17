@@ -9,7 +9,6 @@
  * Dữ liệu tài chính (tiền cược, trả thưởng, GGR, hoa hồng, lợi nhuận ròng) dùng chung
  * cho mọi game — tính từ CommonDrawSummary.
  */
-
 import type { ReactNode } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -133,14 +132,14 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
 }: DrawHistoryTableProps<T>) {
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold">Lịch sử kỳ quay</CardTitle>
-          {isFetching && !isLoading && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
+          {isFetching && !isLoading && <Loader2 className="text-muted-foreground size-3.5 animate-spin" />}
         </div>
       </CardHeader>
 
-      <CardContent className="px-0 pb-4 pt-0">
+      <CardContent className="px-0 pt-0 pb-4">
         {/* ── Filter bar ── */}
         <div className="flex flex-wrap items-center gap-2 px-5 pb-3">
           <Select value={statusValue} onValueChange={onStatusChange}>
@@ -164,40 +163,40 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="pl-5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground pl-5 text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.drawId}
                 </TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.financialDate}
                 </TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   Đóng cược
                 </TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   Mở cược
                 </TableHead>
-                <TableHead className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   Trạng thái
                 </TableHead>
-                <TableHead className="min-w-52 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground min-w-52 text-xs font-medium tracking-wider uppercase">
                   Kết quả
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.entryCount}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.totalStake}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.totalPayout}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.ggr}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.totalCommission}
                 </TableHead>
-                <TableHead className="pr-5 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <TableHead className="text-muted-foreground pr-5 text-right text-xs font-medium tracking-wider uppercase">
                   {REPORT_COLUMN_LABELS.netProfit}
                 </TableHead>
               </TableRow>
@@ -207,12 +206,12 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={12} className="h-24 text-center">
-                    <Loader2 className="mx-auto size-5 animate-spin text-muted-foreground" />
+                    <Loader2 className="text-muted-foreground mx-auto size-5 animate-spin" />
                   </TableCell>
                 </TableRow>
               ) : draws.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="h-24 text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={12} className="text-muted-foreground h-24 text-center text-sm">
                     Không có kỳ quay nào trong khoảng thời gian đã chọn.
                   </TableCell>
                 </TableRow>
@@ -234,7 +233,7 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
         {/* ── Pagination ── */}
         {draws.length > 0 && (
           <div className="flex items-center justify-between px-5 pt-3">
-            <p className="text-sm text-muted-foreground">Trang {page}</p>
+            <p className="text-muted-foreground text-sm">Trang {page}</p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -284,7 +283,7 @@ function DrawRow<T extends CommonDrawSummary>({
   const resultNode = renderResult(draw);
 
   return (
-    <TableRow className="cursor-pointer hover:bg-muted/50" onClick={onClick}>
+    <TableRow className="hover:bg-muted/50 cursor-pointer" onClick={onClick}>
       {/* Kỳ quay */}
       <TableCell className="pl-5 font-mono text-sm">{draw.drawId}</TableCell>
 
@@ -306,32 +305,32 @@ function DrawRow<T extends CommonDrawSummary>({
       <TableCell>{resultNode ?? <span className="text-xs">—</span>}</TableCell>
 
       {/* Phiếu cược */}
-      <TableCell className="text-right tabular-nums text-sm">
+      <TableCell className="text-right text-sm tabular-nums">
         {draw.totalEntries != null && draw.totalEntries > 0 ? formatNumber(draw.totalEntries) : "—"}
       </TableCell>
 
       {/* Tiền cược */}
-      <TableCell className="text-right tabular-nums text-sm">
+      <TableCell className="text-right text-sm tabular-nums">
         {draw.totalRevenue != null && draw.totalRevenue > 0 ? formatNumber(draw.totalRevenue) : "—"}
       </TableCell>
 
       {/* Trả thưởng */}
-      <TableCell className="text-right tabular-nums text-sm">
+      <TableCell className="text-right text-sm tabular-nums">
         {draw.totalPayout != null ? formatNumber(draw.totalPayout) : "—"}
       </TableCell>
 
       {/* Doanh thu thuần (GGR) */}
-      <TableCell className="text-right tabular-nums text-sm">{ggr != null ? formatNumber(ggr) : "—"}</TableCell>
+      <TableCell className="text-right text-sm tabular-nums">{ggr != null ? formatNumber(ggr) : "—"}</TableCell>
 
       {/* Hoa hồng đại lý */}
-      <TableCell className="text-right tabular-nums text-sm">
+      <TableCell className="text-right text-sm tabular-nums">
         {draw.totalAgentCommission != null ? formatNumber(draw.totalAgentCommission) : "—"}
       </TableCell>
 
       {/* Lợi nhuận ròng — chỉ cột này có color */}
       <TableCell
         className={cn(
-          "pr-5 text-right tabular-nums text-sm font-medium",
+          "pr-5 text-right text-sm font-medium tabular-nums",
           netProfit != null ? getNetProfitColor(netProfit) : "",
         )}
       >

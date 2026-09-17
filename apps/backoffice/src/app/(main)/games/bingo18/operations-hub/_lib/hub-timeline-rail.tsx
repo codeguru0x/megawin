@@ -76,7 +76,6 @@
  * ngược lại) lưu bằng `useRef` vì không cần re-render khi đổi. `motion` đã là dependency có sẵn
  * (dùng ở `ai-elements/shimmer.tsx`), không thêm gói mới.
  */
-
 import { useCallback, useMemo, useRef } from "react";
 
 import { formatNumber } from "@megawin/shared/utils";
@@ -192,7 +191,7 @@ function statusLabel(col: DayFlowColumn): string {
  */
 const HEALTH_CARD_CLASS: Record<string, string> = {
   [StageHealth.Ok]: "",
-  [StageHealth.Warn]: "border-amber-500/50 bg-amber-500/5",
+  [StageHealth.Warn]: "border-warning/50 bg-warning/5",
   [StageHealth.Stuck]: "border-destructive/50 bg-destructive/5",
 };
 
@@ -224,7 +223,7 @@ function RailCardPlaceholder() {
   return (
     <div
       aria-hidden
-      className="min-w-[96px] flex-1 basis-0 rounded-lg border border-muted-foreground/20 border-dashed bg-muted/10"
+      className="border-muted-foreground/20 bg-muted/10 min-w-[96px] flex-1 basis-0 rounded-lg border border-dashed"
     />
   );
 }
@@ -243,7 +242,7 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
         // Width GIÃN LẤP ĐẦY hàng, KHÔNG trần `max-w` (round 4 v2 — trần cũ gây "co dồn giữa"
         // khi rail đã full-width, xem header comment file). Sàn `min-w` vẫn giữ để chữ không
         // bị bóp khi `span` kéo lên MAX_SPAN=21.
-        "flex min-w-[96px] flex-1 basis-0 flex-col gap-1 rounded-lg border bg-card px-2.5 py-1.5 text-left transition-colors hover:bg-muted/50",
+        "bg-card hover:bg-muted/50 flex min-w-[96px] flex-1 basis-0 flex-col gap-1 rounded-lg border px-2.5 py-1.5 text-left transition-colors",
         HEALTH_CARD_CLASS[col.health],
         // Vùng quá khứ XA (đã qua chặng chờ đóng, đang settle/done) — mờ hơn, báo "ít quan
         // trọng hơn". KHÔNG áp cho `isPendingClose` (dù zone=Past, card đó vẫn cần NỔI để thấy
@@ -252,62 +251,62 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
         // Đang bán THẬT (gate=Open) — viền trái xanh ngọc, tín hiệu "đang sống" độc lập với
         // zone (round 4 v2 điểm 2: trước đây chỉ có opacity phân biệt past/future, không đủ rõ
         // "kỳ nào đang bán thật" khi nhìn lướt).
-        isSelling && !isBoundary && "border-l-2 border-l-emerald-500/70",
+        isSelling && !isBoundary && "border-l-2 border-l-profit/70",
         // Chờ đóng bán (hết giờ cược, OpsStage.PendingClose) — viền trái cam, KHÁC màu cam của
         // `StageHealth.Warn` về Ý NGHĨA (trạng thái bình thường "đang chờ xử lý", không phải
         // cảnh báo sức khoẻ) nhưng dùng cùng hue cam vì cùng "cần chú ý sớm".
-        isPendingClose && !isBoundary && "border-l-2 border-l-orange-500/70 bg-orange-500/5",
+        isPendingClose && !isBoundary && "bg-warning/5 border-l-2 border-l-warning/70",
         // Vạch phân chia quá khứ/hiện tại — viền trái đậm màu, ranh giới "NGAY BÂY GIỜ" bổ sung
         // cho ring (Tailwind không có utility border-style riêng theo từng cạnh nên dùng màu
         // đậm thay dashed để tránh ảnh hưởng 3 cạnh còn lại).
-        zone === RailZone.Current && "border-l-2 border-l-muted-foreground/40",
+        zone === RailZone.Current && "border-l-muted-foreground/40 border-l-2",
         // Kỳ hiện tại (biên chốt cược) — `ring-2` + `ring-offset-2` (không đè border, bo góc
         // liền mạch 4 phía) CỘNG nền `primary/10` nhẹ — 2 tín hiệu cùng lúc để "sống động" hơn
         // ring đơn thuần (p1-07 §2b, không đụng `HEALTH_CARD_CLASS` vì kỳ hiện tại hiếm khi
         // đồng thời stuck/warn).
-        isBoundary && "bg-primary/10 ring-2 ring-primary ring-offset-2 ring-offset-background",
+        isBoundary && "bg-primary/10 ring-primary ring-offset-background ring-2 ring-offset-2",
       )}
     >
       <div className="flex items-center justify-between gap-1">
         <span className="inline-flex items-center gap-1">
           {isBoundary ? (
-            <Radio className="size-3 shrink-0 animate-pulse text-primary" />
+            <Radio className="text-primary size-3 shrink-0 animate-pulse" />
           ) : isSelling ? (
             // Chấm nhấp nháy xanh ngọc — tín hiệu "đang bán thật" (round 4 v2), tách biệt hẳn
             // với chấm xanh dương của kỳ hiện tại (`isBoundary`) để không nhầm "kỳ hiện tại" và
             // "kỳ đang bán" là 1 (thực tế nhiều kỳ Đang bán cùng lúc, chỉ 1 kỳ là "hiện tại").
             <span className="relative flex size-3 shrink-0 items-center justify-center">
-              <span className="absolute size-1.5 animate-pulse rounded-full bg-emerald-500" />
+              <span className="bg-profit absolute size-1.5 animate-pulse rounded-full" />
             </span>
           ) : isPendingClose ? (
-            <Clock className="size-3 shrink-0 text-orange-600" />
+            <Clock className="text-warning size-3 shrink-0" />
           ) : null}
           <DrawIdLabel drawId={col.drawId} className="text-xs" />
         </span>
-        <span className="shrink-0 text-[10px] text-muted-foreground">
+        <span className="text-muted-foreground shrink-0 text-xs">
           {new Date(col.drawTimeMs).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>
       <span
         className={cn(
-          "truncate text-[10px]",
-          isSelling ? "font-medium text-emerald-700 dark:text-emerald-400" : "text-muted-foreground",
-          isPendingClose && "font-medium text-orange-700 dark:text-orange-400",
+          "truncate text-xs",
+          isSelling ? "text-profit font-medium" : "text-muted-foreground",
+          isPendingClose && "text-warning font-medium",
         )}
       >
         {statusLabel(col)}
       </span>
-      <div className="h-6 w-full rounded bg-muted/40">
+      <div className="bg-muted/40 h-6 w-full rounded">
         <div
           className={cn(
             "h-full rounded",
-            col.health === StageHealth.Stuck ? "bg-destructive" : isSelling ? "bg-emerald-500/70" : "bg-primary/60",
+            col.health === StageHealth.Stuck ? "bg-destructive" : isSelling ? "bg-profit/70" : "bg-primary/60",
           )}
           style={{ width: `${Math.max(4, barPct)}%` }}
         />
       </div>
       {/* Dòng tiền + vé (câu 3 user 07/09) — `col.entries` đã có sẵn trong `DayFlowColumn`. */}
-      <div className="flex items-center justify-between gap-1 text-[10px] tabular-nums">
+      <div className="flex items-center justify-between gap-1 text-xs tabular-nums">
         <span className="font-medium">{formatNumber(col.revenue)}</span>
         <span className="text-muted-foreground">{formatNumber(col.entries)} vé</span>
       </div>
@@ -444,21 +443,21 @@ export function HubTimelineRail() {
 
   if (windowSlots.length === 0) {
     return (
-      <div className="rounded-xl border bg-card p-4 text-center text-muted-foreground text-xs shadow-sm">
+      <div className="bg-card text-muted-foreground rounded-xl border p-4 text-center text-xs shadow-sm">
         Chưa có kỳ nào trong ngày.
       </div>
     );
   }
 
   return (
-    <section className="flex flex-col gap-2 rounded-xl border bg-card p-2.5 shadow-sm">
+    <section className="bg-card flex flex-col gap-2 rounded-xl border p-2.5 shadow-sm">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold text-foreground text-sm">Dải kỳ · {dayFlow.length} kỳ hôm nay</h2>
+        <h2 className="text-foreground text-sm font-semibold">Dải kỳ · {dayFlow.length} kỳ hôm nay</h2>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => shiftWindow(-span)}
-            className="rounded p-1.5 hover:bg-muted"
+            className="hover:bg-muted rounded p-1.5"
             aria-label="Lùi"
           >
             <ChevronLeft className="size-3.5" />
@@ -469,7 +468,7 @@ export function HubTimelineRail() {
             disabled={isFollowing}
             className={cn(
               "flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors",
-              isFollowing ? "cursor-default text-muted-foreground/40" : "text-primary hover:bg-primary/10",
+              isFollowing ? "text-muted-foreground/40 cursor-default" : "text-primary hover:bg-primary/10",
             )}
           >
             <LocateFixed className="size-3.5" />
@@ -478,7 +477,7 @@ export function HubTimelineRail() {
           <button
             type="button"
             onClick={() => shiftWindow(span)}
-            className="rounded p-1.5 hover:bg-muted"
+            className="hover:bg-muted rounded p-1.5"
             aria-label="Tiến"
           >
             <ChevronRight className="size-3.5" />
@@ -487,16 +486,16 @@ export function HubTimelineRail() {
             <button
               type="button"
               onClick={() => adjustSpan(-2)}
-              className="rounded p-1 hover:bg-muted"
+              className="hover:bg-muted rounded p-1"
               aria-label="Thu hẹp cửa sổ"
             >
               <Minus className="size-3" />
             </button>
-            <span className="w-11 text-center text-[10px] text-muted-foreground tabular-nums">{span} kỳ</span>
+            <span className="text-muted-foreground w-11 text-center text-xs tabular-nums">{span} kỳ</span>
             <button
               type="button"
               onClick={() => adjustSpan(2)}
-              className="rounded p-1 hover:bg-muted"
+              className="hover:bg-muted rounded p-1"
               aria-label="Mở rộng cửa sổ"
             >
               <Plus className="size-3" />
@@ -545,11 +544,11 @@ export function HubTimelineRail() {
 /** Skeleton khớp chiều cao thật (header ~28px + card 88px + gap) — tránh layout shift. */
 export function HubTimelineRailSkeleton() {
   return (
-    <div className="flex flex-col gap-2 rounded-xl border bg-card p-2.5 shadow-sm">
-      <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+    <div className="bg-card flex flex-col gap-2 rounded-xl border p-2.5 shadow-sm">
+      <div className="bg-muted h-4 w-40 animate-pulse rounded" />
       <div className="flex h-[88px] items-stretch justify-center gap-1.5">
         {Array.from({ length: 9 }, (_, i) => i).map((i) => (
-          <div key={i} className="min-w-[96px] flex-1 basis-0 animate-pulse rounded-lg bg-muted/50" />
+          <div key={i} className="bg-muted/50 min-w-[96px] flex-1 basis-0 animate-pulse rounded-lg" />
         ))}
       </div>
     </div>

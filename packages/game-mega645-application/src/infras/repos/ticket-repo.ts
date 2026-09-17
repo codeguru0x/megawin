@@ -5,10 +5,8 @@
  */
 
 import { ALL_LISTABLE_STATUSES, TicketStatus } from "@megawin/game-core/entities";
-import type { TicketEntity } from "@megawin/game-mega645/entities";
-import { Mega645Collections } from "@megawin/game-mega645/entities";
-import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
-import { ObjectId } from "mongodb";
+import { Mega645Collections, type TicketEntity } from "@megawin/game-mega645/entities";
+import { ObjectId, type AnyBulkWriteOperation, type Document, type Filter } from "mongodb";
 
 import { TicketMapper } from "../mappers/ticket-mapper";
 import { BaseRepo } from "./base-repo";
@@ -26,7 +24,6 @@ export interface TicketSummary {
 }
 
 const PENDING_STATUSES = [TicketStatus.Paid];
-const COMPLETED_STATUSES = [TicketStatus.Completed, TicketStatus.Refunded, TicketStatus.Void];
 
 export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   constructor() {
@@ -127,8 +124,12 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
 
     if (from || to) {
       const dateRange: Record<string, Date> = {};
-      if (from) dateRange.$gte = from;
-      if (to) dateRange.$lte = to;
+      if (from) {
+        dateRange.$gte = from;
+      }
+      if (to) {
+        dateRange.$lte = to;
+      }
       filter.createdAt = dateRange;
     }
 
@@ -143,7 +144,9 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   }
 
   async bulkSyncSummaries(items: Array<{ ticketId: string; summary: TicketSummary }>): Promise<number> {
-    if (items.length === 0) return 0;
+    if (items.length === 0) {
+      return 0;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = [];

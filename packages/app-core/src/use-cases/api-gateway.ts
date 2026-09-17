@@ -20,7 +20,7 @@
  */
 
 import type { ApiErrorResponse, ApiResponseMeta, ApiSuccessResponse } from "@megawin/shared/api-types";
-import { type AppResult, appErrorToStatusCode } from "@megawin/shared/errors";
+import { appErrorToStatusCode, type AppResult } from "@megawin/shared/errors";
 
 // ============ Types ============
 

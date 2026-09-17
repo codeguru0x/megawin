@@ -27,10 +27,18 @@ const USERNAME_RE = /^[a-z0-9_]+@[a-z0-9_]+$/i;
  */
 export function detectIdentity(input: string): IdentityKind | null {
   const value = input.trim();
-  if (!value) return null;
-  if (UUID_V7_RE.test(value)) return "tx";
-  if (USERNAME_RE.test(value)) return "username";
-  if (ULID_RE.test(value)) return "accountId";
+  if (!value) {
+    return null;
+  }
+  if (UUID_V7_RE.test(value)) {
+    return "tx";
+  }
+  if (USERNAME_RE.test(value)) {
+    return "username";
+  }
+  if (ULID_RE.test(value)) {
+    return "accountId";
+  }
   return "batchKey";
 }
 

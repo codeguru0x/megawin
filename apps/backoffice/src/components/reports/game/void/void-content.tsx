@@ -163,8 +163,8 @@ export function VoidContent({
             <Ban className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">{gameName} — Kỳ huỷ</h1>
-            <p className="text-xs text-muted-foreground">Danh sách kỳ quay đã void và hoàn trả cho khách hàng</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">{gameName} — Kỳ huỷ</h1>
+            <p className="text-muted-foreground text-xs">Danh sách kỳ quay đã void và hoàn trả cho khách hàng</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export function VoidContent({
       {!!drawsData.error && level === "list" && (
         <Card className="gap-0 py-0">
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <p className="text-sm text-muted-foreground">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
+            <p className="text-muted-foreground text-sm">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
             <Button variant="outline" size="sm" onClick={() => drawsData.refetch()}>
               <RefreshCw className="mr-2 size-4" />
               Thử lại

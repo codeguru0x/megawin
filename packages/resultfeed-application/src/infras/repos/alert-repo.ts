@@ -6,8 +6,13 @@
  */
 
 import { docPath } from "@megawin/data/mongo";
-import type { AlertDoc, AlertEntity, ResultFeedAlertSeverity, ResultFeedAlertType } from "@megawin/resultfeed/entities";
-import { ResultFeedAlertStatus } from "@megawin/resultfeed/entities";
+import {
+  ResultFeedAlertStatus,
+  type AlertDoc,
+  type AlertEntity,
+  type ResultFeedAlertSeverity,
+  type ResultFeedAlertType,
+} from "@megawin/resultfeed/entities";
 
 import { AlertMapper } from "../mappers/alert-mapper";
 import { BaseRepo } from "./base-repo";

@@ -16,13 +16,13 @@
  */
 
 import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
-import type {
-  Power655DrawBettingStatsDoc,
-  Power655DrawBettingStatsEntity,
-  Power655PlayTypeStat,
-  Power655TopPotential,
+import {
+  Power655Collections,
+  type Power655DrawBettingStatsDoc,
+  type Power655DrawBettingStatsEntity,
+  type Power655PlayTypeStat,
+  type Power655TopPotential,
 } from "@megawin/game-power655/entities";
-import { Power655Collections } from "@megawin/game-power655/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";

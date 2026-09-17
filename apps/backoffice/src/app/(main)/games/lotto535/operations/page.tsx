@@ -13,7 +13,6 @@
  *   3. Tab Giám sát: Alerts → KPI (+Exposure) → Result
  *   4. Tab Phân tích cược: play type, heatmap 2 chiều (main + special), live feed
  */
-
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
@@ -63,10 +62,10 @@ function LastUpdatedBadge({ drawId }: { drawId: string | undefined }) {
   }, [qc, drawId]);
 
   return (
-    <span className="flex items-center gap-1 text-xs text-muted-foreground/70 tabular-nums">
+    <span className="text-muted-foreground/70 flex items-center gap-1 text-xs tabular-nums">
       <span className="relative flex size-1.5">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-60" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-amber-500" />
+        <span className="bg-warning absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+        <span className="bg-warning relative inline-flex size-1.5 rounded-full" />
       </span>
       Live · <span ref={spanRef} />
     </span>
@@ -94,7 +93,7 @@ function OperationsContent() {
   // Badge alert đọc `alertCounts` từ snapshot (timer 1) — không timer riêng.
   const { data: alertCounts } = useOpsSnapshot(effectiveDrawId, isSettled, (s) => s.alertCounts);
 
-  if (drawNotFound || noDrawAvailable)
+  if (drawNotFound || noDrawAvailable) {
     return (
       <DrawNotFound
         noData={noDrawAvailable}
@@ -103,19 +102,20 @@ function OperationsContent() {
         setCreateOpen={setCreateOpen}
       />
     );
+  }
 
   return (
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-sm">
+          <div className="from-warning to-loss flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lotto 5/35 — Vận hành</h1>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Lotto 5/35 — Vận hành</h1>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+              <p className="text-muted-foreground text-xs">Quản lý và giám sát kỳ quay</p>
               {isActiveForRefresh ? <LastUpdatedBadge drawId={effectiveDrawId} /> : null}
             </div>
           </div>
@@ -144,11 +144,11 @@ function OperationsContent() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="gap-6">
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="monitor" className="gap-1.5">
-            <Activity className="size-4 text-emerald-500" />
+            <Activity className="text-profit size-4" />
             Giám sát
           </TabsTrigger>
           <TabsTrigger value="analysis" className="gap-1.5">
-            <BarChart3 className="size-4 text-sky-500" />
+            <BarChart3 className="text-info size-4" />
             Phân tích cược
           </TabsTrigger>
         </TabsList>
@@ -186,14 +186,14 @@ function DrawNotFound({
 }) {
   return (
     <div className="@container/main flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-sm">
+          <div className="from-warning to-loss flex size-9 items-center justify-center rounded-xl bg-linear-to-br shadow-sm">
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lotto 5/35 — Vận hành</h1>
-            <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Lotto 5/35 — Vận hành</h1>
+            <p className="text-muted-foreground text-xs">Quản lý và giám sát kỳ quay</p>
           </div>
         </div>
         {noData && onCreateOpen && (
@@ -211,20 +211,22 @@ function DrawNotFound({
       )}
 
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <SearchX className="size-6 text-muted-foreground" />
+        <div className="bg-muted flex size-12 items-center justify-center rounded-full">
+          <SearchX className="text-muted-foreground size-6" />
         </div>
-        <h2 className="mt-4 text-base font-semibold text-foreground">
+        <h2 className="text-foreground mt-4 text-base font-semibold">
           {noData ? "Chưa có kỳ quay nào" : "Không tìm thấy kỳ quay"}
         </h2>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
           {noData
             ? "Hệ thống chưa có kỳ quay nào được tạo. Hãy tạo kỳ quay đầu tiên để bắt đầu vận hành."
             : "Kỳ quay được yêu cầu không tồn tại hoặc đã bị xóa khỏi hệ thống."}
         </p>
         <div className="mt-5 flex items-center gap-3">
           <Button variant="outline" size="sm" asChild>
-            <Link prefetch={false} href="/games/lotto535/draws">Lịch sử kỳ quay</Link>
+            <Link prefetch={false} href="/games/lotto535/draws">
+              Lịch sử kỳ quay
+            </Link>
           </Button>
           {noData ? (
             <Button size="sm" className="gap-2" onClick={onCreateOpen}>
@@ -233,7 +235,9 @@ function DrawNotFound({
             </Button>
           ) : (
             <Button size="sm" asChild>
-              <Link prefetch={false} href="/games/lotto535/operations">Về trang vận hành</Link>
+              <Link prefetch={false} href="/games/lotto535/operations">
+                Về trang vận hành
+              </Link>
             </Button>
           )}
         </div>

@@ -18,8 +18,12 @@ import { useJackpotCurrent } from "./use-jackpot";
 export function JackpotHeroCard() {
   const { data, isLoading } = useJackpotCurrent();
 
-  if (isLoading) return <Skeleton className="h-50 rounded-2xl" />;
-  if (!data) return null;
+  if (isLoading) {
+    return <Skeleton className="h-50 rounded-2xl" />;
+  }
+  if (!data) {
+    return null;
+  }
 
   const { cycle, progress } = data;
   const pct = progress.percentage;
@@ -30,27 +34,27 @@ export function JackpotHeroCard() {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border-2 p-6",
-        "bg-linear-to-br from-amber-50/90 via-yellow-50/70 to-orange-50/50",
-        "dark:from-amber-950/50 dark:via-yellow-950/40 dark:to-orange-950/30",
-        isHot ? "border-red-300 dark:border-red-800/60" : "border-amber-200 dark:border-amber-800/50",
+        "from-warning/90 via-warning/70 to-warning/50 bg-linear-to-br",
+        "from-warning/50 via-warning/40 to-warning/30",
+        isHot ? "border-loss" : "border-warning",
       )}
     >
       {/* Decorative orbs */}
-      <div className="pointer-events-none absolute -right-10 -top-10 size-48 rounded-full bg-linear-to-br from-yellow-300/25 to-orange-300/15 blur-3xl dark:from-yellow-500/10 dark:to-orange-500/5" />
-      <div className="pointer-events-none absolute -left-8 bottom-0 size-32 rounded-full bg-linear-to-tr from-amber-200/20 to-yellow-200/10 blur-2xl dark:from-amber-600/10 dark:to-yellow-600/5" />
+      <div className="from-warning/25 to-warning/15 pointer-events-none absolute -top-10 -right-10 size-48 rounded-full bg-linear-to-br blur-3xl" />
+      <div className="from-warning/20 to-warning/10 pointer-events-none absolute bottom-0 -left-8 size-32 rounded-full bg-linear-to-tr blur-2xl" />
 
       <div className="relative space-y-5">
         {/* Top row: icon + amount + badge */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30">
+            <div className="from-warning to-loss shadow-warning/30 flex size-12 items-center justify-center rounded-xl bg-linear-to-br shadow-lg">
               <Trophy className="size-6 text-white" />
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-amber-700/70 dark:text-amber-400/60">
+              <p className="text-warning/70 text-xs font-medium tracking-wider uppercase">
                 Jackpot hiện tại — Vòng #{cycle.cycleNo}
               </p>
-              <p className="mt-0.5 text-3xl font-extrabold tabular-nums tracking-tight text-amber-900 dark:text-amber-100">
+              <p className="text-warning mt-0.5 text-3xl font-extrabold tracking-tight tabular-nums">
                 {formatVND(cycle.currentAmount)}
               </p>
             </div>
@@ -58,7 +62,7 @@ export function JackpotHeroCard() {
 
           <div className="flex shrink-0 items-center gap-2">
             {isHot && (
-              <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
+              <Badge className="border-loss bg-loss text-loss gap-1">
                 <Flame className="size-3" />
                 Nóng
               </Badge>
@@ -69,12 +73,12 @@ export function JackpotHeroCard() {
         {/* Progress bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-medium text-amber-800/70 dark:text-amber-300/70">
+            <span className="text-warning/70 font-medium">
               Tiến trình đến ngưỡng chia — <span className="font-semibold">{formatVNDCompact(progress.threshold)}</span>
             </span>
-            <span className="font-bold tabular-nums text-amber-900 dark:text-amber-200">{pct.toFixed(1)}%</span>
+            <span className="text-warning font-bold tabular-nums">{pct.toFixed(1)}%</span>
           </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-amber-200/60 dark:bg-amber-900/50">
+          <div className="bg-warning/60 h-3 w-full overflow-hidden rounded-full">
             <div
               className="h-full rounded-full transition-all duration-700 ease-out"
               style={{
@@ -87,7 +91,7 @@ export function JackpotHeroCard() {
               }}
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">
+          <div className="text-warning/60 flex items-center justify-between text-xs">
             <span>
               {progress.remaining > 0 ? `Còn thiếu ${formatVNDCompact(progress.remaining)}` : "Đã đạt ngưỡng chia"}
             </span>
@@ -118,7 +122,9 @@ export function JackpotKpiCards() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return null;
+  }
 
   const { cycle, progress } = data;
   const growthPct =
@@ -128,22 +134,22 @@ export function JackpotKpiCards() {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <KpiCard
         icon={Layers}
-        iconBg="bg-blue-100 dark:bg-blue-900/50"
-        iconColor="text-blue-600 dark:text-blue-400"
+        iconBg="bg-info"
+        iconColor="text-info"
         label="Tích luỹ liên tiếp"
         value={`${cycle.drawCount} kỳ`}
         sub={`Từ ${cycle.startDrawId}`}
       />
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-        iconColor="text-emerald-600 dark:text-emerald-400"
+        iconBg="bg-profit"
+        iconColor="text-profit"
         label="Tổng tích lũy"
         value={formatVNDCompact(cycle.totalContribution)}
         sub={
           growthPct > 0 ? (
             <>
-              <span className="font-semibold text-profit">+{growthPct}%</span>
+              <span className="text-profit font-semibold">+{growthPct}%</span>
               {" so với khởi điểm"}
             </>
           ) : (
@@ -153,16 +159,16 @@ export function JackpotKpiCards() {
       />
       <KpiCard
         icon={TrendingUp}
-        iconBg="bg-purple-100 dark:bg-purple-900/50"
-        iconColor="text-purple-600 dark:text-purple-400"
+        iconBg="bg-game-max3d"
+        iconColor="text-game-max3d"
         label="Đỉnh cao nhất"
         value={formatVNDCompact(cycle.peakAmount)}
         sub={`Vòng #${cycle.cycleNo}`}
       />
       <KpiCard
         icon={Target}
-        iconBg="bg-amber-100 dark:bg-amber-900/50"
-        iconColor="text-amber-600 dark:text-amber-400"
+        iconBg="bg-warning"
+        iconColor="text-warning"
         label="Ngưỡng chia"
         value={formatVNDCompact(progress.threshold)}
         sub={progress.remaining > 0 ? `Còn thiếu ${formatVNDCompact(progress.remaining)}` : "Đã đạt ngưỡng"}
@@ -219,14 +225,14 @@ function KpiCard({
   sub?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-        {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
+        {sub && <p className="text-muted-foreground truncate text-xs">{sub}</p>}
       </div>
     </div>
   );

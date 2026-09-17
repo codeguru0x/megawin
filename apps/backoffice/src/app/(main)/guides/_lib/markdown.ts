@@ -56,10 +56,14 @@ export function extractToc(markdown: string): TocItem[] {
       inFence = !inFence;
       continue;
     }
-    if (inFence) continue;
+    if (inFence) {
+      continue;
+    }
 
     const match = HEADING_RE.exec(line);
-    if (!match || !match[1] || !match[2]) continue;
+    if (!match?.[1] || !match[2]) {
+      continue;
+    }
 
     const level = match[1].length;
     const text = match[2].trim();

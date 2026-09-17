@@ -39,7 +39,6 @@
  *    click mở tab mới — điều `onClick={router.push}` KHÔNG làm được, dù mở song song trang đích với
  *    hội thoại là nhu cầu thường trực của staff. `router.push` chỉ còn trong nhánh auto-navigate.
  */
-
 import { useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
@@ -134,7 +133,7 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
       prefetch={false}
       // `not-prose`: thẻ nằm giữa văn xuôi markdown của trợ lý (`.chat-md`) — không để style
       // anchor/paragraph của prose đè lên (cùng lý do `ToolResultLine` khai `not-prose`).
-      className="not-prose group flex w-full items-start gap-2.5 rounded-lg border bg-card px-2.5 py-2 transition-colors hover:border-primary/40 hover:bg-accent/40"
+      className="not-prose group bg-card hover:border-primary/40 hover:bg-accent/40 flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 transition-colors"
       href={output.href as Route}
       // Nhãn bị `truncate` khi dài hơn panel ⇒ giữ đường thoát đọc trọn ngữ cảnh bằng hover.
       title={output.label}
@@ -151,15 +150,15 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="min-w-0 flex-1 truncate font-medium text-sm">{title}</span>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
           {/* `shrink-0`: trạng thái LUÔN đọc được, phần bị cắt là tên trang (còn nguyên ở `title`). */}
-          <span className={cn("shrink-0 text-[11px]", autoNavigatedNow ? "text-muted-foreground" : "text-primary")}>
+          <span className={cn("shrink-0 text-xs", autoNavigatedNow ? "text-muted-foreground" : "text-primary")}>
             {autoNavigatedNow ? "Đã mở" : "Mở trang"}
           </span>
         </span>
-        {context !== undefined && <span className="mt-px block truncate text-muted-foreground text-xs">{context}</span>}
+        {context !== undefined && <span className="text-muted-foreground mt-px block truncate text-xs">{context}</span>}
         {downgradedForDirty && (
-          <span className="mt-1 flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-500">
+          <span className="text-warning mt-1 flex items-center gap-1 text-xs">
             <PencilLineIcon className="size-3 shrink-0" />
             Trang hiện tại có thay đổi chưa lưu
           </span>

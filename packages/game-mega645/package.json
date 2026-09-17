@@ -11,7 +11,8 @@
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "test:unit": "vitest run"
   },
   "exports": {
     "./entities": {
@@ -65,16 +66,21 @@
       "default": "./dist/labels/index.js"
     }
   },
-  "keywords": ["megawin", "mega645", "game", "domain"],
+  "keywords": [
+    "megawin",
+    "mega645",
+    "game",
+    "domain"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.6",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "dependencies": {
     "@megawin/game-core": "workspace:*",

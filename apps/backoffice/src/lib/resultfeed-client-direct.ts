@@ -11,8 +11,8 @@
  */
 
 import type { VietlottResultClient, VietlottResultRecord } from "@megawin/game-core/types";
-import type { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { PullResultsUseCase } from "@megawin/resultfeed-application/use-cases/results";
+import type { ResultFeedGameKey } from "@megawin/resultfeed/entities";
 
 const pullResultsUseCase = new PullResultsUseCase();
 

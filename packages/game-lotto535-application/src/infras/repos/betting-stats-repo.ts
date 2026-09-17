@@ -16,13 +16,13 @@
  */
 
 import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
-import type {
-  Lotto535DrawBettingStatsDoc,
-  Lotto535DrawBettingStatsEntity,
-  Lotto535PlayTypeStat,
-  Lotto535TopPotential,
+import {
+  Lotto535Collections,
+  type Lotto535DrawBettingStatsDoc,
+  type Lotto535DrawBettingStatsEntity,
+  type Lotto535PlayTypeStat,
+  type Lotto535TopPotential,
 } from "@megawin/game-lotto535/entities";
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";

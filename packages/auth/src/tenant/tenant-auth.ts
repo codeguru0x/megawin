@@ -5,7 +5,7 @@
 
 import { TenantRepository } from "@megawin/identity-application/repos";
 
-import { type TenantApiKeyAuthOptions, tenantApiKeyAuthMiddleware } from "../tenant-api-key-auth";
+import { tenantApiKeyAuthMiddleware, type TenantApiKeyAuthOptions } from "../tenant-api-key-auth";
 
 const TENANT_AUTH_PROJECTION = {
   tenantId: 1,

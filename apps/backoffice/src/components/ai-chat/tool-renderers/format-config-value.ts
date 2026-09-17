@@ -19,9 +19,9 @@ type ValueFormatter = (value: ConfigItem["value"]) => string;
 
 /**
  * Dispatch theo `ConfigUnit` bằng `Record` (không `switch`) — `switch` trên union string literal
- * dẫn xuất từ `as const` khiến Biome `noUnnecessaryConditions` báo nhầm "unreachable" (không
+ * dẫn xuất từ `as const` khiến Oxlint `typescript/no-unnecessary-condition` báo nhầm "unreachable" (không
  * resolve được type qua alias cross-module, giống ghi chú `useAwaitThenable` trong
- * `biome-lint-conventions.mdc` §d). `Record<ConfigUnit, ValueFormatter>` vẫn giữ compiler bắt
+ * `oxlint-lint-conventions.mdc` §d). `Record<ConfigUnit, ValueFormatter>` vẫn giữ compiler bắt
  * thiếu key khi `ConfigUnit` thêm member mới, mà không đụng rule đó.
  */
 const FORMATTERS: Record<ConfigUnit, ValueFormatter> = {

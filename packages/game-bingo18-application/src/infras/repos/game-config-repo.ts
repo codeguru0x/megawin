@@ -1,16 +1,16 @@
-import type {
-  BigSmallDrawPrizes,
-  DoubleMatchPrizes,
-  FinancialRates,
-  GlobalConfigEntity,
-  OpsConfig,
-  PlayRules,
-  SingleNumPrizes,
-  SumTotalPrizes,
-  TripleMatchPrizes,
-  VietlottPeriodAnchor,
+import {
+  Bingo18Collections,
+  type BigSmallDrawPrizes,
+  type DoubleMatchPrizes,
+  type FinancialRates,
+  type GlobalConfigEntity,
+  type OpsConfig,
+  type PlayRules,
+  type SingleNumPrizes,
+  type SumTotalPrizes,
+  type TripleMatchPrizes,
+  type VietlottPeriodAnchor,
 } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 
 import { GameConfigMapper } from "../mappers/game-config-mapper";
@@ -53,15 +53,33 @@ export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfi
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (config.rates) $set.rates = config.rates;
-    if (config.singleNumPrizes) $set.singleNumPrizes = config.singleNumPrizes;
-    if (config.doubleMatchPrizes) $set.doubleMatchPrizes = config.doubleMatchPrizes;
-    if (config.tripleMatchPrizes) $set.tripleMatchPrizes = config.tripleMatchPrizes;
-    if (config.sumTotalPrizes) $set.sumTotalPrizes = config.sumTotalPrizes;
-    if (config.bigSmallDrawPrizes) $set.bigSmallDrawPrizes = config.bigSmallDrawPrizes;
-    if (config.play) $set.play = config.play;
-    if (config.ops) $set.ops = config.ops;
-    if (config.vietlott) $set.vietlott = config.vietlott;
+    if (config.rates) {
+      $set.rates = config.rates;
+    }
+    if (config.singleNumPrizes) {
+      $set.singleNumPrizes = config.singleNumPrizes;
+    }
+    if (config.doubleMatchPrizes) {
+      $set.doubleMatchPrizes = config.doubleMatchPrizes;
+    }
+    if (config.tripleMatchPrizes) {
+      $set.tripleMatchPrizes = config.tripleMatchPrizes;
+    }
+    if (config.sumTotalPrizes) {
+      $set.sumTotalPrizes = config.sumTotalPrizes;
+    }
+    if (config.bigSmallDrawPrizes) {
+      $set.bigSmallDrawPrizes = config.bigSmallDrawPrizes;
+    }
+    if (config.play) {
+      $set.play = config.play;
+    }
+    if (config.ops) {
+      $set.ops = config.ops;
+    }
+    if (config.vietlott) {
+      $set.vietlott = config.vietlott;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Global },

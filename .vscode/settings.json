@@ -14,10 +14,9 @@
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "biomejs.biome",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit",
-    "source.organizeImports.biome": "explicit"
+    "source.fixAll.oxc": "explicit"
   },
 
   "[markdown]": {
@@ -26,12 +25,43 @@
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Tailwind v4 at-rules (@source, @theme, @custom-variant, @apply, @utility…)
+  // không nằm trong CSS chuẩn → built-in css language service báo unknownAtRules.
+  // Đây là false positive; PostCSS/Tailwind xử lý đúng lúc build. Biome trước đây
+  // có css.parser.tailwindDirectives — Oxlint không lint CSS, nên phải tắt ở đây.
+  "css.lint.unknownAtRules": "ignore",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
   "typescript.preferences.preferTypeOnlyAutoImports": true,
   "prettier.resolveGlobalModules": false,
-  "prettier.documentSelectors": ["**/*.md", "**/*.yml", "**/*.yaml"],
   "prettier.requireConfig": true,
+  "oxc.enable.oxlint": true,
+  "oxc.enable.oxfmt": false,
+  "oxc.typeAware": true,
+  "oxc.lint.run": "onSave",
   "git.ignoreLimitWarning": true,
   "vitest.disableWorkspaceWarning": true,
   "yaml.customTags": [
@@ -65,8 +95,5 @@
       "bold": false,
       "italic": false
     }
-  ],
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  ]
 }

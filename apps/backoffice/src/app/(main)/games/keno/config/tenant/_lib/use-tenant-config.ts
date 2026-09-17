@@ -6,7 +6,7 @@ import type {
   TenantConfigEntity,
   UpdateTenantConfigOutput,
 } from "@megawin/game-keno-application/use-cases/tenant-config";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -41,7 +41,7 @@ export function useCreateTenantConfig() {
       apiClient.put<UpdateTenantConfigOutput>(`/keno/tenant-config/${tenantId}`, { isEnabled: true }),
     onSuccess: (res, tenantId) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: kenoKeys.tenantConfigs });
+      void queryClient.invalidateQueries({ queryKey: kenoKeys.tenantConfigs });
       toast.success(`Đã tạo cấu hình Keno cho đại lý "${tenantId}".`);
     },
     onError: (err) => {
@@ -58,7 +58,7 @@ export function useUpdateTenantConfig(tenantId: string) {
       apiClient.put<UpdateTenantConfigOutput>(`/keno/tenant-config/${tenantId}`, data),
     onSuccess: (res) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: kenoKeys.tenantConfigs });
+      void queryClient.invalidateQueries({ queryKey: kenoKeys.tenantConfigs });
       toast.success(`Đã lưu cấu hình Keno tenant "${tenantId}" (v${res.version}).`);
     },
     onError: (err) => {

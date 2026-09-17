@@ -27,6 +27,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { SettleContext } from "./types";
+
 export interface BuildSettleReportResult {
   /** Mã kỳ quay. */
   drawId: string;

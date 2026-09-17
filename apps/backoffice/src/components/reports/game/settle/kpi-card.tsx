@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
  */
 export interface KpiCardProps {
   icon: LucideIcon;
-  /** Tailwind bg class cho icon container, VD: "bg-indigo-100 dark:bg-indigo-900/50" */
+  /** Tailwind bg class cho icon container, VD: "bg-info" */
   iconBg: string;
-  /** Tailwind text class cho icon, VD: "text-indigo-600 dark:text-indigo-400" */
+  /** Tailwind text class cho icon, VD: "text-info" */
   iconColor: string;
   label: string;
   value: string;
@@ -24,15 +24,15 @@ export interface KpiCardProps {
 
 export function KpiCard({ icon: Icon, iconBg, iconColor, label, value, valueClass, sub, subNode }: KpiCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>{value}</p>
+        <p className="text-muted-foreground text-xs font-medium">{label}</p>
+        <p className={cn("text-foreground text-lg font-bold tabular-nums", valueClass ?? "")}>{value}</p>
         {subNode}
-        {sub && <p className="truncate text-[11px] tabular-nums text-muted-foreground">{sub}</p>}
+        {sub && <p className="text-muted-foreground truncate text-xs tabular-nums">{sub}</p>}
       </div>
     </div>
   );

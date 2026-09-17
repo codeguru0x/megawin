@@ -6,9 +6,8 @@
  * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
-import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
-import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
+import { GameProduct, type EntryFeedDoc, type FeedVoidInfo } from "@megawin/game-core/entities";
 import type {
   EntryBoardSnapshot,
   EntryPayout,
@@ -109,7 +108,7 @@ function mapDrawResult(result: EntryResult | undefined): Mega645FeedDrawResult |
 }
 
 function mapPayoutDetail(payout: EntryPayout | undefined): Mega645FeedPayoutDetail | undefined {
-  if (!payout || !payout.tiers?.length) {
+  if (!payout?.tiers?.length) {
     return undefined;
   }
 

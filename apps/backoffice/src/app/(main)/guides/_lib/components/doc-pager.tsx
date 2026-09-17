@@ -11,7 +11,9 @@ import type { FlatDoc } from "../navigation";
  * @param next - Doc liền sau, hoặc `null` ở cuối topic.
  */
 export function DocPager({ prev, next }: { prev: FlatDoc | null; next: FlatDoc | null }) {
-  if (!prev && !next) return null;
+  if (!prev && !next) {
+    return null;
+  }
 
   return (
     <nav className="mt-10 grid grid-cols-2 gap-4 border-t pt-6">

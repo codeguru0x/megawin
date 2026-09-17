@@ -1,6 +1,5 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
-import type { TenantConfigDoc, TenantConfigEntity } from "@megawin/game-power655/entities";
-import { Power655Collections } from "@megawin/game-power655/entities";
+import { Power655Collections, type TenantConfigDoc, type TenantConfigEntity } from "@megawin/game-power655/entities";
 import { nowVN } from "@megawin/shared/utils";
 
 import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
@@ -28,8 +27,12 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
     const now = nowVN();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
-    if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
+    if (fields.commissionRate !== undefined) {
+      $set.commissionRate = fields.commissionRate;
+    }
+    if (fields.isEnabled !== undefined) {
+      $set.isEnabled = fields.isEnabled;
+    }
 
     const $setOnInsert: Record<string, unknown> = {
       scope: GameConfigScope.Tenant,
@@ -37,8 +40,12 @@ export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantC
       createdAt: now,
     };
 
-    if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0;
-    if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;
+    if (fields.commissionRate === undefined) {
+      $setOnInsert.commissionRate = 0;
+    }
+    if (fields.isEnabled === undefined) {
+      $setOnInsert.isEnabled = true;
+    }
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Tenant, tenantId },

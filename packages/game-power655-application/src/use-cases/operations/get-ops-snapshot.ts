@@ -101,16 +101,14 @@ export class GetOpsSnapshotUseCase extends UseCase<GetOpsSnapshotInput, GetOpsSn
       drawStatus: draw?.status ?? null,
       stats,
       numberStats,
-      topCombos: topCombos.map(
-        (c): Power655TopCombo => ({
-          comboKey: c.comboKey,
-          playType: c.playType,
-          mainNumbers: c.mainNumbers,
-          sets: c.sets,
-          accounts: c.accountCount,
-          amount: c.amount,
-        }),
-      ),
+      topCombos: topCombos.map((c): Power655TopCombo => ({
+        comboKey: c.comboKey,
+        playType: c.playType,
+        mainNumbers: c.mainNumbers,
+        sets: c.sets,
+        accounts: c.accountCount,
+        amount: c.amount,
+      })),
       topAccounts: topAccounts.map((a) => ({
         accountId: a.accountId,
         username: a.username,

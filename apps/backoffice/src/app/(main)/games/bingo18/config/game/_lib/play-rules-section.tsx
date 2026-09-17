@@ -55,7 +55,7 @@ function LabelWithTooltip({ label, tip, className }: { label: string; tip: strin
       {label}
       <Tooltip>
         <TooltipTrigger asChild>
-          <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
+          <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-72 text-xs">
           {tip}
@@ -116,7 +116,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
       form.watch("drawIntervalMinutes") !== config.play.drawIntervalMinutes);
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
@@ -124,8 +124,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
               {/* Cột trái — Giá vé & Giới hạn */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Giá vé & Giới hạn</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Cấu hình giá 1 lượt chơi và các giới hạn số lượng khi đặt cược Bingo 18.
                   </p>
                 </div>
@@ -135,7 +135,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   name="unitPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
+                      <FormLabel className="text-muted-foreground text-xs">
                         <LabelWithTooltip
                           label="Giá mỗi lượt chơi"
                           tip="Giá cho 1 panel × 1 lượt tham gia dự thưởng. Tổng tiền vé = giá này × số panel × số lượt × số kỳ. Tiền thưởng trả theo bội số giá này."
@@ -151,7 +151,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             name={field.name}
                             ref={field.ref}
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                             VND
                           </span>
                         </div>
@@ -167,7 +167,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     name="maxBasicBoardsPerTicket"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
+                        <FormLabel className="text-muted-foreground text-xs">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
                             tip={`Số panel (A–F) tối đa trên 1 vé — tối đa hiện cấu hình là ${form.watch("maxBasicBoardsPerTicket") || 0} panel. Mỗi panel chơi 1 cách độc lập: Một số, Hai số trùng, Ba số trùng, Cộng tổng, hoặc Lớn/Hoà/Nhỏ. Không được cấu hình vượt ${BINGO18_MAX_BOARDS} (trần cứng toàn hệ thống).`}
@@ -193,7 +193,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     name="maxDrawCount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
+                        <FormLabel className="text-muted-foreground text-xs">
                           <LabelWithTooltip
                             label="Kỳ liên tiếp tối đa"
                             tip="Mua 1 vé đăng ký tham gia tối đa bao nhiêu kỳ Bingo 18 liên tiếp. Mỗi kỳ tạo 1 entry riêng."
@@ -219,7 +219,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     name="salesCloseBeforeSeconds"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
+                        <FormLabel className="text-muted-foreground text-xs">
                           <LabelWithTooltip
                             label="Đóng bán trước"
                             tip={`Ngừng nhận vé trước giờ quay số bao nhiêu giây. Bingo 18 dùng đơn vị giây vì kỳ quay rất ngắn (hiện ${form.watch("drawIntervalMinutes") || 0} phút/kỳ).`}
@@ -248,7 +248,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     name="minBetCount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
+                        <FormLabel className="text-muted-foreground text-xs">
                           <LabelWithTooltip
                             label="Số lượt tối thiểu"
                             tip="Số lần tham gia dự thưởng tối thiểu mỗi board. Người chơi không thể chọn ít hơn giá trị này."
@@ -274,7 +274,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     name="maxBetCount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
+                        <FormLabel className="text-muted-foreground text-xs">
                           <LabelWithTooltip
                             label="Số lượt tối đa"
                             tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với 10 lượt nhận 10× giá trị giải."
@@ -299,10 +299,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
               </div>
 
               {/* Cột phải — Lịch quay số */}
-              <div className="border-t p-6 lg:border-l lg:border-t-0">
+              <div className="border-t p-6 lg:border-t-0 lg:border-l">
                 <div className="mb-5">
-                  <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <h3 className="text-foreground text-sm font-semibold">Lịch quay số</h3>
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Bingo 18 quay liên tục trong ngày theo khoảng cách cố định
                     {drawsPerDay !== null ? (
                       <>
@@ -319,7 +319,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   name="drawIntervalMinutes"
                   render={({ field }) => (
                     <FormItem className="mb-5">
-                      <FormLabel className="text-xs text-muted-foreground">
+                      <FormLabel className="text-muted-foreground text-xs">
                         <LabelWithTooltip
                           label="Khoảng cách kỳ (phút)"
                           tip="Thời gian giữa 2 kỳ quay liên tiếp. Mặc định 6 phút theo lịch Vietlott chính thức."
@@ -343,7 +343,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 />
 
                 <div className="space-y-3">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                     Khung giờ hoạt động
                   </p>
                   <div className="grid grid-cols-2 gap-3">
@@ -352,7 +352,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       name="firstDrawTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">
+                          <FormLabel className="text-muted-foreground text-xs">
                             <LabelWithTooltip
                               label="Kỳ đầu tiên"
                               tip="Giờ quay kỳ đầu tiên trong ngày. Hệ thống tự tính các kỳ tiếp theo cách đều nhau."
@@ -370,7 +370,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       name="lastDrawTime"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">
+                          <FormLabel className="text-muted-foreground text-xs">
                             <LabelWithTooltip
                               label="Kỳ cuối cùng"
                               tip="Giờ quay kỳ cuối cùng trong ngày. Không có kỳ nào được tạo sau thời điểm này."
@@ -387,9 +387,9 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
 
                 {scheduleChanged && (
-                  <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2.5 dark:bg-amber-900/20">
-                    <AlertTriangle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                  <div className="border-warning/50 bg-warning mt-4 flex items-start gap-2 rounded-lg border px-3 py-2.5">
+                    <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                    <p className="text-warning text-xs">
                       Đổi lịch quay sẽ làm <strong>mã kỳ Vietlott hiện tại vô hiệu</strong> — sau khi lưu, hãy vào mục
                       "Mã kỳ Vietlott" bên dưới để cập nhật lại, nếu không các kỳ sau sẽ được gợi ý mã kỳ sai.
                     </p>

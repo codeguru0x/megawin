@@ -15,8 +15,7 @@
  */
 
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { EntryReversal, TicketEntryEntity } from "@megawin/game-max3d/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
+import { Max3dCollections, type EntryReversal, type TicketEntryEntity } from "@megawin/game-max3d/entities";
 import { ObjectId } from "mongodb";
 
 import { EntryMapper } from "../mappers/entry-mapper";

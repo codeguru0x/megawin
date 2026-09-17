@@ -16,13 +16,13 @@ import type {
   EntryVoidInfo,
   TicketEntryEntity,
 } from "@megawin/game-bingo18/entities";
-import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
-import { GameProduct } from "@megawin/game-core/entities";
 import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
+import { GameProduct, type EntryFeedDoc, type FeedVoidInfo } from "@megawin/game-core/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
 import { Long } from "mongodb";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
+
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
   private readonly entryRepo = new EntryRepository();
 

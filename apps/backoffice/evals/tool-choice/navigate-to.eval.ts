@@ -17,8 +17,7 @@
  *    `navigateTo`) — thẻ điều hướng là nguồn chân lý duy nhất và nó render TRƯỚC phần chữ.
  */
 
-import type { EveEvalContext } from "eve/evals";
-import { defineEval } from "eve/evals";
+import { defineEval, type EveEvalContext } from "eve/evals";
 import { satisfies } from "eve/evals/expect";
 
 /** Output thật của `navigateTo` khi `ok: true` — không qua `toToolResult` (khác `getPlayerAccountInfo`). */

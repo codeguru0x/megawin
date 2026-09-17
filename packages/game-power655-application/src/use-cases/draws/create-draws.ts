@@ -16,8 +16,7 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc } from "@megawin/game-power655/entities";
-import { DrawNo, JackpotCycleClosedReasons } from "@megawin/game-power655/entities";
+import { DrawNo, JackpotCycleClosedReasons, type DrawDoc } from "@megawin/game-power655/entities";
 import { generateDrawId } from "@megawin/game-power655/helpers";
 import { POWER655_CREATE_DRAW_BATCH_MAX } from "@megawin/game-power655/schemas";
 import { AppException } from "@megawin/shared/errors";

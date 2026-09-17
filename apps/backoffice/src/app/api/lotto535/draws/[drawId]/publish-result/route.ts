@@ -1,6 +1,6 @@
+import { PublishResultUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
 import { LOTTO535_MAIN_COUNT } from "@megawin/game-lotto535/entities";
 import { lotto535MainNumberSchema, lotto535SpecialNumberSchema } from "@megawin/game-lotto535/schemas";
-import { PublishResultUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
 import { CompanyRole } from "@megawin/identity/entities";
 import { z } from "zod";
 
@@ -27,10 +27,14 @@ const publishResultSchema = z
 
 const publishResultUseCase = new PublishResultUseCase();
 
+const paramsSchema = z.object({
+  drawId: z.string().min(1),
+});
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(publishResultSchema)
+  .params(paramsSchema)
   .handler(async ({ params, body, session, request }) => {
-    const { drawId } = params as { drawId: string };
+    const { drawId } = params;
     return publishResultUseCase.run({ drawId, ...body, actor: actorFromSession(session!, request) });
   });

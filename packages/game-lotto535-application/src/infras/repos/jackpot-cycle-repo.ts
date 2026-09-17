@@ -1,11 +1,11 @@
-import type { JackpotCycleEntity } from "@megawin/game-lotto535/entities";
 import {
+  JackpotCycleStatus,
+  Lotto535Collections,
   type JackpotCycleCloseReason,
   type JackpotCycleDoc,
-  JackpotCycleStatus,
+  type JackpotCycleEntity,
   type JackpotSplitDetail,
   type JackpotWinnerInfo,
-  Lotto535Collections,
   type SplitRatios,
 } from "@megawin/game-lotto535/entities";
 
@@ -32,7 +32,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     config: { splitThreshold: number; splitRatios: SplitRatios };
   }): Promise<void> {
     const existing = await this.findOne({ status: JackpotCycleStatus.Active });
-    if (existing) return;
+    if (existing) {
+      return;
+    }
 
     const maxCycle = await this.findOne({}, { sort: { cycleNo: -1 } });
     const cycleNo = (maxCycle?.cycleNo ?? 0) + 1;
@@ -119,8 +121,12 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       updatedAt: now,
     };
 
-    if (input.splitDetail) $set.splitDetail = input.splitDetail;
-    if (input.winners) $set.winners = input.winners;
+    if (input.splitDetail) {
+      $set.splitDetail = input.splitDetail;
+    }
+    if (input.winners) {
+      $set.winners = input.winners;
+    }
 
     await this.updateOne(
       {

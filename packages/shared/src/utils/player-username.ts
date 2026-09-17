@@ -68,6 +68,8 @@ export function splitBackofficeUsername(megawinUsername: string): {
   tenantId: string | null;
 } {
   const parsed = parseUsername(megawinUsername);
-  if (parsed === null) return { primary: megawinUsername, tenantId: null };
+  if (parsed === null) {
+    return { primary: megawinUsername, tenantId: null };
+  }
   return { primary: parsed.playerExternalId, tenantId: parsed.tenantId };
 }

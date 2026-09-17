@@ -12,7 +12,6 @@
  *
  * Tiền lệ trong repo: `LastUpdatedBadge` (`bingo18/operations/page.tsx:46-61`).
  */
-
 import { useEffect, useRef } from "react";
 
 import { formatDurationCompact } from "@megawin/shared/utils";

@@ -185,7 +185,9 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
       }
 
       const activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) return;
+      if (!activeCycle) {
+        return;
+      }
 
       await this.closeAndCreateNextCycle(activeCycle, input);
     } else {
@@ -194,7 +196,9 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
       // Dùng giá trị snapshot từ PrepareSettle (cycleContributionBefore, cycleDrawCountBefore)
       // thay vì đọc lại activeCycle → idempotent khi retry (không cộng dồn 2 lần).
       const activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) return;
+      if (!activeCycle) {
+        return;
+      }
 
       await this.cycleRepo.updateCycleStats({
         cycleNo: input.config.cycleNo,
@@ -271,10 +275,14 @@ export class FinalizeSettleUseCase extends UseCase<SettleContextWithFinancials, 
    */
   private async ensureNextCycleExists(drawId: string, config: SettleContextWithFinancials["config"]): Promise<void> {
     const existingActive = await this.cycleRepo.getActiveCycle();
-    if (existingActive) return;
+    if (existingActive) {
+      return;
+    }
 
     const nextDraw = await this.drawRepo.findNextPendingDraw(drawId);
-    if (!nextDraw) return;
+    if (!nextDraw) {
+      return;
+    }
 
     await this.cycleRepo.createCycle({
       startDrawId: nextDraw.drawId,

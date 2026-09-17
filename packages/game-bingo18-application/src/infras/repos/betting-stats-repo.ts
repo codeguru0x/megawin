@@ -28,13 +28,13 @@
  */
 
 import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
-import type {
-  Bingo18BucketStat,
-  Bingo18DrawBettingStatsDoc,
-  Bingo18DrawBettingStatsEntity,
-  OpsStatsConfigBase,
+import {
+  Bingo18Collections,
+  type Bingo18BucketStat,
+  type Bingo18DrawBettingStatsDoc,
+  type Bingo18DrawBettingStatsEntity,
+  type OpsStatsConfigBase,
 } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
@@ -138,8 +138,7 @@ export class BettingStatsRepository extends BaseRepo<Bingo18DrawBettingStatsEnti
       // `applyDelta` có doc thật nhưng sub-object có thể thiếu → projection trả `undefined`.
       // Default 0 / undefined tại đây — cùng nguyên tắc "default 1 nơi duy nhất phía đọc".
       const totals = d.totals as
-        | { revenue: number; entries: number; sets: number; commission: number; largeBetCount: number }
-        | undefined;
+        { revenue: number; entries: number; sets: number; commission: number; largeBetCount: number } | undefined;
 
       return {
         drawId: d.drawId as string,

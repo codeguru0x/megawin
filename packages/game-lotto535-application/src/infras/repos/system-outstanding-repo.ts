@@ -10,8 +10,8 @@
  */
 
 import {
-  type OutstandingPerGameAggregateResult,
   SystemOutstandingReportRepository,
+  type OutstandingPerGameAggregateResult,
 } from "@megawin/game-core-application/repos";
 import { LOTTO535_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
 

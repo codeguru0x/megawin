@@ -37,7 +37,9 @@ export class VerifyAndEnableMfaUseCase extends UseCase<VerifyAndEnableMfaInput, 
         throw AppException.badRequest("Mã xác thực không hợp lệ. Vui lòng thử lại.");
       }
     } catch (error: unknown) {
-      if (error instanceof AppException) throw error;
+      if (error instanceof AppException) {
+        throw error;
+      }
 
       const errName = error instanceof Error ? error.constructor.name : "UnknownError";
 

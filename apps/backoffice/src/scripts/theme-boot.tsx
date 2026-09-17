@@ -130,13 +130,11 @@ export function ThemeBootScript() {
   const inserted = useRef<boolean>(false);
 
   useServerInsertedHTML(() => {
-    // biome-ignore lint/suspicious/noUnnecessaryConditions: Biome không theo được mutation `inserted.current = true` xảy ra trong closure ở dòng dưới nên narrow sai thành literal false; guard này thực tế chặn lần flush thứ 2 trở đi.
     if (inserted.current) {
       return null;
     }
     inserted.current = true;
 
-    // biome-ignore lint/security/noDangerouslySetInnerHtml: required for pre-hydration boot script
     return <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />;
   });
 

@@ -32,15 +32,18 @@ function DrawList() {
   const { data, isLoading, error } = useBingo18DrawList(from, to, page);
   const totalPages = data ? Math.ceil(data.total / LIMIT) : 1;
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <GameDrawKpiStripSkeleton />
         <TableSkeleton />
       </div>
     );
-  if (error) return <ErrorCard />;
-  if (!data?.data.length)
+  }
+  if (error) {
+    return <ErrorCard />;
+  }
+  if (!data?.data.length) {
     return (
       <EmptyCard
         icon="calendar"
@@ -48,6 +51,7 @@ function DrawList() {
         description="Không tìm thấy kỳ quay nào trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày."
       />
     );
+  }
 
   return (
     <div className="space-y-4">
@@ -70,11 +74,14 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
   const { navigateToPlayersInDraw } = useBingo18ReportFilters();
   const { data, isLoading } = useBingo18DrawTenants(drawId);
 
-  if (isLoading) return <TableSkeleton rows={6} />;
-  if (!data?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={6} />;
+  }
+  if (!data?.length) {
     return (
       <EmptyCard icon="building" message="Không có dữ liệu" description="Không có đại lý nào tham gia kỳ quay này." />
     );
+  }
 
   return <GameDrawTenantTable drawId={drawId} rows={data} onRowClick={navigateToPlayersInDraw} />;
 }
@@ -85,9 +92,12 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
   const { navigateToEntries } = useBingo18ReportFilters();
   const { data: players, isLoading } = useBingo18Players(drawId, tenantId);
 
-  if (isLoading) return <TableSkeleton rows={5} />;
-  if (!players?.length)
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+  if (!players?.length) {
     return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
+  }
 
   const rows = players.map((p) => ({
     accountId: p.accountId,

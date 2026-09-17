@@ -1,9 +1,8 @@
 "use client";
 
-import { displayVNDateTime, formatNumber } from "@megawin/shared/utils";
+import { formatNumber } from "@megawin/shared/utils";
 import { RefreshCw, Ticket } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,20 +30,6 @@ export interface VoidEntryListProps {
   lineCountLabel?: string;
 }
 
-const REFUND_STATUS_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  pending: "secondary",
-  dispatched: "outline",
-  confirmed: "default",
-  failed: "destructive",
-};
-
-const REFUND_STATUS_LABEL: Record<string, string> = {
-  pending: "Chờ xử lý",
-  dispatched: "Đã gửi",
-  confirmed: "Hoàn tất",
-  failed: "Thất bại",
-};
-
 /**
  * Level 4 — danh sách entries void của 1 player.
  *
@@ -68,11 +53,11 @@ export function VoidEntryList({
   if (isLoading) {
     return (
       <Card className="gap-0 py-0">
-        <CardHeader className="px-5 pb-2 pt-4">
+        <CardHeader className="px-5 pt-4 pb-2">
           <Skeleton className="h-4 w-48" />
           <Skeleton className="mt-1 h-3 w-72" />
         </CardHeader>
-        <CardContent className="space-y-2 px-5 pb-4 pt-0">
+        <CardContent className="space-y-2 px-5 pt-0 pb-4">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
@@ -85,7 +70,7 @@ export function VoidEntryList({
     return (
       <Card className="gap-0 py-0">
         <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-          <p className="text-sm text-muted-foreground">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
+          <p className="text-muted-foreground text-sm">Lỗi tải dữ liệu. Vui lòng thử lại.</p>
           <Button variant="outline" size="sm" onClick={onRefetch}>
             <RefreshCw className="mr-2 size-4" />
             Thử lại
@@ -97,19 +82,19 @@ export function VoidEntryList({
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Ticket className="size-4 text-muted-foreground" />
+          <Ticket className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Phiếu cược — {displayName}</CardTitle>
         </div>
         <CardDescription className="text-xs">
           {rows.length} phiếu · Kỳ {drawId} · {tenantId} · Click để xem chi tiết
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-0 pb-4 pt-0">
+      <CardContent className="px-0 pt-0 pb-4">
         {rows.length === 0 ? (
           <div className="flex h-30 items-center justify-center">
-            <p className="text-sm text-muted-foreground">Không có entries void.</p>
+            <p className="text-muted-foreground text-sm">Không có entries void.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -126,7 +111,7 @@ export function VoidEntryList({
                 {rows.map((entry) => (
                   <TableRow
                     key={entry.id}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => onRowClick(entry)}
                   >
                     <TableCell className="pl-5 font-mono text-sm">{entry.ticketNo ?? entry.id}</TableCell>
@@ -147,7 +132,7 @@ export function VoidEntryList({
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(entry.originalAmount)}
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums font-medium text-amber-600 dark:text-amber-400">
+                    <TableCell className="text-warning text-right text-sm font-medium tabular-nums">
                       {formatNumber(entry.refundAmount)}
                     </TableCell>
                   </TableRow>

@@ -14,7 +14,6 @@
  * định TẮT (zustand). So `prevStuckCount` bằng `useRef`, KHÔNG `useEffect` + state — tránh
  * thêm 1 nguồn re-render cho thứ chỉ cần side-effect.
  */
-
 import { useEffect, useRef } from "react";
 
 import { AlertTriangle, Ban, PlayCircle, RotateCcw, XCircle } from "lucide-react";
@@ -38,7 +37,7 @@ function BannerRow({ item }: { item: BannerItemDef }) {
   const toneClass =
     item.tone === "destructive"
       ? "border-destructive/30 bg-destructive/10 text-destructive"
-      : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
+      : "border-warning/30 bg-warning/10 text-warning";
 
   return (
     <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm ${toneClass}`}>
@@ -50,7 +49,7 @@ function BannerRow({ item }: { item: BannerItemDef }) {
         <button
           type="button"
           onClick={item.onAction}
-          className="shrink-0 rounded-md border border-current/30 px-2.5 py-1 font-medium text-xs transition-opacity hover:opacity-80"
+          className="shrink-0 rounded-md border border-current/30 px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80"
         >
           {item.actionLabel}
         </button>

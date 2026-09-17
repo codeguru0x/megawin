@@ -10,19 +10,18 @@
  * `applyMachineDecision` để không thể vô tình lẫn write path máy vào field này (grep để audit).
  */
 
-import type { CursorPage } from "@megawin/data/mongo";
-import { docPath } from "@megawin/data/mongo";
-import type {
-  ConflictPolicy,
-  ConsensusAgreement,
-  ConsensusDoc,
-  ConsensusEntity,
-  ConsensusHumanVerify,
-  ResultFeedGameKey,
+import { docPath, type CursorPage } from "@megawin/data/mongo";
+import {
+  ConsensusState,
+  DecidedBy,
+  type ConflictPolicy,
+  type ConsensusAgreement,
+  type ConsensusDoc,
+  type ConsensusEntity,
+  type ConsensusHumanVerify,
+  type ResultFeedGameKey,
 } from "@megawin/resultfeed/entities";
-import { ConsensusState, DecidedBy } from "@megawin/resultfeed/entities";
-import type { AnyBulkWriteOperation, BulkWriteResult, Document, Filter } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type BulkWriteResult, type Document, type Filter } from "mongodb";
 
 import { ConsensusMapper } from "../mappers/consensus-mapper";
 import { BaseRepo } from "./base-repo";

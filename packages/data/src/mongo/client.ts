@@ -1,5 +1,6 @@
 import { isDevNextJs } from "@megawin/shared/utils";
-import { type Db, MongoClient } from "mongodb";
+import { MongoClient, type Db } from "mongodb";
+
 import "../types/declarations/global";
 
 const __mongoClientCache__ = new Map<string, MongoClient>();
@@ -12,7 +13,7 @@ const __mongoDbCache__ = new Map<string, Db>(); // `${envKey}::${dbName}`
  * @returns Map<string, MongoClient>
  */
 function getClientCache(): Map<string, MongoClient> {
-  if (!isDevNextJs) {
+  if (!isDevNextJs()) {
     return __mongoClientCache__;
   }
 
@@ -29,7 +30,7 @@ function getClientCache(): Map<string, MongoClient> {
  * @returns
  */
 function getDbCache(): Map<string, Db> {
-  if (!isDevNextJs) {
+  if (!isDevNextJs()) {
     return __mongoDbCache__;
   }
 
@@ -51,9 +52,7 @@ export const getMongoClient = async ({
   mongoEnvKey: string;
   clientOptions?: ConstructorParameters<typeof MongoClient>[1];
 }): Promise<MongoClient> => {
-  // Nếu không có uri thì tự động  tìm  env MONGODB_URI
-  mongoEnvKey = mongoEnvKey ?? "MONGODB_URI";
-
+  // mongoEnvKey bắt buộc (caller / BaseRepo đã default "MONGODB_URI" nếu thiếu).
   const clientCache = getClientCache();
 
   const cached = clientCache.get(mongoEnvKey);

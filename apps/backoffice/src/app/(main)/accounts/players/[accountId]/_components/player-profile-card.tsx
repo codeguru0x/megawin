@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { AccountStatusLabel, type AccountStatus } from "@megawin/identity/entities";
 import { Building2, CalendarClock, CircleUser, Clock, Shield } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -30,13 +30,13 @@ interface PlayerProfileCardProps {
 export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfileCardProps) {
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <CircleUser className="size-4 text-muted-foreground" />
+          <CircleUser className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Thông tin tài khoản</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         {isLoading && (
           <div className="space-y-3 pt-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -47,9 +47,9 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
             ))}
           </div>
         )}
-        {isError && <p className="py-8 text-center text-sm text-destructive">Không thể tải thông tin tài khoản.</p>}
+        {isError && <p className="text-destructive py-8 text-center text-sm">Không thể tải thông tin tài khoản.</p>}
         {!isLoading && !isError && profile && (
-          <div className="divide-y divide-border/50">
+          <div className="divide-border/50 divide-y">
             <InfoRow
               icon={<CircleUser className="size-4" />}
               label="Tên tài khoản"
@@ -74,7 +74,7 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
               icon={<Clock className="size-4" />}
               label="Ngày tạo"
               value={
-                <span className="tabular-nums text-sm">
+                <span className="text-sm tabular-nums">
                   {new Date(profile.createdAt).toLocaleDateString("vi-VN", {
                     year: "numeric",
                     month: "2-digit",
@@ -89,7 +89,7 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
               icon={<CalendarClock className="size-4" />}
               label="Cập nhật lần cuối"
               value={
-                <span className="tabular-nums text-sm">
+                <span className="text-sm tabular-nums">
                   {new Date(profile.updatedAt).toLocaleDateString("vi-VN", {
                     year: "numeric",
                     month: "2-digit",
@@ -110,7 +110,7 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
 function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
-      <div className="flex items-center gap-2.5 text-muted-foreground">
+      <div className="text-muted-foreground flex items-center gap-2.5">
         {icon}
         <span className="text-sm">{label}</span>
       </div>

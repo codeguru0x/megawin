@@ -336,7 +336,9 @@ export class TriggerResettleUseCase extends UseCase<TriggerResettleInput, Trigge
    */
   private async assertNoPendingPriorDraw(drawId: string): Promise<void> {
     const pending = await this.drawRepo.findPendingResettleBeforeDraw(drawId);
-    if (!pending) return;
+    if (!pending) {
+      return;
+    }
 
     throw new AppException(
       "RESETTLE_CASCADE_ORDER",

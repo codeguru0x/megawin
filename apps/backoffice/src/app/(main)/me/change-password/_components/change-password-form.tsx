@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation } from "@tanstack/react-query";
 import { Check, Eye, EyeOff, Info, KeyRound, Loader2, ShieldCheck, X } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import { type ChangePasswordFormValues, changePasswordSchema, PASSWORD_RULES } from "../_lib/schema";
+import { changePasswordSchema, PASSWORD_RULES, type ChangePasswordFormValues } from "../_lib/schema";
 
 export function ChangePasswordForm() {
   const [showCurrent, setShowCurrent] = useState(false);
@@ -59,10 +59,10 @@ export function ChangePasswordForm() {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-3 pt-4">
+      <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/50">
-            <KeyRound className="size-3.5 text-violet-600 dark:text-violet-400" />
+          <div className="bg-game-max3d flex size-7 items-center justify-center rounded-lg">
+            <KeyRound className="text-game-max3d size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Đổi mật khẩu</CardTitle>
@@ -72,7 +72,7 @@ export function ChangePasswordForm() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-5 pt-0">
+      <CardContent className="px-5 pt-0 pb-5">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-md space-y-5">
             <FormField
@@ -99,9 +99,9 @@ export function ChangePasswordForm() {
                         tabIndex={-1}
                       >
                         {showCurrent ? (
-                          <EyeOff className="size-4 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground size-4" />
                         ) : (
-                          <Eye className="size-4 text-muted-foreground" />
+                          <Eye className="text-muted-foreground size-4" />
                         )}
                       </Button>
                     </div>
@@ -135,9 +135,9 @@ export function ChangePasswordForm() {
                         tabIndex={-1}
                       >
                         {showNew ? (
-                          <EyeOff className="size-4 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground size-4" />
                         ) : (
-                          <Eye className="size-4 text-muted-foreground" />
+                          <Eye className="text-muted-foreground size-4" />
                         )}
                       </Button>
                     </div>
@@ -173,9 +173,9 @@ export function ChangePasswordForm() {
                         tabIndex={-1}
                       >
                         {showConfirm ? (
-                          <EyeOff className="size-4 text-muted-foreground" />
+                          <EyeOff className="text-muted-foreground size-4" />
                         ) : (
-                          <Eye className="size-4 text-muted-foreground" />
+                          <Eye className="text-muted-foreground size-4" />
                         )}
                       </Button>
                     </div>
@@ -205,26 +205,26 @@ export function ChangePasswordForm() {
             </div>
 
             {/* Lưu ý bảo mật — nằm trong cùng card */}
-            <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/20">
+            <div className="border-warning/60 bg-warning/50 rounded-lg border p-4">
               <div className="mb-2.5 flex items-center gap-2">
-                <Info className="size-3.5 text-amber-600 dark:text-amber-400" />
-                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">Lưu ý bảo mật</span>
+                <Info className="text-warning size-3.5" />
+                <span className="text-warning text-xs font-semibold">Lưu ý bảo mật</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
+              <ul className="text-muted-foreground space-y-1.5 text-xs">
                 <li className="flex items-center gap-2">
-                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
+                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
                   Không sử dụng lại mật khẩu đã dùng ở dịch vụ khác
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
+                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
                   Đổi mật khẩu định kỳ mỗi 90 ngày
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
+                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
                   Không chia sẻ mật khẩu với bất kỳ ai
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="block size-1 shrink-0 rounded-full bg-amber-500" />
+                  <span className="bg-warning block size-1 shrink-0 rounded-full" />
                   Sử dụng trình quản lý mật khẩu (Password Manager) để lưu trữ an toàn
                 </li>
               </ul>
@@ -245,13 +245,13 @@ function PasswordStrength({ password }: { password: string }) {
     weak: { label: "Yếu", color: "bg-destructive", textColor: "text-destructive" },
     medium: {
       label: "Trung bình",
-      color: "bg-amber-500",
-      textColor: "text-amber-600 dark:text-amber-400",
+      color: "bg-warning",
+      textColor: "text-warning",
     },
     strong: {
       label: "Mạnh",
-      color: "bg-emerald-500",
-      textColor: "text-emerald-600 dark:text-emerald-400",
+      color: "bg-profit",
+      textColor: "text-profit",
     },
   } as const;
 
@@ -279,7 +279,7 @@ function PasswordStrength({ password }: { password: string }) {
               key={rule.label}
               className={cn(
                 "flex items-center gap-2 text-xs transition-colors",
-                passed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+                passed ? "text-profit" : "text-muted-foreground",
               )}
             >
               {passed ? <Check className="size-3 shrink-0" /> : <X className="size-3 shrink-0" />}

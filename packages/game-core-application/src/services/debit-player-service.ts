@@ -47,11 +47,14 @@
 import { TxIntentPhase } from "@megawin/game-core/entities";
 import { ApiClientError } from "@megawin/shared/api-types";
 import { AppException } from "@megawin/shared/errors";
-import type { Currency } from "@megawin/shared/types";
-import { TransactionAction, TransactionReason } from "@megawin/shared/types";
+import { TransactionAction, TransactionReason, type Currency } from "@megawin/shared/types";
 import { generateId, logError, toTenantUsername } from "@megawin/shared/utils";
-import type { TenantGatewayClient, TransactionRequest } from "@megawin/tenant-gateway";
-import { TxLoggingPolicy, tenantGateway } from "@megawin/tenant-gateway";
+import {
+  tenantGateway,
+  TxLoggingPolicy,
+  type TenantGatewayClient,
+  type TransactionRequest,
+} from "@megawin/tenant-gateway";
 
 import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
 

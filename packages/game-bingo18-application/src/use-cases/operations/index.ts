@@ -3,13 +3,7 @@
  */
 
 export { AckAlertUseCase } from "./ack-alert";
-export type {
-  AckAlertInput,
-  AckAlertOutput,
-  AlertGroup,
-  ListAlertsInput,
-  ListAlertsOutput,
-} from "./dto/alerts.dto";
+export type { AckAlertInput, AckAlertOutput, AlertGroup, ListAlertsInput, ListAlertsOutput } from "./dto/alerts.dto";
 export type { DrawSelectorItem, GetDrawSelectorOutput } from "./dto/draw-selector.dto";
 export type {
   OpsHubDrawRow,
@@ -17,12 +11,7 @@ export type {
   OpsHubSnapshotOutput,
   OpsHubThresholds,
 } from "./dto/hub-snapshot.dto";
-export type {
-  GetLiveEntriesInput,
-  GetLiveEntriesOutput,
-  LiveEntryBoard,
-  LiveEntryItem,
-} from "./dto/live-entries.dto";
+export type { GetLiveEntriesInput, GetLiveEntriesOutput, LiveEntryBoard, LiveEntryItem } from "./dto/live-entries.dto";
 export type {
   GetOpsSnapshotInput,
   GetOpsSnapshotOutput,

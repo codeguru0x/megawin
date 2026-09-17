@@ -26,8 +26,11 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { Max3dproDrawPairStatsDoc, Max3dproDrawPairStatsEntity } from "@megawin/game-max3dpro/entities";
-import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
+import {
+  Max3dproCollections,
+  type Max3dproDrawPairStatsDoc,
+  type Max3dproDrawPairStatsEntity,
+} from "@megawin/game-max3dpro/entities";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
 import { PairStatsMapper } from "../mappers/pair-stats-mapper";

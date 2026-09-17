@@ -10,11 +10,11 @@
  */
 
 import { UseCase } from "@megawin/app-core/use-cases";
-import { GameProduct } from "@megawin/game-core/entities";
 import {
-  type PublishSettleDailyResult,
   SystemPublishSettleDailyUseCase,
+  type PublishSettleDailyResult,
 } from "@megawin/game-core-application/use-cases";
+import { GameProduct } from "@megawin/game-core/entities";
 
 import { SystemSettleGameDailyRepo, SystemSettleTenantDailyRepo } from "../../infras/repos";
 

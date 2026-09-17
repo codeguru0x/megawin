@@ -14,7 +14,7 @@
    Path trỏ vào symlink pnpm ở apps/backoffice/node_modules — root node_modules KHÔNG có
    streamdown (pnpm không hoist), nên KHÔNG đổi thành `../../../../node_modules/...`.
    Đặt SAU mọi @import: @source không phải @import nên chèn vào giữa sẽ làm các @import
-   phía dưới thành invalid (biome noInvalidPositionAtImportRule). */
+   phía dưới thành invalid (CSS @import order / invalid @import position). */
 @source "../../node_modules/streamdown/dist/*.js";
 @source "../../node_modules/@streamdown/cjk/dist/*.js";
 @source "../../node_modules/@streamdown/code/dist/*.js";
@@ -67,6 +67,20 @@
   --color-profit-foreground: var(--profit-foreground);
   --color-loss: var(--loss);
   --color-loss-foreground: var(--loss-foreground);
+
+  /* ── Status semantic colors ────────────────────────────────────────────── */
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* ── Board Indicator Colors (A–F) ──────────────────────────────────────── */
+  --color-board-a: var(--board-a);
+  --color-board-b: var(--board-b);
+  --color-board-c: var(--board-c);
+  --color-board-d: var(--board-d);
+  --color-board-e: var(--board-e);
+  --color-board-f: var(--board-f);
 
   /* ── Game Brand Colors ───────────────────────────────────────────────────── */
   /* Primary brand token per game — dùng cho charts, badges, borders, icons.   */
@@ -136,6 +150,13 @@ These serve as the fallback; there is no separate default.css file. */
   --profit-foreground: oklch(1 0 0); /* white */
   --loss: oklch(0.577 0.245 27.325); /* red-500 #ef4444 — đồng bộ với --destructive */
   --loss-foreground: oklch(1 0 0); /* white */
+
+  /* ── Status semantic colors ────────────────────────────────────────────── */
+  /* warning ≈ amber; info ≈ blue — thay raw text-amber-* / text-blue-* */
+  --warning: oklch(0.7 0.175 62.5); /* amber-600 */
+  --warning-foreground: oklch(0.28 0.07 46);
+  --info: oklch(0.546 0.245 262.881); /* ~blue/primary chart */
+  --info-foreground: oklch(0.97 0.014 254.604);
 
   /* ── Game Brand Colors (light mode) ────────────────────────────────────── */
   /* Mega 6/45 — Teal (jackpot: teal-400→emerald-500) */
@@ -213,6 +234,11 @@ These serve as the fallback; there is no separate default.css file. */
   --profit-foreground: oklch(0.1 0.05 150);
   --loss: oklch(0.704 0.191 22.216); /* red-400 #f87171 — đồng bộ với --destructive dark */
   --loss-foreground: oklch(0.1 0.05 27);
+
+  --warning: oklch(0.85 0.13 70.1); /* amber-400 */
+  --warning-foreground: oklch(0.21 0.055 70.1);
+  --info: oklch(0.707 0.165 254.6); /* blue-400 */
+  --info-foreground: oklch(0.1 0.05 254);
 
   /* ── Game Brand Colors (dark mode) ─────────────────────────────────────── */
   /* Sáng hơn so với light mode để dễ đọc trên nền tối */

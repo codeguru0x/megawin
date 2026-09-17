@@ -11,10 +11,14 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+const paramsSchema = z.object({
+  tenantId: z.string().min(1),
+});
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .query(querySchema)
+  .params(paramsSchema)
   .handler(async ({ query, params }) => {
-    const tenantId = (await params).tenantId as string;
+    const tenantId = params.tenantId;
     return new ListTenantDrawsUseCase().run({ ...query, tenantId });
   });

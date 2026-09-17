@@ -8,9 +8,7 @@
  * Header là `ReactNode` truyền qua prop thay vì cờ boolean bên trong (composition, không phải
  * boolean prop proliferation — xem `vercel-composition-patterns` §1.1).
  */
-
-import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import type { EveMessage } from "eve/react";
 import { AlertTriangleIcon } from "lucide-react";
@@ -21,11 +19,9 @@ import { Button } from "@/components/ui/button";
 
 import { useAiPanel } from "../ai-panel/ai-panel-provider";
 import { AssistantHeader } from "./assistant-header";
-import type { AiComposerHandle } from "./composer";
-import { AiComposer } from "./composer";
+import { AiComposer, type AiComposerHandle } from "./composer";
 import { AiEmptyState } from "./empty-state";
-import type { AgentInputResponseInput } from "./render-message";
-import { AgentMessage } from "./render-message";
+import { AgentMessage, type AgentInputResponseInput } from "./render-message";
 
 /**
  * Ảnh chụp message assistant cuối cùng tại ĐÚNG lúc một lượt bắt đầu.
@@ -162,7 +158,7 @@ export function ChatPanel({ header }: { header: ReactNode }) {
   // tránh một render trung gian mà baseline còn là của lượt trước.
   const turnBaselineRef = useRef<TurnBaseline | null>(null);
   const wasActiveTurnRef = useRef(false);
-  // `undefined` = render đầu tiên (ref chưa được gán lần nào). Không dùng `useRef(true)`: Biome hẹp
+  // `undefined` = render đầu tiên (ref chưa được gán lần nào). Không dùng `useRef(true)`: Linter hẹp
   // type về literal `true` và báo `noUnnecessaryConditions`.
   const hasRenderedRef = useRef<boolean | undefined>(undefined);
   // Cửa ghi vào composer cho nút "Hỏi lại câu này" trên message assistant — xem `AiComposerHandle`.
@@ -283,9 +279,9 @@ export function ChatPanel({ header }: { header: ReactNode }) {
         </Conversation>
         <div className="pointer-events-none absolute inset-x-0 bottom-0">
           {cancelStuck && (
-            <div className="pointer-events-auto mx-auto mb-2 flex w-full max-w-3xl items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs backdrop-blur-sm">
-              <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-              <p className="flex-1 text-muted-foreground">
+            <div className="border-destructive/30 bg-destructive/5 pointer-events-auto mx-auto mb-2 flex w-full max-w-3xl items-start gap-2 rounded-lg border px-3 py-2 text-xs backdrop-blur-sm">
+              <AlertTriangleIcon className="text-destructive mt-0.5 size-3.5 shrink-0" />
+              <p className="text-muted-foreground flex-1">
                 Không dừng được tác vụ. Hãy bắt đầu chat mới để tiếp tục làm việc.
               </p>
               <Button onClick={newChat} size="sm" variant="outline">

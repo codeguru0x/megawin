@@ -14,15 +14,17 @@
  * nhiều doc trùng loại/scope trong 1 kỳ (payload cập nhật mỗi tick).
  */
 
-import type {
-  Bingo18BucketStat,
-  Bingo18DrawBettingStatsDoc,
-  Bingo18OpsAlertDoc,
-  OpsAlertsConfig,
+import {
+  Bingo18OpsAlertType,
+  Bingo18PlayType,
+  OpsAlertSeverity,
+  OpsAlertStatus,
+  type Bingo18BucketStat,
+  type Bingo18DrawBettingStatsDoc,
+  type Bingo18OpsAlertDoc,
+  type OpsAlertsConfig,
 } from "@megawin/game-bingo18/entities";
-import { Bingo18OpsAlertType, Bingo18PlayType, OpsAlertSeverity, OpsAlertStatus } from "@megawin/game-bingo18/entities";
-import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
-import { BINGO18_HIGH_MULTIPLIER_BUCKETS } from "@megawin/game-bingo18/rules";
+import { BINGO18_HIGH_MULTIPLIER_BUCKETS, type Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
 
 /** Snapshot stats + exposure cần cho evaluate (đã có in-memory ở worker). */
 export interface EvaluateAlertsInput {
@@ -116,7 +118,11 @@ export function evaluateBingo18Alerts(input: EvaluateAlertsInput): NewAlert[] {
     const total = dirs.reduce((s, d) => s + d.amount, 0);
     if (total > 0) {
       let top = dirs[0]!;
-      for (const d of dirs) if (d.amount > top.amount) top = d;
+      for (const d of dirs) {
+        if (d.amount > top.amount) {
+          top = d;
+        }
+      }
       const pct = (top.amount / total) * 100;
       if (pct >= alerts.sidebetSkewPct) {
         push(
@@ -141,7 +147,9 @@ export function evaluateBingo18Alerts(input: EvaluateAlertsInput): NewAlert[] {
   if (alerts.enabled[Bingo18OpsAlertType.BucketConcentration]) {
     for (const b of BINGO18_HIGH_MULTIPLIER_BUCKETS) {
       const bucket = resolveHighBucket(stats, b.playType, b.key);
-      if (!bucket || bucket.amount < alerts.bucketConcentrationAmount) continue;
+      if (!bucket || bucket.amount < alerts.bucketConcentrationAmount) {
+        continue;
+      }
       push(
         Bingo18OpsAlertType.BucketConcentration,
         // Gấp đôi ngưỡng → critical.
@@ -168,6 +176,8 @@ function resolveHighBucket(
   playType: typeof Bingo18PlayType.SumTotal | typeof Bingo18PlayType.TripleMatch,
   key: string,
 ): Bingo18BucketStat | undefined {
-  if (playType === Bingo18PlayType.SumTotal) return stats.byPlayType.sumTotal[key];
+  if (playType === Bingo18PlayType.SumTotal) {
+    return stats.byPlayType.sumTotal[key];
+  }
   return stats.byPlayType.tripleMatch.specific[key];
 }

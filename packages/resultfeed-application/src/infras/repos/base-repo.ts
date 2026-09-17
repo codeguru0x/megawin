@@ -1,5 +1,4 @@
-import type { BaseEntity } from "@megawin/data/mongo";
-import { type MongoMapper, ResultFeedRepo } from "@megawin/data/mongo";
+import { ResultFeedRepo, type BaseEntity, type MongoMapper } from "@megawin/data/mongo";
 import type { Document } from "mongodb";
 
 /**

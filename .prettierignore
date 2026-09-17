@@ -14,10 +14,8 @@ release
 .cursor
 .gitnexus
 
-# Biome quản format cho các loại file này — Prettier chỉ lo .md/.yml/.yaml
-*.ts
-*.tsx
-*.js
-*.mjs
-*.json
-*.css
+.tmp
+
+# Generated / fixture — shadcn generated + test HTML fixtures (không format)
+apps/backoffice/src/components/ui/**
+packages/*/test/html/**

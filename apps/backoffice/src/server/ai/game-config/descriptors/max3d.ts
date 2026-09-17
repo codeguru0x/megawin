@@ -4,11 +4,11 @@
  * Rename/xoá field ở entity làm ĐỎ COMPILE ngay tại đây — không phải test parse markdown.
  */
 
-import type { BasicPrizeAmounts } from "@megawin/game-max3d/entities";
 import type { GlobalConfigEntity } from "@megawin/game-max3d-application/use-cases/game-config";
+import type { BasicPrizeAmounts } from "@megawin/game-max3d/entities";
 import { WEEKDAY_LABELS_FULL } from "@megawin/shared/utils";
 
-import { type ConfigItem, item } from "../../payload";
+import { item, type ConfigItem } from "../../payload";
 import { GameConfigSection } from "../types";
 
 export const APPLICABLE_SECTIONS: readonly GameConfigSection[] = [
@@ -114,6 +114,9 @@ export function describe(c: GlobalConfigEntity, section: GameConfigSection): Con
       return describePrizes(c);
     case GameConfigSection.Ops:
       return describeOps(c);
+    case "jackpot": {
+      throw new Error('Not implemented yet: "jackpot" case');
+    }
     default:
       return [];
   }

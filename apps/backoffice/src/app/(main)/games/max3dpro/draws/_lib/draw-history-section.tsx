@@ -9,7 +9,6 @@
  * Max 3D Pro không có Jackpot: companyTake = profit thực.
  * Kết quả 20 bộ ba số — hiển thị compact dưới dạng TripletDisplay.
  */
-
 import { useRouter } from "next/navigation";
 
 import type { DrawStatus } from "@megawin/game-core/entities";
@@ -17,13 +16,11 @@ import { Pagination } from "@megawin/shared/constants";
 import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
-import type { CommonDrawSummary } from "@/components/draws";
-import { DrawHistoryTable } from "@/components/draws";
+import { DrawHistoryTable, type CommonDrawSummary } from "@/components/draws";
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
 import { TripletDisplay } from "@/components/games/max3dpro/triplet-display";
 
-import type { DrawSummary } from "./use-draws";
-import { useDrawsList } from "./use-draws";
+import { useDrawsList, type DrawSummary } from "./use-draws";
 
 const OPS_BASE = "/games/max3dpro/operations";
 
@@ -69,14 +66,14 @@ export function DrawHistorySection() {
   const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
-    setPage(null);
+    void setFromDate(from);
+    void setToDate(to);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
-    setPage(null);
+    void setStatusParam(value === "all" ? null : value);
+    void setPage(null);
   }
 
   return (
@@ -97,7 +94,9 @@ export function DrawHistorySection() {
       renderStatusBadge={(status) => <DrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
         // Max3D Pro: 20 bộ ba số chia 4 hạng — hiển thị compact per tier
-        if (!draw.result) return null;
+        if (!draw.result) {
+          return null;
+        }
         const { special, first, second, third } = draw.result as {
           special: string[];
           first: string[];

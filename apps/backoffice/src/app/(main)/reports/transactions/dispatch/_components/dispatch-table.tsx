@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import { TRANSACTION_ACTION_LABELS, TRANSACTION_REASON_LABELS } from "@megawin/game-core/labels";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
-import type { TenantDispatchOrderEntity } from "@megawin/tenant-dispatch/entities";
-import { DispatchOrderStatus } from "@megawin/tenant-dispatch/entities";
+import { DispatchOrderStatus, type TenantDispatchOrderEntity } from "@megawin/tenant-dispatch/entities";
 import { DISPATCH_ORDER_STATUS_LABELS, DISPATCH_SOURCE_KIND_LABELS } from "@megawin/tenant-dispatch/shared/labels";
 import { CheckCircle2, Inbox, Loader2, MoreHorizontal, XCircle } from "lucide-react";
 
@@ -55,9 +54,15 @@ function parseBatchKey(key: string): {
 
 /** Trả về class màu tương ứng tier retry. */
 function getRetryClass(retryCount: number | undefined): string {
-  if (!retryCount) return "text-muted-foreground";
-  if (retryCount >= STUCK_RETRY_THRESHOLD) return "text-loss font-semibold";
-  if (retryCount >= 10) return "text-warning";
+  if (!retryCount) {
+    return "text-muted-foreground";
+  }
+  if (retryCount >= STUCK_RETRY_THRESHOLD) {
+    return "text-loss font-semibold";
+  }
+  if (retryCount >= 10) {
+    return "text-warning";
+  }
   return "text-muted-foreground";
 }
 
@@ -104,7 +109,7 @@ export function DispatchTable({
 
   if (isLoading) {
     return (
-      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
+      <div className="text-muted-foreground flex h-60 items-center justify-center gap-2">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải orders…</span>
       </div>
@@ -114,9 +119,9 @@ export function DispatchTable({
   if (rows.length === 0) {
     return (
       <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
-        <Inbox className="size-8 text-muted-foreground/40" />
-        <p className="text-sm font-medium text-muted-foreground">Không có dispatch order nào</p>
-        <p className="text-xs text-muted-foreground">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
+        <Inbox className="text-muted-foreground/40 size-8" />
+        <p className="text-muted-foreground text-sm font-medium">Không có dispatch order nào</p>
+        <p className="text-muted-foreground text-xs">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
       </div>
     );
   }
@@ -153,7 +158,7 @@ export function DispatchTable({
               return (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer hover:bg-muted/40"
+                  className="hover:bg-muted/40 cursor-pointer"
                   onClick={() => onOpenDetail(row.tx)}
                 >
                   <TableCell className="pl-5 font-mono text-sm tabular-nums">
@@ -163,26 +168,26 @@ export function DispatchTable({
                   <TableCell className="text-center">
                     {isPending && (
                       <Loader2
-                        className="inline-block size-4 animate-spin text-amber-500"
+                        className="text-warning inline-block size-4 animate-spin"
                         aria-label={DISPATCH_ORDER_STATUS_LABELS[row.status]}
                       />
                     )}
                     {isDispatched && (
                       <CheckCircle2
-                        className="inline-block size-4 text-profit"
+                        className="text-profit inline-block size-4"
                         aria-label={DISPATCH_ORDER_STATUS_LABELS[row.status]}
                       />
                     )}
                     {isCancelled && (
                       <XCircle
-                        className="inline-block size-4 text-muted-foreground"
+                        className="text-muted-foreground inline-block size-4"
                         aria-label={DISPATCH_ORDER_STATUS_LABELS[row.status]}
                       />
                     )}
                     <span className="sr-only">{DISPATCH_ORDER_STATUS_LABELS[row.status]}</span>
                   </TableCell>
 
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-sm">
                     {DISPATCH_SOURCE_KIND_LABELS[row.sourceKind]}
                   </TableCell>
 
@@ -192,16 +197,14 @@ export function DispatchTable({
                     <span
                       className={cn(
                         "inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium",
-                        row.action === "debit"
-                          ? "bg-rose-500/10 text-rose-700 dark:text-rose-400"
-                          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                        row.action === "debit" ? "bg-loss/10 text-loss" : "bg-profit/10 text-profit",
                       )}
                     >
                       {TRANSACTION_ACTION_LABELS[row.action]}
                     </span>
                   </TableCell>
 
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="text-muted-foreground text-sm">
                     {TRANSACTION_REASON_LABELS[row.reason]}
                   </TableCell>
 
@@ -219,7 +222,7 @@ export function DispatchTable({
                   {showRetryColumn && (
                     <TableCell className="max-w-90 text-sm">
                       {retryCount === 0 && !errMsg ? (
-                        <span className="text-sm text-muted-foreground">—</span>
+                        <span className="text-muted-foreground text-sm">—</span>
                       ) : (
                         <div className="flex flex-col gap-0.5">
                           {retryCount > 0 && (
@@ -228,7 +231,7 @@ export function DispatchTable({
                             </span>
                           )}
                           {errMsg && (
-                            <span className="block truncate text-xs text-muted-foreground" title={errMsg}>
+                            <span className="text-muted-foreground block truncate text-xs" title={errMsg}>
                               {errMsg}
                             </span>
                           )}
@@ -250,13 +253,13 @@ export function DispatchTable({
                         title={row.batchKey}
                       >
                         {batch.op && batch.purpose && (
-                          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs font-semibold tracking-wide uppercase">
                             <span>{batch.op}</span>
                             <span className="opacity-40">·</span>
                             <span>{batch.purpose}</span>
                           </span>
                         )}
-                        <span className="truncate font-mono text-sm text-primary group-hover:underline">
+                        <span className="text-primary truncate font-mono text-sm group-hover:underline">
                           {batch.ref || row.batchKey}
                         </span>
                       </button>

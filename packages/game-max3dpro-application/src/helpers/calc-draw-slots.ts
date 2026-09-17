@@ -16,8 +16,8 @@ import {
   getDay,
   isBefore,
   subtractMinutes,
-  TZDate,
   toVNDate,
+  TZDate,
   VN_TIMEZONE,
 } from "@megawin/shared/utils";
 
@@ -65,23 +65,31 @@ export function calcMax3dproDrawSlots(
   for (let offset = 0; offset <= 60 && slots.length < count; offset++) {
     const dayVN = offset === 0 ? todayVN : addDays(todayVN, offset);
 
-    if (!drawDaysOfWeek.includes(getDay(dayVN))) continue;
+    if (!drawDaysOfWeek.includes(getDay(dayVN))) {
+      continue;
+    }
 
     const dateStr = formatVNDate(dayVN);
 
     for (let drawNo = 1; drawNo <= drawsPerDay; drawNo++) {
-      if (slots.length >= count) break;
+      if (slots.length >= count) {
+        break;
+      }
 
       const drawTimeStr = drawTimes[drawNo - 1]!;
       const drawId = `${dateStr}.${String(drawNo).padStart(3, "0")}`;
 
-      if (existingDrawIds.has(drawId)) continue;
+      if (existingDrawIds.has(drawId)) {
+        continue;
+      }
 
       const drawTime = toVNDate(dateStr, drawTimeStr);
       const closeAt = subtractMinutes(drawTime, salesCloseBeforeMinutes);
 
       // Bỏ qua nếu thời điểm đóng bán đã qua — kỳ này không còn mua được.
-      if (!isBefore(now, closeAt)) continue;
+      if (!isBefore(now, closeAt)) {
+        continue;
+      }
 
       slots.push({
         drawDate: dateStr,

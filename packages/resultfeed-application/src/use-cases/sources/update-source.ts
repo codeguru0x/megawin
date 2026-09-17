@@ -8,13 +8,11 @@
  */
 
 import { AUDIT_ACTIONS, AuditCategory, AuditTargetType } from "@megawin/audit/entities";
-import type { AuditActor } from "@megawin/audit/logger";
-import { record } from "@megawin/audit/logger";
+import { record, type AuditActor } from "@megawin/audit/logger";
 import type { ResultFeedSourceId } from "@megawin/resultfeed/entities";
 import { AppException } from "@megawin/shared/errors";
 
-import type { SourceEditableFields } from "../../infras/repos/source-repo";
-import { SourceRepository } from "../../infras/repos/source-repo";
+import { SourceRepository, type SourceEditableFields } from "../../infras/repos/source-repo";
 
 export interface UpdateSourceInput {
   sourceId: ResultFeedSourceId;

@@ -15,17 +15,17 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import {
+  Lotto535Collections,
+  PrizeTier,
   type EntryPayout,
   type EntryResult,
   type EntryVoidInfo,
-  Lotto535Collections,
-  PrizeTier,
+  type TicketEntryEntity,
 } from "@megawin/game-lotto535/entities";
-import { type Long, ObjectId } from "mongodb";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -60,7 +60,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tất cả entries trong batch nhận cùng 1 version (atomic batch).
    */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
-    if (docs.length === 0) return 0;
+    if (docs.length === 0) {
+      return 0;
+    }
     const version = await this.nextVersion();
     const stamped = docs.map((doc) => ({ ...doc, version }));
     const result = await this.insertMany(stamped as any[]);
@@ -422,7 +424,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -508,7 +512,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Index: { drawId: 1, status: 1 }
    */
   async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
-    if (activeDrawIds.length === 0) return [];
+    if (activeDrawIds.length === 0) {
+      return [];
+    }
 
     const result = await this.aggregate([
       // Lọc entries scheduled thuộc các draws active — index { drawId: 1, status: 1 }
@@ -550,7 +556,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Index: { drawId: 1, status: 1 }
    */
   async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
-    if (activeDrawIds.length === 0) return [];
+    if (activeDrawIds.length === 0) {
+      return [];
+    }
 
     const result = await this.aggregate([
       // Lọc entries scheduled — cùng filter với Query A
@@ -899,7 +907,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async bulkVoidEntries(
     items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -1202,7 +1212,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       projection: { _id: 1, "payout.tiers": 1 },
     });
 
-    if (matchingEntries.length === 0) return 0;
+    if (matchingEntries.length === 0) {
+      return 0;
+    }
 
     const ops = matchingEntries.map((entry) => {
       const tierEntry = (entry.payout as any)?.tiers?.find(
@@ -1310,7 +1322,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     });
 
-    if (matchingEntries.length === 0) return 0;
+    if (matchingEntries.length === 0) {
+      return 0;
+    }
 
     const ops = matchingEntries.map((entry) => {
       const tiers = (entry.payout as any)?.tiers ?? [];

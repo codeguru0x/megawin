@@ -16,8 +16,7 @@
  * Pipeline KHÔNG $sum "$lineCount" khác với Power655/Mega645/Lotto535.
  */
 
-import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+import { Bingo18Collections, type TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
 
 import { EntryMapper } from "../mappers/entry-mapper";

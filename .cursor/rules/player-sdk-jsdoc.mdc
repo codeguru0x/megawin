@@ -9,6 +9,20 @@ alwaysApply: true
 `@megawin/player-sdk` xuất bản API docs cho tenant qua TypeDoc (`pnpm docs:build`).
 Mọi public export **bắt buộc** có JSDoc đầy đủ. Code được tag `@internal` sẽ bị loại khỏi output.
 
+## Build & TypeDoc tooling (tsdown + TS 7)
+
+- **Bundle:** `tsdown` (`tsdown.config.ts`) — ESM+CJS+dts + browser IIFE
+  (`megawin-player-sdk-browser.global.js`, `window.MegaWin`). `dts` dùng
+  `isolatedDeclarations` + oxc (bật trong `tsconfig.json`).
+- **TypeDoc + TypeScript 7:** `typedoc@0.28` peer chỉ tới TS 6.x; TS 7 chưa có JS
+  Compiler API đầy đủ đến **7.1**. `docs:build` / `docs:watch` chạy qua
+  `scripts/alias-typescript6.mjs` + `@typescript/typescript6` để tránh crash
+  `SyntaxKind`.
+- **Chờ gỡ shim:** khi TypeDoc hỗ trợ TS 7.1+ (theo dõi
+  [TypeDoc#3098](https://github.com/TypeStrong/typedoc/issues/3098) / release note
+  TypeDoc) → bỏ `alias-typescript6.mjs`, bỏ dep `@typescript/typescript6`, gọi
+  `typedoc` thẳng. Không thay TypeDoc bằng tool khác trước cột mốc đó.
+
 ## ⚠️ MANDATORY: Sửa DTO backend PHẢI đồng bộ tay sang SDK — KHÔNG có compiler bảo vệ
 
 `packages/player-sdk` **không import** bất kỳ package backend nào (`@megawin/game-*`,
@@ -481,9 +495,11 @@ src/{game}/
 - [ ] `export type { {Game}TicketPurchaseInput, {Game}PlaceBetResponse, … }` từ `./{game}` (tất cả public types)
 - [ ] `export { {Game}PlayType, {Game}PrizeTier, … }` (enum values — không phải types)
 
-### 6. Build config — `tsup.config.ts`
+### 6. Build config — `tsdown.config.ts`
 
-- [ ] Thêm entry: `{game}: "src/{game}/index.ts"` vào config CJS/ESM đầu tiên
+- [ ] Thêm entry: `{game}: "src/{game}/index.ts"` vào config library (CJS+ESM+dts) đầu tiên
+- [ ] Export mới phải tương thích `isolatedDeclarations` (return type tường minh trên
+      function/const export; param default có annotation)
 
 ### 7. Package exports — `package.json`
 

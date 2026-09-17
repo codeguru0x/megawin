@@ -6,8 +6,11 @@
  * gọi thêm request riêng.
  */
 
-import type { AlertEntity, ResultFeedAlertStatus } from "@megawin/resultfeed/entities";
-import { ResultFeedAlertStatus as Status } from "@megawin/resultfeed/entities";
+import {
+  ResultFeedAlertStatus as Status,
+  type AlertEntity,
+  type ResultFeedAlertStatus,
+} from "@megawin/resultfeed/entities";
 
 import { AlertRepository } from "../../infras/repos/alert-repo";
 

@@ -28,8 +28,12 @@ export const POWER655_MAX_BOARDS = 100;
 // ─── Combinatorics ───
 
 export function combination(n: number, k: number): number {
-  if (k > n || k < 0) return 0;
-  if (k === 0 || k === n) return 1;
+  if (k > n || k < 0) {
+    return 0;
+  }
+  if (k === 0 || k === n) {
+    return 1;
+  }
   let result = 1;
   for (let i = 0; i < Math.min(k, n - k); i++) {
     result = (result * (n - i)) / (i + 1);
@@ -95,7 +99,9 @@ export function getRequiredMainCount(playType: PlayType): number {
 
 export function validateMainNumbers(mainNumbers: string[], playType: PlayType): { valid: boolean; error?: string } {
   const config = PLAY_TYPE_CONFIGS[playType];
-  if (!config) return { valid: false, error: `PlayType không hợp lệ: ${playType}` };
+  if (!config) {
+    return { valid: false, error: `PlayType không hợp lệ: ${playType}` };
+  }
 
   const expectedCount = config.mainCount;
   if (mainNumbers.length !== expectedCount) {

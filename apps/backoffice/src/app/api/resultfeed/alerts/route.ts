@@ -1,6 +1,6 @@
 import { CompanyRole } from "@megawin/identity/entities";
-import { ResultFeedAlertStatus } from "@megawin/resultfeed/entities";
 import { ListAlertsUseCase } from "@megawin/resultfeed-application/use-cases/alerts";
+import { ResultFeedAlertStatus } from "@megawin/resultfeed/entities";
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";

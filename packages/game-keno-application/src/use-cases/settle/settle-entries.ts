@@ -36,13 +36,15 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import type { EntryBoardPayout, EntryPayout, EntryResult } from "@megawin/game-keno/entities";
 import {
   CAPPABLE_PICK_COUNTS,
   KENO_BASIC_PLAY_TYPE_SET,
+  KenoPlayType,
+  type EntryBoardPayout,
+  type EntryPayout,
+  type EntryResult,
   type KenoBigSmallBet,
   type KenoEvenOddBet,
-  KenoPlayType,
 } from "@megawin/game-keno/entities";
 import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
 import { generateId } from "@megawin/shared/utils";

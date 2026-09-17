@@ -1,10 +1,29 @@
 {
+  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
   "semi": true,
   "singleQuote": false,
+  "quoteProps": "as-needed",
   "trailingComma": "all",
-  "printWidth": 100,
+  "printWidth": 120,
   "tabWidth": 2,
   "arrowParens": "always",
+  "bracketSameLine": false,
   "endOfLine": "lf",
-  "proseWrap": "preserve"
+  "proseWrap": "preserve",
+  "importOrder": [
+    "^react$",
+    "^react/(.*)$",
+    "",
+    "^next/(.*)$",
+    "",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^@/(.*)$",
+    "^#(.*)$",
+    "",
+    "^[./]"
+  ],
+  "importOrderTypeScriptVersion": "7.0.2",
+  "tailwindAttributes": ["className"],
+  "tailwindFunctions": ["clsx", "cva", "cn", "twMerge"]
 }

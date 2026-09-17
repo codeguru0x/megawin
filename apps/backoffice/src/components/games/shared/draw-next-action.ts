@@ -9,8 +9,7 @@
  */
 
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { LucideIcon } from "lucide-react";
-import { ChevronRight, Lock, Radio, RotateCcw, Unlock } from "lucide-react";
+import { ChevronRight, Lock, Radio, RotateCcw, Unlock, type LucideIcon } from "lucide-react";
 
 /** Field tối thiểu cần cho `getNextAction` — mọi `DrawSelectorItem` game đều thoả. */
 export interface DrawNextActionFields {
@@ -52,14 +51,14 @@ export function getNextAction(
     case DrawStatus.SalesOpen:
       return {
         label: "Đóng bán",
-        className: "bg-amber-600 hover:bg-amber-700 text-white",
+        className: "bg-warning hover:bg-warning text-white",
         handler: handlers.onCloseSales,
         icon: Lock,
       };
     case DrawStatus.SalesClosed:
       return {
         label: "Công bố kết quả",
-        className: "bg-violet-600 hover:bg-violet-700 text-white",
+        className: "bg-game-max3d hover:bg-game-max3d text-white",
         handler: handlers.onPublishResult,
         icon: Radio,
       };
@@ -70,7 +69,7 @@ export function getNextAction(
           label: "Kết sổ lại",
           handler: handlers.onTriggerResettle,
           icon: RotateCcw,
-          className: "bg-orange-600 hover:bg-orange-700 text-white",
+          className: "bg-warning hover:bg-warning text-white",
         };
       }
       return {

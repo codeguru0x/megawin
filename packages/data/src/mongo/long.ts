@@ -18,7 +18,11 @@ import type { Long } from "mongodb";
  * (edge case khi test hoặc khi MongoDB driver trả plain number cho giá trị nhỏ).
  */
 export function longToString(value: Long | number | string): string {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return value.toString();
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "number") {
+    return value.toString();
+  }
   return value.toString();
 }

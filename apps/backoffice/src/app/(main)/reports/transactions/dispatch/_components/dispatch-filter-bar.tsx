@@ -71,10 +71,18 @@ export function DispatchFilterBar() {
 
   // Current identity value — 1 trong 4 được set.
   const activeIdentity = useMemo<{ kind: IdentityKind; value: string } | null>(() => {
-    if (tx) return { kind: "tx", value: tx };
-    if (batchKey) return { kind: "batchKey", value: batchKey };
-    if (accountId) return { kind: "accountId", value: accountId };
-    if (username) return { kind: "username", value: username };
+    if (tx) {
+      return { kind: "tx", value: tx };
+    }
+    if (batchKey) {
+      return { kind: "batchKey", value: batchKey };
+    }
+    if (accountId) {
+      return { kind: "accountId", value: accountId };
+    }
+    if (username) {
+      return { kind: "username", value: username };
+    }
     return null;
   }, [tx, batchKey, accountId, username]);
 
@@ -94,7 +102,9 @@ export function DispatchFilterBar() {
       return;
     }
     const kind = detectIdentity(value);
-    if (!kind) return; // invalid — giữ input, không submit
+    if (!kind) {
+      return;
+    } // invalid — giữ input, không submit
     setIdentity(kind, value);
   }
 
@@ -115,21 +125,25 @@ export function DispatchFilterBar() {
         {/* ── Cluster 1: Universal search (col-span 3) ───────────────────── */}
         <div className="flex items-center gap-1.5 lg:col-span-3">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
             <Input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleSubmitSearch();
-                if (e.key === "Escape") handleClearSearch();
+                if (e.key === "Enter") {
+                  handleSubmitSearch();
+                }
+                if (e.key === "Escape") {
+                  handleClearSearch();
+                }
               }}
               placeholder="Tx / Batch / Account / Username…"
-              className="h-8 min-w-0 flex-1 pl-8 pr-16 font-mono text-xs"
+              className="h-8 min-w-0 flex-1 pr-16 pl-8 font-mono text-xs"
             />
             {/* Detected-type badge bên phải input */}
             {searchInput.trim() && detectedKind && (
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-medium uppercase tabular-nums">
+              <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">
+                <Badge variant="secondary" className="h-5 px-1.5 text-xs font-medium uppercase tabular-nums">
                   {IDENTITY_KIND_LABELS[detectedKind]}
                 </Badge>
               </span>
@@ -163,13 +177,13 @@ export function DispatchFilterBar() {
             <TooltipTrigger asChild>
               <button
                 type="button"
-                className="flex size-7 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-7 shrink-0 items-center justify-center rounded"
                 aria-label="Gợi ý định dạng"
               >
                 <HelpCircle className="size-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs whitespace-pre-line text-xs">
+            <TooltipContent side="bottom" className="max-w-xs text-xs whitespace-pre-line">
               {IDENTITY_HINT}
             </TooltipContent>
           </Tooltip>
@@ -203,7 +217,7 @@ export function DispatchFilterBar() {
                 <SlidersHorizontal className="size-3.5" />
                 Bộ lọc
                 {activeDimensionCount > 0 && (
-                  <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-[10px] tabular-nums">
+                  <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-xs tabular-nums">
                     {activeDimensionCount}
                   </Badge>
                 )}
@@ -212,14 +226,14 @@ export function DispatchFilterBar() {
             <PopoverContent align="end" className="w-80 p-4">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                     Bộ lọc chi tiết
                   </span>
                   {hasAnyDimension && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 gap-1 px-1.5 text-[11px]"
+                      className="h-6 gap-1 px-1.5 text-xs"
                       onClick={() => {
                         setTenantId(null);
                         setStatus(null);
@@ -235,7 +249,7 @@ export function DispatchFilterBar() {
 
                 {/* Status */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="dispatch-filter-status" className="text-[11px] font-medium text-muted-foreground">
+                  <label htmlFor="dispatch-filter-status" className="text-muted-foreground text-xs font-medium">
                     Trạng thái
                   </label>
                   <Select
@@ -258,7 +272,7 @@ export function DispatchFilterBar() {
 
                 {/* Source kind */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="dispatch-filter-source" className="text-[11px] font-medium text-muted-foreground">
+                  <label htmlFor="dispatch-filter-source" className="text-muted-foreground text-xs font-medium">
                     Loại nguồn
                   </label>
                   <Select
@@ -281,7 +295,7 @@ export function DispatchFilterBar() {
 
                 {/* Tenant */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="dispatch-filter-tenant" className="text-[11px] font-medium text-muted-foreground">
+                  <label htmlFor="dispatch-filter-tenant" className="text-muted-foreground text-xs font-medium">
                     Tenant
                   </label>
                   <TenantCombobox
@@ -301,13 +315,13 @@ export function DispatchFilterBar() {
 
       {/* Identity mode banner — hiển thị rõ cho staff biết đang lookup */}
       {isIdentityMode && activeIdentity && (
-        <div className="flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs">
-          <Search className="size-3.5 shrink-0 text-primary" />
+        <div className="border-primary/40 bg-primary/5 flex items-center gap-2 rounded-md border border-dashed px-3 py-2 text-xs">
+          <Search className="text-primary size-3.5 shrink-0" />
           <span className="text-muted-foreground">
             Đang tra cứu theo{" "}
-            <span className="font-semibold text-foreground">{IDENTITY_KIND_LABELS[activeIdentity.kind]}</span>:
+            <span className="text-foreground font-semibold">{IDENTITY_KIND_LABELS[activeIdentity.kind]}</span>:
           </span>
-          <code className="rounded bg-background px-1.5 py-0.5 font-mono">{activeIdentity.value}</code>
+          <code className="bg-background rounded px-1.5 py-0.5 font-mono">{activeIdentity.value}</code>
           <span className="text-muted-foreground">— các bộ lọc khác tạm bị tắt.</span>
         </div>
       )}

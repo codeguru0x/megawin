@@ -1,7 +1,6 @@
 import { pruneUndefined } from "@megawin/shared/utils";
 
-import type { AuditHttpContext, AuditLogInsertDoc, AuditMetadata } from "../entities";
-import { AuditStatus } from "../entities";
+import { AuditStatus, type AuditHttpContext, type AuditLogInsertDoc, type AuditMetadata } from "../entities";
 import { AuditLogRepository } from "../infras/repos";
 import type { AuditEventInput } from "./types";
 
@@ -32,7 +31,9 @@ import type { AuditEventInput } from "./types";
 let repo: AuditLogRepository | null = null;
 
 function getRepo(): AuditLogRepository {
-  if (!repo) repo = new AuditLogRepository();
+  if (!repo) {
+    repo = new AuditLogRepository();
+  }
   return repo;
 }
 
@@ -59,7 +60,9 @@ function buildHttpContext(input: AuditEventInput): AuditHttpContext | undefined 
  */
 function buildMetadata(input: AuditEventInput): AuditMetadata | undefined {
   const http = buildHttpContext(input);
-  if (!input.metadata && !http) return undefined;
+  if (!input.metadata && !http) {
+    return undefined;
+  }
   return { ...input.metadata, ...(http && { http }) };
 }
 

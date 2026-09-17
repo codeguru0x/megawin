@@ -1,7 +1,6 @@
 import { isOnlyDuplicateKeyError } from "@megawin/data/mongo";
 import type { Currency, TransactionAction, TransactionReason } from "@megawin/shared/types";
-import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
-import { ObjectId } from "mongodb";
+import { ObjectId, type AnyBulkWriteOperation, type Document, type Filter } from "mongodb";
 
 import { RETRY_ALERT_THRESHOLD } from "../../config";
 import type { TenantDispatchOrderEntity, TenantDispatchOrderInput } from "../../entities/dispatch-order";
@@ -477,8 +476,12 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<TenantDispat
     const match: Filter<Document> = {};
     if (filter.from || filter.to) {
       const createdAt: Record<string, Date> = {};
-      if (filter.from) createdAt.$gte = filter.from;
-      if (filter.to) createdAt.$lte = filter.to;
+      if (filter.from) {
+        createdAt.$gte = filter.from;
+      }
+      if (filter.to) {
+        createdAt.$lte = filter.to;
+      }
       match.createdAt = createdAt;
     }
 
@@ -584,8 +587,12 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<TenantDispat
 
     if (filter.from || filter.to) {
       const createdAt: Record<string, Date> = {};
-      if (filter.from) createdAt.$gte = filter.from;
-      if (filter.to) createdAt.$lte = filter.to;
+      if (filter.from) {
+        createdAt.$gte = filter.from;
+      }
+      if (filter.to) {
+        createdAt.$lte = filter.to;
+      }
       mongoFilter.createdAt = createdAt;
     }
 
@@ -595,14 +602,24 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<TenantDispat
   /** Match stage cho `aggregateSummary` — subset của list filter. */
   private buildSummaryMatch(filter: DispatchSummaryFilter): Filter<Document> {
     const mongoFilter: Filter<Document> = {};
-    if (filter.tenantId) mongoFilter.tenantId = filter.tenantId;
-    if (filter.gameId) mongoFilter.gameId = filter.gameId;
-    if (filter.batchKey) mongoFilter.batchKey = filter.batchKey;
+    if (filter.tenantId) {
+      mongoFilter.tenantId = filter.tenantId;
+    }
+    if (filter.gameId) {
+      mongoFilter.gameId = filter.gameId;
+    }
+    if (filter.batchKey) {
+      mongoFilter.batchKey = filter.batchKey;
+    }
 
     if (filter.from || filter.to) {
       const createdAt: Record<string, Date> = {};
-      if (filter.from) createdAt.$gte = filter.from;
-      if (filter.to) createdAt.$lte = filter.to;
+      if (filter.from) {
+        createdAt.$gte = filter.from;
+      }
+      if (filter.to) {
+        createdAt.$lte = filter.to;
+      }
       mongoFilter.createdAt = createdAt;
     }
 

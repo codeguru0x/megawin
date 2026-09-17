@@ -38,8 +38,12 @@ import { DRAW_COMPLETED_STATUSES, type DrawStatus } from "@megawin/game-core/ent
 import type { GlobalConfigEntity, OpsConfig, OpsStatsConfig } from "@megawin/game-max3dpro/entities";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
 import { logError } from "@megawin/shared/utils";
-import type { TickLoopResult, TickOutcome } from "@megawin/worker-core/workers";
-import { LockTakenOverError, TickLoopWorker } from "@megawin/worker-core/workers";
+import {
+  LockTakenOverError,
+  TickLoopWorker,
+  type TickLoopResult,
+  type TickOutcome,
+} from "@megawin/worker-core/workers";
 
 import { AccountStatsRepository } from "../../infras/repos/account-stats-repo";
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";

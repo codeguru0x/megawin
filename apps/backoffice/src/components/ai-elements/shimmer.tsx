@@ -1,10 +1,8 @@
 "use client";
 
-import type { CSSProperties, ElementType, JSX } from "react";
-import { memo, useMemo } from "react";
+import { memo, useMemo, type CSSProperties, type ElementType, type JSX } from "react";
 
-import type { MotionProps } from "motion/react";
-import { motion } from "motion/react";
+import { motion, type MotionProps } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
@@ -40,7 +38,7 @@ const ShimmerComponent = ({ children, as: Component = "p", className, duration =
       animate={{ backgroundPosition: "0% center" }}
       className={cn(
         "relative inline-block bg-size-[250%_100%,auto] bg-clip-text text-transparent",
-        "[--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--color-background),#0000_calc(50%+var(--spread)))] [background-repeat:no-repeat,padding-box]",
+        "[background-repeat:no-repeat,padding-box] [--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--color-background),#0000_calc(50%+var(--spread)))]",
         className,
       )}
       initial={{ backgroundPosition: "100% center" }}

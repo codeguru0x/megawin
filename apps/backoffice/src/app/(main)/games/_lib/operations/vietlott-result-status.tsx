@@ -29,7 +29,7 @@ export function VietlottResultStatus({
 }) {
   if (isLoading) {
     return (
-      <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="text-muted-foreground mt-3 flex items-center gap-1.5 text-xs">
         <Loader2 className="size-3 animate-spin" />
         <span>Đang lấy kết quả tự động…</span>
       </div>
@@ -42,12 +42,10 @@ export function VietlottResultStatus({
 
   if (!found) {
     return (
-      <div className="mt-3 rounded-lg border border-amber-400/60 bg-amber-50 px-4 py-3 dark:bg-amber-900/30">
+      <div className="border-warning/60 bg-warning mt-3 rounded-lg border px-4 py-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle className="size-3.5 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-            Chưa có kết quả tự động cho kỳ này — vui lòng tự nhập.
-          </p>
+          <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+          <p className="text-warning text-sm font-medium">Chưa có kết quả tự động cho kỳ này — vui lòng tự nhập.</p>
         </div>
       </div>
     );
@@ -55,7 +53,7 @@ export function VietlottResultStatus({
 
   if (alreadyApplied) {
     return (
-      <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
+      <div className="text-profit mt-3 flex items-center gap-1.5 text-xs">
         <CheckCircle2 className="size-3" />
         <span>Đã điền kết quả tự động từ ResultFeed.</span>
       </div>
@@ -63,13 +61,11 @@ export function VietlottResultStatus({
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-emerald-300/60 bg-emerald-50 px-4 py-3 dark:bg-emerald-900/20">
+    <div className="border-profit/60 bg-profit mt-3 rounded-lg border px-4 py-3">
       <div className="flex items-start gap-2">
-        <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+        <CheckCircle2 className="text-profit mt-0.5 size-3.5 shrink-0" />
         <div className="flex flex-1 items-center justify-between gap-3">
-          <p className="text-sm text-emerald-800 dark:text-emerald-300">
-            Đã lấy được kết quả tự động — đối chiếu kỹ trước khi lưu.
-          </p>
+          <p className="text-profit text-sm">Đã lấy được kết quả tự động — đối chiếu kỹ trước khi lưu.</p>
           <Button type="button" size="sm" variant="outline" onClick={onApply} className="shrink-0">
             Dùng kết quả này
           </Button>

@@ -15,7 +15,7 @@ import { toVNEndOfDay, toVNStartOfDay } from "@megawin/shared/utils/date";
 
 import type { TxLogEventType, TxLogStatus } from "../../entities/enums";
 import type { TxLogEntity } from "../../entities/tx-log";
-import { type ListTxLogsResult, TxLogRepository } from "../../infras/repos";
+import { TxLogRepository, type ListTxLogsResult } from "../../infras/repos";
 
 /** Date-only format `YYYY-MM-DD` — không chứa ký tự `T`. */
 const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -90,7 +90,9 @@ export class ListTxLogsUseCase extends UseCase<ListTxLogsInput, ListTxLogsOutput
 
   private normalizeLimit(raw: number | undefined): number {
     const size = raw ?? Pagination.Default.Size;
-    if (!Number.isFinite(size) || size <= 0) return Pagination.Default.Size;
+    if (!Number.isFinite(size) || size <= 0) {
+      return Pagination.Default.Size;
+    }
     return Math.min(size, Pagination.Max.Size);
   }
 
@@ -100,11 +102,17 @@ export class ListTxLogsUseCase extends UseCase<ListTxLogsInput, ListTxLogsOutput
    * Không throw nếu format sai — degrade về null, hệ thống trả trang đầu.
    */
   private parseCursor(raw: string | undefined): { createdAt: Date; id: string } | null {
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     const [iso, id] = raw.split("|");
-    if (!iso || !id) return null;
+    if (!iso || !id) {
+      return null;
+    }
     const createdAt = new Date(iso);
-    if (Number.isNaN(createdAt.getTime())) return null;
+    if (Number.isNaN(createdAt.getTime())) {
+      return null;
+    }
     return { createdAt, id };
   }
 

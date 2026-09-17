@@ -55,7 +55,9 @@ export function errorCodeToStatusCode(code: AppErrorCode): number {
  * Ưu tiên: error.statusCode (explicit) → mapping từ code → 400.
  */
 export function appErrorToStatusCode(error: AppError): number {
-  if (error.statusCode != null) return error.statusCode;
+  if (error.statusCode != null) {
+    return error.statusCode;
+  }
   return errorCodeToStatusCode(error.code);
 }
 

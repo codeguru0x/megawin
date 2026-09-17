@@ -1,5 +1,4 @@
 import { UseCase } from "@megawin/app-core/use-cases";
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-mega645/entities";
 import { Pagination } from "@megawin/shared/constants/pagination";
 import { AppException } from "@megawin/shared/errors";

@@ -20,7 +20,9 @@ export const MIN_OBJECT_ID = "000000000000000000000000";
  * Dùng trước khi `new ObjectId(str)` để tránh exception runtime.
  */
 export function isObjectId(value: unknown): value is string {
-  if (typeof value !== "string") return false;
+  if (typeof value !== "string") {
+    return false;
+  }
   return ObjectId.isValid(value) && value.length === 24;
 }
 
@@ -52,7 +54,9 @@ export function toObjectId(id: string): ObjectId {
  * Dùng khi cần normalize giá trị trả về từ MongoDB driver về string thuần.
  */
 export function objectIdToString(id: ObjectId | string): string {
-  if (typeof id === "string") return id;
+  if (typeof id === "string") {
+    return id;
+  }
   return id.toHexString();
 }
 

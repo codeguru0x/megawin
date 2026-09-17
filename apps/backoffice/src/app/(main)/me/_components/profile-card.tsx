@@ -42,12 +42,12 @@ const mfaStatusConfig = {
   enabled: {
     icon: ShieldCheck,
     variant: "default" as const,
-    color: "text-emerald-600 dark:text-emerald-400",
+    color: "text-profit",
   },
   disabled: {
     icon: Shield,
     variant: "secondary" as const,
-    color: "text-amber-600 dark:text-amber-400",
+    color: "text-warning",
   },
 } as const;
 
@@ -67,7 +67,7 @@ export function ProfileCard() {
     return (
       <Card className="gap-0 py-0 shadow-sm">
         <CardContent className="flex items-center justify-center px-5 py-16">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <Loader2 className="text-muted-foreground size-6 animate-spin" />
         </CardContent>
       </Card>
     );
@@ -76,7 +76,7 @@ export function ProfileCard() {
   if (!data) {
     return (
       <Card className="gap-0 py-0 shadow-sm">
-        <CardContent className="px-5 py-16 text-center text-sm text-muted-foreground">
+        <CardContent className="text-muted-foreground px-5 py-16 text-center text-sm">
           Không thể tải thông tin tài khoản.
         </CardContent>
       </Card>
@@ -88,10 +88,10 @@ export function ProfileCard() {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-3 pt-4">
+      <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
-            <CircleUser className="size-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="bg-info flex size-7 items-center justify-center rounded-lg">
+            <CircleUser className="text-info size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Thông tin cá nhân</CardTitle>
@@ -99,8 +99,8 @@ export function ProfileCard() {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-5 pt-0">
-        <div className="mx-auto max-w-md divide-y divide-border/50">
+      <CardContent className="px-5 pt-0 pb-5">
+        <div className="divide-border/50 mx-auto max-w-md divide-y">
           <InfoRow
             icon={<CircleUser className="size-4" />}
             label="Tên tài khoản"
@@ -152,7 +152,7 @@ export function ProfileCard() {
             icon={<Clock className="size-4" />}
             label="Ngày tạo tài khoản"
             value={
-              <span className="tabular-nums text-sm">
+              <span className="text-sm tabular-nums">
                 {new Date(data.createdAt).toLocaleDateString("vi-VN", {
                   year: "numeric",
                   month: "long",
@@ -172,7 +172,7 @@ export function ProfileCard() {
 function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
-      <div className="flex items-center gap-2.5 text-muted-foreground">
+      <div className="text-muted-foreground flex items-center gap-2.5">
         {icon}
         <span className="text-sm">{label}</span>
       </div>

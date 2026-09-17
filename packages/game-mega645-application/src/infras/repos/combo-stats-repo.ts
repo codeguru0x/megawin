@@ -24,8 +24,12 @@
  */
 
 import { docPath, runDeltaBulkWrite } from "@megawin/data/mongo";
-import type { Mega645DrawComboStatsDoc, Mega645DrawComboStatsEntity } from "@megawin/game-mega645/entities";
-import { Mega645Collections, PlayType } from "@megawin/game-mega645/entities";
+import {
+  Mega645Collections,
+  PlayType,
+  type Mega645DrawComboStatsDoc,
+  type Mega645DrawComboStatsEntity,
+} from "@megawin/game-mega645/entities";
 import { buildComboKey, calculateLineCount } from "@megawin/game-mega645/rules";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 
@@ -154,7 +158,9 @@ export class ComboStatsRepository extends BaseRepo<Mega645DrawComboStatsEntity, 
    * @param batchMaxId - ObjectId hex của entry lớn nhất trong batch → watermark mới.
    */
   async bulkUpsertDelta(deltas: ComboStatsDelta[], batchMaxId: string): Promise<void> {
-    if (deltas.length === 0) return;
+    if (deltas.length === 0) {
+      return;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = deltas.map((delta) => ({
@@ -192,7 +198,9 @@ export class ComboStatsRepository extends BaseRepo<Mega645DrawComboStatsEntity, 
    *   `ComboAccountsRepository.countAccountsByCombo`).
    */
   async syncAccountCounts(drawId: string, countsByCombo: Map<string, number>): Promise<void> {
-    if (countsByCombo.size === 0) return;
+    if (countsByCombo.size === 0) {
+      return;
+    }
 
     const ops: AnyBulkWriteOperation<Document>[] = [];
     for (const [comboKey, accounts] of countsByCombo) {

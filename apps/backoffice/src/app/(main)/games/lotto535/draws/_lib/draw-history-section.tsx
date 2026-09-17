@@ -11,7 +11,6 @@
  * Giới hạn đã biết: refresh trang ở page > 1 sẽ fetch lại từ page 1
  * vì cursor là opaque string, không thể persist trên URL.
  */
-
 import { useEffect, useRef } from "react";
 
 import { useRouter } from "next/navigation";
@@ -21,13 +20,11 @@ import { Pagination } from "@megawin/shared/constants";
 import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
-import type { CommonDrawSummary } from "@/components/draws";
-import { DrawHistoryTable } from "@/components/draws";
+import { DrawHistoryTable, type CommonDrawSummary } from "@/components/draws";
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
 
-import type { DrawSummary } from "./use-draws";
-import { useDrawsList } from "./use-draws";
+import { useDrawsList, type DrawSummary } from "./use-draws";
 
 const OPS_BASE = "/games/lotto535/operations";
 
@@ -101,30 +98,34 @@ export function DrawHistorySection() {
   // ─── Filter handlers ────────────────────────────────────────────────────────
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
+    void setFromDate(from);
+    void setToDate(to);
     // Reset cursor map và về page 1 khi filter thay đổi
     cursorMap.current.clear();
-    setPage(null);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
+    void setStatusParam(value === "all" ? null : value);
     cursorMap.current.clear();
-    setPage(null);
+    void setPage(null);
   }
 
   // ─── Pagination handlers ─────────────────────────────────────────────────────
 
   function handlePageNext() {
-    if (!hasMore) return;
+    if (!hasMore) {
+      return;
+    }
     // cursor page+1 đã được lưu vào map bởi useEffect trên
-    setPage(page + 1);
+    void setPage(page + 1);
   }
 
   function handlePagePrev() {
-    if (page <= 1) return;
-    setPage(page - 1);
+    if (page <= 1) {
+      return;
+    }
+    void setPage(page - 1);
   }
 
   return (
@@ -144,13 +145,15 @@ export function DrawHistorySection() {
       onRowClick={(draw) => router.push(`${OPS_BASE}?drawId=${draw.drawId}`)}
       renderStatusBadge={(status) => <DrawStatusBadge status={status} />}
       renderResult={(draw) => {
-        if (!draw.result) return null;
+        if (!draw.result) {
+          return null;
+        }
         return (
           <div className="flex flex-wrap items-center gap-1">
             {draw.result.winningMain.map((n) => (
               <LottoNumberBall key={n} number={n} variant="main" size="sm" />
             ))}
-            <span className="mx-0.5 w-px h-4 bg-border" />
+            <span className="bg-border mx-0.5 h-4 w-px" />
             <LottoNumberBall number={draw.result.winningSpecial} variant="special" size="sm" />
           </div>
         );

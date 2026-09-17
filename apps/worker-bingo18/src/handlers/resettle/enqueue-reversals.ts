@@ -14,8 +14,8 @@
  */
 
 import {
-  type EnqueueReversalsInput,
   EnqueueReversalsUseCase,
+  type EnqueueReversalsInput,
 } from "@megawin/game-bingo18-application/use-cases/resettle";
 
 const useCase = new EnqueueReversalsUseCase();

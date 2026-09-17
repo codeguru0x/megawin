@@ -11,7 +11,6 @@
  *
  * Data được lấy qua useDrawContext() — không cần prop drilling.
  */
-
 import { useState } from "react";
 
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -41,9 +40,9 @@ import {
 import {
   EditScheduleAction,
   PublishResultAction,
-  type PublishResultCurrentValues,
   ResettleAction,
   VoidDrawAction,
+  type PublishResultCurrentValues,
 } from "./draw-actions";
 import { DrawCommandCenter } from "./draw-command-center";
 
@@ -74,7 +73,9 @@ export function DrawManagementSection() {
 
   const result: DrawResult | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
 
     const tierOrder: PrizeTier[] = [
       PrizeTier.Jackpot,
@@ -128,7 +129,9 @@ export function DrawManagementSection() {
 
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.voidInfo) return undefined;
+    if (!d?.voidInfo) {
+      return undefined;
+    }
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
@@ -141,7 +144,9 @@ export function DrawManagementSection() {
   // Pre-fill values cho dialog sửa kết quả (published + settled)
   const currentResult: PublishResultCurrentValues | undefined = (() => {
     const d = drawDetailData?.draw;
-    if (!d?.result) return undefined;
+    if (!d?.result) {
+      return undefined;
+    }
     return {
       winningMain: d.result.winningMain,
       winningSpecial: d.result.winningSpecial,
@@ -154,7 +159,9 @@ export function DrawManagementSection() {
     };
   })();
 
-  if (!draw) return null;
+  if (!draw) {
+    return null;
+  }
 
   return (
     <>
@@ -197,7 +204,7 @@ export function DrawManagementSection() {
                   cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này đưa kỳ về trạng thái{" "}
                   <strong>Published</strong> để vào lại luồng kết sổ lại — số trúng được giữ nguyên.
                 </p>
-                <p className="font-medium text-orange-600 dark:text-orange-400">
+                <p className="text-warning font-medium">
                   Chỉ thực hiện khi DBA đã xác nhận cập nhật jackpot cycle thủ công.
                 </p>
               </div>

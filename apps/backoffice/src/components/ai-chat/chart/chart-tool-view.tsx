@@ -20,7 +20,6 @@
  * hướng dẫn (`55-charts.md`) đã buộc Mira giải thích trong câu trả lời — note thành lặp lại. Trường
  * hợp model tự đoán sai thì đây là chuyện nội bộ, in ra chỉ làm người đọc nghi ngờ biểu đồ đang xem.
  */
-
 import { Suspense, useState } from "react";
 
 import dynamic from "next/dynamic";
@@ -30,11 +29,11 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   ChartFieldType,
+  getChartCatalogEntry,
+  prettifyLabel,
   type ChartKind,
   type ChartModel,
   type ChartRow,
-  getChartCatalogEntry,
-  prettifyLabel,
 } from "@/lib/chart";
 
 import { CellFormat } from "../tool-renderers/format-cell";
@@ -182,9 +181,9 @@ export function ChartToolView({ model, reportLabels, sourceNote }: ChartToolView
       <CardContent className="flex w-full min-w-0 flex-col gap-2 px-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 flex-col">
-            <p className="min-w-0 truncate font-medium text-sm">{model.title}</p>
+            <p className="min-w-0 truncate text-sm font-medium">{model.title}</p>
             {sourceNote === undefined ? null : (
-              <p className="min-w-0 truncate text-[11px] text-muted-foreground">{sourceNote}</p>
+              <p className="text-muted-foreground min-w-0 truncate text-xs">{sourceNote}</p>
             )}
           </div>
           <ChartKindToggle allowedKinds={model.allowedKinds} onChange={setActiveKind} value={activeKind} />
@@ -198,7 +197,7 @@ export function ChartToolView({ model, reportLabels, sourceNote }: ChartToolView
             — thêm 1 component client chỉ để gập/mở là phí. Bảng cuộn NGANG khi nhiều cột (panel hẹp)
             thay vì đẩy cả card rộng ra. */}
         <details className="group w-full min-w-0">
-          <summary className="cursor-pointer list-none text-muted-foreground text-xs hover:text-foreground">
+          <summary className="text-muted-foreground hover:text-foreground cursor-pointer list-none text-xs">
             <span className="group-open:hidden">Xem số liệu ({model.rows.length} dòng)</span>
             <span className="hidden group-open:inline">Ẩn số liệu</span>
           </summary>

@@ -1,9 +1,9 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 import {
-  type Bingo18PrizeSet,
   computeBingo18Exposure,
   DEFAULT_BINGO18_CONFIG,
   normalizeByPlayType,
+  type Bingo18PrizeSet,
 } from "@megawin/game-bingo18/rules";
 
 import { BettingStatsRepository } from "../../infras/repos/betting-stats-repo";

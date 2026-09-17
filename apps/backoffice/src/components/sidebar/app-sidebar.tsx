@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentProps, type FocusEvent, type MouseEvent, useRef } from "react";
+import { useRef, type ComponentProps, type FocusEvent, type MouseEvent } from "react";
 
 import Link from "next/link";
 
@@ -55,7 +55,6 @@ function BrandLink({
   const intentFiredRef = useRef(false);
 
   const fireIntent = () => {
-    // biome-ignore lint/suspicious/noUnnecessaryConditions: ref mutate runtime; Biome không theo dõi `.current`.
     if (intentFiredRef.current || !onIntent) {
       return;
     }
@@ -78,7 +77,7 @@ function BrandLink({
       }}
     >
       <Crown />
-      <span className="font-semibold text-base">{APP_CONFIG.name}</span>
+      <span className="text-base font-semibold">{APP_CONFIG.name}</span>
     </Link>
   );
 }
@@ -113,7 +112,7 @@ export function AppSidebar({ scope: _scope, userRoles, user, ...props }: AppSide
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
-        <div className="group-data-[collapsible=icon]:hidden border-t border-sidebar-border px-3 pt-2 pb-1 text-xs leading-relaxed text-sidebar-foreground/40">
+        <div className="border-sidebar-border text-sidebar-foreground/40 border-t px-3 pt-2 pb-1 text-xs leading-relaxed group-data-[collapsible=icon]:hidden">
           <p>
             {APP_CONFIG.copyright} v.{APP_CONFIG.version}
           </p>

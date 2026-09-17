@@ -60,23 +60,31 @@ export interface ApiGatewayV2IpSource {
  * @returns IP client, hoặc `undefined` nếu không header nào xác định được.
  */
 export function extractClientIp(headers: HttpHeaders): string | undefined {
-  if (!headers) return undefined;
+  if (!headers) {
+    return undefined;
+  }
 
   // cf-connecting-ip: Cloudflare inject IP thực client vào mọi request đến origin.
   // Không thể giả mạo — CF xoá header này nếu client tự set trước khi vào edge.
   const cfIp = headers["cf-connecting-ip"] ?? headers["CF-Connecting-IP"];
-  if (cfIp) return cfIp.trim() || undefined;
+  if (cfIp) {
+    return cfIp.trim() || undefined;
+  }
 
   // x-forwarded-for: "client, proxy1, proxy2" — phần tử đầu là client gốc.
   const xForwardedFor = headers["x-forwarded-for"] ?? headers["X-Forwarded-For"];
   if (xForwardedFor) {
     const firstIp = xForwardedFor.split(",")[0]?.trim();
-    if (firstIp) return firstIp;
+    if (firstIp) {
+      return firstIp;
+    }
   }
 
   // x-real-ip: fallback reverse proxy đơn tầng (nginx).
   const xRealIp = headers["x-real-ip"] ?? headers["X-Real-IP"];
-  if (xRealIp) return xRealIp.trim() || undefined;
+  if (xRealIp) {
+    return xRealIp.trim() || undefined;
+  }
 
   return undefined;
 }
@@ -91,15 +99,21 @@ export function extractClientIp(headers: HttpHeaders): string | undefined {
  * @returns IP client, hoặc `undefined`.
  */
 export function extractClientIpFromWebHeaders(headers: Headers | null | undefined): string | undefined {
-  if (!headers) return undefined;
+  if (!headers) {
+    return undefined;
+  }
 
   const cfIp = headers.get("cf-connecting-ip");
-  if (cfIp) return cfIp.trim() || undefined;
+  if (cfIp) {
+    return cfIp.trim() || undefined;
+  }
 
   const xForwardedFor = headers.get("x-forwarded-for");
   if (xForwardedFor) {
     const firstIp = xForwardedFor.split(",")[0]?.trim();
-    if (firstIp) return firstIp;
+    if (firstIp) {
+      return firstIp;
+    }
   }
 
   return headers.get("x-real-ip")?.trim() || undefined;
@@ -163,7 +177,9 @@ function cleanHeader(value: string | undefined | null): string | undefined {
  * @returns `{ userAgent?, requestId? }` — mỗi field `undefined` nếu không có.
  */
 export function extractHttpContext(headers: HttpHeaders): HttpRequestContext {
-  if (!headers) return {};
+  if (!headers) {
+    return {};
+  }
   return {
     userAgent: cleanHeader(headers["user-agent"] ?? headers["User-Agent"]),
     requestId: cleanHeader(
@@ -180,7 +196,9 @@ export function extractHttpContext(headers: HttpHeaders): HttpRequestContext {
  * @returns `{ userAgent?, requestId? }`.
  */
 export function extractHttpContextFromWebHeaders(headers: Headers | null | undefined): HttpRequestContext {
-  if (!headers) return {};
+  if (!headers) {
+    return {};
+  }
   return {
     userAgent: cleanHeader(headers.get("user-agent")),
     requestId: cleanHeader(headers.get("x-request-id") ?? headers.get("x-amzn-trace-id")),

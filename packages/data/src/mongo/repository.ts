@@ -1,4 +1,5 @@
 import {
+  ObjectId,
   type AggregateOptions,
   type AnyBulkWriteOperation,
   type BulkWriteOptions,
@@ -17,7 +18,6 @@ import {
   type InsertManyResult,
   type InsertOneOptions,
   type MongoClient,
-  ObjectId,
   type OptionalId,
   type ReplaceOptions,
   type Sort,
@@ -242,7 +242,7 @@ export abstract class MongoRepository<
     // Nếu không có limit thì mặc định lấy tối đa 500 bản ghi
     const limit = options?.limit ?? Constants.HardLimit.MongoDBLimit;
 
-    return await this._collection.find(filter, { ...(options ?? {}), limit }).toArray();
+    return await this._collection.find(filter, { ...options, limit }).toArray();
   }
 
   /**
@@ -274,17 +274,17 @@ export abstract class MongoRepository<
    * @returns
    */
   public async paging(filter: Filter<Document>, page: number, size: number, options?: FindOptions): Promise<TEntity[]> {
-    page = page <= 0 ? Constants.Default.Paging.Page : page;
+    const safePage = page <= 0 ? Constants.Default.Paging.Page : page;
 
     // Lấy tối đa số page size đã fix cứng
-    size = size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
+    const safeSize = size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
 
-    const skip = size * (page - 1);
+    const skip = safeSize * (safePage - 1);
 
     // Override các thuộc tính limit và skip để phân trang cho đúng
-    options = Object.assign(options ?? {}, { limit: size, skip: skip });
+    const findOptions = Object.assign(options ?? {}, { limit: safeSize, skip });
 
-    return await this.findMany(filter, options);
+    return await this.findMany(filter, findOptions);
   }
 
   /**

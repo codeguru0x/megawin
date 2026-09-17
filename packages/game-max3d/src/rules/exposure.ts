@@ -36,12 +36,14 @@
 
 import type { Max3dTopPair, Max3dTripletStake } from "../entities/betting-stats";
 import { BasicPrizeTier, PlayMode, PlayType } from "../entities/enums";
-import type { BasicPrizeAmounts, ComboPrizeAmounts, PlusPrizeAmounts } from "../entities/types";
 import {
   MAX3D_DRAW_COUNT_FIRST,
   MAX3D_DRAW_COUNT_SECOND,
   MAX3D_DRAW_COUNT_SPECIAL,
   MAX3D_DRAW_COUNT_THIRD,
+  type BasicPrizeAmounts,
+  type ComboPrizeAmounts,
+  type PlusPrizeAmounts,
 } from "../entities/types";
 
 // ─────────────────────────────────────────────

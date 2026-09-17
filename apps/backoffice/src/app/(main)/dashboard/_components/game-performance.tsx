@@ -5,8 +5,7 @@ import Link from "next/link";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
-import type { SectorProps } from "recharts";
-import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from "recharts";
+import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type SectorProps } from "recharts";
 import type { PieLabelRenderProps } from "recharts/types/polar/Pie";
 
 import { Badge } from "@/components/ui/badge";
@@ -15,14 +14,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getGameHex } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
-import { type DashboardDayKpis, getGameLabel } from "../_lib/compute";
+import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";
 import { ChartSkeleton, GameTableSkeleton } from "./skeletons";
 
 // ─── Helpers color theo rule financial-report-ui ─────────────────────────────
 
 function getNetProfitClass(value: number) {
-  if (value < 0) return "text-red-600 dark:text-red-400";
-  if (value > 0) return "text-emerald-600 dark:text-emerald-400";
+  if (value < 0) {
+    return "text-loss";
+  }
+  if (value > 0) {
+    return "text-profit";
+  }
   return "";
 }
 
@@ -38,13 +41,17 @@ interface PieTooltipProps {
 }
 
 function PieTooltip({ active, payload }: PieTooltipProps) {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload?.length) {
+    return null;
+  }
   const item = payload[0];
-  if (!item) return null;
+  if (!item) {
+    return null;
+  }
   return (
-    <div className="rounded-lg border border-border bg-background px-3 py-2 text-xs shadow-md">
-      <p className="font-semibold text-foreground">{getGameLabel(item.payload.gameProduct)}</p>
-      <p className="mt-0.5 tabular-nums text-muted-foreground">
+    <div className="border-border bg-background rounded-lg border px-3 py-2 text-xs shadow-md">
+      <p className="text-foreground font-semibold">{getGameLabel(item.payload.gameProduct)}</p>
+      <p className="text-muted-foreground mt-0.5 tabular-nums">
         {formatVNDCompact(item.value)} · {item.payload.pct.toFixed(1)}%
       </p>
     </div>
@@ -54,9 +61,13 @@ function PieTooltip({ active, payload }: PieTooltipProps) {
 // ─── Recharts custom label trên pie slices ──────────────────────────────────
 
 function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) {
-  if (!cx || !cy || !midAngle || !innerRadius || !outerRadius || !percent) return null;
+  if (!cx || !cy || !midAngle || !innerRadius || !outerRadius || !percent) {
+    return null;
+  }
   // Chỉ label slice >= 5% để tránh chồng chéo
-  if (percent < 0.05) return null;
+  if (percent < 0.05) {
+    return null;
+  }
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -69,7 +80,7 @@ function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }:
       fill="white"
       textAnchor="middle"
       dominantBaseline="central"
-      className="text-[10px] font-bold"
+      className="text-xs font-bold"
       style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
     >
       {(percent * 100).toFixed(0)}%
@@ -100,8 +111,12 @@ interface GameOverviewProps {
  * Dùng dữ liệu KPI đã compute — không fetch thêm.
  */
 export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
-  if (isLoading) return <GameTableSkeleton />;
-  if (!kpis || kpis.byGame.length === 0) return null;
+  if (isLoading) {
+    return <GameTableSkeleton />;
+  }
+  if (!kpis || kpis.byGame.length === 0) {
+    return null;
+  }
 
   const chartData = kpis.byGame
     .filter((r) => r.totalStake > 0)
@@ -118,16 +133,16 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <PieChartIcon className="size-4 text-muted-foreground" />
+          <PieChartIcon className="text-muted-foreground size-4" />
           <CardTitle className="text-sm font-semibold">Hiệu suất theo game</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="flex flex-col xl:flex-row">
           {/* ── Pie chart — cột trái ─────────────────────────────────── */}
-          <div className="flex shrink-0 flex-col items-center justify-center border-b px-4 pb-4 pt-1 xl:w-65 xl:border-b-0 xl:border-r xl:pb-4">
+          <div className="flex shrink-0 flex-col items-center justify-center border-b px-4 pt-1 pb-4 xl:w-65 xl:border-r xl:border-b-0 xl:pb-4">
             <div className="relative">
               <ResponsiveContainer width={220} height={220}>
                 <PieChart>
@@ -149,11 +164,11 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
               </ResponsiveContainer>
               {/* Center label — z-10 để nằm trên SVG, tooltip dùng z-20 nên sẽ đè lên được */}
               <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Tổng DT</p>
-                <p className="text-sm font-bold tabular-nums text-foreground">{formatVNDCompact(kpis.totalStake)}</p>
+                <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">Tổng DT</p>
+                <p className="text-foreground text-sm font-bold tabular-nums">{formatVNDCompact(kpis.totalStake)}</p>
               </div>
             </div>
-            {/* Mini legend dưới chart — text-[10px] chấp nhận vì trong vùng chart compact */}
+            {/* Mini legend dưới chart — text-xs chấp nhận vì trong vùng chart compact */}
             <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 px-2">
               {chartData.map((item) => (
                 <div key={item.gameProduct} className="flex items-center gap-1">
@@ -161,7 +176,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     className="size-1.5 shrink-0 rounded-full"
                     style={{ background: getGameHex(item.gameProduct) }}
                   />
-                  <span className="text-xs text-muted-foreground">{item.name}</span>
+                  <span className="text-muted-foreground text-xs">{item.name}</span>
                 </div>
               ))}
             </div>
@@ -215,8 +230,8 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                   </TableRow>
                 ))}
                 {/* Hàng TỔNG CỘNG */}
-                <TableRow className="h-9 border-t-2 bg-muted/30 font-semibold hover:bg-muted/40">
-                  <TableCell className="py-0 pl-5 text-xs font-semibold uppercase tracking-wide">
+                <TableRow className="bg-muted/30 hover:bg-muted/40 h-9 border-t-2 font-semibold">
+                  <TableCell className="py-0 pl-5 text-xs font-semibold tracking-wide uppercase">
                     {REPORT_COLUMN_LABELS.summary}
                   </TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
@@ -228,7 +243,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     {formatNumber(totalCommission)}
                   </TableCell>
                   <TableCell className="py-0 pr-5 text-right">
-                    <span className={cn("text-xs tabular-nums font-semibold", getNetProfitClass(kpis.totalProfit))}>
+                    <span className={cn("text-xs font-semibold tabular-nums", getNetProfitClass(kpis.totalProfit))}>
                       {formatNumber(kpis.totalProfit)}
                     </span>
                   </TableCell>
@@ -260,8 +275,8 @@ function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; pay
 
   return (
     <div className="flex items-center gap-3">
-      <div className="w-20 shrink-0 truncate text-xs text-muted-foreground">{getGameLabel(gameProduct)}</div>
-      <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+      <div className="text-muted-foreground w-20 shrink-0 truncate text-xs">{getGameLabel(gameProduct)}</div>
+      <div className="bg-muted relative h-2.5 flex-1 overflow-hidden rounded-full">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${displayPct}%`, background: barColor }}
@@ -270,14 +285,8 @@ function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; pay
       {/* Chỉ text % bên phải đổi màu theo mức cảnh báo */}
       <span
         className={cn(
-          "w-12 shrink-0 text-right text-xs tabular-nums font-medium",
-          isOver
-            ? "text-red-600 dark:text-red-400"
-            : isDanger
-              ? "text-orange-600 dark:text-orange-400"
-              : isWarn
-                ? "text-yellow-600 dark:text-yellow-400"
-                : "text-foreground",
+          "w-12 shrink-0 text-right text-xs font-medium tabular-nums",
+          isOver ? "text-loss" : isDanger ? "text-warning" : isWarn ? "text-warning" : "text-foreground",
         )}
       >
         {(payoutRatio * 100).toFixed(1)}%
@@ -294,8 +303,12 @@ function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; pay
  * Thiết kế h-full để fit cột 1/3 cạnh card GameOverview.
  */
 export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
-  if (isLoading) return <ChartSkeleton height={220} />;
-  if (!kpis || kpis.byGame.length === 0) return null;
+  if (isLoading) {
+    return <ChartSkeleton height={220} />;
+  }
+  if (!kpis || kpis.byGame.length === 0) {
+    return null;
+  }
 
   const rows = kpis.byGame
     .filter((r) => r.totalStake > 0)
@@ -310,26 +323,24 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
 
   return (
     <Card className="flex h-full flex-col gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <BarChart2 className="size-4 text-muted-foreground" />
+            <BarChart2 className="text-muted-foreground size-4" />
             <CardTitle className="text-sm font-semibold">Tỷ lệ trả thưởng</CardTitle>
           </div>
           <Badge
             variant="outline"
             className={cn(
               "shrink-0 text-xs tabular-nums",
-              isOverallDanger
-                ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400"
-                : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400",
+              isOverallDanger ? "border-loss bg-loss text-loss" : "border-profit bg-profit text-profit",
             )}
           >
             Tổng: {(overallRatio * 100).toFixed(1)}%
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-between px-5 pb-4 pt-0">
+      <CardContent className="flex flex-1 flex-col justify-between px-5 pt-0 pb-4">
         {/* Bars xếp sát nhau từ trên xuống, gap cố định — không rời rạc */}
         <div className="flex flex-col gap-2 py-2">
           {rows.map((row) => (
@@ -337,16 +348,16 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
           ))}
         </div>
         {/* Chú thích: bar = màu game cố định; text % thay đổi theo mức cảnh báo */}
-        <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
-          <p className="text-xs font-medium text-muted-foreground">Số %:</p>
+        <div className="border-border flex flex-wrap items-center gap-3 border-t pt-3">
+          <p className="text-muted-foreground text-xs font-medium">Số %:</p>
           {[
             { textClass: "text-foreground", label: "< 85%" },
-            { textClass: "text-yellow-600 dark:text-yellow-400", label: "85–95%" },
-            { textClass: "text-orange-600 dark:text-orange-400", label: "95–100%" },
-            { textClass: "text-red-600 dark:text-red-400", label: "> 100%" },
+            { textClass: "text-warning", label: "85–95%" },
+            { textClass: "text-warning", label: "95–100%" },
+            { textClass: "text-loss", label: "> 100%" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
-              <span className={cn("text-xs tabular-nums font-medium", item.textClass)}>{item.label}</span>
+              <span className={cn("text-xs font-medium tabular-nums", item.textClass)}>{item.label}</span>
             </div>
           ))}
         </div>

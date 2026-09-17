@@ -13,7 +13,6 @@
  *   Bộ số phổ biến] → [Cược gần nhất (feed cột rộng, chia nhóm Pick/Side bet) | Đại lý
  *   (card hẹp)] 2 cột.
  */
-
 import { useMemo } from "react";
 
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
@@ -86,7 +85,9 @@ export function AnalyticsSection({ active }: { active: boolean }) {
   const { data: liveData } = useLiveFeed(effectiveDrawId, active && !isSettled);
 
   const liveEntries: LiveFeedEntry[] = useMemo(() => {
-    if (!liveData) return [];
+    if (!liveData) {
+      return [];
+    }
     return liveData.entries.map((e) => {
       // Lấy board cơ bản đầu tiên để hiển thị preview, fallback side bet nếu không có.
       const firstBasicBoard = e.boards.find((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as never));
@@ -107,7 +108,9 @@ export function AnalyticsSection({ active }: { active: boolean }) {
     });
   }, [liveData]);
 
-  if (!effectiveDrawId) return null;
+  if (!effectiveDrawId) {
+    return null;
+  }
 
   return (
     <section className="space-y-4">
@@ -130,7 +133,7 @@ export function AnalyticsSection({ active }: { active: boolean }) {
 
       {/* Cược gần nhất (feed, cột rộng chính — dữ liệu live hữu ích, cần diện tích) +
           Đại lý (card hẹp phải — RGS B2B ít tenant, card giàu thông tin thay bảng trống) (§4.8). */}
-      <div className="grid gap-4 @[900px]/main:grid-cols-[1fr_24rem] items-start">
+      <div className="grid items-start gap-4 @[900px]/main:grid-cols-[1fr_24rem]">
         <LiveFeed entries={liveEntries} totalCount={liveData?.totalCount ?? 0} isSettled={isSettled} />
         <TenantBreakdownCard tenants={tenants ?? []} />
       </div>

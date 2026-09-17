@@ -19,7 +19,6 @@
  * toàn bộ dòng của tab — không chỉ re-render. Với vài trăm dòng đã chọn, tổng chi phí mount lên
  * tới VÀI GIÂY (đo bằng CPU profile thật, không phải ước lượng) — xem `p1-09-expand-panel-redesign.plan.md` §14.
  */
-
 import { memo } from "react";
 
 import { formatDurationCompact, formatNumber } from "@megawin/shared/utils";
@@ -35,14 +34,14 @@ import { RelativeDuration } from "../../relative-duration";
 import { OPS_STAGE_LABEL, SALE_GATE_LABEL } from "./queue-types";
 
 const HEALTH_DOT_CLASS: Record<string, string> = {
-  ok: "bg-emerald-500",
-  warn: "bg-amber-500",
+  ok: "bg-profit",
+  warn: "bg-warning",
   stuck: "bg-destructive",
 };
 
 const ACCENT_ROW_CLASS: Record<string, string> = {
   none: "",
-  warn: "bg-amber-500/5 hover:bg-amber-500/10",
+  warn: "bg-warning/5 hover:bg-warning/10",
   destructive: "bg-destructive/5 hover:bg-destructive/10",
 };
 
@@ -214,7 +213,7 @@ function QueueRowImpl(props: QueueRowProps) {
             onMouseDown={(e) => onCheckboxMouseDown(e.shiftKey)}
             onChange={() => onToggleSelect(drawId, rowIndex, isSelected)}
             aria-label={`Chọn kỳ ${drawNo}`}
-            className="size-4 shrink-0 cursor-pointer rounded-[4px] border-input accent-primary"
+            className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded"
           />
         ) : (
           // Kỳ không có action bulk khả dụng — icon Lock xám thay ô trống hoàn toàn, tránh
@@ -223,7 +222,7 @@ function QueueRowImpl(props: QueueRowProps) {
           // NHẬP KẾT QUẢ, không phải đã xong).
           <Tooltip>
             <TooltipTrigger asChild>
-              <Lock className="size-3.5 text-muted-foreground/40" />
+              <Lock className="text-muted-foreground/40 size-3.5" />
             </TooltipTrigger>
             <TooltipContent>{lockedReason(stageOrGateKey)}</TooltipContent>
           </Tooltip>
@@ -232,7 +231,7 @@ function QueueRowImpl(props: QueueRowProps) {
       <TableCell className="py-2">
         <DrawIdLabel drawId={drawId} />
       </TableCell>
-      <TableCell className="py-2 text-muted-foreground text-xs tabular-nums">
+      <TableCell className="text-muted-foreground py-2 text-xs tabular-nums">
         {new Date(drawTimeMs).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
       </TableCell>
       <TableCell className="py-2">
@@ -243,13 +242,13 @@ function QueueRowImpl(props: QueueRowProps) {
       </TableCell>
       <TableCell className="py-2 text-xs tabular-nums">
         {remainingSec !== null ? (
-          <span className={healthKey === "stuck" ? "font-medium text-destructive" : undefined}>
+          <span className={healthKey === "stuck" ? "text-destructive font-medium" : undefined}>
             còn {formatDurationCompact(remainingSec)}
           </span>
         ) : ageAnchorMs !== null ? (
           <RelativeDuration
             sinceMs={ageAnchorMs}
-            className={healthKey === "stuck" ? "font-medium text-destructive" : undefined}
+            className={healthKey === "stuck" ? "text-destructive font-medium" : undefined}
           />
         ) : (
           "—"
@@ -258,27 +257,27 @@ function QueueRowImpl(props: QueueRowProps) {
       <TableCell className="py-2 text-right tabular-nums">{formatNumber(revenue)}</TableCell>
       {/* Tách "Vé" và "Bộ" thành 2 cột riêng, bỏ hậu tố "v"/"b" — đơn vị đã ghi ở header cột,
           lặp lại ở 200 dòng chỉ tốn chiều ngang (yêu cầu review 07/09, plan §B5). */}
-      <TableCell className="py-2 text-right text-muted-foreground text-xs tabular-nums">
+      <TableCell className="text-muted-foreground py-2 text-right text-xs tabular-nums">
         {formatNumber(entries)}
         {largeBetCount > 0 ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="ml-1 cursor-default text-amber-600">+{largeBetCount}</span>
+              <span className="text-warning ml-1 cursor-default">+{largeBetCount}</span>
             </TooltipTrigger>
             <TooltipContent>{largeBetCount} cược lớn (≥ ngưỡng cấu hình)</TooltipContent>
           </Tooltip>
         ) : null}
       </TableCell>
-      <TableCell className="py-2 text-right text-muted-foreground text-xs tabular-nums">{formatNumber(sets)}</TableCell>
+      <TableCell className="text-muted-foreground py-2 text-right text-xs tabular-nums">{formatNumber(sets)}</TableCell>
       {/* Cột Exposure MỚI (review 07/09 §A7) — rủi ro chi trả xấu nhất per-kỳ, RAW chưa cap
           (giống nghĩa với field cùng tên ở expand panel — nguồn duy nhất `row.exposureRaw`). */}
-      <TableCell className="py-2 text-right text-muted-foreground text-xs tabular-nums">
+      <TableCell className="text-muted-foreground py-2 text-right text-xs tabular-nums">
         {exposureRaw > 0 ? formatNumber(exposureRaw) : "—"}
       </TableCell>
       <TableCell className="py-2 pr-5">
         <AlertBadge alertsOpen={alertsOpen} alertsCritical={alertsCritical} />
         {errorMessage ? (
-          <div className="mt-1 max-w-48 truncate text-destructive text-xs" title={errorMessage}>
+          <div className="text-destructive mt-1 max-w-48 truncate text-xs" title={errorMessage}>
             ⚠ {errorMessage}
           </div>
         ) : null}

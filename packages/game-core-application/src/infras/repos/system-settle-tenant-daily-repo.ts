@@ -22,8 +22,12 @@
  */
 
 import { isOnlyDuplicateKeyError, ReportRepo } from "@megawin/data/mongo";
-import type { GameProduct, SystemSettleTenantDaily, SystemSettleTenantDailyEntity } from "@megawin/game-core/entities";
-import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
+import {
+  SYSTEM_SETTLE_TENANT_DAILY,
+  type GameProduct,
+  type SystemSettleTenantDaily,
+  type SystemSettleTenantDailyEntity,
+} from "@megawin/game-core/entities";
 import { MongoBulkWriteError } from "mongodb";
 
 import { SystemSettleTenantDailyMapper } from "../mappers";

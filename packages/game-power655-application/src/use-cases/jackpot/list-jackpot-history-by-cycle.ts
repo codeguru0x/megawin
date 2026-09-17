@@ -36,7 +36,9 @@ export class ListJackpotHistoryByCycleUseCase extends UseCase<
 
     // Tìm cycle để lấy startDrawId / endDrawId làm boundary filter.
     const cycle = await this.cycleRepo.getCycleByNo(input.cycleNo);
-    if (!cycle) return { draws: [], page, size, total: 0 };
+    if (!cycle) {
+      return { draws: [], page, size, total: 0 };
+    }
 
     const { draws: rawDraws, total } = await this.drawRepo.getSettledDrawsInCycle(
       cycle.startDrawId,

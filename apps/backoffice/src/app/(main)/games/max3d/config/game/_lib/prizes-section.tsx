@@ -68,7 +68,7 @@ const BASIC_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "trùng 1 trong 2 bộ ĐB",
     badge: "ĐB",
-    color: "bg-red-600 text-white",
+    color: "bg-loss text-white",
   },
   {
     key: "basicFirst" as const,
@@ -76,7 +76,7 @@ const BASIC_FIELDS = [
     label: "Giải Nhất",
     desc: "trùng 1 trong 4 bộ Nhất",
     badge: "1st",
-    color: "bg-amber-500 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "basicSecond" as const,
@@ -84,7 +84,7 @@ const BASIC_FIELDS = [
     label: "Giải Nhì",
     desc: "trùng 1 trong 6 bộ Nhì",
     badge: "2nd",
-    color: "bg-slate-400 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "basicThird" as const,
@@ -92,7 +92,7 @@ const BASIC_FIELDS = [
     label: "Giải Ba",
     desc: "trùng 1 trong 8 bộ Ba",
     badge: "3rd",
-    color: "bg-amber-700 text-white",
+    color: "bg-warning text-white",
   },
 ] as const;
 
@@ -103,7 +103,7 @@ const COMBO3_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "3 hoán vị, trùng bộ ĐB",
     badge: "ĐB",
-    color: "bg-red-600 text-white",
+    color: "bg-loss text-white",
   },
   {
     key: "combo3First" as const,
@@ -111,7 +111,7 @@ const COMBO3_FIELDS = [
     label: "Giải Nhất",
     desc: "3 hoán vị, trùng bộ Nhất",
     badge: "1st",
-    color: "bg-amber-500 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "combo3Second" as const,
@@ -119,7 +119,7 @@ const COMBO3_FIELDS = [
     label: "Giải Nhì",
     desc: "3 hoán vị, trùng bộ Nhì",
     badge: "2nd",
-    color: "bg-slate-400 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "combo3Third" as const,
@@ -127,7 +127,7 @@ const COMBO3_FIELDS = [
     label: "Giải Ba",
     desc: "3 hoán vị, trùng bộ Ba",
     badge: "3rd",
-    color: "bg-amber-700 text-white",
+    color: "bg-warning text-white",
   },
 ] as const;
 
@@ -138,7 +138,7 @@ const COMBO6_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "6 hoán vị, trùng bộ ĐB",
     badge: "ĐB",
-    color: "bg-red-600 text-white",
+    color: "bg-loss text-white",
   },
   {
     key: "combo6First" as const,
@@ -146,7 +146,7 @@ const COMBO6_FIELDS = [
     label: "Giải Nhất",
     desc: "6 hoán vị, trùng bộ Nhất",
     badge: "1st",
-    color: "bg-amber-500 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "combo6Second" as const,
@@ -154,7 +154,7 @@ const COMBO6_FIELDS = [
     label: "Giải Nhì",
     desc: "6 hoán vị, trùng bộ Nhì",
     badge: "2nd",
-    color: "bg-slate-400 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "combo6Third" as const,
@@ -162,7 +162,7 @@ const COMBO6_FIELDS = [
     label: "Giải Ba",
     desc: "6 hoán vị, trùng bộ Ba",
     badge: "3rd",
-    color: "bg-amber-700 text-white",
+    color: "bg-warning text-white",
   },
 ] as const;
 
@@ -173,7 +173,7 @@ const PLUS_FIELDS = [
     label: "Giải Đặc Biệt",
     desc: "2 bộ khớp đủ 2 bộ ĐB",
     badge: "ĐB",
-    color: "bg-red-600 text-white",
+    color: "bg-loss text-white",
   },
   {
     key: "plusFirst" as const,
@@ -181,7 +181,7 @@ const PLUS_FIELDS = [
     label: "Giải Nhất",
     desc: "2 bộ khớp 2 bộ Nhất riêng biệt",
     badge: "1st",
-    color: "bg-amber-500 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "plusSecond" as const,
@@ -189,7 +189,7 @@ const PLUS_FIELDS = [
     label: "Giải Nhì",
     desc: "2 bộ khớp 2 bộ Nhì riêng biệt",
     badge: "2nd",
-    color: "bg-slate-400 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "plusThird" as const,
@@ -197,7 +197,7 @@ const PLUS_FIELDS = [
     label: "Giải Ba",
     desc: "2 bộ khớp 2 bộ Ba riêng biệt",
     badge: "3rd",
-    color: "bg-amber-700 text-white",
+    color: "bg-warning text-white",
   },
   {
     key: "plusFourth" as const,
@@ -205,7 +205,7 @@ const PLUS_FIELDS = [
     label: "Giải Tư",
     desc: "2 bộ khớp 2 kết quả bất kỳ trong 20 bộ",
     badge: "4th",
-    color: "bg-slate-500 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "plusFifth" as const,
@@ -213,7 +213,7 @@ const PLUS_FIELDS = [
     label: "Giải Năm",
     desc: "mỗi bộ khớp 1 bộ ĐB (xét riêng từng bộ)",
     badge: "5th",
-    color: "bg-slate-600 text-white",
+    color: "bg-muted text-white",
   },
   {
     key: "plusSixth" as const,
@@ -221,7 +221,7 @@ const PLUS_FIELDS = [
     label: "Giải Sáu",
     desc: "mỗi bộ khớp 1 bộ Nhất/Nhì/Ba (xét riêng)",
     badge: "6th",
-    color: "bg-emerald-600 text-white",
+    color: "bg-profit text-white",
   },
 ] as const;
 
@@ -229,9 +229,9 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
+        <span className={`inline-flex cursor-help items-center gap-1 ${className ?? ""}`}>
           {label}
-          <Info className="size-3 text-muted-foreground/60" />
+          <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-xs">
@@ -264,8 +264,8 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 
     <div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="text-foreground text-sm font-semibold">{modeLabel}</h3>
+          <p className="text-muted-foreground mt-0.5 text-xs">
             Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
             {" · "}
             {isCombo ? (
@@ -283,23 +283,21 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 
             )}
           </p>
         </div>
-        <div className="flex items-center gap-4 text-xs shrink-0">
+        <div className="flex shrink-0 items-center gap-4 text-xs">
           <div className="text-right">
             <span className="text-muted-foreground">CP kỳ vọng{isCombo ? " / board" : " / line"}</span>
             <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
           </div>
           <div className="text-right">
             <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-            <div
-              className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
-            >
+            <div className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-profit" : "text-loss"}`}>
               {analysis.grossMarginPercent >= 0 ? (
                 <TrendingUp className="mr-1 inline size-3.5" />
               ) : (
                 <TrendingDown className="mr-1 inline size-3.5" />
               )}
               {analysis.grossMarginPercent.toFixed(2)}%
-              <span className="ml-1 font-normal text-muted-foreground">
+              <span className="text-muted-foreground ml-1 font-normal">
                 ({fmt(Math.round(analysis.grossMarginPerLine))} VND{isCombo ? "/board" : "/line"})
               </span>
             </div>
@@ -307,7 +305,7 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 
         </div>
       </div>
       {note ? (
-        <div className="text-xs text-muted-foreground/80 mt-2 leading-snug">
+        <div className="text-muted-foreground/80 mt-2 text-xs leading-snug">
           {Array.isArray(note) ? (
             <ul className="list-disc space-y-0.5 pl-4">
               {note.map((line) => (
@@ -395,7 +393,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
             <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
             <div>
               <span className="text-sm font-medium">{p.label}</span>
-              <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
+              <span className="text-muted-foreground ml-2 text-xs">{p.desc}</span>
             </div>
             <FormControl>
               <MoneyInput
@@ -409,7 +407,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
             </FormControl>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                <span className="text-muted-foreground cursor-help text-right text-xs tabular-nums">
                   {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
                 </span>
               </TooltipTrigger>
@@ -424,16 +422,16 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
                 )}
               </TooltipContent>
             </Tooltip>
-            <span className="text-right text-xs tabular-nums font-medium">
+            <span className="text-right text-xs font-medium tabular-nums">
               {profit ? `${fmt(Math.round(profit.expectedPayout))} VND` : "–"}
             </span>
             <span
-              className={`text-right text-xs tabular-nums font-semibold ${
+              className={`text-right text-xs font-semibold tabular-nums ${
                 profit && profit.payoutRatio > 1
-                  ? "text-red-600"
+                  ? "text-loss"
                   : profit && profit.payoutRatio > 0.5
-                    ? "text-amber-600"
-                    : "text-emerald-600"
+                    ? "text-warning"
+                    : "text-profit"
               }`}
             >
               {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -441,7 +439,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
-                  className={`text-right text-xs tabular-nums cursor-help ${isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground"}`}
+                  className={`cursor-help text-right text-xs tabular-nums ${isOverBreakEven ? "text-loss font-bold" : "text-muted-foreground"}`}
                 >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
                 </span>
@@ -649,7 +647,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
@@ -679,7 +677,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     note="Người chơi chọn 1 bộ ba số, so khớp đúng thứ tự với cả 4 hạng. 20 bộ kết quả quay độc lập nên 1 bộ số có thể xuất hiện ở nhiều hạng — khi đó lĩnh TỔNG các hạng trúng, vì vậy tỷ lệ trả thưởng của board là tổng 4 hàng dưới."
                   />
                 </div>
-                <div className="border-t overflow-x-auto">
+                <div className="overflow-x-auto border-t">
                   <TableHeader />
                   {BASIC_FIELDS.map((p, idx) => (
                     <OddsRow
@@ -707,7 +705,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     note="Bảng giả định bộ số dạng aab (2 chữ số giống) → đúng 3 hoán vị, mỗi hoán vị là 1 line dự thưởng độc lập. Bộ 3 chữ số giống nhau (aaa) chỉ sinh 1 hoán vị: cả giá board lẫn xác suất/CP kỳ vọng đều chỉ bằng 1/3 bảng này, nhưng giải thưởng vẫn là giá trị Combo3 nên tỷ lệ trả thưởng KHÔNG đổi."
                   />
                 </div>
-                <div className="border-t overflow-x-auto">
+                <div className="overflow-x-auto border-t">
                   <TableHeader lineCount={3} />
                   {COMBO3_FIELDS.map((p, idx) => (
                     <OddsRow
@@ -733,7 +731,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     note="Bắt buộc 3 chữ số khác nhau → luôn đúng 6 hoán vị, mỗi hoán vị là 1 line dự thưởng độc lập. Giá board = 6 × giá line, giải thưởng mỗi hoán vị = giá trị Combo6."
                   />
                 </div>
-                <div className="border-t overflow-x-auto">
+                <div className="overflow-x-auto border-t">
                   <TableHeader lineCount={6} />
                   {COMBO6_FIELDS.map((p, idx) => (
                     <OddsRow
@@ -765,7 +763,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     ]}
                   />
                 </div>
-                <div className="border-t overflow-x-auto">
+                <div className="overflow-x-auto border-t">
                   <TableHeader />
                   {PLUS_FIELDS.map((p, idx) => (
                     <OddsRow

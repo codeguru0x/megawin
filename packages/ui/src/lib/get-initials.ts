@@ -1,5 +1,7 @@
 export function getInitials(str: string): string {
-  if (typeof str !== "string" || !str.trim()) return "?";
+  if (typeof str !== "string" || !str.trim()) {
+    return "?";
+  }
 
   return (
     str

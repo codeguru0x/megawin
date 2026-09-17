@@ -8,8 +8,8 @@
  * @see https://better-auth.com/docs/integrations/next
  */
 
-import { AccountStatus, AccountType, ClaimKey } from "@megawin/identity/entities";
 import { auditLogin } from "@megawin/identity-application/services";
+import { AccountStatus, AccountType, ClaimKey } from "@megawin/identity/entities";
 import { betterAuth } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";

@@ -193,8 +193,12 @@ const DRAW = KENO_DRAW_COUNT; // 20
  * C(80,20) = 3,535,316,142,212,174,320 ≈ 3.535 × 10^18 – vượt quá Number.MAX_SAFE_INTEGER.
  */
 function combinationBig(n: number, k: number): bigint {
-  if (k < 0 || k > n) return 0n;
-  if (k === 0 || k === n) return 1n;
+  if (k < 0 || k > n) {
+    return 0n;
+  }
+  if (k === 0 || k === n) {
+    return 1n;
+  }
   const kk = Math.min(k, n - k);
   let result = 1n;
   for (let i = 0; i < kk; i++) {
@@ -342,7 +346,9 @@ export function getBigSmallOdds(): {
 } {
   const ways13Plus = (() => {
     let total = 0n;
-    for (let x = 13; x <= 20; x++) total += sideBetWays(x);
+    for (let x = 13; x <= 20; x++) {
+      total += sideBetWays(x);
+    }
     return total;
   })();
 
@@ -384,7 +390,9 @@ export function getEvenOddOdds(): {
 } {
   const ways15Plus = (() => {
     let total = 0n;
-    for (let x = 15; x <= 20; x++) total += sideBetWays(x);
+    for (let x = 15; x <= 20; x++) {
+      total += sideBetWays(x);
+    }
     return total;
   })();
 

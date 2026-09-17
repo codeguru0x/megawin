@@ -30,15 +30,15 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import type {
-  EntryPayout,
-  EntryPayoutTier,
-  EntryResult,
-  PrizeAmounts,
-  TicketLineDoc,
+import {
+  PrizeTier,
+  type EntryPayout,
+  type EntryPayoutTier,
+  type EntryResult,
+  type PrizeAmounts,
+  type TicketLineDoc,
 } from "@megawin/game-mega645/entities";
-import { PrizeTier } from "@megawin/game-mega645/entities";
-import { type DrawResultForMatch, expandAllBoards, matchLines } from "@megawin/game-mega645/helpers";
+import { expandAllBoards, matchLines, type DrawResultForMatch } from "@megawin/game-mega645/helpers";
 import { generateId } from "@megawin/shared/utils";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -198,9 +198,15 @@ export class SettleEntriesBatchUseCase extends UseCase<SettleContext, SettleEntr
  * Tách hàm riêng để tránh dùng `as keyof` cast không an toàn tại call-site.
  */
 function getFixedPrizeAmount(tier: PrizeTier | null, prizeAmounts: PrizeAmounts): number {
-  if (tier === PrizeTier.Tier1) return prizeAmounts.tier1;
-  if (tier === PrizeTier.Tier2) return prizeAmounts.tier2;
-  if (tier === PrizeTier.Tier3) return prizeAmounts.tier3;
+  if (tier === PrizeTier.Tier1) {
+    return prizeAmounts.tier1;
+  }
+  if (tier === PrizeTier.Tier2) {
+    return prizeAmounts.tier2;
+  }
+  if (tier === PrizeTier.Tier3) {
+    return prizeAmounts.tier3;
+  }
   // Jackpot hoặc null: giải tích luỹ — FinalizeSettle tính sau khi biết pool + số winners.
   return 0;
 }
@@ -224,7 +230,9 @@ function buildPayoutTiersFromLines(
 
   for (const line of lineDocs) {
     const { tier, winAmount } = line.matchResult;
-    if (tier == null) continue;
+    if (tier == null) {
+      continue;
+    }
 
     const existing = tierMap.get(tier) ?? { hitCount: 0, totalAmount: 0 };
     existing.hitCount += 1;

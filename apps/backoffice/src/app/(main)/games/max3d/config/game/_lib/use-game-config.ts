@@ -7,7 +7,7 @@ import type {
   PlayRules,
   VietlottPeriodAnchor,
 } from "@megawin/game-max3d/entities";
-import { ApiClientError, apiClient } from "@megawin/next/client";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 

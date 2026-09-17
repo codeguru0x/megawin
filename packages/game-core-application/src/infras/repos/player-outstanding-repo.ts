@@ -80,29 +80,25 @@ export class PlayerOutstandingRepository extends GameCoreBaseRepo<any> {
         )
         .toArray();
 
-      return docs.map(
-        (doc): PlayerOutstandingEntry => ({
-          gameProduct: gameProduct as GameProduct,
-          // _id là ObjectId — convert sang hex string để dùng làm entryId
-          entryId: String(doc._id),
-          ticketId: (doc.ticketId as string) ?? "",
-          ticketNo: (doc.entrySummary?.ticketNo as string) ?? "",
-          tenantId: (doc.tenant?.tenantId as string) ?? "",
-          drawId: doc.drawId as string,
-          financialDate: (doc.financialDate as string) ?? "",
-          amount: (doc.amount as number) ?? 0,
-          // commissionAmount nằm trong embedded object tenant
-          commissionAmount: (doc.tenant?.commissionAmount as number) ?? 0,
-          // boardCount từ số boards trong entrySummary
-          boardCount: Array.isArray(doc.entrySummary?.boards)
-            ? (doc.entrySummary.boards as unknown[]).length
-            : undefined,
-          // lineCount: games có lines; undefined → keno/bingo18
-          lineCount: (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined),
-          betUnitCount: doc.betUnitCount as number | undefined,
-          createdAt: doc.createdAt ? new Date(doc.createdAt as Date).toISOString() : "",
-        }),
-      );
+      return docs.map((doc): PlayerOutstandingEntry => ({
+        gameProduct: gameProduct as GameProduct,
+        // _id là ObjectId — convert sang hex string để dùng làm entryId
+        entryId: String(doc._id),
+        ticketId: (doc.ticketId as string) ?? "",
+        ticketNo: (doc.entrySummary?.ticketNo as string) ?? "",
+        tenantId: (doc.tenant?.tenantId as string) ?? "",
+        drawId: doc.drawId as string,
+        financialDate: (doc.financialDate as string) ?? "",
+        amount: (doc.amount as number) ?? 0,
+        // commissionAmount nằm trong embedded object tenant
+        commissionAmount: (doc.tenant?.commissionAmount as number) ?? 0,
+        // boardCount từ số boards trong entrySummary
+        boardCount: Array.isArray(doc.entrySummary?.boards) ? (doc.entrySummary.boards as unknown[]).length : undefined,
+        // lineCount: games có lines; undefined → keno/bingo18
+        lineCount: (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined),
+        betUnitCount: doc.betUnitCount as number | undefined,
+        createdAt: doc.createdAt ? new Date(doc.createdAt as Date).toISOString() : "",
+      }));
     });
 
     // Đợi tất cả 7 queries hoàn thành

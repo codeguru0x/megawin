@@ -11,9 +11,6 @@
  * biên tool nên mọi `Date`/ISO datetime đã thành `yyyy-MM-dd HH:mm:ss` giờ VN lúc tới client.
  * Khai DTO gốc sẽ nói `snapshotAt: Date` trong khi runtime là `string` — type đúng nhưng SAI thực tế.
  */
-
-import type { GameProduct } from "@megawin/game-core/entities";
-import { GAME_LABELS, getGameLabel } from "@megawin/game-core/labels";
 import type { DailyOverviewRow, GamePeriodRow, GameSummaryRow } from "@megawin/game-core-application/repos";
 import type {
   GetDailyOverviewOutput,
@@ -21,6 +18,8 @@ import type {
   GetGameSummaryOutput,
   GetSystemOutstandingOutput,
 } from "@megawin/game-core-application/use-cases/reports";
+import type { GameProduct } from "@megawin/game-core/entities";
+import { GAME_LABELS, getGameLabel } from "@megawin/game-core/labels";
 import type { WireType } from "@megawin/shared/types";
 import { FinancialPeriod } from "@megawin/shared/utils";
 

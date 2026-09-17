@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { AccountStatusLabel, type AccountStatus } from "@megawin/identity/entities";
 import { Building2, Check, Clock, Copy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,9 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
     );
   }
 
-  if (isError || !profile) return null;
+  if (isError || !profile) {
+    return null;
+  }
 
   const statusVariant = STATUS_VARIANT[profile.status] ?? "outline";
   const statusLabel = AccountStatusLabel[profile.status as AccountStatus] ?? profile.status;
@@ -70,12 +72,12 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
     <div className="mt-1 flex flex-col gap-0 border-t pt-3">
       {/* Avatar + username + status badge */}
       <div className="flex flex-col items-center gap-2 px-1 pb-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary ring-2 ring-primary/20">
+        <div className="bg-primary/10 text-primary ring-primary/20 flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2">
           {initials}
         </div>
         <div className="text-center">
           {profile.displayName && profile.displayName !== profile.username && (
-            <p className="font-mono text-xs font-semibold leading-tight text-foreground">{profile.displayName}</p>
+            <p className="text-foreground font-mono text-xs leading-tight font-semibold">{profile.displayName}</p>
           )}
         </div>
         <Badge variant={statusVariant} className="h-5 text-xs">
@@ -87,7 +89,7 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
       <CopyableId value={profile.accountId} />
 
       {/* Detail rows */}
-      <div className="flex flex-col divide-y divide-border/50">
+      <div className="divide-border/50 flex flex-col divide-y">
         <SidebarRow icon={Building2} label="Đại lý" value={profile.tenantId} mono />
         <SidebarRow
           icon={Clock}
@@ -118,17 +120,17 @@ function CopyableId({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex items-center gap-1 border-y border-border/50 px-1 py-2">
-      <span className="min-w-0 truncate font-mono text-xs text-muted-foreground" title={value}>
+    <div className="border-border/50 flex items-center gap-1 border-y px-1 py-2">
+      <span className="text-muted-foreground min-w-0 truncate font-mono text-xs" title={value}>
         {value}
       </span>
       <button
         type="button"
         onClick={handleCopy}
-        className="flex shrink-0 items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground flex shrink-0 items-center justify-center rounded p-0.5 transition-colors"
         title="Copy Account ID"
       >
-        {copied ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+        {copied ? <Check className="text-profit size-3" /> : <Copy className="size-3" />}
       </button>
     </div>
   );
@@ -148,10 +150,10 @@ function SidebarRow({
   return (
     <div className="flex items-center justify-between gap-1 px-1 py-2">
       <div className="flex shrink-0 items-center gap-1.5">
-        <Icon className="size-3 shrink-0 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">{label}</span>
+        <Icon className="text-muted-foreground size-3 shrink-0" />
+        <span className="text-muted-foreground text-xs">{label}</span>
       </div>
-      <span className={`truncate text-right text-xs font-medium text-foreground ${mono ? "font-mono" : ""}`}>
+      <span className={`text-foreground truncate text-right text-xs font-medium ${mono ? "font-mono" : ""}`}>
         {value}
       </span>
     </div>

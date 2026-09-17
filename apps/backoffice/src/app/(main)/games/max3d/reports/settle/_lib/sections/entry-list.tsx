@@ -3,7 +3,7 @@
 import type { TicketEntryEntity } from "@megawin/game-max3d/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
 
-import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
 
 import { useMax3DEntries } from "../use-report-queries";
 import { Max3dEntryDetailDialog } from "./entry-detail-dialog";
@@ -22,9 +22,15 @@ export function EntryList({
 }) {
   const { data, isLoading, error } = useMax3DEntries(drawId, tenantId, accountId);
 
-  if (isLoading) return <TableSkeleton rows={5} />;
-  if (error) return <ErrorCard message="Lỗi tải entries." />;
-  if (!data?.length) return <EmptyCard icon="ticket" message="Không có entry nào." />;
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+  if (error) {
+    return <ErrorCard message="Lỗi tải entries." />;
+  }
+  if (!data?.length) {
+    return <EmptyCard icon="ticket" message="Không có entry nào." />;
+  }
 
   const rows: EntryRow[] = data.map((entry) => ({
     id: entry.id,

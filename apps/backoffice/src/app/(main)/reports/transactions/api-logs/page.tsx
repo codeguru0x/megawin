@@ -20,8 +20,8 @@ function TxLogPageInner() {
             <FileSearch className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lịch sử giao dịch</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-foreground text-lg font-semibold tracking-tight">Lịch sử giao dịch</h1>
+            <p className="text-muted-foreground text-xs">
               Audit log các lệnh gọi transaction đến tenant — lưu trữ 90 ngày.
             </p>
           </div>

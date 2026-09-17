@@ -5,7 +5,7 @@ import type {
   GetSystemOutstandingOutput,
 } from "@megawin/game-core-application/use-cases/reports";
 import { apiClient } from "@megawin/next/client";
-import { noop, type QueryClient, useQuery } from "@tanstack/react-query";
+import { noop, useQuery, type QueryClient } from "@tanstack/react-query";
 
 import type { GetDashboardJackpotsOutput } from "@/app/api/dashboard/jackpots/_lib/types";
 import { dashboardKeys } from "@/lib/query-keys/dashboard";

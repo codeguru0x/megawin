@@ -11,8 +11,7 @@
  * file này CHỈ lo format drawId từ (drawDate, drawNo) đã biết.
  */
 
-import type { ISODateString } from "../entities/types";
-import { DrawNo } from "../entities/types";
+import { DrawNo, type ISODateString } from "../entities/types";
 
 /**
  * Tạo Draw ID từ drawDate và drawNo.

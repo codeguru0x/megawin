@@ -1,3 +1,22 @@
+import { accountsKeys } from "./accounts";
+import { auditLogsKeys } from "./audit-logs";
+import { bingo18Keys } from "./bingo18";
+import { dashboardKeys } from "./dashboard";
+import { kenoKeys } from "./keno";
+import { lotto535Keys } from "./lotto535";
+import { max3dKeys } from "./max3d";
+import { max3dproKeys } from "./max3dpro";
+import { meKeys } from "./me";
+import { mega645Keys } from "./mega645";
+import { playerDetailKeys } from "./player-detail";
+import { power655Keys } from "./power655";
+import { reportsKeys } from "./reports";
+import { resultfeedKeys } from "./resultfeed";
+import { tenantDispatchKeys } from "./tenant-dispatch";
+import { tenantsKeys } from "./tenants";
+import { txLogsKeys } from "./tx-logs";
+import { workersKeys } from "./workers";
+
 /**
  * Centralized React Query Key Factory
  *
@@ -65,25 +84,6 @@ export { tenantDispatchKeys } from "./tenant-dispatch";
 export { tenantsKeys } from "./tenants";
 export { txLogsKeys } from "./tx-logs";
 export { workersKeys } from "./workers";
-
-import { accountsKeys } from "./accounts";
-import { auditLogsKeys } from "./audit-logs";
-import { bingo18Keys } from "./bingo18";
-import { dashboardKeys } from "./dashboard";
-import { kenoKeys } from "./keno";
-import { lotto535Keys } from "./lotto535";
-import { max3dKeys } from "./max3d";
-import { max3dproKeys } from "./max3dpro";
-import { meKeys } from "./me";
-import { mega645Keys } from "./mega645";
-import { playerDetailKeys } from "./player-detail";
-import { power655Keys } from "./power655";
-import { reportsKeys } from "./reports";
-import { resultfeedKeys } from "./resultfeed";
-import { tenantDispatchKeys } from "./tenant-dispatch";
-import { tenantsKeys } from "./tenants";
-import { txLogsKeys } from "./tx-logs";
-import { workersKeys } from "./workers";
 
 export const queryKeys = {
   tenants: tenantsKeys,

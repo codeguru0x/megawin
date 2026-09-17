@@ -15,17 +15,17 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import {
+  Mega645Collections,
+  PrizeTier,
   type EntryPayout,
   type EntryResult,
   type EntryVoidInfo,
-  Mega645Collections,
-  PrizeTier,
+  type TicketEntryEntity,
 } from "@megawin/game-mega645/entities";
-import { type Long, ObjectId } from "mongodb";
+import { ObjectId, type Long } from "mongodb";
 
 import { mapDocToEntryForStats } from "../mappers/entry-for-stats-mapper";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -69,7 +69,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tất cả entries trong batch nhận cùng 1 version (atomic batch).
    */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
-    if (docs.length === 0) return 0;
+    if (docs.length === 0) {
+      return 0;
+    }
     const version = await this.nextVersion();
     const stamped = docs.map((doc) => ({ ...doc, version }));
     const result = await this.insertMany(stamped as any[]);
@@ -217,7 +219,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -1121,7 +1125,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     drawId: string,
     perEntryAmounts: Map<string, { prizeAmount: number; jackpotPerUnit: number }>,
   ): Promise<number> {
-    if (perEntryAmounts.size === 0) return 0;
+    if (perEntryAmounts.size === 0) {
+      return 0;
+    }
 
     const entryIds = Array.from(perEntryAmounts.keys()).map((id) => new ObjectId(id));
 
@@ -1144,7 +1150,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     );
 
-    if (matchingEntries.length === 0) return 0;
+    if (matchingEntries.length === 0) {
+      return 0;
+    }
 
     const ops: Array<{
       updateOne: { filter: Record<string, unknown>; update: Record<string, unknown> };
@@ -1202,7 +1210,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       });
     }
 
-    if (ops.length === 0) return 0;
+    if (ops.length === 0) {
+      return 0;
+    }
 
     const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;

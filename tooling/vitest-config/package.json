@@ -13,9 +13,13 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./setup-db-guard": {
-      "types": "./dist/setup-db-guard.d.ts",
-      "default": "./dist/setup-db-guard.js"
+    "./global-setup-mongo": {
+      "types": "./dist/global-setup-mongo.d.ts",
+      "default": "./dist/global-setup-mongo.js"
+    },
+    "./global-setup-redis": {
+      "types": "./dist/global-setup-redis.d.ts",
+      "default": "./dist/global-setup-redis.js"
     }
   },
   "scripts": {
@@ -29,7 +33,7 @@
     "@testing-library/user-event": "^14.6.7",
     "jsdom": "^30.0.1",
     "mongodb": "^7.6.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "peerDependenciesMeta": {
     "@testing-library/jest-dom": {
@@ -48,6 +52,11 @@
       "optional": true
     }
   },
+  "dependencies": {
+    "@testcontainers/mongodb": "^11.12.0",
+    "@testcontainers/redis": "^11.12.0",
+    "testcontainers": "^11.12.0"
+  },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@testing-library/jest-dom": "^7.0.1",
@@ -56,8 +65,8 @@
     "@types/node": "^25.9.6",
     "jsdom": "^30.0.1",
     "mongodb": "^7.6.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   }
 }

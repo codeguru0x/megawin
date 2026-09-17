@@ -55,7 +55,7 @@ function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
       {label}
       <Tooltip>
         <TooltipTrigger asChild>
-          <HelpCircle className="size-3.5 text-muted-foreground/60 cursor-help" />
+          <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-72 text-xs">
           {tip}
@@ -94,13 +94,13 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
   }
 
   return (
-    <Card className="overflow-hidden py-0 gap-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit as any)}>
           <CardContent className="p-0">
             <div className="p-6 pb-4">
-              <h3 className="text-sm font-semibold text-foreground">Jackpot kép (Dual Jackpot)</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 className="text-foreground text-sm font-semibold">Jackpot kép (Dual Jackpot)</h3>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 Jackpot 1 (trùng 6/6 số chính) và Jackpot 2 (trùng 5/6 + số bonus). Cả hai tích luỹ song song theo tỷ lệ
                 đã cài đặt. Vietlott quy định tối thiểu 30 tỷ (JP1) / 3 tỷ (JP2); hệ thống không ép buộc giá trị này.
               </p>
@@ -114,10 +114,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     name="jp1SeedAmount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
-                          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 mr-1">
-                            Jackpot 1
-                          </Badge>
+                        <FormLabel className="text-muted-foreground text-xs">
+                          <Badge className="bg-loss text-loss mr-1">Jackpot 1</Badge>
                           <LabelWithTooltip
                             label="Giá trị khởi điểm"
                             tip="Số tiền khởi điểm của Jackpot 1 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Vietlott quy định tối thiểu 30 tỷ VND; hệ thống không ép buộc giá trị này."
@@ -133,7 +131,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                               name={field.name}
                               ref={field.ref}
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                               VND
                             </span>
                           </div>
@@ -147,10 +145,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     name="jp2SeedAmount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
-                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 mr-1">
-                            Jackpot 2
-                          </Badge>
+                        <FormLabel className="text-muted-foreground text-xs">
+                          <Badge className="bg-info text-info mr-1">Jackpot 2</Badge>
                           <LabelWithTooltip
                             label="Giá trị khởi điểm"
                             tip="Số tiền khởi điểm của Jackpot 2 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Vietlott quy định tối thiểu 3 tỷ VND; hệ thống không ép buộc giá trị này."
@@ -166,7 +162,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                               name={field.name}
                               ref={field.ref}
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                               VND
                             </span>
                           </div>
@@ -185,7 +181,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   name="jp1ContributionRatio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
+                      <FormLabel className="text-muted-foreground text-xs">
                         <LabelWithTooltip
                           label="Tỷ lệ tích luỹ Jackpot 1 / Jackpot 2"
                           tip="Phân bổ phần tích luỹ Jackpot giữa JP1 và JP2. Tổng hai tỷ lệ luôn = 100%. Mặc định 90% JP1 / 10% JP2."
@@ -204,7 +200,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           {jp1Ratio >= 5 && `JP1 · ${jp1Ratio}%`}
                         </div>
                         <div
-                          className="flex items-center justify-center bg-blue-500 text-white transition-[width] duration-150"
+                          className="bg-info flex items-center justify-center text-white transition-[width] duration-150"
                           style={{ width: `${jp2Ratio}%` }}
                         >
                           {jp2Ratio >= 5 && `JP2 · ${jp2Ratio}%`}
@@ -214,7 +210,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                       {/* Input số cho cả 2 ô — luôn đồng bộ, tổng = 100 */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground">Jackpot 1 — Tỷ lệ tích luỹ</p>
+                          <p className="text-muted-foreground text-xs font-medium">Jackpot 1 — Tỷ lệ tích luỹ</p>
                           <div className="flex items-baseline gap-1.5">
                             <FormControl>
                               <MoneyInput
@@ -234,11 +230,11 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                                 }
                               />
                             </FormControl>
-                            <span className="text-sm text-muted-foreground">%</span>
+                            <span className="text-muted-foreground text-sm">%</span>
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground">Jackpot 2 — Tỷ lệ tích luỹ</p>
+                          <p className="text-muted-foreground text-xs font-medium">Jackpot 2 — Tỷ lệ tích luỹ</p>
                           <div className="flex items-baseline gap-1.5">
                             <MoneyInput
                               className="h-9 w-20 text-center font-semibold"
@@ -253,13 +249,13 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                                 floatValue === undefined || (floatValue >= 1 && floatValue <= 99)
                               }
                             />
-                            <span className="text-sm text-muted-foreground">%</span>
+                            <span className="text-muted-foreground text-sm">%</span>
                           </div>
                         </div>
                       </div>
 
-                      <p className="text-xs text-muted-foreground tabular-nums">
-                        Tổng: <span className="font-semibold text-foreground">{jp1Ratio + jp2Ratio}%</span> · JP1 + JP2
+                      <p className="text-muted-foreground text-xs tabular-nums">
+                        Tổng: <span className="text-foreground font-semibold">{jp1Ratio + jp2Ratio}%</span> · JP1 + JP2
                         luôn = 100%
                       </p>
 
@@ -273,7 +269,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   name="jp1OverflowThreshold"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">
+                      <FormLabel className="text-muted-foreground text-xs">
                         <LabelWithTooltip
                           label="Jackpot 1 — Ngưỡng tràn (Overflow)"
                           tip="Khi quỹ Jackpot 1 vượt quá ngưỡng này và kỳ đó có Jackpot 2 winner, phần tiền dư ra sẽ tự động chuyển sang quỹ Jackpot 2 kỳ đó. Nếu không ai trúng cả Jackpot 1 lẫn Jackpot 2, Jackpot 1 tiếp tục tăng không bị giới hạn."
@@ -289,7 +285,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                             name={field.name}
                             ref={field.ref}
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                          <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium">
                             VND
                           </span>
                         </div>
@@ -302,10 +298,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
             </div>
           </CardContent>
 
-          <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
+          <div className="bg-info/80 border-t px-6 py-3">
             <div className="flex items-start gap-2">
-              <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
-              <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
+              <Info className="text-info mt-0.5 size-3.5 shrink-0" />
+              <p className="text-info text-xs leading-relaxed">
                 Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) và Jackpot 2 (trùng 5/6 + bonus).
                 Vietlott quy định tối thiểu 30 tỷ (JP1) / 3 tỷ (JP2); hệ thống không ép buộc giá trị này. Tích luỹ mỗi
                 kỳ theo tỷ lệ Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có người trúng —{" "}

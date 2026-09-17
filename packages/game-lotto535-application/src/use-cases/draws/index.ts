@@ -1,7 +1,4 @@
-export type {
-  DetectResettleBoundariesInput,
-  DetectResettleBoundariesOutput,
-} from "../resettle/detect-boundaries";
+export type { DetectResettleBoundariesInput, DetectResettleBoundariesOutput } from "../resettle/detect-boundaries";
 export { DetectResettleBoundariesUseCase } from "../resettle/detect-boundaries";
 export type { AutoEnrollInput, AutoEnrollOutput } from "./auto-enroll-entries";
 export { AutoEnrollEntriesUseCase } from "./auto-enroll-entries";

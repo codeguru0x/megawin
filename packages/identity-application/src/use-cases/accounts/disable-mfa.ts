@@ -41,7 +41,9 @@ export class DisableMfaUseCase extends UseCase<DisableMfaInput, DisableMfaOutput
         totpCode: input.totpCode,
       });
     } catch (error: unknown) {
-      if (error instanceof AppException) throw error;
+      if (error instanceof AppException) {
+        throw error;
+      }
 
       const msg = error instanceof Error ? error.message : "Unknown error";
       const errName = error instanceof Error ? error.constructor.name : "UnknownError";

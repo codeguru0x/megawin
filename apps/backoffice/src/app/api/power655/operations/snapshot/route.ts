@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { OpsAlertStatus } from "@megawin/game-power655/entities";
 import { GetOpsSnapshotUseCase } from "@megawin/game-power655-application/use-cases/operations";
+import { OpsAlertStatus } from "@megawin/game-power655/entities";
 import { CompanyRole } from "@megawin/identity/entities";
 import { apiSuccess } from "@megawin/next/server";
 

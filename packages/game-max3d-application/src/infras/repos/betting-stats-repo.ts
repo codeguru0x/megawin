@@ -28,13 +28,13 @@
  */
 
 import { docPath, MIN_OBJECT_ID } from "@megawin/data/mongo";
-import type {
-  Max3dDrawBettingStatsDoc,
-  Max3dDrawBettingStatsEntity,
-  Max3dPlayTypeStat,
-  OpsStatsConfig,
+import {
+  Max3dCollections,
+  type Max3dDrawBettingStatsDoc,
+  type Max3dDrawBettingStatsEntity,
+  type Max3dPlayTypeStat,
+  type OpsStatsConfig,
 } from "@megawin/game-max3d/entities";
-import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { AnyBulkWriteOperation, Document, UpdateFilter } from "mongodb";
 
 import { BettingStatsMapper } from "../mappers/betting-stats-mapper";
@@ -58,7 +58,9 @@ export class BettingStatsRepository extends BaseRepo<Max3dDrawBettingStatsEntity
 
   /** Đọc stats nhiều kỳ 1 lần — dùng bởi reader cần nhiều draw 1 lượt (VD ops snapshot). */
   async getManyByDrawIds(drawIds: string[]): Promise<Max3dDrawBettingStatsEntity[]> {
-    if (drawIds.length === 0) return [];
+    if (drawIds.length === 0) {
+      return [];
+    }
     return await this.findMany({ drawId: { $in: drawIds } });
   }
 

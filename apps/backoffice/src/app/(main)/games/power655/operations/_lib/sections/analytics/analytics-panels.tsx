@@ -11,7 +11,6 @@
  * Nguồn: `snapshot.topAccounts` / `stats.topPotential` / `snapshot.topCombos` (BE sort sẵn) —
  * FE chỉ render. Username qua `PlayerOutstandingLink` (rule player-display-username.mdc).
  */
-
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { PlayType } from "@megawin/game-power655/entities";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
@@ -33,88 +32,88 @@ import { NumberBadge } from "./number-heatmap";
 export const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
   {
     standard: {
-      dot: "bg-red-500",
-      text: "text-red-600 dark:text-red-400",
+      dot: "bg-loss",
+      text: "text-loss",
       fill: "#dc2626",
-      bg: "bg-red-50/60 dark:bg-red-950/20",
-      border: "border-red-200/60 dark:border-red-800/40",
+      bg: "bg-loss/60",
+      border: "border-loss/60",
     },
     bao5: {
-      dot: "bg-green-500",
-      text: "text-green-600 dark:text-green-400",
+      dot: "bg-profit",
+      text: "text-profit",
       fill: "#22c55e",
-      bg: "bg-green-50/60 dark:bg-green-950/20",
-      border: "border-green-200/60 dark:border-green-800/40",
+      bg: "bg-profit/60",
+      border: "border-profit/60",
     },
     bao7: {
-      dot: "bg-indigo-500",
-      text: "text-indigo-600 dark:text-indigo-400",
+      dot: "bg-info",
+      text: "text-info",
       fill: "#6366f1",
-      bg: "bg-indigo-50/60 dark:bg-indigo-950/20",
-      border: "border-indigo-200/60 dark:border-indigo-800/40",
+      bg: "bg-info/60",
+      border: "border-info/60",
     },
     bao8: {
-      dot: "bg-blue-500",
-      text: "text-blue-600 dark:text-blue-400",
+      dot: "bg-info",
+      text: "text-info",
       fill: "#3b82f6",
-      bg: "bg-blue-50/60 dark:bg-blue-950/20",
-      border: "border-blue-200/60 dark:border-blue-800/40",
+      bg: "bg-info/60",
+      border: "border-info/60",
     },
     bao9: {
-      dot: "bg-sky-500",
-      text: "text-sky-600 dark:text-sky-400",
+      dot: "bg-info",
+      text: "text-info",
       fill: "#0ea5e9",
-      bg: "bg-sky-50/60 dark:bg-sky-950/20",
-      border: "border-sky-200/60 dark:border-sky-800/40",
+      bg: "bg-info/60",
+      border: "border-info/60",
     },
     bao10: {
-      dot: "bg-cyan-500",
-      text: "text-cyan-600 dark:text-cyan-400",
+      dot: "bg-info",
+      text: "text-info",
       fill: "#06b6d4",
-      bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
-      border: "border-cyan-200/60 dark:border-cyan-800/40",
+      bg: "bg-info/60",
+      border: "border-info/60",
     },
     bao11: {
-      dot: "bg-teal-500",
-      text: "text-teal-600 dark:text-teal-400",
+      dot: "bg-game-mega645",
+      text: "text-game-mega645",
       fill: "#14b8a6",
-      bg: "bg-teal-50/60 dark:bg-teal-950/20",
-      border: "border-teal-200/60 dark:border-teal-800/40",
+      bg: "bg-game-mega645/60",
+      border: "border-game-mega645/60",
     },
     bao12: {
-      dot: "bg-emerald-500",
-      text: "text-emerald-600 dark:text-emerald-400",
+      dot: "bg-profit",
+      text: "text-profit",
       fill: "#10b981",
-      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-      border: "border-emerald-200/60 dark:border-emerald-800/40",
+      bg: "bg-profit/60",
+      border: "border-profit/60",
     },
     bao13: {
-      dot: "bg-violet-500",
-      text: "text-violet-600 dark:text-violet-400",
+      dot: "bg-game-max3d",
+      text: "text-game-max3d",
       fill: "#8b5cf6",
-      bg: "bg-violet-50/60 dark:bg-violet-950/20",
-      border: "border-violet-200/60 dark:border-violet-800/40",
+      bg: "bg-game-max3d/60",
+      border: "border-game-max3d/60",
     },
     bao14: {
-      dot: "bg-fuchsia-500",
-      text: "text-fuchsia-600 dark:text-fuchsia-400",
+      dot: "bg-game-max3dpro",
+      text: "text-game-max3dpro",
       fill: "#d946ef",
-      bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
-      border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
+      bg: "bg-game-max3dpro/60",
+      border: "border-game-max3dpro/60",
     },
     bao15: {
-      dot: "bg-pink-500",
-      text: "text-pink-600 dark:text-pink-400",
+      dot: "bg-game-max3dpro",
+      text: "text-game-max3dpro text-game-max3dpro",
       fill: "#ec4899",
-      bg: "bg-pink-50/60 dark:bg-pink-950/20",
-      border: "border-pink-200/60 dark:border-pink-800/40",
+      bg: "bg-game-max3dpro/60 bg-game-max3dpro/20",
+      border: "border-game-max3dpro/60 border-game-max3dpro/40",
     },
     bao18: {
-      dot: "bg-rose-500",
-      text: "text-rose-600 dark:text-rose-400",
+      dot: "bg-loss",
+      text: "text-loss",
       fill: "#f43f5e",
-      bg: "bg-rose-50/60 dark:bg-rose-950/20",
-      border: "border-rose-200/60 dark:border-rose-800/40",
+      bg: "bg-loss/60",
+      border: "border-loss/60",
     },
   };
 
@@ -191,7 +190,7 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
   return (
     <div
       className={cn(
-        "relative rounded-xl border p-3 flex flex-col gap-1.5 transition-all min-w-0",
+        "relative flex min-w-0 flex-col gap-1.5 rounded-xl border p-3 transition-all",
         isEmpty && "opacity-40",
         color.bg,
         color.border,
@@ -200,22 +199,22 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
     >
       {/* Donut nổi góc phải-trên bằng `absolute` — không chiếm chỗ trong flex flow. */}
       <MiniDonut pct={d.pct} fill={color.fill} size={44} className="absolute top-1.5 right-1.5" />
-      <div className="flex items-center gap-1.5 min-w-0 pr-11">
-        <div className={cn("size-2 rounded-full shrink-0", color.dot)} />
-        <span className={cn("text-xs font-semibold truncate", color.text)}>{d.label}</span>
+      <div className="flex min-w-0 items-center gap-1.5 pr-11">
+        <div className={cn("size-2 shrink-0 rounded-full", color.dot)} />
+        <span className={cn("truncate text-xs font-semibold", color.text)}>{d.label}</span>
       </div>
       {/* Doanh thu (nổi bật) + số bộ/board (phụ) — neo đáy card, cùng baseline. */}
       <div className="mt-auto flex items-baseline justify-between gap-2 pr-11">
-        <p className="min-w-0 text-sm font-bold tabular-nums text-foreground leading-none truncate">
+        <p className="text-foreground min-w-0 truncate text-sm leading-none font-bold tabular-nums">
           {formatNumber(d.revenue)}
         </p>
       </div>
-      <div className="flex items-baseline gap-2 flex-wrap">
-        <span className="text-[10px] tabular-nums text-muted-foreground/70">
-          <span className="font-semibold text-foreground">{formatNumber(d.sets)}</span> bộ
+      <div className="flex flex-wrap items-baseline gap-2">
+        <span className="text-muted-foreground/70 text-xs tabular-nums">
+          <span className="text-foreground font-semibold">{formatNumber(d.sets)}</span> bộ
         </span>
-        <span className="text-[10px] tabular-nums text-muted-foreground/70">
-          <span className="font-semibold text-foreground">{formatNumber(d.boards)}</span> board
+        <span className="text-muted-foreground/70 text-xs tabular-nums">
+          <span className="text-foreground font-semibold">{formatNumber(d.boards)}</span> board
         </span>
       </div>
     </div>
@@ -247,28 +246,28 @@ export function PlayTypeCard({ distribution }: { distribution: PlayTypeRow[] }) 
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+      <CardHeader className="px-5 pt-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50 shrink-0">
-              <BarChart2 className="size-3.5 text-red-600 dark:text-red-400" />
+            <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
+              <BarChart2 className="text-loss size-3.5" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
-              <CardDescription className="text-xs mt-0.5">Standard · Bao 5 · Bao 7–18</CardDescription>
+              <CardDescription className="mt-0.5 text-xs">Standard · Bao 5 · Bao 7–18</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
-            <span className="font-semibold text-foreground">{formatNumber(totalSets)}</span>
+          <div className="text-muted-foreground flex items-center gap-1.5 text-xs tabular-nums">
+            <span className="text-foreground font-semibold">{formatNumber(totalSets)}</span>
             <span>bộ</span>
             <span className="opacity-40">·</span>
-            <span className="font-semibold text-foreground">{formatNumber(totalRevenue)}</span>
+            <span className="text-foreground font-semibold">{formatNumber(totalRevenue)}</span>
             <span>VND</span>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
-        <div className="grid grid-cols-2 @[560px]/main:grid-cols-3 @[820px]/main:grid-cols-4 gap-2.5 auto-rows-fr">
+      <CardContent className="px-5 pt-0 pb-4">
+        <div className="grid auto-rows-fr grid-cols-2 gap-2.5 @[560px]/main:grid-cols-3 @[820px]/main:grid-cols-4">
           {rows.map((d) => (
             <PlayTypeItem key={d.playType} d={d} />
           ))}
@@ -306,7 +305,7 @@ export function TopRiskPanel({
   }
 
   return (
-    <div className="grid gap-4 @[640px]/main:grid-cols-2 @[1000px]/main:grid-cols-3 items-start">
+    <div className="grid items-start gap-4 @[640px]/main:grid-cols-2 @[1000px]/main:grid-cols-3">
       <TopAccountsCard drawId={drawId} rows={topAccounts} />
       <TopPotentialCard drawId={drawId} rows={topPotential} />
       <TopCombosCard rows={topCombos} />
@@ -318,26 +317,26 @@ export function TopRiskPanel({
 function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow[] }) {
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50 shrink-0">
-            <TrendingUp className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+          <div className="bg-profit flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <TrendingUp className="text-profit size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top người chơi</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Theo tổng tiền cược trong kỳ</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Theo tổng tiền cược trong kỳ</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
+          <p className="text-muted-foreground py-4 text-center text-sm">Chưa có dữ liệu</p>
         ) : (
           <div className="space-y-1">
             {rows.map((a, i) => (
               <div
                 key={a.accountId}
-                className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
+                className="border-border/40 bg-muted/10 flex items-center gap-2.5 rounded-lg border px-3 py-2"
               >
                 <RankBadge rank={i + 1} />
                 <PlayerOutstandingLink
@@ -345,13 +344,11 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   drawId={drawId}
                   accountId={a.accountId}
                   username={a.username}
-                  className="flex-1 min-w-0 text-sm"
+                  className="min-w-0 flex-1 text-sm"
                 />
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                    {formatNumber(a.amount)}
-                  </p>
-                  <p className="text-[11px] tabular-nums text-muted-foreground/60">{formatNumber(a.entries)} vé</p>
+                <div className="shrink-0 text-right">
+                  <p className="text-profit text-sm font-bold tabular-nums">{formatNumber(a.amount)}</p>
+                  <p className="text-muted-foreground/60 text-xs tabular-nums">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -366,29 +363,29 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
 function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotentialRow[] }) {
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50 shrink-0">
-            <TrendingUp className="size-3.5 text-red-600 dark:text-red-400" />
+          <div className="bg-loss flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <TrendingUp className="text-loss size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Top phải trả tiềm năng</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Entry rủi ro giải cố định cao nhất nếu trúng</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Entry rủi ro giải cố định cao nhất nếu trúng</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
+          <p className="text-muted-foreground py-4 text-center text-sm">Chưa có dữ liệu</p>
         ) : (
           <div className="space-y-1">
             {rows.map((p, i) => (
               <div
                 key={p.entryId}
-                className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
+                className="border-border/40 bg-muted/10 flex items-center gap-2.5 rounded-lg border px-3 py-2"
               >
                 <RankBadge rank={i + 1} danger />
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <PlayerOutstandingLink
                     gameProduct={GameProduct.Power655}
                     drawId={drawId}
@@ -396,13 +393,13 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     username={p.username}
                     className="text-sm"
                   />
-                  <p className="text-[11px] text-muted-foreground/70 tabular-nums mt-0.5">
-                    Cược <span className="font-medium text-foreground">{formatNumber(p.amount)}</span>
+                  <p className="text-muted-foreground/70 mt-0.5 text-xs tabular-nums">
+                    Cược <span className="text-foreground font-medium">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
-                <div className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-right">
-                  <p className="text-[10px] text-red-500/70 leading-none">Phải trả</p>
-                  <p className="text-sm font-bold tabular-nums text-red-600 dark:text-red-400 leading-tight">
+                <div className="bg-loss/10 shrink-0 rounded-md px-2 py-1 text-right">
+                  <p className="text-loss/70 text-xs leading-none">Phải trả</p>
+                  <p className="text-loss text-sm leading-tight font-bold tabular-nums">
                     {formatNumber(p.potentialWin)}
                   </p>
                 </div>
@@ -427,41 +424,41 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50 shrink-0">
-            <Trophy className="size-3.5 text-amber-600 dark:text-amber-400" />
+          <div className="bg-warning flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <Trophy className="text-warning size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Bộ số phổ biến nhất</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Bộ số được nhiều người dồn</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Bộ số được nhiều người dồn</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
+          <p className="text-muted-foreground py-4 text-center text-sm">Chưa có dữ liệu</p>
         ) : (
           <div className="space-y-1">
             {rows.map((c) => (
               <div
                 key={c.rank}
-                className="flex items-start gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
+                className="border-border/40 bg-muted/10 flex items-start gap-2.5 rounded-lg border px-3 py-2"
               >
-                <span className="text-sm leading-none shrink-0 pt-0.5">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 flex-wrap">
+                <span className="shrink-0 pt-0.5 text-sm leading-none">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1">
                     {c.mainNumbers.map((n) => (
                       <NumberBadge key={n} num={n} variant="soft" />
                     ))}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     {POWER655_PLAY_TYPE_LABELS[c.playType] ?? c.playType}
                   </p>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(c.sets)} bộ</p>
-                  <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(c.accounts)} người</p>
+                <div className="shrink-0 text-right">
+                  <p className="text-foreground text-xs font-semibold tabular-nums">{formatNumber(c.sets)} bộ</p>
+                  <p className="text-muted-foreground text-xs tabular-nums">{formatNumber(c.accounts)} người</p>
                 </div>
               </div>
             ))}
@@ -477,12 +474,8 @@ function RankBadge({ rank, danger = false }: { rank: number; danger?: boolean })
   return (
     <span
       className={cn(
-        "inline-flex size-6 items-center justify-center rounded-full text-[11px] font-bold tabular-nums shrink-0",
-        rank === 1
-          ? danger
-            ? "bg-red-500 text-white"
-            : "bg-emerald-500 text-white"
-          : "bg-muted text-muted-foreground",
+        "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums",
+        rank === 1 ? (danger ? "bg-loss text-white" : "bg-profit text-white") : "bg-muted text-muted-foreground",
       )}
     >
       {rank}
@@ -508,20 +501,20 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
-            <Store className="size-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="bg-info flex size-7 shrink-0 items-center justify-center rounded-lg">
+            <Store className="text-info size-3.5" />
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Phân tích theo đại lý</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Doanh thu · Hoa hồng</CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Doanh thu · Hoa hồng</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
+      <CardContent className="px-5 pt-0 pb-4">
         {tenants.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
+          <p className="text-muted-foreground py-4 text-center text-sm">Chưa có dữ liệu</p>
         ) : isFew ? (
           <div className="space-y-2.5">
             {tenants.map((t, i) => (
@@ -539,19 +532,19 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
 /** 1 card đại lý giàu thông tin — dùng khi ít đại lý (≤3). */
 function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; rank: number; maxRevenue: number }) {
   return (
-    <div className="rounded-xl border bg-muted/10 p-3.5">
+    <div className="bg-muted/10 rounded-xl border p-3.5">
       <div className="flex items-center gap-2">
-        <span className="inline-flex size-6 items-center justify-center rounded-full bg-blue-500/10 text-[11px] font-bold tabular-nums text-blue-600 dark:text-blue-400 shrink-0">
+        <span className="bg-info/10 text-info inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums">
           {rank}
         </span>
-        <span className="text-sm font-semibold truncate flex-1">{tenant.tenantId}</span>
-        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold tabular-nums text-blue-600 dark:text-blue-400">
+        <span className="flex-1 truncate text-sm font-semibold">{tenant.tenantId}</span>
+        <span className="bg-info/10 text-info rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums">
           {tenant.pct.toFixed(1)}%
         </span>
       </div>
-      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-muted">
+      <div className="bg-muted mt-2.5 h-1.5 overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full bg-blue-500/70 transition-all"
+          className="bg-info/70 h-full rounded-full transition-all"
           style={{ width: `${(tenant.revenue / maxRevenue) * 100}%` }}
         />
       </div>
@@ -562,12 +555,7 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
           value={formatNumber(tenant.revenue)}
           accent="text-foreground"
         />
-        <TenantMetric
-          icon={Receipt}
-          label="Hoa hồng"
-          value={formatNumber(tenant.commission)}
-          accent="text-amber-600 dark:text-amber-400"
-        />
+        <TenantMetric icon={Receipt} label="Hoa hồng" value={formatNumber(tenant.commission)} accent="text-warning" />
         <TenantMetric
           icon={Users}
           label="Người chơi"
@@ -595,13 +583,13 @@ function TenantMetric({
   accent: string;
 }) {
   return (
-    <div className="rounded-lg bg-card border border-border/40 px-2.5 py-2">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
+    <div className="bg-card border-border/40 rounded-lg border px-2.5 py-2">
+      <div className="text-muted-foreground/60 flex items-center gap-1 text-xs tracking-wider uppercase">
         <Icon className="size-3 shrink-0" />
         <span className="truncate">{label}</span>
       </div>
-      <p className={cn("mt-0.5 text-sm font-bold tabular-nums leading-tight", accent)}>{value}</p>
-      {sub ? <p className="text-[10px] tabular-nums text-muted-foreground/60">{sub}</p> : null}
+      <p className={cn("mt-0.5 text-sm leading-tight font-bold tabular-nums", accent)}>{value}</p>
+      {sub ? <p className="text-muted-foreground/60 text-xs tabular-nums">{sub}</p> : null}
     </div>
   );
 }
@@ -609,9 +597,9 @@ function TenantMetric({
 /** Bảng compact — dùng khi nhiều đại lý (>3). */
 function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue: number }) {
   return (
-    <div className="rounded-xl border overflow-hidden">
+    <div className="overflow-hidden rounded-xl border">
       <div
-        className="grid gap-x-2 px-3 py-2 bg-muted/40 border-b text-xs font-medium text-muted-foreground uppercase tracking-wider"
+        className="bg-muted/40 text-muted-foreground grid gap-x-2 border-b px-3 py-2 text-xs font-medium tracking-wider uppercase"
         style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
       >
         <span>Đại lý</span>
@@ -619,27 +607,27 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
         <span className="text-right">Người chơi</span>
         <span className="text-right">Doanh thu</span>
       </div>
-      <div className="divide-y divide-border/50 max-h-70 overflow-y-auto">
+      <div className="divide-border/50 max-h-70 divide-y overflow-y-auto">
         {tenants.map((t, i) => (
           <div
             key={t.tenantId}
-            className="relative grid gap-x-2 px-3 py-2.5 items-center hover:bg-muted/20 transition-colors"
+            className="hover:bg-muted/20 relative grid items-center gap-x-2 px-3 py-2.5 transition-colors"
             style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
           >
             <div
-              className="absolute inset-y-0 left-0 bg-blue-500/5 dark:bg-blue-400/5 rounded-r-sm"
+              className="bg-info/5 absolute inset-y-0 left-0 rounded-r-sm"
               style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
             />
-            <div className="relative flex items-center gap-2 min-w-0">
-              <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">{i + 1}</span>
-              <span className="text-sm font-medium truncate">{t.tenantId}</span>
-              <span className="text-xs text-muted-foreground/50 shrink-0">{t.pct.toFixed(0)}%</span>
+            <div className="relative flex min-w-0 items-center gap-2">
+              <span className="text-muted-foreground/40 w-4 shrink-0 text-xs font-bold tabular-nums">{i + 1}</span>
+              <span className="truncate text-sm font-medium">{t.tenantId}</span>
+              <span className="text-muted-foreground/50 shrink-0 text-xs">{t.pct.toFixed(0)}%</span>
             </div>
-            <span className="relative text-right tabular-nums text-sm">{formatNumber(t.entries)}</span>
-            <span className="relative text-right tabular-nums text-sm text-muted-foreground">
+            <span className="relative text-right text-sm tabular-nums">{formatNumber(t.entries)}</span>
+            <span className="text-muted-foreground relative text-right text-sm tabular-nums">
               {t.players === null ? "—" : formatNumber(t.players)}
             </span>
-            <span className="relative text-right tabular-nums text-sm font-medium">{formatNumber(t.revenue)}</span>
+            <span className="relative text-right text-sm font-medium tabular-nums">{formatNumber(t.revenue)}</span>
           </div>
         ))}
       </div>

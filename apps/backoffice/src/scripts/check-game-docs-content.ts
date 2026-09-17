@@ -22,7 +22,7 @@
  *    xem chú thích ở `CONFIG_COUNT_RE` bên dưới cho lỗi thật đã xảy ra.
  *
  * Cho phép ngoại lệ bằng comment allowlist ngay trên dòng vi phạm, nêu rõ lý do (chính sách
- * suppression giống Biome — `biome-lint-conventions.mdc` §d):
+ * suppression giống linter — `oxlint-lint-conventions.mdc` §d):
  *
  * ```markdown
  * <!-- structural: không gian số Keno, không phải config -->

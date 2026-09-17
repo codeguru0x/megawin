@@ -3,8 +3,12 @@
  *
  * 3 preset theo tầng package (xem `.cursor/plans/monorepo-test-setup/00-overview.md`):
  * - `nodeConfig`      — domain pure (không DB) + workers glue thuần logic.
- * - `integrationConfig` — application/infra Node + Mongo (RỦI RO DB staging chung).
+ * - `integrationConfig` — application/infra Node + Mongo/Redis qua Testcontainers.
  * - `jsdomConfig`     — UI (`@megawin/ui`) / Next.js (`backoffice`), React Testing Library.
+ *
+ * `globalSetup` KHÔNG bake cứng vào `integrationConfig` — mỗi package tự khai
+ * `@megawin/vitest-config/global-setup-mongo` hoặc `.../global-setup-redis` (xem
+ * `.cursor/plans/testcontainers-setup/`).
  */
 
 import type { ViteUserConfig as UserConfig } from "vitest/config";
@@ -27,17 +31,14 @@ export const nodeConfig: UserConfig = {
 export const sharedConfig: UserConfig = nodeConfig;
 
 /**
- * Application/infra Node + Mongo. Test chạy trên DB staging DÙNG CHUNG → BẮT BUỘC
- * `setupFiles` trỏ `db-guard` tập trung (`./setup-db-guard`). KHÔNG hardcode `globalSetup` —
- * mỗi package tự khai báo vì turbo filter build-deps khác nhau theo tên package.
- *
+ * Application/infra Node + Mongo/Redis qua Testcontainers.
+ * KHÔNG bake `globalSetup` — mỗi package tự khai Mongo hoặc Redis setup phù hợp.
  * Package dùng preset này PHẢI tuân `.cursor/rules/test-data-safety.mdc`.
  */
 export const integrationConfig: UserConfig = {
   test: {
     ...nodeConfig.test,
     testTimeout: 30_000,
-    setupFiles: ["@megawin/vitest-config/setup-db-guard"],
   },
 };
 

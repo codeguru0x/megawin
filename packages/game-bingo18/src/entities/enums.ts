@@ -83,9 +83,7 @@ export type Bingo18SideBetPlayType = typeof Bingo18PlayType.SumTotal | typeof Bi
 
 /** Narrowed type cho basic play types. */
 export type Bingo18BasicPlayType =
-  | typeof Bingo18PlayType.SingleNum
-  | typeof Bingo18PlayType.DoubleMatch
-  | typeof Bingo18PlayType.TripleMatch;
+  typeof Bingo18PlayType.SingleNum | typeof Bingo18PlayType.DoubleMatch | typeof Bingo18PlayType.TripleMatch;
 
 /** Set dùng cho runtime check: playType có thuộc basic hay không. */
 export const BINGO18_BASIC_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(BINGO18_BASIC_PLAY_TYPES);

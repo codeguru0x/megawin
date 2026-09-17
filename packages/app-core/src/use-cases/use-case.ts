@@ -42,7 +42,7 @@
  * execute: (input) => getDailyOverviewUseCase.safeRun(input);
  */
 
-import { AppException, type AppResult, isAppError } from "@megawin/shared/errors";
+import { AppException, isAppError, type AppResult } from "@megawin/shared/errors";
 import { logError } from "@megawin/shared/utils";
 
 /**
@@ -56,7 +56,8 @@ const UNEXPECTED_ERROR_MESSAGE = "Lỗi xảy ra trên hệ thống, vui lòng l
 export abstract class UseCase<I = void, O = void> {
   protected abstract execute(input: I): Promise<O>;
 
-  // biome-ignore lint/complexity/noBannedTypes: {} ở đây là type-level trick chuẩn để check "I có toàn field optional" trong conditional type (nếu {} extends I thì mọi field của I đều optional) — không phải dùng {} làm type giá trị thông thường.
+  // `{} extends I` là type-level trick chuẩn để check "I có toàn field optional" trong conditional
+  // type — không phải dùng `{}` làm type giá trị thông thường.
   async run(...args: I extends void ? [] : {} extends I ? [input?: I] : [input: I]): Promise<O> {
     const input = args[0] as I;
     try {
@@ -66,7 +67,7 @@ export abstract class UseCase<I = void, O = void> {
     }
   }
 
-  // biome-ignore lint/complexity/noBannedTypes: cùng type-level trick như run() ở trên — kiểm tra I toàn field optional.
+  // Cùng type-level trick như run() ở trên — kiểm tra I toàn field optional.
   async safeRun(...args: I extends void ? [] : {} extends I ? [input?: I] : [input: I]): Promise<AppResult<O>> {
     const input = args[0] as I;
     try {

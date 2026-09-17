@@ -51,8 +51,12 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-import type { DrawSelectorItem } from "../../../use-operations";
-import { usePublishResult, useVietlottResult, useVietlottSuggestion } from "../../../use-operations";
+import {
+  usePublishResult,
+  useVietlottResult,
+  useVietlottSuggestion,
+  type DrawSelectorItem,
+} from "../../../use-operations";
 
 /** Href tĩnh — build 1 lần ở module scope, dùng lại cho cả 2 nhắc nhở trong dialog. */
 const vietlottConfigLink = vietlottConfigHref(GameProduct.Max3dpro);
@@ -415,7 +419,7 @@ export function PublishResultAction({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Dice3 className="size-4.5 text-pink-500" />
+            <Dice3 className="text-game-max3dpro size-4.5" />
             {formatResultDialogTitle(draw.drawId, draw.drawTime)}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
@@ -424,7 +428,7 @@ export function PublishResultAction({
             {isRepublish && " Kết quả cũ sẽ bị ghi đè."}
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="size-3.5 text-muted-foreground" />
+                <HelpCircle className="text-muted-foreground size-3.5" />
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs">
                 {MAX3D_PRO_DRAW_TOTAL} bộ ba số từ &apos;000&apos; đến &apos;999&apos;. Thứ tự 2 bộ Đặc Biệt phân biệt
@@ -452,13 +456,13 @@ export function PublishResultAction({
             </div>
 
             {showDiff && (
-              <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-3 text-xs">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-4 rounded-full bg-muted ring-1 ring-border" />
+                  <span className="bg-muted ring-border size-4 rounded-full ring-1" />
                   Thứ tự
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="size-4 rounded-full bg-amber-100 ring-1 ring-amber-300 dark:bg-amber-900/50 dark:ring-amber-700" />
+                  <span className="bg-warning ring-warning size-4 rounded-full ring-1" />
                   Gợi ý Vietlott (ô lệch)
                 </span>
               </div>
@@ -472,12 +476,12 @@ export function PublishResultAction({
                   <div key={tier.key} className="mb-3.5 space-y-2.5 last:mb-0">
                     <div className="flex items-center gap-2">
                       <span className={`size-2.5 shrink-0 rounded-full ${TIER_DOT_STYLES[tier.key]}`} />
-                      <Label className="font-semibold text-sm">{tier.label}</Label>
+                      <Label className="text-sm font-semibold">{tier.label}</Label>
                       {tier.key === "special" && (
                         <span className="text-muted-foreground text-xs">(thứ tự quay có ý nghĩa)</span>
                       )}
                     </div>
-                    <div className="rounded-lg border bg-muted/20 p-3">
+                    <div className="bg-muted/20 rounded-lg border p-3">
                       <div className="grid grid-cols-6 gap-x-2 gap-y-3">
                         {Array.from({ length: tier.count }, (_, i) => {
                           const flatIndex = tier.offset + i;
@@ -485,7 +489,7 @@ export function PublishResultAction({
                           return (
                             <div key={i} className="flex flex-col items-center gap-1">
                               <div className="relative w-full">
-                                <span className="absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full bg-muted font-semibold text-[9px] text-muted-foreground ring-2 ring-background">
+                                <span className="bg-muted text-muted-foreground ring-background absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full text-xs font-semibold ring-2">
                                   {i + 1}
                                 </span>
                                 <Input
@@ -498,21 +502,17 @@ export function PublishResultAction({
                                   value={triplets[flatIndex]}
                                   onChange={(e) => handleTripletChange(flatIndex, e.target.value)}
                                   className={cn(
-                                    "w-full text-center font-bold font-mono text-sm tabular-nums",
+                                    "w-full text-center font-mono text-sm font-bold tabular-nums",
                                     validation.fieldErrors.has(flatIndex) && "border-destructive",
-                                    !validation.fieldErrors.has(flatIndex) &&
-                                      isDiff &&
-                                      "border-amber-400 bg-amber-50/50 dark:bg-amber-900/20",
+                                    !validation.fieldErrors.has(flatIndex) && isDiff && "border-warning bg-warning/50",
                                   )}
                                 />
                               </div>
                               {showTierDiff && (
                                 <span
                                   className={cn(
-                                    "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono font-semibold text-[10px] tabular-nums",
-                                    isDiff
-                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
-                                      : "invisible",
+                                    "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono text-xs font-semibold tabular-nums",
+                                    isDiff ? "bg-warning text-warning" : "invisible",
                                   )}
                                 >
                                   {incomingNumbers?.[flatIndex] ?? "000"}
@@ -541,19 +541,19 @@ export function PublishResultAction({
             />
 
             {pasteNotice && (
-              <div className="rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
+              <div className="border-warning/50 bg-warning rounded-lg border px-4 py-3">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                  <p className="text-amber-800 text-sm dark:text-amber-300">{pasteNotice}</p>
+                  <AlertCircle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                  <p className="text-warning text-sm">{pasteNotice}</p>
                 </div>
               </div>
             )}
 
             {validation.messages.length > 0 && (
-              <div className="space-y-1 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+              <div className="border-destructive/30 bg-destructive/5 space-y-1 rounded-lg border px-4 py-3">
                 {validation.messages.map((msg, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+                    <AlertCircle className="text-destructive mt-0.5 size-3.5 shrink-0" />
                     <p className="text-destructive text-sm">{msg}</p>
                   </div>
                 ))}
@@ -564,19 +564,19 @@ export function PublishResultAction({
 
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
-                  <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+                <div className="bg-info flex size-6 items-center justify-center rounded-md">
+                  <ExternalLink className="text-info size-3.5" />
                 </div>
-                <Label className="font-semibold text-sm">Tham chiếu Vietlott</Label>
+                <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
               </div>
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <p className="mb-3 text-muted-foreground text-xs">
+              <div className="bg-muted/30 rounded-lg border p-4">
+                <p className="text-muted-foreground mb-3 text-xs">
                   Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát. Chỉ sửa tham chiếu (giữ nguyên kết quả)
                   sẽ KHÔNG kích hoạt kết sổ lại.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                    <Label className="text-muted-foreground flex items-center gap-1.5 text-xs">
                       <CalendarDays className="size-3" /> Ngày Vietlott
                     </Label>
                     <Input
@@ -587,7 +587,7 @@ export function PublishResultAction({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                    <Label className="text-muted-foreground flex items-center gap-1.5 text-xs">
                       <Hash className="size-3" /> Mã kỳ Vietlott
                     </Label>
                     <Input
@@ -605,18 +605,18 @@ export function PublishResultAction({
 
                 {/* 4 trường hợp không suy được — mỗi trường hợp 1 thông báo riêng (overview §7.1). */}
                 {!suggestion.isFetching && !suggestedPeriod && !trimmedPeriod && suggestion.data?.reason && (
-                  <div className="mt-3 rounded-lg border border-blue-300/50 bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
+                  <div className="border-info/50 bg-info mt-3 rounded-lg border px-4 py-3">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                      <AlertCircle className="text-info mt-0.5 size-3.5 shrink-0" />
                       <div className="space-y-1">
-                        <p className="text-blue-800 text-sm leading-relaxed dark:text-blue-300">
+                        <p className="text-info text-sm leading-relaxed">
                           {VIETLOTT_SUGGESTION_UNAVAILABLE_MESSAGES[suggestion.data.reason]}
                         </p>
                         {suggestion.data.reason === VietlottSuggestionUnavailableReason.NoAnchor && (
                           <Link
                             prefetch={false}
                             href={vietlottConfigLink}
-                            className="font-medium text-blue-700 text-xs underline dark:text-blue-400"
+                            className="text-info text-xs font-medium underline"
                           >
                             Cấu hình mã kỳ Vietlott →
                           </Link>
@@ -628,15 +628,15 @@ export function PublishResultAction({
 
                 {/* Cảnh báo lệch — MỌI kỳ, không chỉ kỳ đầu (overview §4.3). Mềm, không chặn lưu. */}
                 {periodMismatch && (
-                  <div className="mt-3 rounded-lg border border-amber-300/50 bg-amber-50 px-4 py-3 dark:bg-amber-900/20">
+                  <div className="border-warning/50 bg-warning mt-3 rounded-lg border px-4 py-3">
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
                       <div className="space-y-1">
-                        <p className="text-amber-800 text-sm dark:text-amber-300">
+                        <p className="text-warning text-sm">
                           Mã kỳ vừa nhập (<span className="font-mono font-semibold">{trimmedPeriod}</span>) khác gợi ý
                           hệ thống (<span className="font-mono font-semibold">{suggestedPeriod}</span>).
                         </p>
-                        <p className="text-amber-700 text-xs dark:text-amber-400">
+                        <p className="text-warning text-xs">
                           Nếu giá trị vừa nhập đúng với trang Vietlott, hãy{" "}
                           <Link prefetch={false} href={vietlottConfigLink} className="font-medium underline">
                             cập nhật lại mã kỳ Vietlott

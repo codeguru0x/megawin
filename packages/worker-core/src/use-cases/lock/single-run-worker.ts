@@ -113,6 +113,8 @@
  * ```
  */
 
+import { randomUUID } from "node:crypto";
+
 import { UseCase } from "@megawin/app-core/use-cases";
 import { truncateErrorMessage } from "@megawin/shared/utils";
 
@@ -120,7 +122,6 @@ import { WorkerLockKind } from "../../entities";
 import { WorkerLockRepository } from "../../infras/repos";
 import { StalledItemTracker } from "../health/stalled-item-tracker";
 import type { WorkerRunResult } from "../types";
-import { randomUUID } from "node:crypto";
 
 export abstract class SingleRunWorker<I, O> extends UseCase<I, WorkerRunResult<O>> {
   protected readonly lockRepo = new WorkerLockRepository();

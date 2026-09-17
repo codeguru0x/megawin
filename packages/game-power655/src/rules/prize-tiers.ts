@@ -95,7 +95,9 @@ const TIER_PRIORITY: PrizeTier[] = [
 
 export function highestTier(tiers: PrizeTier[]): PrizeTier | null {
   for (const t of TIER_PRIORITY) {
-    if (tiers.includes(t)) return t;
+    if (tiers.includes(t)) {
+      return t;
+    }
   }
   return null;
 }

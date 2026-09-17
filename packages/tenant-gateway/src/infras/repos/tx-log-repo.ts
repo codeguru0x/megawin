@@ -23,7 +23,7 @@
  * invocation concurrent cùng `tx` (cold-start overlap).
  */
 
-import { type Document, type Filter, ObjectId, type Sort } from "mongodb";
+import { ObjectId, type Document, type Filter, type Sort } from "mongodb";
 
 import type { TxLogDoc, TxLogEntity } from "../../entities";
 import { TenantGatewayBaseRepo } from "../base-repo";
@@ -212,15 +212,27 @@ export class TxLogRepository extends TenantGatewayBaseRepo<TxLogEntity, TxLogMap
       conditions.push({ tx: filter.tx });
     } else if (filter.from || filter.to) {
       const range: { $gte?: Date; $lte?: Date } = {};
-      if (filter.from) range.$gte = filter.from;
-      if (filter.to) range.$lte = filter.to;
+      if (filter.from) {
+        range.$gte = filter.from;
+      }
+      if (filter.to) {
+        range.$lte = filter.to;
+      }
       conditions.push({ createdAt: range } as Filter<TxLogDoc>);
     }
 
-    if (filter.status) conditions.push({ status: filter.status });
-    if (filter.tenantId) conditions.push({ tenantId: filter.tenantId });
-    if (filter.eventType) conditions.push({ eventType: filter.eventType });
-    if (filter.batchId) conditions.push({ batchId: filter.batchId });
+    if (filter.status) {
+      conditions.push({ status: filter.status });
+    }
+    if (filter.tenantId) {
+      conditions.push({ tenantId: filter.tenantId });
+    }
+    if (filter.eventType) {
+      conditions.push({ eventType: filter.eventType });
+    }
+    if (filter.batchId) {
+      conditions.push({ batchId: filter.batchId });
+    }
 
     if (cursor) {
       const isBatchScoped = !!filter.batchId && !filter.tx;
@@ -242,8 +254,12 @@ export class TxLogRepository extends TenantGatewayBaseRepo<TxLogEntity, TxLogMap
       }
     }
 
-    if (conditions.length === 0) return {};
-    if (conditions.length === 1) return conditions[0]!;
+    if (conditions.length === 0) {
+      return {};
+    }
+    if (conditions.length === 1) {
+      return conditions[0]!;
+    }
     return { $and: conditions };
   }
 }

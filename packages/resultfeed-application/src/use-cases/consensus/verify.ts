@@ -11,8 +11,7 @@
  */
 
 import { AUDIT_ACTIONS, AuditCategory, AuditTargetType } from "@megawin/audit/entities";
-import type { AuditActor } from "@megawin/audit/logger";
-import { record } from "@megawin/audit/logger";
+import { record, type AuditActor } from "@megawin/audit/logger";
 import type { ConsensusHumanVerify, ResultFeedGameKey } from "@megawin/resultfeed/entities";
 import { checkIntrinsic, computeDisplayHash, computePayoutHash } from "@megawin/resultfeed/rules";
 import { AppException } from "@megawin/shared/errors";

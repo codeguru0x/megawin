@@ -9,8 +9,7 @@
  * Alias mỏng của {@link TenantRepo}.
  */
 
-import type { BaseEntity } from "@megawin/data/mongo";
-import { type MongoMapper, TenantRepo } from "@megawin/data/mongo";
+import { TenantRepo, type BaseEntity, type MongoMapper } from "@megawin/data/mongo";
 import type { Document } from "mongodb";
 
 export class TenantGatewayBaseRepo<

@@ -12,7 +12,6 @@
  * LiveFeed đọc endpoint riêng (live entries KHÔNG nằm trong stats doc) nhưng DÙNG CHUNG nhịp
  * `tickSeconds` với snapshot (analysis §5.2) — lấy `pollSeconds` từ chính snapshot.
  */
-
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayType } from "@megawin/game-lotto535/entities";
 import { LOTTO535_PLAY_TYPE_LABELS } from "@megawin/game-lotto535/labels";
@@ -36,8 +35,7 @@ import type {
   TopPotentialRow,
 } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
-import type { LiveEntryItem } from "../../use-operations";
-import { useOpsLiveEntries, useOpsSnapshot } from "../../use-operations";
+import { useOpsLiveEntries, useOpsSnapshot, type LiveEntryItem } from "../../use-operations";
 import { PlayTypeCard, TenantBreakdownCard, TopRiskPanel } from "./analytics-panels";
 import { LiveFeed } from "./live-feed";
 import { NumberHeatmap } from "./number-heatmap";
@@ -88,15 +86,17 @@ export function AnalyticsSection({ active }: { active: boolean }) {
   );
   const liveFeed = toLiveFeed(liveData?.entries);
 
-  if (!draw || !status || !ANALYTICS_SHOW.has(status)) return null;
+  if (!draw || !status || !ANALYTICS_SHOW.has(status)) {
+    return null;
+  }
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
+      <h2 className="text-muted-foreground text-sm font-semibold tracking-wider uppercase">Phân tích cược</h2>
 
       <PlayTypeCard distribution={playTypes ?? []} />
 
-      <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
+      <div className="grid items-stretch gap-4 lg:grid-cols-[7fr_3fr]">
         <NumberHeatmap
           mainNumbers={mainNumberFreq ?? []}
           specialNumbers={specialNumberFreq ?? []}
@@ -121,13 +121,17 @@ export function AnalyticsSection({ active }: { active: boolean }) {
 
 /** Suffix mô tả kiểu bao cho live feed — standard/specialCover không hiện, còn lại "(Bao N)". */
 function baoSuffix(playType: string): string | undefined {
-  if (playType === "standard" || playType === "specialCover") return undefined;
+  if (playType === "standard" || playType === "specialCover") {
+    return undefined;
+  }
   return `(${LOTTO535_PLAY_TYPE_LABELS[playType as PlayType] ?? playType})`;
 }
 
 /** `live-entries.entries` → LiveFeedEntry[] — lấy board đầu tiên làm đại diện hiển thị. */
 function toLiveFeed(entries: LiveEntryItem[] | undefined): LiveFeedEntry[] {
-  if (!entries) return [];
+  if (!entries) {
+    return [];
+  }
   return entries.map((e) => {
     const firstBoard = e.boards[0];
     const playType = firstBoard?.playType ?? "standard";

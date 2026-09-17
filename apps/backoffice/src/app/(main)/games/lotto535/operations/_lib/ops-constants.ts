@@ -69,8 +69,17 @@ export function describeStatsPlayKey(key: Lotto535StatsPlayKey): string {
       return LOTTO535_PLAY_TYPE_LABELS.mainCover4;
     case Lotto535StatsPlayKey.SpecialCover:
       return LOTTO535_PLAY_TYPE_LABELS.specialCover;
-    default: {
-      // mainCoverN (N=6..15) — key dạng "mainCover6".."mainCover15", tách số N từ suffix.
+    // mainCoverN (N=6..15) — key dạng "mainCover6".."mainCover15", tách số N từ suffix.
+    case Lotto535StatsPlayKey.MainCover6:
+    case Lotto535StatsPlayKey.MainCover7:
+    case Lotto535StatsPlayKey.MainCover8:
+    case Lotto535StatsPlayKey.MainCover9:
+    case Lotto535StatsPlayKey.MainCover10:
+    case Lotto535StatsPlayKey.MainCover11:
+    case Lotto535StatsPlayKey.MainCover12:
+    case Lotto535StatsPlayKey.MainCover13:
+    case Lotto535StatsPlayKey.MainCover14:
+    case Lotto535StatsPlayKey.MainCover15: {
       const n = key.replace("mainCover", "");
       return `Bao ${n} số chính`;
     }

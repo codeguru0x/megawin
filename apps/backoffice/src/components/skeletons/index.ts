@@ -1,5 +1,1 @@
-export {
-  ListRouteSkeleton,
-  OperationsRouteSkeleton,
-  ReportRouteSkeleton,
-} from "./route-skeletons";
+export { ListRouteSkeleton, OperationsRouteSkeleton, ReportRouteSkeleton } from "./route-skeletons";

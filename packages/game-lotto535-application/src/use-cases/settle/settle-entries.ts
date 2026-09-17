@@ -65,16 +65,16 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import type {
-  Board,
-  EntryBoardSnapshot,
-  EntryPayout,
-  EntryPayoutTier,
-  EntryResult,
-  TicketLineDoc,
+import {
+  PrizeTier,
+  type Board,
+  type EntryBoardSnapshot,
+  type EntryPayout,
+  type EntryPayoutTier,
+  type EntryResult,
+  type TicketLineDoc,
 } from "@megawin/game-lotto535/entities";
-import { PrizeTier } from "@megawin/game-lotto535/entities";
-import { type DrawResultForMatch, expandAllBoards, matchLines } from "@megawin/game-lotto535/helpers";
+import { expandAllBoards, matchLines, type DrawResultForMatch } from "@megawin/game-lotto535/helpers";
 import { generateId } from "@megawin/shared/utils";
 
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -258,7 +258,9 @@ function buildPayoutTiersFromLines(
 
   for (const line of lineDocs) {
     const { tier, winAmount } = line.matchResult;
-    if (tier == null) continue;
+    if (tier == null) {
+      continue;
+    }
 
     const existing = tierMap.get(tier) ?? { hitCount: 0, betUnitCount: 0, totalAmount: 0 };
     existing.hitCount += 1;

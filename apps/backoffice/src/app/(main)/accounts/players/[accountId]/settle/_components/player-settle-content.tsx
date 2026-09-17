@@ -91,7 +91,7 @@ export function PlayerSettleContent({ accountId }: PlayerSettleContentProps) {
       {/* Header: breadcrumb + date filter */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 className="size-4 shrink-0 text-muted-foreground" />
+          <BarChart3 className="text-muted-foreground size-4 shrink-0" />
           <SettleBreadcrumb
             level={currentLevel}
             gameLabel={gameLabel}
@@ -165,24 +165,24 @@ function SettleBreadcrumb({
   onClickDate,
 }: SettleBreadcrumbProps) {
   if (level === 1) {
-    return <span className="text-sm font-medium text-foreground">Báo cáo tài chính</span>;
+    return <span className="text-foreground text-sm font-medium">Báo cáo tài chính</span>;
   }
 
   return (
     <div className="flex items-center gap-1 text-sm">
-      <button type="button" className="font-medium text-muted-foreground hover:text-foreground" onClick={onClickRoot}>
+      <button type="button" className="text-muted-foreground hover:text-foreground font-medium" onClick={onClickRoot}>
         Tài chính
       </button>
 
       {level >= 2 && (
         <>
-          <ChevronRight className="size-3.5 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3.5" />
           {level === 2 ? (
-            <span className="font-semibold text-foreground">{gameLabel}</span>
+            <span className="text-foreground font-semibold">{gameLabel}</span>
           ) : (
             <button
               type="button"
-              className="font-medium text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground font-medium"
               onClick={onClickGame}
             >
               {gameLabel}
@@ -193,13 +193,13 @@ function SettleBreadcrumb({
 
       {level >= 3 && fd && (
         <>
-          <ChevronRight className="size-3.5 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground size-3.5" />
           {level === 3 ? (
-            <span className="font-semibold text-foreground">{fd}</span>
+            <span className="text-foreground font-semibold">{fd}</span>
           ) : (
             <button
               type="button"
-              className="font-medium text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground font-medium"
               onClick={onClickDate}
             >
               {fd}
@@ -210,8 +210,8 @@ function SettleBreadcrumb({
 
       {level >= 4 && draw && (
         <>
-          <ChevronRight className="size-3.5 text-muted-foreground" />
-          <span className="font-semibold text-foreground">{draw}</span>
+          <ChevronRight className="text-muted-foreground size-3.5" />
+          <span className="text-foreground font-semibold">{draw}</span>
         </>
       )}
     </div>

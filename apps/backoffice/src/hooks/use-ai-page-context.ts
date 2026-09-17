@@ -31,10 +31,9 @@
  * });
  * ```
  */
-
 import { useEffect, useRef } from "react";
 
-import { type AiPageContextValue, registerAiPageContext } from "@/lib/ai-page-context";
+import { registerAiPageContext, type AiPageContextValue } from "@/lib/ai-page-context";
 
 /**
  * @param key Định danh khối context (xuất hiện thẳng trong prompt, đặt tên ngắn + có nghĩa:

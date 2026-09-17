@@ -58,7 +58,9 @@ export class SyncTicketSummariesUseCase extends UseCase<DrawSyncInput, SyncTicke
       const items = tickets
         .map((t) => {
           const summary = summaryMap.get(t.ticketId);
-          if (!summary) return null;
+          if (!summary) {
+            return null;
+          }
           return {
             ticketId: t.ticketId,
             summary: { ...summary, totalDraws: totalDrawsMap.get(t.ticketId) ?? 1 },

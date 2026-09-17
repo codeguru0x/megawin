@@ -6,7 +6,6 @@
  * Wrapper game-specific: quản lý URL state (nuqs) + fetch data + inject
  * render props game-cụ thể (kết quả 6+1, draw status badge) vào DrawHistoryTable.
  */
-
 import { useRouter } from "next/navigation";
 
 import type { DrawStatus } from "@megawin/game-core/entities";
@@ -14,13 +13,11 @@ import { Pagination } from "@megawin/shared/constants";
 import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 
-import type { CommonDrawSummary } from "@/components/draws";
-import { DrawHistoryTable } from "@/components/draws";
+import { DrawHistoryTable, type CommonDrawSummary } from "@/components/draws";
 import { Power655DrawStatusBadge } from "@/components/games/power655/draw-status-badge";
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
 
-import type { DrawSummary } from "./use-draws";
-import { useDrawsList } from "./use-draws";
+import { useDrawsList, type DrawSummary } from "./use-draws";
 
 const OPS_BASE = "/games/power655/operations";
 
@@ -74,14 +71,14 @@ export function DrawHistorySection() {
   const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
-    setPage(null);
+    void setFromDate(from);
+    void setToDate(to);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
-    setPage(null);
+    void setStatusParam(value === "all" ? null : value);
+    void setPage(null);
   }
 
   return (
@@ -101,13 +98,15 @@ export function DrawHistorySection() {
       onRowClick={(draw) => router.push(`${OPS_BASE}?drawId=${draw.drawId}`)}
       renderStatusBadge={(status) => <Power655DrawStatusBadge status={status as DrawStatus} />}
       renderResult={(draw) => {
-        if (!draw.result) return null;
+        if (!draw.result) {
+          return null;
+        }
         return (
           <div className="flex flex-wrap items-center gap-1">
             {draw.result.winningMain.map((n) => (
               <PowerNumberBall key={n} number={Number(n)} variant="main" size="sm" />
             ))}
-            <span className="mx-0.5 w-px h-4 bg-border" />
+            <span className="bg-border mx-0.5 h-4 w-px" />
             <PowerNumberBall number={Number(draw.result.bonusNumber)} variant="bonus" size="sm" />
           </div>
         );

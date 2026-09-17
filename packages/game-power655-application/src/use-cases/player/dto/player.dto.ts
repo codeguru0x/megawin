@@ -1,7 +1,3 @@
-import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary } from "@megawin/game-power655/entities";
-
-export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
-
 /**
  * Power 6/55 – Player DTOs
  *
@@ -15,6 +11,9 @@ export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
  */
 
 import type { EntryOutcome } from "@megawin/game-core/entities";
+import type { DrawSettleSummaryTier, EntryPayoutTier, EntrySummary } from "@megawin/game-power655/entities";
+
+export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 
 // ─── Get Current Draw (Player) ───
 

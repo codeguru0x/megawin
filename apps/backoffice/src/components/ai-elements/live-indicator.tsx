@@ -40,8 +40,8 @@ import { cn } from "@/lib/utils";
 export function LiveDot({ className }: { className?: string }) {
   return (
     <span className={cn("relative flex size-2.5 items-center justify-center", className)} role="status">
-      <span className="absolute inline-flex size-full rounded-full bg-primary/60 motion-safe:animate-ping" />
-      <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
+      <span className="bg-primary/60 absolute inline-flex size-full rounded-full motion-safe:animate-ping" />
+      <span className="bg-primary relative inline-flex size-2.5 rounded-full" />
       <span className="sr-only">Đang xử lý</span>
     </span>
   );
