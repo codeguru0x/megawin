@@ -27,7 +27,7 @@ export function JackpotHeroCard() {
     return null;
   }
 
-  const { cycle, config, _jackpot1Progress, _jackpot2Progress } = data;
+  const { cycle, config } = data;
 
   const jp1 = cycle.jackpot1CurrentAmount;
   const jp2 = cycle.jackpot2CurrentAmount;
@@ -178,18 +178,18 @@ export function JackpotKpiCards() {
     return null;
   }
 
-  const { cycle, _jackpot1Progress, _jackpot2Progress } = data;
+  const { cycle, jackpot1Progress, jackpot2Progress } = data;
 
   // Phần tích luỹ thuần = current - seed (không tính seed ban đầu).
   // Tương đương cycle.totalContribution của Lotto 5/35 / Mega 6/45.
-  const jp1Contribution = _jackpot1Progress.current - _jackpot1Progress.seed;
-  const jp2Contribution = _jackpot2Progress.current - _jackpot2Progress.seed;
+  const jp1Contribution = jackpot1Progress.current - jackpot1Progress.seed;
+  const jp2Contribution = jackpot2Progress.current - jackpot2Progress.seed;
 
   // % tăng JP1 so với khởi điểm seed
-  const jp1GrowthPct = _jackpot1Progress.seed > 0 ? Math.round((jp1Contribution / _jackpot1Progress.seed) * 100) : 0;
+  const jp1GrowthPct = jackpot1Progress.seed > 0 ? Math.round((jp1Contribution / jackpot1Progress.seed) * 100) : 0;
 
   // % tăng JP2 so với khởi điểm seed hiện tại (seed reset mỗi lần JP2 trao thưởng)
-  const jp2GrowthPct = _jackpot2Progress.seed > 0 ? Math.round((jp2Contribution / _jackpot2Progress.seed) * 100) : 0;
+  const jp2GrowthPct = jackpot2Progress.seed > 0 ? Math.round((jp2Contribution / jackpot2Progress.seed) * 100) : 0;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -216,7 +216,7 @@ export function JackpotKpiCards() {
               {" so với khởi điểm"}
             </>
           ) : (
-            `Khởi điểm: ${formatVNDCompact(_jackpot1Progress.seed)}`
+            `Khởi điểm: ${formatVNDCompact(jackpot1Progress.seed)}`
           )
         }
       />
@@ -234,7 +234,7 @@ export function JackpotKpiCards() {
               {" so với khởi điểm"}
             </>
           ) : (
-            `Khởi điểm: ${formatVNDCompact(_jackpot2Progress.seed)}`
+            `Khởi điểm: ${formatVNDCompact(jackpot2Progress.seed)}`
           )
         }
       />
