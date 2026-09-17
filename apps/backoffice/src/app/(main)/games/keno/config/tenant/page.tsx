@@ -121,7 +121,7 @@ export default function KenoTenantConfigPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-sky-600 shadow-sm">
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>
@@ -476,7 +476,7 @@ function AddTenantDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-sky-600 shadow-sm">
               <Building2 className="size-4.5 text-white" />
             </div>
             <div>

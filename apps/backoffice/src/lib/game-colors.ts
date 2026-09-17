@@ -60,7 +60,7 @@ export interface GameColorTokens {
  * - Mega645:  teal      (#0d9488) — teal-600
  * - Power655: red       (#dc2626) — red-600 (đậm hơn red-500 để tách khỏi pink)
  * - Lotto535: amber     (#d97706) — amber-600
- * - Keno:     chart sky-700 (#0284c7); page icon orange-500→600 (khớp header Kỳ quay)
+ * - Keno:     sky/cyan (#0284c7) — sky-700; page icon sky-500→600 (tách khỏi orange Power655)
  * - Max3D:    violet    (#7c3aed) — violet-600
  * - Max3DPro: fuchsia   (#c026d3) — fuchsia-600 (tách rõ khỏi red Power655)
  * - Bingo18:  lime      (#65a30d) — lime-600 (tách rõ khỏi teal Mega645)
@@ -118,10 +118,9 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     iconGradient: "from-amber-400 to-orange-500",
   },
 
-  // ── Keno — Sky/Cyan (chart) + Orange (page icon) ─────────────────────────
-  // `hex` giữ sky-700 (#0284c7) để tách stacked bar khỏi amber Lotto535.
-  // `iconGradient` dùng orange — khớp header trang Kỳ quay / Vận hành / Kỳ huỷ /
-  // Tồn đọng (`from-orange-500 to-orange-600`).
+  // ── Keno — Sky/Cyan ─────────────────────────────────────────────────────
+  // Brand sky-700 (#0284c7) — tách khỏi amber Lotto535 (chart) và orange/red Power655
+  // (page icon). Header mọi trang Keno dùng iconGradient sky, không dùng orange.
   [GameProduct.Keno]: {
     hex: "#0284c7",
     twBg: "bg-game-keno",
@@ -134,7 +133,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-sky-950/50",
     gradientViaDark: "dark:via-cyan-950/40",
     gradientToDark: "dark:to-blue-950/30",
-    iconGradient: "from-orange-500 to-orange-600",
+    iconGradient: "from-sky-500 to-sky-600",
   },
 
   // ── Max3D — Violet ────────────────────────────────────────────────────────

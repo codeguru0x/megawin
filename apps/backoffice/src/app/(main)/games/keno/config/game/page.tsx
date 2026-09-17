@@ -39,7 +39,7 @@ export default function KenoConfigPage() {
   return (
     <div className="@container/main flex flex-col gap-2">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-sky-600 shadow-sm">
           <Settings2 className="size-4.5 text-white" />
         </div>
         <div>

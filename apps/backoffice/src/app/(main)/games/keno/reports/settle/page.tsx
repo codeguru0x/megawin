@@ -19,7 +19,7 @@ function KenoFinancialContent() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-sky-600 shadow-sm">
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
@@ -42,7 +42,7 @@ function KenoFinancialContent() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as "draws" | "tenants")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="draws" className="gap-1.5">
-            <CalendarRange className="size-4 text-orange-500" />
+            <CalendarRange className="size-4 text-sky-500" />
             Theo kỳ quay
           </TabsTrigger>
           <TabsTrigger value="tenants" className="gap-1.5">

@@ -6,7 +6,7 @@
  * Tổng quan kỳ quay Keno đang active và lịch sử.
  * Keno: ~119 kỳ/ngày, 8 phút/kỳ — hiển thị drawNo + drawTime.
  * Link đến trang vận hành để quản lý chi tiết.
- * Theme: orange.
+ * Theme: sky/cyan (GAME_COLORS Keno — tách khỏi orange Power 6/55).
  */
 import Link from "next/link";
 
@@ -29,7 +29,7 @@ export default function KenoDrawsPage() {
       {/* Page Header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-sky-600 shadow-sm">
             <CalendarClock className="size-4.5 text-white" />
           </div>
           <div>
