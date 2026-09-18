@@ -15,6 +15,9 @@
     "check:fix": "oxlint . --fix && prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:update": "playwright test --update-snapshots",
     "check:server-boundary": "tsx src/scripts/check-server-boundary.ts",
     "check:url-params": "tsx src/scripts/check-url-params.ts",
     "check:nav-registry": "tsx src/scripts/check-nav-registry.ts",
@@ -102,6 +105,7 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

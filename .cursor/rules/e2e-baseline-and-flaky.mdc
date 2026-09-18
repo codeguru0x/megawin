@@ -1,0 +1,56 @@
+---
+description: Quy tắc khi Playwright E2E fail — không tự update baseline, không che flaky, không tự bật dev server.
+globs:
+  - "apps/backoffice/test/e2e/**"
+  - "apps/backoffice/playwright.config.ts"
+alwaysApply: false
+---
+
+# E2E Backoffice — Baseline, Flaky & Dev Server
+
+## 1. KHÔNG tự update baseline
+
+Khi `pnpm --filter @megawin/backoffice test:e2e` fail vì screenshot lệch:
+
+1. **KHÔNG tự chạy `test:e2e:update`** để làm fail biến mất. Baseline là "bản đã được NGƯỜI duyệt";
+   agent tự update = tự duyệt hộ, và sẽ hợp lệ hoá luôn cả bug nếu đó là bug.
+2. Phân loại theo cây quyết định (`.cursor/plans/ui-visual-regression/p1-03-review-workflow-and-guardrail.plan.md` §2):
+   regression thật / có chủ đích / flaky. Ba loại xử khác nhau.
+3. Nếu **có chủ đích**: báo user diff cụ thể (đường dẫn ảnh actual/expected), đề xuất
+   `test:e2e:update`, **để user tự chạy hoặc xác nhận tường minh** trước khi agent chạy hộ.
+4. Nếu **không chắc** → dừng, báo user. KHÔNG đoán rồi update.
+
+## 2. KHÔNG che flaky
+
+- **KHÔNG** thêm `retries` vào `playwright.config.ts` để làm xanh test lúc xanh lúc đỏ.
+- **KHÔNG** nới `maxDiffPixelRatio` / thêm `mask` tràn lan để "cho qua".
+- **KHÔNG** thêm `waitForTimeout(n)` để chờ cho chắc.
+- Chứng minh flaky bằng `test:e2e --repeat-each=5`, rồi sửa **nguyên nhân**: đóng băng thời gian
+  (`page.clock`), mock network (`page.route`), web-first assertion thay vì `networkidle`.
+  Xem `p0-03-determinism-and-testids.plan.md`.
+
+## 3. KHÔNG sửa code production để test dễ hơn
+
+Không đổi cấu trúc DOM/class/logic chỉ để selector dễ viết. Ngoại lệ duy nhất: thêm
+`data-testid`/`role`/`aria-*` khi không có selector semantic — và phải nêu lý do trong PR.
+`interval-registry.ts`, `use-hub-query.ts`, `proxy.ts` là code đã tối ưu/bảo mật có chủ đích:
+test phải thích ứng, không ngược lại.
+
+## 4. KHÔNG tự bật dev server chạy nền dài hạn
+
+`next dev` của backoffice kéo Mongo driver + 7 game package — tiến trình nặng. Playwright
+`webServer` tự quản (`reuseExistingServer`). Nếu cần dev server cho Next.js MCP: nói user chạy,
+hoặc chạy có thời hạn rồi dừng.
+
+## 5. MCP không thay `check-types` / `oxlint`
+
+`get_errors` của Next.js MCP là **bổ sung**. Checklist kết thúc task vẫn theo
+`oxlint-lint-conventions.mdc` §g: `oxlint <paths>` + `prettier --write <paths>` + `check-types`.
+
+## 6. Baseline screenshot — local-only (không commit)
+
+- `apps/backoffice/test/e2e/**/*-snapshots/` **gitignore**. PNG chỉ trên máy dev.
+- Lần đầu / mất folder: `pnpm --filter @megawin/backoffice test:e2e:update`.
+- **`CI=true`:** `ops-hub-visual` skip; smoke không chụp `login.png`. Behaviour vẫn chạy.
+- Khi lên GHA: đừng kỳ vọng visual xanh nhờ ảnh local — hoặc giữ skip, hoặc sinh baseline
+  Linux trong Docker rồi mới commit (đổi lại convention).

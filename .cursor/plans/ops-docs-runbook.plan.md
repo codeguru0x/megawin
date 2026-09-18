@@ -175,7 +175,7 @@ Nội dung nằm trong JS chunk -> server trả static, không I/O runtime.
 
 ## Bước 6 — UI three-pane (chuẩn knowledge base, style theo frontend-design rule)
 
-Tuân thủ skill [frontend-design](.cursor/skills/frontend-design/SKILL.md) + design tokens [globals.css](apps/backoffice/src/app/globals.css) (shadcn vars + `--color-game-*`). Tái dùng shadcn, đồng bộ với toàn app.
+Tuân thủ skill [shadcn](.cursor/skills/shadcn/SKILL.md) + design tokens [globals.css](apps/backoffice/src/app/globals.css) (shadcn vars + `--color-game-*`). Tái dùng shadcn, đồng bộ với toàn app.
 
 - **`guides/layout.tsx`**: 3-pane `DocsSidebar(~280px,border-r)` | `Article(giữa,scroll riêng,max-w~72ch)` | `TableOfContents(~240px, ẩn dưới xl)`. Trong `(main)` giữ auth + app sidebar. Responsive: dưới `lg` sidebar -> `Sheet`, ẩn TOC.
 - **`docs-sidebar.tsx`**: cây Game>Topic>Doc từ manifest, `Collapsible`, active highlight màu brand game (`text-game-{gameKey}`/`bg-game-{gameKey}-muted`), icon game theo sidebar chính.

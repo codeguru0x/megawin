@@ -65,3 +65,16 @@ CLAUDE.md
 # Bytecode cache của 3 hook Python ở .cursor/hooks/ (Python tự sinh khi import module
 # dùng chung `_gitnexus_common.py`). Bản thân hook đã commit; cache thì không.
 .cursor/hooks/__pycache__/
+
+# Playwright E2E artifacts (apps/backoffice — xem .cursor/plans/ui-visual-regression/).
+# Baseline screenshot: CHỈ local (1 dev, phương án A). Không commit — tránh phình repo /
+# lệch font khi lên CI. Visual spec tự skip khi `CI=true` (xem playwright.config + specs).
+# Lần đầu trên máy: `pnpm --filter @megawin/backoffice test:e2e:update`.
+apps/backoffice/test/e2e/**/*-snapshots/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+# Storage state chứa session cookie ký bằng BETTER_AUTH_SECRET thật → ai lấy được
+# là đăng nhập backoffice quyền admin trong 24h. Xem p0-02 §4.
+apps/backoffice/test/e2e/support/.auth/

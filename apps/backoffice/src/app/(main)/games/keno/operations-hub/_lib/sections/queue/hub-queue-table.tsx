@@ -316,7 +316,7 @@ export function HubQueueTable() {
   }
 
   return (
-    <section className="flex flex-col gap-2">
+    <section aria-label="Hàng chờ kỳ quay" className="flex flex-col gap-2">
       {/* Tab bar — 5 tab, icon (bạn yêu cầu — plan §B5) + badge số đếm, phím tắt 1-5 xử lý ở
           `use-hub-keyboard.ts` (p1-02i). */}
       <div className="flex items-center gap-1 border-b" role="tablist">

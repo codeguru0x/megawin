@@ -21,6 +21,14 @@ overrides:
   "@types/node": ^25.9.6
   "@types/react": ^19.3.0
   "@types/react-dom": ^19.3.0
+  # `next` khai `@playwright/test` là OPTIONAL peer chỉ để phục vụ `next/experimental/testmode`
+  # — thứ không có trong `exports` của next@16.3.5 và repo không dùng (0 match). Cài
+  # `@playwright/test` lẻ ở 1 package làm pnpm sinh instance `next` thứ 2 (peer set khác → hash
+  # khác). `NextURL` vẫn còn `private [Internal]` (PR vercel/next.js#82172 chỉ bỏ brand của
+  # `NextRequest`, chưa bỏ của `NextURL`) nên 2 instance không assignable → 798 lỗi type giữa
+  # `packages/next` và `apps/backoffice`. Xoá peer để mọi package luôn dùng đúng 1 instance.
+  # Chi tiết: `.cursor/plans/ui-visual-regression/p0-01-playwright-foundation.plan.md` §1.
+  "next>@playwright/test": "-"
 
 allowBuilds:
   esbuild: true
@@ -31,31 +39,10 @@ allowBuilds:
   cpu-features: true
   ssh2: true
 
-minimumReleaseAgeExclude:
-  - "@better-auth/core@1.6.20 || 1.7.5"
-  - "@better-auth/drizzle-adapter@1.6.20 || 1.7.5"
-  - "@better-auth/kysely-adapter@1.6.20 || 1.7.5"
-  - "@better-auth/memory-adapter@1.6.20 || 1.7.5"
-  - "@better-auth/mongo-adapter@1.6.20 || 1.7.5"
-  - "@better-auth/prisma-adapter@1.6.20 || 1.7.5"
-  - "@better-auth/telemetry@1.6.20 || 1.7.5"
-  - better-auth@1.6.20 || 1.7.5
-  - react-hook-form@7.80.0
-  - postcss@8.5.23
-  - eve@0.51.1 || 0.55.0
-  - "@ai-sdk/gateway@4.0.74 || 4.0.81"
-  - ai@7.0.92 || 7.0.101
-  - "@turbo/darwin-64@2.10.13"
-  - "@turbo/darwin-arm64@2.10.13"
-  - "@turbo/linux-64@2.10.13"
-  - "@turbo/linux-arm64@2.10.13"
-  - "@turbo/windows-64@2.10.13"
-  - "@turbo/windows-arm64@2.10.13"
-  - turbo@2.10.13
-  - "@vercel/config@0.7.1"
-  - "@vercel/routing-utils@6.6.0"
-  - framer-motion@13.3.0
-  - lucide-react@1.46.0
-  - motion-dom@13.3.0
-  - motion-utils@13.3.0
-  - motion@13.3.0
+# pnpm v11 mặc định `minimumReleaseAge: 1440` (24 giờ): không cài bản vừa publish
+# trên npm cho đến khi đủ tuổi — giảm rủi ro supply-chain (malware thường bị phát hiện
+# trong ~1 giờ). CỐ TÌNH không dùng `minimumReleaseAgeExclude`: kể cả package "uy tín"
+# (axios, …) đã từng bị xâm nhập; ngoại lệ làm mất lớp bảo vệ đúng lúc cần nhất.
+# Khi bump dep mới < 24 giờ tuổi mà install fail → chờ đủ tuổi, KHÔNG thêm exclude.
+# Docs: https://pnpm.io/settings/dependency-resolution#minimumreleaseage
+minimumReleaseAge: 1440
