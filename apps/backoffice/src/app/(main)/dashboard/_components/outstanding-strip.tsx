@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import Link from "next/link";
 
 import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities/financial-report";
@@ -126,15 +128,18 @@ function GameCard({
       className="group border-border/50 bg-background/80 hover:border-border relative flex gap-2 overflow-hidden rounded-lg border p-2.5 transition-all hover:shadow-sm"
     >
       {/* Color indicator bar bên trái */}
-      <div className="w-1 shrink-0 rounded-full" style={{ background: hex }} />
+      <div
+        className="w-1 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+        style={{ "--swatch-bg": hex } as React.CSSProperties}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         {/* Tên game + % */}
         <div className="flex items-center justify-between gap-1">
           <span className="text-foreground truncate text-xs font-semibold">{getGameLabel(gameProduct)}</span>
           <span
-            className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums"
-            style={{ background: hex }}
+            className="shrink-0 rounded bg-[var(--swatch-bg)] px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums"
+            style={{ "--swatch-bg": hex } as React.CSSProperties}
           >
             {pct.toFixed(1)}%
           </span>
@@ -281,10 +286,20 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
           {sorted.map((g) => {
             const pct = totalStake > 0 ? (g.totalOutstandingStake / totalStake) * 100 : 0;
             if (pct < 8) {
-              return <div key={g.gameProduct} style={{ width: `${Math.max(pct, 0)}%` }} />;
+              return (
+                <div
+                  key={g.gameProduct}
+                  className="w-[var(--bar-w)]"
+                  style={{ "--bar-w": `${Math.max(pct, 0)}%` } as CSSProperties}
+                />
+              );
             }
             return (
-              <div key={g.gameProduct} className="flex h-full items-center justify-center" style={{ width: `${pct}%` }}>
+              <div
+                key={g.gameProduct}
+                className="flex h-full w-[var(--bar-w)] items-center justify-center"
+                style={{ "--bar-w": `${pct}%` } as CSSProperties}
+              >
                 <span className="text-[9px] font-bold text-white drop-shadow-sm">{pct.toFixed(0)}%</span>
               </div>
             );

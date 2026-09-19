@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 /**
  * Ops Hub — Bulk Confirm Dialog (guideline §5.6, plan §8.4, p1-09 §12)
  *
@@ -164,8 +166,8 @@ export function BulkConfirmDialog({
               </div>
               <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                 <div
-                  className="bg-primary h-full rounded-full transition-all"
-                  style={{ width: `${(batchState.doneChunks / batchState.totalChunks) * 100}%` }}
+                  className="bg-primary h-full w-[var(--bar-w)] rounded-full transition-all"
+                  style={{ "--bar-w": `${(batchState.doneChunks / batchState.totalChunks) * 100}%` } as CSSProperties}
                 />
               </div>
               <div className="flex items-center gap-3 text-xs">

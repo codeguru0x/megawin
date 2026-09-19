@@ -48,9 +48,9 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
   return (
     <div>
       <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">Trên trang này</p>
-      <ul className="space-y-1 text-sm">
+      <ul className="space-y-1 pl-[var(--toc-pl)] text-sm">
         {items.map((item) => (
-          <li key={item.id} style={{ paddingLeft: (item.level - 2) * 12 }}>
+          <li key={item.id} style={{ "--toc-pl": `${(item.level - 2) * 12}px` } as React.CSSProperties}>
             <a
               href={`#${item.id}`}
               className={cn(

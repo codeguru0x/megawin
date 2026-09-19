@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 /**
  * Max 3D Pro – Analytics Panels (tab Phân tích cược)
  *
@@ -54,7 +56,10 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
                   {formatNumber(r.units)} lượt cược · {formatNumber(r.entries)} phiếu
                 </p>
                 <div className="bg-muted mt-1.5 h-1 w-full overflow-hidden rounded-full">
-                  <div className={cn("h-full rounded-full", color.bar)} style={{ width: `${r.pct}%` }} />
+                  <div
+                    className={cn("w-[var(--bar-w)]", "h-full rounded-full", color.bar)}
+                    style={{ "--bar-w": `${r.pct}%` } as CSSProperties}
+                  />
                 </div>
               </div>
             );
@@ -87,8 +92,7 @@ export function TopTripletsCard({ rows }: { rows: TopTripletRow[] }) {
             {rows.map((r, i) => (
               <div
                 key={r.triplet}
-                className="border-border/40 bg-muted/10 grid items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
-                style={{ gridTemplateColumns: "1.5rem 3.5rem 1fr 5.5rem" }}
+                className="border-border/40 bg-muted/10 grid [grid-template-columns:1.5rem_3.5rem_1fr_5.5rem] items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
               >
                 <span className="text-muted-foreground/50 text-[10px] tabular-nums">{i + 1}</span>
                 <span className="inline-flex h-6 items-center justify-center rounded-md bg-emerald-500/15 px-1.5 font-mono text-xs font-bold text-emerald-700 tabular-nums dark:text-emerald-400">
@@ -132,12 +136,11 @@ export function PairTable({ rows }: { rows: PairRow[] }) {
               <div
                 key={r.pairKey}
                 className={cn(
-                  "grid items-center gap-x-2 rounded-lg border px-2.5 py-1.5",
+                  "grid [grid-template-columns:7.5rem_3.5rem_4.5rem_1fr] items-center gap-x-2 rounded-lg border px-2.5 py-1.5",
                   r.overLiability
                     ? "border-red-300/70 bg-red-50/60 dark:border-red-800/50 dark:bg-red-950/20"
                     : "border-border/40 bg-muted/10",
                 )}
-                style={{ gridTemplateColumns: "7.5rem 3.5rem 4.5rem 1fr" }}
               >
                 <span className="inline-flex items-center gap-1 font-mono text-xs font-bold tabular-nums">
                   <span className="rounded bg-violet-500/15 px-1 py-0.5 text-violet-700 dark:text-violet-400">
@@ -314,8 +317,7 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
           {tenants.map((t) => (
             <div
               key={t.tenantId}
-              className="border-border/40 bg-muted/10 grid items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
-              style={{ gridTemplateColumns: "1fr 4rem 5rem 3rem" }}
+              className="border-border/40 bg-muted/10 grid [grid-template-columns:1fr_4rem_5rem_3rem] items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
             >
               <span className="truncate text-xs font-medium">{t.tenantId}</span>
               <span className="text-muted-foreground text-right text-[11px] tabular-nums">

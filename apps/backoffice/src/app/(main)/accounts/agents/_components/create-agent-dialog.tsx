@@ -58,7 +58,7 @@ export function CreateAgentAccountDialog() {
   const mutation = useMutation({
     mutationFn: (values: CreateAgentValues) => apiClient.post<CreateAgentAccountResponse>("/accounts/agents", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: accountsKeys.agents });
+      void queryClient.invalidateQueries({ queryKey: accountsKeys.agents });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản đại lý thành công.", {

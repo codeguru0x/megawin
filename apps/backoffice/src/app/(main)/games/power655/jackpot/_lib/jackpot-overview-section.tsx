@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Hash, Layers, TrendingUp, Trophy, Zap } from "lucide-react";
@@ -130,17 +132,19 @@ export function JackpotHeroCard() {
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-red-200/50 dark:bg-red-900/40">
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${Math.min(jp1Pct, 100)}%`,
-                background: isOverflow
-                  ? "linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)"
-                  : isHot
-                    ? "linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)"
-                    : isWarm
-                      ? "linear-gradient(90deg, #f87171, #ef4444, #dc2626)"
-                      : "linear-gradient(90deg, #fca5a5, #f87171, #ef4444)",
-              }}
+              className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all duration-700 ease-out"
+              style={
+                {
+                  "--bar-w": `${Math.min(jp1Pct, 100)}%`,
+                  "--bar-bg": isOverflow
+                    ? "linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)"
+                    : isHot
+                      ? "linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)"
+                      : isWarm
+                        ? "linear-gradient(90deg, #f87171, #ef4444, #dc2626)"
+                        : "linear-gradient(90deg, #fca5a5, #f87171, #ef4444)",
+                } as CSSProperties
+              }
             />
           </div>
           <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">

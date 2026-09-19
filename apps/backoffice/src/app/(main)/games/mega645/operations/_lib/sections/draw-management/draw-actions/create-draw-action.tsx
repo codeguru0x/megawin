@@ -218,10 +218,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           {/* Bảng preview — read-only, chỉ toggle mở bán/chờ lịch */}
           <div className="overflow-hidden rounded-xl border">
             {/* Table header */}
-            <div
-              className="bg-muted/40 grid items-center gap-x-3 border-b px-4 py-2"
-              style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
-            >
+            <div className="bg-muted/40 grid [grid-template-columns:1.5rem_3rem_1fr_6.5rem_9rem] items-center gap-x-3 border-b px-4 py-2">
               <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">#</span>
               <span className="text-muted-foreground text-center text-[11px] font-medium tracking-wider uppercase">
                 Thứ
@@ -262,10 +259,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 <div
                   key={row.previewDrawId}
                   className={cn(
-                    "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
+                    "grid [grid-template-columns:1.5rem_3rem_1fr_6.5rem_9rem] items-center gap-x-3 px-4 py-2.5 transition-colors",
                     row.isOpen ? "bg-teal-50/50 dark:bg-teal-950/15" : "hover:bg-muted/20",
                   )}
-                  style={{ gridTemplateColumns: "1.5rem 3rem 1fr 6.5rem 9rem" }}
                 >
                   {/* Số thứ tự */}
                   <span

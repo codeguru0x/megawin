@@ -94,7 +94,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         accessToken,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
+      void qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       setStep("done");
     },
     onError: (error) => {

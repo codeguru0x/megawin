@@ -104,7 +104,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
         draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId ||
         draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Future)?.drawId ||
         draws[0]?.drawId;
-      setSelectedDrawId(drawId === activeDrawId ? null : drawId);
+      void setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],
   );

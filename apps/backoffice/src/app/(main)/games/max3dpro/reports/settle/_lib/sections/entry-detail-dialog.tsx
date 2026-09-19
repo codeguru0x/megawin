@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import Link from "next/link";
 
 import { EntryStatus } from "@megawin/game-core/entities";
@@ -356,14 +358,11 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   return (
                     <div
                       key={i}
-                      className="grid items-start gap-x-3 rounded-md border-l-[3px] py-2 pr-2 pl-3"
-                      style={{
-                        borderLeftColor: boardColor,
-                        gridTemplateColumns: "2rem 5rem 1fr",
-                      }}
+                      className="grid [grid-template-columns:2rem_5rem_1fr] items-start gap-x-3 rounded-md border-l-[3px] border-l-[var(--board-color)] py-2 pr-2 pl-3"
+                      style={{ "--board-color": boardColor } as CSSProperties}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span className="text-sm leading-none font-extrabold" style={{ color: boardColor }}>
+                        <span className="text-sm leading-none font-extrabold text-[var(--board-color)]">
                           {board.boardNo}
                         </span>
                       </div>
@@ -428,14 +427,11 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     return (
                       <div
                         key={i}
-                        className="grid items-start gap-x-3 rounded-md border-l-[3px] py-2 pr-2 pl-3"
-                        style={{
-                          borderLeftColor: boardColor,
-                          gridTemplateColumns: "2rem 5rem 1fr",
-                        }}
+                        className="grid [grid-template-columns:2rem_5rem_1fr] items-start gap-x-3 rounded-md border-l-[3px] border-l-[var(--board-color)] py-2 pr-2 pl-3"
+                        style={{ "--board-color": boardColor } as CSSProperties}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span className="text-sm leading-none font-extrabold" style={{ color: boardColor }}>
+                          <span className="text-sm leading-none font-extrabold text-[var(--board-color)]">
                             {board.boardNo}
                           </span>
                         </div>

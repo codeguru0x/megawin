@@ -347,8 +347,8 @@ function MainGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full"
-            style={{ background: LOTTO_MAIN_HEX }}
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)]"
+            style={{ "--swatch-bg": LOTTO_MAIN_HEX } as React.CSSProperties}
           >
             <Star className="size-2.5 text-white" />
           </span>
@@ -367,8 +367,8 @@ function MainGrid({
         </div>
       </div>
       <div
-        className="border-border/50 overflow-hidden rounded-md border"
-        style={{ display: "grid", gridTemplateColumns: `repeat(${MAIN_COLS}, 1fr)` }}
+        className="border-border/50 grid [grid-template-columns:var(--grid-cols)] overflow-hidden rounded-md border"
+        style={{ "--grid-cols": `repeat(${MAIN_COLS}, 1fr)` } as React.CSSProperties}
       >
         {Array.from({ length: MAIN_TOTAL }, (_, i) => {
           const num = String(i + 1).padStart(2, "0");
@@ -435,8 +435,8 @@ function SpecialGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full"
-            style={{ background: LOTTO_SPECIAL_HEX }}
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)]"
+            style={{ "--swatch-bg": LOTTO_SPECIAL_HEX } as React.CSSProperties}
           >
             <Star className="size-2.5 text-white" />
           </span>
@@ -455,8 +455,8 @@ function SpecialGrid({
         </div>
       </div>
       <div
-        className="border-border/50 overflow-hidden rounded-md border"
-        style={{ display: "grid", gridTemplateColumns: `repeat(${SPECIAL_COLS}, 1fr)` }}
+        className="border-border/50 grid [grid-template-columns:var(--grid-cols)] overflow-hidden rounded-md border"
+        style={{ "--grid-cols": `repeat(${SPECIAL_COLS}, 1fr)` } as React.CSSProperties}
       >
         {Array.from({ length: SPECIAL_TOTAL }, (_, i) => {
           const num = String(i + 1).padStart(2, "0");

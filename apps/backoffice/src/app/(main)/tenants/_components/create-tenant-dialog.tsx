@@ -55,7 +55,7 @@ export function CreateTenantDialog() {
 
   function handleCopy() {
     if (createdApiKey) {
-      navigator.clipboard.writeText(createdApiKey);
+      void navigator.clipboard.writeText(createdApiKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }

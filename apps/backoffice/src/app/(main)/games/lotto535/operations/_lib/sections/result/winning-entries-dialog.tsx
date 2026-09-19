@@ -216,15 +216,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* Full-screen on desktop, full-height modal */}
-      <DialogContent
-        className="flex flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none"
-        style={{
-          width: "calc(100vw - 2rem)",
-          maxWidth: "1400px",
-          height: "calc(100vh - 2rem)",
-          maxHeight: "960px",
-        }}
-      >
+      <DialogContent className="flex h-[calc(100vh-2rem)] max-h-[960px] w-[calc(100vw-2rem)] max-w-[1400px] flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none">
         {/* ── Top header bar ── */}
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">

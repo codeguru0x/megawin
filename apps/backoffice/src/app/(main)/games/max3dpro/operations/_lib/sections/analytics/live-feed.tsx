@@ -60,7 +60,7 @@ export function LiveFeed({
           )}
         </div>
       </CardHeader>
-      <div className="overflow-y-auto px-5 pb-4" style={{ maxHeight: 950 }}>
+      <div className="max-h-[950px] overflow-y-auto px-5 pb-4">
         {entries.length === 0 ? (
           <div className="text-muted-foreground/50 flex flex-col items-center justify-center py-8">
             <Radio className="mb-1.5 size-5" />
@@ -75,15 +75,15 @@ export function LiveFeed({
                 <div
                   key={e.entryId}
                   className={cn(
-                    "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
+                    "hover:bg-muted/40 rounded-lg border-l-2 border-l-[var(--feed-border)] px-2.5 py-2 transition-colors",
                     i === 0 && "bg-muted/20",
                     isLargeBet && "bg-red-500/5",
                   )}
-                  style={{
-                    borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
-                  }}
+                  style={
+                    { "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties
+                  }
                 >
-                  <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
+                  <div className="grid [grid-template-columns:1fr_auto] gap-x-3">
                     {/* Row 1: play mode label */}
                     <div className="flex min-w-0 items-center gap-1.5">
                       <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />

@@ -188,7 +188,10 @@ function TooltipItem({ color, label, value }: { color: string | undefined; label
   return (
     <>
       {color !== undefined && (
-        <span className="mt-0.5 size-2.5 shrink-0 rounded-[2px]" style={{ backgroundColor: color }} />
+        <span
+          className="mt-0.5 size-2.5 shrink-0 rounded-[2px] bg-[var(--swatch-bg)]"
+          style={{ "--swatch-bg": color } as React.CSSProperties}
+        />
       )}
       <div className="flex flex-1 items-center justify-between gap-4 leading-none">
         <span className="text-muted-foreground">{label}</span>
@@ -955,7 +958,10 @@ function ScatterChartBody({
 function ScatterLegend({ color, text }: { color: string; text: string }) {
   return (
     <div className="text-muted-foreground flex items-center justify-center gap-1.5 pt-3 text-xs">
-      <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+      <span
+        className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+        style={{ "--swatch-bg": color } as React.CSSProperties}
+      />
       {text}
     </div>
   );

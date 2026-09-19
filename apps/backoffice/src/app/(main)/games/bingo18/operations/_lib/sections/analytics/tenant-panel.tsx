@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 /**
  * Bingo 18 – Tenant Panel (cột hẹp cạnh Live feed)
  *
@@ -35,7 +37,10 @@ function TenantRichCard({ tenant, rank }: { tenant: TenantRow; rank: number }) {
         </span>
       </div>
       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-        <div className="h-full rounded-full bg-amber-500/60 transition-all" style={{ width: `${tenant.pct}%` }} />
+        <div
+          className="h-full w-[var(--bar-w)] rounded-full bg-amber-500/60 transition-all"
+          style={{ "--bar-w": `${tenant.pct}%` } as CSSProperties}
+        />
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
         <div className="bg-muted/40 rounded-md px-1 py-1.5">
@@ -82,8 +87,7 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
             {tenants.map((t) => (
               <div
                 key={t.tenantId}
-                className="border-border/40 bg-muted/10 grid items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
-                style={{ gridTemplateColumns: "1fr 4rem 5rem 3rem" }}
+                className="border-border/40 bg-muted/10 grid [grid-template-columns:1fr_4rem_5rem_3rem] items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
               >
                 <span className="truncate text-xs font-medium">{t.tenantId}</span>
                 <span className="text-muted-foreground text-right text-[11px] tabular-nums">

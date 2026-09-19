@@ -118,7 +118,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
       // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
       const activeDrawId =
         draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId || draws[0]?.drawId;
-      setSelectedDrawId(drawId === activeDrawId ? null : drawId);
+      void setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { Save, TrendingUp } from "lucide-react";
@@ -64,8 +66,8 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
               <div className="bg-muted h-3 w-full overflow-hidden rounded-full">
                 <div className="flex h-full">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-300"
-                    style={{ width: `${Math.min(commissionRate, 100)}%` }}
+                    className="h-full w-[var(--bar-w)] bg-blue-500 transition-all duration-300"
+                    style={{ "--bar-w": `${Math.min(commissionRate, 100)}%` } as CSSProperties}
                   />
                 </div>
               </div>

@@ -10,7 +10,7 @@
  *   snapshot — KHÔNG hardcode client; dưới sàn `exposureWarnMinAmount` → luôn xanh).
  * - Collapse "Top 5 outcome trả nặng".
  */
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
 import type { Bingo18ExposureResult } from "@megawin/game-bingo18/rules";
 import { formatNumber } from "@megawin/shared/utils";
@@ -134,7 +134,10 @@ export function ExposureCard({
             <span>Ngưỡng cảnh báo {warnRevenuePct}%</span>
           </div>
           <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-            <div className={cn("h-full rounded-full transition-all", gaugeColor)} style={{ width: `${gaugeWidth}%` }} />
+            <div
+              className={cn("w-[var(--bar-w)]", "h-full rounded-full transition-all", gaugeColor)}
+              style={{ "--bar-w": `${gaugeWidth}%` } as CSSProperties}
+            />
           </div>
         </div>
 

@@ -311,8 +311,8 @@ function MainGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-            style={{ background: POWER_HEX }}
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)] text-[9px] font-bold text-white"
+            style={{ "--swatch-bg": POWER_HEX } as React.CSSProperties}
           >
             P
           </span>
@@ -331,8 +331,8 @@ function MainGrid({
         </div>
       </div>
       <div
-        className="border-border/50 overflow-hidden rounded-md border"
-        style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 1fr)` }}
+        className="border-border/50 grid [grid-template-columns:var(--grid-cols)] overflow-hidden rounded-md border"
+        style={{ "--grid-cols": `repeat(${COLS}, 1fr)` } as React.CSSProperties}
       >
         {Array.from({ length: TOTAL }, (_, i) => {
           const num = String(i + 1).padStart(2, "0");

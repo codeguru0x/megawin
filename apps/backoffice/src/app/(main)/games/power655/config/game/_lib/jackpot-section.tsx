@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { HelpCircle, Info, Save } from "lucide-react";
@@ -195,17 +197,19 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                       {/* Bar trực quan — cập nhật theo input bên dưới */}
                       <div className="flex h-7 w-full overflow-hidden rounded-md text-xs font-semibold">
                         <div
-                          className="flex items-center justify-center text-white transition-[width] duration-150"
-                          style={{
-                            width: `${jp1Ratio}%`,
-                            background: "linear-gradient(90deg, #ef4444, #f97316)",
-                          }}
+                          className="flex w-[var(--bar-w)] items-center justify-center bg-[var(--bar-bg)] text-white transition-[width] duration-150"
+                          style={
+                            {
+                              "--bar-w": `${jp1Ratio}%`,
+                              "--bar-bg": "linear-gradient(90deg, #ef4444, #f97316)",
+                            } as React.CSSProperties
+                          }
                         >
                           {jp1Ratio >= 5 && `JP1 · ${jp1Ratio}%`}
                         </div>
                         <div
-                          className="flex items-center justify-center bg-blue-500 text-white transition-[width] duration-150"
-                          style={{ width: `${jp2Ratio}%` }}
+                          className="flex w-[var(--bar-w)] items-center justify-center bg-blue-500 text-white transition-[width] duration-150"
+                          style={{ "--bar-w": `${jp2Ratio}%` } as CSSProperties}
                         >
                           {jp2Ratio >= 5 && `JP2 · ${jp2Ratio}%`}
                         </div>

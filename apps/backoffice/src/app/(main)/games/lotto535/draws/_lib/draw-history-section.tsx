@@ -98,17 +98,17 @@ export function DrawHistorySection() {
   // ─── Filter handlers ────────────────────────────────────────────────────────
 
   function handleDateChange(from: string, to: string) {
-    setFromDate(from);
-    setToDate(to);
+    void setFromDate(from);
+    void setToDate(to);
     // Reset cursor map và về page 1 khi filter thay đổi
     cursorMap.current.clear();
-    setPage(null);
+    void setPage(null);
   }
 
   function handleStatusChange(value: string) {
-    setStatusParam(value === "all" ? null : value);
+    void setStatusParam(value === "all" ? null : value);
     cursorMap.current.clear();
-    setPage(null);
+    void setPage(null);
   }
 
   // ─── Pagination handlers ─────────────────────────────────────────────────────
@@ -118,14 +118,14 @@ export function DrawHistorySection() {
       return;
     }
     // cursor page+1 đã được lưu vào map bởi useEffect trên
-    setPage(page + 1);
+    void setPage(page + 1);
   }
 
   function handlePagePrev() {
     if (page <= 1) {
       return;
     }
-    setPage(page - 1);
+    void setPage(page - 1);
   }
 
   return (

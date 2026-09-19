@@ -269,8 +269,8 @@ function KenoGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white"
-            style={{ background: KENO_HEX }}
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)] text-[9px] font-bold text-white"
+            style={{ "--swatch-bg": KENO_HEX } as React.CSSProperties}
           >
             K
           </span>
@@ -291,8 +291,8 @@ function KenoGrid({
         </div>
       </div>
       <div
-        className="border-border/50 overflow-hidden rounded-md border"
-        style={{ display: "grid", gridTemplateColumns: `repeat(${COLS}, 1fr)` }}
+        className="border-border/50 grid [grid-template-columns:var(--grid-cols)] overflow-hidden rounded-md border"
+        style={{ "--grid-cols": `repeat(${COLS}, 1fr)` } as React.CSSProperties}
       >
         {KENO_ALL_NUMBERS.map((num, i) => {
           const n = byNum.get(num) ?? {

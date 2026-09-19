@@ -9,7 +9,7 @@
  * "lệch X%". Ngưỡng từ `snapshot.thresholds` — KHÔNG hardcode (fallback loading ở caller).
  * Chú thích xác suất nền đối xứng (Nhỏ 37,50% · Hòa 25,00% · Lớn 37,50%).
  */
-import { memo } from "react";
+import { memo, type CSSProperties } from "react";
 
 import { formatCurrency, formatNumber } from "@megawin/shared/utils";
 import { Scale, Sigma } from "lucide-react";
@@ -189,8 +189,12 @@ export function SideBetCard({
             return (
               <div
                 key={d.key}
-                className={cn("h-full transition-all", isTopSkewed ? "bg-amber-500" : SEGMENT_COLORS[d.key])}
-                style={{ width: `${pct}%` }}
+                className={cn(
+                  "w-[var(--bar-w)]",
+                  "h-full transition-all",
+                  isTopSkewed ? "bg-amber-500" : SEGMENT_COLORS[d.key],
+                )}
+                style={{ "--bar-w": `${pct}%` } as CSSProperties}
               />
             );
           })}

@@ -52,7 +52,7 @@ export function DashboardContent() {
     kpisQuery.isFetching || jackpotsQuery.isFetching || drawsQuery.isFetching || outstandingQuery.isFetching;
 
   function handleRefresh() {
-    qc.invalidateQueries({ queryKey: dashboardKeys.all });
+    void qc.invalidateQueries({ queryKey: dashboardKeys.all });
   }
 
   return (

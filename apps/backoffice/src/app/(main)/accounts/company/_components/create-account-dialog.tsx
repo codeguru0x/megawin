@@ -121,7 +121,7 @@ export function CreateCompanyAccountDialog() {
     mutationFn: (values: CreateAccountValues) =>
       apiClient.post<CreateCompanyAccountResponse>("/accounts/company", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: accountsKeys.company });
+      void queryClient.invalidateQueries({ queryKey: accountsKeys.company });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản thành công.", {

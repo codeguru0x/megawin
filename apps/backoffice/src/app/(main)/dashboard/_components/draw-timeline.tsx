@@ -71,7 +71,10 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
         isActive && "bg-blue-50/50 hover:bg-blue-100/60 dark:bg-blue-950/20 dark:hover:bg-blue-950/30",
       )}
     >
-      <span className="size-2 shrink-0 rounded-full" style={{ background: c.hex }} />
+      <span
+        className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+        style={{ "--swatch-bg": c.hex } as React.CSSProperties}
+      />
       <span className="text-foreground min-w-0 flex-1 truncate text-xs font-medium">
         {getGameLabel(event.gameProduct)}
       </span>
@@ -138,7 +141,7 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         </Badge>
       </div>
       {/* Column body — scrollable */}
-      <div className="flex flex-col gap-0.5 overflow-y-auto p-1" style={{ maxHeight: 260 }}>
+      <div className="flex max-h-[260px] flex-col gap-0.5 overflow-y-auto p-1">
         {count > 0 ? (
           children
         ) : (
@@ -227,7 +230,10 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
                   href={`/games/${g.gameProduct}/operations`}
                   className="border-border/50 bg-muted/30 hover:bg-muted/60 flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors"
                 >
-                  <span className="size-1.5 rounded-full" style={{ background: c.hex }} />
+                  <span
+                    className="size-1.5 rounded-full bg-[var(--swatch-bg)]"
+                    style={{ "--swatch-bg": c.hex } as React.CSSProperties}
+                  />
                   <span className="text-xs font-medium">{getGameLabel(g.gameProduct)}</span>
                   <span className="text-muted-foreground text-xs">·</span>
                   {g.activeCount > 0 && (

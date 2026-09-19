@@ -76,7 +76,7 @@
  * ngược lại) lưu bằng `useRef` vì không cần re-render khi đổi. `motion` đã là dependency có sẵn
  * (dùng ở `ai-elements/shimmer.tsx`), không thêm gói mới.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, type CSSProperties } from "react";
 
 import { formatNumber } from "@megawin/shared/utils";
 import { ChevronLeft, ChevronRight, Clock, LocateFixed, Minus, Plus, Radio } from "lucide-react";
@@ -299,10 +299,11 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
       <div className="bg-muted/40 h-6 w-full rounded">
         <div
           className={cn(
+            "w-[var(--bar-w)]",
             "h-full rounded",
             col.health === StageHealth.Stuck ? "bg-destructive" : isSelling ? "bg-emerald-500/70" : "bg-primary/60",
           )}
-          style={{ width: `${Math.max(4, barPct)}%` }}
+          style={{ "--bar-w": `${Math.max(4, barPct)}%` } as CSSProperties}
         />
       </div>
       {/* Dòng tiền + vé (câu 3 user 07/09) — `col.entries` đã có sẵn trong `DayFlowColumn`. */}

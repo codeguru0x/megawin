@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { Building2, Save, TrendingUp } from "lucide-react";
@@ -78,14 +80,14 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
               <div className="mb-4 space-y-1.5">
                 <div className="bg-muted flex h-3 overflow-hidden rounded-full">
                   <div
-                    className="bg-blue-500 transition-all duration-300"
-                    style={{ width: `${Math.min(commissionRate, 100)}%` }}
+                    className="w-[var(--bar-w)] bg-blue-500 transition-all duration-300"
+                    style={{ "--bar-w": `${Math.min(commissionRate, 100)}%` } as CSSProperties}
                   />
                   <div
                     className="bg-emerald-500 transition-all duration-300"
-                    style={{
-                      width: `${Math.min(companyRate, 100 - Math.min(commissionRate, 100))}%`,
-                    }}
+                    style={
+                      { "--bar-w": `${Math.min(companyRate, 100 - Math.min(commissionRate, 100))}%` } as CSSProperties
+                    }
                   />
                 </div>
                 <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">

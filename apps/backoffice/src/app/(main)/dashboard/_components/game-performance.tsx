@@ -173,8 +173,8 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
               {chartData.map((item) => (
                 <div key={item.gameProduct} className="flex items-center gap-1">
                   <span
-                    className="size-1.5 shrink-0 rounded-full"
-                    style={{ background: getGameHex(item.gameProduct) }}
+                    className="size-1.5 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+                    style={{ "--swatch-bg": getGameHex(item.gameProduct) } as React.CSSProperties}
                   />
                   <span className="text-muted-foreground text-xs">{item.name}</span>
                 </div>
@@ -206,8 +206,8 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                         className="flex items-center gap-2 hover:underline"
                       >
                         <span
-                          className="size-2 shrink-0 rounded-full"
-                          style={{ background: getGameHex(row.gameProduct) }}
+                          className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+                          style={{ "--swatch-bg": getGameHex(row.gameProduct) } as React.CSSProperties}
                         />
                         <span className="text-xs font-medium">{getGameLabel(row.gameProduct)}</span>
                       </Link>
@@ -276,10 +276,10 @@ function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; pay
   return (
     <div className="flex items-center gap-3">
       <div className="text-muted-foreground w-20 shrink-0 truncate text-xs">{getGameLabel(gameProduct)}</div>
-      <div className="bg-muted relative h-2.5 flex-1 overflow-hidden rounded-full">
+      <div className="bg-muted relative h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--bar-bg)]">
         <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${displayPct}%`, background: barColor }}
+          className="h-full w-[var(--bar-w)] rounded-full transition-all duration-500"
+          style={{ "--bar-w": `${displayPct}%`, "--bar-bg": barColor } as React.CSSProperties}
         />
       </div>
       {/* Chỉ text % bên phải đổi màu theo mức cảnh báo */}

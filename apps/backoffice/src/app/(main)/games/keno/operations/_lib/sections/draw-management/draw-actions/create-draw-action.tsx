@@ -375,10 +375,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               </div>
 
               {/* Cột: # | MÃ KỲ (drawId) | GIỜ QUAY | toggle. Ngày quay đã nằm trong mã kỳ. */}
-              <div
-                className="bg-muted/20 grid items-center gap-x-3 border-b px-4 py-2"
-                style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
-              >
+              <div className="bg-muted/20 grid [grid-template-columns:1.5rem_1fr_6.5rem_9rem] items-center gap-x-3 border-b px-4 py-2">
                 <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">#</span>
                 <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Mã kỳ</span>
                 <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Giờ quay</span>
@@ -411,10 +408,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   <div
                     key={row.previewDrawId}
                     className={cn(
-                      "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
+                      "grid [grid-template-columns:1.5rem_1fr_6.5rem_9rem] items-center gap-x-3 px-4 py-2.5 transition-colors",
                       row.isOpen ? "bg-orange-50/50 dark:bg-orange-950/15" : "hover:bg-muted/20",
                     )}
-                    style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
                   >
                     <span
                       className={cn(

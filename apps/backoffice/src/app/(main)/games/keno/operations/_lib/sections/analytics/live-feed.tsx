@@ -69,15 +69,13 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
   return (
     <div
       className={cn(
-        "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
+        "hover:bg-muted/40 rounded-lg border-l-2 border-l-[var(--feed-border)] px-2.5 py-2 transition-colors",
         highlightFirst && "bg-muted/20",
         isLargeBet && "bg-red-500/5",
       )}
-      style={{
-        borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
-      }}
+      style={{ "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties}
     >
-      <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
+      <div className="grid [grid-template-columns:1fr_auto] gap-x-3">
         {/* Row 1: play type */}
         <div className="flex min-w-0 items-center gap-1.5">
           <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
@@ -164,7 +162,7 @@ function FeedGroup({
         <p className="text-muted-foreground/50 px-2.5 py-1.5 text-xs">Chưa có cược nhóm này</p>
       ) : (
         // Mỗi nhóm cuộn ĐỘC LẬP → 2 cột không kéo nhau, thấy đồng thời cược mới nhất mỗi nhóm.
-        <div className="space-y-0.5 overflow-y-auto pr-0.5" style={{ maxHeight: 560 }}>
+        <div className="max-h-[560px] space-y-0.5 overflow-y-auto pr-0.5">
           {entries.map((e, i) => (
             <FeedRow key={e.entryId} entry={e} highlightFirst={isFirstGroup && i === 0} />
           ))}

@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Layers, Target, TrendingUp, Trophy } from "lucide-react";
@@ -90,15 +92,17 @@ export function JackpotHeroCard() {
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-amber-200/60 dark:bg-amber-900/50">
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${Math.min(pct, 100)}%`,
-                background: isHot
-                  ? "linear-gradient(90deg, #f59e0b, #ef4444, #dc2626)"
-                  : isWarm
-                    ? "linear-gradient(90deg, #fbbf24, #f59e0b, #d97706)"
-                    : "linear-gradient(90deg, #fde68a, #fbbf24, #f59e0b)",
-              }}
+              className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all duration-700 ease-out"
+              style={
+                {
+                  "--bar-w": `${Math.min(pct, 100)}%`,
+                  "--bar-bg": isHot
+                    ? "linear-gradient(90deg, #f59e0b, #ef4444, #dc2626)"
+                    : isWarm
+                      ? "linear-gradient(90deg, #fbbf24, #f59e0b, #d97706)"
+                      : "linear-gradient(90deg, #fde68a, #fbbf24, #f59e0b)",
+                } as CSSProperties
+              }
             />
           </div>
           <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">

@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import Link from "next/link";
 
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
@@ -36,8 +38,13 @@ function ProgressBar({
   return (
     <div className={cn("h-3 w-full overflow-hidden rounded-full", trackClassName)}>
       <div
-        className="h-full rounded-full transition-all duration-700 ease-out"
-        style={{ width: `${capped}%`, background: gradient }}
+        className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all duration-700 ease-out"
+        style={
+          {
+            "--bar-w": `${capped}%`,
+            "--bar-bg": gradient,
+          } as CSSProperties
+        }
       />
     </div>
   );

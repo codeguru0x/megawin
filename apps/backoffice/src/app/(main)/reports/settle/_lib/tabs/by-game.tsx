@@ -212,8 +212,8 @@ export function ByGameTab() {
                       <TableCell className="pl-5 font-medium">
                         <span className="inline-flex items-center gap-2">
                           <span
-                            className="size-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: getGameHex(row.gameProduct) }}
+                            className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+                            style={{ "--swatch-bg": getGameHex(row.gameProduct) } as React.CSSProperties}
                           />
                           {getGameLabel(row.gameProduct as GameProduct)}
                         </span>

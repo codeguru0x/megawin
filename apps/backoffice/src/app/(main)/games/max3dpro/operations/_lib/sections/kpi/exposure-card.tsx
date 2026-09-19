@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 /**
  * Max 3D Pro – Exposure Card (tab Giám sát)
  *
@@ -111,8 +113,8 @@ export function ExposureCard({
           </div>
           <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
             <div
-              className={cn("h-full rounded-full transition-all", gaugeColor)}
-              style={{ width: `${Math.min(100, ratio * 100)}%` }}
+              className={cn("w-[var(--bar-w)]", "h-full rounded-full transition-all", gaugeColor)}
+              style={{ "--bar-w": `${Math.min(100, ratio * 100)}%` } as CSSProperties}
             />
           </div>
         </div>

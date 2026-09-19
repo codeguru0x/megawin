@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 /**
  * Power 6/55 Operations — Analytics Panels
  *
@@ -550,8 +552,8 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
       </div>
       <div className="bg-muted mt-2.5 h-1.5 overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full bg-blue-500/70 transition-all"
-          style={{ width: `${(tenant.revenue / maxRevenue) * 100}%` }}
+          className="h-full w-[var(--bar-w)] rounded-full bg-blue-500/70 transition-all"
+          style={{ "--bar-w": `${(tenant.revenue / maxRevenue) * 100}%` } as CSSProperties}
         />
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -609,10 +611,7 @@ function TenantMetric({
 function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue: number }) {
   return (
     <div className="overflow-hidden rounded-xl border">
-      <div
-        className="bg-muted/40 text-muted-foreground grid gap-x-2 border-b px-3 py-2 text-xs font-medium tracking-wider uppercase"
-        style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
-      >
+      <div className="bg-muted/40 text-muted-foreground grid [grid-template-columns:1fr_5rem_5rem_6rem] gap-x-2 border-b px-3 py-2 text-xs font-medium tracking-wider uppercase">
         <span>Đại lý</span>
         <span className="text-right">Entries</span>
         <span className="text-right">Người chơi</span>
@@ -622,12 +621,11 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
         {tenants.map((t, i) => (
           <div
             key={t.tenantId}
-            className="hover:bg-muted/20 relative grid items-center gap-x-2 px-3 py-2.5 transition-colors"
-            style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
+            className="hover:bg-muted/20 relative grid [grid-template-columns:1fr_5rem_5rem_6rem] items-center gap-x-2 px-3 py-2.5 transition-colors"
           >
             <div
-              className="absolute inset-y-0 left-0 rounded-r-sm bg-blue-500/5 dark:bg-blue-400/5"
-              style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
+              className="absolute inset-y-0 left-0 w-[var(--bar-w)] rounded-r-sm bg-blue-500/5 dark:bg-blue-400/5"
+              style={{ "--bar-w": `${(t.revenue / maxRevenue) * 100}%` } as CSSProperties}
             />
             <div className="relative flex min-w-0 items-center gap-2">
               <span className="text-muted-foreground/40 w-4 shrink-0 text-xs font-bold tabular-nums">{i + 1}</span>

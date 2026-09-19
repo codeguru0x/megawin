@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 /**
  * Keno – Exposure Card (tab Giám sát)
  *
@@ -40,7 +42,10 @@ function CapRow({ row }: { row: ExposureCapRow }) {
     <div className="flex items-center gap-2">
       <span className="text-muted-foreground w-14 shrink-0 text-xs">{KENO_PLAY_TYPE_LABELS[row.playType]}</span>
       <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
-        <div className={cn("h-full rounded-full transition-all", c.bar)} style={{ width: `${pct}%` }} />
+        <div
+          className={cn("w-[var(--bar-w)]", "h-full rounded-full transition-all", c.bar)}
+          style={{ "--bar-w": `${pct}%` } as CSSProperties}
+        />
       </div>
       <span className={cn("w-16 shrink-0 text-right text-xs font-semibold tabular-nums", c.text)}>
         {formatNumber(row.sets)}/{formatNumber(row.max)}

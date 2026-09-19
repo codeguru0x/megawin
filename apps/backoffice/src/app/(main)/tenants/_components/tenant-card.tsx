@@ -62,7 +62,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
   const maskedKey = tenant.apiKey.slice(0, 8) + "••••••••••••••••";
 
   function handleCopy(key: string) {
-    navigator.clipboard.writeText(key);
+    void navigator.clipboard.writeText(key);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }

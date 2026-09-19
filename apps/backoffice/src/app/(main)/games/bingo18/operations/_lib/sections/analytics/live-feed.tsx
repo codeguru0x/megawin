@@ -71,13 +71,13 @@ function FeedRow({
   return (
     <div
       className={cn(
-        "hover:bg-muted/40 rounded-lg border-l-2 px-2.5 py-2 transition-colors",
+        "hover:bg-muted/40 rounded-lg border-l-2 border-l-[var(--feed-border)] px-2.5 py-2 transition-colors",
         isFirst && "bg-muted/20",
         isLargeBet && "bg-red-500/5",
       )}
-      style={{ borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") }}
+      style={{ "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties}
     >
-      <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
+      <div className="grid [grid-template-columns:1fr_auto] gap-x-3">
         <div className="flex min-w-0 items-center gap-1.5">
           <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
           <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>{label}</span>

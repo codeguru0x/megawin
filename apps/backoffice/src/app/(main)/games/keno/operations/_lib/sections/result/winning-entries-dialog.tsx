@@ -9,7 +9,7 @@
  * - Side bet (bigSmall/evenOdd): nhãn cược + outcome diễn giải mức giải.
  * - Board bị payout cap (bậc 8/9/10) được đánh dấu [cap].
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type CSSProperties } from "react";
 
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
@@ -66,15 +66,10 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningEntryBoardDetai
   const numbers = board.numbers ?? [];
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
-      style={{
-        borderLeftColor: boardColor,
-        gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
-      }}
+      className="grid [grid-template-columns:1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-[var(--board-color)] py-1.5 pl-2"
+      style={{ "--board-color": boardColor } as CSSProperties}
     >
-      <span className="text-xs leading-none font-extrabold" style={{ color: boardColor }}>
-        {board.boardNo}
-      </span>
+      <span className="text-xs leading-none font-extrabold text-[var(--board-color)]">{board.boardNo}</span>
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="text-foreground text-xs font-semibold whitespace-nowrap">
@@ -102,15 +97,10 @@ function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
   const outcomeLabel = board.outcome ? KENO_OUTCOME_LABELS[board.outcome] : undefined;
   return (
     <div
-      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
-      style={{
-        borderLeftColor: boardColor,
-        gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
-      }}
+      className="grid [grid-template-columns:1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-[var(--board-color)] py-1.5 pl-2"
+      style={{ "--board-color": boardColor } as CSSProperties}
     >
-      <span className="text-xs leading-none font-extrabold" style={{ color: boardColor }}>
-        {board.boardNo}
-      </span>
+      <span className="text-xs leading-none font-extrabold text-[var(--board-color)]">{board.boardNo}</span>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-400">
           {typeLabel} · {betLabel}
@@ -280,15 +270,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="flex flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none"
-        style={{
-          width: "calc(100vw - 2rem)",
-          maxWidth: "1400px",
-          height: "calc(100vh - 2rem)",
-          maxHeight: "960px",
-        }}
-      >
+      <DialogContent className="flex h-[calc(100vh-2rem)] max-h-[960px] w-[calc(100vw-2rem)] max-w-[1400px] flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none">
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-500/15 ring-1 ring-orange-500/30">

@@ -58,10 +58,7 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; wi
   const isAnyTriple = board.playType === "tripleMatch" && board.tripleKind === "any";
 
   return (
-    <div
-      className="grid items-center gap-x-2 rounded-md border-l-[3px] border-l-amber-400 py-1.5 pl-2"
-      style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}
-    >
+    <div className="grid [grid-template-columns:minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-amber-400 py-1.5 pl-2">
       <div className="flex min-w-0 items-center gap-2">
         <span className="text-foreground text-xs font-semibold whitespace-nowrap">{label}</span>
         {/* Khách chọn gì */}
@@ -99,10 +96,7 @@ function SideBetDetail({ board, drawSum }: { board: WinningBoardDetail; drawSum:
     ? `Tổng ${board.sum ?? "?"}`
     : (BINGO18_BIG_SMALL_BET_LABELS[board.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ?? board.bet ?? "—");
   return (
-    <div
-      className="grid items-center gap-x-2 rounded-md border-l-[3px] border-l-cyan-400 py-1.5 pl-2"
-      style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}
-    >
+    <div className="grid [grid-template-columns:minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-cyan-400 py-1.5 pl-2">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-400">
           {typeLabel} · {pick}
@@ -238,15 +232,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="flex flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none"
-        style={{
-          width: "calc(100vw - 2rem)",
-          maxWidth: "1400px",
-          height: "calc(100vh - 2rem)",
-          maxHeight: "960px",
-        }}
-      >
+      <DialogContent className="flex h-[calc(100vh-2rem)] max-h-[960px] w-[calc(100vw-2rem)] max-w-[1400px] flex-col gap-0 overflow-hidden rounded-2xl border p-0 shadow-2xl sm:max-w-none">
         <div className="bg-background flex shrink-0 items-center justify-between gap-4 border-b px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 ring-1 ring-amber-500/30">

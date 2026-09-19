@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Layers, MoveUpRight, Sigma, Target, Trophy } from "lucide-react";
@@ -108,15 +110,17 @@ export function JackpotHeroCard() {
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-teal-200/60 dark:bg-teal-900/50">
             <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${Math.min(pct, 100)}%`,
-                background: isHot
-                  ? "linear-gradient(90deg, #0d9488, #0891b2, #06b6d4)"
-                  : isWarm
-                    ? "linear-gradient(90deg, #14b8a6, #0d9488, #059669)"
-                    : "linear-gradient(90deg, #5eead4, #2dd4bf, #14b8a6)",
-              }}
+              className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all duration-700 ease-out"
+              style={
+                {
+                  "--bar-w": `${Math.min(pct, 100)}%`,
+                  "--bar-bg": isHot
+                    ? "linear-gradient(90deg, #0d9488, #0891b2, #06b6d4)"
+                    : isWarm
+                      ? "linear-gradient(90deg, #14b8a6, #0d9488, #059669)"
+                      : "linear-gradient(90deg, #5eead4, #2dd4bf, #14b8a6)",
+                } as CSSProperties
+              }
             />
           </div>
           <div className="flex items-center justify-between text-[11px] text-teal-700/60 dark:text-teal-400/50">
