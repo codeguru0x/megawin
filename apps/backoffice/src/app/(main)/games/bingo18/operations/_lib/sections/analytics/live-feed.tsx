@@ -79,7 +79,7 @@ function FeedRow({
   return (
     <div
       className={cn(
-        "hover:bg-muted/40 rounded-lg border-l-2 border-l-[var(--feed-border)] px-2.5 py-2 transition-colors",
+        "hover:bg-muted/40 rounded-lg border-l-2 border-l-(--feed-border) px-2.5 py-2 transition-colors",
         isFirst && "bg-muted/20",
         isLargeBet && "bg-red-500/5",
       )}

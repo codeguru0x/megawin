@@ -181,7 +181,7 @@ export function AiPanel() {
               // khác hẳn trang `/ai` — cùng một khung chat mà hai bộ mặt. Sự phân định với vùng
               // dashboard do `border-l` + shadow lo; khác biệt bề mặt dồn vào BUBBLE ô nhập (xem
               // `composer.tsx`).
-              "sticky top-0 h-svh shrink-0 self-start overflow-hidden transition-[width] duration-200 ease-linear",
+              "sticky top-0 h-svh shrink-0 self-start overflow-hidden transition-all duration-200 ease-linear",
               open && "border-l",
             ),
       )}

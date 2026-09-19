@@ -92,7 +92,7 @@ export function LiveFeed({
                 <div
                   key={e.entryId}
                   className={cn(
-                    "hover:bg-muted/40 rounded-lg border-l-2 border-l-[var(--feed-border)] px-2.5 py-2 transition-colors",
+                    "hover:bg-muted/40 rounded-lg border-l-2 border-l-(--feed-border) px-2.5 py-2 transition-colors",
                     i === 0 && "bg-muted/20",
                     isLargeBet && "bg-red-500/5",
                   )}

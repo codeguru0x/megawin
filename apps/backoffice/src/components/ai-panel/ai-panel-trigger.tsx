@@ -51,8 +51,8 @@ export function AiPanelTrigger() {
             // ring-1 mảnh viền trong (không ring-offset) — tạo độ sắc cho mép pill mà không
             // trông như field đang được select trong form.
             "ring-1 ring-indigo-500/40",
-            "transition-[filter,box-shadow] outline-none hover:brightness-110",
-            "focus-visible:ring-[3px] focus-visible:ring-indigo-400/60",
+            "transition outline-none hover:brightness-110",
+            "focus-visible:ring-3 focus-visible:ring-indigo-400/60",
             // Trạng thái mở: glow toả ra thay vì viền đôi — báo "đang bật" mà vẫn giữ được
             // cảm giác nút hành động, không thành khối bị highlight.
             open && "shadow-lg ring-2 shadow-indigo-500/40 ring-indigo-400/70 brightness-110",

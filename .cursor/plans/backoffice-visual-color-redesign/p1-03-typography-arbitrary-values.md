@@ -11,6 +11,23 @@ grid, "Hướng B" (chuẩn hoá lên 12px) sẽ **phá vỡ** rule đã publish
 File này giờ **chỉ còn phạm vi non-typography arbitrary** (border/ring/shadow/width...) — phần
 còn lại của 648 sau khi trừ ~578 đã xử ở P0-06.
 
+## Status (2026-09-19) — DONE trên branch `visual/p1-03-non-typography-arbitrary`
+
+`shadcn(no-arbitrary-values)` backoffice: **0** (không suppress). Chiến lược giống P0-06 —
+named token giữ đúng pixel + TW4 paren syntax `bg-(--var)` cho CSS var động.
+
+| Nhóm | Cách xử lý |
+|---|---|
+| `text-[12px]` / `rounded-[2px]` / `rounded-[4px]` | `text-xs` / `rounded-xs` / `rounded-2xs` |
+| `border-l-[3px]` / `ring-[3px]` / `border-[1.5px]` | `--border-width-3` / `--ring-width-3` / `--border-width-1_5` |
+| `text-[9px]` | `--text-4xs` (9px) |
+| `bg-[var(--swatch-bg)]` … | `bg-(--swatch-bg)` (TW4) |
+| shadow float-up, shimmer, delay, text-shadow, text-code | named tokens / `@utility .bg-size-shimmer` |
+| `transition-[width]` / `[color,box-shadow]`… | `transition-all` / `transition` (default covers color+shadow+filter) |
+
+Còn lại ngoài scope lint: `components/ui/**` (exempt) + layout arbitrary (`allow: ["layout"]`,
+vd `[grid-template-columns:…]`).
+
 ## 1. Phạm vi còn lại — chỉ non-typography
 
 Sau P0-06, warning `no-arbitrary-values` chỉ còn phần **không phải** `text-[11px]`/`text-[10px]`

@@ -139,7 +139,7 @@ export function LayoutControls() {
                   {THEME_PRESET_OPTIONS.map((preset) => (
                     <SelectItem key={preset.value} className="text-xs" value={preset.value}>
                       <span
-                        className="size-2.5 rounded-full bg-[var(--preset-swatch)]"
+                        className="size-2.5 rounded-full bg-(--preset-swatch)"
                         style={
                           {
                             "--preset-swatch":

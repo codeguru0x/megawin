@@ -58,7 +58,7 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; wi
   const isAnyTriple = board.playType === "tripleMatch" && board.tripleKind === "any";
 
   return (
-    <div className="grid [grid-template-columns:minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-amber-400 py-1.5 pl-2">
+    <div className="grid [grid-template-columns:minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-3 border-l-amber-400 py-1.5 pl-2">
       <div className="flex min-w-0 items-center gap-2">
         <span className="text-foreground text-xs font-semibold whitespace-nowrap">{label}</span>
         {/* Khách chọn gì */}
@@ -96,7 +96,7 @@ function SideBetDetail({ board, drawSum }: { board: WinningBoardDetail; drawSum:
     ? `Tổng ${board.sum ?? "?"}`
     : (BINGO18_BIG_SMALL_BET_LABELS[board.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ?? board.bet ?? "—");
   return (
-    <div className="grid [grid-template-columns:minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-cyan-400 py-1.5 pl-2">
+    <div className="grid [grid-template-columns:minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-3 border-l-cyan-400 py-1.5 pl-2">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-400">
           {typeLabel} · {pick}

@@ -85,11 +85,11 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
       <div className="absolute inset-0 bg-linear-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/40 dark:via-yellow-950/30 dark:to-orange-950/40" />
 
       {/* Shimmer sweep */}
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite] bg-linear-to-r from-transparent via-white/40 to-transparent dark:via-white/10" />
+      <div className="animate-shimmer absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/40 to-transparent dark:via-white/10" />
 
       {/* Corner sparkles */}
       <Sparkles className="absolute top-3 right-3 size-4 animate-pulse text-amber-400/60 dark:text-amber-500/60" />
-      <Sparkles className="absolute bottom-3 left-3 size-3 animate-pulse text-amber-300/50 [animation-delay:0.8s] dark:text-amber-600/50" />
+      <Sparkles className="absolute bottom-3 left-3 size-3 animate-pulse text-amber-300/50 delay-800 dark:text-amber-600/50" />
 
       <div className="relative flex items-center gap-4 px-5 py-4">
         {/* Icon */}

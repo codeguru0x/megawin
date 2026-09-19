@@ -1065,7 +1065,7 @@ export const PromptInputSubmit = ({
     // Vòng spinner mảnh bọc ngoài icon vuông vừa báo "đang xử lý" vừa báo "bấm để dừng".
     Icon = (
       <span className="relative flex size-4 items-center justify-center">
-        <span className="absolute inset-0 animate-spin rounded-full border-[1.5px] border-current border-t-transparent opacity-40" />
+        <span className="border-1.5 absolute inset-0 animate-spin rounded-full border-current border-t-transparent opacity-40" />
         <SquareIcon className="size-2 fill-current" />
       </span>
     );

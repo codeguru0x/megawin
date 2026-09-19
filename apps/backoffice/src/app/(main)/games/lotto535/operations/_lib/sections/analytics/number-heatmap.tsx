@@ -357,7 +357,7 @@ function MainGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)]"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-(--swatch-bg)"
             style={{ "--swatch-bg": lottoMainSwatchBg() } as React.CSSProperties}
           >
             <Star className="size-2.5 text-white" />
@@ -445,7 +445,7 @@ function SpecialGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)]"
+            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-(--swatch-bg)"
             style={{ "--swatch-bg": lottoSpecialSwatchBg() } as React.CSSProperties}
           >
             <Star className="size-2.5 text-white" />

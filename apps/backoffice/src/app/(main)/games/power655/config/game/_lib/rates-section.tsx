@@ -80,7 +80,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
               <div className="mb-4 space-y-1.5">
                 <div className="bg-muted flex h-3 overflow-hidden rounded-full">
                   <div
-                    className="w-[var(--bar-w)] bg-blue-500 transition-all duration-300"
+                    className="w-(--bar-w) bg-blue-500 transition-all duration-300"
                     style={{ "--bar-w": `${Math.min(commissionRate, 100)}%` } as CSSProperties}
                   />
                   <div

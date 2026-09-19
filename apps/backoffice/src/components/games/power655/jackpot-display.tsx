@@ -18,7 +18,7 @@ export function DualJackpotDisplay({ jp1Amount, jp2Amount, size = "md", classNam
         <span
           className={cn(
             "text-3xs rounded-md bg-red-100 px-1.5 py-0.5 font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300",
-            size === "sm" && "text-[9px]",
+            size === "sm" && "text-4xs",
           )}
         >
           Jackpot 1
@@ -38,7 +38,7 @@ export function DualJackpotDisplay({ jp1Amount, jp2Amount, size = "md", classNam
         <span
           className={cn(
             "text-3xs rounded-md bg-blue-100 px-1.5 py-0.5 font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
-            size === "sm" && "text-[9px]",
+            size === "sm" && "text-4xs",
           )}
         >
           Jackpot 2

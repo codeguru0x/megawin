@@ -72,7 +72,7 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       )}
     >
       <span
-        className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+        className="size-2 shrink-0 rounded-full bg-(--swatch-bg)"
         style={{ "--swatch-bg": c.hex } as React.CSSProperties}
       />
       <span className="text-foreground min-w-0 flex-1 truncate text-xs font-medium">
@@ -231,7 +231,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
                   className="border-border/50 bg-muted/30 hover:bg-muted/60 flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors"
                 >
                   <span
-                    className="size-1.5 rounded-full bg-[var(--swatch-bg)]"
+                    className="size-1.5 rounded-full bg-(--swatch-bg)"
                     style={{ "--swatch-bg": c.hex } as React.CSSProperties}
                   />
                   <span className="text-xs font-medium">{getGameLabel(g.gameProduct)}</span>

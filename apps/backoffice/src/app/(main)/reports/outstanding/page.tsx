@@ -238,7 +238,7 @@ function SystemOutstandingContent() {
                         <TableCell className="pl-5 font-medium">
                           <span className="inline-flex items-center gap-2">
                             <span
-                              className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+                              className="size-2 shrink-0 rounded-full bg-(--swatch-bg)"
                               style={{ "--swatch-bg": gameHex } as React.CSSProperties}
                             />
                             {gameName}

@@ -54,7 +54,7 @@ const SumBarColumn = memo(function SumBarColumn({
             </span>
             <div
               className={cn(
-                "h-[var(--bar-h)] w-full rounded-t-md transition-all duration-500",
+                "h-(--bar-h) w-full rounded-t-md transition-all duration-500",
                 overThreshold
                   ? "bg-amber-500"
                   : isHighMultiplier
@@ -190,7 +190,7 @@ export function SideBetCard({
               <div
                 key={d.key}
                 className={cn(
-                  "w-[var(--bar-w)]",
+                  "w-(--bar-w)",
                   "h-full transition-all",
                   isTopSkewed ? "bg-amber-500" : SEGMENT_COLORS[d.key],
                 )}

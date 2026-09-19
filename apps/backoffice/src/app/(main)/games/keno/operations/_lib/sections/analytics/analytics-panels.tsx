@@ -204,11 +204,11 @@ function SideBetPairCard({
 
       <div className="bg-muted flex h-2 overflow-hidden rounded-full">
         <div
-          className={cn("w-[var(--bar-w)]", "transition-all", leftColor)}
+          className={cn("w-(--bar-w)", "transition-all", leftColor)}
           style={{ "--bar-w": `${leftPct}%` } as CSSProperties}
         />
         <div
-          className={cn("w-[var(--bar-w)]", "transition-all", rightColor)}
+          className={cn("w-(--bar-w)", "transition-all", rightColor)}
           style={{ "--bar-w": `${rightPct}%` } as CSSProperties}
         />
       </div>
@@ -602,7 +602,7 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
       {/* Bar doanh thu (tỷ trọng so với đại lý lớn nhất) */}
       <div className="bg-muted mt-2.5 h-1.5 overflow-hidden rounded-full">
         <div
-          className="h-full w-[var(--bar-w)] rounded-full bg-blue-500/70 transition-all"
+          className="h-full w-(--bar-w) rounded-full bg-blue-500/70 transition-all"
           style={{ "--bar-w": `${(tenant.revenue / maxRevenue) * 100}%` } as CSSProperties}
         />
       </div>
@@ -676,7 +676,7 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
             className="hover:bg-muted/20 relative grid [grid-template-columns:1fr_5rem_5rem_6rem] items-center gap-x-2 px-3 py-2.5 transition-colors"
           >
             <div
-              className="absolute inset-y-0 left-0 w-[var(--bar-w)] rounded-r-sm bg-blue-500/5 dark:bg-blue-400/5"
+              className="absolute inset-y-0 left-0 w-(--bar-w) rounded-r-sm bg-blue-500/5 dark:bg-blue-400/5"
               style={{ "--bar-w": `${(t.revenue / maxRevenue) * 100}%` } as CSSProperties}
             />
             <div className="relative flex min-w-0 items-center gap-2">

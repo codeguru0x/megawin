@@ -16,7 +16,7 @@
  * 1. **Dải A full-width trên cùng** — gộp chặng + câu "vì sao" (`text-xs`, khớp bảng 5A) + tuổi
  *    trong chặng + NÚT hành động vào 1 dải, nút canh PHẢI. Trước đó nút nằm ở footer dưới cả 3
  *    khối, cách câu chẩn đoán ~120px, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm.
- *    `border-l-[3px]` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
+ *    `border-l-3` theo `health` giữ liên tục thị giác với dòng bảng (dòng `stuck` nền đỏ nhạt,
  *    panel cũ chuyển sang xám nên tín hiệu "đang đỏ" biến mất đúng lúc đọc kỹ nhất).
  * 2. **2 cột bất đối xứng 58/42**, mỗi cột bọc khung `border rounded-lg bg-card` riêng (fix vòng
  *    4, xem thêm bên dưới) — tách biệt khỏi nền `bg-muted/30` của panel.
@@ -387,7 +387,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
             theo trục dọc, buộc mắt đi qua vùng toàn số `0` mới tới thứ cần bấm. Typography cả dải
             giữ `text-xs` để khớp dòng bảng 5A (không bump `text-sm` — panel sẽ "to" hơn dòng ngoài).
 
-            `border-l-[3px]` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
+            `border-l-3` + nền theo `health` giữ LIÊN TỤC THỊ GIÁC với dòng bảng (§1.7): dòng
             `stuck` có nền đỏ nhạt, panel cũ đổi sang xám `bg-muted/30` nên tín hiệu "kỳ này đang
             đỏ" BIẾN MẤT đúng lúc staff đọc kỹ nhất.
 
@@ -396,7 +396,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
           */}
           <div
             className={cn(
-              "mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-l-[3px] p-3",
+              "mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-l-3 p-3",
               row.health === StageHealth.Stuck
                 ? "border-l-destructive bg-destructive/5"
                 : row.health === StageHealth.Warn

@@ -213,7 +213,7 @@ function QueueRowImpl(props: QueueRowProps) {
             onMouseDown={(e) => onCheckboxMouseDown(e.shiftKey)}
             onChange={() => onToggleSelect(drawId, rowIndex, isSelected)}
             aria-label={`Chọn kỳ ${drawNo}`}
-            className="border-input accent-primary size-4 shrink-0 cursor-pointer rounded-[4px]"
+            className="border-input accent-primary rounded-2xs size-4 shrink-0 cursor-pointer"
           />
         ) : (
           // Kỳ không có action bulk khả dụng — icon Lock xám thay ô trống hoàn toàn, tránh

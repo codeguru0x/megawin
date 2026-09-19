@@ -319,7 +319,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
         // Entry trúng Jackpot: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Icon nhận biết JP nằm trong chip Hạng trúng.
-        hasJp && "border-l-[3px] border-l-purple-400",
+        hasJp && "border-l-3 border-l-purple-400",
       )}
     >
       <TableCell className="py-3 pl-6 text-center">

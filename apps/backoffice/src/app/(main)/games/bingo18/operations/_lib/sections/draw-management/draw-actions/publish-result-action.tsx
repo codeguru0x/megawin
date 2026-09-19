@@ -473,7 +473,7 @@ export function PublishResultAction({
                     return (
                       <div key={i} className="flex flex-col items-center gap-1">
                         <div className="relative w-full">
-                          <span className="bg-muted text-muted-foreground ring-background absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full text-[9px] font-semibold ring-2">
+                          <span className="bg-muted text-muted-foreground ring-background text-4xs absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full font-semibold ring-2">
                             {i + 1}
                           </span>
                           <Input

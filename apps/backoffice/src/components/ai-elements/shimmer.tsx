@@ -43,7 +43,7 @@ const ShimmerComponent = ({ children, as: Component = "p", className, duration =
         } as CSSProperties
       }
       className={cn(
-        "relative inline-block bg-size-[250%_100%,auto] bg-clip-text text-transparent",
+        "bg-size-shimmer relative inline-block bg-clip-text text-transparent",
         "[background-repeat:no-repeat,padding-box] [--bg:linear-gradient(90deg,#0000_calc(50%-var(--spread)),var(--color-background),#0000_calc(50%+var(--spread)))]",
         "[background-image:var(--bg),linear-gradient(var(--color-muted-foreground),var(--color-muted-foreground))]",
         className,

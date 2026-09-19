@@ -557,7 +557,7 @@ export function PublishResultAction({
                               Tách hẳn HÌNH DẠNG (tròn, xám, đè góc) khỏi chip số Vietlott (bầu
                               dục, vàng, nằm dưới) để 2 loại số không còn nhìn lẫn như thiết kế
                               cũ (cả 2 đều là dòng chữ nhỏ, chỉ khác vị trí trên/dưới). */}
-                          <span className="bg-muted text-muted-foreground ring-background absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full text-[9px] font-semibold ring-2">
+                          <span className="bg-muted text-muted-foreground ring-background text-4xs absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full font-semibold ring-2">
                             {i + 1}
                           </span>
                           <Input

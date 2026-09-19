@@ -51,7 +51,7 @@ export function NumberHeatmapHoverLayer<T extends NumberHeatmapHoverItem>({
     // canh giữa ổn định trong suốt vòng đời panel.
     <div
       key={item.number}
-      className="pointer-events-none fixed top-[var(--hover-t)] left-[var(--hover-l)] z-50 [transform:var(--hover-tx)]"
+      className="pointer-events-none fixed top-(--hover-t) left-(--hover-l) z-50 [transform:var(--hover-tx)]"
       style={
         {
           "--hover-l": `${left}px`,

@@ -23,6 +23,30 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* radius-xs / radius-2xs: token nhỏ cố định (2px / 4px) — dùng cho checkbox,
+     swatch legend, accent nhỏ. KHÔNG derive từ --radius vì scale sm/md/lg đã
+     gắn với radius theme (10px default) → sm = 6px, không khớp 2px/4px. */
+  --radius-xs: 0.125rem; /* 2px */
+  --radius-2xs: 0.25rem; /* 4px */
+
+  /* Border/ring width 3px — accent left-border trên entry board / hub panel /
+     winning-entry row. Không có sẵn trong scale mặc định (0/2/4/8). Giữ ĐÚNG
+     3px có chủ đích (xem comment hub-expand-panel §1.7), không ép về 2/4. */
+  --border-width-3: 3px;
+  --border-width-1_5: 1.5px; /* spinner / thin dashed chart stroke */
+  --ring-width-3: 3px;
+
+  /* Shadow / animation named tokens — P1-03 non-typography arbitrary */
+  --shadow-float-up: 0 -8px 28px rgb(0 0 0 / 0.12); /* hub bulk action bar */
+  --shadow-float-up-dark: 0 -8px 28px rgb(0 0 0 / 0.5);
+  --text-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3); /* chart label contrast */
+  --animate-shimmer: shimmer 2.5s ease-in-out infinite;
+  /* bg-size-shimmer: comma trong value → TW @theme không sinh utility ổn định;
+     khai @utility riêng ở @layer utilities bên dưới. */
+  --delay-800: 800ms; /* sparkles stagger after shimmer */
+  --radius-inherit: inherit; /* sticky navbar inherits parent radius */
+  --text-code: 0.85em; /* inline <code> relative to surrounding prose */
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -91,10 +115,11 @@
   --color-status-published: var(--status-published);
   --color-status-published-foreground: var(--status-published-foreground);
 
-  /* ── Typography tier T4/T5 — CHỈ dùng cho heatmap grid (xem operations-page-ui.mdc) ──── */
-  /* Named token thay arbitrary value — giữ ĐÚNG pixel hiện tại (11px/10px), không đổi thang. */
+  /* ── Typography tier T4/T5/T6 — heatmap + micro labels (xem operations-page-ui.mdc) ─ */
+  /* Named token thay arbitrary value — giữ ĐÚNG pixel hiện tại, không đổi thang. */
   --text-2xs: 0.6875rem; /* 11px — T4, heatmap badge + cell data */
   --text-3xs: 0.625rem; /* 10px — T5, heatmap cell sub-text, stepper time */
+  --text-4xs: 0.5625rem; /* 9px — T6, micro label (publish-result digit, JP chip) */
 
   /* ── Game Brand Colors ───────────────────────────────────────────────────── */
   /* Primary brand token per game — dùng cho charts, badges, borders, icons.   */
@@ -322,6 +347,14 @@ These serve as the fallback; there is no separate default.css file. */
 }
 
 @layer utilities {
+  /* P1-03: TextShimmer dual-layer size — comma khiến @theme --background-size-*
+     không map đúng sang class, nên đặt utility tường minh. */
+  .bg-size-shimmer {
+    background-size:
+      250% 100%,
+      auto;
+  }
+
   [data-theme-preset]:not([data-theme-preset="default"]) .shadow-2xs {
     box-shadow: var(--shadow-2xs);
   }

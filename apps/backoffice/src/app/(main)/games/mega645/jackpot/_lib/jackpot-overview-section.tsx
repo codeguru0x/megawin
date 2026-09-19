@@ -119,7 +119,7 @@ export function JackpotHeroCard() {
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-teal-200/60 dark:bg-teal-900/50">
             <div
-              className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all duration-700 ease-out"
+              className="h-full w-(--bar-w) rounded-full bg-(--bar-bg) transition-all duration-700 ease-out"
               style={
                 {
                   "--bar-w": `${Math.min(pct, 100)}%`,

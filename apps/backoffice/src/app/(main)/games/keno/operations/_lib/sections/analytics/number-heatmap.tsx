@@ -269,7 +269,7 @@ function KenoGrid({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span
-            className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)] text-[9px] font-bold text-white"
+            className="text-4xs inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-(--swatch-bg) font-bold text-white"
             style={{ "--swatch-bg": KENO_HEX } as React.CSSProperties}
           >
             K
@@ -428,7 +428,7 @@ function ComboLookupDialog({
             value={raw}
             onChange={(e) => handleCsvChange(e.target.value)}
             placeholder="Nhập 8/9/10 số, vd 01,05,12,... (hoặc chọn trên bảng)"
-            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-[3px]"
+            className="focus-visible:ring-ring/50 h-9 w-full rounded-md border bg-transparent px-3 text-sm tabular-nums shadow-xs outline-none focus-visible:ring-3"
           />
 
           {/* Chips số đã chọn + counter */}

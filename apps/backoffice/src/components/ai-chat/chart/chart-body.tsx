@@ -190,7 +190,7 @@ function TooltipItem({ color, label, value }: { color: string | undefined; label
     <>
       {color !== undefined && (
         <span
-          className="mt-0.5 size-2.5 shrink-0 rounded-[2px] bg-[var(--swatch-bg)]"
+          className="mt-0.5 size-2.5 shrink-0 rounded-xs bg-(--swatch-bg)"
           style={{ "--swatch-bg": color } as CSSProperties}
         />
       )}
@@ -959,7 +959,7 @@ function ScatterLegend({ color, text }: { color: string; text: string }) {
   return (
     <div className="text-muted-foreground flex items-center justify-center gap-1.5 pt-3 text-xs">
       <span
-        className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+        className="size-2 shrink-0 rounded-full bg-(--swatch-bg)"
         style={{ "--swatch-bg": color } as CSSProperties}
       />
       {text}
@@ -1082,7 +1082,7 @@ export default function ChartBody({ model, reportLabels }: ChartBodyProps) {
     <ChartContainer
       className={cn(
         "w-full",
-        isHBar && "h-[var(--chart-h)]",
+        isHBar && "h-(--chart-h)",
         !isHBar &&
           (model.kind === ChartKind.Line ||
             model.kind === ChartKind.Area ||

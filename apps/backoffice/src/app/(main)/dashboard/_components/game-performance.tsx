@@ -80,7 +80,7 @@ function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }:
       fill="white"
       textAnchor="middle"
       dominantBaseline="central"
-      className="text-3xs font-bold [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]"
+      className="text-3xs font-bold text-shadow-sm"
     >
       {(percent * 100).toFixed(0)}%
     </text>
@@ -172,7 +172,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
               {chartData.map((item) => (
                 <div key={item.gameProduct} className="flex items-center gap-1">
                   <span
-                    className="size-1.5 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+                    className="size-1.5 shrink-0 rounded-full bg-(--swatch-bg)"
                     style={{ "--swatch-bg": getGameHex(item.gameProduct) } as React.CSSProperties}
                   />
                   <span className="text-muted-foreground text-xs">{item.name}</span>
@@ -205,7 +205,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                         className="flex items-center gap-2 hover:underline"
                       >
                         <span
-                          className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+                          className="size-2 shrink-0 rounded-full bg-(--swatch-bg)"
                           style={{ "--swatch-bg": getGameHex(row.gameProduct) } as React.CSSProperties}
                         />
                         <span className="text-xs font-medium">{getGameLabel(row.gameProduct)}</span>
@@ -275,9 +275,9 @@ function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; pay
   return (
     <div className="flex items-center gap-3">
       <div className="text-muted-foreground w-20 shrink-0 truncate text-xs">{getGameLabel(gameProduct)}</div>
-      <div className="bg-muted relative h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--bar-bg)]">
+      <div className="bg-muted relative h-2.5 flex-1 overflow-hidden rounded-full bg-(--bar-bg)">
         <div
-          className="h-full w-[var(--bar-w)] rounded-full transition-all duration-500"
+          className="h-full w-(--bar-w) rounded-full transition-all duration-500"
           style={{ "--bar-w": `${displayPct}%`, "--bar-bg": barColor } as React.CSSProperties}
         />
       </div>

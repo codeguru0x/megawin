@@ -129,7 +129,7 @@ function GameCard({
     >
       {/* Color indicator bar bên trái */}
       <div
-        className="w-1 shrink-0 rounded-full bg-[var(--swatch-bg)]"
+        className="w-1 shrink-0 rounded-full bg-(--swatch-bg)"
         style={{ "--swatch-bg": hex } as React.CSSProperties}
       />
 
@@ -138,7 +138,7 @@ function GameCard({
         <div className="flex items-center justify-between gap-1">
           <span className="text-foreground truncate text-xs font-semibold">{getGameLabel(gameProduct)}</span>
           <span
-            className="text-3xs shrink-0 rounded bg-[var(--swatch-bg)] px-1.5 py-0.5 font-bold text-white tabular-nums"
+            className="text-3xs shrink-0 rounded bg-(--swatch-bg) px-1.5 py-0.5 font-bold text-white tabular-nums"
             style={{ "--swatch-bg": hex } as React.CSSProperties}
           >
             {pct.toFixed(1)}%
@@ -166,7 +166,7 @@ function GameCard({
         {/* Progress bar — visual tỷ lệ % stake */}
         <div className="bg-muted/60 mt-0.5 h-1 w-full overflow-hidden rounded-full">
           <div
-            className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all"
+            className="h-full w-(--bar-w) rounded-full bg-(--bar-bg) transition-all"
             style={{ "--bar-w": `${Math.min(pct, 100)}%`, "--bar-bg": hex } as CSSProperties}
           />
         </div>
@@ -271,7 +271,7 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
                 key={g.gameProduct}
                 prefetch={false}
                 href={`/games/${g.gameProduct}/outstanding`}
-                className="relative h-full w-[var(--seg-w)] bg-[var(--seg-bg)] transition-opacity hover:opacity-80"
+                className="relative h-full w-(--seg-w) bg-(--seg-bg) transition-opacity hover:opacity-80"
                 style={
                   {
                     "--seg-w": `${Math.max(pct, 2)}%`,
@@ -291,7 +291,7 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
               return (
                 <div
                   key={g.gameProduct}
-                  className="w-[var(--bar-w)]"
+                  className="w-(--bar-w)"
                   style={{ "--bar-w": `${Math.max(pct, 0)}%` } as CSSProperties}
                 />
               );
@@ -299,10 +299,10 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
             return (
               <div
                 key={g.gameProduct}
-                className="flex h-full w-[var(--bar-w)] items-center justify-center"
+                className="flex h-full w-(--bar-w) items-center justify-center"
                 style={{ "--bar-w": `${pct}%` } as CSSProperties}
               >
-                <span className="text-[9px] font-bold text-white drop-shadow-sm">{pct.toFixed(0)}%</span>
+                <span className="text-4xs font-bold text-white drop-shadow-sm">{pct.toFixed(0)}%</span>
               </div>
             );
           })}

@@ -74,10 +74,10 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
   return (
     <div className="relative overflow-hidden rounded-xl border-2 border-teal-400/60 dark:border-teal-500/50">
       <div className="absolute inset-0 bg-linear-to-br from-teal-50 via-emerald-50 to-cyan-50 dark:from-teal-950/40 dark:via-emerald-950/30 dark:to-cyan-950/40" />
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite] bg-linear-to-r from-transparent via-white/40 to-transparent dark:via-white/10" />
+      <div className="animate-shimmer absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/40 to-transparent dark:via-white/10" />
 
       <Sparkles className="absolute top-3 right-3 size-4 animate-pulse text-teal-400/60 dark:text-teal-500/60" />
-      <Sparkles className="absolute bottom-3 left-3 size-3 animate-pulse text-emerald-300/50 [animation-delay:0.8s] dark:text-emerald-600/50" />
+      <Sparkles className="absolute bottom-3 left-3 size-3 animate-pulse text-emerald-300/50 delay-800 dark:text-emerald-600/50" />
 
       <div className="relative flex items-center gap-4 px-5 py-4">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-teal-400/20 ring-2 ring-teal-400/40 dark:bg-teal-500/20 dark:ring-teal-500/30">

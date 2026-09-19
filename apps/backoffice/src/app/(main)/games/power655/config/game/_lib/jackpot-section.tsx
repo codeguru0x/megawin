@@ -201,7 +201,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                       {/* Bar trực quan — cập nhật theo input bên dưới */}
                       <div className="flex h-7 w-full overflow-hidden rounded-md text-xs font-semibold">
                         <div
-                          className="flex w-[var(--bar-w)] items-center justify-center bg-[var(--bar-bg)] text-white transition-[width] duration-150"
+                          className="flex w-(--bar-w) items-center justify-center bg-(--bar-bg) text-white transition-all duration-150"
                           style={
                             {
                               "--bar-w": `${jp1Ratio}%`,
@@ -212,7 +212,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           {jp1Ratio >= 5 && `JP1 · ${jp1Ratio}%`}
                         </div>
                         <div
-                          className="flex w-[var(--bar-w)] items-center justify-center bg-blue-500 text-white transition-[width] duration-150"
+                          className="flex w-(--bar-w) items-center justify-center bg-blue-500 text-white transition-all duration-150"
                           style={{ "--bar-w": `${jp2Ratio}%` } as CSSProperties}
                         >
                           {jp2Ratio >= 5 && `JP2 · ${jp2Ratio}%`}

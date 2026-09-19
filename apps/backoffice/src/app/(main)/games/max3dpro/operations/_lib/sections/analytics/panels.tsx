@@ -57,7 +57,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
                 </p>
                 <div className="bg-muted mt-1.5 h-1 w-full overflow-hidden rounded-full">
                   <div
-                    className={cn("w-[var(--bar-w)]", "h-full rounded-full", color.bar)}
+                    className={cn("w-(--bar-w)", "h-full rounded-full", color.bar)}
                     style={{ "--bar-w": `${r.pct}%` } as CSSProperties}
                   />
                 </div>

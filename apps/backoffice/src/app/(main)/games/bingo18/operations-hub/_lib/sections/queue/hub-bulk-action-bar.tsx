@@ -204,7 +204,7 @@ export function HubBulkActionBar() {
       <div
         role="region"
         aria-label="Thao tác hàng loạt"
-        className="border-primary/30 bg-card dark:border-primary/40 sticky bottom-0 z-20 flex items-center justify-between gap-4 border-t-2 px-4 py-3 shadow-[0_-8px_28px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_28px_rgba(0,0,0,0.5)]"
+        className="border-primary/30 bg-card dark:border-primary/40 shadow-float-up dark:shadow-float-up-dark sticky bottom-0 z-20 flex items-center justify-between gap-4 border-t-2 px-4 py-3"
       >
         {/* Trái: clear + action — sát cột checkbox để chọn xong bấm ngay, không kéo chuột ngang bảng. */}
         <div className="flex min-w-0 flex-wrap items-center gap-2">

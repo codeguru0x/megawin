@@ -43,7 +43,7 @@ function CapRow({ row }: { row: ExposureCapRow }) {
       <span className="text-muted-foreground w-14 shrink-0 text-xs">{KENO_PLAY_TYPE_LABELS[row.playType]}</span>
       <div className="bg-muted h-1.5 flex-1 overflow-hidden rounded-full">
         <div
-          className={cn("w-[var(--bar-w)]", "h-full rounded-full transition-all", c.bar)}
+          className={cn("w-(--bar-w)", "h-full rounded-full transition-all", c.bar)}
           style={{ "--bar-w": `${pct}%` } as CSSProperties}
         />
       </div>

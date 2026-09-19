@@ -124,7 +124,7 @@ export function ExposureCard({
           </div>
           <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
             <div
-              className={cn("w-[var(--bar-w)]", "h-full rounded-full transition-all", gaugeColor)}
+              className={cn("w-(--bar-w)", "h-full rounded-full transition-all", gaugeColor)}
               style={{ "--bar-w": `${Math.min(100, ratio * 100)}%` } as CSSProperties}
             />
           </div>

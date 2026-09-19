@@ -317,11 +317,11 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   return (
                     <div
                       key={i}
-                      className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-[3px] border-l-[var(--board-color)] py-2 pl-3"
+                      className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span className="text-sm leading-none font-extrabold text-[var(--board-color)]">
+                        <span className="text-sm leading-none font-extrabold text-(--board-color)">
                           {board.boardNo}
                         </span>
                       </div>
@@ -364,11 +364,11 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     return (
                       <div
                         key={i}
-                        className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-[3px] border-l-[var(--board-color)] py-2 pl-3"
+                        className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span className="text-sm leading-none font-extrabold text-[var(--board-color)]">
+                          <span className="text-sm leading-none font-extrabold text-(--board-color)">
                             {board.boardNo}
                           </span>
                         </div>

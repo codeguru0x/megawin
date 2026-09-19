@@ -166,7 +166,7 @@ export function BulkConfirmDialog({
               </div>
               <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
                 <div
-                  className="bg-primary h-full w-[var(--bar-w)] rounded-full transition-all"
+                  className="bg-primary h-full w-(--bar-w) rounded-full transition-all"
                   style={{ "--bar-w": `${(batchState.doneChunks / batchState.totalChunks) * 100}%` } as CSSProperties}
                 />
               </div>

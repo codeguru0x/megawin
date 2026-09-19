@@ -179,7 +179,7 @@ export function MarkdownRenderer({ content, basePath }: { content: string; baseP
     code: ({ className, children }) => {
       const isBlock = className?.includes("language-");
       if (!isBlock) {
-        return <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-[0.85em]">{children}</code>;
+        return <code className="bg-muted text-code rounded px-1.5 py-0.5 font-mono">{children}</code>;
       }
       return <code className={className}>{children}</code>;
     },

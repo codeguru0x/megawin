@@ -304,7 +304,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   ))}
                 </div>
                 {drawSum > 0 && (
-                  <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-3 py-1 text-[12px] font-semibold tabular-nums">
+                  <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold tabular-nums">
                     Tổng
                     <span className="text-foreground font-bold">{drawSum}</span>
                   </span>
@@ -399,11 +399,11 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   return (
                     <div
                       key={i}
-                      className="grid [grid-template-columns:2rem_8rem_1fr] items-start gap-x-3 rounded-md border-l-[3px] border-l-[var(--board-color)] py-2 pl-3"
+                      className="grid [grid-template-columns:2rem_8rem_1fr] items-start gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span className="text-sm leading-none font-extrabold text-[var(--board-color)]">
+                        <span className="text-sm leading-none font-extrabold text-(--board-color)">
                           {snapshot.boardNo}
                         </span>
                       </div>
@@ -482,11 +482,11 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     return (
                       <div
                         key={i}
-                        className="grid [grid-template-columns:2rem_8rem_1fr] items-start gap-x-3 rounded-md border-l-[3px] border-l-[var(--board-color)] py-2 pl-3"
+                        className="grid [grid-template-columns:2rem_8rem_1fr] items-start gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span className="text-sm leading-none font-extrabold text-[var(--board-color)]">
+                          <span className="text-sm leading-none font-extrabold text-(--board-color)">
                             {snapshot.boardNo}
                           </span>
                         </div>

@@ -38,7 +38,7 @@ function ProgressBar({
   return (
     <div className={cn("h-3 w-full overflow-hidden rounded-full", trackClassName)}>
       <div
-        className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all duration-700 ease-out"
+        className="h-full w-(--bar-w) rounded-full bg-(--bar-bg) transition-all duration-700 ease-out"
         style={
           {
             "--bar-w": `${capped}%`,

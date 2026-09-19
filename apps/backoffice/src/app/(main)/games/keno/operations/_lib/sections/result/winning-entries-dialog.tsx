@@ -66,10 +66,10 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningEntryBoardDetai
   const numbers = board.numbers ?? [];
   return (
     <div
-      className="grid [grid-template-columns:1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-[var(--board-color)] py-1.5 pl-2"
+      className="grid [grid-template-columns:1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-3 border-l-(--board-color) py-1.5 pl-2"
       style={{ "--board-color": boardColor } as CSSProperties}
     >
-      <span className="text-xs leading-none font-extrabold text-[var(--board-color)]">{board.boardNo}</span>
+      <span className="text-xs leading-none font-extrabold text-(--board-color)">{board.boardNo}</span>
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex items-center gap-2">
           <span className="text-foreground text-xs font-semibold whitespace-nowrap">
@@ -97,10 +97,10 @@ function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
   const outcomeLabel = board.outcome ? KENO_OUTCOME_LABELS[board.outcome] : undefined;
   return (
     <div
-      className="grid [grid-template-columns:1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-[3px] border-l-[var(--board-color)] py-1.5 pl-2"
+      className="grid [grid-template-columns:1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 rounded-md border-l-3 border-l-(--board-color) py-1.5 pl-2"
       style={{ "--board-color": boardColor } as CSSProperties}
     >
-      <span className="text-xs leading-none font-extrabold text-[var(--board-color)]">{board.boardNo}</span>
+      <span className="text-xs leading-none font-extrabold text-(--board-color)">{board.boardNo}</span>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <span className="rounded border border-cyan-200 bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950/20 dark:text-cyan-400">
           {typeLabel} · {betLabel}
@@ -205,7 +205,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
         "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
         // Entry bị payout cap: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Nhãn [cap] đã có trong board detail.
-        hasCapped && "border-l-[3px] border-l-amber-400",
+        hasCapped && "border-l-3 border-l-amber-400",
       )}
     >
       <TableCell className="py-3 pl-6 text-center">

@@ -299,7 +299,7 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
       <div className="bg-muted/40 h-6 w-full rounded">
         <div
           className={cn(
-            "w-[var(--bar-w)]",
+            "w-(--bar-w)",
             "h-full rounded",
             col.health === StageHealth.Stuck ? "bg-destructive" : isSelling ? "bg-emerald-500/70" : "bg-primary/60",
           )}

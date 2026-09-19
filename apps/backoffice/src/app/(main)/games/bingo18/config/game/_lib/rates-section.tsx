@@ -65,7 +65,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
               <div className="bg-muted h-3 w-full overflow-hidden rounded-full">
                 <div className="flex h-full">
                   <div
-                    className="h-full w-[var(--bar-w)] bg-blue-500 transition-all duration-300"
+                    className="h-full w-(--bar-w) bg-blue-500 transition-all duration-300"
                     style={{ "--bar-w": `${Math.min(commissionRate, 100)}%` } as CSSProperties}
                   />
                 </div>

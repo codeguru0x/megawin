@@ -38,7 +38,7 @@ function TenantRichCard({ tenant, rank }: { tenant: TenantRow; rank: number }) {
       </div>
       <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
         <div
-          className="h-full w-[var(--bar-w)] rounded-full bg-amber-500/60 transition-all"
+          className="h-full w-(--bar-w) rounded-full bg-amber-500/60 transition-all"
           style={{ "--bar-w": `${tenant.pct}%` } as CSSProperties}
         />
       </div>
