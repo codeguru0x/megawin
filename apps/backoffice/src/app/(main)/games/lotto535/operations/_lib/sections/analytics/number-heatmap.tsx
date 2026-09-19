@@ -3,10 +3,9 @@
 /**
  * Lotto 5/35 — Number Heatmap (+ combo lookup)
  *
- * Main grid 7 × 5 = 35 số chính (01-35), theme amber. Special grid 4 × 3 = 12 số
- * đặc biệt (01-12), theme orange. 5-level heat intensity (cold → hot, amber cho
- * hot), theo DÒNG TIỀN mỗi số. Cả 2 bảng LUÔN cho click chọn số, phục vụ tra cứu
- * combo (khác Power 6/55: 2 chiều số riêng — dialog chọn main + special).
+ * Main grid 7 × 5 = 35 số chính (01-35), special grid 4 × 3 = 12 số ĐB (01-12).
+ * Heat intensity amber chung cho CẢ main lẫn special (P1-05) — brand header vẫn
+ * amber/orange swatch. Theo DÒNG TIỀN mỗi số. Cả 2 bảng LUÔN cho click chọn số.
  *
  * PlayType TỰ SUY theo số lượng main+special đã chọn (4+1=mainCover4, 5+1=standard,
  * 6-15+1=mainCoverN, 5+2..12=specialCover); dialog validate qua `validateSelection`
@@ -68,25 +67,20 @@ function lottoSpecialSwatchBg(): string {
 }
 const LOTTO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
-// ─── Heatmap Intensity Scale ─────────────────────────────────────────────────
+// ─── Heatmap Intensity Scale (amber chung — P1-05; main = special) ───────────
 
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
-const HEAT_BADGE_STYLES_MAIN: Record<HeatLevel, string> = {
-  cold: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200",
-  low: "bg-amber-300 text-amber-900 dark:bg-amber-800 dark:text-amber-100",
-  mid: "bg-amber-400 text-white dark:bg-amber-700",
-  warm: "bg-amber-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+const HEAT_BADGE_STYLES_AMBER: Record<HeatLevel, string> = {
+  cold: "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+  low: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200",
+  mid: "bg-amber-400 text-amber-950 dark:bg-amber-600 dark:text-white",
+  warm: "bg-amber-600 text-white dark:bg-amber-500",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-500",
 };
 
-const HEAT_BADGE_STYLES_SPECIAL: Record<HeatLevel, string> = {
-  cold: "bg-orange-200/80 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200",
-  low: "bg-orange-300 text-orange-900 dark:bg-orange-800 dark:text-orange-100",
-  mid: "bg-orange-400 text-white dark:bg-orange-700",
-  warm: "bg-orange-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
-};
+const HEAT_BADGE_STYLES_MAIN = HEAT_BADGE_STYLES_AMBER;
+const HEAT_BADGE_STYLES_SPECIAL = HEAT_BADGE_STYLES_AMBER;
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",

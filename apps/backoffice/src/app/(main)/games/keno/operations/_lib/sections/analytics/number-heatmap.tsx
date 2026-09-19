@@ -6,8 +6,8 @@
  * Grid 10 × 8 = 80 số (01-80).
  * Keno: chỉ hiển thị tần suất xuất hiện trong board cược (pick1-10).
  * Side bets (bigSmall, evenOdd) không có numbers cụ thể → không xuất hiện trong grid.
- * Theme: sky/cyan — brand color GAME_COLORS[GameProduct.Keno].hex (#0284c7).
- * 5-level heat intensity scale (cold → hot, amber cross-game cho hot).
+ * Brand icon/header: sky — GAME_COLORS[GameProduct.Keno].hex (#0284c7).
+ * Heat intensity: amber scale chung cross-game (P1-05) — cold→hot.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -58,25 +58,24 @@ import { useComboLookup } from "../../use-operations";
 const KENO_HEX = GAME_COLORS[GameProduct.Keno].hex; // "#0284c7" sky-700
 const KENO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
-// ─── Heatmap Intensity Scale ─────────────────────────────────────────────────
-// 5 cấp độ intensity: cold→low→mid→warm→hot (amber cross-game cho hot).
-// Staff quét mắt nhận ra ngay số "nóng" vs "lạnh" mà không cần hover.
+// ─── Heatmap Intensity Scale (amber chung — P1-05) ───────────────────────────
+// 5 cấp: cold→low→mid→warm→hot. Hot giữ ring-2 để nổi so với warm cùng hue.
 
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-sky-200/80 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200",
-  low: "bg-sky-300 text-sky-900 dark:bg-sky-800 dark:text-sky-100",
-  mid: "bg-sky-400 text-white dark:bg-sky-700",
-  warm: "bg-sky-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+  cold: "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+  low: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200",
+  mid: "bg-amber-400 text-amber-950 dark:bg-amber-600 dark:text-white",
+  warm: "bg-amber-600 text-white dark:bg-amber-500",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-500",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-sky-50/40 dark:bg-sky-950/10",
-  warm: "bg-sky-50/70 dark:bg-sky-950/20",
+  mid: "bg-amber-50/40 dark:bg-amber-950/10",
+  warm: "bg-amber-50/70 dark:bg-amber-950/20",
   hot: "bg-amber-50/60 dark:bg-amber-950/15",
 };
 

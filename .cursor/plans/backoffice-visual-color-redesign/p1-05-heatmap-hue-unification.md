@@ -1,5 +1,11 @@
 # P1-05 — Hợp nhất hue heatmap (Mega645/Power655/Lotto535/Keno) về 1 hue trung tính
 
+## Status (2026-09-19) — DONE trên `visual/p1-05-heatmap`
+
+Đã đổi `HEAT_BADGE_STYLES` (+ `HEAT_CELL_BG`) sang amber scale chung ở 4 file heatmap;
+Lotto535 main+special cùng amber; cập nhật `operations-page-ui.mdc` §4. Brand selected/soft
+vẫn giữ per-game hue (ngoài intensity scale).
+
 **Đã chốt với user (19/09/2026):** đổi heatmap intensity scale từ per-game hue (teal cho Mega645,
 red/orange cho Power655, amber cho Lotto535, sky/orange cho Keno) sang **1 hue chung duy nhất**
 cho cả 4 game có heatmap — chấp nhận mất đặc trưng nhận diện game tại chính khu vực heatmap, đổi

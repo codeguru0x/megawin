@@ -3,13 +3,13 @@
 /**
  * Power 6/55 — Number Heatmap (+ combo lookup)
  *
- * Grid 11 × 5 = 55 số chính (01-55). 5-level heat intensity (cold → hot, amber cho hot),
+ * Grid 11 × 5 = 55 số chính (01-55). Heat intensity amber chung cross-game (P1-05),
  * theo DÒNG TIỀN mỗi số. Bảng LUÔN cho click chọn số (không giới hạn), phục vụ tra cứu
  * combo. PlayType TỰ SUY theo số lượng đã chọn (5=bao5, 6=standard, 7-15=baoN, 18=bao18);
  * dialog validate đúng số lượng trước khi tra (analysis §3.10(7)).
  *
  * Export dùng chung: `NumberBadge` (filled/soft/outlined + selected), `NumbersWithTooltip`
- * (collapse > 7 số) — analytics-panels + live-feed import.
+ * (collapse > 7 số) — analytics-panels + live-feed import. Brand header vẫn red.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -62,23 +62,23 @@ import { useComboLookup } from "../../use-operations";
 const POWER_HEX = GAME_COLORS[GameProduct.Power655].hex; // "#dc2626" red-600
 const POWER_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
-// ─── Heatmap Intensity Scale ─────────────────────────────────────────────────
+// ─── Heatmap Intensity Scale (amber chung — P1-05) ───────────────────────────
 
 type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
 
 const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-red-200/80 text-red-900 dark:bg-red-900/40 dark:text-red-200",
-  low: "bg-red-300 text-red-900 dark:bg-red-800 dark:text-red-100",
-  mid: "bg-red-400 text-white dark:bg-red-700",
-  warm: "bg-red-600 text-white",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+  cold: "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+  low: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200",
+  mid: "bg-amber-400 text-amber-950 dark:bg-amber-600 dark:text-white",
+  warm: "bg-amber-600 text-white dark:bg-amber-500",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-500",
 };
 
 const HEAT_CELL_BG: Record<HeatLevel, string> = {
   cold: "",
   low: "",
-  mid: "bg-red-50/40 dark:bg-red-950/10",
-  warm: "bg-red-50/70 dark:bg-red-950/20",
+  mid: "bg-amber-50/40 dark:bg-amber-950/10",
+  warm: "bg-amber-50/70 dark:bg-amber-950/20",
   hot: "bg-amber-50/60 dark:bg-amber-950/15",
 };
 

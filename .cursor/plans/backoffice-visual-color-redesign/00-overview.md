@@ -29,7 +29,7 @@
 | 2 | Hợp nhất màu status badge — đổi literal → token semantic (Draw/Ticket/Entry × 7 game) | [`p1-02-status-badge-unification.md`](p1-02-status-badge-unification.md) | 0 warning mới (P0-05 đã dedup ở track an toàn) — phase này chỉ đổi giá trị trong 1 file `status-badge-tone.ts` | Trung bình — đổi từ literal sang token opacity, màu gần giống nhưng không byte-identical |
 | 3 | Non-typography arbitrary (border/ring/shadow/width...) | [`p1-03-typography-arbitrary-values.md`](p1-03-typography-arbitrary-values.md) | phần còn lại của `no-arbitrary-values` sau P0-06 (~70, phần lớn 578 typography đã xử ở track an toàn) | Thấp — số lượng nhỏ, review từng case |
 | 4 | `no-restyle` — spacing/typography override thật (2039) | [`p1-04-restyle-spacing-typography.md`](p1-04-restyle-spacing-typography.md) | `no-restyle` (2039) | Cao nhất — nhiều override CÓ CHỦ ĐÍCH, cần quyết định giữ (justify + suppress) hay bỏ (đổi UI) |
-| 5 | Hợp nhất hue heatmap (Mega645/Power655/Lotto535/Keno) về 1 hue amber chung | [`p1-05-heatmap-hue-unification.md`](p1-05-heatmap-hue-unification.md) | không phải oxlint warning — thuộc `operations-page-ui.mdc`, cần sửa CẢ rule lẫn code | Trung bình — mất per-game hue tại heatmap, đổi rule đã publish |
+| 5 | Hợp nhất hue heatmap (Mega645/Power655/Lotto535/Keno) về 1 hue amber chung | [`p1-05-heatmap-hue-unification.md`](p1-05-heatmap-hue-unification.md) | không phải oxlint warning — thuộc `operations-page-ui.mdc`, cần sửa CẢ rule lẫn code | Trung bình — mất per-game hue tại heatmap, đổi rule đã publish — **DONE 19/09** |
 
 ## 3. Định nghĩa "Definition of Done" cho toàn track (đã chốt với user 19/09/2026)
 

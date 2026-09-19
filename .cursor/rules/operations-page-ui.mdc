@@ -214,9 +214,11 @@ function getHeatLevel(count: number, maxCount: number): HeatLevel {
 }
 ```
 
-- Badge: gradient từ `{game}-300` (cold) → `{game}-700` (warm) → `amber-500` (hot).
-- Hot level: **amber cross-game** + `ring-2 ring-amber-300/50`.
-- Cell background: subtle tinting cho mid/warm/hot.
+- Badge: gradient amber DUY NHẤT cho mọi game — `amber-100/80` (cold) → `amber-600` (warm) →
+  `amber-500` (hot) + `ring-2 ring-amber-300/50`. KHÔNG còn per-game hue trên heatmap
+  (hợp nhất P1-05, xem `backoffice-visual-color-redesign/p1-05-heatmap-hue-unification.md`).
+  Brand màu game vẫn giữ ở icon/header ngoài heatmap.
+- Cell background: subtle tinting amber cho mid/warm/hot.
 
 ### Shared design tokens
 
@@ -520,7 +522,7 @@ games/{game}/operations/
 ### ✅ Phải làm — Game có Heatmap (mega645, power655, lotto535, keno)
 
 - [ ] NumberBadge — 3 variants, dùng shared tokens
-- [ ] Heatmap 5-level intensity (cold→hot), amber cho hot
+- [ ] Heatmap 5-level intensity (cold→hot), **amber scale chung** mọi game (P1-05)
 - [ ] `NumbersWithTooltip` — collapse > 7, reuse cho TopCombos + LiveFeed
 - [ ] TopCombos — `variant="soft"`, medal emoji
 - [ ] Shared tokens từ `game-number-tokens.ts`
