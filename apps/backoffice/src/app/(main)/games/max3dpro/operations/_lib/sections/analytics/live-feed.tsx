@@ -36,6 +36,13 @@ const PLAY_MODE_COLORS: Record<string, { dot: string; text: string; fill: string
  * worker sinh, tránh mâu thuẫn feed vs alert.
  */
 
+function resolveFeedBorder(isLargeBet: boolean, fill: string | undefined): string {
+  if (isLargeBet) {
+    return "#ef4444";
+  }
+  return fill ?? "transparent";
+}
+
 export function LiveFeed({
   entries,
   isSettled = false,
@@ -79,9 +86,7 @@ export function LiveFeed({
                     i === 0 && "bg-muted/20",
                     isLargeBet && "bg-red-500/5",
                   )}
-                  style={
-                    { "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties
-                  }
+                  style={{ "--feed-border": resolveFeedBorder(isLargeBet, color?.fill) } as React.CSSProperties}
                 >
                   <div className="grid [grid-template-columns:1fr_auto] gap-x-3">
                     {/* Row 1: play mode label */}

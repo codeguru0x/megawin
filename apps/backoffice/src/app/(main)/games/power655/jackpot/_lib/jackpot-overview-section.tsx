@@ -14,6 +14,20 @@ import { cn } from "@/lib/utils";
 import { useJackpotCurrent } from "./use-jackpot";
 
 /** Token brand Power655 — gradient hero khớp byte-for-byte với literal cũ. */
+
+function overflowBarBg(isOverflow: boolean, isHot: boolean, isWarm: boolean): string {
+  if (isOverflow) {
+    return "linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)";
+  }
+  if (isHot) {
+    return "linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)";
+  }
+  if (isWarm) {
+    return "linear-gradient(90deg, #f87171, #ef4444, #dc2626)";
+  }
+  return "linear-gradient(90deg, #fca5a5, #f87171, #ef4444)";
+}
+
 const c = GAME_COLORS[GameProduct.Power655];
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
@@ -136,13 +150,7 @@ export function JackpotHeroCard() {
               style={
                 {
                   "--bar-w": `${Math.min(jp1Pct, 100)}%`,
-                  "--bar-bg": isOverflow
-                    ? "linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)"
-                    : isHot
-                      ? "linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)"
-                      : isWarm
-                        ? "linear-gradient(90deg, #f87171, #ef4444, #dc2626)"
-                        : "linear-gradient(90deg, #fca5a5, #f87171, #ef4444)",
+                  "--bar-bg": overflowBarBg(isOverflow, isHot, isWarm),
                 } as CSSProperties
               }
             />

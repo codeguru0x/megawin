@@ -207,7 +207,11 @@ export function DataTable<Row>({ columns, rows }: { columns: readonly ColumnSpec
                     className={cn(
                       "py-1 text-xs tabular-nums",
                       isAlignedRight(column) && "text-right",
-                      signedClassName(value, column.signed),
+                      column.signed === true && typeof value === "number" && value < 0 && "text-destructive",
+                      column.signed === true &&
+                        typeof value === "number" &&
+                        value >= 0 &&
+                        "text-emerald-600 dark:text-emerald-400",
                     )}
                     key={column.key}
                   >

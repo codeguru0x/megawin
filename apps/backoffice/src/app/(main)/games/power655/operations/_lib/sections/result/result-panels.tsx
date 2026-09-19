@@ -289,7 +289,22 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     ) : (
                       <span className="size-3.5 shrink-0" />
                     )}
-                    <Badge variant="outline" className={cn("h-5 border px-2 py-0 text-xs", cfg?.badge)}>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "h-5 border px-2 py-0 text-xs",
+                        t.tier === PrizeTier.Jackpot1 &&
+                          "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
+                        t.tier === PrizeTier.Jackpot2 &&
+                          "border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300",
+                        t.tier === PrizeTier.Tier1 &&
+                          "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+                        t.tier === PrizeTier.Tier2 &&
+                          "border-cyan-300 bg-cyan-50 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
+                        t.tier === PrizeTier.Tier3 &&
+                          "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+                      )}
+                    >
                       {t.label}
                     </Badge>
                   </div>

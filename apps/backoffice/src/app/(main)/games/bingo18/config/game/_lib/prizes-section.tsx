@@ -330,7 +330,16 @@ function PrizeGroup({
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className={cn("text-xs text-white", group.badgeColor)}>
+            <Badge
+              className={cn(
+                "text-xs text-white",
+                group.id === "singleNum" && "bg-blue-500",
+                group.id === "doubleMatch" && "bg-purple-500",
+                group.id === "tripleMatch" && "bg-red-500",
+                group.id === "sumTotal" && "bg-emerald-500",
+                group.id === "bigSmallDraw" && "bg-amber-500",
+              )}
+            >
               {group.icon}
               <span className="ml-1">{group.label}</span>
             </Badge>

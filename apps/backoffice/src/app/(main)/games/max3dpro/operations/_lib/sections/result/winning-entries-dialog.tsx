@@ -64,26 +64,34 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
 
 // ─── Tier badge colors ────────────────────────────────────────────────────────
 
-const TIER_BADGE_COLORS: Partial<Record<PrizeTier, string>> = {
-  [PrizeTier.Special]:
-    "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
-  [PrizeTier.SpecialSub]:
-    "border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-700",
-  [PrizeTier.First]:
-    "border-yellow-300 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300 dark:border-yellow-700",
-  [PrizeTier.Second]:
-    "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
-  [PrizeTier.Third]:
-    "border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700",
-};
-
 function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
   const label = MAX3DPRO_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier;
-  const badgeClass = TIER_BADGE_COLORS[tier.tier as PrizeTier] ?? "border-border bg-muted/40 text-muted-foreground";
 
   return (
     <div className="flex items-center gap-1.5">
-      <Badge variant="outline" className={cn("text-3xs h-4 py-0", badgeClass)}>
+      <Badge
+        variant="outline"
+        className={cn(
+          "text-3xs h-4 py-0",
+          tier.tier === PrizeTier.Special &&
+            "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+          tier.tier === PrizeTier.SpecialSub &&
+            "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
+          tier.tier === PrizeTier.First &&
+            "border-yellow-300 bg-yellow-50 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300",
+          tier.tier === PrizeTier.Second &&
+            "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+          tier.tier === PrizeTier.Third &&
+            "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+          !(
+            tier.tier === PrizeTier.Special ||
+            tier.tier === PrizeTier.SpecialSub ||
+            tier.tier === PrizeTier.First ||
+            tier.tier === PrizeTier.Second ||
+            tier.tier === PrizeTier.Third
+          ) && "border-border bg-muted/40 text-muted-foreground",
+        )}
+      >
         {label}
       </Badge>
       <span className="text-xs text-amber-700 tabular-nums dark:text-amber-400">+{formatNumber(tier.amount)}</span>

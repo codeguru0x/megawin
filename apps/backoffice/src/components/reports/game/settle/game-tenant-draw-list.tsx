@@ -4,7 +4,7 @@ import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber } from "@megawin/shared/utils";
 import { CalendarRange } from "lucide-react";
 
-import { getNetProfitColor, PayoutRatioCell } from "@/components/reports/payout-ratio";
+import { PayoutRatioCell } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -137,7 +137,11 @@ export function GameTenantDrawList({
                       {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell
-                      className={cn("text-right text-sm font-medium tabular-nums", getNetProfitColor(rowNetProfit))}
+                      className={cn(
+                        "text-right text-sm font-medium tabular-nums",
+                        rowNetProfit < 0 && "text-loss",
+                        rowNetProfit > 0 && "text-profit",
+                      )}
                     >
                       {formatNumber(rowNetProfit)}
                     </TableCell>
@@ -179,7 +183,11 @@ export function GameTenantDrawList({
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
                 <TableCell
-                  className={cn("text-right text-sm font-semibold tabular-nums", getNetProfitColor(totals.netProfit))}
+                  className={cn(
+                    "text-right text-sm font-semibold tabular-nums",
+                    totals.netProfit < 0 && "text-loss",
+                    totals.netProfit > 0 && "text-profit",
+                  )}
                 >
                   {formatNumber(totals.netProfit)}
                 </TableCell>

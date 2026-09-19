@@ -6,12 +6,31 @@
  */
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHART_HEIGHT_CLASS, type ChartKind } from "@/lib/chart";
+import { ChartKind, type ChartKind as ChartKindType } from "@/lib/chart";
+import { cn } from "@/lib/utils";
 
 export interface ChartSkeletonProps {
-  kind: ChartKind;
+  kind: ChartKindType;
 }
 
 export function ChartSkeleton({ kind }: ChartSkeletonProps) {
-  return <Skeleton className={`w-full rounded-md ${CHART_HEIGHT_CLASS[kind]}`} />;
+  return (
+    <Skeleton
+      className={cn(
+        "w-full rounded-md",
+        (kind === ChartKind.Line ||
+          kind === ChartKind.Area ||
+          kind === ChartKind.Bar ||
+          kind === ChartKind.Scatter ||
+          kind === ChartKind.Composed) &&
+          "h-64",
+        (kind === ChartKind.HBar ||
+          kind === ChartKind.Pie ||
+          kind === ChartKind.Donut ||
+          kind === ChartKind.Radar ||
+          kind === ChartKind.RadialBar) &&
+          "h-72",
+      )}
+    />
+  );
 }

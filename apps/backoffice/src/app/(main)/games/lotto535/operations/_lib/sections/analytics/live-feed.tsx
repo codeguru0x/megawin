@@ -28,6 +28,13 @@ import { NumbersWithTooltip } from "./number-heatmap";
  */
 const LARGE_BET_THRESHOLD = 5_000_000;
 
+function resolveFeedBorder(isLargeBet: boolean, fill: string | undefined): string {
+  if (isLargeBet) {
+    return "#ef4444";
+  }
+  return fill ?? "transparent";
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntry[]; isSettled?: boolean }) {
@@ -67,9 +74,7 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                     i === 0 && "bg-muted/20",
                     isLargeBet && "bg-red-500/5",
                   )}
-                  style={
-                    { "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties
-                  }
+                  style={{ "--feed-border": resolveFeedBorder(isLargeBet, color?.fill) } as React.CSSProperties}
                 >
                   {/* Grid 3 rows × 2 cols:
                       row1: play-type label | (empty)

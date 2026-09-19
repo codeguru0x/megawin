@@ -54,6 +54,14 @@ const BINGO18_ANALYTICS_LABELS: Record<string, string> = {
 const SIDE_PLAY_TYPES = new Set(["sumTotal", "bigSmallDraw"]);
 
 /** 1 dòng entry trong feed — dùng chung cho cả 2 cột. */
+
+function resolveFeedBorder(isLargeBet: boolean, fill: string | undefined): string {
+  if (isLargeBet) {
+    return "#ef4444";
+  }
+  return fill ?? "transparent";
+}
+
 function FeedRow({
   entry,
   isFirst,
@@ -75,7 +83,7 @@ function FeedRow({
         isFirst && "bg-muted/20",
         isLargeBet && "bg-red-500/5",
       )}
-      style={{ "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties}
+      style={{ "--feed-border": resolveFeedBorder(isLargeBet, color?.fill) } as React.CSSProperties}
     >
       <div className="grid [grid-template-columns:1fr_auto] gap-x-3">
         <div className="flex min-w-0 items-center gap-1.5">

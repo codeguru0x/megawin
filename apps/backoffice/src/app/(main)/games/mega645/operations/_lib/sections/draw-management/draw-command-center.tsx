@@ -369,7 +369,15 @@ export function DrawCommandCenter({
             <div className="flex flex-wrap items-center gap-2">
               {nextAction && (
                 <Button
-                  className={cn("gap-1.5 font-medium", nextAction.className)}
+                  className={cn(
+                    "gap-1.5 font-medium",
+                    nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
+                      "bg-amber-600 text-white hover:bg-amber-700",
+                    nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
+                      "bg-violet-600 text-white hover:bg-violet-700",
+                    nextAction.className === "bg-orange-600 text-white hover:bg-orange-700" &&
+                      "bg-orange-600 text-white hover:bg-orange-700",
+                  )}
                   size="sm"
                   onClick={nextAction.handler}
                 >

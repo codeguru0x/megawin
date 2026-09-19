@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import type { KenoDrawResult, VoidInfo } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
@@ -349,7 +350,14 @@ function SettleConfirmDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Huỷ bỏ</AlertDialogCancel>
-          <Button onClick={handleConfirm} disabled={isPending} className={confirmClassName}>
+          <Button
+            onClick={handleConfirm}
+            disabled={isPending}
+            className={cn(
+              confirmClassName === "bg-orange-600 text-white hover:bg-orange-700" &&
+                "bg-orange-600 text-white hover:bg-orange-700",
+            )}
+          >
             {isError ? (
               <>
                 <RotateCcw className="size-4" />

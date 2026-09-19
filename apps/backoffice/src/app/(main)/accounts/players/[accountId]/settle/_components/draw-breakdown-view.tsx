@@ -4,7 +4,7 @@ import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
 
-import { getNetProfitColor, PayoutRatioCell } from "@/components/reports/payout-ratio";
+import { PayoutRatioCell } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -132,7 +132,8 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
                     <TableCell
                       className={cn(
                         "pr-5 text-right text-sm font-medium tabular-nums",
-                        getNetProfitColor(row.netProfit),
+                        row.netProfit < 0 && "text-loss",
+                        row.netProfit > 0 && "text-profit",
                       )}
                     >
                       {formatNumber(row.netProfit)}
@@ -165,7 +166,8 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
                 <TableCell
                   className={cn(
                     "pr-5 text-right text-sm font-semibold tabular-nums",
-                    getNetProfitColor(totals.netProfit),
+                    totals.netProfit < 0 && "text-loss",
+                    totals.netProfit > 0 && "text-profit",
                   )}
                 >
                   {formatNumber(totals.netProfit)}

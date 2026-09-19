@@ -10,12 +10,7 @@ import { getGameLabel, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { Building2, DollarSign, Gamepad2, TrendingDown, TrendingUp } from "lucide-react";
 
-import {
-  getNetProfitColor,
-  getPayoutRatioColor,
-  PayoutRatioCell,
-  PayoutRatioKpiBadge,
-} from "@/components/reports/payout-ratio";
+import { getPayoutRatioColor, PayoutRatioCell, PayoutRatioKpiBadge } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getGameHex } from "@/lib/game-colors";
@@ -92,7 +87,7 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
         iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.ggr}
         value={formatVNDCompact(ggr)}
-        valueClass={getNetProfitColor(ggr)}
+        valueClass={(ggr < 0 && "text-loss", ggr > 0 && "text-profit")}
       />
       {/* Hoa hồng ĐL */}
       <KpiCard
@@ -110,7 +105,7 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
         iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
-        valueClass={getNetProfitColor(netProfit)}
+        valueClass={(netProfit < 0 && "text-loss", netProfit > 0 && "text-profit")}
       />
     </div>
   );
@@ -236,7 +231,8 @@ export function ByGameTab() {
                       <TableCell
                         className={cn(
                           "pr-5 text-right text-sm font-medium tabular-nums",
-                          getNetProfitColor(row.netProfit),
+                          row.netProfit < 0 && "text-loss",
+                          row.netProfit > 0 && "text-profit",
                         )}
                       >
                         {formatNumber(row.netProfit)}
@@ -274,7 +270,8 @@ export function ByGameTab() {
                   <TableCell
                     className={cn(
                       "pr-5 text-right text-sm font-semibold tabular-nums",
-                      getNetProfitColor(totals.netProfit),
+                      totals.netProfit < 0 && "text-loss",
+                      totals.netProfit > 0 && "text-profit",
                     )}
                   >
                     {formatNumber(totals.netProfit)}

@@ -27,7 +27,6 @@ import {
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
 import {
-  DATA_HOVER_SURFACE_CLASS,
   NumberHeatmapCellDetail,
   NumberHeatmapHoverLayer,
   useNumberHeatmapHover,
@@ -184,7 +183,14 @@ export function NumbersWithTooltip({ numbers, variant = "soft" }: { numbers: str
               +{hidden.length}
             </span>
           </HoverCardTrigger>
-          <HoverCardContent side="top" sideOffset={6} className={cn(DATA_HOVER_SURFACE_CLASS, "w-auto p-3")}>
+          <HoverCardContent
+            side="top"
+            sideOffset={6}
+            className={cn(
+              "bg-popover text-popover-foreground border-border rounded-xl border px-3 py-2.5 shadow-lg",
+              "w-auto p-3",
+            )}
+          >
             <p className="text-muted-foreground mb-1.5 text-xs">Tất cả {numbers.length} số</p>
             <div className="flex max-w-50 flex-wrap items-center gap-1">
               {numbers.map((n) => (

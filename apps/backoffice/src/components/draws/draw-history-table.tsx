@@ -17,7 +17,6 @@ import { formatNumber, formatVNTime } from "@megawin/shared/utils";
 import { Loader2 } from "lucide-react";
 
 import { FinancialDateRangePicker } from "@/components/date-picker/financial-date-range-picker";
-import { getNetProfitColor } from "@/components/reports/payout-ratio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -331,7 +330,8 @@ function DrawRow<T extends CommonDrawSummary>({
       <TableCell
         className={cn(
           "pr-5 text-right text-sm font-medium tabular-nums",
-          netProfit != null ? getNetProfitColor(netProfit) : "",
+          netProfit != null && netProfit < 0 && "text-loss",
+          netProfit != null && netProfit > 0 && "text-profit",
         )}
       >
         {netProfit != null ? formatNumber(netProfit) : "—"}

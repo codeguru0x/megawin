@@ -100,7 +100,16 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                 return (
                   <div key={cap.pick} className="space-y-3 rounded-lg border p-4">
                     <div className="flex items-center gap-2">
-                      <Badge className={cn("text-white", cap.badge)}>Bậc {cap.pick}</Badge>
+                      <Badge
+                        className={cn(
+                          "text-white",
+                          cap.pick === 10 && "bg-red-500",
+                          cap.pick === 9 && "bg-orange-500",
+                          cap.pick === 8 && "bg-amber-600",
+                        )}
+                      >
+                        Bậc {cap.pick}
+                      </Badge>
                       <span className="text-muted-foreground text-xs">
                         Trùng {cap.pick}/{cap.pick} số · Giải cố định: <strong>{fmt(fixedPrize)} VND</strong>
                       </span>

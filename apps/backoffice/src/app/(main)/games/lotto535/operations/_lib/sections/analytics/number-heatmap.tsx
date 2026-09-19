@@ -30,7 +30,6 @@ import {
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
 import {
-  DATA_HOVER_SURFACE_CLASS,
   NumberHeatmapCellDetail,
   NumberHeatmapHoverLayer,
   useNumberHeatmapHover,
@@ -61,8 +60,12 @@ import { useComboLookup } from "../../use-operations";
 
 // ─── Lotto 5/35 color tokens ─────────────────────────────────────────────────
 
-const LOTTO_MAIN_HEX = "#d97706"; // amber-600
-const LOTTO_SPECIAL_HEX = "#ea580c"; // orange-600
+function lottoMainSwatchBg(): string {
+  return "#d97706"; // amber-600
+}
+function lottoSpecialSwatchBg(): string {
+  return "#ea580c"; // orange-600
+}
 const LOTTO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
 // ─── Heatmap Intensity Scale ─────────────────────────────────────────────────
@@ -209,7 +212,14 @@ export function NumbersWithTooltip({
               +{hidden.length}
             </span>
           </HoverCardTrigger>
-          <HoverCardContent side="top" sideOffset={6} className={cn(DATA_HOVER_SURFACE_CLASS, "w-auto p-3")}>
+          <HoverCardContent
+            side="top"
+            sideOffset={6}
+            className={cn(
+              "bg-popover text-popover-foreground border-border rounded-xl border px-3 py-2.5 shadow-lg",
+              "w-auto p-3",
+            )}
+          >
             <p className="text-muted-foreground mb-1.5 text-xs">Tất cả {numbers.length} số</p>
             <div className="flex max-w-50 flex-wrap items-center gap-1">
               {numbers.map((n) => (
@@ -348,7 +358,7 @@ function MainGrid({
         <div className="flex items-center gap-1.5">
           <span
             className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)]"
-            style={{ "--swatch-bg": LOTTO_MAIN_HEX } as React.CSSProperties}
+            style={{ "--swatch-bg": lottoMainSwatchBg() } as React.CSSProperties}
           >
             <Star className="size-2.5 text-white" />
           </span>
@@ -436,7 +446,7 @@ function SpecialGrid({
         <div className="flex items-center gap-1.5">
           <span
             className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)]"
-            style={{ "--swatch-bg": LOTTO_SPECIAL_HEX } as React.CSSProperties}
+            style={{ "--swatch-bg": lottoSpecialSwatchBg() } as React.CSSProperties}
           >
             <Star className="size-2.5 text-white" />
           </span>

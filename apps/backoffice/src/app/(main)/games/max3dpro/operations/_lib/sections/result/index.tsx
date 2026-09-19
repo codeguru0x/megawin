@@ -169,7 +169,35 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                       ) : (
                         <span className="size-3.5 shrink-0" />
                       )}
-                      <Badge variant="outline" className={cn("h-5 border px-2 py-0 text-xs", cfg.badge)}>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "h-5 border px-2 py-0 text-xs",
+                          tier.tier === PrizeTier.Special &&
+                            "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+                          tier.tier === PrizeTier.SpecialSub &&
+                            "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
+                          tier.tier === PrizeTier.First &&
+                            "border-yellow-300 bg-yellow-50 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300",
+                          tier.tier === PrizeTier.Second &&
+                            "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+                          tier.tier === PrizeTier.Third &&
+                            "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+                          tier.tier === PrizeTier.Fourth && "border-border bg-muted/40 text-muted-foreground",
+                          tier.tier === PrizeTier.Fifth && "border-border bg-muted/40 text-muted-foreground",
+                          tier.tier === PrizeTier.Sixth && "border-border bg-muted/40 text-muted-foreground",
+                          !(
+                            tier.tier === PrizeTier.Special ||
+                            tier.tier === PrizeTier.SpecialSub ||
+                            tier.tier === PrizeTier.First ||
+                            tier.tier === PrizeTier.Second ||
+                            tier.tier === PrizeTier.Third ||
+                            tier.tier === PrizeTier.Fourth ||
+                            tier.tier === PrizeTier.Fifth ||
+                            tier.tier === PrizeTier.Sixth
+                          ) && "border-border bg-muted/40 text-muted-foreground",
+                        )}
+                      >
                         {label}
                       </Badge>
                     </div>

@@ -17,6 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
+import { cn } from "@/lib/utils";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -215,7 +216,19 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                 idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
                               }`}
                             >
-                              <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
+                              <Badge
+                                className={cn(
+                                  "w-9 justify-center text-xs font-bold",
+                                  p.key === "tier1" && "bg-amber-500 text-white",
+                                  p.key === "tier2" && "bg-slate-400 text-white",
+                                  p.key === "tier3" && "bg-amber-700 text-white",
+                                  p.key === "tier4" && "bg-slate-500 text-white",
+                                  p.key === "tier5" && "bg-slate-600 text-white",
+                                  p.key === "consolation" && "bg-emerald-600 text-white",
+                                )}
+                              >
+                                {p.badge}
+                              </Badge>
                               <div>
                                 <span className="text-sm font-medium">{p.label}</span>
                                 <span className="text-muted-foreground ml-2 text-xs">{p.desc}</span>

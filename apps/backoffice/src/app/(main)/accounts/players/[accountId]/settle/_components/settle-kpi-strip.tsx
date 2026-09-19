@@ -5,7 +5,7 @@ import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { Building2, DollarSign, Receipt, TrendingDown, TrendingUp } from "lucide-react";
 
-import { formatPayoutRatio, getNetProfitColor, getPayoutRatioColor } from "@/components/reports/payout-ratio";
+import { formatPayoutRatio, getPayoutRatioColor } from "@/components/reports/payout-ratio";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -141,7 +141,7 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
         iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
-        valueClass={getNetProfitColor(netProfit)}
+        valueClass={cn(netProfit < 0 && "text-loss", netProfit > 0 && "text-profit")}
       />
     </div>
   );

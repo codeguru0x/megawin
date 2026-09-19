@@ -6,9 +6,9 @@ import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber } from "@megawin/shared/utils";
 import { Ticket } from "lucide-react";
 
-import { getNetProfitColor } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -153,9 +153,11 @@ export function GamePlayerEntryList({
                         )}
                       </TableCell>
                       <TableCell
-                        className={`pr-5 text-right text-sm font-medium tabular-nums ${
-                          playerNet !== null ? getNetProfitColor(playerNet) : ""
-                        }`}
+                        className={cn(
+                          "pr-5 text-right text-sm font-medium tabular-nums",
+                          playerNet !== null && playerNet < 0 && "text-loss",
+                          playerNet !== null && playerNet > 0 && "text-profit",
+                        )}
                       >
                         {playerNet !== null ? (
                           <>

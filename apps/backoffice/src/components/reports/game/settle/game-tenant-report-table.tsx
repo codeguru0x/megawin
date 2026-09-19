@@ -4,12 +4,7 @@ import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { Building2, DollarSign, Percent, TrendingDown, TrendingUp } from "lucide-react";
 
-import {
-  getNetProfitColor,
-  getPayoutRatioColor,
-  PayoutRatioCell,
-  PayoutRatioKpiBadge,
-} from "@/components/reports/payout-ratio";
+import { getPayoutRatioColor, PayoutRatioCell, PayoutRatioKpiBadge } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -119,7 +114,7 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
           iconColor="text-blue-600 dark:text-blue-400"
           label={REPORT_COLUMN_LABELS.ggr}
           value={formatVNDCompact(totals.ggr)}
-          valueClass={getNetProfitColor(totals.ggr)}
+          valueClass={(totals.ggr < 0 && "text-loss", totals.ggr > 0 && "text-profit")}
         />
         <KpiCard
           icon={Percent}
@@ -134,7 +129,7 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
           iconColor={totals.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
           label={REPORT_COLUMN_LABELS.netProfit}
           value={formatVNDCompact(totals.netProfit)}
-          valueClass={getNetProfitColor(totals.netProfit)}
+          valueClass={(totals.netProfit < 0 && "text-loss", totals.netProfit > 0 && "text-profit")}
         />
       </div>
 
@@ -194,7 +189,11 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
                         {formatNumber(row.totalCommission)}
                       </TableCell>
                       <TableCell
-                        className={cn("text-right text-sm font-medium tabular-nums", getNetProfitColor(rowNetProfit))}
+                        className={cn(
+                          "text-right text-sm font-medium tabular-nums",
+                          rowNetProfit < 0 && "text-loss",
+                          rowNetProfit > 0 && "text-profit",
+                        )}
                       >
                         {formatNumber(rowNetProfit)}
                       </TableCell>
@@ -237,7 +236,11 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
                     {formatNumber(totals.totalCommission)}
                   </TableCell>
                   <TableCell
-                    className={cn("text-right text-sm font-semibold tabular-nums", getNetProfitColor(totals.netProfit))}
+                    className={cn(
+                      "text-right text-sm font-semibold tabular-nums",
+                      totals.netProfit < 0 && "text-loss",
+                      totals.netProfit > 0 && "text-profit",
+                    )}
                   >
                     {formatNumber(totals.netProfit)}
                   </TableCell>

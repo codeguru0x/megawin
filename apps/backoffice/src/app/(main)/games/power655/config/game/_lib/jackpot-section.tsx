@@ -19,6 +19,10 @@ import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
 
 import type { GameConfig } from "./use-game-config";
 
+function jp1BarBg(): string {
+  return "linear-gradient(90deg, #ef4444, #f97316)";
+}
+
 const jackpotFormSchema = z
   .object({
     jp1SeedAmount: z.coerce.number().int().nonnegative("Phải >= 0"),
@@ -201,7 +205,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           style={
                             {
                               "--bar-w": `${jp1Ratio}%`,
-                              "--bar-bg": "linear-gradient(90deg, #ef4444, #f97316)",
+                              "--bar-bg": jp1BarBg(),
                             } as React.CSSProperties
                           }
                         >

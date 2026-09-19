@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
+import { cn } from "@/lib/utils";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -240,7 +241,21 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
       render={({ field }) => (
         <FormItem>
           <div className={`${TABLE_ROW_CLS} ${isLast ? "" : "border-b"}`}>
-            <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
+            <Badge
+              className={cn(
+                "w-9 justify-center text-xs font-bold",
+                p.key === "special" && "bg-red-600 text-white",
+                p.key === "specialSub" && "bg-red-500 text-white",
+                p.key === "first" && "bg-amber-500 text-white",
+                p.key === "second" && "bg-slate-400 text-white",
+                p.key === "third" && "bg-amber-700 text-white",
+                p.key === "fourth" && "bg-slate-500 text-white",
+                p.key === "fifth" && "bg-slate-600 text-white",
+                p.key === "sixth" && "bg-emerald-600 text-white",
+              )}
+            >
+              {p.badge}
+            </Badge>
             <div>
               <span className="text-sm font-medium">{p.label}</span>
               <span className="text-muted-foreground ml-2 text-xs">{p.desc}</span>

@@ -14,6 +14,17 @@ import { cn } from "@/lib/utils";
 import { useJackpotCurrent } from "./use-jackpot";
 
 /** Token brand Lotto535 — gradient hero khớp byte-for-byte với literal cũ. */
+
+function milestoneBarBg(isHot: boolean, isWarm: boolean): string {
+  if (isHot) {
+    return "linear-gradient(90deg, #f59e0b, #ef4444, #dc2626)";
+  }
+  if (isWarm) {
+    return "linear-gradient(90deg, #fbbf24, #f59e0b, #d97706)";
+  }
+  return "linear-gradient(90deg, #fde68a, #fbbf24, #f59e0b)";
+}
+
 const c = GAME_COLORS[GameProduct.Lotto535];
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
@@ -96,11 +107,7 @@ export function JackpotHeroCard() {
               style={
                 {
                   "--bar-w": `${Math.min(pct, 100)}%`,
-                  "--bar-bg": isHot
-                    ? "linear-gradient(90deg, #f59e0b, #ef4444, #dc2626)"
-                    : isWarm
-                      ? "linear-gradient(90deg, #fbbf24, #f59e0b, #d97706)"
-                      : "linear-gradient(90deg, #fde68a, #fbbf24, #f59e0b)",
+                  "--bar-bg": milestoneBarBg(isHot, isWarm),
                 } as CSSProperties
               }
             />

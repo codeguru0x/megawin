@@ -204,7 +204,16 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                         render={({ field }) => (
                           <FormItem>
                             <div className="group bg-muted/30 hover:bg-muted/50 flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors">
-                              <Badge className={`${tier.color} w-9 justify-center text-xs font-bold`}>
+                              <Badge
+                                className={cn(
+                                  "w-9 justify-center text-xs font-bold",
+                                  t === "tier1" && "bg-amber-500 text-white",
+                                  t === "tier2" && "bg-slate-400 text-white",
+                                  t === "tier3" && "bg-amber-700 text-white",
+                                  t === "tier4" && "bg-slate-500 text-white",
+                                  t === "tier5" && "bg-slate-600 text-white",
+                                )}
+                              >
                                 {tier.badge}
                               </Badge>
                               <span className="flex-1 text-sm font-medium">{tier.label}</span>

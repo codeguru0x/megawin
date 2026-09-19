@@ -34,19 +34,6 @@ const PICK_MATCH_COUNTS: Record<number, number[]> = {
 
 const fmt = formatNumber;
 
-const PICK_BADGE_COLORS: Record<number, string> = {
-  10: "bg-red-500",
-  9: "bg-orange-500",
-  8: "bg-amber-600",
-  7: "bg-amber-500",
-  6: "bg-yellow-500",
-  5: "bg-lime-500",
-  4: "bg-emerald-500",
-  3: "bg-teal-500",
-  2: "bg-cyan-500",
-  1: "bg-slate-500",
-};
-
 function isCapped(pick: number, match: number): boolean {
   return (pick === 10 && match === 10) || (pick === 9 && match === 9) || (pick === 8 && match === 8);
 }
@@ -109,7 +96,23 @@ function PickPrizeGroup({
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className={cn("text-xs text-white", PICK_BADGE_COLORS[pick])}>Bậc {pick}</Badge>
+            <Badge
+              className={cn(
+                "text-xs text-white",
+                pick === 10 && "bg-red-500",
+                pick === 9 && "bg-orange-500",
+                pick === 8 && "bg-amber-600",
+                pick === 7 && "bg-amber-500",
+                pick === 6 && "bg-yellow-500",
+                pick === 5 && "bg-lime-500",
+                pick === 4 && "bg-emerald-500",
+                pick === 3 && "bg-teal-500",
+                pick === 2 && "bg-cyan-500",
+                pick === 1 && "bg-slate-500",
+              )}
+            >
+              Bậc {pick}
+            </Badge>
             <span className="text-muted-foreground text-sm">
               Chọn {pick} số &middot; {matchCounts.length} mức thưởng
             </span>

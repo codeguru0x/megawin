@@ -26,7 +26,6 @@ import {
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
 import {
-  DATA_HOVER_SURFACE_CLASS,
   NumberHeatmapCellDetail,
   NumberHeatmapHoverLayer,
   useNumberHeatmapHover,
@@ -58,7 +57,9 @@ import { useComboLookup } from "../../use-operations";
 // ─── Mega 6/45 color tokens ──────────────────────────────────────────────────
 // Brand: teal-600 (#0d9488) — source of truth: GAME_COLORS[GameProduct.Mega645].hex
 
-const MEGA_HEX = "#0d9488"; // teal-600
+function megaSwatchBg(): string {
+  return "#0d9488"; // teal-600
+}
 const MEGA_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
 // ─── Heatmap Intensity Scale ─────────────────────────────────────────────────
@@ -182,7 +183,14 @@ export function NumbersWithTooltip({ numbers, variant = "soft" }: { numbers: str
               +{hidden.length}
             </span>
           </HoverCardTrigger>
-          <HoverCardContent side="top" sideOffset={6} className={cn(DATA_HOVER_SURFACE_CLASS, "w-auto p-3")}>
+          <HoverCardContent
+            side="top"
+            sideOffset={6}
+            className={cn(
+              "bg-popover text-popover-foreground border-border rounded-xl border px-3 py-2.5 shadow-lg",
+              "w-auto p-3",
+            )}
+          >
             <p className="text-muted-foreground mb-1.5 text-xs">Tất cả {numbers.length} số</p>
             <div className="flex max-w-50 flex-wrap items-center gap-1">
               {numbers.map((n) => (
@@ -310,7 +318,7 @@ function MainGrid({
         <div className="flex items-center gap-1.5">
           <span
             className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--swatch-bg)] text-[9px] font-bold text-white"
-            style={{ "--swatch-bg": MEGA_HEX } as React.CSSProperties}
+            style={{ "--swatch-bg": megaSwatchBg() } as React.CSSProperties}
           >
             M
           </span>

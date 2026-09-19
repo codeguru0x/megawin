@@ -274,7 +274,25 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     ) : (
                       <span className="size-3.5 shrink-0" />
                     )}
-                    <Badge variant="outline" className={cn("h-5 border px-2 py-0 text-xs", cfg?.badge)}>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "h-5 border px-2 py-0 text-xs",
+                        t.tier === PrizeTier.Jackpot &&
+                          "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
+                        t.tier === PrizeTier.Tier1 &&
+                          "border-yellow-300 bg-yellow-50 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300",
+                        t.tier === PrizeTier.Tier2 &&
+                          "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
+                        t.tier === PrizeTier.Tier3 &&
+                          "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+                        t.tier === PrizeTier.Tier4 &&
+                          "border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300",
+                        t.tier === PrizeTier.Tier5 &&
+                          "border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300",
+                        t.tier === PrizeTier.Consolation && "border-border bg-muted/40 text-muted-foreground",
+                      )}
+                    >
                       {t.label}
                     </Badge>
                   </div>

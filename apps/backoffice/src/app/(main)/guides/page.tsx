@@ -84,7 +84,27 @@ async function GuidesLandingContent() {
                 href={firstTopic && firstDoc ? `/guides/${game.gameKey}/${firstTopic.key}/${firstDoc.slug}` : "/guides"}
                 className="group"
               >
-                <Card className={cn("h-full border-l-4 transition-colors hover:shadow-sm", meta.border)}>
+                <Card
+                  className={cn(
+                    "h-full border-l-4 transition-colors hover:shadow-sm",
+                    game.gameKey === "power655" && "border-game-power655",
+                    game.gameKey === "lotto535" && "border-game-lotto535",
+                    game.gameKey === "mega645" && "border-game-mega645",
+                    game.gameKey === "keno" && "border-game-keno",
+                    game.gameKey === "max3d" && "border-game-max3d",
+                    game.gameKey === "max3dpro" && "border-game-max3dpro",
+                    game.gameKey === "bingo18" && "border-game-bingo18",
+                    !(
+                      game.gameKey === "power655" ||
+                      game.gameKey === "lotto535" ||
+                      game.gameKey === "mega645" ||
+                      game.gameKey === "keno" ||
+                      game.gameKey === "max3d" ||
+                      game.gameKey === "max3dpro" ||
+                      game.gameKey === "bingo18"
+                    ) && "border-border",
+                  )}
+                >
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <span className={cn("flex size-9 items-center justify-center rounded-md", meta.bgMuted)}>

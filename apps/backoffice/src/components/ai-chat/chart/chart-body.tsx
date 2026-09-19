@@ -50,7 +50,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import {
-  CHART_HEIGHT_CLASS,
   ChartFieldType,
   ChartKind,
   chartSeriesColor,
@@ -1081,7 +1080,24 @@ export default function ChartBody({ model, reportLabels }: ChartBodyProps) {
 
   return (
     <ChartContainer
-      className={cn("w-full", isHBar ? "h-[var(--chart-h)]" : CHART_HEIGHT_CLASS[model.kind])}
+      className={cn(
+        "w-full",
+        isHBar && "h-[var(--chart-h)]",
+        !isHBar &&
+          (model.kind === ChartKind.Line ||
+            model.kind === ChartKind.Area ||
+            model.kind === ChartKind.Bar ||
+            model.kind === ChartKind.Scatter ||
+            model.kind === ChartKind.Composed) &&
+          "h-64",
+        !isHBar &&
+          (model.kind === ChartKind.HBar ||
+            model.kind === ChartKind.Pie ||
+            model.kind === ChartKind.Donut ||
+            model.kind === ChartKind.Radar ||
+            model.kind === ChartKind.RadialBar) &&
+          "h-72",
+      )}
       config={config}
       style={isHBar ? ({ "--chart-h": `${hbarHeightPx}px` } as CSSProperties) : undefined}
     >

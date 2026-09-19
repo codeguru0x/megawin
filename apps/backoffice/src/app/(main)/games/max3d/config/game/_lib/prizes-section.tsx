@@ -26,6 +26,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
+import { cn } from "@/lib/utils";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -392,7 +393,32 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes, lin
       render={({ field }) => (
         <FormItem>
           <div className={`${TABLE_ROW_CLS} ${isLast ? "" : "border-b"}`}>
-            <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
+            <Badge
+              className={cn(
+                "w-9 justify-center text-xs font-bold",
+                p.key === "basicSpecial" && "bg-red-600 text-white",
+                p.key === "basicFirst" && "bg-amber-500 text-white",
+                p.key === "basicSecond" && "bg-slate-400 text-white",
+                p.key === "basicThird" && "bg-amber-700 text-white",
+                p.key === "combo3Special" && "bg-red-600 text-white",
+                p.key === "combo3First" && "bg-amber-500 text-white",
+                p.key === "combo3Second" && "bg-slate-400 text-white",
+                p.key === "combo3Third" && "bg-amber-700 text-white",
+                p.key === "combo6Special" && "bg-red-600 text-white",
+                p.key === "combo6First" && "bg-amber-500 text-white",
+                p.key === "combo6Second" && "bg-slate-400 text-white",
+                p.key === "combo6Third" && "bg-amber-700 text-white",
+                p.key === "plusSpecial" && "bg-red-600 text-white",
+                p.key === "plusFirst" && "bg-amber-500 text-white",
+                p.key === "plusSecond" && "bg-slate-400 text-white",
+                p.key === "plusThird" && "bg-amber-700 text-white",
+                p.key === "plusFourth" && "bg-slate-500 text-white",
+                p.key === "plusFifth" && "bg-slate-600 text-white",
+                p.key === "plusSixth" && "bg-emerald-600 text-white",
+              )}
+            >
+              {p.badge}
+            </Badge>
             <div>
               <span className="text-sm font-medium">{p.label}</span>
               <span className="text-muted-foreground ml-2 text-xs">{p.desc}</span>

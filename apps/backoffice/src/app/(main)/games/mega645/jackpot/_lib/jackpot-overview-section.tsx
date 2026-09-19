@@ -14,6 +14,17 @@ import { cn } from "@/lib/utils";
 import { useJackpotCurrent } from "./use-jackpot";
 
 /** Token brand Mega645 — gradient hero khớp byte-for-byte với literal cũ. */
+
+function milestoneBarBg(isHot: boolean, isWarm: boolean): string {
+  if (isHot) {
+    return "linear-gradient(90deg, #0d9488, #0891b2, #06b6d4)";
+  }
+  if (isWarm) {
+    return "linear-gradient(90deg, #14b8a6, #0d9488, #059669)";
+  }
+  return "linear-gradient(90deg, #5eead4, #2dd4bf, #14b8a6)";
+}
+
 const c = GAME_COLORS[GameProduct.Mega645];
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
@@ -114,11 +125,7 @@ export function JackpotHeroCard() {
               style={
                 {
                   "--bar-w": `${Math.min(pct, 100)}%`,
-                  "--bar-bg": isHot
-                    ? "linear-gradient(90deg, #0d9488, #0891b2, #06b6d4)"
-                    : isWarm
-                      ? "linear-gradient(90deg, #14b8a6, #0d9488, #059669)"
-                      : "linear-gradient(90deg, #5eead4, #2dd4bf, #14b8a6)",
+                  "--bar-bg": milestoneBarBg(isHot, isWarm),
                 } as CSSProperties
               }
             />

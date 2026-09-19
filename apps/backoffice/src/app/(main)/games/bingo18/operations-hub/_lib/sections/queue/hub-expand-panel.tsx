@@ -456,7 +456,15 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                     <TooltipTrigger asChild>
                       <Button
                         size="sm"
-                        className={cn("gap-1.5 font-medium", nextAction.className)}
+                        className={cn(
+                          "gap-1.5 font-medium",
+                          nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
+                            "bg-amber-600 text-white hover:bg-amber-700",
+                          nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
+                            "bg-violet-600 text-white hover:bg-violet-700",
+                          nextAction.className === "bg-orange-600 text-white hover:bg-orange-700" &&
+                            "bg-orange-600 text-white hover:bg-orange-700",
+                        )}
                         disabled={primaryDisabled}
                         onClick={() => setOpenBulkDialog(bulkKind)}
                       >
@@ -468,7 +476,15 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                 ) : (
                   <Button
                     size="sm"
-                    className={cn("gap-1.5 font-medium", nextAction.className)}
+                    className={cn(
+                      "gap-1.5 font-medium",
+                      nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
+                        "bg-amber-600 text-white hover:bg-amber-700",
+                      nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
+                        "bg-violet-600 text-white hover:bg-violet-700",
+                      nextAction.className === "bg-orange-600 text-white hover:bg-orange-700" &&
+                        "bg-orange-600 text-white hover:bg-orange-700",
+                    )}
                     disabled={primaryDisabled}
                     onClick={() => setOpenBulkDialog(bulkKind)}
                   >
@@ -484,7 +500,15 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                   // tiết) vẫn còn ở icon "Mở trang vận hành chi tiết" trên header panel.
                   <Button
                     size="sm"
-                    className={cn("gap-1.5 font-medium", nextAction.className)}
+                    className={cn(
+                      "gap-1.5 font-medium",
+                      nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
+                        "bg-amber-600 text-white hover:bg-amber-700",
+                      nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
+                        "bg-violet-600 text-white hover:bg-violet-700",
+                      nextAction.className === "bg-orange-600 text-white hover:bg-orange-700" &&
+                        "bg-orange-600 text-white hover:bg-orange-700",
+                    )}
                     onClick={() => onOpenPublish(row.drawId)}
                   >
                     <nextAction.icon className="size-3.5" /> {nextAction.label}
@@ -493,7 +517,19 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                   // Fallback — status khác chưa có mutation/dialog riêng ở Hub, giữ nav như cũ
                   // (p1-08 §6: trước đây nút "biến mất" âm thầm ở case này, khiến kỳ trông như
                   // "bị khoá hoàn toàn" — bug thật, không chỉ là câu chữ tooltip).
-                  <Button asChild size="sm" className={cn("gap-1.5 font-medium", nextAction.className)}>
+                  <Button
+                    asChild
+                    size="sm"
+                    className={cn(
+                      "gap-1.5 font-medium",
+                      nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
+                        "bg-amber-600 text-white hover:bg-amber-700",
+                      nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
+                        "bg-violet-600 text-white hover:bg-violet-700",
+                      nextAction.className === "bg-orange-600 text-white hover:bg-orange-700" &&
+                        "bg-orange-600 text-white hover:bg-orange-700",
+                    )}
+                  >
                     <Link
                       href={drawOperationsHref(GameProduct.Bingo18, row.drawId)}
                       target="_blank"

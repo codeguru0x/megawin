@@ -54,6 +54,13 @@ const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string
  */
 const LARGE_BET_THRESHOLD = 1_000_000;
 
+function resolveFeedBorder(isLargeBet: boolean, fill: string | undefined): string {
+  if (isLargeBet) {
+    return "#ef4444";
+  }
+  return fill ?? "transparent";
+}
+
 /** Phân loại 1 entry preview theo nhóm luật chơi: side bet (bigSmall/evenOdd) vs pick cơ bản. */
 function isSideBetEntry(e: LiveFeedEntry): boolean {
   return e.playType === "bigSmall" || e.playType === "evenOdd";
@@ -73,7 +80,7 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
         highlightFirst && "bg-muted/20",
         isLargeBet && "bg-red-500/5",
       )}
-      style={{ "--feed-border": isLargeBet ? "#ef4444" : (color?.fill ?? "transparent") } as React.CSSProperties}
+      style={{ "--feed-border": resolveFeedBorder(isLargeBet, color?.fill) } as React.CSSProperties}
     >
       <div className="grid [grid-template-columns:1fr_auto] gap-x-3">
         {/* Row 1: play type */}

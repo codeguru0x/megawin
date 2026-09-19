@@ -153,7 +153,18 @@ function GroupSection({
       <div className="flex items-center gap-1.5 px-2 pb-1">
         {cfg.icon}
         <span className={cn("text-2xs font-semibold tracking-wider uppercase", cfg.color)}>{cfg.label}</span>
-        <Badge variant="outline" className={cn("text-3xs ml-auto h-4 px-1.5 py-0 font-mono", cfg.badgeClass)}>
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-3xs ml-auto h-4 px-1.5 py-0 font-mono",
+            group === DrawSelectorGroup.Active &&
+              "border-green-200 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
+            group === DrawSelectorGroup.Future &&
+              "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+            group === DrawSelectorGroup.Recent &&
+              "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
+          )}
+        >
           {draws.length}
         </Badge>
       </div>

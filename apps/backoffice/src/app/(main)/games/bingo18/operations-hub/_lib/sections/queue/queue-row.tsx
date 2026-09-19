@@ -39,12 +39,6 @@ const HEALTH_DOT_CLASS: Record<string, string> = {
   stuck: "bg-destructive",
 };
 
-const ACCENT_ROW_CLASS: Record<string, string> = {
-  none: "",
-  warn: "bg-amber-500/5 hover:bg-amber-500/10",
-  destructive: "bg-destructive/5 hover:bg-destructive/10",
-};
-
 export interface QueueRowProps {
   drawId: string;
   drawNo: number;
@@ -179,7 +173,13 @@ function QueueRowImpl(props: QueueRowProps) {
     <TableRow
       id={`hub-row-${drawId}`}
       data-state={isSelected ? "selected" : undefined}
-      className={cn("queue-row cursor-pointer", isExpanded ? "bg-muted/40" : ACCENT_ROW_CLASS[accent])}
+      className={cn(
+        "queue-row cursor-pointer",
+        isExpanded && "bg-muted/40",
+        !isExpanded && accent === "none" && "",
+        !isExpanded && accent === "warn" && "bg-amber-500/5 hover:bg-amber-500/10",
+        !isExpanded && accent === "destructive" && "bg-destructive/5 hover:bg-destructive/10",
+      )}
       onClick={() => onToggleExpand(drawId)}
     >
       <TableCell className="w-8 py-2" onClick={(e) => e.stopPropagation()}>
