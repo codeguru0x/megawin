@@ -58,13 +58,11 @@ export function JackpotHeroCard() {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border-2 p-6",
+        // Gradient mono-tone (1 hue, fade qua opacity) — token --game-mega645-muted tự đổi
+        // giá trị giữa light/dark, không cần khai `dark:` riêng (xem P1-01).
         "bg-linear-to-br",
-        c.gradientFrom,
-        c.gradientVia,
-        c.gradientTo,
-        c.gradientFromDark,
-        c.gradientViaDark,
-        c.gradientToDark,
+        c.gradientMutedFrom,
+        "to-transparent",
         isHot ? "border-teal-400 dark:border-teal-700/70" : "border-teal-200 dark:border-teal-800/50",
       )}
     >

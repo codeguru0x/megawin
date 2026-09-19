@@ -306,7 +306,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </span>
                 )}
                 {openCount > 0 && (
-                  <Badge className="bg-orange-600 text-xs text-white hover:bg-orange-600">{openCount} mở bán</Badge>
+                  <Badge className="bg-profit text-profit-foreground hover:bg-profit text-xs">{openCount} mở bán</Badge>
                 )}
                 {scheduledCount > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -367,10 +367,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   disabled={rows.length === 0}
                   className="text-muted-foreground hover:text-foreground text-2xs flex items-center gap-1 font-medium transition-colors disabled:opacity-40"
                 >
-                  {allOpen ? <Unlock className="size-3 text-orange-600" /> : <Lock className="size-3" />}
-                  <span className={cn(allOpen && "text-orange-600 dark:text-orange-400")}>
-                    {allOpen ? "Đóng tất cả" : "Mở tất cả"}
-                  </span>
+                  {allOpen ? <Unlock className="text-profit size-3" /> : <Lock className="size-3" />}
+                  <span className={cn(allOpen && "text-profit")}>{allOpen ? "Đóng tất cả" : "Mở tất cả"}</span>
                 </button>
               </div>
 
@@ -409,13 +407,13 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     key={row.previewDrawId}
                     className={cn(
                       "grid [grid-template-columns:1.5rem_1fr_6.5rem_9rem] items-center gap-x-3 px-4 py-2.5 transition-colors",
-                      row.isOpen ? "bg-orange-50/50 dark:bg-orange-950/15" : "hover:bg-muted/20",
+                      row.isOpen ? "bg-profit/10" : "hover:bg-muted/20",
                     )}
                   >
                     <span
                       className={cn(
                         "text-xs font-semibold tabular-nums",
-                        row.isOpen ? "text-orange-700 dark:text-orange-300" : "text-muted-foreground",
+                        row.isOpen ? "text-profit" : "text-muted-foreground",
                       )}
                     >
                       {i + 1}
@@ -443,7 +441,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       className="flex cursor-pointer items-center justify-end gap-1.5 select-none"
                     >
                       {row.isOpen ? (
-                        <Unlock className="size-3 shrink-0 text-orange-500" />
+                        <Unlock className="text-profit size-3 shrink-0" />
                       ) : (
                         <Lock className="text-muted-foreground/40 size-3 shrink-0" />
                       )}
@@ -456,7 +454,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       <span
                         className={cn(
                           "text-2xs min-w-12 text-left font-medium",
-                          row.isOpen ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground",
+                          row.isOpen ? "text-profit" : "text-muted-foreground",
                         )}
                       >
                         {row.isOpen ? "Mở bán" : "Chờ lịch"}
@@ -476,7 +474,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <Button
             onClick={handleCreate}
             disabled={!canSubmit}
-            className={cn(openCount > 0 && "bg-orange-600 text-white hover:bg-orange-700")}
+            className={cn(openCount > 0 && "bg-profit text-profit-foreground hover:bg-profit/90")}
           >
             {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Tạo {rows.length} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}

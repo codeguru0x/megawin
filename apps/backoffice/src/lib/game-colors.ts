@@ -40,6 +40,14 @@ export interface GameColorTokens {
   /** Dark mode gradient end */
   gradientToDark: string;
   /**
+   * Gradient mono-tone (fade từ muted color về transparent), dùng cho hero/jackpot card.
+   *
+   * VD: `"from-game-mega645-muted/80"` — KHÔNG cần biến thể riêng cho dark mode, vì
+   * `--game-mega645-muted` TỰ ĐỘNG đổi giá trị ở `.dark` (đã định nghĩa sẵn trong globals.css)
+   * — token, không phải literal, nên "kế thừa" dark mode miễn phí.
+   */
+  gradientMutedFrom: string;
+  /**
    * Tailwind gradient classes cho icon tròn ở page header.
    *
    * Dùng với: `className={\`bg-linear-to-br \${c.iconGradient}\`}`
@@ -80,6 +88,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-teal-950/50",
     gradientViaDark: "dark:via-cyan-950/40",
     gradientToDark: "dark:to-emerald-950/30",
+    gradientMutedFrom: "from-game-mega645-muted/80",
     iconGradient: "from-teal-500 to-teal-600",
   },
 
@@ -98,6 +107,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-red-950/50",
     gradientViaDark: "dark:via-orange-950/40",
     gradientToDark: "dark:to-amber-950/30",
+    gradientMutedFrom: "from-game-power655-muted/80",
     iconGradient: "from-red-500 to-orange-500",
   },
 
@@ -115,6 +125,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-amber-950/50",
     gradientViaDark: "dark:via-yellow-950/40",
     gradientToDark: "dark:to-orange-950/30",
+    gradientMutedFrom: "from-game-lotto535-muted/80",
     iconGradient: "from-amber-400 to-orange-500",
   },
 
@@ -133,6 +144,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-sky-950/50",
     gradientViaDark: "dark:via-cyan-950/40",
     gradientToDark: "dark:to-blue-950/30",
+    gradientMutedFrom: "from-game-keno-muted/80",
     iconGradient: "from-sky-500 to-sky-600",
   },
 
@@ -150,6 +162,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-violet-950/50",
     gradientViaDark: "dark:via-purple-950/40",
     gradientToDark: "dark:to-indigo-950/30",
+    gradientMutedFrom: "from-game-max3d-muted/80",
     iconGradient: "from-violet-500 to-violet-600",
   },
 
@@ -168,6 +181,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-fuchsia-950/50",
     gradientViaDark: "dark:via-purple-950/40",
     gradientToDark: "dark:to-pink-950/30",
+    gradientMutedFrom: "from-game-max3dpro-muted/80",
     iconGradient: "from-fuchsia-500 to-fuchsia-600",
   },
 
@@ -185,6 +199,7 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     gradientFromDark: "dark:from-lime-950/50",
     gradientViaDark: "dark:via-green-950/40",
     gradientToDark: "dark:to-emerald-950/30",
+    gradientMutedFrom: "from-game-bingo18-muted/80",
     iconGradient: "from-lime-500 to-lime-600",
   },
 };
@@ -201,6 +216,7 @@ const DEFAULT_COLORS: GameColorTokens = {
   gradientFromDark: "dark:from-gray-950/50",
   gradientViaDark: "dark:via-gray-950/40",
   gradientToDark: "dark:to-slate-950/30",
+  gradientMutedFrom: "from-muted",
   iconGradient: "from-gray-400 to-gray-500",
 };
 
