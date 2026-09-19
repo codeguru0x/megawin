@@ -218,7 +218,7 @@
               },
               {
                 "pattern": "^Tabs(List|Content|Trigger)$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^DialogContent$|^SheetContent$|^DrawerContent$|^PopoverContent$|^HoverCardContent$",
@@ -251,7 +251,7 @@
               },
               {
                 "pattern": "^Input$|^Textarea$|^SelectTrigger$|^MoneyInput$",
-                "allow": ["layout", "w-full", "w-*", "min-w-*", "max-w-*", "flex-1"]
+                "allow": ["layout", "typography", "w-full", "w-*", "min-w-*", "max-w-*", "flex-1"]
               },
               {
                 "pattern": "^Spinner$",
@@ -370,7 +370,7 @@
               },
               {
                 "pattern": "^Tabs(List|Content|Trigger)$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^DialogContent$|^SheetContent$|^DrawerContent$|^PopoverContent$|^HoverCardContent$",
@@ -403,7 +403,7 @@
               },
               {
                 "pattern": "^Input$|^Textarea$|^SelectTrigger$|^MoneyInput$",
-                "allow": ["layout", "w-full", "w-*", "min-w-*", "max-w-*", "flex-1"]
+                "allow": ["layout", "typography", "w-full", "w-*", "min-w-*", "max-w-*", "flex-1"]
               },
               {
                 "pattern": "^Spinner$",

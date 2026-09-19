@@ -2,7 +2,7 @@
 
 ## Status (2026-09-19) — đang làm trên `visual/p1-04-restyle`
 
-Baseline sau P1-03: **2262** `no-restyle` → slice-1 **~1471** → slice-2 **~1257** (−1005 tổng).
+Baseline sau P1-03: **2262** `no-restyle` → slice-1 **~1471** → slice-2 **~1257** → slice-3 (Input typography + TabsList shape) **~1067** (−1195 tổng).
 
 ### Đã làm (2a + nới contract có giải trình)
 
@@ -19,6 +19,8 @@ Baseline sau P1-03: **2262** `no-restyle` → slice-1 **~1471** → slice-2 **~1
 | TooltipContent `allow: typography` | contract | Giữ `font-mono` / `tabular-nums` |
 | Table* `allow: color` | contract | semantic color trên cell |
 | Title/Description + Dialog/Sheet Header/Footer `allow: spacing` | contract | icon+title `gap-*`, footer `pt-*`/`gap-*` |
+| Input/SelectTrigger/Textarea/MoneyInput `allow: typography` | contract | số liệu `font-mono`/`tabular-nums`/`text-center` |
+| TabsList/Trigger/Content `allow: shape` | contract | underline tabs `border-b` |
 
 ### Còn lại (ước lượng)
 
