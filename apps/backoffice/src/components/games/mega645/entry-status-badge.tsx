@@ -1,28 +1,29 @@
 "use client";
 
+import { StatusBadgeTone, statusBadgeToneClass } from "@/components/games/shared/status-badge-tone";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   scheduled: {
     label: "Chờ quay",
-    className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    className: statusBadgeToneClass(StatusBadgeTone.Neutral),
   },
   active: {
     label: "Đã khoá",
-    className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    className: statusBadgeToneClass(StatusBadgeTone.Info),
   },
   drawn: {
     label: "Đã quay",
-    className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    className: statusBadgeToneClass(StatusBadgeTone.Published),
   },
   settled: {
     label: "Đã settle",
-    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+    className: statusBadgeToneClass(StatusBadgeTone.Success),
   },
   void: {
     label: "Vô hiệu",
-    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    className: statusBadgeToneClass(StatusBadgeTone.Negative),
   },
 };
 
