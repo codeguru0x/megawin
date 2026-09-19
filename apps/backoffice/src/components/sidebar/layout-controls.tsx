@@ -1,5 +1,7 @@
 "use client";
 
+import type { CSSProperties } from "react";
+
 import { Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -137,11 +139,13 @@ export function LayoutControls() {
                   {THEME_PRESET_OPTIONS.map((preset) => (
                     <SelectItem key={preset.value} className="text-xs" value={preset.value}>
                       <span
-                        className="size-2.5 rounded-full"
-                        style={{
-                          backgroundColor:
-                            (resolvedThemeMode ?? "light") === "dark" ? preset.primary.dark : preset.primary.light,
-                        }}
+                        className="size-2.5 rounded-full bg-[var(--preset-swatch)]"
+                        style={
+                          {
+                            "--preset-swatch":
+                              (resolvedThemeMode ?? "light") === "dark" ? preset.primary.dark : preset.primary.light,
+                          } as CSSProperties
+                        }
                       />
                       {preset.label}
                     </SelectItem>

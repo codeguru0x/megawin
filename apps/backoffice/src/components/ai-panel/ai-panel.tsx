@@ -29,8 +29,8 @@ import { useAiPanel } from "./ai-panel-provider";
 import { AiPanelMode } from "./use-ai-panel-mode";
 
 /**
- * Resize handle — mép trái panel (chỉ docked/overlay). Kéo cập nhật width qua ref +
- * `style.width` trực tiếp trên panel (tránh re-render mỗi px), commit vào state + cookie
+ * Resize handle — mép trái panel (chỉ docked/overlay). Kéo cập nhật `--panel-w` qua ref
+ * trực tiếp trên panel (tránh re-render mỗi px), commit vào state + cookie
  * (qua `actions.setWidth`, đã debounce 300ms) khi pointerup. Hỗ trợ phím mũi tên trái/phải
  * cho keyboard user (focusable, role="separator" chuẩn WAI-ARIA cho resize handle).
  */
@@ -58,7 +58,7 @@ function AiPanelResizeHandle({
         );
         pendingWidthRef.current = nextWidth;
         if (panelRef.current) {
-          panelRef.current.style.width = `${nextWidth}px`;
+          panelRef.current.style.setProperty("--panel-w", `${nextWidth}px`);
         }
       };
 
@@ -157,7 +157,9 @@ export function AiPanel() {
       // Docked: width CHÍNH LÀ cơ chế đóng/mở (0 khi đóng, không border để tránh sliver 1px) vì
       // panel là flex sibling chiếm chỗ thật trong layout — không thể "trượt ra ngoài" như overlay.
       style={
-        isOverlay ? ({ "--panel-w": width } as CSSProperties) : ({ "--panel-w": open ? width : 0 } as CSSProperties)
+        isOverlay
+          ? ({ "--panel-w": `${width}px` } as CSSProperties)
+          : ({ "--panel-w": open ? `${width}px` : "0px" } as CSSProperties)
       }
       className={cn(
         "bg-background flex w-[var(--panel-w)] flex-col",
