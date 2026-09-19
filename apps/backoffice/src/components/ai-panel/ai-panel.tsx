@@ -162,7 +162,7 @@ export function AiPanel() {
           : ({ "--panel-w": open ? `${width}px` : "0px" } as CSSProperties)
       }
       className={cn(
-        "bg-background flex w-[var(--panel-w)] flex-col",
+        "bg-background flex w-(--panel-w) flex-col",
         isOverlay
           ? cn(
               "fixed inset-y-0 right-0 z-40 border-l shadow-xl transition-transform duration-200 ease-linear",
