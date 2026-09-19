@@ -194,7 +194,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 text-3xs flex cursor-pointer items-center gap-1 transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -531,7 +531,7 @@ export function FinancialSummary({
               Biến động Jackpot
             </span>
             {f.hasJackpotWinner && (
-              <Badge className="ml-auto h-4 gap-1 border border-teal-400/40 bg-teal-500/15 px-1.5 text-[10px] text-teal-700 dark:text-teal-300">
+              <Badge className="text-3xs ml-auto h-4 gap-1 border border-teal-400/40 bg-teal-500/15 px-1.5 text-teal-700 dark:text-teal-300">
                 <Star className="size-2 fill-current" />
                 Đã trao
               </Badge>
@@ -582,7 +582,7 @@ export function FinancialSummary({
                   <span className="text-foreground shrink-0 font-mono text-sm font-bold tabular-nums">0</span>
                 </div>
                 <div className="bg-muted/10 px-3 py-1.5">
-                  <p className="text-muted-foreground/70 pl-8 text-[11px]">
+                  <p className="text-muted-foreground/70 text-2xs pl-8">
                     Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                   </p>
                 </div>

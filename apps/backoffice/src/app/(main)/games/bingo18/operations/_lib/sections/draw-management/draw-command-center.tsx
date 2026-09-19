@@ -261,7 +261,7 @@ export function DrawCommandCenter({
                 />
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <p className="text-muted-foreground shrink-0 font-mono text-[11px]">{draw.drawId}</p>
+                <p className="text-muted-foreground text-2xs shrink-0 font-mono">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
                 {/* Countdown theo trạng thái — thay chip giờ tĩnh, người trực ca
                     không cần tự nhìn đồng hồ (Bingo18 chu kỳ ~6 phút).

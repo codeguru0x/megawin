@@ -82,7 +82,7 @@ function FeedRow({
           <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
           <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>{label}</span>
           {isLargeBet && (
-            <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+            <span className="text-3xs inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 font-semibold text-red-600 dark:text-red-400">
               Cược lớn
             </span>
           )}
@@ -105,7 +105,7 @@ function FeedRow({
             entry.numbers.map((n, idx) => (
               <span
                 key={`n-${idx}`}
-                className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500 text-[11px] font-bold text-white tabular-nums"
+                className="text-2xs inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500 font-bold text-white tabular-nums"
               >
                 {n}
               </span>
@@ -145,7 +145,7 @@ function FeedColumn({
       <div className="mb-1.5 flex items-center gap-1.5">
         <Icon className="text-muted-foreground size-3.5 shrink-0" />
         <span className="text-muted-foreground text-xs font-semibold">{title}</span>
-        <span className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(entries.length)}</span>
+        <span className="text-muted-foreground/60 text-2xs tabular-nums">{formatNumber(entries.length)}</span>
       </div>
       <div className="max-h-[560px] space-y-0.5 overflow-y-auto pr-1">
         {entries.length === 0 ? (
@@ -181,7 +181,7 @@ export function LiveFeed({
         <div className="flex items-center gap-2">
           <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
-          <span className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(totalCount)} phiếu</span>
+          <span className="text-muted-foreground/60 text-2xs tabular-nums">{formatNumber(totalCount)} phiếu</span>
           {!isSettled && (
             <span className="ml-auto flex items-center gap-1 text-xs font-medium text-green-600">
               <span className="size-1.5 animate-pulse rounded-full bg-green-500" />

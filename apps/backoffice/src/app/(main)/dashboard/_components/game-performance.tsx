@@ -80,7 +80,7 @@ function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }:
       fill="white"
       textAnchor="middle"
       dominantBaseline="central"
-      className="text-[10px] font-bold [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]"
+      className="text-3xs font-bold [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]"
     >
       {(percent * 100).toFixed(0)}%
     </text>
@@ -167,7 +167,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                 <p className="text-foreground text-sm font-bold tabular-nums">{formatVNDCompact(kpis.totalStake)}</p>
               </div>
             </div>
-            {/* Mini legend dưới chart — text-[10px] chấp nhận vì trong vùng chart compact */}
+            {/* Mini legend dưới chart — text-3xs chấp nhận vì trong vùng chart compact */}
             <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 px-2">
               {chartData.map((item) => (
                 <div key={item.gameProduct} className="flex items-center gap-1">

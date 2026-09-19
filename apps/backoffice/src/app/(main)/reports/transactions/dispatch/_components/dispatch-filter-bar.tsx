@@ -143,7 +143,7 @@ export function DispatchFilterBar() {
             {/* Detected-type badge bên phải input */}
             {searchInput.trim() && detectedKind && (
               <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">
-                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-medium uppercase tabular-nums">
+                <Badge variant="secondary" className="text-3xs h-5 px-1.5 font-medium uppercase tabular-nums">
                   {IDENTITY_KIND_LABELS[detectedKind]}
                 </Badge>
               </span>
@@ -217,7 +217,7 @@ export function DispatchFilterBar() {
                 <SlidersHorizontal className="size-3.5" />
                 Bộ lọc
                 {activeDimensionCount > 0 && (
-                  <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-[10px] tabular-nums">
+                  <Badge variant="secondary" className="text-3xs ml-0.5 h-4 min-w-4 px-1 tabular-nums">
                     {activeDimensionCount}
                   </Badge>
                 )}
@@ -233,7 +233,7 @@ export function DispatchFilterBar() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-6 gap-1 px-1.5 text-[11px]"
+                      className="text-2xs h-6 gap-1 px-1.5"
                       onClick={() => {
                         setTenantId(null);
                         setStatus(null);
@@ -249,7 +249,7 @@ export function DispatchFilterBar() {
 
                 {/* Status */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="dispatch-filter-status" className="text-muted-foreground text-[11px] font-medium">
+                  <label htmlFor="dispatch-filter-status" className="text-muted-foreground text-2xs font-medium">
                     Trạng thái
                   </label>
                   <Select
@@ -272,7 +272,7 @@ export function DispatchFilterBar() {
 
                 {/* Source kind */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="dispatch-filter-source" className="text-muted-foreground text-[11px] font-medium">
+                  <label htmlFor="dispatch-filter-source" className="text-muted-foreground text-2xs font-medium">
                     Loại nguồn
                   </label>
                   <Select
@@ -295,7 +295,7 @@ export function DispatchFilterBar() {
 
                 {/* Tenant */}
                 <div className="flex flex-col gap-1">
-                  <label htmlFor="dispatch-filter-tenant" className="text-muted-foreground text-[11px] font-medium">
+                  <label htmlFor="dispatch-filter-tenant" className="text-muted-foreground text-2xs font-medium">
                     Tenant
                   </label>
                   <TenantCombobox

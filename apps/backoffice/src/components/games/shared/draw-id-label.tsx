@@ -66,7 +66,7 @@ export function DrawIdLabel({ drawId, mode = "compact", className }: DrawIdLabel
     <span className={cn("inline-flex items-center gap-1.5 tabular-nums", className)}>
       <span className="font-medium">{noLabel}</span>
       {isToday ? null : (
-        <span className="rounded bg-amber-500/15 px-1 py-0.5 text-[10px] leading-none font-medium text-amber-700 dark:text-amber-400">
+        <span className="text-3xs rounded bg-amber-500/15 px-1 py-0.5 leading-none font-medium text-amber-700 dark:text-amber-400">
           {dayLabel}
         </span>
       )}

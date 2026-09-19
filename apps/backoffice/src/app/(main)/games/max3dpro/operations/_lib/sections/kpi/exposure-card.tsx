@@ -24,7 +24,7 @@ function ComponentStat({ label, value, tip, danger }: { label: string; value: nu
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="border-border/50 bg-muted/10 cursor-help rounded-lg border px-3 py-2">
-          <p className="text-muted-foreground text-[11px]">{label}</p>
+          <p className="text-muted-foreground text-2xs">{label}</p>
           <p
             className={cn(
               "text-sm leading-tight font-bold tabular-nums",
@@ -105,7 +105,7 @@ export function ExposureCard({
 
         {/* Gauge vs ngưỡng tuyệt đối */}
         <div className="space-y-1">
-          <div className="text-muted-foreground flex items-center justify-between text-[11px] tabular-nums">
+          <div className="text-muted-foreground text-2xs flex items-center justify-between tabular-nums">
             <span>
               Worst-case / Ngưỡng: <span className="text-foreground font-semibold">{Math.round(ratio * 100)}%</span>
             </span>

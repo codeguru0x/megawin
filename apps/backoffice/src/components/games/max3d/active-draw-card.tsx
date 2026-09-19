@@ -192,7 +192,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 </Link>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="text-muted-foreground font-mono text-[11px]">{draw.drawId}</p>
+              <p className="text-muted-foreground text-2xs font-mono">{draw.drawId}</p>
             </div>
           </div>
         </div>
@@ -253,7 +253,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 <Ticket className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-muted-foreground text-[11px]">Vé đã bán</p>
+                <p className="text-muted-foreground text-2xs">Vé đã bán</p>
                 <p className="text-sm font-semibold tabular-nums">
                   {draw.stats!.ticketEntryCount.toLocaleString("vi-VN")}
                 </p>
@@ -264,7 +264,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 <CircleDollarSign className="size-3.5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <p className="text-muted-foreground text-[11px]">Doanh thu</p>
+                <p className="text-muted-foreground text-2xs">Doanh thu</p>
                 <p className="text-sm font-semibold tabular-nums">{formatVND(draw.stats!.totalSalesAmount)}</p>
               </div>
             </div>
@@ -314,7 +314,7 @@ export function Max3dQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 </Link>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="text-muted-foreground font-mono text-[11px]">{draw.drawId}</p>
+              <p className="text-muted-foreground text-2xs font-mono">{draw.drawId}</p>
             </div>
           </div>
         </div>
@@ -343,7 +343,7 @@ export function Max3dQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               {displayVNDateTime(draw.drawTime)}
             </TooltipContent>
           </Tooltip>
-          <span className="text-muted-foreground/60 ml-auto text-[10px]">{draw.drawDate}</span>
+          <span className="text-muted-foreground/60 text-3xs ml-auto">{draw.drawDate}</span>
         </div>
       </div>
     </div>

@@ -105,7 +105,7 @@ export function JackpotHeroCard() {
               }
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">
+          <div className="text-2xs flex items-center justify-between text-amber-700/60 dark:text-amber-400/50">
             <span>
               {progress.remaining > 0 ? `Còn thiếu ${formatVNDCompact(progress.remaining)}` : "Đã đạt ngưỡng chia"}
             </span>

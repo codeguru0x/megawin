@@ -415,7 +415,7 @@ export function PublishResultAction({
 
               <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
                 {showDiff && (
-                  <div className="text-muted-foreground flex items-center gap-3 text-[11px]">
+                  <div className="text-muted-foreground text-2xs flex items-center gap-3">
                     <span className="inline-flex items-center gap-1.5">
                       <span className="bg-muted ring-border size-4 rounded-full ring-1" />
                       Thứ tự
@@ -458,7 +458,7 @@ export function PublishResultAction({
                           {showMainDiff && (
                             <span
                               className={cn(
-                                "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono text-[10px] font-semibold tabular-nums",
+                                "text-3xs inline-flex h-4.5 items-center rounded-full px-1.5 font-mono font-semibold tabular-nums",
                                 isDiff
                                   ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
                                   : "invisible",
@@ -504,7 +504,7 @@ export function PublishResultAction({
                     {showBonusDiff && (
                       <span
                         className={cn(
-                          "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono text-[10px] font-semibold tabular-nums",
+                          "text-3xs inline-flex h-4.5 items-center rounded-full px-1.5 font-mono font-semibold tabular-nums",
                           bonusDiff?.diffIndices.has(0)
                             ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
                             : "invisible",

@@ -152,13 +152,13 @@ function NavigateToSuccessCard({ output, toolCallId }: { output: NavigateToSucce
         <span className="flex items-baseline gap-2">
           <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
           {/* `shrink-0`: trạng thái LUÔN đọc được, phần bị cắt là tên trang (còn nguyên ở `title`). */}
-          <span className={cn("shrink-0 text-[11px]", autoNavigatedNow ? "text-muted-foreground" : "text-primary")}>
+          <span className={cn("text-2xs shrink-0", autoNavigatedNow ? "text-muted-foreground" : "text-primary")}>
             {autoNavigatedNow ? "Đã mở" : "Mở trang"}
           </span>
         </span>
         {context !== undefined && <span className="text-muted-foreground mt-px block truncate text-xs">{context}</span>}
         {downgradedForDirty && (
-          <span className="mt-1 flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-500">
+          <span className="text-2xs mt-1 flex items-center gap-1 text-amber-600 dark:text-amber-500">
             <PencilLineIcon className="size-3 shrink-0" />
             Trang hiện tại có thay đổi chưa lưu
           </span>

@@ -131,7 +131,7 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         <Badge
           variant="secondary"
           className={cn(
-            "ml-auto h-4 min-w-5 justify-center px-1.5 text-[10px] font-bold",
+            "text-3xs ml-auto h-4 min-w-5 justify-center px-1.5 font-bold",
             accent === "blue" && "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
             accent === "emerald" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
             accent === "muted" && "bg-muted text-muted-foreground",

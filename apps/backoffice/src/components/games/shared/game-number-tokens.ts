@@ -20,7 +20,7 @@
 export const HEATMAP_BADGE_SIZE = "size-6";
 
 /** Font size trong badge. */
-export const HEATMAP_BADGE_TEXT = "text-[11px]";
+export const HEATMAP_BADGE_TEXT = "text-2xs"; // 11px — T4, không đổi
 
 /**
  * Padding-top của ô cell trong grid.
@@ -30,7 +30,7 @@ export const HEATMAP_BADGE_TEXT = "text-[11px]";
 export const HEATMAP_CELL_PT = "pt-8";
 
 /** Font size cho số tiền/count chính trong ô. */
-export const HEATMAP_CELL_DATA_SIZE = "text-[11px]";
+export const HEATMAP_CELL_DATA_SIZE = "text-2xs"; // 11px — T4, không đổi
 
 /** Font size cho text phụ (số lần, ×). */
-export const HEATMAP_CELL_SUB_SIZE = "text-[10px]";
+export const HEATMAP_CELL_SUB_SIZE = "text-3xs"; // 10px — T5, không đổi

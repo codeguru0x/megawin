@@ -210,7 +210,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 text-3xs flex cursor-pointer items-center gap-1 transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -552,7 +552,7 @@ export function FinancialSummary({
               Biến động Jackpot
             </span>
             {f.hasJackpotWinner && (
-              <Badge className="ml-auto h-4 gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-[10px] text-amber-700 dark:text-amber-300">
+              <Badge className="text-3xs ml-auto h-4 gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-amber-700 dark:text-amber-300">
                 <Star className="size-2 fill-current" />
                 Đã trao
               </Badge>
@@ -561,7 +561,7 @@ export function FinancialSummary({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button type="button" className="ml-auto flex items-center" aria-label="Giải thích kỳ chia giải">
-                    <Badge className="h-4 cursor-help gap-1 border border-violet-400/40 bg-violet-500/15 px-1.5 text-[10px] text-violet-700 dark:text-violet-300">
+                    <Badge className="text-3xs h-4 cursor-help gap-1 border border-violet-400/40 bg-violet-500/15 px-1.5 text-violet-700 dark:text-violet-300">
                       <Info className="size-2.5" />
                       Kỳ chia giải
                     </Badge>
@@ -620,7 +620,7 @@ export function FinancialSummary({
                   </span>
                 </div>
                 <div className="bg-muted/10 px-3 py-1.5">
-                  <p className="text-muted-foreground/70 pl-8 text-[11px]">
+                  <p className="text-muted-foreground/70 text-2xs pl-8">
                     Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                   </p>
                 </div>
@@ -655,7 +655,7 @@ export function FinancialSummary({
                   </span>
                 </div>
                 <div className="bg-muted/10 px-3 py-1.5">
-                  <p className="text-muted-foreground/70 pl-8 text-[11px]">
+                  <p className="text-muted-foreground/70 text-2xs pl-8">
                     Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                   </p>
                 </div>

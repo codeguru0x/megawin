@@ -168,7 +168,7 @@ function FilterBadge({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tabular-nums transition-all duration-150",
+        "text-2xs inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 font-semibold tabular-nums transition-all duration-150",
         "hover:scale-105 active:scale-95",
         active ? cn("shadow-sm ring-1 ring-offset-1", activeClass) : colorClass,
       )}
@@ -176,7 +176,7 @@ function FilterBadge({
       {label}
       <span
         className={cn(
-          "min-w-[1.2rem] rounded-full px-1 py-0 text-center text-[10px] font-bold tabular-nums",
+          "text-3xs min-w-[1.2rem] rounded-full px-1 py-0 text-center font-bold tabular-nums",
           active ? "bg-white/30" : "bg-current/10 opacity-80",
         )}
       >
@@ -236,7 +236,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 text-3xs flex cursor-pointer items-center gap-1 transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -296,7 +296,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                 <button
                   type="button"
                   onClick={() => setHighlight(null)}
-                  className="text-muted-foreground/50 hover:text-muted-foreground text-[10px] underline underline-offset-2"
+                  className="text-muted-foreground/50 hover:text-muted-foreground text-3xs underline underline-offset-2"
                 >
                   Xoá lọc
                 </button>
@@ -305,7 +305,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
 
             {/* Chú thích khi đang filter */}
             {highlight && (
-              <p className="text-muted-foreground/60 text-center text-[10px]">
+              <p className="text-muted-foreground/60 text-3xs text-center">
                 {highlight === "big" && `${result.bigCount} số Lớn (≥41) · ${result.smallCount} số Nhỏ`}
                 {highlight === "small" && `${result.smallCount} số Nhỏ (≤40) · ${result.bigCount} số Lớn`}
                 {highlight === "even" && `${result.evenCount} số Chẵn · ${result.oddCount} số Lẻ`}
@@ -318,16 +318,16 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
           {result.basicPrizes.length > 0 && (
             <div className="overflow-hidden rounded-xl border">
               <div className="bg-muted/40 grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 border-b px-3 py-2">
-                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
                   Cơ bản (Pick × Trúng)
                 </span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Boards
                 </span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>
@@ -375,16 +375,14 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
           {result.sideBetPrizes.length > 0 && (
             <div className="overflow-hidden rounded-xl border">
               <div className="bg-muted/40 grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 border-b px-3 py-2">
-                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
-                  Side Bets
-                </span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">Side Bets</span>
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Bets
                 </span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Giá trị thưởng
                 </span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Tổng thưởng
                 </span>
               </div>

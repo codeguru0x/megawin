@@ -152,8 +152,8 @@ function GroupSection({
     <div>
       <div className="flex items-center gap-1.5 px-2 pb-1">
         {cfg.icon}
-        <span className={cn("text-[11px] font-semibold tracking-wider uppercase", cfg.color)}>{cfg.label}</span>
-        <Badge variant="outline" className={cn("ml-auto h-4 px-1.5 py-0 font-mono text-[10px]", cfg.badgeClass)}>
+        <span className={cn("text-2xs font-semibold tracking-wider uppercase", cfg.color)}>{cfg.label}</span>
+        <Badge variant="outline" className={cn("text-3xs ml-auto h-4 px-1.5 py-0 font-mono", cfg.badgeClass)}>
           {draws.length}
         </Badge>
       </div>
@@ -266,7 +266,7 @@ export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }
         {!search && allActive.length >= 5 && (
           <div className="mb-2 flex items-center gap-1.5 rounded-md bg-green-50 px-2.5 py-1.5 dark:bg-green-950/40">
             <Zap className="size-3 shrink-0 text-green-500" />
-            <span className="text-[11px] text-green-700 dark:text-green-400">
+            <span className="text-2xs text-green-700 dark:text-green-400">
               {allActive.length} kỳ đang diễn ra
               {allFuture.length > 0 && ` · ${allFuture.length} sắp tới`}
             </span>

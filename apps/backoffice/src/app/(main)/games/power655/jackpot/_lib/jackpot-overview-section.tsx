@@ -86,7 +86,7 @@ export function JackpotHeroCard() {
               </p>
               {/* JP1 primary — dòng lớn */}
               <div className="mt-0.5 flex items-baseline gap-2">
-                <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                <span className="text-3xs rounded-md bg-red-100 px-1.5 py-0.5 font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
                   Jackpot 1
                 </span>
                 <span className="text-3xl font-extrabold tracking-tight text-red-900 tabular-nums dark:text-red-100">
@@ -95,7 +95,7 @@ export function JackpotHeroCard() {
               </div>
               {/* JP2 secondary — dòng nhỏ */}
               <div className="mt-1 flex items-center gap-2">
-                <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                <span className="text-3xs rounded-md bg-blue-100 px-1.5 py-0.5 font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
                   Jackpot 2
                 </span>
                 <span className="text-sm font-semibold text-blue-700 tabular-nums dark:text-blue-300">
@@ -147,18 +147,18 @@ export function JackpotHeroCard() {
               }
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
+          <div className="text-2xs flex items-center justify-between text-red-700/60 dark:text-red-400/50">
             <span>
               {isOverflow
                 ? `Đã vượt +${formatVNDCompact(jp1 - overflowThreshold)}`
                 : `Còn thiếu ${formatVNDCompact(jp1Remaining)}`}
             </span>
             <span className="flex items-center gap-1">
-              <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+              <span className="text-3xs rounded-md bg-red-100 px-1.5 py-0.5 font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
                 JP1 {jp1ContribPct}%
               </span>
               <span className="text-muted-foreground/50">·</span>
-              <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+              <span className="text-3xs rounded-md bg-blue-100 px-1.5 py-0.5 font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
                 JP2 {jp2ContribPct}%
               </span>
             </span>
@@ -318,9 +318,9 @@ function KpiCard({
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-[11px] font-medium">{label}</p>
+        <p className="text-muted-foreground text-2xs font-medium">{label}</p>
         <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
-        {sub && <p className="text-muted-foreground truncate text-[11px]">{sub}</p>}
+        {sub && <p className="text-muted-foreground text-2xs truncate">{sub}</p>}
       </div>
     </div>
   );

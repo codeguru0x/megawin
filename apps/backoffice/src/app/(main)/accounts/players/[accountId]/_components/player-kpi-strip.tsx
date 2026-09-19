@@ -93,9 +93,9 @@ export function PlayerKpiStrip({ data, isLoading }: PlayerKpiStripProps) {
             <card.icon className={cn("size-5", card.iconColor)} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-muted-foreground text-[11px] font-medium">{card.label}</p>
+            <p className="text-muted-foreground text-2xs font-medium">{card.label}</p>
             <p className={cn("text-foreground text-lg font-bold tabular-nums", card.valueClass)}>{card.value}</p>
-            <p className="text-muted-foreground truncate text-[11px]">{card.sub}</p>
+            <p className="text-muted-foreground text-2xs truncate">{card.sub}</p>
           </div>
         </div>
       ))}

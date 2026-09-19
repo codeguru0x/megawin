@@ -321,7 +321,7 @@ export function DrawCommandCenter({
                   <button
                     type="button"
                     onClick={settlingRetryHandler}
-                    className="text-muted-foreground/70 hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[11px] transition-colors"
+                    className="text-muted-foreground/70 hover:text-foreground text-2xs inline-flex shrink-0 items-center gap-1 transition-colors"
                   >
                     <RotateCcw className="size-3" /> Thử lại
                   </button>

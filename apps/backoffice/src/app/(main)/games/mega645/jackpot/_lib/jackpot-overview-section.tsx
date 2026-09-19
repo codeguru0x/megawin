@@ -123,7 +123,7 @@ export function JackpotHeroCard() {
               }
             />
           </div>
-          <div className="flex items-center justify-between text-[11px] text-teal-700/60 dark:text-teal-400/50">
+          <div className="text-2xs flex items-center justify-between text-teal-700/60 dark:text-teal-400/50">
             <span>
               {(progress?.remaining ?? 0) > 0
                 ? `Còn thiếu ${formatVNDCompact(progress!.remaining)}`
@@ -269,9 +269,9 @@ function KpiCard({
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-[11px] font-medium">{label}</p>
+        <p className="text-muted-foreground text-2xs font-medium">{label}</p>
         <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
-        {sub && <p className="text-muted-foreground truncate text-[11px]">{sub}</p>}
+        {sub && <p className="text-muted-foreground text-2xs truncate">{sub}</p>}
       </div>
     </div>
   );

@@ -168,7 +168,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 1. Metadata strip ───────────────────────────────────── */}
           <div className="bg-muted/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg px-4 py-3 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <User className="size-3.5 shrink-0" />
                 Người chơi
               </span>
@@ -192,21 +192,21 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Layers className="size-3.5 shrink-0" />
                 Cặp số
               </span>
               <span className="font-semibold tabular-nums">{formatNumber(entry.lineCount)}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Building2 className="size-3.5 shrink-0" />
                 Đại lý
               </span>
               <span className="font-semibold">{(entry as any).tenantId ?? "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Clock className="size-3.5 shrink-0" />
                 Đặt lúc
               </span>
@@ -224,10 +224,10 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                  <p className="text-muted-foreground text-2xs flex items-center gap-1.5">
                     Tiền cược
                     {entry.betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
+                      <span className="bg-muted text-muted-foreground text-3xs rounded px-1 py-px font-medium">
                         ×{formatNumber(entry.betUnitCount)}
                       </span>
                     )}
@@ -240,7 +240,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant?.commissionAmount ?? 0)}</p>
                 </div>
               </div>
@@ -252,10 +252,10 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                  <p className="text-muted-foreground text-2xs flex items-center gap-1.5">
                     Tiền cược
                     {entry.betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
+                      <span className="bg-muted text-muted-foreground text-3xs rounded px-1 py-px font-medium">
                         ×{formatNumber(entry.betUnitCount)}
                       </span>
                     )}
@@ -268,7 +268,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalPayout}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
@@ -277,7 +277,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant?.commissionAmount ?? 0)}</p>
                 </div>
               </div>
@@ -301,7 +301,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
+                    <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
                         playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
@@ -319,7 +319,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 4. Kết quả & Bộ số đã chọn ─────────────────────────────── */}
           {result && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">Kết quả</p>
+              <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Kết quả</p>
               <div className="mb-4 space-y-1.5">
                 {(
                   [
@@ -331,7 +331,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 ).map(({ label, values }) =>
                   values?.length ? (
                     <div key={label} className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-muted-foreground w-16 shrink-0 text-[11px]">{label}</span>
+                      <span className="text-muted-foreground text-2xs w-16 shrink-0">{label}</span>
                       {values.map((t) => (
                         <TripletDisplay
                           key={t}
@@ -347,9 +347,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
               <div className="mb-3 border-t" />
 
-              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">
-                Bộ số đã chọn
-              </p>
+              <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2">
                 {boards.map((board, i) => {
                   const boardColor = boardColorVar(board.boardNo);
@@ -366,12 +364,12 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5 pt-0.5">
-                        <span className="text-foreground text-[11px] leading-tight font-semibold">
+                        <span className="text-foreground text-2xs leading-tight font-semibold">
                           {playLabel ?? "Thẳng"}
                         </span>
-                        <span className="text-muted-foreground text-[10px] leading-tight">{board.lineCount} cặp</span>
+                        <span className="text-muted-foreground text-3xs leading-tight">{board.lineCount} cặp</span>
                         {board.betCount > 1 && (
-                          <span className="text-muted-foreground/70 text-[10px] leading-tight">×{board.betCount}</span>
+                          <span className="text-muted-foreground/70 text-3xs leading-tight">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -392,9 +390,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           ) : (
             boards.length > 0 && (
               <div className="rounded-lg border p-4">
-                <p className="text-muted-foreground mb-3 text-[11px] font-medium tracking-wide uppercase">
-                  Bộ số đã chọn
-                </p>
+                <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2">
                   {boards.map((board, i) => {
                     const boardColor = boardColorVar(board.boardNo);
@@ -411,14 +407,12 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5 pt-0.5">
-                          <span className="text-foreground text-[11px] leading-tight font-semibold">
+                          <span className="text-foreground text-2xs leading-tight font-semibold">
                             {playLabel ?? "Thẳng"}
                           </span>
-                          <span className="text-muted-foreground text-[10px] leading-tight">{board.lineCount} cặp</span>
+                          <span className="text-muted-foreground text-3xs leading-tight">{board.lineCount} cặp</span>
                           {board.betCount > 1 && (
-                            <span className="text-muted-foreground/70 text-[10px] leading-tight">
-                              ×{board.betCount}
-                            </span>
+                            <span className="text-muted-foreground/70 text-3xs leading-tight">×{board.betCount}</span>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5">
@@ -437,7 +431,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 6. Giải trúng ──────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="border-profit/30 bg-profit/5 rounded-lg border p-4">
-              <p className="text-profit mb-3 text-[11px] font-medium tracking-wide uppercase">Giải trúng</p>
+              <p className="text-profit text-2xs mb-3 font-medium tracking-wide uppercase">Giải trúng</p>
               <div className="space-y-2">
                 {[...tiers]
                   .sort(
@@ -457,10 +451,10 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           <Badge variant="secondary" className="font-medium">
                             {tierLabel}
                           </Badge>
-                          <span className="bg-secondary text-muted-foreground rounded px-1.5 py-0.5 text-[10px]">
+                          <span className="bg-secondary text-muted-foreground text-3xs rounded px-1.5 py-0.5">
                             {modeTag}
                           </span>
-                          <span className="bg-profit/15 text-profit inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                          <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
                             ×{tier.hitCount} lần
                           </span>
                         </div>

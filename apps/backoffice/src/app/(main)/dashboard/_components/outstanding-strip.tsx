@@ -81,7 +81,7 @@ function MetricCard({ icon: Icon, label, value, color }: MetricCardProps) {
         )}
       />
       <div className="min-w-0">
-        <p className="text-muted-foreground text-[10px] font-medium">{label}</p>
+        <p className="text-muted-foreground text-3xs font-medium">{label}</p>
         <p className="text-foreground text-sm font-bold tabular-nums">{value}</p>
       </div>
     </div>
@@ -138,7 +138,7 @@ function GameCard({
         <div className="flex items-center justify-between gap-1">
           <span className="text-foreground truncate text-xs font-semibold">{getGameLabel(gameProduct)}</span>
           <span
-            className="shrink-0 rounded bg-[var(--swatch-bg)] px-1.5 py-0.5 text-[10px] font-bold text-white tabular-nums"
+            className="text-3xs shrink-0 rounded bg-[var(--swatch-bg)] px-1.5 py-0.5 font-bold text-white tabular-nums"
             style={{ "--swatch-bg": hex } as React.CSSProperties}
           >
             {pct.toFixed(1)}%
@@ -149,7 +149,7 @@ function GameCard({
         <span className="text-foreground text-sm font-bold tabular-nums">{formatVNDCompact(stake)}</span>
 
         {/* Chi tiết: kỳ · vé · NC · đại lý */}
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] tabular-nums">
+        <div className="text-muted-foreground text-3xs flex flex-wrap items-center gap-x-2 gap-y-0 tabular-nums">
           <span>{activeDrawCount} kỳ</span>
           <span>{formatNumber(entryCount)} vé</span>
           <span>{formatNumber(playerCount)} NC</span>
@@ -158,7 +158,7 @@ function GameCard({
 
         {/* Ước tính commission nếu có */}
         {estimatedCommission > 0 && (
-          <span className="text-[10px] text-amber-600 tabular-nums dark:text-amber-400">
+          <span className="text-3xs text-amber-600 tabular-nums dark:text-amber-400">
             ~{formatVNDCompact(estimatedCommission)} HH
           </span>
         )}

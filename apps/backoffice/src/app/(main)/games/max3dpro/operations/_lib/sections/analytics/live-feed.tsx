@@ -91,7 +91,7 @@ export function LiveFeed({
                         {e.playModeLabel}
                       </span>
                       {isLargeBet && (
-                        <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                        <span className="text-3xs inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 font-semibold text-red-600 dark:text-red-400">
                           Cược lớn
                         </span>
                       )}

@@ -59,7 +59,7 @@ export function PowerMatchBall({
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none",
-        size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs",
+        size === "sm" ? "text-2xs size-7" : "size-8 text-xs",
         POWER_MATCH_BALL_STYLE[variant],
       )}
     >

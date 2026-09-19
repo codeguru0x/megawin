@@ -892,7 +892,7 @@ function ScatterChartBody({
         type="number"
       >
         <Label
-          className="fill-muted-foreground text-[11px]"
+          className="fill-muted-foreground text-2xs"
           offset={-14}
           position="insideBottom"
           value={prettifyLabel(pair.x.dataKey, reportLabels)}
@@ -910,7 +910,7 @@ function ScatterChartBody({
       >
         <Label
           angle={-90}
-          className="fill-muted-foreground text-[11px] [text-anchor:middle]"
+          className="fill-muted-foreground text-2xs [text-anchor:middle]"
           position="insideLeft"
           value={prettifyLabel(pair.y.dataKey, reportLabels)}
         />

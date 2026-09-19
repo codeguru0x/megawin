@@ -74,6 +74,11 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
+  /* ── Typography tier T4/T5 — CHỈ dùng cho heatmap grid (xem operations-page-ui.mdc) ──── */
+  /* Named token thay arbitrary value — giữ ĐÚNG pixel hiện tại (11px/10px), không đổi thang. */
+  --text-2xs: 0.6875rem; /* 11px — T4, heatmap badge + cell data */
+  --text-3xs: 0.625rem; /* 10px — T5, heatmap cell sub-text, stepper time */
+
   /* ── Game Brand Colors ───────────────────────────────────────────────────── */
   /* Primary brand token per game — dùng cho charts, badges, borders, icons.   */
   /* Thêm vào @theme để Tailwind sinh ra bg-game-*, text-game-*, border-game-* */

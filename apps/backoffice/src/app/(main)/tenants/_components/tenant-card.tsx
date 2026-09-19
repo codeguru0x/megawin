@@ -198,14 +198,14 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="flex items-center gap-3 px-6 py-4">
               <Globe className="text-muted-foreground size-4 shrink-0" />
               <div className="min-w-0">
-                <p className="text-muted-foreground text-[11px]">Callback URL</p>
+                <p className="text-muted-foreground text-2xs">Callback URL</p>
                 <p className="text-foreground truncate text-xs font-medium">{tenant.callbackBaseUrl}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4">
               <Calendar className="text-muted-foreground size-4 shrink-0" />
               <div className="min-w-0">
-                <p className="text-muted-foreground text-[11px]">Ngày tạo</p>
+                <p className="text-muted-foreground text-2xs">Ngày tạo</p>
                 <p className="text-foreground text-xs font-medium tabular-nums">
                   {new Date(tenant.createdAt).toLocaleDateString("vi-VN", {
                     day: "2-digit",
@@ -222,7 +222,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
 
         {/* Card Footer */}
         <CardFooter className="justify-between border-t px-6 py-3">
-          <p className="text-muted-foreground text-[11px] tabular-nums">
+          <p className="text-muted-foreground text-2xs tabular-nums">
             Cập nhật lần cuối:{" "}
             {new Date(tenant.updatedAt).toLocaleDateString("vi-VN", {
               day: "2-digit",
@@ -232,7 +232,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
               minute: "2-digit",
             })}
           </p>
-          {tenant.description && <p className="text-muted-foreground text-[11px] italic">{tenant.description}</p>}
+          {tenant.description && <p className="text-muted-foreground text-2xs italic">{tenant.description}</p>}
         </CardFooter>
       </Card>
 

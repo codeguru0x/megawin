@@ -63,7 +63,7 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; wi
         <span className="text-foreground text-xs font-semibold whitespace-nowrap">{label}</span>
         {/* Khách chọn gì */}
         {isAnyTriple ? (
-          <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap">
+          <span className="bg-muted text-muted-foreground text-2xs rounded px-1.5 py-0.5 font-medium whitespace-nowrap">
             3 số bất kỳ
           </span>
         ) : board.number !== undefined ? (
@@ -73,7 +73,7 @@ function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; wi
         )}
         {/* Trúng gì: số lần khớp */}
         {board.matchCount != null && board.matchCount > 0 && (
-          <span className="inline-flex items-center rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-bold whitespace-nowrap text-amber-700 tabular-nums dark:text-amber-400">
+          <span className="text-2xs inline-flex items-center rounded-full bg-amber-500/15 px-1.5 py-0.5 font-bold whitespace-nowrap text-amber-700 tabular-nums dark:text-amber-400">
             trúng ×{board.matchCount}
           </span>
         )}
@@ -102,7 +102,7 @@ function SideBetDetail({ board, drawSum }: { board: WinningBoardDetail; drawSum:
           {typeLabel} · {pick}
         </span>
         {/* Trúng gì: kết quả thực tế của kỳ quay để đối chiếu */}
-        {drawSum > 0 && <span className="text-muted-foreground text-[11px] whitespace-nowrap">KQ: tổng {drawSum}</span>}
+        {drawSum > 0 && <span className="text-muted-foreground text-2xs whitespace-nowrap">KQ: tổng {drawSum}</span>}
       </div>
       <span className="justify-self-end text-xs font-semibold whitespace-nowrap text-cyan-700 tabular-nums dark:text-cyan-400">
         +{formatNumber(board.winAmount)}

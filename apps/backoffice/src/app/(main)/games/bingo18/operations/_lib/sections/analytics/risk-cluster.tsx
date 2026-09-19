@@ -25,7 +25,7 @@ function RankBadge({ rank, topClass }: { rank: number; topClass: string }) {
   return (
     <span
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums",
+        "text-3xs flex size-5 shrink-0 items-center justify-center rounded-full font-bold tabular-nums",
         rank === 1 ? topClass : "bg-muted text-muted-foreground",
       )}
     >
@@ -76,7 +76,7 @@ export function RiskCluster({
                       username={a.username}
                       className="text-xs"
                     />
-                    <p className="text-muted-foreground text-[10px] tabular-nums">{formatNumber(a.entries)} phiếu</p>
+                    <p className="text-muted-foreground text-3xs tabular-nums">{formatNumber(a.entries)} phiếu</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
                     {formatNumber(a.amount)}
@@ -115,7 +115,7 @@ export function RiskCluster({
                       username={p.username}
                       className="text-xs"
                     />
-                    <p className="text-muted-foreground text-[10px] tabular-nums">Cược {formatNumber(p.amount)}</p>
+                    <p className="text-muted-foreground text-3xs tabular-nums">Cược {formatNumber(p.amount)}</p>
                   </div>
                   <span className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-700 tabular-nums dark:text-red-300">
                     Phải trả {formatNumber(p.potentialWin)}

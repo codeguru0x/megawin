@@ -226,7 +226,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 text-3xs flex cursor-pointer items-center gap-1 transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng
@@ -573,13 +573,13 @@ export function FinancialSummary({
             {(f.hasJackpot1Winner || f.hasJackpot2Winner || f.jp1Overflow > 0) && (
               <div className="ml-auto flex items-center gap-1">
                 {f.hasJackpot1Winner && (
-                  <Badge className="h-4 gap-1 border border-purple-400/40 bg-purple-500/15 px-1.5 text-[10px] text-purple-700 dark:text-purple-300">
+                  <Badge className="text-3xs h-4 gap-1 border border-purple-400/40 bg-purple-500/15 px-1.5 text-purple-700 dark:text-purple-300">
                     <Star className="size-2 fill-current" />
                     Trao JP1
                   </Badge>
                 )}
                 {f.hasJackpot2Winner && (
-                  <Badge className="h-4 gap-1 border border-indigo-400/40 bg-indigo-500/15 px-1.5 text-[10px] text-indigo-700 dark:text-indigo-300">
+                  <Badge className="text-3xs h-4 gap-1 border border-indigo-400/40 bg-indigo-500/15 px-1.5 text-indigo-700 dark:text-indigo-300">
                     <Star className="size-2 fill-current" />
                     Trao JP2
                   </Badge>
@@ -588,7 +588,7 @@ export function FinancialSummary({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button type="button" className="flex items-center" aria-label="Giải thích tràn quỹ">
-                        <Badge className="h-4 cursor-help gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-[10px] text-amber-700 dark:text-amber-300">
+                        <Badge className="text-3xs h-4 cursor-help gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-amber-700 dark:text-amber-300">
                           <Info className="size-2.5" />
                           Tràn JP1→JP2
                         </Badge>
@@ -723,7 +723,7 @@ export function FinancialSummary({
             )}
             {(f.hasJackpot1Winner || f.hasJackpot2Winner) && (
               <div className="bg-muted/10 px-3 py-1.5">
-                <p className="text-muted-foreground/70 pl-3 text-[11px]">
+                <p className="text-muted-foreground/70 text-2xs pl-3">
                   Cycle đã đóng — kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
                 </p>
               </div>

@@ -45,7 +45,7 @@ const SumBarColumn = memo(function SumBarColumn({
           <div className="flex w-full flex-1 flex-col justify-end">
             <span
               className={cn(
-                "mb-0.5 text-center text-[10px] font-semibold tabular-nums",
+                "text-3xs mb-0.5 text-center font-semibold tabular-nums",
                 amount === 0 ? "opacity-0" : "opacity-100",
                 overThreshold ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
               )}
@@ -66,7 +66,7 @@ const SumBarColumn = memo(function SumBarColumn({
           </div>
           <span
             className={cn(
-              "flex h-6 w-full items-center justify-center rounded-md text-[11px] font-bold tabular-nums",
+              "text-2xs flex h-6 w-full items-center justify-center rounded-md font-bold tabular-nums",
               isHighMultiplier
                 ? "bg-red-100 text-red-700 ring-1 ring-red-300/60 dark:bg-red-900/50 dark:text-red-300 dark:ring-red-800/50"
                 : "bg-muted text-muted-foreground",
@@ -174,7 +174,7 @@ export function SideBetCard({
             </p>
           </div>
           {skewed && (
-            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+            <span className="text-2xs shrink-0 rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
               Lệch {Math.round(topPct)}% → {top.label}
             </span>
           )}
@@ -216,7 +216,7 @@ export function SideBetCard({
               >
                 <p className="text-xs font-medium">{d.label}</p>
                 <p className="text-sm leading-tight font-bold tabular-nums">{formatNumber(d.amount)}</p>
-                <p className="text-muted-foreground text-[10px] tabular-nums">
+                <p className="text-muted-foreground text-3xs tabular-nums">
                   {Math.round(pct)}% · nền {d.base}
                 </p>
               </div>

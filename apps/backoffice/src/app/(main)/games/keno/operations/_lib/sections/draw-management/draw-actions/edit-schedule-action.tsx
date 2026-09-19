@@ -148,7 +148,7 @@ export function EditScheduleAction({
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-muted-foreground/70 text-[11px]">
+            <p className="text-muted-foreground/70 text-2xs">
               Keno quay cố định theo chu kỳ 8 phút. Chỉ sửa khi có lý do đặc biệt.
             </p>
           </div>

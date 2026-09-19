@@ -24,9 +24,9 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-[11px] font-medium">{label}</p>
+        <p className="text-muted-foreground text-2xs font-medium">{label}</p>
         <p className="text-foreground text-lg font-bold tabular-nums">{value}</p>
-        <p className="text-muted-foreground truncate text-[11px]">{sub}</p>
+        <p className="text-muted-foreground text-2xs truncate">{sub}</p>
       </div>
     </div>
   );

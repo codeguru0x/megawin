@@ -53,7 +53,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
                 </div>
                 <p className="mt-1 text-sm font-bold tabular-nums">{formatNumber(r.revenue)}</p>
                 <p
-                  className="text-muted-foreground text-[10px] tabular-nums"
+                  className="text-muted-foreground text-3xs tabular-nums"
                   title="Số phiếu xấp xỉ theo nhóm — cộng dồn không dedupe khi 1 phiếu có nhiều bộ số cùng nhóm."
                 >
                   {formatNumber(r.units)} lượt cược · {formatNumber(r.entries)} phiếu
@@ -99,11 +99,11 @@ export function TopTripletsCard({ rows }: { rows: TopTripletRow[] }) {
                 key={r.triplet}
                 className="border-border/40 bg-muted/10 grid [grid-template-columns:1.5rem_3.5rem_1fr_5.5rem] items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
               >
-                <span className="text-muted-foreground/50 text-[10px] tabular-nums">{i + 1}</span>
+                <span className="text-muted-foreground/50 text-3xs tabular-nums">{i + 1}</span>
                 <span className="inline-flex h-6 items-center justify-center rounded-md bg-emerald-500/15 px-1.5 font-mono text-xs font-bold text-emerald-700 tabular-nums dark:text-emerald-400">
                   {r.triplet}
                 </span>
-                <span className="text-muted-foreground text-[11px] tabular-nums">
+                <span className="text-muted-foreground text-2xs tabular-nums">
                   {formatNumber(r.straightUnits)} trùng khớp · {formatNumber(r.comboUnits)} tổ hợp
                 </span>
                 <span className="text-right text-xs font-semibold tabular-nums">{formatNumber(r.amount)}</span>
@@ -158,12 +158,12 @@ export function PairTable({ rows }: { rows: PairRow[] }) {
                     {r.triplet2}
                   </span>
                 </span>
-                <span className="text-muted-foreground text-right text-[11px] tabular-nums">
+                <span className="text-muted-foreground text-2xs text-right tabular-nums">
                   {formatNumber(r.units)} bộ
                 </span>
                 <span
                   className={cn(
-                    "text-right text-[11px] tabular-nums",
+                    "text-2xs text-right tabular-nums",
                     r.overAccounts ? "font-semibold text-amber-600 dark:text-amber-400" : "text-muted-foreground",
                   )}
                   title={r.overAccounts ? "Nhiều account cùng cược cặp này (nghi syndicate)" : undefined}
@@ -195,7 +195,7 @@ function RankBadge({ rank, topClass }: { rank: number; topClass: string }) {
   return (
     <span
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums",
+        "text-3xs flex size-5 shrink-0 items-center justify-center rounded-full font-bold tabular-nums",
         rank === 1 ? topClass : "bg-muted text-muted-foreground",
       )}
     >
@@ -245,7 +245,7 @@ export function RiskCluster({
                       username={a.username}
                       className="text-xs"
                     />
-                    <p className="text-muted-foreground text-[10px] tabular-nums">{formatNumber(a.entries)} phiếu</p>
+                    <p className="text-muted-foreground text-3xs tabular-nums">{formatNumber(a.entries)} phiếu</p>
                   </div>
                   <span className="shrink-0 text-xs font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
                     {formatNumber(a.amount)}
@@ -286,7 +286,7 @@ export function RiskCluster({
                       username={p.username}
                       className="text-xs"
                     />
-                    <p className="text-muted-foreground text-[10px] tabular-nums">Cược {formatNumber(p.amount)}</p>
+                    <p className="text-muted-foreground text-3xs tabular-nums">Cược {formatNumber(p.amount)}</p>
                   </div>
                   <span className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-xs font-semibold text-red-700 tabular-nums dark:text-red-300">
                     ≈ {formatNumber(p.potentialWin)}
@@ -324,11 +324,9 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
               className="border-border/40 bg-muted/10 grid [grid-template-columns:1fr_4rem_5rem_3rem] items-center gap-x-2 rounded-lg border px-2.5 py-1.5"
             >
               <span className="truncate text-xs font-medium">{t.tenantId}</span>
-              <span className="text-muted-foreground text-right text-[11px] tabular-nums">
-                {formatNumber(t.entries)}
-              </span>
+              <span className="text-muted-foreground text-2xs text-right tabular-nums">{formatNumber(t.entries)}</span>
               <span className="text-right text-xs font-semibold tabular-nums">{formatNumber(t.revenue)}</span>
-              <span className="text-muted-foreground text-right text-[11px] tabular-nums">{t.pct.toFixed(0)}%</span>
+              <span className="text-muted-foreground text-2xs text-right tabular-nums">{t.pct.toFixed(0)}%</span>
             </div>
           ))}
         </div>

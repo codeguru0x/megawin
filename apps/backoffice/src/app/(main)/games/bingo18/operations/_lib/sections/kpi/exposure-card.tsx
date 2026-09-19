@@ -27,7 +27,7 @@ function DiceBadges({ numbers }: { numbers: [number, number, number] }) {
       {numbers.map((n, i) => (
         <span
           key={i}
-          className="inline-flex size-5 items-center justify-center rounded bg-red-500/10 text-[11px] font-bold text-red-700 tabular-nums dark:text-red-300"
+          className="text-2xs inline-flex size-5 items-center justify-center rounded bg-red-500/10 font-bold text-red-700 tabular-nums dark:text-red-300"
         >
           {n}
         </span>
@@ -94,7 +94,7 @@ export function ExposureCard({
               <TooltipTrigger asChild>
                 <div className="flex cursor-help flex-col items-center gap-0.5">
                   <DiceBadges numbers={exposure.worstCase.numbers} />
-                  <span className="text-muted-foreground text-[10px] tabular-nums">Tổng {exposure.worstCase.sum}</span>
+                  <span className="text-muted-foreground text-3xs tabular-nums">Tổng {exposure.worstCase.sum}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-72 text-xs">
@@ -122,7 +122,7 @@ export function ExposureCard({
 
         {/* Gauge worst-case / doanh thu */}
         <div className="space-y-1">
-          <div className="text-muted-foreground flex items-center justify-between text-[11px] tabular-nums">
+          <div className="text-muted-foreground text-2xs flex items-center justify-between tabular-nums">
             <span>
               Worst-case / Doanh thu: <span className="text-foreground font-semibold">{Math.round(pct)}%</span>
               {underFloor && (
@@ -159,7 +159,7 @@ export function ExposureCard({
                   className="border-border/50 bg-muted/10 flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5"
                 >
                   <span className="flex items-center gap-1.5">
-                    <span className="text-muted-foreground/60 text-[10px] tabular-nums">#{i + 1}</span>
+                    <span className="text-muted-foreground/60 text-3xs tabular-nums">#{i + 1}</span>
                     <DiceBadges numbers={o.numbers} />
                   </span>
                   <span className="text-xs font-semibold text-red-600/90 tabular-nums dark:text-red-400">

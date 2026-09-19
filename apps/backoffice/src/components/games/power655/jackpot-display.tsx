@@ -17,7 +17,7 @@ export function DualJackpotDisplay({ jp1Amount, jp2Amount, size = "md", classNam
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300",
+            "text-3xs rounded-md bg-red-100 px-1.5 py-0.5 font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300",
             size === "sm" && "text-[9px]",
           )}
         >
@@ -37,7 +37,7 @@ export function DualJackpotDisplay({ jp1Amount, jp2Amount, size = "md", classNam
       <div className="flex items-center gap-2">
         <span
           className={cn(
-            "rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+            "text-3xs rounded-md bg-blue-100 px-1.5 py-0.5 font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
             size === "sm" && "text-[9px]",
           )}
         >

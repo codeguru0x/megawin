@@ -233,7 +233,7 @@ function AlertToggleRow({
           >
             {meta.label}
           </span>
-          <span className={cn("rounded px-1.5 py-px text-[10px] leading-tight font-medium", style.badge, style.icon)}>
+          <span className={cn("text-3xs rounded px-1.5 py-px leading-tight font-medium", style.badge, style.icon)}>
             {style.label}
           </span>
           <Tooltip>
@@ -373,7 +373,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                         </TooltipContent>
                       </Tooltip>
                     </p>
-                    <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-medium">
+                    <span className="bg-primary/10 text-primary text-2xs rounded-full px-2 py-0.5 font-medium">
                       {enabledCount}/{alertMeta.length} đang bật
                     </span>
                   </div>

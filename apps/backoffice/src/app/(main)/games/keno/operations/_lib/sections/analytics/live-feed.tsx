@@ -81,7 +81,7 @@ function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFir
           <div className={cn("size-1.5 shrink-0 rounded-full", color?.dot ?? "bg-muted-foreground")} />
           <span className={cn("truncate text-xs font-semibold", color?.text ?? "text-muted-foreground")}>{label}</span>
           {isLargeBet && (
-            <span className="inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+            <span className="text-3xs inline-flex h-4 shrink-0 items-center rounded-full bg-red-500/15 px-1.5 font-semibold text-red-600 dark:text-red-400">
               Cược lớn
             </span>
           )}
@@ -154,7 +154,7 @@ function FeedGroup({
       <div className="flex items-center gap-1.5 py-1">
         <Icon className={cn("size-3.5 shrink-0", accent)} />
         <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">{title}</span>
-        <span className="bg-muted text-muted-foreground ml-auto rounded-full px-1.5 text-[11px] font-medium tabular-nums">
+        <span className="bg-muted text-muted-foreground text-2xs ml-auto rounded-full px-1.5 font-medium tabular-nums">
           {entries.length}
         </span>
       </div>
@@ -193,7 +193,7 @@ export function LiveFeed({
           <Activity className="text-muted-foreground size-4 shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {totalCount > 0 && (
-            <span className="bg-muted text-muted-foreground rounded-full px-1.5 text-[11px] font-medium tabular-nums">
+            <span className="bg-muted text-muted-foreground text-2xs rounded-full px-1.5 font-medium tabular-nums">
               {formatNumber(totalCount)}
             </span>
           )}

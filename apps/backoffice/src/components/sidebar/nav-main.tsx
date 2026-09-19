@@ -160,7 +160,7 @@ const NavItemExpanded = ({
             {item.subItems.map((subItem) => (
               <SidebarMenuSubItem key={subItem.title}>
                 {subItem.sectionLabel && (
-                  <p className="text-muted-foreground/60 px-2 pt-3 pb-1 text-[10px] font-semibold tracking-wider uppercase">
+                  <p className="text-muted-foreground/60 text-3xs px-2 pt-3 pb-1 font-semibold tracking-wider uppercase">
                     {subItem.sectionLabel}
                   </p>
                 )}
@@ -205,7 +205,7 @@ const NavItemCollapsed = ({
             // chỉ nhận đúng 1 child, 2 children gây lỗi runtime/hydration.
             <Fragment key={subItem.title}>
               {subItem.sectionLabel && (
-                <p className="text-muted-foreground/60 pointer-events-none px-2 pt-2 pb-0.5 text-[10px] font-semibold tracking-wider uppercase">
+                <p className="text-muted-foreground/60 text-3xs pointer-events-none px-2 pt-2 pb-0.5 font-semibold tracking-wider uppercase">
                   {subItem.sectionLabel}
                 </p>
               )}

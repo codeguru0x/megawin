@@ -118,7 +118,7 @@ export function EmptyCard({ text }: { text: string }) {
 export function KpiTile({ label, value, valueClassName }: { label: string; value: string; valueClassName?: string }) {
   return (
     <div className="bg-muted/50 rounded-md px-2 py-1.5">
-      <p className="text-muted-foreground text-[10px]">{label}</p>
+      <p className="text-muted-foreground text-3xs">{label}</p>
       <p className={cn("text-sm font-semibold tabular-nums", valueClassName)}>{value}</p>
     </div>
   );

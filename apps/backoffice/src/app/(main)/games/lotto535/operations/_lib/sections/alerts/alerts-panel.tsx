@@ -230,7 +230,7 @@ function AlertTopEntries({ drawId, payload }: { drawId: string; payload: Record<
             </span>
             {e.fixedPotential > 0 && (
               <span
-                className="shrink-0 text-[11px] text-red-500/80 tabular-nums"
+                className="text-2xs shrink-0 text-red-500/80 tabular-nums"
                 title="Rủi ro chi trả giải cố định nếu trúng tối đa"
               >
                 ⚠ {formatNumber(e.fixedPotential)}
@@ -298,7 +298,7 @@ function AlertItemRow({ alert }: { alert: Lotto535OpsAlertEntity }) {
                 <span
                   key={c.label}
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] tabular-nums",
+                    "text-2xs inline-flex items-center gap-1 rounded-md px-2 py-0.5 tabular-nums",
                     c.danger ? "bg-red-500/10 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground",
                   )}
                 >
@@ -312,7 +312,7 @@ function AlertItemRow({ alert }: { alert: Lotto535OpsAlertEntity }) {
           <AlertTopEntries drawId={alert.drawId} payload={alert.payload} />
           {/* Bộ số liên quan (combo_concentration) — main + special. */}
           <AlertComboNumbers payload={alert.payload} />
-          <p className="text-muted-foreground/70 text-[11px] tabular-nums">
+          <p className="text-muted-foreground/70 text-2xs tabular-nums">
             {displayVNTimeWithSeconds(new Date(alert.createdAt))}
           </p>
         </div>
@@ -451,7 +451,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                     {activeCount > 0 && (
                       <span
                         className={cn(
-                          "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                          "text-2xs shrink-0 rounded-full px-2 py-0.5 font-medium",
                           severityBadgeClass(g.severity),
                         )}
                       >

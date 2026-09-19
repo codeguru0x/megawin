@@ -137,7 +137,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 1. Metadata 2-column ───────────────────────────────────── */}
           <div className="bg-muted/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg px-4 py-3 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <User className="size-3.5 shrink-0" />
                 Người chơi
               </span>
@@ -161,21 +161,21 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Layers className="size-3.5 shrink-0" />
                 {REPORT_COLUMN_LABELS.lineCount}
               </span>
               <span className="font-semibold tabular-nums">{formatNumber(entry.lineCount)}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Building2 className="size-3.5 shrink-0" />
                 Đại lý
               </span>
               <span className="font-semibold">{entry.tenantId ?? "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Clock className="size-3.5 shrink-0" />
                 Đặt lúc
               </span>
@@ -194,10 +194,10 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                  <p className="text-muted-foreground text-2xs flex items-center gap-1.5">
                     Tiền cược
                     {entry.betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
+                      <span className="bg-muted text-muted-foreground text-3xs rounded px-1 py-px font-medium">
                         ×{formatNumber(entry.betUnitCount)}
                       </span>
                     )}
@@ -210,7 +210,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
@@ -223,10 +223,10 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                  <p className="text-muted-foreground text-2xs flex items-center gap-1.5">
                     Tiền cược
                     {entry.betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
+                      <span className="bg-muted text-muted-foreground text-3xs rounded px-1 py-px font-medium">
                         ×{formatNumber(entry.betUnitCount)}
                       </span>
                     )}
@@ -239,7 +239,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalPayout}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
@@ -248,7 +248,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
@@ -272,7 +272,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
+                    <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
                         playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
@@ -290,7 +290,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 4. Kết quả & Bộ số đã chọn — gộp thành 1 card để so sánh trực quan */}
           {entry.result && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">Kết quả</p>
+              <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Kết quả</p>
               <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                 {entry.result.winningNumbers.map((n: string) => {
                   const playerPicked = boards.some((b) => b.numbers.includes(n));
@@ -300,9 +300,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
               <div className="mb-3 border-t" />
 
-              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">
-                Bộ số đã chọn
-              </p>
+              <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2.5">
                 {boards.map((board, i) => {
                   const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
@@ -320,14 +318,14 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-foreground text-[11px] leading-tight font-semibold">
+                        <span className="text-foreground text-2xs leading-tight font-semibold">
                           {isStandard ? "Thường" : playLabel}
                         </span>
-                        <span className="text-muted-foreground text-[10px] leading-tight">
+                        <span className="text-muted-foreground text-3xs leading-tight">
                           {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                         </span>
                         {board.betCount > 1 && (
-                          <span className="text-muted-foreground/70 text-[10px] leading-tight">×{board.betCount}</span>
+                          <span className="text-muted-foreground/70 text-3xs leading-tight">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -344,9 +342,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             /* Fallback: chỉ hiển thị board nếu chưa có kết quả (scheduled) */
             boards.length > 0 && (
               <div className="rounded-lg border p-4">
-                <p className="text-muted-foreground mb-3 text-[11px] font-medium tracking-wide uppercase">
-                  Bộ số đã chọn
-                </p>
+                <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2.5">
                   {boards.map((board, i) => {
                     const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
@@ -364,16 +360,14 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-foreground text-[11px] leading-tight font-semibold">
+                          <span className="text-foreground text-2xs leading-tight font-semibold">
                             {isStandard ? "Thường" : playLabel}
                           </span>
-                          <span className="text-muted-foreground text-[10px] leading-tight">
+                          <span className="text-muted-foreground text-3xs leading-tight">
                             {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                           </span>
                           {board.betCount > 1 && (
-                            <span className="text-muted-foreground/70 text-[10px] leading-tight">
-                              ×{board.betCount}
-                            </span>
+                            <span className="text-muted-foreground/70 text-3xs leading-tight">×{board.betCount}</span>
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-1">
@@ -392,7 +386,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 6. Giải trúng ─────────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="border-profit/30 bg-profit/5 rounded-lg border p-4">
-              <p className="text-profit mb-3 text-[11px] font-medium tracking-wide uppercase">Giải trúng</p>
+              <p className="text-profit text-2xs mb-3 font-medium tracking-wide uppercase">Giải trúng</p>
               <div className="space-y-2">
                 {[...tiers]
                   .sort(
@@ -409,7 +403,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         <Badge variant="secondary" className="font-medium">
                           {MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier}
                         </Badge>
-                        <span className="bg-profit/15 text-profit inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                        <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
                           ×{tier.hitCount} lần
                         </span>
                       </div>

@@ -259,9 +259,7 @@ export function ThreadSidebar({ className }: { className?: string }) {
             }
             return (
               <div className="mb-3" key={label}>
-                <p className="text-muted-foreground px-2 py-1 text-[11px] font-medium tracking-wide uppercase">
-                  {label}
-                </p>
+                <p className="text-muted-foreground text-2xs px-2 py-1 font-medium tracking-wide uppercase">{label}</p>
                 <div className="flex flex-col gap-0.5">
                   {bucket.map((thread) => (
                     <ThreadItem

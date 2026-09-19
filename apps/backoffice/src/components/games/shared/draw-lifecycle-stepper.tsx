@@ -123,7 +123,7 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
                 {step.label}
               </p>
               {step.time && (
-                <p className="text-muted-foreground/60 mt-0.5 font-mono text-[10px] tabular-nums">{step.time}</p>
+                <p className="text-muted-foreground/60 text-3xs mt-0.5 font-mono tabular-nums">{step.time}</p>
               )}
             </div>
           </div>

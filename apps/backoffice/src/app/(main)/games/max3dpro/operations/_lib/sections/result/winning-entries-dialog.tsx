@@ -42,7 +42,7 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
 
   return (
     <div className="flex items-start gap-2">
-      <span className="text-muted-foreground/50 mt-0.5 w-4 shrink-0 text-[10px] font-medium tabular-nums">
+      <span className="text-muted-foreground/50 text-3xs mt-0.5 w-4 shrink-0 font-medium tabular-nums">
         {board.boardNo}
       </span>
       <div className="flex flex-col gap-0.5">
@@ -51,7 +51,7 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
             <TripletDisplay key={i} value={t} variant={winningSet.has(t) ? "matched" : "default"} size="sm" />
           ))}
         </div>
-        <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
+        <span className="text-3xs font-medium text-orange-600 dark:text-orange-400">
           {modeLabel}
           {board.isDuplicate && <span className="ml-1 text-amber-600">(ĐB)</span>}
           {" · "}
@@ -83,7 +83,7 @@ function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <Badge variant="outline" className={cn("h-4 py-0 text-[10px]", badgeClass)}>
+      <Badge variant="outline" className={cn("text-3xs h-4 py-0", badgeClass)}>
         {label}
       </Badge>
       <span className="text-xs text-amber-700 tabular-nums dark:text-amber-400">+{formatNumber(tier.amount)}</span>
@@ -160,7 +160,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
       <TableCell className="py-3">
         <div>
           <p className="text-foreground text-sm">{displayName}</p>
-          <p className="text-muted-foreground/50 mt-0.5 max-w-32 truncate font-mono text-[10px]">@{entry.tenantId}</p>
+          <p className="text-muted-foreground/50 text-3xs mt-0.5 max-w-32 truncate font-mono">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">

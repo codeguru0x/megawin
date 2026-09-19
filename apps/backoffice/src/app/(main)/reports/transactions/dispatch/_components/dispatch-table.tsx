@@ -255,7 +255,7 @@ export function DispatchTable({
                         title={row.batchKey}
                       >
                         {batch.op && batch.purpose && (
-                          <span className="text-muted-foreground flex items-center gap-1 text-[10px] font-semibold tracking-wide uppercase">
+                          <span className="text-muted-foreground text-3xs flex items-center gap-1 font-semibold tracking-wide uppercase">
                             <span>{batch.op}</span>
                             <span className="opacity-40">·</span>
                             <span>{batch.purpose}</span>

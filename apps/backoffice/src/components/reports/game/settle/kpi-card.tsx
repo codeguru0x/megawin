@@ -29,10 +29,10 @@ export function KpiCard({ icon: Icon, iconBg, iconColor, label, value, valueClas
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-muted-foreground text-[11px] font-medium">{label}</p>
+        <p className="text-muted-foreground text-2xs font-medium">{label}</p>
         <p className={cn("text-foreground text-lg font-bold tabular-nums", valueClass ?? "")}>{value}</p>
         {subNode}
-        {sub && <p className="text-muted-foreground truncate text-[11px] tabular-nums">{sub}</p>}
+        {sub && <p className="text-muted-foreground text-2xs truncate tabular-nums">{sub}</p>}
       </div>
     </div>
   );

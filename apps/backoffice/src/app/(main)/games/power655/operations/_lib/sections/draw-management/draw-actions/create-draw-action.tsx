@@ -219,18 +219,18 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <div className="overflow-hidden rounded-xl border">
             {/* Table header */}
             <div className="bg-muted/40 grid [grid-template-columns:1.5rem_3rem_1fr_6.5rem_9rem] items-center gap-x-3 border-b px-4 py-2">
-              <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">#</span>
-              <span className="text-muted-foreground text-center text-[11px] font-medium tracking-wider uppercase">
+              <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">#</span>
+              <span className="text-muted-foreground text-2xs text-center font-medium tracking-wider uppercase">
                 Thứ
               </span>
-              <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Mã kỳ</span>
-              <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Giờ quay</span>
+              <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">Mã kỳ</span>
+              <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">Giờ quay</span>
               <div className="flex items-center justify-end">
                 <button
                   type="button"
                   onClick={toggleAll}
                   disabled={rows.length === 0}
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] font-medium transition-colors disabled:opacity-40"
+                  className="text-muted-foreground hover:text-foreground text-2xs flex items-center gap-1 font-medium transition-colors disabled:opacity-40"
                   title={allOpen ? "Tắt tất cả" : "Mở bán tất cả"}
                 >
                   {allOpen ? <Unlock className="size-3 text-purple-600" /> : <Lock className="size-3" />}
@@ -323,7 +323,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     />
                     <span
                       className={cn(
-                        "min-w-12 text-left text-[11px] font-medium",
+                        "text-2xs min-w-12 text-left font-medium",
                         row.isOpen ? "text-purple-600 dark:text-purple-400" : "text-muted-foreground",
                       )}
                     >

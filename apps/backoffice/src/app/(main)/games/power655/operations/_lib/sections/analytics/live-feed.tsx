@@ -75,7 +75,7 @@ export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntr
                         {e.playTypeLabel}
                       </span>
                       {isLargeBet && (
-                        <span className="shrink-0 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                        <span className="text-3xs shrink-0 rounded-full bg-red-500/10 px-1.5 py-0.5 font-semibold text-red-600 dark:text-red-400">
                           Cược lớn
                         </span>
                       )}

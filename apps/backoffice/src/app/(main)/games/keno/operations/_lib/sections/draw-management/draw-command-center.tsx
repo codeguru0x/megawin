@@ -269,7 +269,7 @@ export function DrawCommandCenter({
                 />
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <p className="text-muted-foreground shrink-0 font-mono text-[11px]">{draw.drawId}</p>
+                <p className="text-muted-foreground text-2xs shrink-0 font-mono">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
                 {/* Countdown theo trạng thái — thay chip giờ tĩnh, người trực ca
                     không cần tự nhìn đồng hồ (Keno chu kỳ ~8 phút).
@@ -354,7 +354,7 @@ export function DrawCommandCenter({
                   <button
                     type="button"
                     onClick={settlingRetryHandler}
-                    className="text-muted-foreground/70 hover:text-foreground inline-flex shrink-0 items-center gap-1 text-[11px] transition-colors"
+                    className="text-muted-foreground/70 hover:text-foreground text-2xs inline-flex shrink-0 items-center gap-1 transition-colors"
                   >
                     <RotateCcw className="size-3" /> Thử lại
                   </button>

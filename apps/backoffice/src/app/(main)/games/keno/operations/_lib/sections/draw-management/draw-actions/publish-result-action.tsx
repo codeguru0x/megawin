@@ -499,7 +499,7 @@ export function PublishResultAction({
                 (X) của dialog, dễ đọc nhầm badge là 1 phần điều khiển dialog thay vì thông tin
                 về kỳ đang nhập. `shrink-0` giữ badge không co lại khi tiêu đề dài. */}
             {inQueueMode && (
-              <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2 py-0.5 font-mono text-[11px]">
+              <span className="bg-muted text-muted-foreground text-2xs shrink-0 rounded-full px-2 py-0.5 font-mono">
                 kỳ {(queue?.length ?? 0) - remainingDraws.length}/{queue?.length}
               </span>
             )}
@@ -535,7 +535,7 @@ export function PublishResultAction({
                     lượng ("5 số khác") thay vì minh hoạ hình dạng. Chỉ cần hình dạng + màu +
                     chữ mô tả, không cần số mẫu để nhận biết. */}
                 {showDiff && (
-                  <div className="text-muted-foreground mb-2.5 flex items-center gap-3 text-[11px]">
+                  <div className="text-muted-foreground text-2xs mb-2.5 flex items-center gap-3">
                     <span className="inline-flex items-center gap-1.5">
                       <span className="bg-muted ring-border size-4 rounded-full ring-1" />
                       Thứ tự quay
@@ -585,7 +585,7 @@ export function PublishResultAction({
                         {showDiff && (
                           <span
                             className={cn(
-                              "inline-flex h-4.5 items-center rounded-full px-1.5 font-mono text-[10px] font-semibold tabular-nums",
+                              "text-3xs inline-flex h-4.5 items-center rounded-full px-1.5 font-mono font-semibold tabular-nums",
                               isDiff
                                 ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
                                 : "invisible",

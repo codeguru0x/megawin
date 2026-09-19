@@ -144,7 +144,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 1. Metadata 2-column ──────────────────────────────────── */}
           <div className="bg-muted/50 grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg px-4 py-3 text-sm">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <User className="size-3.5 shrink-0" />
                 Người chơi
               </span>
@@ -168,21 +168,21 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Hash className="size-3.5 shrink-0" />
                 Lượt cược
               </span>
               <span className="font-semibold tabular-nums">{betUnitCount}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Building2 className="size-3.5 shrink-0" />
                 Đại lý
               </span>
               <span className="font-semibold">{(entry as any).tenantId ?? "—"}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+              <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
                 <Clock className="size-3.5 shrink-0" />
                 Đặt lúc
               </span>
@@ -200,10 +200,10 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                  <p className="text-muted-foreground text-2xs flex items-center gap-1.5">
                     Tiền cược
                     {betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
+                      <span className="bg-muted text-muted-foreground text-3xs rounded px-1 py-px font-medium">
                         ×{formatNumber(betUnitCount)}
                       </span>
                     )}
@@ -216,7 +216,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">Hoa hồng ĐL</p>
+                  <p className="text-muted-foreground text-2xs">Hoa hồng ĐL</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
@@ -228,10 +228,10 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                  <p className="text-muted-foreground text-2xs flex items-center gap-1.5">
                     {REPORT_COLUMN_LABELS.totalStake}
                     {betUnitCount > 1 && (
-                      <span className="bg-muted text-muted-foreground rounded px-1 py-px text-[10px] font-medium">
+                      <span className="bg-muted text-muted-foreground text-3xs rounded px-1 py-px font-medium">
                         ×{formatNumber(betUnitCount)}
                       </span>
                     )}
@@ -244,7 +244,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">Trả thưởng</p>
+                  <p className="text-muted-foreground text-2xs">Trả thưởng</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
                 </div>
               </div>
@@ -253,7 +253,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[11px]">Hoa hồng ĐL</p>
+                  <p className="text-muted-foreground text-2xs">Hoa hồng ĐL</p>
                   <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
@@ -277,7 +277,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-[11px]">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
+                    <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
                         playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
@@ -296,7 +296,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {drawNumbers.length > 0 && !isScheduled && allBoardSnapshots.length > 0 ? (
             <div className="rounded-lg border p-4">
               {/* Kết quả 3 xúc xắc kỳ quay */}
-              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">Kết quả</p>
+              <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Kết quả</p>
               <div className="mb-4 flex flex-col items-center gap-3">
                 <div className="flex items-center gap-4">
                   {drawNumbers.map((num, i) => (
@@ -315,7 +315,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="mb-3 border-t" />
 
               {/* Danh sách cược */}
-              <p className="text-muted-foreground mb-2 text-[11px] font-medium tracking-wide uppercase">
+              <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">
                 Danh sách cược
                 {winBoardCount > 0 && (
                   <span className="text-profit ml-2">
@@ -382,7 +382,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       outcomeContent = (
                         <div className="flex items-center justify-start gap-1.5">
                           {!isSideBet && bp.matchCount != null && bp.matchCount > 0 && (
-                            <span className="bg-profit/15 text-profit inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                            <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
                               ×{bp.matchCount}
                             </span>
                           )}
@@ -408,12 +408,12 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5 pt-0.5">
-                        <span className="text-foreground text-[11px] leading-tight font-semibold">
+                        <span className="text-foreground text-2xs leading-tight font-semibold">
                           {BINGO18_PLAY_TYPE_LABELS[snapshot.playType as keyof typeof BINGO18_PLAY_TYPE_LABELS] ??
                             snapshot.playType}
                         </span>
                         {snapshot.betCount > 1 && (
-                          <span className="text-muted-foreground text-[10px] leading-tight">×{snapshot.betCount}</span>
+                          <span className="text-muted-foreground text-3xs leading-tight">×{snapshot.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-col gap-1.5">
@@ -430,9 +430,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             allBoardSnapshots.length > 0 && (
               <div className="rounded-lg border p-4">
                 <div className="mb-3">
-                  <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                    Danh sách cược
-                  </p>
+                  <p className="text-muted-foreground text-2xs font-medium tracking-wide uppercase">Danh sách cược</p>
                 </div>
                 <div className="space-y-2">
                   {allBoardSnapshots.map((snapshot, i) => {
@@ -493,14 +491,12 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5 pt-0.5">
-                          <span className="text-foreground text-[11px] leading-tight font-semibold">
+                          <span className="text-foreground text-2xs leading-tight font-semibold">
                             {BINGO18_PLAY_TYPE_LABELS[snapshot.playType as keyof typeof BINGO18_PLAY_TYPE_LABELS] ??
                               snapshot.playType}
                           </span>
                           {snapshot.betCount > 1 && (
-                            <span className="text-muted-foreground text-[10px] leading-tight">
-                              ×{snapshot.betCount}
-                            </span>
+                            <span className="text-muted-foreground text-3xs leading-tight">×{snapshot.betCount}</span>
                           )}
                         </div>
                         <div>{selectionContent}</div>

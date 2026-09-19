@@ -216,7 +216,7 @@ function NumberCell({
       </span>
       <div className="flex flex-col items-center gap-0.5">
         {isEmpty ? (
-          <span className="text-muted-foreground/20 text-[11px] tabular-nums">–</span>
+          <span className="text-muted-foreground/20 text-2xs tabular-nums">–</span>
         ) : (
           <>
             {/* Dòng tiền — giá trị chính (lớp heat nền theo giá trị này). */}
@@ -323,7 +323,7 @@ function KenoGrid({
         )}
       </NumberHeatmapHoverLayer>
       {isSparse && (
-        <p className="text-muted-foreground/60 text-[11px] italic">
+        <p className="text-muted-foreground/60 text-2xs italic">
           Dữ liệu còn ít ({formatNumber(totalSets)} bộ) — heatmap sẽ rõ hơn khi có thêm cược.
         </p>
       )}

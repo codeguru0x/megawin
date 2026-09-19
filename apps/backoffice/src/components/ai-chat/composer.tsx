@@ -181,7 +181,7 @@ export function AiComposer({
                   {errorDisplay.message}
                   {/* Chi tiết kỹ thuật CHỈ ở môi trường development (xem `describeAgentError`). */}
                   {errorDisplay.devDetail !== undefined && (
-                    <span className="mt-1 block font-mono text-[10px] wrap-break-word opacity-70">
+                    <span className="text-3xs mt-1 block font-mono wrap-break-word opacity-70">
                       dev: {errorDisplay.devDetail}
                     </span>
                   )}

@@ -183,7 +183,7 @@ export function ChartToolView({ model, reportLabels, sourceNote }: ChartToolView
           <div className="flex min-w-0 flex-col">
             <p className="min-w-0 truncate text-sm font-medium">{model.title}</p>
             {sourceNote === undefined ? null : (
-              <p className="text-muted-foreground min-w-0 truncate text-[11px]">{sourceNote}</p>
+              <p className="text-muted-foreground text-2xs min-w-0 truncate">{sourceNote}</p>
             )}
           </div>
           <ChartKindToggle allowedKinds={model.allowedKinds} onChange={setActiveKind} value={activeKind} />

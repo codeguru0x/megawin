@@ -76,7 +76,7 @@ const DiceCell = memo(function DiceCell({
           <span className="text-base leading-tight font-bold tabular-nums">
             {amount > 0 ? formatCurrency(amount) : "—"}
           </span>
-          <span className="text-muted-foreground text-[11px] tabular-nums">{formatNumber(sets)}x</span>
+          <span className="text-muted-foreground text-2xs tabular-nums">{formatNumber(sets)}x</span>
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-xs tabular-nums">

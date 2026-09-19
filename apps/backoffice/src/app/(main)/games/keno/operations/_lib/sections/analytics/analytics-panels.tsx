@@ -126,7 +126,7 @@ function PickCard({ row }: { row: PlayTypeRow }) {
         <p className="text-foreground min-w-0 truncate text-sm leading-none font-bold tabular-nums">
           {formatNumber(row.revenue)}
         </p>
-        <span className="text-muted-foreground/70 shrink-0 text-[10px] leading-none font-medium tabular-nums">
+        <span className="text-muted-foreground/70 text-3xs shrink-0 leading-none font-medium tabular-nums">
           {formatNumber(row.sets)} bộ
         </span>
       </div>
@@ -175,7 +175,7 @@ function SideBetPairCard({
         <div className={cn("size-2 shrink-0 rounded-full", playStyle.dot)} />
         <span className={cn("flex-1 text-xs font-semibold", playStyle.text)}>{playStyle.label}</span>
         {skewed && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/50 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 tabular-nums dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-300">
+          <span className="text-3xs inline-flex items-center gap-1 rounded-full border border-amber-500/50 bg-amber-500/15 px-1.5 py-0.5 font-bold text-amber-700 tabular-nums dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-300">
             <TriangleAlert className="size-2.5 shrink-0" />
             Lệch {maxPct.toFixed(0)}%
           </span>
@@ -213,7 +213,7 @@ function SideBetPairCard({
         />
       </div>
 
-      <div className="text-muted-foreground/70 flex items-center justify-between text-[10px] tabular-nums">
+      <div className="text-muted-foreground/70 text-3xs flex items-center justify-between tabular-nums">
         <span>{leftPct.toFixed(0)}%</span>
         {pair.drawAmount > 0 && <span>Hoà {formatNumber(pair.drawAmount)}</span>}
         <span>{rightPct.toFixed(0)}%</span>
@@ -400,7 +400,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
                   <p className="text-sm font-bold text-emerald-600 tabular-nums dark:text-emerald-400">
                     {formatNumber(a.amount)}
                   </p>
-                  <p className="text-muted-foreground/60 text-[11px] tabular-nums">{formatNumber(a.entries)} vé</p>
+                  <p className="text-muted-foreground/60 text-2xs tabular-nums">{formatNumber(a.entries)} vé</p>
                 </div>
               </div>
             ))}
@@ -445,13 +445,13 @@ function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotential
                     username={p.username}
                     className="text-sm"
                   />
-                  <p className="text-muted-foreground/70 mt-0.5 text-[11px] tabular-nums">
+                  <p className="text-muted-foreground/70 text-2xs mt-0.5 tabular-nums">
                     Cược <span className="text-foreground font-medium">{formatNumber(p.amount)}</span>
                   </p>
                 </div>
                 {/* Rủi ro chi trả — số chính, đỏ đậm, có nền để nổi bật */}
                 <div className="shrink-0 rounded-md bg-red-500/10 px-2 py-1 text-right">
-                  <p className="text-[10px] leading-none text-red-500/70">Phải trả</p>
+                  <p className="text-3xs leading-none text-red-500/70">Phải trả</p>
                   <p className="text-sm leading-tight font-bold text-red-600 tabular-nums dark:text-red-400">
                     {formatNumber(p.potentialWin)}
                   </p>
@@ -527,7 +527,7 @@ function RankBadge({ rank, danger = false }: { rank: number; danger?: boolean })
   return (
     <span
       className={cn(
-        "inline-flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums",
+        "text-2xs inline-flex size-6 shrink-0 items-center justify-center rounded-full font-bold tabular-nums",
         rank === 1
           ? danger
             ? "bg-red-500 text-white"
@@ -590,7 +590,7 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
     <div className="bg-muted/10 rounded-xl border p-3.5">
       {/* Header: rank + tên + % share */}
       <div className="flex items-center gap-2">
-        <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[11px] font-bold text-blue-600 tabular-nums dark:text-blue-400">
+        <span className="text-2xs inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 font-bold text-blue-600 tabular-nums dark:text-blue-400">
           {rank}
         </span>
         <span className="flex-1 truncate text-sm font-semibold">{tenant.tenantId}</span>
@@ -649,12 +649,12 @@ function TenantMetric({
 }) {
   return (
     <div className="bg-card border-border/40 rounded-lg border px-2.5 py-2">
-      <div className="text-muted-foreground/60 flex items-center gap-1 text-[10px] tracking-wider uppercase">
+      <div className="text-muted-foreground/60 text-3xs flex items-center gap-1 tracking-wider uppercase">
         <Icon className="size-3 shrink-0" />
         <span className="truncate">{label}</span>
       </div>
       <p className={cn("mt-0.5 text-sm leading-tight font-bold tabular-nums", accent)}>{value}</p>
-      {sub ? <p className="text-muted-foreground/60 text-[10px] tabular-nums">{sub}</p> : null}
+      {sub ? <p className="text-muted-foreground/60 text-3xs tabular-nums">{sub}</p> : null}
     </div>
   );
 }

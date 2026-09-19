@@ -208,7 +208,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="text-muted-foreground/60 hover:text-primary/70 flex cursor-pointer items-center gap-1 text-[10px] transition-colors"
+                  className="text-muted-foreground/60 hover:text-primary/70 text-3xs flex cursor-pointer items-center gap-1 transition-colors"
                 >
                   <ExternalLink className="size-3" />
                   Phiếu cược trúng thưởng

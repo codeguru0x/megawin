@@ -102,12 +102,9 @@ export function PayoutRatioKpiBadge({ ratio, className }: PayoutRatioProps) {
 
   return (
     <span className={cn("inline-flex items-center gap-1.5", className)}>
-      <span className="text-muted-foreground text-[11px]">Tỷ lệ TT</span>
+      <span className="text-muted-foreground text-2xs">Tỷ lệ TT</span>
       <span
-        className={cn(
-          "inline-flex items-center rounded px-1 py-0.5 text-[11px] font-semibold tabular-nums",
-          badgeClass,
-        )}
+        className={cn("text-2xs inline-flex items-center rounded px-1 py-0.5 font-semibold tabular-nums", badgeClass)}
       >
         {formatPayoutRatio(ratio)}
       </span>

@@ -73,7 +73,7 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
         label="Tổng đơn cược"
         value={formatNumber(totalEntryCount)}
         subNode={
-          <span className="text-muted-foreground inline-flex items-center gap-1.5 text-[11px]">
+          <span className="text-muted-foreground text-2xs inline-flex items-center gap-1.5">
             Thắng {formatNumber(totalWinCount)}
             <span
               className={cn("inline-flex items-center rounded px-1 py-0.5 font-semibold tabular-nums", WIN_RATE_BADGE)}
@@ -102,7 +102,7 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={
-          <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
+          <span className="text-muted-foreground text-2xs inline-flex items-center gap-1">
             Tỷ lệ TT{" "}
             <span
               className={cn(

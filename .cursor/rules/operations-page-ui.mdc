@@ -193,7 +193,7 @@ export function NumberBadge({ num, muted, variant = "filled", heatLevel }) {
 **Quy tắc:**
 
 - Size: luôn dùng **shared token** `HEATMAP_BADGE_SIZE` (`size-6` = 24px).
-- Text: luôn dùng **shared token** `HEATMAP_BADGE_TEXT` (`text-[11px]`).
+- Text: luôn dùng **shared token** `HEATMAP_BADGE_TEXT` (`text-2xs`).
 - TopCombos + LiveFeed: **luôn `variant="soft"`** — KHÔNG dùng `filled`.
 
 ---
@@ -224,10 +224,10 @@ function getHeatLevel(count: number, maxCount: number): HeatLevel {
 
 ```typescript
 export const HEATMAP_BADGE_SIZE = "size-6";         // 24px — đồng nhất tất cả game
-export const HEATMAP_BADGE_TEXT = "text-[11px]";     // T4 font tier
+export const HEATMAP_BADGE_TEXT = "text-2xs";        // T4 font tier (11px)
 export const HEATMAP_CELL_PT = "pt-8";               // padding-top cho badge absolute
-export const HEATMAP_CELL_DATA_SIZE = "text-[11px]"; // T4 — amount trong cell
-export const HEATMAP_CELL_SUB_SIZE = "text-[10px]";  // T5 — count/multiplier
+export const HEATMAP_CELL_DATA_SIZE = "text-2xs";    // T4 — amount trong cell (11px)
+export const HEATMAP_CELL_SUB_SIZE = "text-3xs";     // T5 — count/multiplier (10px)
 ```
 
 **BẮT BUỘC dùng tokens** cho tất cả game có heatmap. KHÔNG hardcode size.
@@ -422,8 +422,8 @@ Theo tiêu chuẩn typography trong `frontend-dev.mdc` section 1.2:
 | T1 (18px) | `text-lg` | Page title, KPI value, section title |
 | T2 (14px) | `text-sm` | Card title, body, table data |
 | T3 (12px) | `text-xs` | **Minimum** cho mọi text ngoài heatmap grid |
-| T4 (11px) | `text-[11px]` | **Chỉ** heatmap grid cell — dùng shared token |
-| T5 (10px) | `text-[10px]` | **Chỉ** heatmap grid sub-text, stepper time — dùng shared token |
+| T4 (11px) | `text-2xs` | **Chỉ** heatmap grid cell — dùng shared token |
+| T5 (10px) | `text-3xs` | **Chỉ** heatmap grid sub-text, stepper time — dùng shared token |
 
 **KHÔNG BAO GIỜ** dùng `text-[8px]` hoặc `text-[9px]`.
 
@@ -535,7 +535,7 @@ games/{game}/operations/
 
 - [ ] `variant="filled"` ngoài heatmap grid — dùng `soft`
 - [ ] Wrap numbers xuống dòng trong LiveFeed/TopCombos — `flex-nowrap overflow-hidden`
-- [ ] `text-[10px]`/`text-[11px]` ngoài heatmap grid — dùng `text-xs`
+- [ ] `text-[Npx]` arbitrary value — dùng `text-2xs`/`text-3xs`/`text-xs` theo đúng tier
 - [ ] `text-[8px]`/`text-[9px]` ở bất kỳ đâu
 - [ ] Thu nhỏ badge cho game nhiều số — giữ `size-6`, thêm hàng grid
 - [ ] Hardcode play type colors inline — tách vào `PLAY_TYPE_COLORS`

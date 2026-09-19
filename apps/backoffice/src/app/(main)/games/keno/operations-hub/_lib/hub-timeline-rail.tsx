@@ -283,13 +283,13 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
           ) : null}
           <DrawIdLabel drawId={col.drawId} className="text-xs" />
         </span>
-        <span className="text-muted-foreground shrink-0 text-[10px]">
+        <span className="text-muted-foreground text-3xs shrink-0">
           {new Date(col.drawTimeMs).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
         </span>
       </div>
       <span
         className={cn(
-          "truncate text-[10px]",
+          "text-3xs truncate",
           isSelling ? "font-medium text-emerald-700 dark:text-emerald-400" : "text-muted-foreground",
           isPendingClose && "font-medium text-orange-700 dark:text-orange-400",
         )}
@@ -307,7 +307,7 @@ function RailCard({ col, isBoundary, zone, medianRevenue, onNavigate }: RailCard
         />
       </div>
       {/* Dòng tiền + vé (câu 3 user 07/09) — `col.entries` đã có sẵn trong `DayFlowColumn`. */}
-      <div className="flex items-center justify-between gap-1 text-[10px] tabular-nums">
+      <div className="text-3xs flex items-center justify-between gap-1 tabular-nums">
         <span className="font-medium">{formatNumber(col.revenue)}</span>
         <span className="text-muted-foreground">{formatNumber(col.entries)} vé</span>
       </div>
@@ -492,7 +492,7 @@ export function HubTimelineRail() {
             >
               <Minus className="size-3" />
             </button>
-            <span className="text-muted-foreground w-11 text-center text-[10px] tabular-nums">{span} kỳ</span>
+            <span className="text-muted-foreground text-3xs w-11 text-center tabular-nums">{span} kỳ</span>
             <button
               type="button"
               onClick={() => adjustSpan(2)}

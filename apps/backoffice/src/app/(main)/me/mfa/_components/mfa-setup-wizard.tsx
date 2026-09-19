@@ -170,7 +170,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                     </div>
                     <span
                       className={cn(
-                        "text-[11px] font-medium",
+                        "text-2xs font-medium",
                         isCurrent ? "text-primary" : "text-muted-foreground",
                         isCompleted && "text-foreground",
                       )}
@@ -272,7 +272,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
             <div className="bg-muted/30 rounded-lg border p-4">
               <ol className="flex flex-col gap-3 text-sm">
                 <li className="flex gap-3">
-                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
+                  <span className="bg-primary text-primary-foreground text-3xs flex size-5 shrink-0 items-center justify-center rounded-full font-bold">
                     1
                   </span>
                   <span className="text-muted-foreground">
@@ -281,7 +281,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   </span>
                 </li>
                 <li className="flex gap-3">
-                  <span className="bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
+                  <span className="bg-primary text-primary-foreground text-3xs flex size-5 shrink-0 items-center justify-center rounded-full font-bold">
                     2
                   </span>
                   <span className="text-muted-foreground">

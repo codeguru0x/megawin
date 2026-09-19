@@ -331,7 +331,7 @@ export function FinancialDateRangePicker({
             <CalendarIcon className="text-muted-foreground size-4" />
             <span className="font-medium">{buttonLabel}</span>
             {numDays > 0 && (
-              <span className="bg-muted text-muted-foreground ml-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums">
+              <span className="bg-muted text-muted-foreground text-3xs ml-0.5 inline-flex items-center rounded-md px-1.5 py-0.5 font-semibold tabular-nums">
                 {dayCountLabel(numDays)}
               </span>
             )}
@@ -356,7 +356,7 @@ export function FinancialDateRangePicker({
                 <div className="flex items-center gap-2">
                   {/* Ô "Từ" — highlight khi đang ở step start */}
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-muted-foreground px-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                    <span className="text-muted-foreground text-3xs px-0.5 font-semibold tracking-wide uppercase">
                       Từ
                     </span>
                     <input
@@ -383,7 +383,7 @@ export function FinancialDateRangePicker({
 
                   {/* Ô "Đến" — highlight khi đang ở step end */}
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-muted-foreground px-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                    <span className="text-muted-foreground text-3xs px-0.5 font-semibold tracking-wide uppercase">
                       Đến
                     </span>
                     <input
@@ -408,7 +408,7 @@ export function FinancialDateRangePicker({
 
                   {/* Badge số ngày — hiện cả khi = 1 ngày */}
                   {pendingDays > 0 && (
-                    <span className="bg-muted text-muted-foreground mt-4 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums">
+                    <span className="bg-muted text-muted-foreground text-3xs mt-4 shrink-0 rounded px-1.5 py-0.5 font-semibold tabular-nums">
                       {dayCountLabel(pendingDays)}
                     </span>
                   )}
@@ -428,7 +428,7 @@ export function FinancialDateRangePicker({
 
             {/* ── Cột phải: 8 Presets, 2 nhóm đều 4 ── */}
             <div className="flex w-40 shrink-0 flex-col gap-2 p-1.5">
-              <p className="text-muted-foreground px-2 text-[10px] font-semibold tracking-widest uppercase">Phổ biến</p>
+              <p className="text-muted-foreground text-3xs px-2 font-semibold tracking-widest uppercase">Phổ biến</p>
               <div className="flex flex-col gap-0.5">
                 {commonPresets.map((preset) => (
                   <PresetButton
@@ -442,7 +442,7 @@ export function FinancialDateRangePicker({
 
               <div className="bg-border h-px" />
 
-              <p className="text-muted-foreground px-2 text-[10px] font-semibold tracking-widest uppercase">Chu kỳ</p>
+              <p className="text-muted-foreground text-3xs px-2 font-semibold tracking-widest uppercase">Chu kỳ</p>
               <div className="flex flex-col gap-0.5">
                 {periodPresets.map((preset) => (
                   <PresetButton

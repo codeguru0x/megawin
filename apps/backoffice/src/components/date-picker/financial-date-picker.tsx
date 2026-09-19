@@ -127,7 +127,7 @@ export function FinancialDatePicker({
 
             {/* ── Cột phải: Preset nhanh ── */}
             <div className="flex w-36 shrink-0 flex-col gap-0.5 p-2">
-              <p className="text-muted-foreground px-2 pt-0.5 pb-1 text-[10px] font-semibold tracking-widest uppercase">
+              <p className="text-muted-foreground text-3xs px-2 pt-0.5 pb-1 font-semibold tracking-widest uppercase">
                 Nhanh
               </p>
               {presets.map((preset) => {

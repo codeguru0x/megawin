@@ -201,7 +201,7 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 </Link>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="text-muted-foreground font-mono text-[11px]">{draw.drawId}</p>
+              <p className="text-muted-foreground text-2xs font-mono">{draw.drawId}</p>
             </div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 <Ticket className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-muted-foreground text-[11px]">Vé đã bán</p>
+                <p className="text-muted-foreground text-2xs">Vé đã bán</p>
                 <p className="text-sm font-semibold tabular-nums">
                   {draw.stats!.ticketEntryCount.toLocaleString("vi-VN")}
                 </p>
@@ -273,7 +273,7 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 <CircleDollarSign className="size-3.5 text-teal-600 dark:text-teal-400" />
               </div>
               <div>
-                <p className="text-muted-foreground text-[11px]">Doanh thu</p>
+                <p className="text-muted-foreground text-2xs">Doanh thu</p>
                 <p className="text-sm font-semibold tabular-nums">{formatVND(draw.stats!.totalSalesAmount)}</p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export function Mega645QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 </Link>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="text-muted-foreground font-mono text-[11px]">{draw.drawId}</p>
+              <p className="text-muted-foreground text-2xs font-mono">{draw.drawId}</p>
             </div>
           </div>
         </div>

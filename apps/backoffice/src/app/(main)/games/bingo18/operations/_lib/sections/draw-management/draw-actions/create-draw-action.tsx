@@ -359,7 +359,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             <div className="overflow-hidden rounded-xl border">
               {/* Header: ngày quay ghi 1 lần ở đây, không lặp trên từng dòng */}
               <div className="bg-muted/40 flex items-center justify-between border-b px-4 py-2">
-                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">
                   Ngày quay: <span className="text-foreground font-mono normal-case">{drawDate}</span>
                   {rows.length > 0 && ` · ${rows.length} kỳ`}
                 </span>
@@ -367,7 +367,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   type="button"
                   onClick={toggleAll}
                   disabled={rows.length === 0}
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] font-medium transition-colors disabled:opacity-40"
+                  className="text-muted-foreground hover:text-foreground text-2xs flex items-center gap-1 font-medium transition-colors disabled:opacity-40"
                 >
                   {allOpen ? <Unlock className="size-3 text-amber-600" /> : <Lock className="size-3" />}
                   <span className={cn(allOpen && "text-amber-600 dark:text-amber-400")}>
@@ -378,10 +378,10 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
 
               {/* Cột: # | MÃ KỲ (drawId) | GIỜ QUAY | toggle. Ngày quay đã nằm trong mã kỳ. */}
               <div className="bg-muted/20 grid [grid-template-columns:1.5rem_1fr_6.5rem_9rem] items-center gap-x-3 border-b px-4 py-2">
-                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">#</span>
-                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Mã kỳ</span>
-                <span className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">Giờ quay</span>
-                <span className="text-muted-foreground text-right text-[11px] font-medium tracking-wider uppercase">
+                <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">#</span>
+                <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">Mã kỳ</span>
+                <span className="text-muted-foreground text-2xs font-medium tracking-wider uppercase">Giờ quay</span>
+                <span className="text-muted-foreground text-2xs text-right font-medium tracking-wider uppercase">
                   Trạng thái
                 </span>
               </div>
@@ -453,7 +453,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       />
                       <span
                         className={cn(
-                          "min-w-12 text-left text-[11px] font-medium",
+                          "text-2xs min-w-12 text-left font-medium",
                           row.isOpen ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
                         )}
                       >
