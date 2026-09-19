@@ -1,13 +1,18 @@
 "use client";
 
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Hash, Layers, TrendingUp, Trophy, Zap } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import { useJackpotCurrent } from "./use-jackpot";
+
+/** Token brand Power655 — gradient hero khớp byte-for-byte với literal cũ. */
+const c = GAME_COLORS[GameProduct.Power655];
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
 
@@ -48,8 +53,13 @@ export function JackpotHeroCard() {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border-2 p-6",
-        "bg-linear-to-br from-red-50/90 via-orange-50/70 to-amber-50/50",
-        "dark:from-red-950/50 dark:via-orange-950/40 dark:to-amber-950/30",
+        "bg-linear-to-br",
+        c.gradientFrom,
+        c.gradientVia,
+        c.gradientTo,
+        c.gradientFromDark,
+        c.gradientViaDark,
+        c.gradientToDark,
         isOverflow
           ? "border-violet-300 dark:border-violet-700/60"
           : isHot

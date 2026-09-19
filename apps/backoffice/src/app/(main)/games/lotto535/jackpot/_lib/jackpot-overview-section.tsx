@@ -1,13 +1,18 @@
 "use client";
 
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Layers, Target, TrendingUp, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import { useJackpotCurrent } from "./use-jackpot";
+
+/** Token brand Lotto535 — gradient hero khớp byte-for-byte với literal cũ. */
+const c = GAME_COLORS[GameProduct.Lotto535];
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
 
@@ -34,8 +39,13 @@ export function JackpotHeroCard() {
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border-2 p-6",
-        "bg-linear-to-br from-amber-50/90 via-yellow-50/70 to-orange-50/50",
-        "dark:from-amber-950/50 dark:via-yellow-950/40 dark:to-orange-950/30",
+        "bg-linear-to-br",
+        c.gradientFrom,
+        c.gradientVia,
+        c.gradientTo,
+        c.gradientFromDark,
+        c.gradientViaDark,
+        c.gradientToDark,
         isHot ? "border-red-300 dark:border-red-800/60" : "border-amber-200 dark:border-amber-800/50",
       )}
     >
