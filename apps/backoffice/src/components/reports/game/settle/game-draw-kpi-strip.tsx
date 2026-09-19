@@ -5,6 +5,7 @@ import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { CalendarRange, DollarSign, Percent, TrendingDown, TrendingUp } from "lucide-react";
 
 import { getPayoutRatioColor, PayoutRatioKpiBadge } from "@/components/reports/payout-ratio";
+import { cn } from "@/lib/utils";
 
 import { KpiCard } from "./kpi-card";
 
@@ -82,7 +83,7 @@ export function GameDrawKpiStrip({ data, drawCountSub = "kỳ đã settle" }: Ga
         iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.ggr}
         value={formatVNDCompact(data.ggr)}
-        valueClass={(data.ggr < 0 && "text-loss", data.ggr > 0 && "text-profit")}
+        valueClass={cn(data.ggr < 0 && "text-loss", data.ggr > 0 && "text-profit")}
       />
 
       {/* Hoa hồng ĐL */}
@@ -101,7 +102,7 @@ export function GameDrawKpiStrip({ data, drawCountSub = "kỳ đã settle" }: Ga
         iconColor={data.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(data.netProfit)}
-        valueClass={(data.netProfit < 0 && "text-loss", data.netProfit > 0 && "text-profit")}
+        valueClass={cn(data.netProfit < 0 && "text-loss", data.netProfit > 0 && "text-profit")}
       />
     </div>
   );

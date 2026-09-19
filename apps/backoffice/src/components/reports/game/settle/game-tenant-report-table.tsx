@@ -114,7 +114,7 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
           iconColor="text-blue-600 dark:text-blue-400"
           label={REPORT_COLUMN_LABELS.ggr}
           value={formatVNDCompact(totals.ggr)}
-          valueClass={(totals.ggr < 0 && "text-loss", totals.ggr > 0 && "text-profit")}
+          valueClass={cn(totals.ggr < 0 && "text-loss", totals.ggr > 0 && "text-profit")}
         />
         <KpiCard
           icon={Percent}
@@ -129,7 +129,7 @@ export function GameTenantReportTable({ rows, onRowClick, showLineCount = false 
           iconColor={totals.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
           label={REPORT_COLUMN_LABELS.netProfit}
           value={formatVNDCompact(totals.netProfit)}
-          valueClass={(totals.netProfit < 0 && "text-loss", totals.netProfit > 0 && "text-profit")}
+          valueClass={cn(totals.netProfit < 0 && "text-loss", totals.netProfit > 0 && "text-profit")}
         />
       </div>
 

@@ -87,7 +87,7 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
         iconColor="text-blue-600 dark:text-blue-400"
         label={REPORT_COLUMN_LABELS.ggr}
         value={formatVNDCompact(ggr)}
-        valueClass={(ggr < 0 && "text-loss", ggr > 0 && "text-profit")}
+        valueClass={cn(ggr < 0 && "text-loss", ggr > 0 && "text-profit")}
       />
       {/* Hoa hồng ĐL */}
       <KpiCard
@@ -105,7 +105,7 @@ function KpiStrip({ data }: { data: GameSummaryRow[] }) {
         iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
-        valueClass={(netProfit < 0 && "text-loss", netProfit > 0 && "text-profit")}
+        valueClass={cn(netProfit < 0 && "text-loss", netProfit > 0 && "text-profit")}
       />
     </div>
   );
