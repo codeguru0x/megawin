@@ -80,12 +80,10 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
             <div className="flex flex-col gap-5 px-5 py-4">
               {/* Summary row */}
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={DISPATCH_ORDER_STATUS_VARIANT[order.status]} className="text-xs">
+                <Badge variant={DISPATCH_ORDER_STATUS_VARIANT[order.status]}>
                   {DISPATCH_ORDER_STATUS_LABELS[order.status]}
                 </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {DISPATCH_SOURCE_KIND_LABELS[order.sourceKind]}
-                </Badge>
+                <Badge variant="outline">{DISPATCH_SOURCE_KIND_LABELS[order.sourceKind]}</Badge>
                 <span className="text-muted-foreground font-mono text-sm">{order.tenantId}</span>
                 <span className="text-muted-foreground ml-auto font-mono text-sm tabular-nums">
                   {displayVNDateTime(order.createdAt)}

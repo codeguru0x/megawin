@@ -36,7 +36,7 @@ function ComponentStat({ label, value, tip, danger }: { label: string; value: nu
           </p>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-72 text-xs">
+      <TooltipContent side="top" className="max-w-72">
         {tip}
       </TooltipContent>
     </Tooltip>
@@ -62,7 +62,7 @@ export function ExposureCard({
   const gaugeColor = ratio >= 1 ? "bg-red-500" : ratio >= 0.5 ? "bg-amber-500" : "bg-emerald-500";
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">

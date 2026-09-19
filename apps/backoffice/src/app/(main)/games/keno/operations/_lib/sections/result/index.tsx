@@ -208,7 +208,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
 
   return (
     <>
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/50">
@@ -447,7 +447,7 @@ function FinancialSummary({
   // KHÔNG render ledger toàn 0. Keno không có snapshot Jackpot trên draw.
   if (!f) {
     return (
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -486,7 +486,7 @@ function FinancialSummary({
     : "Chi trả giải vượt doanh thu — công ty bù phần thiếu. Keno không có quỹ Jackpot nên toàn bộ chênh lệch tính thẳng vào P&L kỳ.";
 
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

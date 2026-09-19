@@ -86,13 +86,12 @@ async function GuidesLandingContent() {
               >
                 <Card
                   className={cn(
-                    "h-full border-l-4 transition-colors hover:shadow-sm",
+                    "h-full border-l-4 transition-colors",
                     game.gameKey === "power655" && "border-game-power655",
                     game.gameKey === "lotto535" && "border-game-lotto535",
                     game.gameKey === "mega645" && "border-game-mega645",
                     game.gameKey === "keno" && "border-game-keno",
                     game.gameKey === "max3d" && "border-game-max3d",
-                    game.gameKey === "max3dpro" && "border-game-max3dpro",
                     game.gameKey === "bingo18" && "border-game-bingo18",
                     !(
                       game.gameKey === "power655" ||

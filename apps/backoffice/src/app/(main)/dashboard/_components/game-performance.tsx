@@ -337,7 +337,7 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
           <Badge
             variant="outline"
             className={cn(
-              "shrink-0 text-xs tabular-nums",
+              "shrink-0 tabular-nums",
               isOverallDanger
                 ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400"
                 : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400",

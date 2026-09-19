@@ -249,7 +249,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
                   {formatNumber(item.actualCompanyTake)}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
+              <TooltipContent side="top">
                 Tỷ lệ công ty thu: <span className="font-semibold">{companyTakeRatePct}</span>
               </TooltipContent>
             </Tooltip>

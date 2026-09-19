@@ -308,20 +308,16 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   </span>
                 )}
                 {openCount > 0 && (
-                  <Badge className="bg-profit text-profit-foreground hover:bg-profit text-xs">{openCount} mở bán</Badge>
+                  <Badge className="bg-profit text-profit-foreground hover:bg-profit">{openCount} mở bán</Badge>
                 )}
-                {scheduledCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {scheduledCount} chờ lịch
-                  </Badge>
-                )}
+                {scheduledCount > 0 && <Badge variant="secondary">{scheduledCount} chờ lịch</Badge>}
                 {preview.data && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline">
                     Còn {availableDraws.length}/{preview.data.maxPerDay} kỳ
                   </Badge>
                 )}
                 {preview.isError && (
-                  <Badge variant="outline" className="border-red-300 text-xs text-red-600">
+                  <Badge variant="outline" className="border-red-300 text-red-600">
                     Lỗi tải gợi ý — thử chọn lại ngày
                   </Badge>
                 )}

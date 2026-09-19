@@ -135,7 +135,7 @@ function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
         <TooltipTrigger asChild>
           <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-80 text-xs">
+        <TooltipContent side="top" className="max-w-80">
           {tip}
         </TooltipContent>
       </Tooltip>
@@ -240,7 +240,7 @@ function AlertToggleRow({
             <TooltipTrigger asChild>
               <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-80 text-xs">
+            <TooltipContent side="top" className="max-w-80">
               {meta.tip}
             </TooltipContent>
           </Tooltip>
@@ -367,7 +367,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                         <TooltipTrigger asChild>
                           <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-80 text-xs">
+                        <TooltipContent side="top" className="max-w-80">
                           Chọn loại rủi ro hệ thống sẽ giám sát và sinh cảnh báo mỗi chu kỳ. Tắt một loại nghĩa là ngưng
                           theo dõi rủi ro đó — KHÔNG nên tắt 'Liability cặp (2 chiều)' (rủi ro số 1 của game).
                         </TooltipContent>

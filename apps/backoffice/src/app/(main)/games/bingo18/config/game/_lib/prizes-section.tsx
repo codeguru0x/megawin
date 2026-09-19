@@ -281,7 +281,7 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
           <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 text-xs">
+      <TooltipContent side="top" className="max-w-64">
         {tip}
       </TooltipContent>
     </Tooltip>
@@ -332,7 +332,7 @@ function PrizeGroup({
           <div className="flex items-center gap-2">
             <Badge
               className={cn(
-                "text-xs text-white",
+                "text-white",
                 group.id === "singleNum" && "bg-blue-500",
                 group.id === "doubleMatch" && "bg-purple-500",
                 group.id === "tripleMatch" && "bg-red-500",
@@ -415,7 +415,7 @@ function PrizeGroup({
                       {tier ? `1 : ${fmt(Math.round(tier.oneInN))}` : "–"}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-72 text-xs">
+                  <TooltipContent side="top" className="max-w-72">
                     {tier && (
                       <>
                         Số cách trúng: {fmt(Math.round(tier.probability * TOTAL_OUTCOMES))} / {TOTAL_OUTCOMES}
@@ -589,7 +589,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     </div>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-72 text-xs">
+                <TooltipContent side="bottom" className="max-w-72">
                   Biên lợi nhuận thấp nhất trong tất cả mức cược. Mỗi loại cược là độc lập — khách chỉ đặt 1 mức mỗi
                   lần, nên con số này phản ánh trường hợp xấu nhất.
                 </TooltipContent>

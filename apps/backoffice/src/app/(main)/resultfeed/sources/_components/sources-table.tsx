@@ -55,7 +55,7 @@ export function SourcesTable({ rows, isLoading, onEdit }: SourcesTableProps) {
               <TableCell>
                 <div className="flex flex-wrap gap-1">
                   {row.gameKeys.map((key) => (
-                    <Badge key={key} variant="secondary" className="text-xs">
+                    <Badge key={key} variant="secondary">
                       {RESULTFEED_GAME_LABELS[key]}
                     </Badge>
                   ))}

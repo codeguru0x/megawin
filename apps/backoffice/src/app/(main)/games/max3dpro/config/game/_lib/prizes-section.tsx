@@ -117,7 +117,7 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
           <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 text-xs">
+      <TooltipContent side="top" className="max-w-64">
         {tip}
       </TooltipContent>
     </Tooltip>
@@ -243,13 +243,12 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
           <div className={`${TABLE_ROW_CLS} ${isLast ? "" : "border-b"}`}>
             <Badge
               className={cn(
-                "w-9 justify-center text-xs font-bold",
+                "w-9 justify-center font-bold",
                 p.key === "special" && "bg-red-600 text-white",
                 p.key === "specialSub" && "bg-red-500 text-white",
                 p.key === "first" && "bg-amber-500 text-white",
                 p.key === "second" && "bg-slate-400 text-white",
                 p.key === "third" && "bg-amber-700 text-white",
-                p.key === "fourth" && "bg-slate-500 text-white",
                 p.key === "fifth" && "bg-slate-600 text-white",
                 p.key === "sixth" && "bg-emerald-600 text-white",
               )}
@@ -276,7 +275,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
                   {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-72 text-xs">
+              <TooltipContent side="top" className="max-w-72">
                 {odds && (
                   <>
                     Số lần trúng kỳ vọng: {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)} cặp
@@ -308,7 +307,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
                 </span>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-80 text-xs">
+              <TooltipContent side="top" className="max-w-80">
                 {isOverBreakEven
                   ? `Giải thưởng (${fmt(profit!.currentPrize)}) vượt mức hoà vốn của RIÊNG hạng này (${fmt(Math.round(profit!.breakEvenPrize))}) → chỉ hạng này đã lỗ`
                   : profit

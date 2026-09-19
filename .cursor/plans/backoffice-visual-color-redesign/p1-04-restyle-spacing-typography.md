@@ -1,5 +1,30 @@
 # P1-04 — `no-restyle` (2039 warning) — override spacing/typography/shape ngoài contract
 
+## Status (2026-09-19) — đang làm trên `visual/p1-04-restyle`
+
+Baseline sau P1-03: **2262** `no-restyle` → hiện **~1471** (−791).
+
+### Đã làm (2a + nới contract có giải trình)
+
+| Việc | Loại | Ghi chú |
+|---|---|---|
+| Xoá `shadow-sm` / `hover:shadow-sm` trên `<Card>` | 2a | Card default đã có `shadow-sm` |
+| Xoá `text-xs` thừa trên `<TooltipContent>` | 2a | Tooltip default đã `text-xs` |
+| Xoá `text-xs` thừa trên `<Badge>` | 2a | `badgeVariants` đã `text-xs` |
+| Skeleton `allow: shape` | contract | Skeleton phải khớp radius UI đích (`rounded-xl`…) |
+| CardHeader/Footer `allow: shape` | contract | Config form dùng `border-t` divider có chủ đích |
+| TooltipContent `allow: typography` | contract | Giữ `font-mono` / `tabular-nums` hợp lệ |
+| Table* `allow: color` | contract | `text-profit`/`text-loss`/`text-muted-foreground` trên cell là nghiệp vụ |
+
+### Còn lại (ước lượng theo nhóm lớn)
+
+Button (~250, spacing tùy size — nhiều `h-7`/`gap-1.5` là compact có chủ đích), Badge còn
+lại (~130), Input typography, Dialog* spacing, TabsList shape, icon color (Loader2/Search…),
+TableRow `transition-colors` (effect).
+
+Ưu tiên tiếp: Button migrate sang `size` prop (2c nhẹ) / xoá `gap-2` thừa (2a) → Input 2a →
+Badge spacing/shape.
+
 ## 1. Contract hiện có (`.oxlintrc.json` root, dòng 174-215)
 
 Mặc định mọi component chỉ được phép `className` loại `layout` (`flex`, `gap`, `w-*`, `mt-*`...).

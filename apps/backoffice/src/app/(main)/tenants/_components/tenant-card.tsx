@@ -85,7 +85,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-foreground truncate text-sm font-semibold">{tenant.displayName}</h3>
-                <Badge variant={isActive ? "default" : "destructive"} className="shrink-0 gap-1 text-xs">
+                <Badge variant={isActive ? "default" : "destructive"} className="shrink-0 gap-1">
                   {isActive ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
                   {isActive ? "Hoạt động" : "Vô hiệu"}
                 </Badge>

@@ -45,7 +45,7 @@ export function ExposureCard({
 
   return (
     <Card
-      className={cn("gap-0 py-0 shadow-sm", clickable && "hover:bg-muted/20 cursor-pointer transition-colors")}
+      className={cn("gap-0 py-0", clickable && "hover:bg-muted/20 cursor-pointer transition-colors")}
       onClick={onOpenAnalysis}
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}

@@ -107,7 +107,7 @@ function AlertBadge({ alertsOpen, alertsCritical }: { alertsOpen: number; alerts
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant={alertsCritical > 0 ? "destructive" : "secondary"} className="gap-1 text-xs">
+        <Badge variant={alertsCritical > 0 ? "destructive" : "secondary"} className="gap-1">
           <AlertTriangle className="size-3" />
           {alertsOpen}
         </Badge>

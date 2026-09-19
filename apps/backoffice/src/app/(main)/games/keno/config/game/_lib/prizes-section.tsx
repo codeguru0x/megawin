@@ -53,7 +53,7 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
           <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 text-xs">
+      <TooltipContent side="top" className="max-w-64">
         {tip}
       </TooltipContent>
     </Tooltip>
@@ -98,13 +98,12 @@ function PickPrizeGroup({
           <div className="flex items-center gap-2">
             <Badge
               className={cn(
-                "text-xs text-white",
+                "text-white",
                 pick === 10 && "bg-red-500",
                 pick === 9 && "bg-orange-500",
                 pick === 8 && "bg-amber-600",
                 pick === 7 && "bg-amber-500",
                 pick === 6 && "bg-yellow-500",
-                pick === 5 && "bg-lime-500",
                 pick === 4 && "bg-emerald-500",
                 pick === 3 && "bg-teal-500",
                 pick === 2 && "bg-cyan-500",
@@ -117,7 +116,7 @@ function PickPrizeGroup({
               Chọn {pick} số &middot; {matchCounts.length} mức thưởng
             </span>
             {matchCounts.some((m) => isCapped(pick, m)) && (
-              <Badge variant="outline" className="border-red-300 text-xs text-red-600 dark:text-red-400">
+              <Badge variant="outline" className="border-red-300 text-red-600 dark:text-red-400">
                 Có giới hạn
               </Badge>
             )}
@@ -189,7 +188,7 @@ function PickPrizeGroup({
                       {profit ? `1 : ${fmt(Math.round(profit.oneInN))}` : "–"}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-72 text-xs">
+                  <TooltipContent side="top" className="max-w-72">
                     {profit && (
                       <>
                         Số cách trúng: {fmt(Math.round(profit.probability * Number(TOTAL_OUTCOMES)))} /{" "}

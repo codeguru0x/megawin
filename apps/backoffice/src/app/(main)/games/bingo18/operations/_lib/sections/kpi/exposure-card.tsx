@@ -71,7 +71,7 @@ export function ExposureCard({
   const gaugeWidth = Math.min(100, warnRevenuePct > 0 ? (pct / warnRevenuePct) * 100 : 0);
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export function ExposureCard({
                   <span className="text-muted-foreground text-3xs tabular-nums">Tổng {exposure.worstCase.sum}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-72 text-xs">
+              <TooltipContent side="top" className="max-w-72">
                 Kết quả xấu nhất cho nhà cái: nếu 3 xúc xắc ra đúng bộ này, kỳ phải trả nhiều tiền nhất. Tính chính xác
                 từ toàn bộ cược hiện tại — không phải ước lượng.
               </TooltipContent>

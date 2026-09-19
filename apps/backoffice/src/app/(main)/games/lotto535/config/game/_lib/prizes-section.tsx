@@ -97,7 +97,7 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
           <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 text-xs">
+      <TooltipContent side="top" className="max-w-64">
         {tip}
       </TooltipContent>
     </Tooltip>
@@ -218,13 +218,12 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                             >
                               <Badge
                                 className={cn(
-                                  "w-9 justify-center text-xs font-bold",
+                                  "w-9 justify-center font-bold",
                                   p.key === "tier1" && "bg-amber-500 text-white",
                                   p.key === "tier2" && "bg-slate-400 text-white",
                                   p.key === "tier3" && "bg-amber-700 text-white",
                                   p.key === "tier4" && "bg-slate-500 text-white",
                                   p.key === "tier5" && "bg-slate-600 text-white",
-                                  p.key === "consolation" && "bg-emerald-600 text-white",
                                 )}
                               >
                                 {p.badge}
@@ -249,7 +248,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                     {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
                                   </span>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-72 text-xs">
+                                <TooltipContent side="top" className="max-w-72">
                                   {odds && (
                                     <>
                                       Số cách trúng: {fmt(odds.ways)} / {fmt(TOTAL_OUTCOMES)}
@@ -283,7 +282,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                     {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
                                   </span>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-80 text-xs">
+                                <TooltipContent side="top" className="max-w-80">
                                   {isOverBreakEven
                                     ? `Giải thưởng hiện tại (${fmt(profit!.currentPrize)}) đã vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))}) → LỖ`
                                     : profit
@@ -346,7 +345,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                           {isJackpot && (
                             <Badge
                               variant="secondary"
-                              className="bg-red-100 text-xs font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                              className="bg-red-100 font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300"
                             >
                               JP
                             </Badge>
@@ -360,7 +359,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                               1 : {fmt(Math.round(row.oneInN))}
                             </span>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-72 text-xs">
+                          <TooltipContent side="top" className="max-w-72">
                             Số cách trúng: {fmt(Math.round(row.ways))} / {fmt(TOTAL_OUTCOMES)}
                             <br />
                             Xác suất: {(row.probability * 100).toFixed(6)}%

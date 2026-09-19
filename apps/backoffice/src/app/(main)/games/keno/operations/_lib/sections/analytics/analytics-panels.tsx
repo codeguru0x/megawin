@@ -256,7 +256,7 @@ export function PlayTypeCard({
   const totalRevenue = playTypes.reduce((a, r) => a + r.revenue, 0);
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -366,7 +366,7 @@ export function TopRiskPanel({
 /** Top người chơi theo tổng tiền cược — dòng tiền vào tô emerald. */
 function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow[] }) {
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
@@ -414,7 +414,7 @@ function TopAccountsCard({ drawId, rows }: { drawId: string; rows: TopAccountRow
 /** Top phải trả tiềm năng — rủi ro chi trả per-entry (đỏ, nổi bật). */
 function TopPotentialCard({ drawId, rows }: { drawId: string; rows: TopPotentialRow[] }) {
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
@@ -476,7 +476,7 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
   const medals = ["🥇", "🥈", "🥉"];
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
@@ -555,7 +555,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
   const isFew = tenants.length <= 3;
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

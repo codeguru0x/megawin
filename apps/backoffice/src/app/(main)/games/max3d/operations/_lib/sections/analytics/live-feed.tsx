@@ -57,7 +57,7 @@ export function LiveFeed({
   largeBetThreshold: number;
 }) {
   return (
-    <Card className="flex flex-col gap-0 py-0 shadow-sm">
+    <Card className="flex flex-col gap-0 py-0">
       <CardHeader className="shrink-0 px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <Activity className="text-muted-foreground size-4 shrink-0" />

@@ -328,7 +328,7 @@ export function DrawCommandCenter({
                     <RotateCcw className="size-3" /> Thử lại
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-56 text-xs">
+                <TooltipContent side="bottom" className="max-w-56">
                   Dùng khi kết sổ bị treo (worker không khởi động hoặc vừa tải lại trang). An toàn để bấm — nếu đang
                   chạy bình thường, hệ thống sẽ bỏ qua.
                 </TooltipContent>

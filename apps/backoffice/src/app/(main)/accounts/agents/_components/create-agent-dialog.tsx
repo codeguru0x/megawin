@@ -88,12 +88,8 @@ export function CreateAgentAccountDialog() {
         <DialogHeader>
           <DialogTitle>Tạo tài khoản đại lý</DialogTitle>
           <DialogDescription>
-            Tạo tài khoản đại lý mới. Quyền mặc định là{" "}
-            <Badge variant="secondary" className="text-xs">
-              Agent
-            </Badge>
-            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần đầu. Mỗi Tenant chỉ được gán 1 đại lý duy
-            nhất.
+            Tạo tài khoản đại lý mới. Quyền mặc định là <Badge variant="secondary">Agent</Badge>. Mật khẩu tạm thời,
+            người dùng sẽ phải đổi khi đăng nhập lần đầu. Mỗi Tenant chỉ được gán 1 đại lý duy nhất.
           </DialogDescription>
         </DialogHeader>
 

@@ -51,7 +51,7 @@ export function RiskCluster({
     <div className="grid gap-4 @[40rem]/main:grid-cols-2">
       {/* Top người chơi — dòng tiền vào (emerald) */}
       {topAccounts.length > 0 && (
-        <Card className="gap-0 py-0 shadow-sm">
+        <Card className="gap-0 py-0">
           <CardHeader className="px-5 pt-4 pb-2">
             <div className="flex items-center gap-2">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
@@ -90,7 +90,7 @@ export function RiskCluster({
 
       {/* Top phải trả tiềm năng — rủi ro (đỏ nền) */}
       {topPotential.length > 0 && (
-        <Card className="gap-0 py-0 shadow-sm">
+        <Card className="gap-0 py-0">
           <CardHeader className="px-5 pt-4 pb-2">
             <div className="flex items-center gap-2">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">

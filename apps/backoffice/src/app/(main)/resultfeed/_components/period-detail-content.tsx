@@ -103,11 +103,7 @@ function ObservationCard({
         <div className="flex items-center gap-2">
           {selectable && <RadioGroupItem value={observation.id} id={`obs-${observation.id}`} />}
           <span className="font-mono text-sm font-medium">{observation.sourceId}</span>
-          {role && (
-            <Badge variant="outline" className="text-xs">
-              {role}
-            </Badge>
-          )}
+          {role && <Badge variant="outline">{role}</Badge>}
           {trustWeight !== undefined && <span className="text-muted-foreground text-xs">trust {trustWeight}</span>}
         </div>
         <Badge variant={INTRINSIC_STATE_VARIANT[observation.intrinsicState]}>

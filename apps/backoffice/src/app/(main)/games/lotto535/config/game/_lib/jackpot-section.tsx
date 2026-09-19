@@ -85,7 +85,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
           <TooltipTrigger asChild>
             <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
           </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-72 text-xs">
+          <TooltipContent side="top" className="max-w-72">
             {tip}
           </TooltipContent>
         </Tooltip>
@@ -206,7 +206,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                             <div className="group bg-muted/30 hover:bg-muted/50 flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors">
                               <Badge
                                 className={cn(
-                                  "w-9 justify-center text-xs font-bold",
+                                  "w-9 justify-center font-bold",
                                   t === "tier1" && "bg-amber-500 text-white",
                                   t === "tier2" && "bg-slate-400 text-white",
                                   t === "tier3" && "bg-amber-700 text-white",
@@ -238,7 +238,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   })}
 
                   <div className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2">
-                    <Badge variant="outline" className="w-9 justify-center text-xs">
+                    <Badge variant="outline" className="w-9 justify-center">
                       KK
                     </Badge>
                     <span className="text-muted-foreground flex-1 text-sm">Khuyến Khích</span>

@@ -127,13 +127,12 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
               <Badge
                 variant="outline"
                 className={cn(
-                  "h-5 border px-2 py-0 text-xs",
+                  "h-5 border px-2 py-0",
                   tier.tier === "special" &&
                     "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
                   tier.tier === "first" &&
                     "border-yellow-300 bg-yellow-50 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300",
-                  tier.tier === "second" &&
-                    "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
+                  "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
                   tier.tier === "third" &&
                     "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
                   tier.tier === "fourth" && "border-border bg-muted/40 text-muted-foreground",
@@ -207,7 +206,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
 
   return (
     <>
-      <Card className="gap-0 py-0 shadow-sm">
+      <Card className="gap-0 py-0">
         <CardHeader className="px-5 pt-4 pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
@@ -290,7 +289,7 @@ function FinancialSummary({
   // KHÔNG render ledger toàn 0. Max 3D không có snapshot Jackpot trên draw.
   if (!f) {
     return (
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -330,7 +329,7 @@ function FinancialSummary({
     : "Chi trả giải vượt doanh thu — công ty bù phần thiếu. Max 3D không có quỹ Jackpot nên toàn bộ chênh lệch tính thẳng vào P&L kỳ.";
 
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

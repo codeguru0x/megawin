@@ -65,7 +65,7 @@ export function ProfileCard() {
 
   if (isLoading) {
     return (
-      <Card className="gap-0 py-0 shadow-sm">
+      <Card className="gap-0 py-0">
         <CardContent className="flex items-center justify-center px-5 py-16">
           <Loader2 className="text-muted-foreground size-6 animate-spin" />
         </CardContent>
@@ -75,7 +75,7 @@ export function ProfileCard() {
 
   if (!data) {
     return (
-      <Card className="gap-0 py-0 shadow-sm">
+      <Card className="gap-0 py-0">
         <CardContent className="text-muted-foreground px-5 py-16 text-center text-sm">
           Không thể tải thông tin tài khoản.
         </CardContent>
@@ -87,7 +87,7 @@ export function ProfileCard() {
   const MfaIcon = mfaConfig.icon;
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

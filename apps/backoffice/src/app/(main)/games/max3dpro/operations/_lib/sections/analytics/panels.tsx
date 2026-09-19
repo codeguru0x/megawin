@@ -34,7 +34,7 @@ const GROUP_COLORS: Record<string, { dot: string; bar: string }> = {
 
 export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <PieChart className="text-muted-foreground size-4 shrink-0" />
@@ -74,7 +74,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
 
 export function TopTripletsCard({ rows }: { rows: TopTripletRow[] }) {
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <Grid3x3 className="text-muted-foreground size-4 shrink-0" />
@@ -113,7 +113,7 @@ export function TopTripletsCard({ rows }: { rows: TopTripletRow[] }) {
 
 export function PairTable({ rows }: { rows: PairRow[] }) {
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
@@ -216,7 +216,7 @@ export function RiskCluster({
   return (
     <div className="grid gap-4 @[40rem]/main:grid-cols-2">
       {topAccounts.length > 0 && (
-        <Card className="gap-0 py-0 shadow-sm">
+        <Card className="gap-0 py-0">
           <CardHeader className="px-5 pt-4 pb-2">
             <div className="flex items-center gap-2">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
@@ -254,7 +254,7 @@ export function RiskCluster({
       )}
 
       {topPotential.length > 0 && (
-        <Card className="gap-0 py-0 shadow-sm">
+        <Card className="gap-0 py-0">
           <CardHeader className="px-5 pt-4 pb-2">
             <div className="flex items-center gap-2">
               <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">
@@ -305,7 +305,7 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
   }
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <Building2 className="text-muted-foreground size-4 shrink-0" />

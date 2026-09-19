@@ -54,7 +54,7 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
 
   if (isLoading) {
     return (
-      <Card className="gap-0 py-0 shadow-sm">
+      <Card className="gap-0 py-0">
         <CardContent className="flex items-center justify-center px-5 py-12">
           <Loader2 className="text-muted-foreground size-6 animate-spin" />
         </CardContent>
@@ -67,7 +67,7 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
   const Icon = config.icon;
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">

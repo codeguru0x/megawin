@@ -114,7 +114,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
   if (step === "done") {
     return (
-      <Card className="gap-0 border-emerald-200/60 py-0 shadow-sm dark:border-emerald-800/40">
+      <Card className="gap-0 border-emerald-200/60 py-0 dark:border-emerald-800/40">
         <CardContent className="flex flex-col items-center gap-5 px-5 py-12">
           <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100 ring-4 ring-emerald-50 dark:bg-emerald-900/50 dark:ring-emerald-900/20">
             <ShieldCheck className="size-8 text-emerald-600 dark:text-emerald-400" />
@@ -135,7 +135,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
   }
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-5 pb-4">
         <div className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">

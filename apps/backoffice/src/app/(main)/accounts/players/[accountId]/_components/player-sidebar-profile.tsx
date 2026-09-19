@@ -80,7 +80,7 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
             <p className="text-foreground font-mono text-xs leading-tight font-semibold">{profile.displayName}</p>
           )}
         </div>
-        <Badge variant={statusVariant} className="h-5 text-xs">
+        <Badge variant={statusVariant} className="h-5">
           {statusLabel}
         </Badge>
       </div>

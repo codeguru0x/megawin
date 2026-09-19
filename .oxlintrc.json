@@ -177,8 +177,12 @@
             "allow": ["layout"],
             "contracts": [
               {
-                "pattern": "^Card$|^(Card)?(Content|Header|Footer)$",
+                "pattern": "^Card$|^CardContent$",
                 "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^Card(Header|Footer)$",
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^CardTitle$|^DialogTitle$|^SheetTitle$|^DrawerTitle$|^AlertTitle$",
@@ -190,11 +194,11 @@
               },
               {
                 "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
-                "allow": ["layout", "typography", "spacing"]
+                "allow": ["layout", "typography", "spacing", "color"]
               },
               {
                 "pattern": "^Skeleton$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^Label$|^FormLabel$|^SelectLabel$",
@@ -218,7 +222,7 @@
               },
               {
                 "pattern": "^TooltipContent$",
-                "allow": ["layout"]
+                "allow": ["layout", "typography"]
               },
               {
                 "pattern": "^Avatar$|^AvatarImage$|^AvatarFallback$",
@@ -321,8 +325,12 @@
             "allow": ["layout"],
             "contracts": [
               {
-                "pattern": "^Card$|^(Card)?(Content|Header|Footer)$",
+                "pattern": "^Card$|^CardContent$",
                 "allow": ["layout", "spacing"]
+              },
+              {
+                "pattern": "^Card(Header|Footer)$",
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^CardTitle$|^DialogTitle$|^SheetTitle$|^DrawerTitle$|^AlertTitle$",
@@ -334,11 +342,11 @@
               },
               {
                 "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
-                "allow": ["layout", "typography", "spacing"]
+                "allow": ["layout", "typography", "spacing", "color"]
               },
               {
                 "pattern": "^Skeleton$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^Label$|^FormLabel$|^SelectLabel$",
@@ -362,7 +370,7 @@
               },
               {
                 "pattern": "^TooltipContent$",
-                "allow": ["layout"]
+                "allow": ["layout", "typography"]
               },
               {
                 "pattern": "^Avatar$|^AvatarImage$|^AvatarFallback$",

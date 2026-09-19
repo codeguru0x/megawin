@@ -79,7 +79,7 @@ const DiceCell = memo(function DiceCell({
           <span className="text-muted-foreground text-2xs tabular-nums">{formatNumber(sets)}x</span>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs tabular-nums">
+      <TooltipContent side="top" className="tabular-nums">
         Số {diceValue}: {formatNumber(amount)} VND · {formatNumber(sets)} bộ (Một số + Hai số trùng + Ba số cụ thể)
       </TooltipContent>
     </Tooltip>
@@ -90,7 +90,7 @@ export function DiceBoard({ cells }: { cells: DiceCellItem[] }) {
   const maxAmount = Math.max(...cells.map((c) => c.amount), 0);
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">

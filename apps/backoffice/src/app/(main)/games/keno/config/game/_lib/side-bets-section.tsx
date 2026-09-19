@@ -37,7 +37,7 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
           <Info className="text-muted-foreground/60 size-3" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 text-xs">
+      <TooltipContent side="top" className="max-w-64">
         {tip}
       </TooltipContent>
     </Tooltip>
@@ -191,13 +191,13 @@ function BigSmallGroup({
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className="bg-amber-500 text-xs text-white">Lớn/Nhỏ</Badge>
+            <Badge className="bg-amber-500 text-white">Lớn/Nhỏ</Badge>
             <span className="text-muted-foreground text-sm">{BS_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="text-muted-foreground size-3.5 cursor-help" />
               </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs text-xs">
+              <TooltipContent side="right" className="max-w-xs">
                 Dựa vào 20 số quay: đếm số lượng số "lớn" (41-80) và "nhỏ" (1-40).
               </TooltipContent>
             </Tooltip>
@@ -268,7 +268,7 @@ function BigSmallGroup({
                       {`1 : ${fmt(Math.round(1 / odds.probability))}`}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-72 text-xs">
+                  <TooltipContent side="top" className="max-w-72">
                     Số cách trúng: {fmt(Number(odds.waysBig))} / {fmt(Number(TOTAL_OUTCOMES))}
                     <br />
                     Xác suất: {(odds.probability * 100).toFixed(4)}%
@@ -355,13 +355,13 @@ function EvenOddGroup({
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge className="bg-teal-500 text-xs text-white">Chẵn/Lẻ</Badge>
+            <Badge className="bg-teal-500 text-white">Chẵn/Lẻ</Badge>
             <span className="text-muted-foreground text-sm">{EO_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="text-muted-foreground size-3.5 cursor-help" />
               </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs text-xs">
+              <TooltipContent side="right" className="max-w-xs">
                 Dựa vào 20 số quay: đếm số chẵn và số lẻ trong 20 số.
               </TooltipContent>
             </Tooltip>
@@ -432,7 +432,7 @@ function EvenOddGroup({
                       {`1 : ${fmt(Math.round(1 / odds.probability))}`}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-72 text-xs">
+                  <TooltipContent side="top" className="max-w-72">
                     Số cách trúng: {fmt(Number(odds.waysBig))} / {fmt(Number(TOTAL_OUTCOMES))}
                     <br />
                     Xác suất: {(odds.probability * 100).toFixed(4)}%

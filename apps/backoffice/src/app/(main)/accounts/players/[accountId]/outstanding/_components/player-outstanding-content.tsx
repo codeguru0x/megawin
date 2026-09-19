@@ -86,9 +86,7 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
           <span className="text-muted-foreground text-xs">Live</span>
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom" className="text-xs">
-        Tự động refresh mỗi 60s · Nhấn để lấy dữ liệu mới nhất
-      </TooltipContent>
+      <TooltipContent side="bottom">Tự động refresh mỗi 60s · Nhấn để lấy dữ liệu mới nhất</TooltipContent>
     </Tooltip>
   );
 }

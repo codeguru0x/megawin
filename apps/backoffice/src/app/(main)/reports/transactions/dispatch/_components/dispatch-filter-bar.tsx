@@ -183,7 +183,7 @@ export function DispatchFilterBar() {
                 <HelpCircle className="size-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs text-xs whitespace-pre-line">
+            <TooltipContent side="bottom" className="max-w-xs whitespace-pre-line">
               {IDENTITY_HINT}
             </TooltipContent>
           </Tooltip>

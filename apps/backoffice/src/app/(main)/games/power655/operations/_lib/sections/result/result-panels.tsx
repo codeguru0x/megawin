@@ -128,7 +128,7 @@ function JackpotWinnerBanner({
             </p>
             <Badge
               className={cn(
-                "h-4.5 gap-1 border px-2 text-xs",
+                "h-4.5 gap-1 border px-2",
                 isJp1
                   ? "border-purple-400/50 bg-purple-500/20 text-purple-700 dark:text-purple-300"
                   : "border-indigo-400/50 bg-indigo-500/20 text-indigo-700 dark:text-indigo-300",
@@ -174,7 +174,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
     <>
       <Card
         className={cn(
-          "gap-0 py-0 shadow-sm",
+          "gap-0 py-0",
           (hasJp1Winner || hasJp2Winner) && "ring-1 ring-purple-400/40 dark:ring-purple-500/30",
         )}
       >
@@ -292,13 +292,12 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-5 border px-2 py-0 text-xs",
+                        "h-5 border px-2 py-0",
                         t.tier === PrizeTier.Jackpot1 &&
                           "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
                         t.tier === PrizeTier.Jackpot2 &&
                           "border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300",
-                        t.tier === PrizeTier.Tier1 &&
-                          "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
+                        "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
                         t.tier === PrizeTier.Tier2 &&
                           "border-cyan-300 bg-cyan-50 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
                         t.tier === PrizeTier.Tier3 &&
@@ -436,7 +435,7 @@ export function FinancialSummary({
   // KHÔNG render ledger toàn 0 / Biến động Jackpot lệch.
   if (!f) {
     return (
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -556,7 +555,7 @@ export function FinancialSummary({
   ];
 
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

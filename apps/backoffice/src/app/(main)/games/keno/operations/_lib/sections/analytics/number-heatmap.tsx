@@ -562,7 +562,7 @@ export function NumberHeatmap({ numbers, drawId }: { numbers: NumberFreqItem[]; 
   const canLookup = !!drawId && selected.length > 0;
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">

@@ -76,7 +76,7 @@ const SumBarColumn = memo(function SumBarColumn({
           </span>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="top" className="text-xs tabular-nums">
+      <TooltipContent side="top" className="tabular-nums">
         Tổng {sum}
         {isHighMultiplier ? " (×120 — cửa nhân cao)" : ""}: {formatNumber(amount)} VND · {formatNumber(sets)} bộ
       </TooltipContent>
@@ -95,7 +95,7 @@ export function SumTotalBar({
   const maxAmount = Math.max(...bars.map((b) => b.amount), 1);
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-1">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/50">
@@ -161,7 +161,7 @@ export function SideBetCard({
   };
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-1">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900/50">

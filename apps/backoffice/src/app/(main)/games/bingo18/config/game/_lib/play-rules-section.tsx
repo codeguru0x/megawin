@@ -57,7 +57,7 @@ function LabelWithTooltip({ label, tip, className }: { label: string; tip: strin
         <TooltipTrigger asChild>
           <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-72 text-xs">
+        <TooltipContent side="top" className="max-w-72">
           {tip}
         </TooltipContent>
       </Tooltip>

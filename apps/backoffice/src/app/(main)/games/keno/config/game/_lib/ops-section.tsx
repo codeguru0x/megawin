@@ -144,7 +144,7 @@ function LabelWithTooltip({ label, tip, className }: { label: string; tip: strin
         <TooltipTrigger asChild>
           <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
         </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-80 text-xs">
+        <TooltipContent side="top" className="max-w-80">
           {tip}
         </TooltipContent>
       </Tooltip>
@@ -249,7 +249,7 @@ function AlertToggleRow({
             <TooltipTrigger asChild>
               <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-80 text-xs">
+            <TooltipContent side="top" className="max-w-80">
               {meta.tip}
             </TooltipContent>
           </Tooltip>
@@ -400,7 +400,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                         <TooltipTrigger asChild>
                           <HelpCircle className="text-muted-foreground/60 size-3.5 cursor-help" />
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-80 text-xs">
+                        <TooltipContent side="top" className="max-w-80">
                           Chọn loại rủi ro worker sẽ giám sát và sinh alert mỗi chu kỳ. Tắt một loại nghĩa là ngưng theo
                           dõi rủi ro đó — dùng khi muốn giảm nhiễu, KHÔNG nên tắt loại 'Nghiêm trọng' trừ khi có lý do
                           rõ ràng.

@@ -88,7 +88,7 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
             <p className="text-sm font-bold tracking-tight text-teal-800 dark:text-teal-300">
               🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!
             </p>
-            <Badge className="h-4.5 gap-1 border border-teal-400/50 bg-teal-500/20 px-2 text-xs text-teal-700 dark:text-teal-300">
+            <Badge className="h-4.5 gap-1 border border-teal-400/50 bg-teal-500/20 px-2 text-teal-700 dark:text-teal-300">
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
@@ -116,7 +116,7 @@ function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
           <Gem className="size-3.5 shrink-0 animate-pulse text-teal-500" />
           <Badge
             variant="outline"
-            className="h-5 gap-1 border-teal-300 bg-teal-50 px-2 py-0 text-xs text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
+            className="h-5 gap-1 border-teal-300 bg-teal-50 px-2 py-0 text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
           >
             <Star className="size-2.5 fill-teal-500 text-teal-500" />
             {t.label}
@@ -148,7 +148,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
 
   return (
     <>
-      <Card className={cn("shadow-sm", hasJackpotWinner && "ring-1 ring-teal-400/40 dark:ring-teal-500/30")}>
+      <Card className={cn(hasJackpotWinner && "ring-1 ring-teal-400/40 dark:ring-teal-500/30")}>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div
@@ -258,13 +258,12 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-5 border px-2 py-0 text-xs",
+                        "h-5 border px-2 py-0",
                         t.tier === PrizeTier.Jackpot &&
                           "border-teal-300 bg-teal-50 text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300",
                         t.tier === PrizeTier.Tier1 &&
                           "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-                        t.tier === PrizeTier.Tier2 &&
-                          "border-cyan-300 bg-cyan-50 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
+                        "border-cyan-300 bg-cyan-50 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300",
                         t.tier === PrizeTier.Tier3 &&
                           "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
                       )}
@@ -396,7 +395,7 @@ export function FinancialSummary({
   // KHÔNG render ledger toàn 0 / Biến động Jackpot lệch.
   if (!f) {
     return (
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -516,7 +515,7 @@ export function FinancialSummary({
   ];
 
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

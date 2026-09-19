@@ -372,7 +372,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
   const defaultOpen = groups.filter((g) => g.items.some((it) => it.status === OpsAlertStatus.New)).map((g) => g.type);
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/50">

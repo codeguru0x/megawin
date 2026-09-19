@@ -165,7 +165,7 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
 
   return (
     <>
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/50">
@@ -393,7 +393,7 @@ function FinancialSummary({
   // KHÔNG render ledger toàn 0. Bingo 18 không có snapshot Jackpot trên draw.
   if (!f) {
     return (
-      <Card className="shadow-sm">
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -433,7 +433,7 @@ function FinancialSummary({
     : "Chi trả giải vượt doanh thu — công ty bù phần thiếu. Bingo 18 không có quỹ Jackpot nên toàn bộ chênh lệch tính thẳng vào P&L kỳ.";
 
   return (
-    <Card className="shadow-sm">
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">

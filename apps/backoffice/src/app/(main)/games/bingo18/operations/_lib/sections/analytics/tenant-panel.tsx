@@ -66,7 +66,7 @@ export function TenantPanel({ tenants }: { tenants: TenantRow[] }) {
   }
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <Building2 className="text-muted-foreground size-4 shrink-0" />

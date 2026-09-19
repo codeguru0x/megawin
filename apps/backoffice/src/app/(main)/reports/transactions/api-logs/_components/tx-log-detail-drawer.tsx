@@ -78,12 +78,8 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
             <div className="flex flex-col gap-5 px-5 py-4">
               {/* Summary */}
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={TX_LOG_STATUS_VARIANT[log.status]} className="text-xs">
-                  {TX_LOG_STATUS_LABELS[log.status]}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {TX_LOG_EVENT_TYPE_LABELS[log.eventType]}
-                </Badge>
+                <Badge variant={TX_LOG_STATUS_VARIANT[log.status]}>{TX_LOG_STATUS_LABELS[log.status]}</Badge>
+                <Badge variant="outline">{TX_LOG_EVENT_TYPE_LABELS[log.eventType]}</Badge>
                 <span className="text-muted-foreground font-mono text-sm">{log.tenantId}</span>
                 <span className="text-muted-foreground ml-auto font-mono text-sm tabular-nums">
                   {displayVNDateTime(log.createdAt)}

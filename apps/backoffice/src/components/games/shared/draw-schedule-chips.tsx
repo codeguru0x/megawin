@@ -93,7 +93,7 @@ export function ScheduleChips({ draw }: { draw: DrawScheduleFields }) {
               </span>
             </div>
           </TooltipTrigger>
-          <TooltipContent side="bottom" className="font-mono text-xs">
+          <TooltipContent side="bottom" className="font-mono">
             {item.fullDateTime}
           </TooltipContent>
         </Tooltip>

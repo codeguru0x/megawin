@@ -184,7 +184,7 @@ export function LiveFeed({
   const sideEntries = entries.filter((e) => SIDE_PLAY_TYPES.has(e.playType.split("-")[0] ?? e.playType));
 
   return (
-    <Card className="@container/feed flex flex-col gap-0 py-0 shadow-sm">
+    <Card className="@container/feed flex flex-col gap-0 py-0">
       <CardHeader className="shrink-0 px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
           <Activity className="text-muted-foreground size-4 shrink-0" />

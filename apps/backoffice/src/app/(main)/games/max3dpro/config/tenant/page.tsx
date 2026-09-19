@@ -280,7 +280,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
               </div>
             </div>
 
-            <Badge variant={config.isEnabled ? "default" : "destructive"} className="shrink-0 gap-1 text-xs">
+            <Badge variant={config.isEnabled ? "default" : "destructive"} className="shrink-0 gap-1">
               {config.isEnabled ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
               {config.isEnabled ? "Hoạt động" : "Vô hiệu hoá"}
             </Badge>
@@ -512,7 +512,7 @@ function AddTenantDialog({
                     <p className="truncate text-sm font-medium">{t.displayName}</p>
                     <p className="text-muted-foreground truncate text-xs">{t.tenantId}</p>
                   </div>
-                  <Badge variant={t.status === "active" ? "default" : "secondary"} className="shrink-0 text-xs">
+                  <Badge variant={t.status === "active" ? "default" : "secondary"} className="shrink-0">
                     {t.status === "active" ? "Hoạt động" : t.status}
                   </Badge>
                 </button>

@@ -210,7 +210,7 @@ export function Lotto535PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                   </span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="font-mono text-xs">
+              <TooltipContent side="bottom" className="font-mono">
                 {displayVNDateTime(draw.sales.openAt)}
               </TooltipContent>
             </Tooltip>
@@ -225,7 +225,7 @@ export function Lotto535PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 </span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="font-mono text-xs">
+            <TooltipContent side="bottom" className="font-mono">
               {displayVNDateTime(draw.sales.closeAt)}
             </TooltipContent>
           </Tooltip>
@@ -239,7 +239,7 @@ export function Lotto535PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 </span>
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="font-mono text-xs">
+            <TooltipContent side="bottom" className="font-mono">
               {displayVNDateTime(draw.drawTime)}
             </TooltipContent>
           </Tooltip>
@@ -334,7 +334,7 @@ export function Lotto535QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 {displayVNTime(draw.sales.closeAt)}
               </span>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="font-mono text-xs">
+            <TooltipContent side="bottom" className="font-mono">
               {displayVNDateTime(draw.sales.closeAt)}
             </TooltipContent>
           </Tooltip>
@@ -345,7 +345,7 @@ export function Lotto535QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 <span className="text-foreground font-semibold">{drawTime}</span>
               </span>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="font-mono text-xs">
+            <TooltipContent side="bottom" className="font-mono">
               {displayVNDateTime(draw.drawTime)}
             </TooltipContent>
           </Tooltip>

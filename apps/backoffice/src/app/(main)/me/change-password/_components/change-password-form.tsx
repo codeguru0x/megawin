@@ -58,7 +58,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
+    <Card className="gap-0 py-0">
       <CardHeader className="px-5 pt-4 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="flex size-7 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/50">
