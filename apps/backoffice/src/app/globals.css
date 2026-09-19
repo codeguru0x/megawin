@@ -68,6 +68,12 @@
   --color-loss: var(--loss);
   --color-loss-foreground: var(--loss-foreground);
 
+  /* ── Warning / Info semantic colors ─────────────────────────────────────── */
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
   /* ── Game Brand Colors ───────────────────────────────────────────────────── */
   /* Primary brand token per game — dùng cho charts, badges, borders, icons.   */
   /* Thêm vào @theme để Tailwind sinh ra bg-game-*, text-game-*, border-game-* */
@@ -136,6 +142,15 @@ These serve as the fallback; there is no separate default.css file. */
   --profit-foreground: oklch(1 0 0); /* white */
   --loss: oklch(0.577 0.245 27.325); /* red-500 #ef4444 — đồng bộ với --destructive */
   --loss-foreground: oklch(1 0 0); /* white */
+
+  /* ── Warning / Info semantic colors ────────────────────────────────────── */
+  /* Dùng cho cảnh báo (chờ xử lý, gần ngưỡng) và thông tin trung tính.       */
+  /* Tailwind utility: text-warning, bg-warning, text-info, bg-info           */
+  /* oklch convert chính xác từ Tailwind hex (culori-equivalent).            */
+  --warning: oklch(0.769 0.165 70.1); /* amber-500 #f59e0b */
+  --warning-foreground: oklch(0.216 0.006 56); /* dark text đủ contrast trên nền amber */
+  --info: oklch(0.623 0.188 259.8); /* blue-500 #3b82f6 */
+  --info-foreground: oklch(1 0 0); /* white */
 
   /* ── Game Brand Colors (light mode) ────────────────────────────────────── */
   /* Mega 6/45 — Teal (jackpot: teal-400→emerald-500) */
@@ -213,6 +228,12 @@ These serve as the fallback; there is no separate default.css file. */
   --profit-foreground: oklch(0.1 0.05 150);
   --loss: oklch(0.704 0.191 22.216); /* red-400 #f87171 — đồng bộ với --destructive dark */
   --loss-foreground: oklch(0.1 0.05 27);
+
+  /* ── Warning / Info semantic colors (dark mode) ────────────────────────── */
+  --warning: oklch(0.837 0.164 84.4); /* amber-400 #fbbf24 — sáng hơn cho nền tối */
+  --warning-foreground: oklch(0.15 0.05 70);
+  --info: oklch(0.714 0.143 254.6); /* blue-400 #60a5fa */
+  --info-foreground: oklch(0.15 0.05 250);
 
   /* ── Game Brand Colors (dark mode) ─────────────────────────────────────── */
   /* Sáng hơn so với light mode để dễ đọc trên nền tối */
