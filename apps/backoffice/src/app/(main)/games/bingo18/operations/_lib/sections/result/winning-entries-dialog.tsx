@@ -174,7 +174,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
   const sideBetBoards = entry.boardDetails.filter((b) => BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType));
 
   return (
-    <TableRow onClick={onClick} className="group hover:bg-muted/30 cursor-pointer align-top transition-colors">
+    <TableRow onClick={onClick} className="group hover:bg-muted/30 cursor-pointer align-top">
       <TableCell className="py-3 pl-6 text-center">
         <span className="bg-muted text-muted-foreground inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums">
           {rowNo}

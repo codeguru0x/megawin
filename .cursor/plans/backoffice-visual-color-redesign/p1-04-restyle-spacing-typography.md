@@ -2,7 +2,7 @@
 
 ## Status (2026-09-19) — đang làm trên `visual/p1-04-restyle`
 
-Baseline sau P1-03: **2262** `no-restyle` → slice-1 **~1471** → slice-2 **~1257** → slice-3 (Input typography + TabsList shape) **~1067** (−1195 tổng).
+Baseline sau P1-03: **2262** `no-restyle` → … → slice-4 **~768** (−1494 tổng). Contract/2a an toàn coi như hết.
 
 ### Đã làm (2a + nới contract có giải trình)
 
@@ -21,15 +21,15 @@ Baseline sau P1-03: **2262** `no-restyle` → slice-1 **~1471** → slice-2 **~1
 | Title/Description + Dialog/Sheet Header/Footer `allow: spacing` | contract | icon+title `gap-*`, footer `pt-*`/`gap-*` |
 | Input/SelectTrigger/Textarea/MoneyInput `allow: typography` | contract | số liệu `font-mono`/`tabular-nums`/`text-center` |
 | TabsList/Trigger/Content `allow: shape` | contract | underline tabs `border-b` |
+| AccordionItem xoá `border-b` thừa | 2a | default AccordionItem đã có |
+| Label/SelectItem/Badge/ScrollArea/DialogContent/Table/Accordion/Collapsible | contract | spacing/typography/shape theo pattern UI |
+| TableRow xoá `transition-colors` thừa | 2a | TableRow default đã có |
 
 ### Còn lại (ước lượng)
 
-Typography còn (~305: Input `font-mono`/`tabular-nums`, Button `text-xs`/`h-7` compact),
-spacing còn (~289: Badge size, Dialog compact, Label…), shape (~159: TabsList/Badge/Accordion),
-color raw (~432), effect (`transition-colors`, `shadow-2xl`).
-
-Ưu tiên tiếp: Input typography contract hoặc 2b (số liệu mono) → Badge shape/spacing còn lại →
-TabsList shape → effect classes.
+Color raw trên Button/Card (~432 — action tint / game palette, 2b/2c visual), Button compact
+`h-7`/`text-xs`, effect (`shadow-2xl`, Collapsible animate). Không suppress hàng loạt — xử khi
+review ảnh từng khu vực.
 
 ## 1. Contract hiện có (`.oxlintrc.json` root, dòng 174-215)
 

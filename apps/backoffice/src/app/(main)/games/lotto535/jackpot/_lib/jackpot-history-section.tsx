@@ -233,7 +233,6 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   return (
     <TableRow
       className={cn(
-        "transition-colors",
         isSplit && "bg-amber-50/50 dark:bg-amber-950/20",
         isWinner && "bg-green-50/50 dark:bg-green-950/20",
       )}

@@ -382,7 +382,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
             const accent = severityAccent(g.severity);
             const isCritical = g.severity === OpsAlertSeverity.Critical;
             return (
-              <AccordionItem key={g.type} value={g.type} className="border-b last:border-b-0">
+              <AccordionItem key={g.type} value={g.type}>
                 <AccordionTrigger className="py-3 hover:no-underline">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className={cn("size-2 shrink-0 rounded-full", accent.dot)} />

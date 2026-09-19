@@ -248,7 +248,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
-    <TableRow className={cn("transition-colors", hasWinner && "bg-blue-50/40 dark:bg-blue-950/20")}>
+    <TableRow className={cn(hasWinner && "bg-blue-50/40 dark:bg-blue-950/20")}>
       {/* Kỳ (DrawId) */}
       <TableCell className="pl-5 font-mono text-sm tabular-nums">{item.drawId}</TableCell>
 

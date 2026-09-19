@@ -202,7 +202,7 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
     <TableRow
       onClick={onClick}
       className={cn(
-        "group hover:bg-muted/30 cursor-pointer align-top transition-colors",
+        "group hover:bg-muted/30 cursor-pointer align-top",
         // Entry bị payout cap: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
         // bảng đồng nhất, tránh nền loang gây khó quét mắt. Nhãn [cap] đã có trong board detail.
         hasCapped && "border-l-3 border-l-amber-400",

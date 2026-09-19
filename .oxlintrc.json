@@ -198,7 +198,7 @@
               },
               {
                 "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
-                "allow": ["layout", "typography", "spacing", "color"]
+                "allow": ["layout", "typography", "spacing", "color", "shape"]
               },
               {
                 "pattern": "^Skeleton$",
@@ -206,11 +206,15 @@
               },
               {
                 "pattern": "^Label$|^FormLabel$|^SelectLabel$",
-                "allow": ["layout", "typography", "color"]
+                "allow": ["layout", "typography", "color", "spacing"]
+              },
+              {
+                "pattern": "^SelectItem$",
+                "allow": ["layout", "spacing", "typography"]
               },
               {
                 "pattern": "^Badge$",
-                "allow": ["layout", "color"]
+                "allow": ["layout", "color", "spacing", "typography", "shape"]
               },
               {
                 "pattern": "^Alert$",
@@ -222,7 +226,7 @@
               },
               {
                 "pattern": "^DialogContent$|^SheetContent$|^DrawerContent$|^PopoverContent$|^HoverCardContent$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^TooltipContent$",
@@ -230,7 +234,7 @@
               },
               {
                 "pattern": "^Avatar$|^AvatarImage$|^AvatarFallback$",
-                "allow": ["layout", "size-*"]
+                "allow": ["layout", "size-*", "shape"]
               },
               {
                 "pattern": "^Button$",
@@ -263,7 +267,15 @@
               },
               {
                 "pattern": "^ScrollArea$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
+              },
+              {
+                "pattern": "^Accordion(Item|Content|Trigger)$",
+                "allow": ["layout", "spacing", "typography", "shape"]
+              },
+              {
+                "pattern": "^Collapsible(Content|Trigger)?$",
+                "allow": ["layout", "spacing", "typography", "shape"]
               },
               {
                 "pattern": "^(FormItem|FormControl|FormMessage|Field|FieldGroup|FieldSet|FieldContent)$",
@@ -350,7 +362,7 @@
               },
               {
                 "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
-                "allow": ["layout", "typography", "spacing", "color"]
+                "allow": ["layout", "typography", "spacing", "color", "shape"]
               },
               {
                 "pattern": "^Skeleton$",
@@ -358,11 +370,15 @@
               },
               {
                 "pattern": "^Label$|^FormLabel$|^SelectLabel$",
-                "allow": ["layout", "typography", "color"]
+                "allow": ["layout", "typography", "color", "spacing"]
+              },
+              {
+                "pattern": "^SelectItem$",
+                "allow": ["layout", "spacing", "typography"]
               },
               {
                 "pattern": "^Badge$",
-                "allow": ["layout", "color"]
+                "allow": ["layout", "color", "spacing", "typography", "shape"]
               },
               {
                 "pattern": "^Alert$",
@@ -374,7 +390,7 @@
               },
               {
                 "pattern": "^DialogContent$|^SheetContent$|^DrawerContent$|^PopoverContent$|^HoverCardContent$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
               },
               {
                 "pattern": "^TooltipContent$",
@@ -382,7 +398,7 @@
               },
               {
                 "pattern": "^Avatar$|^AvatarImage$|^AvatarFallback$",
-                "allow": ["layout", "size-*"]
+                "allow": ["layout", "size-*", "shape"]
               },
               {
                 "pattern": "^Button$",
@@ -415,7 +431,15 @@
               },
               {
                 "pattern": "^ScrollArea$",
-                "allow": ["layout", "spacing"]
+                "allow": ["layout", "spacing", "shape"]
+              },
+              {
+                "pattern": "^Accordion(Item|Content|Trigger)$",
+                "allow": ["layout", "spacing", "typography", "shape"]
+              },
+              {
+                "pattern": "^Collapsible(Content|Trigger)?$",
+                "allow": ["layout", "spacing", "typography", "shape"]
               },
               {
                 "pattern": "^(FormItem|FormControl|FormMessage|Field|FieldGroup|FieldSet|FieldContent)$",
