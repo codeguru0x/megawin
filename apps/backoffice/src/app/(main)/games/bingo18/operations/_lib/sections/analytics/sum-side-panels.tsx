@@ -54,14 +54,14 @@ const SumBarColumn = memo(function SumBarColumn({
             </span>
             <div
               className={cn(
-                "w-full rounded-t-md transition-all duration-500",
+                "h-[var(--bar-h)] w-full rounded-t-md transition-all duration-500",
                 overThreshold
                   ? "bg-amber-500"
                   : isHighMultiplier
                     ? "bg-red-400/80 dark:bg-red-500/70"
                     : "bg-cyan-400/80 dark:bg-cyan-600/70",
               )}
-              style={{ height: `${Math.max(heightPct, amount > 0 ? 4 : 0)}%` }}
+              style={{ "--bar-h": `${Math.max(heightPct, amount > 0 ? 4 : 0)}%` } as CSSProperties}
             />
           </div>
           <span

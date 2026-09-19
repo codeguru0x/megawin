@@ -80,8 +80,7 @@ function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }:
       fill="white"
       textAnchor="middle"
       dominantBaseline="central"
-      className="text-[10px] font-bold"
-      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.3)" }}
+      className="text-[10px] font-bold [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]"
     >
       {(percent * 100).toFixed(0)}%
     </text>

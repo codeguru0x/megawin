@@ -38,7 +38,19 @@ export function Power655EntryStatusBadge({ status, className }: EntryStatusBadge
   };
 
   return (
-    <Badge variant="outline" className={cn("border-0", config.className, className)}>
+    <Badge
+      variant="outline"
+      className={cn(
+        "border-0",
+        status === "scheduled" && "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+        status === "active" && "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+        status === "drawn" && "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+        status === "settled" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+        status === "void" && "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+        !STATUS_MAP[status] && "bg-muted text-muted-foreground",
+        className,
+      )}
+    >
       {config.label}
     </Badge>
   );

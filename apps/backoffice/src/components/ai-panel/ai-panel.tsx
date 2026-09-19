@@ -14,7 +14,7 @@
  * `ChatPanel` (`src/components/ai-chat/`) — dùng chung với trang `/ai`, panel chỉ thêm
  * frame/resize/drawer xung quanh.
  */
-import { Activity, useCallback, useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { Activity, useCallback, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 
 import { usePathname } from "next/navigation";
 
@@ -156,9 +156,11 @@ export function AiPanel() {
       // Overlay: width cố định, đóng/mở bằng translate ra/vào ngoài khung hình (xem className).
       // Docked: width CHÍNH LÀ cơ chế đóng/mở (0 khi đóng, không border để tránh sliver 1px) vì
       // panel là flex sibling chiếm chỗ thật trong layout — không thể "trượt ra ngoài" như overlay.
-      style={isOverlay ? { width } : { width: open ? width : 0 }}
+      style={
+        isOverlay ? ({ "--panel-w": width } as CSSProperties) : ({ "--panel-w": open ? width : 0 } as CSSProperties)
+      }
       className={cn(
-        "bg-background flex flex-col",
+        "bg-background flex w-[var(--panel-w)] flex-col",
         isOverlay
           ? cn(
               "fixed inset-y-0 right-0 z-40 border-l shadow-xl transition-transform duration-200 ease-linear",

@@ -166,8 +166,8 @@ function GameCard({
         {/* Progress bar — visual tỷ lệ % stake */}
         <div className="bg-muted/60 mt-0.5 h-1 w-full overflow-hidden rounded-full">
           <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${Math.min(pct, 100)}%`, background: hex }}
+            className="h-full w-[var(--bar-w)] rounded-full bg-[var(--bar-bg)] transition-all"
+            style={{ "--bar-w": `${Math.min(pct, 100)}%`, "--bar-bg": hex } as CSSProperties}
           />
         </div>
       </div>
@@ -271,11 +271,13 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
                 key={g.gameProduct}
                 prefetch={false}
                 href={`/games/${g.gameProduct}/outstanding`}
-                className="relative h-full transition-opacity hover:opacity-80"
-                style={{
-                  width: `${Math.max(pct, 2)}%`,
-                  background: getGameHex(g.gameProduct as string),
-                }}
+                className="relative h-full w-[var(--seg-w)] bg-[var(--seg-bg)] transition-opacity hover:opacity-80"
+                style={
+                  {
+                    "--seg-w": `${Math.max(pct, 2)}%`,
+                    "--seg-bg": getGameHex(g.gameProduct as string),
+                  } as CSSProperties
+                }
                 title={`${getGameLabel(g.gameProduct as string)}: ${formatVND(g.totalOutstandingStake)} (${pct.toFixed(1)}%)`}
               />
             );

@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -52,7 +54,7 @@ export function ChartSkeleton({ height = 240 }: { height?: number }) {
         <Skeleton className="h-4 w-32" />
       </CardHeader>
       <CardContent className="px-5 pt-0 pb-4">
-        <Skeleton className="w-full rounded" style={{ height }} />
+        <Skeleton className="h-[var(--skel-h)] w-full rounded" style={{ "--skel-h": `${height}px` } as CSSProperties} />
       </CardContent>
     </Card>
   );

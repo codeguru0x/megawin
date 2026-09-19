@@ -151,11 +151,12 @@ function PickCard({ row }: { row: PlayTypeRow }) {
  */
 function SideBetPairCard({
   pair,
-  style,
+  playStyle,
   skewPct,
 }: {
   pair: SideBetPair;
-  style: { bg: string; border: string; dot: string; text: string; label: string };
+  /** UI tokens (Tailwind classes) — không phải React `style` attr. */
+  playStyle: { bg: string; border: string; dot: string; text: string; label: string };
   skewPct: number;
 }) {
   const pairTotal = pair.left.amount + pair.right.amount;
@@ -169,10 +170,10 @@ function SideBetPairCard({
   const rightColor = skewed && !leftHeavier ? "bg-amber-500" : "bg-slate-400 dark:bg-slate-500";
 
   return (
-    <div className={cn("flex flex-1 flex-col gap-2 rounded-xl border p-3", style.bg, style.border)}>
+    <div className={cn("flex flex-1 flex-col gap-2 rounded-xl border p-3", playStyle.bg, playStyle.border)}>
       <div className="flex items-center gap-2">
-        <div className={cn("size-2 shrink-0 rounded-full", style.dot)} />
-        <span className={cn("flex-1 text-xs font-semibold", style.text)}>{style.label}</span>
+        <div className={cn("size-2 shrink-0 rounded-full", playStyle.dot)} />
+        <span className={cn("flex-1 text-xs font-semibold", playStyle.text)}>{playStyle.label}</span>
         {skewed && (
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/50 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 tabular-nums dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-300">
             <TriangleAlert className="size-2.5 shrink-0" />
@@ -307,7 +308,7 @@ export function PlayTypeCard({
                     <SideBetPairCard
                       key={pair.label}
                       pair={pair}
-                      style={sideBetStyles[i] ?? sideBetStyles[0]!}
+                      playStyle={sideBetStyles[i] ?? sideBetStyles[0]!}
                       skewPct={sidebetSkewPct}
                     />
                   ))}

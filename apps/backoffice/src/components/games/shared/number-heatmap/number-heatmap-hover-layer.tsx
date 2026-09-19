@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { createPortal } from "react-dom";
 
@@ -51,12 +51,14 @@ export function NumberHeatmapHoverLayer<T extends NumberHeatmapHoverItem>({
     // canh giữa ổn định trong suốt vòng đời panel.
     <div
       key={item.number}
-      className="pointer-events-none fixed z-50"
-      style={{
-        left,
-        top,
-        transform: placeBelow ? "translate(-50%, 0)" : "translate(-50%, -100%)",
-      }}
+      className="pointer-events-none fixed top-[var(--hover-t)] left-[var(--hover-l)] z-50 [transform:var(--hover-tx)]"
+      style={
+        {
+          "--hover-l": `${left}px`,
+          "--hover-t": `${top}px`,
+          "--hover-tx": placeBelow ? "translate(-50%, 0)" : "translate(-50%, -100%)",
+        } as CSSProperties
+      }
     >
       {/* Div trong — CHỈ animation (scale/fade), transform-origin mặc định = center
           trùng đúng tâm điểm đã canh ở div ngoài → mọc từ đúng ô hover. */}

@@ -9,6 +9,8 @@
  * KHÔNG import file này trực tiếp từ nơi khác ngoài `chart-tool-view.tsx` — luôn qua
  * `next/dynamic` để giữ đúng code-splitting.
  */
+import type { CSSProperties } from "react";
+
 import {
   Area,
   AreaChart,
@@ -190,7 +192,7 @@ function TooltipItem({ color, label, value }: { color: string | undefined; label
       {color !== undefined && (
         <span
           className="mt-0.5 size-2.5 shrink-0 rounded-[2px] bg-[var(--swatch-bg)]"
-          style={{ "--swatch-bg": color } as React.CSSProperties}
+          style={{ "--swatch-bg": color } as CSSProperties}
         />
       )}
       <div className="flex flex-1 items-center justify-between gap-4 leading-none">
@@ -908,9 +910,8 @@ function ScatterChartBody({
       >
         <Label
           angle={-90}
-          className="fill-muted-foreground text-[11px]"
+          className="fill-muted-foreground text-[11px] [text-anchor:middle]"
           position="insideLeft"
-          style={{ textAnchor: "middle" }}
           value={prettifyLabel(pair.y.dataKey, reportLabels)}
         />
       </YAxis>
@@ -960,7 +961,7 @@ function ScatterLegend({ color, text }: { color: string; text: string }) {
     <div className="text-muted-foreground flex items-center justify-center gap-1.5 pt-3 text-xs">
       <span
         className="size-2 shrink-0 rounded-full bg-[var(--swatch-bg)]"
-        style={{ "--swatch-bg": color } as React.CSSProperties}
+        style={{ "--swatch-bg": color } as CSSProperties}
       />
       {text}
     </div>
@@ -1080,9 +1081,9 @@ export default function ChartBody({ model, reportLabels }: ChartBodyProps) {
 
   return (
     <ChartContainer
-      className={cn("w-full", isHBar ? undefined : CHART_HEIGHT_CLASS[model.kind])}
+      className={cn("w-full", isHBar ? "h-[var(--chart-h)]" : CHART_HEIGHT_CLASS[model.kind])}
       config={config}
-      style={isHBar ? { height: hbarHeightPx } : undefined}
+      style={isHBar ? ({ "--chart-h": `${hbarHeightPx}px` } as CSSProperties) : undefined}
     >
       {renderChartByKind(model, reportLabels)}
     </ChartContainer>
