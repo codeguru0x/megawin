@@ -594,7 +594,7 @@ function EntriesView({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs"
+              className="text-xs"
               disabled={page <= 1}
               onClick={() => onPageChange(page - 1)}
             >
@@ -604,7 +604,7 @@ function EntriesView({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs"
+              className="text-xs"
               disabled={page >= totalPages}
               onClick={() => onPageChange(page + 1)}
             >

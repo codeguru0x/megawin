@@ -78,7 +78,7 @@ export function ReviewListTable({
                 <TableCell className="text-right tabular-nums">{row.agreeing.length}</TableCell>
                 <TableCell className="text-right tabular-nums">
                   {row.conflicting.length > 0 ? (
-                    <Badge variant="destructive" className="gap-1">
+                    <Badge variant="destructive">
                       <AlertTriangle className="size-3" />
                       {row.conflicting.length}
                     </Badge>
@@ -102,23 +102,11 @@ export function ReviewListTable({
         <div className="flex items-center justify-between border-t px-5 py-3">
           <span className="text-muted-foreground text-xs tabular-nums">Trang {page}</span>
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs"
-              disabled={!hasPrev || isFetching}
-              onClick={onPrev}
-            >
+            <Button size="sm" variant="outline" className="text-xs" disabled={!hasPrev || isFetching} onClick={onPrev}>
               <ChevronLeft className="size-3.5" />
               Trước
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs"
-              disabled={!hasNext || isFetching}
-              onClick={onNext}
-            >
+            <Button size="sm" variant="outline" className="text-xs" disabled={!hasNext || isFetching} onClick={onNext}>
               Sau
               <ChevronRight className="size-3.5" />
             </Button>

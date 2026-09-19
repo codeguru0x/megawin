@@ -448,9 +448,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
                       >
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="font-medium">
-                            {tierLabel}
-                          </Badge>
+                          <Badge variant="secondary">{tierLabel}</Badge>
                           <span className="bg-secondary text-muted-foreground text-3xs rounded px-1.5 py-0.5">
                             {modeTag}
                           </span>

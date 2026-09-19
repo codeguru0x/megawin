@@ -59,7 +59,7 @@ export function PeriodLookupContent() {
             />
           </div>
 
-          <Button className="h-9 gap-1.5" disabled={!gameInput || !periodInput.trim()} onClick={handleSubmit}>
+          <Button className="gap-1.5" disabled={!gameInput || !periodInput.trim()} onClick={handleSubmit}>
             <Search className="size-3.5" />
             Tra cứu
           </Button>

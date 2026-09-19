@@ -167,7 +167,7 @@ function StatMini({ label, value }: { label: string; value: string }) {
 function CycleReasonBadge({ reason }: { reason?: string }) {
   if (reason === JackpotCycleCloseReason.Winner) {
     return (
-      <Badge className="gap-1 border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
+      <Badge className="border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
         <Sparkles className="size-3" />
         Trúng Jackpot
       </Badge>
@@ -175,7 +175,7 @@ function CycleReasonBadge({ reason }: { reason?: string }) {
   }
   if (reason === JackpotCycleCloseReason.Split) {
     return (
-      <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
+      <Badge className="border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
         <Split className="size-3" />
         Chia giải
       </Badge>

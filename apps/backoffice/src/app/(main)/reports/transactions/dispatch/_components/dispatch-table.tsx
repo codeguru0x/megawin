@@ -302,7 +302,7 @@ export function DispatchTable({
           <Button
             size="sm"
             variant="outline"
-            className="h-8 text-xs"
+            className="text-xs"
             disabled={isFetchingNextPage}
             onClick={() => fetchNextPage()}
           >

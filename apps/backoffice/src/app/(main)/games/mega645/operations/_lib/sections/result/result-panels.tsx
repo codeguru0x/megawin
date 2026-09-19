@@ -88,7 +88,7 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
             <p className="text-sm font-bold tracking-tight text-teal-800 dark:text-teal-300">
               🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!
             </p>
-            <Badge className="h-4.5 gap-1 border border-teal-400/50 bg-teal-500/20 px-2 text-teal-700 dark:text-teal-300">
+            <Badge className="h-4.5 border border-teal-400/50 bg-teal-500/20 text-teal-700 dark:text-teal-300">
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
@@ -116,7 +116,7 @@ function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
           <Gem className="size-3.5 shrink-0 animate-pulse text-teal-500" />
           <Badge
             variant="outline"
-            className="h-5 gap-1 border-teal-300 bg-teal-50 px-2 py-0 text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
+            className="h-5 border-teal-300 bg-teal-50 py-0 text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
           >
             <Star className="size-2.5 fill-teal-500 text-teal-500" />
             {t.label}
@@ -258,7 +258,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-5 border px-2 py-0",
+                        "h-5 border py-0",
                         t.tier === PrizeTier.Jackpot &&
                           "border-teal-300 bg-teal-50 text-teal-700 dark:border-teal-700 dark:bg-teal-950/50 dark:text-teal-300",
                         t.tier === PrizeTier.Tier1 &&
@@ -543,7 +543,7 @@ export function FinancialSummary({
               Biến động Jackpot
             </span>
             {f.hasJackpotWinner && (
-              <Badge className="text-3xs ml-auto h-4 gap-1 border border-teal-400/40 bg-teal-500/15 px-1.5 text-teal-700 dark:text-teal-300">
+              <Badge className="text-3xs ml-auto h-4 border border-teal-400/40 bg-teal-500/15 px-1.5 text-teal-700 dark:text-teal-300">
                 <Star className="size-2 fill-current" />
                 Đã trao
               </Badge>

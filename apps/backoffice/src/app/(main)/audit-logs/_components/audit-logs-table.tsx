@@ -149,23 +149,11 @@ export function AuditLogsTable({
         <div className="flex items-center justify-between border-t px-5 py-3">
           <span className="text-muted-foreground text-xs tabular-nums">Trang {pageIndex + 1}</span>
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs"
-              disabled={!hasPrev || isFetching}
-              onClick={onPrev}
-            >
+            <Button size="sm" variant="outline" className="text-xs" disabled={!hasPrev || isFetching} onClick={onPrev}>
               <ChevronLeft className="size-3.5" />
               Trước
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs"
-              disabled={!hasNext || isFetching}
-              onClick={onNext}
-            >
+            <Button size="sm" variant="outline" className="text-xs" disabled={!hasNext || isFetching} onClick={onNext}>
               Sau
               <ChevronRight className="size-3.5" />
             </Button>

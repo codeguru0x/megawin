@@ -71,7 +71,7 @@ export function TenantCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "h-8 w-full justify-between gap-1 font-mono text-xs font-normal",
+            "w-full justify-between gap-1 font-mono text-xs font-normal",
             !value && "text-muted-foreground",
             className,
           )}

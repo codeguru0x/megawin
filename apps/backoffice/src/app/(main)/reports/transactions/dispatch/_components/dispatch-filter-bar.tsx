@@ -143,7 +143,7 @@ export function DispatchFilterBar() {
             {/* Detected-type badge bên phải input */}
             {searchInput.trim() && detectedKind && (
               <span className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">
-                <Badge variant="secondary" className="text-3xs h-5 px-1.5 font-medium uppercase tabular-nums">
+                <Badge variant="secondary" className="text-3xs h-5 px-1.5 uppercase tabular-nums">
                   {IDENTITY_KIND_LABELS[detectedKind]}
                 </Badge>
               </span>
@@ -154,7 +154,7 @@ export function DispatchFilterBar() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 shrink-0 px-2 text-xs"
+              className="shrink-0 px-2 text-xs"
               onClick={handleClearSearch}
               title="Xoá tìm"
             >
@@ -162,12 +162,7 @@ export function DispatchFilterBar() {
               Xoá
             </Button>
           ) : (
-            <Button
-              size="sm"
-              className="h-8 shrink-0 px-3 text-xs"
-              onClick={handleSubmitSearch}
-              disabled={!isInputValid}
-            >
+            <Button size="sm" className="shrink-0 px-3 text-xs" onClick={handleSubmitSearch} disabled={!isInputValid}>
               <Search className="size-3.5" />
               Tìm
             </Button>
@@ -210,7 +205,7 @@ export function DispatchFilterBar() {
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 shrink-0 gap-1.5 px-2.5 text-xs"
+                className="shrink-0 px-2.5 text-xs"
                 disabled={isIdentityMode}
                 title="Bộ lọc"
               >

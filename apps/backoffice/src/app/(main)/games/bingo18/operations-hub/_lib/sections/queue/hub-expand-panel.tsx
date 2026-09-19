@@ -440,7 +440,7 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                 // Quá giờ mở bán: không mở bán lại được — KHÔNG hiện "Mở bán" disabled
                 // (`getNextAction` vẫn trả OpenSales theo status `scheduled`). Link sang
                 // trang operations để huỷ (VOID không chạy trong Hub).
-                <Button asChild size="sm" variant="destructive" className="gap-1.5 font-medium">
+                <Button asChild size="sm" variant="destructive">
                   <Link
                     href={drawOperationsHref(GameProduct.Bingo18, row.drawId)}
                     target="_blank"
@@ -457,7 +457,6 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                       <Button
                         size="sm"
                         className={cn(
-                          "gap-1.5 font-medium",
                           nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
                             "bg-amber-600 text-white hover:bg-amber-700",
                           nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
@@ -477,7 +476,6 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                   <Button
                     size="sm"
                     className={cn(
-                      "gap-1.5 font-medium",
                       nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
                         "bg-amber-600 text-white hover:bg-amber-700",
                       nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
@@ -501,7 +499,6 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                   <Button
                     size="sm"
                     className={cn(
-                      "gap-1.5 font-medium",
                       nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
                         "bg-amber-600 text-white hover:bg-amber-700",
                       nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
@@ -521,7 +518,6 @@ export function HubExpandPanel({ row, onClose, onOpenPublish }: HubExpandPanelPr
                     asChild
                     size="sm"
                     className={cn(
-                      "gap-1.5 font-medium",
                       nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
                         "bg-amber-600 text-white hover:bg-amber-700",
                       nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&

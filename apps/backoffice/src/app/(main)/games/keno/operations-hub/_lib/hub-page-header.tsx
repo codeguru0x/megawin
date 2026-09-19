@@ -104,7 +104,7 @@ function RefreshButton() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-auto gap-1.5 px-1.5 py-0.5"
+          className="h-auto px-1.5 py-0.5"
           disabled={state.isFetching}
           onClick={actions.refresh}
         >

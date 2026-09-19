@@ -50,7 +50,7 @@ export function WorkersContent() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="text-xs"
           onClick={() => query.refetch()}
           disabled={query.isFetching}
         >

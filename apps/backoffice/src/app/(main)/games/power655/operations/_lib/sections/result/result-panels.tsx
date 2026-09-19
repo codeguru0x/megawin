@@ -128,7 +128,7 @@ function JackpotWinnerBanner({
             </p>
             <Badge
               className={cn(
-                "h-4.5 gap-1 border px-2",
+                "h-4.5 border",
                 isJp1
                   ? "border-purple-400/50 bg-purple-500/20 text-purple-700 dark:text-purple-300"
                   : "border-indigo-400/50 bg-indigo-500/20 text-indigo-700 dark:text-indigo-300",
@@ -292,7 +292,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-5 border px-2 py-0",
+                        "h-5 border py-0",
                         t.tier === PrizeTier.Jackpot1 &&
                           "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
                         t.tier === PrizeTier.Jackpot2 &&
@@ -587,13 +587,13 @@ export function FinancialSummary({
             {(f.hasJackpot1Winner || f.hasJackpot2Winner || f.jp1Overflow > 0) && (
               <div className="ml-auto flex items-center gap-1">
                 {f.hasJackpot1Winner && (
-                  <Badge className="text-3xs h-4 gap-1 border border-purple-400/40 bg-purple-500/15 px-1.5 text-purple-700 dark:text-purple-300">
+                  <Badge className="text-3xs h-4 border border-purple-400/40 bg-purple-500/15 px-1.5 text-purple-700 dark:text-purple-300">
                     <Star className="size-2 fill-current" />
                     Trao JP1
                   </Badge>
                 )}
                 {f.hasJackpot2Winner && (
-                  <Badge className="text-3xs h-4 gap-1 border border-indigo-400/40 bg-indigo-500/15 px-1.5 text-indigo-700 dark:text-indigo-300">
+                  <Badge className="text-3xs h-4 border border-indigo-400/40 bg-indigo-500/15 px-1.5 text-indigo-700 dark:text-indigo-300">
                     <Star className="size-2 fill-current" />
                     Trao JP2
                   </Badge>
@@ -602,7 +602,7 @@ export function FinancialSummary({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button type="button" className="flex items-center" aria-label="Giải thích tràn quỹ">
-                        <Badge className="text-3xs h-4 cursor-help gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-amber-700 dark:text-amber-300">
+                        <Badge className="text-3xs h-4 cursor-help border border-amber-400/40 bg-amber-500/15 px-1.5 text-amber-700 dark:text-amber-300">
                           <Info className="size-2.5" />
                           Tràn JP1→JP2
                         </Badge>

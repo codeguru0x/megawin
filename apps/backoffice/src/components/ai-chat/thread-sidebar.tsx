@@ -232,7 +232,7 @@ export function ThreadSidebar({ className }: { className?: string }) {
       <div className="flex flex-col gap-2 p-3">
         {/* Trong danh sách thì GIỮ chữ "Chat mới" (staff feedback 17/08): đây là hành động chính của
             panel, nhãn chữ rõ hơn icon trần. Header trang mới là chỗ chỉ dùng icon. */}
-        <Button className="w-full justify-start gap-2" onClick={createThread} variant="outline">
+        <Button className="w-full justify-start" onClick={createThread} variant="outline">
           <SquarePenIcon className="size-4" />
           Chat mới
         </Button>

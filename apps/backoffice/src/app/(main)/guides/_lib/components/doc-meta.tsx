@@ -30,7 +30,7 @@ export function DocMeta({
       <Badge
         variant="outline"
         className={cn(
-          "gap-1 border-transparent",
+          "border-transparent",
           gameKey === "power655" && "bg-game-power655-muted text-game-power655",
           gameKey === "lotto535" && "bg-game-lotto535-muted text-game-lotto535",
           gameKey === "mega645" && "bg-game-mega645-muted text-game-mega645",

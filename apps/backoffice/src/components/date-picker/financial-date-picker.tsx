@@ -104,10 +104,7 @@ export function FinancialDatePicker({
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn("h-9 gap-2 px-3 text-sm tabular-nums", !value && "text-muted-foreground")}
-          >
+          <Button variant="outline" className={cn("px-3 tabular-nums", !value && "text-muted-foreground")}>
             <CalendarIcon className="text-muted-foreground size-4" />
             <span className="font-medium">{displayDate(value)}</span>
           </Button>

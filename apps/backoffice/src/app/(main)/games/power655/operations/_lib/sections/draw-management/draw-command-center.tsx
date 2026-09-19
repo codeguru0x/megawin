@@ -370,7 +370,6 @@ export function DrawCommandCenter({
               {nextAction && (
                 <Button
                   className={cn(
-                    "gap-1.5 font-medium",
                     nextAction.className === "bg-amber-600 text-white hover:bg-amber-700" &&
                       "bg-amber-600 text-white hover:bg-amber-700",
                     nextAction.className === "bg-violet-600 text-white hover:bg-violet-700" &&
@@ -385,19 +384,19 @@ export function DrawCommandCenter({
                 </Button>
               )}
               {canRepublish && (
-                <Button variant="outline" size="sm" onClick={onRepublishResult} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={onRepublishResult}>
                   <ClipboardPen className="size-3.5" /> Sửa kết quả
                 </Button>
               )}
               {canReopenSales && (
-                <Button variant="outline" size="sm" onClick={onOpenSales} className="gap-1.5">
+                <Button variant="outline" size="sm" onClick={onOpenSales}>
                   <Unlock className="size-3.5" /> Mở lại bán
                 </Button>
               )}
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
-                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="text-muted-foreground gap-1.5">
+                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="text-muted-foreground">
                   <Pencil className="size-3.5" /> Sửa lịch
                 </Button>
               )}
@@ -406,7 +405,7 @@ export function DrawCommandCenter({
                   variant="ghost"
                   size="sm"
                   onClick={onVoidDraw}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="size-3.5" /> Hủy kỳ
                 </Button>

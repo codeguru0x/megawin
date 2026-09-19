@@ -103,7 +103,7 @@ function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number;
             <p className="text-sm font-bold tracking-tight text-amber-800 dark:text-amber-300">
               🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!
             </p>
-            <Badge className="h-4.5 gap-1 border border-amber-400/50 bg-amber-500/20 px-2 text-amber-700 dark:text-amber-300">
+            <Badge className="h-4.5 border border-amber-400/50 bg-amber-500/20 text-amber-700 dark:text-amber-300">
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
@@ -131,7 +131,7 @@ function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
           <Gem className="size-3.5 shrink-0 animate-pulse text-amber-500" />
           <Badge
             variant="outline"
-            className="h-5 gap-1 border-amber-300 bg-amber-50 px-2 py-0 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+            className="h-5 border-amber-300 bg-amber-50 py-0 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
           >
             <Star className="size-2.5 fill-amber-500 text-amber-500" />
             {t.label}
@@ -277,7 +277,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     <Badge
                       variant="outline"
                       className={cn(
-                        "h-5 border px-2 py-0",
+                        "h-5 border py-0",
                         t.tier === PrizeTier.Jackpot &&
                           "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
                         t.tier === PrizeTier.Tier1 &&
@@ -569,7 +569,7 @@ export function FinancialSummary({
               Biến động Jackpot
             </span>
             {f.hasJackpotWinner && (
-              <Badge className="text-3xs ml-auto h-4 gap-1 border border-amber-400/40 bg-amber-500/15 px-1.5 text-amber-700 dark:text-amber-300">
+              <Badge className="text-3xs ml-auto h-4 border border-amber-400/40 bg-amber-500/15 px-1.5 text-amber-700 dark:text-amber-300">
                 <Star className="size-2 fill-current" />
                 Đã trao
               </Badge>
@@ -578,7 +578,7 @@ export function FinancialSummary({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button type="button" className="ml-auto flex items-center" aria-label="Giải thích kỳ chia giải">
-                    <Badge className="text-3xs h-4 cursor-help gap-1 border border-violet-400/40 bg-violet-500/15 px-1.5 text-violet-700 dark:text-violet-300">
+                    <Badge className="text-3xs h-4 cursor-help border border-violet-400/40 bg-violet-500/15 px-1.5 text-violet-700 dark:text-violet-300">
                       <Info className="size-2.5" />
                       Kỳ chia giải
                     </Badge>

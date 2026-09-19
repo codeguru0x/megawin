@@ -226,7 +226,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           <div className="flex items-baseline gap-1.5">
                             <FormControl>
                               <MoneyInput
-                                className="h-9 w-20 text-center font-semibold"
+                                className="w-20 text-center font-semibold"
                                 value={field.value ?? 90}
                                 onValueChange={(v) => {
                                   const clamped = Math.min(99, Math.max(1, v ?? 1));
@@ -249,7 +249,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           <p className="text-muted-foreground text-xs font-medium">Jackpot 2 — Tỷ lệ tích luỹ</p>
                           <div className="flex items-baseline gap-1.5">
                             <MoneyInput
-                              className="h-9 w-20 text-center font-semibold"
+                              className="w-20 text-center font-semibold"
                               value={jp2Ratio}
                               onValueChange={(v) => {
                                 const jp2 = Math.min(99, Math.max(1, v ?? 1));

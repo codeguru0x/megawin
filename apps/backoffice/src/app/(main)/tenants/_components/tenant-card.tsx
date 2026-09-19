@@ -85,7 +85,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-foreground truncate text-sm font-semibold">{tenant.displayName}</h3>
-                <Badge variant={isActive ? "default" : "destructive"} className="shrink-0 gap-1">
+                <Badge variant={isActive ? "default" : "destructive"} className="shrink-0">
                   {isActive ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
                   {isActive ? "Hoạt động" : "Vô hiệu"}
                 </Badge>
@@ -95,16 +95,11 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setEditOpen(true)}>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => setEditOpen(true)}>
               <Pencil className="size-3.5" />
               Chỉnh sửa
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-              onClick={() => setRegenDialogOpen(true)}
-            >
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => setRegenDialogOpen(true)}>
               <RefreshCw className="size-3.5" />
               Tạo API key mới
             </Button>

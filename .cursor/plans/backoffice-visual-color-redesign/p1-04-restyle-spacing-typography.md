@@ -2,7 +2,7 @@
 
 ## Status (2026-09-19) — đang làm trên `visual/p1-04-restyle`
 
-Baseline sau P1-03: **2262** `no-restyle` → hiện **~1471** (−791).
+Baseline sau P1-03: **2262** `no-restyle` → slice-1 **~1471** → slice-2 **~1257** (−1005 tổng).
 
 ### Đã làm (2a + nới contract có giải trình)
 
@@ -10,20 +10,24 @@ Baseline sau P1-03: **2262** `no-restyle` → hiện **~1471** (−791).
 |---|---|---|
 | Xoá `shadow-sm` / `hover:shadow-sm` trên `<Card>` | 2a | Card default đã có `shadow-sm` |
 | Xoá `text-xs` thừa trên `<TooltipContent>` | 2a | Tooltip default đã `text-xs` |
-| Xoá `text-xs` thừa trên `<Badge>` | 2a | `badgeVariants` đã `text-xs` |
-| Skeleton `allow: shape` | contract | Skeleton phải khớp radius UI đích (`rounded-xl`…) |
-| CardHeader/Footer `allow: shape` | contract | Config form dùng `border-t` divider có chủ đích |
-| TooltipContent `allow: typography` | contract | Giữ `font-mono` / `tabular-nums` hợp lệ |
-| Table* `allow: color` | contract | `text-profit`/`text-loss`/`text-muted-foreground` trên cell là nghiệp vụ |
+| Xoá `text-xs` / `gap-1` / `px-2` / `font-medium` thừa trên `<Badge>` | 2a | `badgeVariants` đã có |
+| Button `size="sm"`: xoá `gap-1.5` / `h-8` / `font-medium` thừa | 2a | khớp CVA `sm` + base |
+| Button default: xoá `gap-2` / `h-9` / `px-4` / `text-sm` thừa | 2a | khớp CVA default |
+| Input/SelectTrigger default: xoá `h-9` thừa | 2a | Input/`data-[size=default]:h-9` |
+| Skeleton `allow: shape` | contract | Skeleton phải khớp radius UI đích |
+| CardHeader/Footer `allow: shape` | contract | Config form `border-t` divider |
+| TooltipContent `allow: typography` | contract | Giữ `font-mono` / `tabular-nums` |
+| Table* `allow: color` | contract | semantic color trên cell |
+| Title/Description + Dialog/Sheet Header/Footer `allow: spacing` | contract | icon+title `gap-*`, footer `pt-*`/`gap-*` |
 
-### Còn lại (ước lượng theo nhóm lớn)
+### Còn lại (ước lượng)
 
-Button (~250, spacing tùy size — nhiều `h-7`/`gap-1.5` là compact có chủ đích), Badge còn
-lại (~130), Input typography, Dialog* spacing, TabsList shape, icon color (Loader2/Search…),
-TableRow `transition-colors` (effect).
+Typography còn (~305: Input `font-mono`/`tabular-nums`, Button `text-xs`/`h-7` compact),
+spacing còn (~289: Badge size, Dialog compact, Label…), shape (~159: TabsList/Badge/Accordion),
+color raw (~432), effect (`transition-colors`, `shadow-2xl`).
 
-Ưu tiên tiếp: Button migrate sang `size` prop (2c nhẹ) / xoá `gap-2` thừa (2a) → Input 2a →
-Badge spacing/shape.
+Ưu tiên tiếp: Input typography contract hoặc 2b (số liệu mono) → Badge shape/spacing còn lại →
+TabsList shape → effect classes.
 
 ## 1. Contract hiện có (`.oxlintrc.json` root, dòng 174-215)
 

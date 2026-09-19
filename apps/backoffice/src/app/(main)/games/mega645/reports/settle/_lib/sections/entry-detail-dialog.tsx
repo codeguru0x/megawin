@@ -400,7 +400,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="font-medium">
+                        <Badge variant="secondary">
                           {MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier}
                         </Badge>
                         <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">

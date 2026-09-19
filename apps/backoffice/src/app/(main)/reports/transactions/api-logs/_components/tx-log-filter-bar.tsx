@@ -63,7 +63,7 @@ export function TxLogFilterBar() {
           <Button
             size="sm"
             variant="ghost"
-            className="h-8 shrink-0 px-2 text-xs"
+            className="shrink-0 px-2 text-xs"
             onClick={handleClearTx}
             title="Xoá tìm theo tx"
           >
@@ -71,7 +71,7 @@ export function TxLogFilterBar() {
             Xoá
           </Button>
         ) : (
-          <Button size="sm" className="h-8 shrink-0 px-3 text-xs" onClick={handleSubmitTx} disabled={!txInput.trim()}>
+          <Button size="sm" className="shrink-0 px-3 text-xs" onClick={handleSubmitTx} disabled={!txInput.trim()}>
             <Search className="size-3.5" />
             Tìm
           </Button>

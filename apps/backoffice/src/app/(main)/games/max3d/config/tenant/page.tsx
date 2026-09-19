@@ -135,7 +135,7 @@ export default function Max3dTenantConfigPage() {
               <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 placeholder="Tìm theo tên hoặc ID đại lý…"
-                className="h-9 w-64 pl-9"
+                className="w-64 pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -298,7 +298,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
               </div>
             </div>
 
-            <Badge variant={config.isEnabled ? "default" : "destructive"} className="shrink-0 gap-1">
+            <Badge variant={config.isEnabled ? "default" : "destructive"} className="shrink-0">
               {config.isEnabled ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
               {config.isEnabled ? "Hoạt động" : "Vô hiệu hoá"}
             </Badge>
@@ -468,7 +468,7 @@ function AddTenantDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm">
           <Plus className="size-3.5" />
           Thêm đại lý
         </Button>
@@ -491,7 +491,7 @@ function AddTenantDialog({
             <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2" />
             <Input
               placeholder="Tìm theo ID hoặc tên đại lý…"
-              className="h-9 pl-8 text-sm"
+              className="pl-8 text-sm"
               value={dialogSearch}
               onChange={(e) => setDialogSearch(e.target.value)}
             />

@@ -226,7 +226,7 @@ export function HubBulkActionBar() {
                   key={btn.kind}
                   size="sm"
                   variant="default"
-                  className={cn("font-medium", btn.className)}
+                  className={cn(btn.className)}
                   onClick={() => handleOpenDialog(btn.kind)}
                 >
                   <btn.icon className="mr-1.5 size-3.5" />

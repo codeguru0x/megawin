@@ -127,7 +127,7 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
               <Badge
                 variant="outline"
                 className={cn(
-                  "h-5 border px-2 py-0",
+                  "h-5 border py-0",
                   tier.tier === "special" &&
                     "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
                   tier.tier === "first" &&

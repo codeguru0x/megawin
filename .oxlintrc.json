@@ -186,11 +186,15 @@
               },
               {
                 "pattern": "^CardTitle$|^DialogTitle$|^SheetTitle$|^DrawerTitle$|^AlertTitle$",
-                "allow": ["layout", "typography"]
+                "allow": ["layout", "typography", "spacing"]
               },
               {
                 "pattern": "^CardDescription$|^DialogDescription$|^SheetDescription$|^AlertDescription$",
-                "allow": ["layout", "typography"]
+                "allow": ["layout", "typography", "spacing"]
+              },
+              {
+                "pattern": "^Dialog(Header|Footer)$|^Sheet(Header|Footer)$",
+                "allow": ["layout", "spacing"]
               },
               {
                 "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",
@@ -334,11 +338,15 @@
               },
               {
                 "pattern": "^CardTitle$|^DialogTitle$|^SheetTitle$|^DrawerTitle$|^AlertTitle$",
-                "allow": ["layout", "typography"]
+                "allow": ["layout", "typography", "spacing"]
               },
               {
                 "pattern": "^CardDescription$|^DialogDescription$|^SheetDescription$|^AlertDescription$",
-                "allow": ["layout", "typography"]
+                "allow": ["layout", "typography", "spacing"]
+              },
+              {
+                "pattern": "^Dialog(Header|Footer)$|^Sheet(Header|Footer)$",
+                "allow": ["layout", "spacing"]
               },
               {
                 "pattern": "^Table(Cell|Head|Row|Header|Body|Footer|Caption)$",

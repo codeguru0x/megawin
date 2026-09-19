@@ -120,7 +120,7 @@ export function VietlottResultPanel({
           type="button"
           size="sm"
           onClick={onApply}
-          className="shrink-0 gap-1.5 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700"
+          className="shrink-0 bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700"
         >
           <WandSparkles className="size-3.5" />
           Áp dụng

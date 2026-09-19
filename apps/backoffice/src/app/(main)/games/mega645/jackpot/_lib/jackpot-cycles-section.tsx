@@ -154,7 +154,7 @@ function StatMini({ label, value }: { label: string; value: string }) {
 function CycleReasonBadge({ reason }: { reason?: string }) {
   if (reason === JackpotCycleCloseReason.Winner) {
     return (
-      <Badge className="gap-1 border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
+      <Badge className="border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
         <Sparkles className="size-3" />
         Trúng Jackpot
       </Badge>

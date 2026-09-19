@@ -324,10 +324,7 @@ export function FinancialDateRangePicker({
 
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn("h-9 gap-2 px-3 text-sm tabular-nums", !from && "text-muted-foreground")}
-          >
+          <Button variant="outline" className={cn("px-3 tabular-nums", !from && "text-muted-foreground")}>
             <CalendarIcon className="text-muted-foreground size-4" />
             <span className="font-medium">{buttonLabel}</span>
             {numDays > 0 && (
@@ -414,12 +411,7 @@ export function FinancialDateRangePicker({
                   )}
                 </div>
 
-                <Button
-                  size="sm"
-                  onClick={handleConfirm}
-                  disabled={!canConfirm}
-                  className="mt-4 shrink-0 gap-1.5 self-end"
-                >
+                <Button size="sm" onClick={handleConfirm} disabled={!canConfirm} className="mt-4 shrink-0 self-end">
                   <Check className="size-3.5" />
                   Áp dụng
                 </Button>

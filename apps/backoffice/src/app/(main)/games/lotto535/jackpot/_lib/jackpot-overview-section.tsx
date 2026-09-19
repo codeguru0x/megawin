@@ -83,7 +83,7 @@ export function JackpotHeroCard() {
 
           <div className="flex shrink-0 items-center gap-2">
             {isHot && (
-              <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
+              <Badge className="border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
                 <Flame className="size-3" />
                 Nóng
               </Badge>

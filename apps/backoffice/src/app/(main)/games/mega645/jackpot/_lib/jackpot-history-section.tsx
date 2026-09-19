@@ -179,7 +179,7 @@ function CycleSelector({ cycles, value, isLoading, onChange }: CycleSelectorProp
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-9 w-52 text-sm">
+      <SelectTrigger className="w-52 text-sm">
         <SelectValue placeholder="Chọn vòng Jackpot" />
       </SelectTrigger>
       <SelectContent>
@@ -284,7 +284,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       {/* Jackpot (hasWinner) */}
       <TableCell className="pr-5 text-center">
         {isWinner ? (
-          <Badge className="gap-1 border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
+          <Badge className="border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
             <Sparkles className="size-3" />
             Trúng
           </Badge>

@@ -37,7 +37,7 @@ export function MagicFetchResultButton({
           onClick={onFetch}
           disabled={disabled || isFetching}
           className={cn(
-            "gap-1.5 text-violet-700 hover:bg-violet-50 hover:text-violet-800 dark:text-violet-400 dark:hover:bg-violet-950/40",
+            "text-violet-700 hover:bg-violet-50 hover:text-violet-800 dark:text-violet-400 dark:hover:bg-violet-950/40",
           )}
         >
           {isFetching ? <Loader2 className="size-3.5 animate-spin" /> : <WandSparkles className="size-3.5" />}

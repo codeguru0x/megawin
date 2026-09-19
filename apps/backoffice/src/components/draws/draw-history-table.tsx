@@ -142,7 +142,7 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
         {/* ── Filter bar ── */}
         <div className="flex flex-wrap items-center gap-2 px-5 pb-3">
           <Select value={statusValue} onValueChange={onStatusChange}>
-            <SelectTrigger className="h-9 w-40 text-sm">
+            <SelectTrigger className="w-40 text-sm">
               <SelectValue placeholder="Trạng thái" />
             </SelectTrigger>
             <SelectContent>

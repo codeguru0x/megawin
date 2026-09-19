@@ -120,13 +120,13 @@ export function JackpotHeroCard() {
           {/* Badges */}
           <div className="flex shrink-0 flex-col items-end gap-1.5">
             {isOverflow && (
-              <Badge className="gap-1 border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
+              <Badge className="border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
                 <Zap className="size-3" />
                 Overflow
               </Badge>
             )}
             {!isOverflow && isHot && (
-              <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
+              <Badge className="border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
                 <Flame className="size-3" />
                 Nóng
               </Badge>

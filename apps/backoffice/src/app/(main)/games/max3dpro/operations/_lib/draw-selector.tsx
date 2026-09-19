@@ -80,7 +80,7 @@ export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }
 
   return (
     <Select value={isInList ? selectedDrawId : ""} onValueChange={onSelect}>
-      <SelectTrigger className="h-9 w-55 gap-2 text-sm font-medium">
+      <SelectTrigger className="w-55 gap-2 text-sm font-medium">
         <div className="flex min-w-0 items-center gap-2">
           {selected && STATUS_ICON[selected.status]}
           <SelectValue placeholder="Chọn kỳ quay">

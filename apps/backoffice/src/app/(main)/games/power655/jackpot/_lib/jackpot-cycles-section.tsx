@@ -197,7 +197,7 @@ function CycleReasonBadge({ reason }: { reason?: string }) {
 
   if (info.variant === "winner") {
     return (
-      <Badge className="gap-1 border-orange-500/30 bg-orange-500/15 text-orange-700 dark:text-orange-400">
+      <Badge className="border-orange-500/30 bg-orange-500/15 text-orange-700 dark:text-orange-400">
         <Sparkles className="size-3" />
         {info.label}
       </Badge>

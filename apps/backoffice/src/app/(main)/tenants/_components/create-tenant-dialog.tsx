@@ -83,7 +83,7 @@ export function CreateTenantDialog() {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogTrigger asChild>
-          <Button size="sm" className="gap-1.5">
+          <Button size="sm">
             <Plus className="size-3.5" />
             Thêm đối tác
           </Button>
@@ -112,7 +112,7 @@ export function CreateTenantDialog() {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
+        <Button size="sm">
           <Plus className="size-3.5" />
           Thêm đối tác
         </Button>

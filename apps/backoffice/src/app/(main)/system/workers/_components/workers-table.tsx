@@ -149,7 +149,7 @@ export function WorkersTable({
                       className="h-7 gap-1 px-2 text-xs"
                       onClick={() => onOpenStalledItems(row)}
                     >
-                      <Badge variant={stalledVariant} className="gap-1">
+                      <Badge variant={stalledVariant}>
                         <AlertTriangle className="size-3" />
                         {row.stalledItems.length}
                       </Badge>

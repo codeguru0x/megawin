@@ -50,7 +50,7 @@ export function TenantsList() {
           <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             placeholder="Tìm theo tên hoặc ID đối tác…"
-            className="h-9 pl-9"
+            className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
