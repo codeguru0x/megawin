@@ -74,6 +74,23 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
+  /* ── Status-only semantic colors (P1-02) ────────────────────────────────── */
+  /* Dùng riêng cho status badge (draw/ticket/entry) — KHÔNG phải financial.  */
+  /* 4 token mới vì 9 tone gốc (audit status-badge-tone.ts) có 4 hue KHÔNG    */
+  /* trùng bất kỳ token financial/warning/info nào đã có: green (đang mở    */
+  /* bán/paid) ≠ profit (emerald, đã settle); yellow (đóng bán) ≠ warning    */
+  /* (amber, partial); orange (đang kết sổ/hoàn tiền); purple (đã có KQ).    */
+  /* Gộp ép vào 4 token cũ sẽ làm 2 status khác nhau hiện CÙNG 1 màu trong    */
+  /* cùng 1 badge set (VD salesOpen vs settled) — mất khả năng phân biệt.    */
+  --color-status-active: var(--status-active);
+  --color-status-active-foreground: var(--status-active-foreground);
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-foreground: var(--status-pending-foreground);
+  --color-status-progress: var(--status-progress);
+  --color-status-progress-foreground: var(--status-progress-foreground);
+  --color-status-published: var(--status-published);
+  --color-status-published-foreground: var(--status-published-foreground);
+
   /* ── Typography tier T4/T5 — CHỈ dùng cho heatmap grid (xem operations-page-ui.mdc) ──── */
   /* Named token thay arbitrary value — giữ ĐÚNG pixel hiện tại (11px/10px), không đổi thang. */
   --text-2xs: 0.6875rem; /* 11px — T4, heatmap badge + cell data */
@@ -157,6 +174,17 @@ These serve as the fallback; there is no separate default.css file. */
   --info: oklch(0.623 0.188 259.8); /* blue-500 #3b82f6 */
   --info-foreground: oklch(1 0 0); /* white */
 
+  /* ── Status-only semantic colors (P1-02, light mode) ────────────────────── */
+  /* Riêng cho status badge — xem giải thích đầy đủ ở @theme inline block trên. */
+  --status-active: oklch(0.627 0.17 149.2); /* green-600 #16a34a */
+  --status-active-foreground: oklch(1 0 0); /* white */
+  --status-pending: oklch(0.795 0.162 86); /* yellow-500 #eab308 */
+  --status-pending-foreground: oklch(0.286 0.064 53.8); /* dark text đủ contrast */
+  --status-progress: oklch(0.646 0.194 41.1); /* orange-600 #ea580c */
+  --status-progress-foreground: oklch(1 0 0); /* white */
+  --status-published: oklch(0.558 0.252 302.3); /* purple-600 #9333ea */
+  --status-published-foreground: oklch(1 0 0); /* white */
+
   /* ── Game Brand Colors (light mode) ────────────────────────────────────── */
   /* Mega 6/45 — Teal (jackpot: teal-400→emerald-500) */
   --game-mega645: oklch(0.5765 0.149 194.77); /* teal-600  #0d9488 */
@@ -239,6 +267,16 @@ These serve as the fallback; there is no separate default.css file. */
   --warning-foreground: oklch(0.15 0.05 70);
   --info: oklch(0.714 0.143 254.6); /* blue-400 #60a5fa */
   --info-foreground: oklch(0.15 0.05 250);
+
+  /* ── Status-only semantic colors (P1-02, dark mode) ──────────────────────── */
+  --status-active: oklch(0.8 0.182 151.7); /* green-400 #4ade80 — sáng hơn cho nền tối */
+  --status-active-foreground: oklch(0.15 0.05 150);
+  --status-pending: oklch(0.861 0.173 91.9); /* yellow-400 #facc15 */
+  --status-pending-foreground: oklch(0.15 0.05 86);
+  --status-progress: oklch(0.758 0.159 55.9); /* orange-400 #fb923c — sáng hơn cho nền tối */
+  --status-progress-foreground: oklch(0.15 0.05 41);
+  --status-published: oklch(0.722 0.177 305.5); /* purple-400 #c084fc */
+  --status-published-foreground: oklch(0.15 0.06 302);
 
   /* ── Game Brand Colors (dark mode) ─────────────────────────────────────── */
   /* Sáng hơn so với light mode để dễ đọc trên nền tối */
