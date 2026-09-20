@@ -14,7 +14,8 @@
 | **S3a DONE** (20/09) | `lib/*` unnecessary-condition **18→0** (auth narrow, hasOwn lookup, nav for…of, theme matchMedia). Tổng rule 562→**544** |
 | **S3b DONE** (20/09) | Keno `no-unnecessary-condition` **64→1** (giữ AudioContext `?? webkit` Safari). `check-types` xanh |
 | **S3c partial** (20/09) | 6 game còn lại: **401→260** — cùng pattern an toàn (`toTenantUsername`, sales, entrySummary, totalStake, status map). Jackpot/entry-detail còn lại → S3c-2 |
-| Còn lại | ~1.007 warning (ước) |
+| **S3c-2** (20/09) | Xóa dead `playPing`/AudioContext (keno+bingo18); jackpot mega645 `progress` required; play-rules/entry-detail/outstanding (TicketEntity). 6 game **~187**; keno **0**. |
+| Còn lại | ~930 warning (ước) |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ## 1. Baseline đo thật (2026-09-20)
@@ -295,8 +296,7 @@ Mỗi slice = 1 commit message dạng:
 
 | File:line | Rule | Lý do giữ / cần hỏi user |
 |---|---|---|
-| `keno/operations-hub/_lib/hub-alert-banner.tsx:69` | `no-unnecessary-condition` | `window.AudioContext ?? webkitAudioContext` — DOM lib đánh dấu `AudioContext` luôn có; Safari cũ vẫn cần webkit. **Không xoá** — đổi runtime Safari. |
-| `bingo18/operations-hub/_lib/hub-alert-banner.tsx:69` | `no-unnecessary-condition` | Cùng lý do Safari webkit như Keno. |
+| `*/reports/outstanding` (bingo18/keno/max3d/max3dpro/power655) | `no-unnecessary-condition` | `mapEntryRow` khai **inline optional type** lỏng hơn `TicketEntryEntity` — `?.` khớp type khai báo; siết type → TicketEntity là S3c-3 (không đụng trong slice này). |
 
 ---
 

@@ -116,7 +116,7 @@ export function Max3dproEntryDetailDialog({
 /** Nội dung chi tiết thật — chỉ render khi `entry` đã fetch xong (xem `Max3dproEntryDetailDialog`). */
 function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const tiers = entry.payout?.tiers ?? [];
-  const boards = entry.entrySummary.boards ?? [];
+  const boards = entry.entrySummary.boards;
   const isScheduled = entry.status === EntryStatus.Scheduled;
   const isSettled = entry.status === EntryStatus.Settled;
   const isVoid = entry.status === EntryStatus.Void;

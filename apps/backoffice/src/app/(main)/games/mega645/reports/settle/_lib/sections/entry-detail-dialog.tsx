@@ -81,7 +81,7 @@ export function Mega645EntryDetailDialog({
 /** Nội dung chi tiết thật — chỉ render khi `entry` đã fetch xong (xem `Mega645EntryDetailDialog`). */
 function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const tiers = entry.payout?.tiers ?? [];
-  const boards = entry.entrySummary.boards ?? [];
+  const boards = entry.entrySummary.boards;
   // scheduled = đang chờ kết quả — KHÔNG hiển thị payout, lãi/lỗ, kết quả
 
   const isScheduled = entry.status === EntryStatus.Scheduled;

@@ -10,15 +10,10 @@
  * `truncated` LUÔN ưu tiên 1: nó nghĩa là "số đang xem KHÔNG đầy đủ" — nghiêm trọng hơn mọi
  * cảnh báo về dữ liệu đã thấy, và là hàng rào chống bẫy trần-500-im-lặng (p0-03 §1.1).
  *
- * Âm thanh (guideline §8.2): 1 tiếng `ping` DUY NHẤT khi `stuckCount` tăng từ 0 lên > 0, mặc
- * định TẮT (zustand). So `prevStuckCount` bằng `useRef`, KHÔNG `useEffect` + state — tránh
- * thêm 1 nguồn re-render cho thứ chỉ cần side-effect.
+ * Chỉ hiển thị — không phát âm thanh (không có UI bật tiếng; product chỉ cần banner nhìn thấy).
  */
-import { useEffect, useRef } from "react";
-
 import { AlertTriangle, Ban, PlayCircle, RotateCcw, XCircle } from "lucide-react";
 
-import { useHubPreferences } from "./hub-preferences-store";
 import { HubGateTab } from "./sections/queue/queue-types";
 import { useHubContext } from "./use-hub-context";
 import { useHubUrlParams } from "./use-hub-url-params";
@@ -58,58 +53,10 @@ function BannerRow({ item }: { item: BannerItemDef }) {
   );
 }
 
-/**
- * Chuông cảnh báo — hiệu ứng phụ tách khỏi render, đọc `Audio` API trực tiếp khi cạnh tăng.
- * Tổng hợp tiếng "ping" bằng Web Audio API (oscillator ngắn), KHÔNG dùng file audio tĩnh —
- * tránh thêm asset chỉ để phát 1 tiếng bíp ngắn, và tránh lỗi 404 nếu file thiếu.
- */
-function playPing(): void {
-  try {
-    const AudioContextCtor =
-      window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new AudioContextCtor();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.4);
-    oscillator.onended = () => {
-      void ctx.close();
-    };
-  } catch {
-    // Trình duyệt chặn autoplay không tương tác trước đó, hoặc không hỗ trợ AudioContext —
-    // bỏ qua, mất tiếng ping không phải lỗi nghiêm trọng (banner vẫn hiện đầy đủ).
-  }
-}
-
-function useStuckSound(stuckCount: number): void {
-  const soundOnCritical = useHubPreferences((s) => s.soundOnCritical);
-  const prevStuckCountRef = useRef(stuckCount);
-
-  useEffect(() => {
-    const prev = prevStuckCountRef.current;
-    prevStuckCountRef.current = stuckCount;
-    if (!soundOnCritical) {
-      return;
-    }
-    // Chỉ ping đúng lúc cạnh 0 → dương — không lặp lại khi stuckCount dao động 3→4→3.
-    if (prev === 0 && stuckCount > 0) {
-      playPing();
-    }
-  }, [stuckCount, soundOnCritical]);
-}
-
 export function HubAlertBanner() {
   const { state } = useHubContext();
   const [, setUrlParams] = useHubUrlParams();
   const { snapshot, funnel, stuckCount } = state;
-
-  useStuckSound(stuckCount);
 
   if (!snapshot) {
     return null;

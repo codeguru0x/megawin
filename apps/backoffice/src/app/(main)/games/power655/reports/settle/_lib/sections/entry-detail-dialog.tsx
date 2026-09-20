@@ -83,7 +83,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
     [PrizeTier.Tier3]: 4,
   };
   const sortedTiers = [...tiers].sort((a, b) => (TIER_ORDER[a.tier] ?? 99) - (TIER_ORDER[b.tier] ?? 99));
-  const boards = entry.entrySummary.boards ?? [];
+  const boards = entry.entrySummary.boards;
   const isScheduled = entry.status === EntryStatus.Scheduled;
   const isSettled = entry.status === EntryStatus.Settled;
   const isVoid = entry.status === EntryStatus.Void;

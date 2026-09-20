@@ -106,7 +106,7 @@ export function Max3dEntryDetailDialog({
 /** Nội dung chi tiết thật — chỉ render khi `entry` đã fetch xong (xem `Max3dEntryDetailDialog`). */
 function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const tiers = entry.payout?.tiers ?? [];
-  const boards: EntryBoardSnapshot[] = entry.entrySummary?.boards ?? [];
+  const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
   const isScheduled = entry.status === EntryStatus.Scheduled;
   const isSettled = entry.status === EntryStatus.Settled;
   const isVoid = entry.status === EntryStatus.Void;
@@ -159,7 +159,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
         </DialogTitle>
         <DialogDescription className="flex items-center gap-1.5 font-mono text-xs">
           <Ticket className="text-muted-foreground size-3 shrink-0" />
-          {entry.entrySummary?.ticketNo} · {entry.drawId}
+          {entry.entrySummary.ticketNo} · {entry.drawId}
         </DialogDescription>
       </DialogHeader>
 
@@ -241,7 +241,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
-                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant?.commissionAmount ?? 0)}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
             </div>
@@ -278,7 +278,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-2xs">{REPORT_COLUMN_LABELS.totalCommission}</p>
-                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant?.commissionAmount ?? 0)}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
               {playerNet !== null && (

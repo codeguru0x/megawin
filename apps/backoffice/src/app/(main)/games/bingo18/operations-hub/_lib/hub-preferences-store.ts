@@ -15,8 +15,6 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 interface HubPreferencesState {
-  /** Bật tiếng `ping` khi `stuckCount` tăng từ 0 lên > 0 (guideline §8.2). Mặc định TẮT. */
-  soundOnCritical: boolean;
   /** Ẩn/hiện dải Day Flow (Zone 3) — hữu ích trên màn hình hẹp (guideline rủi ro §11, mục Day Flow). */
   dayFlowVisible: boolean;
   /** Mật độ dòng bảng 5A — `p1-02` dùng, khai sẵn ở đây để không phải thêm store mới. */
@@ -27,7 +25,6 @@ interface HubPreferencesState {
    * cần chia sẻ qua link.
    */
   sellingTableExpanded: boolean;
-  setSoundOnCritical: (value: boolean) => void;
   setDayFlowVisible: (value: boolean) => void;
   setDensity: (value: "compact" | "comfortable") => void;
   setSellingTableExpanded: (value: boolean) => void;
@@ -61,21 +58,18 @@ const safeLocalStorage = {
 export const useHubPreferences = create<HubPreferencesState>()(
   persist(
     (set) => ({
-      soundOnCritical: false,
       dayFlowVisible: true,
       density: "comfortable",
       sellingTableExpanded: false,
-      setSoundOnCritical: (value) => set({ soundOnCritical: value }),
       setDayFlowVisible: (value) => set({ dayFlowVisible: value }),
       setDensity: (value) => set({ density: value }),
       setSellingTableExpanded: (value) => set({ sellingTableExpanded: value }),
     }),
     {
       name: "bingo18-ops-hub-preferences",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
-        soundOnCritical: state.soundOnCritical,
         dayFlowVisible: state.dayFlowVisible,
         density: state.density,
         sellingTableExpanded: state.sellingTableExpanded,

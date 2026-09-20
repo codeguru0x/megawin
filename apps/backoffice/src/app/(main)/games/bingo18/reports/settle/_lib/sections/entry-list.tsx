@@ -34,9 +34,9 @@ export function EntryList({
 
   const rows: EntryRow[] = data.map((entry) => {
     const p = entry.payout as any;
-    const boardCount = entry.entrySummary?.boards?.length ?? 0;
+    const boardCount = entry.entrySummary.boards.length;
     // Bingo18 không có lineCount — betUnitCount = Σ(board.betCount)
-    const betUnitCount = entry.entrySummary?.boards?.reduce((sum: number, b: any) => sum + (b.betCount ?? 1), 0) ?? 0;
+    const betUnitCount = entry.entrySummary.boards.reduce((sum: number, b) => sum + b.betCount, 0);
     return {
       id: entry.id,
       ticketNo: entry.entrySummary.ticketNo,

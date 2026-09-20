@@ -92,12 +92,12 @@ function mapPlayerRow(r: {
 function mapEntryRow(entry: TicketEntryEntity): OutstandingEntryRow {
   return {
     id: entry.id,
-    ticketNo: entry.entrySummary?.ticketNo,
+    ticketNo: entry.entrySummary.ticketNo,
     createdAt: entry.createdAt,
-    boardCount: entry.entrySummary?.boards?.length,
-    lineCount: entry.lineCount ?? undefined,
+    boardCount: entry.entrySummary.boards.length,
+    lineCount: entry.lineCount,
     betUnitCount: entry.betUnitCount,
-    commissionAmount: entry.tenant?.commissionAmount ?? 0,
+    commissionAmount: entry.tenant.commissionAmount,
     totalStake: entry.amount,
   };
 }

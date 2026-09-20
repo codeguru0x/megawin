@@ -45,8 +45,7 @@ export function JackpotHeroCard() {
 
   const { cycle, progress } = data;
 
-  // Guard: progress có thể undefined nếu response từ cache cũ chưa có field này.
-  const pct = progress?.percentage ?? 0;
+  const pct = progress.percentage;
   // "Nóng" khi đã đạt ≥ 90% ngưỡng milestone hiện tại.
   const isHot = pct >= 90;
   const isWarm = pct >= 60;
@@ -112,8 +111,7 @@ export function JackpotHeroCard() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-teal-800/70 dark:text-teal-300/70">
-              Tiến trình đến{" "}
-              <span className="font-semibold">{formatVNDCompact(progress?.milestoneThreshold ?? 0)}</span>
+              Tiến trình đến <span className="font-semibold">{formatVNDCompact(progress.milestoneThreshold)}</span>
             </span>
             <span className="font-bold text-teal-900 tabular-nums dark:text-teal-200">{pct.toFixed(1)}%</span>
           </div>
@@ -130,14 +128,12 @@ export function JackpotHeroCard() {
           </div>
           <div className="text-2xs flex items-center justify-between text-teal-700/60 dark:text-teal-400/50">
             <span>
-              {(progress?.remaining ?? 0) > 0
-                ? `Còn thiếu ${formatVNDCompact(progress!.remaining)}`
-                : progress
-                  ? `Đã vượt mốc ×${progress.currentMultiple}`
-                  : "Đang tải..."}
+              {progress.remaining > 0
+                ? `Còn thiếu ${formatVNDCompact(progress.remaining)}`
+                : `Đã vượt mốc ×${progress.currentMultiple}`}
             </span>
             <span>
-              Mốc ×{progress?.nextMultiple ?? "?"} · Khởi điểm {formatVNDCompact(cycle.seedAmount)}
+              Mốc ×{progress.nextMultiple} · Khởi điểm {formatVNDCompact(cycle.seedAmount)}
             </span>
           </div>
         </div>
@@ -214,8 +210,8 @@ export function JackpotKpiCards() {
         iconBg="bg-teal-100 dark:bg-teal-900/50"
         iconColor="text-teal-600 dark:text-teal-400"
         label="Mốc tiếp theo"
-        value={formatVNDCompact(progress?.milestoneThreshold ?? 0)}
-        sub={`×${progress?.nextMultiple ?? "?"} khởi điểm — mốc tham chiếu`}
+        value={formatVNDCompact(progress.milestoneThreshold)}
+        sub={`×${progress.nextMultiple} khởi điểm — mốc tham chiếu`}
       />
     </div>
   );

@@ -71,24 +71,24 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
-      minBetCount: config.play.minBetCount ?? 1,
-      maxBetCount: config.play.maxBetCount ?? 10,
+      minBetCount: config.play.minBetCount,
+      maxBetCount: config.play.maxBetCount,
       maxBoardsPerTicket: config.play.maxBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeMinutes: config.play.salesCloseBeforeMinutes,
       drawTime: config.play.drawTimes[0] ?? "18:00",
-      drawDaysOfWeek: config.play.drawDaysOfWeek ?? [1, 3, 5],
+      drawDaysOfWeek: config.play.drawDaysOfWeek,
     },
   });
 
   useAiFormDirty("play-rules", form.formState.isDirty);
 
-  const drawDays = form.watch("drawDaysOfWeek") ?? [];
+  const drawDays = form.watch("drawDaysOfWeek");
 
   // Đổi giờ quay hoặc ngày quay trong tuần làm mã kỳ Vietlott (nếu đã cấu hình) mất
   // hiệu lực — mọi phép gợi ý dựa trên mã kỳ cũ sẽ sai kể từ đây. Chỉ cảnh báo khi ĐÃ có
   // mã kỳ (config.vietlott) — chưa cấu hình thì đổi lịch quay không ảnh hưởng gì.
-  const currentDrawDaysSorted = [...(config.play.drawDaysOfWeek ?? [])].sort();
+  const currentDrawDaysSorted = [...config.play.drawDaysOfWeek].sort();
   const watchedDrawDaysSorted = [...drawDays].sort();
   const drawDaysChanged =
     currentDrawDaysSorted.length !== watchedDrawDaysSorted.length ||

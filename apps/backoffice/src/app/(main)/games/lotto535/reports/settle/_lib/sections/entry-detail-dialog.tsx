@@ -74,7 +74,7 @@ export function Lotto535EntryDetailDialog({
 /** Nội dung chi tiết thật — chỉ render khi `entry` đã fetch xong (xem `Lotto535EntryDetailDialog`). */
 function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const tiers = entry.payout?.tiers ?? [];
-  const boards = entry.entrySummary.boards ?? [];
+  const boards = entry.entrySummary.boards;
   const isScheduled = entry.status === EntryStatus.Scheduled;
   const isSettled = entry.status === EntryStatus.Settled;
   const isVoid = entry.status === EntryStatus.Void;

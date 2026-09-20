@@ -204,7 +204,7 @@ export function PublishResultAction({
   const suggestedPeriod = suggestion.data?.suggestedPeriod ?? null;
 
   useEffect(() => {
-    if (isOpen && currentResult?.diceNumbers?.length === BINGO18_DRAW_COUNT) {
+    if (isOpen && currentResult?.diceNumbers.length === BINGO18_DRAW_COUNT) {
       setDice(currentResult.diceNumbers.map((n) => String(n)));
       setVietlotDate(currentResult.vietlottRef?.drawDate ?? defaultVietlotDate);
       setVietlotPeriod(currentResult.vietlottRef?.drawPeriod ?? "");
@@ -273,7 +273,9 @@ export function PublishResultAction({
   const incomingNumbers = vietlottResultQuery.data?.found ? vietlottResultQuery.data.numbers : null;
   const diff = incomingNumbers ? diffResultNumbers(dice, incomingNumbers) : null;
   const hasAnyNumber = dice.some((d) => d.trim() !== "");
-  const showDiff = !!diff && hasAnyNumber && !diff.isIdentical;
+  // Giữ `activeDiff` (không chỉ boolean) để JSX truy `diffIndices` không cần `?.` thừa.
+  const activeDiff = diff != null && hasAnyNumber && !diff.isIdentical ? diff : null;
+  const showDiff = activeDiff != null;
   const displayFound =
     hasManualFetch || vietlottResultQuery.data?.found === true ? vietlottResultQuery.data?.found : undefined;
 
@@ -421,9 +423,9 @@ export function PublishResultAction({
           <DialogTitle className="flex items-center gap-2">
             <ClipboardCheck className="size-4.5 text-amber-500" />
             {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
-            {inQueueMode && (
+            {queue != null && queue.length > 1 && (
               <span className="bg-muted text-muted-foreground text-2xs ml-auto rounded-full px-2 py-0.5 font-mono">
-                kỳ {(queue?.length ?? 0) - remainingDraws.length}/{queue?.length}
+                kỳ {queue.length - remainingDraws.length}/{queue.length}
               </span>
             )}
           </DialogTitle>
@@ -469,7 +471,7 @@ export function PublishResultAction({
               <div className="bg-muted/30 rounded-lg border p-4" onPaste={handleGridPaste}>
                 <div className="grid grid-cols-3 gap-x-3 gap-y-3">
                   {dice.map((value, i) => {
-                    const isDiff = showDiff && diff?.diffIndices.has(i);
+                    const isDiff = activeDiff != null && activeDiff.diffIndices.has(i);
                     return (
                       <div key={i} className="flex flex-col items-center gap-1">
                         <div className="relative w-full">

@@ -82,8 +82,8 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const allBoardPayouts: EntryBoardPayout[] = payout?.boardPayouts ?? [];
   // Map theo boardNo — dùng để tra payout của từng board
   const payoutByBoardNo = new Map(allBoardPayouts.map((bp) => [bp.boardNo, bp]));
-  const allBoardSnapshots: EntryBoardSnapshot[] = entry.entrySummary?.boards ?? [];
-  const betUnitCount = allBoardSnapshots.reduce((sum, b) => sum + (b.betCount ?? 1), 0);
+  const allBoardSnapshots: EntryBoardSnapshot[] = entry.entrySummary.boards;
+  const betUnitCount = allBoardSnapshots.reduce((sum, b) => sum + b.betCount, 0);
 
   const payoutAmount: number = payout?.payoutAmount ?? 0;
 
@@ -108,7 +108,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
     : 0;
 
   const accountId = (entry as any).accountId ?? "";
-  const tenantUsername = toTenantUsername(entry.username ?? accountId);
+  const tenantUsername = toTenantUsername(entry.username);
   const playerLink = `/accounts/players/${accountId}` as Route;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
@@ -135,7 +135,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
         </DialogTitle>
         <DialogDescription className="flex items-center gap-1.5 font-mono text-xs">
           <Ticket className="text-muted-foreground size-3 shrink-0" />
-          {entry.entrySummary?.ticketNo || entry.id} · {entry.drawId}
+          {entry.entrySummary.ticketNo} · {entry.drawId}
         </DialogDescription>
       </DialogHeader>
 
