@@ -315,7 +315,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
   }
 
   const enabled = form.watch("enabled");
-  const enabledCount = alertMeta.reduce((count, meta) => count + (enabled?.[meta.type] ? 1 : 0), 0);
+  const enabledCount = alertMeta.reduce((count, meta) => count + (enabled[meta.type] ? 1 : 0), 0);
 
   return (
     <Card className="gap-0 overflow-hidden py-0">
@@ -424,7 +424,7 @@ export function OpsSection({ config, onSave, isPending }: OpsSectionProps) {
                       <AlertToggleRow
                         key={meta.type}
                         meta={meta}
-                        checked={enabled?.[meta.type] ?? false}
+                        checked={enabled[meta.type] ?? false}
                         onToggle={(v) =>
                           form.setValue("enabled", { ...enabled, [meta.type]: v }, { shouldDirty: true })
                         }

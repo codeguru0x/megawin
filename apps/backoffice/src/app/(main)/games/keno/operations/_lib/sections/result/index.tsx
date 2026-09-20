@@ -105,10 +105,8 @@ function getNumberHighlight(n: number, filter: HighlightFilter): "match" | "dim"
   if (filter === "even") {
     return isEven ? "match" : "dim";
   }
-  if (filter === "odd") {
-    return !isEven ? "match" : "dim";
-  }
-  return "none";
+  // filter === "odd" — exhaustive sau big/small/even (null đã return sớm)
+  return !isEven ? "match" : "dim";
 }
 
 // ─── Highlighted Keno Number Ball ────────────────────────────────────────────
@@ -649,11 +647,11 @@ export function ResultSection() {
       }));
 
     return {
-      winningNumbers: d.result.winningNumbers ?? [],
-      bigCount: d.result.bigCount ?? 0,
-      smallCount: d.result.smallCount ?? 0,
-      evenCount: d.result.evenCount ?? 0,
-      oddCount: d.result.oddCount ?? 0,
+      winningNumbers: d.result.winningNumbers,
+      bigCount: d.result.bigCount,
+      smallCount: d.result.smallCount,
+      evenCount: d.result.evenCount,
+      oddCount: d.result.oddCount,
       basicPrizes,
       sideBetPrizes,
       // Chỉ map khi đã settle — tránh ledger giả toàn 0 sau republish ($unset financial).

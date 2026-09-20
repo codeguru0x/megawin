@@ -88,8 +88,8 @@ export function KenoEntryDetailDialog({
 
 /** Nội dung chi tiết thật — chỉ render khi `entry` đã fetch xong (xem `KenoEntryDetailDialog`). */
 function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
-  const boards: EntryBoardSnapshot[] = entry.entrySummary?.boards ?? [];
-  const betUnitCount = boards.reduce((sum, b) => sum + (b.betCount ?? 1), 0);
+  const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
+  const betUnitCount = boards.reduce((sum, b) => sum + b.betCount, 0);
 
   // Payout data — chỉ có sau khi settle
   const boardPayoutsMap = new Map<string, EntryBoardPayout>(
@@ -147,7 +147,7 @@ function KenoEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
         </DialogTitle>
         <DialogDescription className="flex items-center gap-1.5 font-mono text-xs">
           <Ticket className="text-muted-foreground size-3 shrink-0" />
-          {entry.entrySummary?.ticketNo ?? entry.id} · {entry.drawId}
+          {entry.entrySummary.ticketNo} · {entry.drawId}
         </DialogDescription>
       </DialogHeader>
 

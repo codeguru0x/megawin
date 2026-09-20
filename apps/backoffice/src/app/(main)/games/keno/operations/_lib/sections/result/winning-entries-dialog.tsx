@@ -190,7 +190,7 @@ function KpiBar({
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
-  const displayName = toTenantUsername(entry.username) ?? entry.username;
+  const displayName = toTenantUsername(entry.username);
   const hasCapped = entry.boardDetails.some((b) => b.isCapped);
   const winningSet = new Set(entry.winningNumbers);
 

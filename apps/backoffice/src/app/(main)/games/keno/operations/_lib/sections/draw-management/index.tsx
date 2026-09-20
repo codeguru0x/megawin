@@ -105,11 +105,11 @@ export function DrawManagementSection() {
       return undefined;
     }
     return {
-      winningNumbers: d.result.winningNumbers ?? [],
-      bigCount: d.result.bigCount ?? 0,
-      smallCount: d.result.smallCount ?? 0,
-      evenCount: d.result.evenCount ?? 0,
-      oddCount: d.result.oddCount ?? 0,
+      winningNumbers: d.result.winningNumbers,
+      bigCount: d.result.bigCount,
+      smallCount: d.result.smallCount,
+      evenCount: d.result.evenCount,
+      oddCount: d.result.oddCount,
       publishedAt: d.result.publishedAt,
     };
   })();
@@ -120,11 +120,11 @@ export function DrawManagementSection() {
       return undefined;
     }
     return {
-      winningNumbers: d.result.winningNumbers ?? [],
+      winningNumbers: d.result.winningNumbers,
       vietlottRef: d.vietlottRef
         ? {
             drawPeriod: d.vietlottRef.drawPeriod,
-            drawDate: String(d.vietlottRef.drawDate ?? ""),
+            drawDate: String(d.vietlottRef.drawDate),
           }
         : undefined,
     };

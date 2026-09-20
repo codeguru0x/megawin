@@ -335,8 +335,10 @@ export function PublishResultAction({
   );
   const hasAnyNumber = numbers.some((n) => n.trim() !== "");
   // Chỉ highlight khi: có kết quả nguồn + form đã có ít nhất 1 số + thực sự lệch. Form rỗng
-  // thì autofill tự điền, không có gì để so.
-  const showDiff = !!diff && !diff.isIdentical && hasAnyNumber;
+  // thì autofill tự điền, không có gì để so. Giữ `activeDiff` (không chỉ boolean) để JSX
+  // truy `diffIndices` không cần `?.` / `!= null` thừa sau khi đã chứng minh diff tồn tại.
+  const activeDiff = diff != null && !diff.isIdentical && hasAnyNumber ? diff : null;
+  const showDiff = activeDiff != null;
 
   // Ẩn state "chưa có kết quả cho kỳ này" cho tới khi staff CHỦ ĐỘNG bấm nút "Kết quả" — query
   // vẫn tự fetch ngầm ngay lúc mở dialog (phục vụ autofill Rule A + phát hiện lệch V4), nhưng
@@ -498,9 +500,9 @@ export function PublishResultAction({
                 tiêu đề (giờ quay), KHÔNG đẩy sát phải (`ml-auto`) — vị trí đó nằm cạnh nút đóng
                 (X) của dialog, dễ đọc nhầm badge là 1 phần điều khiển dialog thay vì thông tin
                 về kỳ đang nhập. `shrink-0` giữ badge không co lại khi tiêu đề dài. */}
-            {inQueueMode && (
+            {queue != null && queue.length > 1 && (
               <span className="bg-muted text-muted-foreground text-2xs shrink-0 rounded-full px-2 py-0.5 font-mono">
-                kỳ {(queue?.length ?? 0) - remainingDraws.length}/{queue?.length}
+                kỳ {queue.length - remainingDraws.length}/{queue.length}
               </span>
             )}
           </DialogTitle>
@@ -549,7 +551,7 @@ export function PublishResultAction({
 
                 <div className="grid grid-cols-5 gap-x-2 gap-y-3">
                   {Array.from({ length: KENO_DRAW_COUNT }, (_, i) => {
-                    const isDiff = showDiff && diff?.diffIndices.has(i);
+                    const isDiff = activeDiff != null && activeDiff.diffIndices.has(i);
                     return (
                       <div key={i} className="flex flex-col items-center gap-1">
                         <div className="relative w-full">

@@ -69,7 +69,7 @@ function isSideBetEntry(e: LiveFeedEntry): boolean {
 /** 1 dòng entry trong feed — dùng chung cho cả 2 nhóm (Pick / Side bet). */
 function FeedRow({ entry, highlightFirst }: { entry: LiveFeedEntry; highlightFirst: boolean }) {
   const color = PLAY_TYPE_COLORS[entry.playType];
-  const label = KENO_PLAY_TYPE_LABELS[entry.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ?? entry.playType;
+  const label = KENO_PLAY_TYPE_LABELS[entry.playType as keyof typeof KENO_PLAY_TYPE_LABELS];
   const isSideBet = isSideBetEntry(entry);
   const isLargeBet = entry.amount >= LARGE_BET_THRESHOLD;
 

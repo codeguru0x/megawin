@@ -12,7 +12,8 @@
 | **S1 DONE** (20/09) | `requireDrawId` helper + thay 32× `drawId!` trong `use-operations` ×7; `no-non-null-assertion` 206→**174**; `check-types` xanh |
 | **S2 DONE** (20/09) | `exhaustive-deps` **26→0**: EMPTY_DRAWS / useMemo ổn định array; hub destructure query; tenant `existingSet` memo; players bỏ effect thừa |
 | **S3a DONE** (20/09) | `lib/*` unnecessary-condition **18→0** (auth narrow, hasOwn lookup, nav for…of, theme matchMedia). Tổng rule 562→**544** |
-| Còn lại | ~1.199 warning (ước) |
+| **S3b DONE** (20/09) | Keno `no-unnecessary-condition` **64→1** (giữ AudioContext `?? webkit` Safari). `check-types` xanh |
+| Còn lại | ~1.135 warning (ước) |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ## 1. Baseline đo thật (2026-09-20)
@@ -293,7 +294,7 @@ Mỗi slice = 1 commit message dạng:
 
 | File:line | Rule | Lý do giữ / cần hỏi user |
 |---|---|---|
-| _(trống — điền khi skip)_ | | |
+| `keno/operations-hub/_lib/hub-alert-banner.tsx:69` | `no-unnecessary-condition` | `window.AudioContext ?? webkitAudioContext` — DOM lib đánh dấu `AudioContext` luôn có; Safari cũ vẫn cần webkit. **Không xoá** — đổi runtime Safari. |
 
 ---
 

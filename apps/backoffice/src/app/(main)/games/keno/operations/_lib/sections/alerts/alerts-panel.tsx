@@ -407,9 +407,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className={cn("size-2 shrink-0 rounded-full", accent.dot)} />
                     {isCritical && activeCount > 0 && <AlertTriangle className="size-3.5 shrink-0 text-red-500" />}
-                    <span className="truncate text-sm font-semibold">
-                      {KENO_OPS_ALERT_TYPE_LABELS[g.type] ?? g.type}
-                    </span>
+                    <span className="truncate text-sm font-semibold">{KENO_OPS_ALERT_TYPE_LABELS[g.type]}</span>
                     {/* Badge đếm CHỈ alert cần xử lý — khớp ý nghĩa với badge header (mới/critical),
                         KHÔNG cộng cả phần đã ack (dễ hiểu lầm còn nhiều việc phải làm). */}
                     <Badge variant={activeCount > 0 ? "secondary" : "outline"} className="shrink-0 tabular-nums">

@@ -70,8 +70,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
-      minBetCount: config.play.minBetCount ?? 1,
-      maxBetCount: config.play.maxBetCount ?? 10,
+      minBetCount: config.play.minBetCount,
+      maxBetCount: config.play.maxBetCount,
       maxBasicBoardsPerTicket: config.play.maxBasicBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeSeconds: config.play.salesCloseBeforeSeconds,

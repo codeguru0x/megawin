@@ -73,11 +73,11 @@ export function ExposureCard({
       role={clickable ? "button" : undefined}
       tabIndex={clickable ? 0 : undefined}
       onKeyDown={
-        clickable
+        onOpenAnalysis
           ? (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onOpenAnalysis?.();
+                onOpenAnalysis();
               }
             }
           : undefined

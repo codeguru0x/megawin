@@ -100,7 +100,7 @@ export function AnalyticsSection({ active }: { active: boolean }) {
         playType: previewBoard?.playType ?? "unknown",
         numbers: previewBoard?.numbers ?? [],
         // Side bet: map bet field để hiển thị cụ thể ("big", "small", "even", "odd", ...).
-        bet: isSideBet ? (previewBoard as { bet?: string })?.bet : undefined,
+        bet: isSideBet ? (previewBoard as { bet?: string }).bet : undefined,
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,

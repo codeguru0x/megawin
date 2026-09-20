@@ -38,7 +38,7 @@ export function EntryList({
     const boardCount = p?.boardPayouts?.length ?? (entry as any).selectionCount ?? 0;
     return {
       id: entry.id,
-      ticketNo: entry.entrySummary?.ticketNo ?? entry.id.slice(-8),
+      ticketNo: entry.entrySummary.ticketNo,
       boardCount,
       // lineCount không truyền → component hiển thị chỉ "Boards"
       betUnitCount: entry.betUnitCount,
@@ -49,7 +49,7 @@ export function EntryList({
   });
 
   const entryMap = new Map<string, TicketEntryEntity>(data.map((e) => [e.id, e]));
-  const playerLabel = toTenantUsername(playerDisplayName ?? accountId) ?? accountId;
+  const playerLabel = toTenantUsername(playerDisplayName ?? accountId);
 
   return (
     <GamePlayerEntryList

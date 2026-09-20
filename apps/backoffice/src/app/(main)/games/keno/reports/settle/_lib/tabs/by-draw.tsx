@@ -97,11 +97,11 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
 
   const rows = players.map((p) => ({
     accountId: p.accountId,
-    displayName: toTenantUsername(p.username) ?? p.accountId,
+    displayName: toTenantUsername(p.username),
     entryCount: p.entryCount,
-    totalStake: p.totalStake ?? 0,
-    totalWin: p.totalWin ?? 0,
-    totalPayout: p.totalPayout ?? 0,
+    totalStake: p.totalStake,
+    totalWin: p.totalWin,
+    totalPayout: p.totalPayout,
   }));
 
   return (
@@ -125,9 +125,7 @@ function Breadcrumb() {
       rootLabel="Kỳ quay"
       drawId={drawId ?? undefined}
       tenantId={level === "players" || level === "entries" ? (tenantId ?? undefined) : undefined}
-      playerName={
-        level === "entries" && accountId ? (playerName ?? toTenantUsername(accountId) ?? accountId) : undefined
-      }
+      playerName={level === "entries" && accountId ? (playerName ?? toTenantUsername(accountId)) : undefined}
       onRootClick={navigateToList}
       onDrawClick={drawId && (level === "players" || level === "entries") ? () => navigateToDraw(drawId) : undefined}
       onTenantClick={tenantId && level === "entries" ? () => navigateBackToPlayers() : undefined}

@@ -241,7 +241,7 @@ export function PlayTypeCard({
     (pt) =>
       pickMap.get(pt) ?? {
         playType: pt,
-        label: KENO_PLAY_TYPE_LABELS[pt] ?? pt,
+        label: KENO_PLAY_TYPE_LABELS[pt],
         sets: 0,
         revenue: 0,
         pct: 0,
@@ -506,7 +506,7 @@ export function TopCombosCard({ rows }: { rows: TopComboRow[] }) {
                     ))}
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {KENO_PLAY_TYPE_LABELS[c.playType as KenoPlayType] ?? c.playType}
+                    {KENO_PLAY_TYPE_LABELS[c.playType as KenoPlayType]}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">

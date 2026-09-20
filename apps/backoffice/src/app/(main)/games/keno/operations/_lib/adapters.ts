@@ -99,7 +99,7 @@ export function toPlayTypeRows(stats: Stats): PlayTypeRow[] {
     const s = bp[pt];
     return {
       playType: pt,
-      label: KENO_PLAY_TYPE_LABELS[pt] ?? pt,
+      label: KENO_PLAY_TYPE_LABELS[pt],
       sets: s.sets,
       revenue: s.amount,
       pct: 0,

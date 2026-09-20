@@ -84,8 +84,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           drawNo: remoteDraw.drawNo,
           drawDate: remoteDraw.drawDate.split("-").reverse().join("/"),
           drawTime: displayVNTime(remoteDraw.drawTime), // ISO → HH:mm (selector contract)
-          salesOpenAt: remoteDraw.sales?.openAt,
-          salesCloseAt: remoteDraw.sales?.closeAt ?? "",
+          salesOpenAt: remoteDraw.sales.openAt,
+          salesCloseAt: remoteDraw.sales.closeAt,
           // drawTime luôn có — giờ quay theo lịch, dùng cho countdown/overdue-publish.
           scheduledDrawAt: remoteDraw.drawTime,
           drawResultAt: remoteDraw.result?.publishedAt,

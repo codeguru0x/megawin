@@ -334,7 +334,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 <p className="text-xs text-amber-700 dark:text-amber-300">
                   {drawDate === todayVN()
                     ? "Hôm nay đã qua giờ quay kỳ cuối hoặc đã tạo đủ kỳ."
-                    : `Đã tạo đủ ${preview.data?.maxPerDay ?? 0} kỳ cho ngày này.`}{" "}
+                    : `Đã tạo đủ ${preview.data.maxPerDay} kỳ cho ngày này.`}{" "}
                   Vui lòng chọn ngày tiếp theo.
                 </p>
                 {drawDate !== tomorrow && (
