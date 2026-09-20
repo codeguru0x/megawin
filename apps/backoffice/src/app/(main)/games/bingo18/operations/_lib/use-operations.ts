@@ -22,6 +22,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClie
 import { toast } from "sonner";
 
 import { bingo18Keys } from "@/lib/query-keys";
+import { requireDrawId } from "@/lib/require-draw-id";
 
 export type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
 export type {
@@ -138,7 +139,7 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
     queryKey: bingo18Keys.opsSnapshot(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetOpsSnapshotOutput>(`${BASE}/snapshot`, {
-        params: { drawId: drawId! },
+        params: { drawId: requireDrawId(drawId) },
       }),
     enabled: !!drawId,
     // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
@@ -169,7 +170,7 @@ export function useAlerts(drawId: string | undefined, status: string | undefined
     queryFn: () =>
       apiClient.get<ListAlertsOutput>(`${BASE}/alerts`, {
         params: {
-          drawId: drawId!,
+          drawId: requireDrawId(drawId),
           ...(status ? { status } : {}),
           grouped: "true",
         },
@@ -224,7 +225,7 @@ export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean
     queryKey: bingo18Keys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
-        params: { drawId: drawId! },
+        params: { drawId: requireDrawId(drawId) },
       }),
     enabled: !!drawId,
     refetchInterval: isSettled ? false : pollMs,
@@ -256,7 +257,7 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
     queryFn: ({ pageParam }) =>
       apiClient.get<GetWinningEntriesOutput>(`${BASE}/winning-entries`, {
         params: {
-          drawId: drawId!,
+          drawId: requireDrawId(drawId),
           limit: WINNING_ENTRIES_PAGE_SIZE,
           ...(pageParam ? { cursor: pageParam } : {}),
         },

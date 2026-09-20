@@ -123,7 +123,7 @@ literal, hoặc hoàn toàn không liên quan render). Nếu không chứng minh
 
 | # | Việc | File plan | Ảnh hưởng pixel |
 |---|---|---|---|
-| 1 | TypeScript/React warnings (~1.370) | [`p0-01-typescript-react-warnings.md`](p0-01-typescript-react-warnings.md) | Không (logic/type only) |
+| 1 | TypeScript/React warnings (~1.370) | [`p0-01-typescript-react-warnings.md`](p0-01-typescript-react-warnings.md) | Không (logic/type only) — **ƯU TIÊN TIẾP (20/09):** `no-floating-promises` đã 0; còn ~1.275. Visual track tạm dừng. |
 | 2 | Thêm token `--warning`/`--info` vào `globals.css` | [`p0-02-token-additions.md`](p0-02-token-additions.md) | Không (thuần additive, chưa ai dùng) |
 | 3 | `no-inline-styles` (~288) — chuyển `style={{...}}` sang CSS custom property/class | [`p0-03-inline-styles-and-static-classes.md`](p0-03-inline-styles-and-static-classes.md) | Không (computed style giữ nguyên) |
 | 4 | `require-static-classes` (~86) — className động → tĩnh | [`p0-03-inline-styles-and-static-classes.md`](p0-03-inline-styles-and-static-classes.md) §2 | Không (cùng class cuối cùng) |

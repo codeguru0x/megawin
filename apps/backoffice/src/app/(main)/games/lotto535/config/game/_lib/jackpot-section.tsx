@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAiFormDirty } from "@/hooks/use-ai-form-dirty";
+import { cn } from "@/lib/utils";
 
 import type { GameConfig } from "./use-game-config";
 

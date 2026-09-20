@@ -24,6 +24,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 
 import { lotto535Keys } from "@/lib/query-keys";
+import { requireDrawId } from "@/lib/require-draw-id";
 
 export type { GetDrawDetailOutput, ResettlePreflightOutput } from "@megawin/game-lotto535-application/use-cases/draws";
 export type {
@@ -153,7 +154,7 @@ export function useOpsSnapshot<TData = GetOpsSnapshotOutput>(
     queryKey: lotto535Keys.opsSnapshot(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetOpsSnapshotOutput>(`${BASE}/snapshot`, {
-        params: { drawId: drawId! },
+        params: { drawId: requireDrawId(drawId) },
       }),
     enabled: !!drawId,
     // Poll khớp nhịp worker đọc từ response; dừng hẳn khi settled.
@@ -183,7 +184,7 @@ export function useAlerts(drawId: string | undefined, status: string | undefined
     queryFn: () =>
       apiClient.get<ListAlertsOutput>(`${BASE}/alerts`, {
         params: {
-          drawId: drawId!,
+          drawId: requireDrawId(drawId),
           ...(status ? { status } : {}),
           grouped: "true",
         },
@@ -236,7 +237,7 @@ export function useComboLookup(drawId: string | undefined) {
     }) =>
       apiClient.get<GetComboLookupOutput>(`${BASE}/combo-lookup`, {
         params: {
-          drawId: drawId!,
+          drawId: requireDrawId(drawId),
           playType,
           mainNumbers: mainNumbers.join(","),
           specialNumbers: specialNumbers.join(","),
@@ -272,7 +273,7 @@ export function useOpsLiveEntries(drawId: string | undefined, isSettled: boolean
     queryKey: lotto535Keys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
       apiClient.get<GetLiveEntriesOutput>(`${BASE}/live-entries`, {
-        params: { drawId: drawId! },
+        params: { drawId: requireDrawId(drawId) },
       }),
     enabled: !!drawId,
     refetchInterval: isSettled ? false : pollMs,
@@ -308,7 +309,7 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
     queryFn: ({ pageParam }) =>
       apiClient.get<GetWinningEntriesOutput>(`${BASE}/winning-entries`, {
         params: {
-          drawId: drawId!,
+          drawId: requireDrawId(drawId),
           limit: WINNING_ENTRIES_PAGE_SIZE,
           ...(pageParam ? { cursor: pageParam } : {}),
         },
