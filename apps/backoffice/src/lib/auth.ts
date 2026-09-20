@@ -103,15 +103,20 @@ export const auth = betterAuth({
       overrideUserInfoOnSignIn: true,
       mapProfileToUser: (profile) => {
         const raw = profile as Record<string, unknown>;
+        // Narrow unknown claim → string | undefined (không `as string` + `??` thừa).
+        const str = (key: string): string | undefined => {
+          const v = raw[key];
+          return typeof v === "string" ? v : undefined;
+        };
 
         return {
-          sub: (raw[ClaimKey.Sub] as string) ?? undefined,
-          accountStatus: (raw[ClaimKey.AccountStatus] as string) ?? AccountStatus.Active,
-          accountId: (raw[ClaimKey.AccountId] as string) ?? undefined,
-          roles: (raw[ClaimKey.Roles] as string) ?? "",
-          tenantId: (raw[ClaimKey.TenantId] as string) ?? undefined,
-          accountType: (raw[ClaimKey.AccountType] as string) ?? undefined,
-          username: (raw[ClaimKey.Username] as string) ?? undefined,
+          sub: str(ClaimKey.Sub),
+          accountStatus: str(ClaimKey.AccountStatus) ?? AccountStatus.Active,
+          accountId: str(ClaimKey.AccountId),
+          roles: str(ClaimKey.Roles) ?? "",
+          tenantId: str(ClaimKey.TenantId),
+          accountType: str(ClaimKey.AccountType),
+          username: str(ClaimKey.Username),
         };
       },
     },

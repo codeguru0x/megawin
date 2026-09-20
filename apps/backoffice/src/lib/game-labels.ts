@@ -26,5 +26,8 @@ export const GAME_PRODUCT_OPTIONS: Array<{ value: GameProduct; label: string }> 
 
 /** Lookup label theo string — fallback nếu gameId không khớp enum. */
 export function getGameLabel(gameId: string): string {
-  return GAME_PRODUCT_LABELS[gameId as GameProduct] ?? gameId;
+  if (Object.hasOwn(GAME_PRODUCT_LABELS, gameId)) {
+    return GAME_PRODUCT_LABELS[gameId as GameProduct];
+  }
+  return gameId;
 }

@@ -11,7 +11,8 @@
 | Đã xong trước đó | `no-floating-promises` → **0** (commit `a947d859`) |
 | **S1 DONE** (20/09) | `requireDrawId` helper + thay 32× `drawId!` trong `use-operations` ×7; `no-non-null-assertion` 206→**174**; `check-types` xanh |
 | **S2 DONE** (20/09) | `exhaustive-deps` **26→0**: EMPTY_DRAWS / useMemo ổn định array; hub destructure query; tenant `existingSet` memo; players bỏ effect thừa |
-| Còn lại | ~1.217 warning (ước) |
+| **S3a DONE** (20/09) | `lib/*` unnecessary-condition **18→0** (auth narrow, hasOwn lookup, nav for…of, theme matchMedia). Tổng rule 562→**544** |
+| Còn lại | ~1.199 warning (ước) |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ## 1. Baseline đo thật (2026-09-20)

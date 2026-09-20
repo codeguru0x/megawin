@@ -679,7 +679,8 @@ export function buildNavHref(
   page: NavPage,
   args?: { segments?: Readonly<Record<string, string>>; params?: Readonly<Record<string, string>> },
 ): BuildNavHrefResult {
-  const entry = NAV_REGISTRY[page];
+  // Index qua Record rộng để giữ nhánh UnknownPage (defense khi caller cast sai NavPage).
+  const entry = (NAV_REGISTRY as Record<string, NavPageDefinition | undefined>)[page];
   if (!entry) {
     return {
       ok: false,
@@ -720,7 +721,8 @@ export function buildNavHref(
   const query = new URLSearchParams();
 
   for (const [canonicalKey, rawValue] of Object.entries(rawParams)) {
-    if (rawValue === undefined || rawValue === "") {
+    // `Object.entries` trên Record<string, string> → value luôn string; chỉ bỏ chuỗi rỗng.
+    if (rawValue === "") {
       continue;
     }
     const paramDef = paramDefs[canonicalKey];
@@ -775,7 +777,8 @@ function buildAppliedLabel(
 ): string {
   const parts = [entry.label];
   if (segments.gameKey) {
-    parts.push(GAME_LABELS[segments.gameKey as GameProduct] ?? segments.gameKey);
+    const gameKey = segments.gameKey;
+    parts.push(Object.hasOwn(GAME_LABELS, gameKey) ? GAME_LABELS[gameKey as GameProduct] : gameKey);
   }
   if (params.drawId) {
     parts.push(`kỳ #${params.drawId}`);
@@ -834,17 +837,20 @@ export function isKnownNavHref(href: string): boolean {
     const paramDefs = resolveEntryParams(entry, resolvedSegments);
     const urlKeyToDef = new Map(Object.values(paramDefs).map((def) => [def.urlKey, def] as const));
     const searchParams = new URLSearchParams(queryString);
+    // Dùng for...of (không forEach) để TS theo dõi mutation `queryOk` — forEach làm
+    // oxlint nghĩ `queryOk` luôn true và gợi ý xoá check (sẽ phá validate href).
     let queryOk = true;
-    searchParams.forEach((value, key) => {
+    for (const [key, value] of searchParams.entries()) {
       const def = urlKeyToDef.get(key);
       if (!def || !matchesKindShape(def.kind, value)) {
         queryOk = false;
-        return;
+        break;
       }
       if (def.kind === NavParamKind.Enum && !(def.values?.includes(value) ?? false)) {
         queryOk = false;
+        break;
       }
-    });
+    }
     if (queryOk) {
       return true;
     }

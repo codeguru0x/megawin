@@ -52,11 +52,15 @@ function normalizeRoles(roles: readonly string[] | string | undefined): string[]
 function toActor(u: AuditActorSource): AuditActor {
   const accountId = u.accountId ?? "";
   const username = u.username ?? "";
+  // Narrow string → AccountType; giá trị lạ / thiếu → Unknown (không cast mù + ?? thừa).
+  const actorType =
+    u.accountType === AccountType.Company || u.accountType === AccountType.Agent || u.accountType === AccountType.Player
+      ? ACCOUNT_TO_ACTOR_TYPE[u.accountType]
+      : AuditActorType.Unknown;
   return {
     // accountId là id nghiệp vụ (ULID/UUID portable); fallback username nếu thiếu.
     id: accountId || username,
-    // Map tường minh accountType → AuditActorType; giá trị lạ → unknown (cờ forensic).
-    type: ACCOUNT_TO_ACTOR_TYPE[u.accountType as AccountType] ?? AuditActorType.Unknown,
+    type: actorType,
     // Nhãn hiển thị: ưu tiên username → accountId.
     name: username || accountId,
     roles: normalizeRoles(u.roles),

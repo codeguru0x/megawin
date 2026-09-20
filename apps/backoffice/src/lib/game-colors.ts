@@ -240,7 +240,10 @@ export const SYSTEM_ICON_GRADIENT = "from-primary/70 to-primary";
  * An toàn khi dùng với dynamic game product IDs từ API.
  */
 export function getGameColors(gameProduct: string): GameColorTokens {
-  return GAME_COLORS[gameProduct as GameProduct] ?? DEFAULT_COLORS;
+  if (Object.hasOwn(GAME_COLORS, gameProduct)) {
+    return GAME_COLORS[gameProduct as GameProduct];
+  }
+  return DEFAULT_COLORS;
 }
 
 /**
