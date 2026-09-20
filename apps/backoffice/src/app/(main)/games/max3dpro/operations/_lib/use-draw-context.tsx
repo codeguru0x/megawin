@@ -15,6 +15,7 @@
 import { createContext, useCallback, useContext, type ReactNode } from "react";
 
 import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
+import { displayVNTime } from "@megawin/shared/utils";
 import { useQueryState } from "nuqs";
 
 import { useAiPageContext } from "@/hooks/use-ai-page-context";
@@ -92,7 +93,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           // Max 3D Pro: drawNo luôn là 1
           drawNo: remoteDraw.drawNo as 1,
           drawDate: remoteDraw.drawDate.split("-").reverse().join("/"),
-          drawTime: remoteDraw.drawTime,
+          drawTime: displayVNTime(remoteDraw.drawTime), // ISO → HH:mm (selector contract)
           salesOpenAt: remoteDraw.sales?.openAt,
           salesCloseAt: remoteDraw.sales?.closeAt ?? "",
           // drawTime luôn có — giờ quay theo lịch, dùng cho countdown/overdue-publish.

@@ -214,11 +214,15 @@ function getHeatLevel(count: number, maxCount: number): HeatLevel {
 }
 ```
 
-- Badge: gradient amber DUY NHẤT cho mọi game — `amber-100/80` (cold) → `amber-600` (warm) →
-  `amber-500` (hot) + `ring-2 ring-amber-300/50`. KHÔNG còn per-game hue trên heatmap
-  (hợp nhất P1-05, xem `backoffice-visual-color-redesign/p1-05-heatmap-hue-unification.md`).
-  Brand màu game vẫn giữ ở icon/header ngoài heatmap.
-- Cell background: subtle tinting amber cho mid/warm/hot.
+- Badge: financial-cool scale chung — cold = trong suốt, low/mid = `slate`/`blue` rất nhạt
+  (liên tục, không nhảy patch), warm = `blue-500`, hot = `blue-700` + ring. Source:
+  `number-heatmap/heat-scale.ts`. Lotto535 **special (ĐB)** dùng cùng thang luminance với
+  hue **indigo**. KHÔNG dùng amber/orange cho heatmap — 2 hue đó đã là màu ngữ nghĩa
+  cảnh báo (`--warning`) trong design system, tái dùng cho mật độ cược (chỉ số trung
+  tính) gây hiểu lầm "có cảnh báo" + đã bị reject 2 lần (quá sáng, rồi quá loang lổ).
+  Brand màu game vẫn giữ ở icon/header / selected / soft ngoài heatmap intensity.
+- Cell background: `slate`/`blue` tint rất nhạt, tăng dần liên tục theo mức — tránh
+  cảm giác "chấm loang lổ" (patch đậm cạnh vùng trong suốt).
 
 ### Shared design tokens
 

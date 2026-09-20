@@ -11,6 +11,15 @@
  */
 
 export { DATA_HOVER_SURFACE_CLASS } from "./hover-surface-class";
+export {
+  getHeatLevel,
+  HEAT_BADGE_STYLES_BLUE,
+  HEAT_BADGE_STYLES_INDIGO,
+  HEAT_CELL_BG_BLUE,
+  HEAT_CELL_BG_INDIGO,
+  HeatLevel,
+} from "./heat-scale";
+export type { HeatLevel as HeatLevelName } from "./heat-scale";
 export { NumberHeatmapCellDetail } from "./number-heatmap-cell-detail";
 export { NumberHeatmapHoverLayer } from "./number-heatmap-hover-layer";
 export {

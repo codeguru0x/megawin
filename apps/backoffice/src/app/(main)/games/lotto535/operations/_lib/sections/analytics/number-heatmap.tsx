@@ -4,8 +4,8 @@
  * Lotto 5/35 — Number Heatmap (+ combo lookup)
  *
  * Main grid 7 × 5 = 35 số chính (01-35), special grid 4 × 3 = 12 số ĐB (01-12).
- * Heat intensity amber chung cho CẢ main lẫn special (P1-05) — brand header vẫn
- * amber/orange swatch. Theo DÒNG TIỀN mỗi số. Cả 2 bảng LUÔN cho click chọn số.
+ * Heat intensity: main = amber chung (P1-05); special = orange (giữ nhận diện ĐB).
+ * Brand header vẫn amber/orange swatch. Theo DÒNG TIỀN mỗi số. Cả 2 bảng LUÔN cho click chọn số.
  *
  * PlayType TỰ SUY theo số lượng main+special đã chọn (4+1=mainCover4, 5+1=standard,
  * 6-15+1=mainCoverN, 5+2..12=specialCover); dialog validate qua `validateSelection`
@@ -29,9 +29,15 @@ import {
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
 import {
+  getHeatLevel,
+  HEAT_BADGE_STYLES_BLUE,
+  HEAT_BADGE_STYLES_INDIGO,
+  HEAT_CELL_BG_BLUE,
+  HEAT_CELL_BG_INDIGO,
   NumberHeatmapCellDetail,
   NumberHeatmapHoverLayer,
   useNumberHeatmapHover,
+  type HeatLevelName,
 } from "@/components/games/shared/number-heatmap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,48 +73,12 @@ function lottoSpecialSwatchBg(): string {
 }
 const LOTTO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
-// ─── Heatmap Intensity Scale (amber chung — P1-05; main = special) ───────────
-
-type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
-
-const HEAT_BADGE_STYLES_AMBER: Record<HeatLevel, string> = {
-  cold: "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
-  low: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200",
-  mid: "bg-amber-400 text-amber-950 dark:bg-amber-600 dark:text-white",
-  warm: "bg-amber-600 text-white dark:bg-amber-500",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-500",
-};
-
-const HEAT_BADGE_STYLES_MAIN = HEAT_BADGE_STYLES_AMBER;
-const HEAT_BADGE_STYLES_SPECIAL = HEAT_BADGE_STYLES_AMBER;
-
-const HEAT_CELL_BG: Record<HeatLevel, string> = {
-  cold: "",
-  low: "",
-  mid: "bg-amber-50/40 dark:bg-amber-950/10",
-  warm: "bg-amber-50/70 dark:bg-amber-950/20",
-  hot: "bg-amber-50/60 dark:bg-amber-950/15",
-};
-
-function getHeatLevel(amount: number, maxAmount: number): HeatLevel {
-  if (amount === 0 || maxAmount === 0) {
-    return "cold";
-  }
-  const ratio = amount / maxAmount;
-  if (ratio >= 0.8) {
-    return "hot";
-  }
-  if (ratio >= 0.55) {
-    return "warm";
-  }
-  if (ratio >= 0.3) {
-    return "mid";
-  }
-  if (ratio >= 0.1) {
-    return "low";
-  }
-  return "cold";
-}
+// Heat intensity: shared financial-cool — main=blue, special=indigo (ĐB).
+type HeatLevel = HeatLevelName;
+const HEAT_BADGE_STYLES_MAIN = HEAT_BADGE_STYLES_BLUE;
+const HEAT_BADGE_STYLES_SPECIAL = HEAT_BADGE_STYLES_INDIGO;
+const HEAT_CELL_BG_MAIN = HEAT_CELL_BG_BLUE;
+const HEAT_CELL_BG_SPECIAL = HEAT_CELL_BG_INDIGO;
 
 // ─── Number Badge ─────────────────────────────────────────────────────────────
 
@@ -258,7 +228,8 @@ function NumberCell({
   const isEmpty = n.sets === 0;
   const isLastCol = col === totalCols - 1;
   const isLastRow = row === totalRows - 1;
-  const cellBg = isEmpty ? "" : HEAT_CELL_BG[heatLevel];
+  const cellBgScale = ballVariant === "special" ? HEAT_CELL_BG_SPECIAL : HEAT_CELL_BG_MAIN;
+  const cellBg = isEmpty ? "" : cellBgScale[heatLevel];
   const hoverBg =
     ballVariant === "special"
       ? "hover:bg-orange-100/50 dark:hover:bg-orange-950/30"

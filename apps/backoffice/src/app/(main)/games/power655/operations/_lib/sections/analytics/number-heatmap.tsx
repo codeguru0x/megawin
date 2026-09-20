@@ -27,9 +27,13 @@ import {
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
 import {
+  getHeatLevel,
+  HEAT_BADGE_STYLES_BLUE,
+  HEAT_CELL_BG_BLUE,
   NumberHeatmapCellDetail,
   NumberHeatmapHoverLayer,
   useNumberHeatmapHover,
+  type HeatLevelName,
 } from "@/components/games/shared/number-heatmap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,45 +66,10 @@ import { useComboLookup } from "../../use-operations";
 const POWER_HEX = GAME_COLORS[GameProduct.Power655].hex; // "#dc2626" red-600
 const POWER_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
-// ─── Heatmap Intensity Scale (amber chung — P1-05) ───────────────────────────
-
-type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
-
-const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
-  low: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200",
-  mid: "bg-amber-400 text-amber-950 dark:bg-amber-600 dark:text-white",
-  warm: "bg-amber-600 text-white dark:bg-amber-500",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-500",
-};
-
-const HEAT_CELL_BG: Record<HeatLevel, string> = {
-  cold: "",
-  low: "",
-  mid: "bg-amber-50/40 dark:bg-amber-950/10",
-  warm: "bg-amber-50/70 dark:bg-amber-950/20",
-  hot: "bg-amber-50/60 dark:bg-amber-950/15",
-};
-
-function getHeatLevel(count: number, maxCount: number): HeatLevel {
-  if (count === 0 || maxCount === 0) {
-    return "cold";
-  }
-  const ratio = count / maxCount;
-  if (ratio >= 0.8) {
-    return "hot";
-  }
-  if (ratio >= 0.55) {
-    return "warm";
-  }
-  if (ratio >= 0.3) {
-    return "mid";
-  }
-  if (ratio >= 0.1) {
-    return "low";
-  }
-  return "cold";
-}
+// Heat intensity: shared financial-cool blue — `@/components/games/shared/number-heatmap/heat-scale`.
+type HeatLevel = HeatLevelName;
+const HEAT_BADGE_STYLES = HEAT_BADGE_STYLES_BLUE;
+const HEAT_CELL_BG = HEAT_CELL_BG_BLUE;
 
 // ─── Number Badge ─────────────────────────────────────────────────────────────
 

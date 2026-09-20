@@ -1,5 +1,11 @@
 # P1-02 — Hợp nhất màu status badge (Draw/Ticket/Entry × 7 game = 17 file)
 
+## Status (2026-09-19) — DONE
+
+Commit `9d2b7e13`. `status-badge-tone.ts` chỉ còn `TONE_CLASS` semantic; 4 token mới
+`status-active/pending/progress/published` trong `globals.css`; 17 call site đã chuyển;
+`useSemantic` / `TONE_CLASS_LEGACY` đã xoá ở bước dọn cuối.
+
 **Tiền đề (19/09/2026):** phần "gom 17 file về 1 nơi định nghĩa" đã tách sang track AN TOÀN —
 [`backoffice-lint-color-cleanup/p0-05-status-badge-tone-centralize.md`](../backoffice-lint-color-cleanup/p0-05-status-badge-tone-centralize.md)
 — vì đó là refactor DRY thuần túy (dedup literal, giữ đúng giá trị), không đổi pixel. File này

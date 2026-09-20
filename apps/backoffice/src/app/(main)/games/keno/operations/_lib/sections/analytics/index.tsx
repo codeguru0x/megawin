@@ -5,7 +5,7 @@
  *
  * Đọc snapshot (timer 1) qua `select` slice cho từng panel — panel này đổi không
  * kéo panel khác re-render (§4.2). Live feed dùng **timer 2** (`useLiveFeed`),
- * chỉ chạy khi tab Phân tích mở & kỳ chưa settle.
+ * chỉ chạy khi tab Phân tích mở; kỳ settled vẫn fetch 1 lần (không poll).
  *
  * Layout (plan p0-07 §3, cập nhật §4.8):
  *   PlayTypeCard (pick grid + side-bet pair cards) → NumberHeatmap (chọn số + combo
@@ -46,8 +46,8 @@ import { NumberHeatmap } from "./number-heatmap";
 // ─── Component ────────────────────────────────────────────────────────────────
 
 /**
- * @param active - Tab Phân tích đang mở. Gate `useLiveFeed` (timer 2) — chỉ poll
- *   live entries khi staff thực sự xem tab này.
+ * @param active - Tab Phân tích đang mở. Gate `useLiveFeed` (timer 2) — chỉ fetch
+ *   live entries khi staff thực sự xem tab này (settled: 1 lần; chưa settle: poll).
  */
 export function AnalyticsSection({ active }: { active: boolean }) {
   const { effectiveDrawId, isSettled } = useDrawContext();
@@ -81,8 +81,8 @@ export function AnalyticsSection({ active }: { active: boolean }) {
     s.stats ? toTenantRows(s.stats) : [],
   );
 
-  // Timer 2 — chỉ chạy khi tab mở & chưa settle (analysis §4.2).
-  const { data: liveData } = useLiveFeed(effectiveDrawId, active && !isSettled);
+  // Timer 2 — chạy khi tab mở; settled = fetch 1 lần (không poll).
+  const { data: liveData } = useLiveFeed(effectiveDrawId, active, isSettled);
 
   const liveEntries: LiveFeedEntry[] = useMemo(() => {
     if (!liveData) {

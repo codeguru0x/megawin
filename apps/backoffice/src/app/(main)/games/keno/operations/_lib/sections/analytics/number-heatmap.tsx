@@ -24,9 +24,13 @@ import {
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
 import {
+  getHeatLevel,
+  HEAT_BADGE_STYLES_BLUE,
+  HEAT_CELL_BG_BLUE,
   NumberHeatmapCellDetail,
   NumberHeatmapHoverLayer,
   useNumberHeatmapHover,
+  type HeatLevelName,
 } from "@/components/games/shared/number-heatmap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,46 +62,10 @@ import { useComboLookup } from "../../use-operations";
 const KENO_HEX = GAME_COLORS[GameProduct.Keno].hex; // "#0284c7" sky-700
 const KENO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
-// ─── Heatmap Intensity Scale (amber chung — P1-05) ───────────────────────────
-// 5 cấp: cold→low→mid→warm→hot. Hot giữ ring-2 để nổi so với warm cùng hue.
-
-type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
-
-const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
-  cold: "bg-amber-100/80 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
-  low: "bg-amber-200/80 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200",
-  mid: "bg-amber-400 text-amber-950 dark:bg-amber-600 dark:text-white",
-  warm: "bg-amber-600 text-white dark:bg-amber-500",
-  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50 dark:bg-amber-500",
-};
-
-const HEAT_CELL_BG: Record<HeatLevel, string> = {
-  cold: "",
-  low: "",
-  mid: "bg-amber-50/40 dark:bg-amber-950/10",
-  warm: "bg-amber-50/70 dark:bg-amber-950/20",
-  hot: "bg-amber-50/60 dark:bg-amber-950/15",
-};
-
-function getHeatLevel(count: number, maxCount: number): HeatLevel {
-  if (count === 0 || maxCount === 0) {
-    return "cold";
-  }
-  const ratio = count / maxCount;
-  if (ratio >= 0.8) {
-    return "hot";
-  }
-  if (ratio >= 0.55) {
-    return "warm";
-  }
-  if (ratio >= 0.3) {
-    return "mid";
-  }
-  if (ratio >= 0.1) {
-    return "low";
-  }
-  return "cold";
-}
+// Heat intensity: shared financial-cool blue — `@/components/games/shared/number-heatmap/heat-scale`.
+type HeatLevel = HeatLevelName;
+const HEAT_BADGE_STYLES = HEAT_BADGE_STYLES_BLUE;
+const HEAT_CELL_BG = HEAT_CELL_BG_BLUE;
 
 // ─── Number Badge ─────────────────────────────────────────────────────────────
 
@@ -159,10 +127,6 @@ export function NumberBadge({
 
 function NumberCell({
   n,
-  col,
-  row,
-  totalCols,
-  totalRows,
   heatLevel,
   selected,
   onToggle,
@@ -170,10 +134,6 @@ function NumberCell({
   onHoverLeave,
 }: {
   n: NumberFreqItem;
-  col: number;
-  row: number;
-  totalCols: number;
-  totalRows: number;
   heatLevel: HeatLevel;
   /** Đang được chọn — ô hiện ring sky nổi bật. */
   selected: boolean;
@@ -182,20 +142,18 @@ function NumberCell({
   onHoverLeave: () => void;
 }) {
   const isEmpty = n.sets === 0;
-  const isLastCol = col === totalCols - 1;
-  const isLastRow = row === totalRows - 1;
   const cellBg = isEmpty ? "" : HEAT_CELL_BG[heatLevel];
 
+  // Mỗi ô = card riêng (border + rounded) + grid gap ở cha → nền heat cùng màu
+  // không dính thành 1 khối (bug bảng liền viền border-r/border-b trước đây).
   const cellClass = cn(
-    "relative w-full text-left transition-colors select-none",
-    "border-border/50 border-r border-b",
-    isLastCol && "border-r-0",
-    isLastRow && "border-b-0",
+    "relative w-full rounded-md border text-left transition-colors select-none",
+    "border-border/60",
     HEATMAP_CELL_PT,
     "px-1 pb-1.5",
     cellBg || "bg-card",
     "cursor-pointer hover:bg-sky-100/50 dark:hover:bg-sky-950/30",
-    selected && "bg-sky-100/80 ring-2 ring-sky-500 ring-inset dark:bg-sky-900/40",
+    selected && "border-sky-500 bg-sky-100/80 ring-2 ring-sky-500/40 dark:bg-sky-900/40",
   );
 
   return (
@@ -234,9 +192,8 @@ function NumberCell({
 
 // ─── Grid 10 × 8 — 80 số ─────────────────────────────────────────────────────
 
-/** Số cột grid — layout UI (Keno 80 số → 10 cột × 8 hàng). TOTAL số đến từ KENO_ALL_NUMBERS. */
+/** Số cột grid — layout UI (Keno 80 số → 10 cột × 8 hàng). Tập số đến từ KENO_ALL_NUMBERS. */
 const COLS = 10;
-const TOTAL = KENO_ALL_NUMBERS.length;
 
 /**
  * Ngưỡng dữ liệu thưa: tổng số bộ cược < 10 → heatmap chưa có ý nghĩa thống kê,
@@ -260,7 +217,6 @@ function KenoGrid({
   const totalAmount = numbers.reduce((a, n) => a + n.amount, 0);
   // Heat intensity theo DÒNG TIỀN — số nóng = số bị dồn tiền nhiều nhất.
   const maxAmount = numbers.reduce((a, n) => Math.max(a, n.amount), 0);
-  const totalRows = Math.ceil(TOTAL / COLS);
   const isSparse = totalSets > 0 && totalSets < SPARSE_DATA_THRESHOLD;
 
   return (
@@ -290,10 +246,10 @@ function KenoGrid({
         </div>
       </div>
       <div
-        className="border-border/50 grid [grid-template-columns:var(--grid-cols)] overflow-hidden rounded-md border"
+        className="grid [grid-template-columns:var(--grid-cols)] gap-1"
         style={{ "--grid-cols": `repeat(${COLS}, 1fr)` } as React.CSSProperties}
       >
-        {KENO_ALL_NUMBERS.map((num, i) => {
+        {KENO_ALL_NUMBERS.map((num) => {
           const n = byNum.get(num) ?? {
             number: num,
             sets: 0,
@@ -303,10 +259,6 @@ function KenoGrid({
             <NumberCell
               key={num}
               n={n}
-              col={i % COLS}
-              row={Math.floor(i / COLS)}
-              totalCols={COLS}
-              totalRows={totalRows}
               heatLevel={getHeatLevel(n.amount, maxAmount)}
               selected={selected.has(num)}
               onToggle={onToggle}

@@ -23,13 +23,13 @@
 
 ## 2. Các phase (độc lập, làm theo thứ tự ưu tiên rủi ro thấp → cao)
 
-| # | Phase | File | Số warning liên quan | Rủi ro |
-|---|---|---|---:|---|
-| 1 | Đơn giản hoá màu theo game (hero card, draw-action panel) | [`p1-01-game-color-simplification.md`](p1-01-game-color-simplification.md) | phần còn lại của `no-raw-colors` sau track an toàn (~gradient/border/text theo game) | Trung bình — đổi decorative, không đổi semantic |
-| 2 | Hợp nhất màu status badge — đổi literal → token semantic (Draw/Ticket/Entry × 7 game) | [`p1-02-status-badge-unification.md`](p1-02-status-badge-unification.md) | 0 warning mới (P0-05 đã dedup ở track an toàn) — phase này chỉ đổi giá trị trong 1 file `status-badge-tone.ts` | Trung bình — đổi từ literal sang token opacity, màu gần giống nhưng không byte-identical |
-| 3 | Non-typography arbitrary (border/ring/shadow/width...) | [`p1-03-typography-arbitrary-values.md`](p1-03-typography-arbitrary-values.md) | phần còn lại của `no-arbitrary-values` sau P0-06 (~70, phần lớn 578 typography đã xử ở track an toàn) | Thấp — số lượng nhỏ, review từng case |
-| 4 | `no-restyle` — spacing/typography override thật (2039) | [`p1-04-restyle-spacing-typography.md`](p1-04-restyle-spacing-typography.md) | `no-restyle` (2039) | Cao nhất — nhiều override CÓ CHỦ ĐÍCH, cần quyết định giữ (justify + suppress) hay bỏ (đổi UI) |
-| 5 | Hợp nhất hue heatmap (Mega645/Power655/Lotto535/Keno) về 1 hue amber chung | [`p1-05-heatmap-hue-unification.md`](p1-05-heatmap-hue-unification.md) | không phải oxlint warning — thuộc `operations-page-ui.mdc`, cần sửa CẢ rule lẫn code | Trung bình — mất per-game hue tại heatmap, đổi rule đã publish — **DONE 19/09** |
+| # | Phase | File | Status (2026-09-20) | Rủi ro |
+|---|---|---|---|---|
+| 1 | Đơn giản hoá màu theo game (hero card, draw-action panel) | [`p1-01`](p1-01-game-color-simplification.md) | **DONE** (`cbdd949c`) — mono-tone `gradientMutedFrom` | Trung bình |
+| 2 | Hợp nhất màu status badge → token semantic | [`p1-02`](p1-02-status-badge-unification.md) | **DONE** (`9d2b7e13`) — `status-*` tokens + 17 call site | Trung bình |
+| 3 | Non-typography arbitrary (border/ring/shadow/width...) | [`p1-03`](p1-03-typography-arbitrary-values.md) | **DONE** (`f22e6d8e`) — `no-arbitrary-values` = 0 | Thấp |
+| 4 | `no-restyle` — spacing/typography override thật | [`p1-04`](p1-04-restyle-spacing-typography.md) | **PARTIAL** — 2a + contract xong (~−1494); leftover color raw / compact Button / effect cần review ảnh từng khu vực — **KHÔNG suppress hàng loạt** | Cao nhất |
+| 5 | Hợp nhất hue heatmap → 1 scale chung | [`p1-05`](p1-05-heatmap-hue-unification.md) | **DONE** (branch `visual/p1-05-heatmap`) — financial-cool **blue** (+ indigo Lotto Special); kèm fix draw-selector + live-feed settled | Trung bình |
 
 ## 3. Định nghĩa "Definition of Done" cho toàn track (đã chốt với user 19/09/2026)
 
@@ -44,8 +44,10 @@ rõ ràng (theo `oxlint-lint-conventions.mdc` §d), **không** dùng như cách 
 - Mỗi phase DONE khi: (a) khu vực đó hết warning liên quan MÀ KHÔNG dựa vào suppression diện rộng,
   (b) mọi page bị đổi đã được user duyệt ảnh trước/sau, (c) có Playwright screenshot spec mới bảo
   vệ page đó (nhóm màn hình quan trọng: dashboard, draws, jackpot, operations).
-- Track VISUAL coi là DONE toàn bộ khi tất cả 4 phase (P1-01 → P1-04) đã đi qua từng khu vực theo
+- Track VISUAL coi là DONE toàn bộ khi tất cả 5 phase (P1-01 → P1-05) đã đi qua từng khu vực theo
   đúng tinh thần trên — không có "khoanh vùng còn lại rồi suppress cho gọn".
+  **Hiện trạng 20/09:** P1-01/02/03/05 DONE; P1-04 còn leftover ~758 `no-restyle` + phần lớn
+  `no-raw-colors` (~4k) nằm ngoài scope 2a đã xong — mở slice mới khi chọn khu vực UI cụ thể.
 
 ## 4. Quy ước áp dụng cho mọi phase kể từ đây
 

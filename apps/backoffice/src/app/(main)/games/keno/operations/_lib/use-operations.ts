@@ -238,10 +238,16 @@ export function useComboLookup(drawId: string | undefined) {
  * Live feed: N entries mới nhất của 1 kỳ Keno — **timer 2** (analysis §4.2).
  *
  * Đọc live entries (KHÔNG nằm trong stats doc) nên vẫn cần endpoint riêng.
- * `enabled` gate ở caller (`onAnalysisTab && !isSettled`) để chỉ chạy khi tab Phân
- * tích mở. Nhịp poll khớp `pollMs` (mặc định 10s) — dừng khi settled.
+ * `enabled` gate ở caller (`onAnalysisTab`) — chỉ chạy khi tab Phân tích mở.
+ * Kỳ đã settle: fetch 1 lần, không poll (`staleTime` Infinity).
+ * Kỳ đang chạy: poll theo `pollMs` (mặc định 10s).
+ *
+ * @param drawId - Kỳ cần đọc; `undefined` → query tắt.
+ * @param enabled - Tab Phân tích đang mở.
+ * @param isSettled - Kỳ đã settle → dừng poll.
+ * @param pollMs - Nhịp poll khi chưa settle.
  */
-export function useLiveFeed(drawId: string | undefined, enabled: boolean, pollMs = 10_000) {
+export function useLiveFeed(drawId: string | undefined, enabled: boolean, isSettled = false, pollMs = 10_000) {
   return useQuery({
     queryKey: kenoKeys.opsLiveEntries(drawId ?? ""),
     queryFn: () =>
@@ -249,8 +255,8 @@ export function useLiveFeed(drawId: string | undefined, enabled: boolean, pollMs
         params: { drawId: drawId! },
       }),
     enabled: !!drawId && enabled,
-    refetchInterval: enabled ? pollMs : false,
-    staleTime: pollMs * 0.8,
+    refetchInterval: enabled && !isSettled ? pollMs : false,
+    staleTime: isSettled ? Infinity : pollMs * 0.8,
   });
 }
 

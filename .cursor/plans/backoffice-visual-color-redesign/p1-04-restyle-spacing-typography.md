@@ -1,8 +1,14 @@
 # P1-04 — `no-restyle` (2039 warning) — override spacing/typography/shape ngoài contract
 
-## Status (2026-09-19) — đang làm trên `visual/p1-04-restyle`
+## Status (2026-09-20) — PARTIAL (2a + contract DONE; leftover cần review ảnh)
 
-Baseline sau P1-03: **2262** `no-restyle` → … → slice-4 **~768** (−1494 tổng). Contract/2a an toàn coi như hết.
+Branch đã merge vào chuỗi visual (`2e33e8a1` → `7d4317a2`). Baseline sau P1-03: **2262**
+`no-restyle` → slice-4 **~768** (−1494 tổng). **Contract/2a an toàn coi như hết.**
+
+**Không coi leftover là "còn làm nốt trong 1 PR":** ~758 còn lại chủ yếu color raw trên
+Button/Card (action tint / game palette) + compact `h-7`/`text-xs` + effect — thuộc 2b/2c,
+**bắt buộc review ảnh từng khu vực**, cấm suppress hàng loạt (`00-overview.md` §3). Mở
+slice mới khi user chọn khu vực UI cụ thể (VD Ops Hub Keno, jackpot cards…).
 
 ### Đã làm (2a + nới contract có giải trình)
 

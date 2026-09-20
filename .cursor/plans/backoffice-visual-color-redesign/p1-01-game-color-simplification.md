@@ -1,5 +1,10 @@
 # P1-01 — Đơn giản hoá màu theo game (hero card, draw-action panel)
 
+## Status (2026-09-19) — DONE
+
+Commit `cbdd949c`. `GameColorTokens.gradientMutedFrom` thay 6 field gradient cũ; 3 jackpot
+hero + draw-action panels dùng token `--game-*-muted` (mono-tone, tự đúng light/dark).
+
 **Quyết định đã chốt ở** [`backoffice-lint-color-cleanup/00-overview.md`](../backoffice-lint-color-cleanup/00-overview.md)
 §2.3: **GIỮ** màu game làm token nhận diện (badge, icon, chart, border) — **BỎ** lớp gradient
 trang trí đa-tầng đa-hue (3-6 stop, mỗi stop 1 màu Tailwind palette khác nhau × light/dark) trên
