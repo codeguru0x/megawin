@@ -42,7 +42,7 @@ const createAccountSchema = z.object({
 type CreateAccountValues = z.infer<typeof createAccountSchema>;
 
 /** Tính độ mạnh password 0–4 dựa trên length + complexity. */
-function getPasswordStrength(pwd: string): number {
+function getPasswordStrength(pwd: string): 0 | 1 | 2 | 3 | 4 {
   if (pwd.length === 0) {
     return 0;
   }
@@ -62,7 +62,7 @@ function getPasswordStrength(pwd: string): number {
   if (/[^A-Za-z0-9]/.test(pwd)) {
     score++;
   }
-  return Math.min(score, 4);
+  return Math.min(score, 4) as 0 | 1 | 2 | 3 | 4;
 }
 
 const STRENGTH_CONFIG = [
@@ -95,7 +95,7 @@ export function CreateCompanyAccountDialog() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { data: session } = useSession();
-  const currentRoles = (session?.user as { roles?: string[] })?.roles ?? [];
+  const currentRoles = session?.user != null ? ((session.user as { roles?: string[] }).roles ?? []) : [];
   const isCurrentAdmin = currentRoles.includes(CompanyRole.Admin);
 
   // Nếu không phải admin thì chỉ được tạo tài khoản staff — lọc options hiển thị
@@ -115,7 +115,7 @@ export function CreateCompanyAccountDialog() {
 
   const selectedRoles = useWatch({ control: form.control, name: "roles" });
   const passwordValue = useWatch({ control: form.control, name: "password" });
-  const strength = getPasswordStrength(passwordValue ?? "");
+  const strength = getPasswordStrength(passwordValue);
 
   const mutation = useMutation({
     mutationFn: (values: CreateAccountValues) =>
@@ -244,20 +244,20 @@ export function CreateCompanyAccountDialog() {
                     </Button>
                   </div>
                   {/* Password strength bar */}
-                  {(passwordValue?.length ?? 0) > 0 && (
+                  {passwordValue.length > 0 && (
                     <div className="space-y-1">
                       <div className="flex gap-1">
-                        {Array.from({ length: 4 }).map((_, i) => (
+                        {(["s0", "s1", "s2", "s3"] as const).map((id, i) => (
                           <div
-                            key={i}
+                            key={id}
                             className={cn(
                               "h-1 flex-1 rounded-full transition-all duration-300",
-                              i < strength ? (STRENGTH_CONFIG[strength]?.color ?? "bg-muted") : "bg-muted",
+                              i < strength ? STRENGTH_CONFIG[strength].color : "bg-muted",
                             )}
                           />
                         ))}
                       </div>
-                      <p className="text-muted-foreground text-xs">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
+                      <p className="text-muted-foreground text-xs">Độ mạnh: {STRENGTH_CONFIG[strength].label}</p>
                     </div>
                   )}
                   <FormMessage className="text-xs" />
@@ -274,9 +274,9 @@ export function CreateCompanyAccountDialog() {
                   <FormLabel className="text-xs font-medium">Phân quyền</FormLabel>
                   <div className="grid gap-2">
                     {availableRoleOptions.map((opt) => {
-                      const checked = selectedRoles?.includes(opt.value);
+                      const checked = selectedRoles.includes(opt.value);
                       const meta = ROLE_META[opt.value as CompanyRole];
-                      const RoleIcon = meta?.icon ?? User;
+                      const RoleIcon = meta.icon;
                       return (
                         <button
                           key={opt.value}
@@ -290,13 +290,13 @@ export function CreateCompanyAccountDialog() {
                           )}
                         >
                           <div
-                            className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", meta?.iconBg)}
+                            className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", meta.iconBg)}
                           >
-                            <RoleIcon className={cn("size-4", meta?.iconColor)} />
+                            <RoleIcon className={cn("size-4", meta.iconColor)} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm leading-none font-medium">{opt.label}</p>
-                            <p className="text-muted-foreground mt-0.5 text-xs">{meta?.description}</p>
+                            <p className="text-muted-foreground mt-0.5 text-xs">{meta.description}</p>
                           </div>
                           <div
                             className={cn(

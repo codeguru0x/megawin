@@ -324,7 +324,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 )}
               </p>
               <div className="space-y-2">
-                {allBoardSnapshots.map((snapshot, i) => {
+                {allBoardSnapshots.map((snapshot) => {
                   const boardColor = boardColorVar(snapshot.boardNo);
                   const bp = payoutByBoardNo.get(snapshot.boardNo);
                   const isSideBet = BINGO18_SIDE_BET_PLAY_TYPE_SET.has(snapshot.playType);
@@ -364,16 +364,13 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         Tổng {snapshot.sum}
                       </span>
                     );
-                  } else if (snapshot.playType === "bigSmallDraw") {
-                    const betLabel = snapshot.bet
-                      ? (BINGO18_BIG_SMALL_BET_LABELS[snapshot.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ??
-                        snapshot.bet)
-                      : "—";
+                  } else {
+                    // Còn lại chỉ bigSmallDraw (PlayType union 5 giá trị).
+                    const betLabel =
+                      BINGO18_BIG_SMALL_BET_LABELS[snapshot.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS];
                     selectionContent = (
                       <span className="bg-secondary rounded px-2 py-0.5 text-xs font-semibold">{betLabel}</span>
                     );
-                  } else {
-                    selectionContent = <span className="text-muted-foreground">—</span>;
                   }
 
                   let outcomeContent: React.ReactNode = null;
@@ -398,7 +395,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
                   return (
                     <div
-                      key={i}
+                      key={snapshot.boardNo}
                       className="grid [grid-template-columns:2rem_8rem_1fr] items-start gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
@@ -409,8 +406,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       </div>
                       <div className="flex flex-col gap-0.5 pt-0.5">
                         <span className="text-foreground text-2xs leading-tight font-semibold">
-                          {BINGO18_PLAY_TYPE_LABELS[snapshot.playType as keyof typeof BINGO18_PLAY_TYPE_LABELS] ??
-                            snapshot.playType}
+                          {BINGO18_PLAY_TYPE_LABELS[snapshot.playType as keyof typeof BINGO18_PLAY_TYPE_LABELS]}
                         </span>
                         {snapshot.betCount > 1 && (
                           <span className="text-muted-foreground text-3xs leading-tight">×{snapshot.betCount}</span>
@@ -433,7 +429,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <p className="text-muted-foreground text-2xs font-medium tracking-wide uppercase">Danh sách cược</p>
                 </div>
                 <div className="space-y-2">
-                  {allBoardSnapshots.map((snapshot, i) => {
+                  {allBoardSnapshots.map((snapshot) => {
                     const boardColor = boardColorVar(snapshot.boardNo);
 
                     let selectionContent: React.ReactNode;
@@ -467,21 +463,18 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           Tổng {snapshot.sum}
                         </span>
                       );
-                    } else if (snapshot.playType === "bigSmallDraw") {
-                      const betLabel = snapshot.bet
-                        ? (BINGO18_BIG_SMALL_BET_LABELS[snapshot.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ??
-                          snapshot.bet)
-                        : "—";
+                    } else {
+                      // Còn lại chỉ bigSmallDraw (PlayType union 5 giá trị).
+                      const betLabel =
+                        BINGO18_BIG_SMALL_BET_LABELS[snapshot.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS];
                       selectionContent = (
                         <span className="bg-secondary rounded px-2 py-0.5 text-xs font-semibold">{betLabel}</span>
                       );
-                    } else {
-                      selectionContent = <span className="text-muted-foreground">—</span>;
                     }
 
                     return (
                       <div
-                        key={i}
+                        key={snapshot.boardNo}
                         className="grid [grid-template-columns:2rem_8rem_1fr] items-start gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
@@ -492,8 +485,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         </div>
                         <div className="flex flex-col gap-0.5 pt-0.5">
                           <span className="text-foreground text-2xs leading-tight font-semibold">
-                            {BINGO18_PLAY_TYPE_LABELS[snapshot.playType as keyof typeof BINGO18_PLAY_TYPE_LABELS] ??
-                              snapshot.playType}
+                            {BINGO18_PLAY_TYPE_LABELS[snapshot.playType as keyof typeof BINGO18_PLAY_TYPE_LABELS]}
                           </span>
                           {snapshot.betCount > 1 && (
                             <span className="text-muted-foreground text-3xs leading-tight">×{snapshot.betCount}</span>

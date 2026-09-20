@@ -124,12 +124,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   // Tất cả bộ ba số kết quả — dùng để highlight triplets trên board
   const result = entry.result;
   const resultTriplets = result
-    ? new Set<string>([
-        ...(result.special ?? []),
-        ...(result.first ?? []),
-        ...(result.second ?? []),
-        ...(result.third ?? []),
-      ])
+    ? new Set<string>([...result.special, ...result.first, ...result.second, ...result.third])
     : new Set<string>();
 
   const tenantUsername = toTenantUsername(entry.username);
@@ -329,7 +324,7 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     { label: "Ba", values: result.third },
                   ] as { label: string; values: string[] }[]
                 ).map(({ label, values }) =>
-                  values?.length ? (
+                  values.length ? (
                     <div key={label} className="flex flex-wrap items-center gap-1.5">
                       <span className="text-muted-foreground text-2xs w-16 shrink-0">{label}</span>
                       {values.map((t) => (

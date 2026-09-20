@@ -18,7 +18,8 @@
 | **S7a DONE** (20/09) | `require-array-sort-compare` **12→0** — play-rules mega645/power655/max3d/max3dpro `.sort((a,b)=>a-b)`. |
 | **S6 partial** (20/09) | Shared skeleton slots + lifecycle `key={step.label}` + outstanding TableSkeleton + settle `key={board.boardNo}` (5 game). array-index còn ~160. |
 | **S3d partial** (20/09) | Snapshot `stats?.updatedAt.getTime`; adapters LABEL; resettle narrow `preflightResult`; publish `showDiff && diff.diffIndices`; compute `playerCount`; `useUserRoles` guard. |
-| Còn lại | unnecessary ~250; non-null 173; array-index ~160; set-state 53; base-to-string 33; any 128 |
+| **S3e + S6b** (20/09) | Accounts/agents tables LABEL+mfa; create-account ROLE_META/strength; profile labels; entry-detail LABEL/`??` (lotto/mega/max3d/max3dpro/power); bingo18 `key={boardNo}`; max3dpro playMode dead branch. |
+| Còn lại | unnecessary ~190; non-null 173; array-index ~150; set-state 53; base-to-string 32 |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ### Ma trận rủi ro S3→S9 (quyết định tiếp tục)

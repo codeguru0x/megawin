@@ -93,9 +93,9 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const winningSpecial = (entry.result as any)?.winningSpecial as string | undefined;
 
   // Tập hợp tất cả số chính khách đã chọn — dùng highlight trên kết quả
-  const allPickedMain = new Set<string>(boards.flatMap((b) => b.mainNumbers ?? []));
+  const allPickedMain = new Set<string>(boards.flatMap((b) => b.mainNumbers));
   // Tất cả số đặc biệt khách đã chọn
-  const allPickedSpecial = new Set<string>(boards.flatMap((b) => b.specialNumbers ?? []));
+  const allPickedSpecial = new Set<string>(boards.flatMap((b) => b.specialNumbers));
 
   const tenantUsername = toTenantUsername(entry.username);
   const playerLink = `/accounts/players/${entry.accountId}` as Route;
@@ -312,10 +312,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2.5">
                 {boards.map((board) => {
-                  const playLabel =
-                    board.playType === "standard"
-                      ? null
-                      : (LOTTO535_PLAY_TYPE_LABELS[board.playType] ?? board.playType);
+                  const playLabel = board.playType === "standard" ? null : LOTTO535_PLAY_TYPE_LABELS[board.playType];
                   const boardColor = boardColorVar(board.boardNo);
                   return (
                     <div
@@ -373,10 +370,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2.5">
                   {boards.map((board) => {
-                    const playLabel =
-                      board.playType === "standard"
-                        ? null
-                        : (LOTTO535_PLAY_TYPE_LABELS[board.playType] ?? board.playType);
+                    const playLabel = board.playType === "standard" ? null : LOTTO535_PLAY_TYPE_LABELS[board.playType];
                     const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
@@ -431,7 +425,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   >
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">
-                        {LOTTO535_PRIZE_TIER_LABELS[tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS] ?? tier.tier}
+                        {LOTTO535_PRIZE_TIER_LABELS[tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS]}
                       </Badge>
                       <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
                         ×{tier.hitCount} lần

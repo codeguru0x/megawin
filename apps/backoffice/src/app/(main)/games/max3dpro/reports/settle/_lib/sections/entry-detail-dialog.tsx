@@ -56,10 +56,8 @@ function playModeLabel(board: EntryBoardSnapshot): string | null {
     const n = board.triplets.length;
     return `Bao ${n} bộ`;
   }
-  if (board.playMode === "multiDigit") {
-    return "Bao chữ số";
-  }
-  return null;
+  // PlayMode chỉ còn multiDigit sau nhánh trên — luôn "Bao chữ số".
+  return "Bao chữ số";
 }
 
 // ─── Draw Result Sets (để highlight triplets đã trúng) ───────────────────────
@@ -68,12 +66,7 @@ function buildResultSet(result: TicketEntryEntity["result"]): Set<string> {
   if (!result) {
     return new Set();
   }
-  return new Set([
-    ...(result.special ?? []),
-    ...(result.first ?? []),
-    ...(result.second ?? []),
-    ...(result.third ?? []),
-  ]);
+  return new Set([...result.special, ...result.first, ...result.second, ...result.third]);
 }
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
@@ -330,7 +323,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     { label: "Giải Ba", values: entry.result.third },
                   ] as { label: string; values: string[] }[]
                 ).map(({ label, values }) =>
-                  values?.length ? (
+                  values.length ? (
                     <div key={label} className="flex flex-wrap items-center gap-1.5">
                       <span className="text-muted-foreground text-2xs w-16 shrink-0">{label}</span>
                       {values.map((t) => (

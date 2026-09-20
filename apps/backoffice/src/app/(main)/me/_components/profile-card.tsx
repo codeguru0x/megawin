@@ -83,7 +83,7 @@ export function ProfileCard() {
     );
   }
 
-  const mfaConfig = mfaStatusConfig[data.mfaStatus as keyof typeof mfaStatusConfig] ?? mfaStatusConfig.none;
+  const mfaConfig = mfaStatusConfig[data.mfaStatus as keyof typeof mfaStatusConfig];
   const MfaIcon = mfaConfig.icon;
 
   return (
@@ -112,9 +112,7 @@ export function ProfileCard() {
             icon={<Briefcase className="size-4" />}
             label="Loại tài khoản"
             value={
-              <Badge variant="outline">
-                {AccountTypeLabel[data.accountType as keyof typeof AccountTypeLabel] ?? data.accountType}
-              </Badge>
+              <Badge variant="outline">{AccountTypeLabel[data.accountType as keyof typeof AccountTypeLabel]}</Badge>
             }
           />
           <InfoRow
@@ -134,8 +132,8 @@ export function ProfileCard() {
             icon={<Shield className="size-4" />}
             label="Trạng thái"
             value={
-              <Badge variant={statusBadgeVariant[data.status] ?? "outline"}>
-                {AccountStatusLabel[data.status as keyof typeof AccountStatusLabel] ?? data.status}
+              <Badge variant={statusBadgeVariant[data.status]}>
+                {AccountStatusLabel[data.status as keyof typeof AccountStatusLabel]}
               </Badge>
             }
           />
@@ -143,9 +141,7 @@ export function ProfileCard() {
             icon={<MfaIcon className={`size-4 ${mfaConfig.color}`} />}
             label="Xác thực 2 lớp (MFA)"
             value={
-              <Badge variant={mfaConfig.variant}>
-                {MfaStatusLabel[data.mfaStatus as keyof typeof MfaStatusLabel] ?? data.mfaStatus}
-              </Badge>
+              <Badge variant={mfaConfig.variant}>{MfaStatusLabel[data.mfaStatus as keyof typeof MfaStatusLabel]}</Badge>
             }
           />
           <InfoRow

@@ -172,7 +172,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <Building2 className="size-3.5 shrink-0" />
                 Đại lý
               </span>
-              <span className="font-semibold">{entry.tenantId ?? "—"}</span>
+              <span className="font-semibold">{entry.tenantId}</span>
             </div>
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground text-2xs flex items-center gap-1.5">
@@ -303,7 +303,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2.5">
                 {boards.map((board) => {
-                  const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
+                  const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType];
                   const isStandard = board.playType === PlayType.Standard;
                   const boardColor = boardColorVar(board.boardNo);
                   return (
@@ -345,7 +345,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2.5">
                   {boards.map((board) => {
-                    const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
+                    const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType];
                     const isStandard = board.playType === PlayType.Standard;
                     const boardColor = boardColorVar(board.boardNo);
                     return (
@@ -400,9 +400,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier}
-                        </Badge>
+                        <Badge variant="secondary">{MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier]}</Badge>
                         <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
                           ×{tier.hitCount} lần
                         </span>

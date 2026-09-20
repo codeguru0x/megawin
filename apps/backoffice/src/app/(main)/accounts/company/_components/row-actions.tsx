@@ -22,7 +22,7 @@ export function AccountRowActions({ account }: { account: CompanyAccount }) {
   const [passwordOpen, setPasswordOpen] = useState(false);
 
   const { data: session } = useSession();
-  const currentRoles = (session?.user as { roles?: string[] })?.roles ?? [];
+  const currentRoles = session?.user != null ? ((session.user as { roles?: string[] }).roles ?? []) : [];
   const isCurrentAdmin = currentRoles.includes(CompanyRole.Admin);
   const targetIsAdmin = account.roles.includes(CompanyRole.Admin);
 

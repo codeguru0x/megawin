@@ -1,6 +1,6 @@
 "use client";
 
-import { AccountStatusLabel, MfaStatus, MfaStatusLabel, type AccountStatus } from "@megawin/identity/entities";
+import { AccountStatusLabel, MfaStatusLabel, type AccountStatus, type MfaStatus } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { List } from "lucide-react";
 
@@ -83,7 +83,7 @@ export function AgentAccountsTable() {
 
 function AgentAccountRow({ account, index }: { account: AgentAccount; index: number }) {
   const status = account.status as AccountStatus;
-  const mfa = (account.mfaStatus ?? MfaStatus.None) as MfaStatus;
+  const mfa = account.mfaStatus as MfaStatus;
 
   return (
     <TableRow>
@@ -100,10 +100,10 @@ function AgentAccountRow({ account, index }: { account: AgentAccount; index: num
         </Badge>
       </TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>
+        <Badge variant={STATUS_VARIANT[status]}>{AccountStatusLabel[status]}</Badge>
       </TableCell>
       <TableCell>
-        <Badge variant={MFA_VARIANT[mfa] ?? "outline"}>{MfaStatusLabel[mfa] ?? mfa}</Badge>
+        <Badge variant={MFA_VARIANT[mfa]}>{MfaStatusLabel[mfa]}</Badge>
       </TableCell>
       <TableCell className="text-muted-foreground text-sm tabular-nums">
         {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}

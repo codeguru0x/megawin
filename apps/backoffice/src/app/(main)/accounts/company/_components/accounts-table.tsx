@@ -3,10 +3,10 @@
 import {
   AccountStatusLabel,
   CompanyRoleLabel,
-  MfaStatus,
   MfaStatusLabel,
   type AccountStatus,
   type CompanyRole,
+  type MfaStatus,
 } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { List } from "lucide-react";
@@ -90,7 +90,7 @@ export function CompanyAccountsTable() {
 
 function CompanyAccountRow({ account, index }: { account: CompanyAccount; index: number }) {
   const status = account.status as AccountStatus;
-  const mfa = (account.mfaStatus ?? MfaStatus.None) as MfaStatus;
+  const mfa = account.mfaStatus as MfaStatus;
 
   return (
     <TableRow>
@@ -105,16 +105,16 @@ function CompanyAccountRow({ account, index }: { account: CompanyAccount; index:
         <div className="flex flex-wrap gap-1">
           {account.roles.map((role) => (
             <Badge key={role} variant="secondary">
-              {CompanyRoleLabel[role as CompanyRole] ?? role}
+              {CompanyRoleLabel[role as CompanyRole]}
             </Badge>
           ))}
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>
+        <Badge variant={STATUS_VARIANT[status]}>{AccountStatusLabel[status]}</Badge>
       </TableCell>
       <TableCell>
-        <Badge variant={MFA_VARIANT[mfa] ?? "outline"}>{MfaStatusLabel[mfa] ?? mfa}</Badge>
+        <Badge variant={MFA_VARIANT[mfa]}>{MfaStatusLabel[mfa]}</Badge>
       </TableCell>
       <TableCell className="text-muted-foreground text-sm tabular-nums">
         {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}
