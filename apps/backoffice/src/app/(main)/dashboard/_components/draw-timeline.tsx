@@ -154,6 +154,10 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
+/** Slot id cố định — skeleton tĩnh không reorder; tránh `key={index}`. */
+const COL_SLOTS = ["col-active", "col-settled", "col-scheduled"] as const;
+const ROW_SLOTS = ["r0", "r1", "r2", "r3"] as const;
+
 export function DrawTimelineSkeleton() {
   return (
     <Card className="gap-0 py-0">
@@ -162,11 +166,11 @@ export function DrawTimelineSkeleton() {
       </CardHeader>
       <CardContent className="px-5 pt-0 pb-4">
         <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, c) => (
-            <div key={c} className="border-border/50 space-y-2 rounded-lg border p-3">
+          {COL_SLOTS.map((colId) => (
+            <div key={colId} className="border-border/50 space-y-2 rounded-lg border p-3">
               <Skeleton className="h-4 w-24" />
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-7 rounded-md" />
+              {ROW_SLOTS.map((rowId) => (
+                <Skeleton key={rowId} className="h-7 rounded-md" />
               ))}
             </div>
           ))}
@@ -273,8 +277,8 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
             accent="blue"
             emptyText="Không có kỳ nào đang diễn ra"
           >
-            {active.map((e, i) => (
-              <DrawEventRow key={`act-${e.gameProduct}-${i}`} event={e} />
+            {active.map((e) => (
+              <DrawEventRow key={`act-${e.gameProduct}-${e.drawId}`} event={e} />
             ))}
           </Column>
 
@@ -285,8 +289,8 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
             accent="emerald"
             emptyText="Chưa có kỳ nào hoàn thành"
           >
-            {settled.map((e, i) => (
-              <DrawEventRow key={`std-${e.gameProduct}-${i}`} event={e} />
+            {settled.map((e) => (
+              <DrawEventRow key={`std-${e.gameProduct}-${e.drawId}`} event={e} />
             ))}
           </Column>
 
@@ -297,8 +301,8 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
             accent="muted"
             emptyText="Không có kỳ sắp tới"
           >
-            {scheduled.map((e, i) => (
-              <DrawEventRow key={`sch-${e.gameProduct}-${i}`} event={e} />
+            {scheduled.map((e) => (
+              <DrawEventRow key={`sch-${e.gameProduct}-${e.drawId}`} event={e} />
             ))}
           </Column>
         </div>

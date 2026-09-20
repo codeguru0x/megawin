@@ -20,7 +20,8 @@
 | **S3d partial** (20/09) | Snapshot `stats?.updatedAt.getTime`; adapters LABEL; resettle narrow `preflightResult`; publish `showDiff && diff.diffIndices`; compute `playerCount`; `useUserRoles` guard. |
 | **S3e + S6b** (20/09) | Accounts/agents tables LABEL+mfa; create-account ROLE_META/strength; profile labels; entry-detail LABEL/`??` (lotto/mega/max3d/max3dpro/power); bingo18 `key={boardNo}`; max3dpro playMode dead branch. |
 | **S3f + S6c** (20/09) | Players STATUS/GAME_LABELS; outstanding `entries[0]`; resettle `key={n}`; publish `slot-${i}`/`msg`; draw-history/winning triplets; player settle skeletons. |
-| Còn lại | unnecessary ~166; array-index ~120+; non-null 173; set-state 53 |
+| **S3g + S6d** (20/09) | Alerts LABEL/counts; draw-mgmt LABEL+cast; entry-list `boards.length`; draw-history `special.map`; prizes `defaultPrizes`; dashboard/jackpot/tenant/by-game slot keys; winning `boardNo`/`tier`; bingo18 publish `d1..d3`. ops-section `config.ops ??` **giữ** (tsc optional). |
+| Còn lại | unnecessary **112**; array-index **62**; non-null 173; set-state 53 |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ### Ma trận rủi ro S3→S9 (quyết định tiếp tục)

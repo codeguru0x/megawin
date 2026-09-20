@@ -3,14 +3,18 @@ import type { CSSProperties } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+/** Slot id cố định — skeleton tĩnh không reorder; tránh `key={index}`. */
+const HERO_KPI_SLOTS = ["hero-0", "hero-1", "hero-2", "hero-3", "hero-4"] as const;
+const GAME_ROW_SLOTS = ["row-0", "row-1", "row-2", "row-3", "row-4", "row-5", "row-6"] as const;
+
 /**
  * Skeleton cho 5 Hero KPI cards — khớp layout rounded-xl border bg-card p-4.
  */
 export function HeroKpisSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
+      {HERO_KPI_SLOTS.map((id) => (
+        <div key={id} className="bg-card flex items-center gap-3 rounded-xl border p-4 shadow-sm">
           <Skeleton className="size-10 shrink-0 rounded-lg" />
           <div className="flex-1 space-y-1.5">
             <Skeleton className="h-3 w-20" />
@@ -32,8 +36,8 @@ export function GameTableSkeleton() {
       </CardHeader>
       <CardContent className="px-5 pt-0 pb-4">
         <div className="space-y-2.5">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4">
+          {GAME_ROW_SLOTS.map((id) => (
+            <div key={id} className="flex items-center gap-4">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 flex-1" />
               <Skeleton className="h-4 w-20" />

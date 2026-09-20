@@ -82,7 +82,7 @@ export function DrawManagementSection() {
       return {
         mode: "basic" as const,
         tier: tier as BasicPrizeTier,
-        label: MAX3D_BASIC_PRIZE_TIER_LABELS[tier as BasicPrizeTier] ?? String(tier),
+        label: MAX3D_BASIC_PRIZE_TIER_LABELS[tier as BasicPrizeTier],
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,
@@ -95,7 +95,7 @@ export function DrawManagementSection() {
       return {
         mode: "plus" as const,
         tier: tier as PlusPrizeTier,
-        label: MAX3D_PLUS_PRIZE_TIER_LABELS[tier as PlusPrizeTier] ?? String(tier),
+        label: MAX3D_PLUS_PRIZE_TIER_LABELS[tier as PlusPrizeTier],
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,
@@ -139,7 +139,7 @@ export function DrawManagementSection() {
       vietlottRef: d.vietlottRef
         ? {
             drawPeriod: d.vietlottRef.drawPeriod,
-            drawDate: String(d.vietlottRef.drawDate ?? ""),
+            drawDate: String(d.vietlottRef.drawDate),
           }
         : undefined,
     };

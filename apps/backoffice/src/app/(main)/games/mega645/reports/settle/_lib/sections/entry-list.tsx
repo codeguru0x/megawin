@@ -36,7 +36,7 @@ export function EntryList({
   const rows: EntryRow[] = data.map((entry) => ({
     id: entry.id,
     ticketNo: entry.entrySummary.ticketNo,
-    boardCount: entry.entrySummary.boards?.length ?? 0,
+    boardCount: entry.entrySummary.boards.length,
     lineCount: entry.lineCount,
     betUnitCount: entry.betUnitCount,
     amount: entry.amount,

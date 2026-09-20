@@ -92,7 +92,7 @@ export function DrawManagementSection() {
       const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
-        label: POWER655_PRIZE_TIER_LABELS[tier] ?? String(tier),
+        label: POWER655_PRIZE_TIER_LABELS[tier],
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,
@@ -141,12 +141,12 @@ export function DrawManagementSection() {
       return undefined;
     }
     return {
-      winningMain: (d.result.winningMain as string[]) ?? [],
-      bonusNumber: d.result.bonusNumber ?? "",
+      winningMain: d.result.winningMain as string[],
+      bonusNumber: d.result.bonusNumber,
       vietlottRef: d.vietlottRef
         ? {
             drawPeriod: d.vietlottRef.drawPeriod,
-            drawDate: String(d.vietlottRef.drawDate ?? ""),
+            drawDate: String(d.vietlottRef.drawDate),
           }
         : undefined,
     };

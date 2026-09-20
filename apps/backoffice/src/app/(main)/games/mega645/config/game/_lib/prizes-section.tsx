@@ -307,7 +307,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     const isJackpot = row.tier === "jackpot";
                     const defaultPrize = isJackpot
                       ? config.jackpot.seedAmount
-                      : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                      : config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes];
                     const expectedPayout = row.probability * defaultPrize;
                     const payoutRate = unitPrice > 0 ? (expectedPayout / unitPrice) * 100 : 0;
 
@@ -366,7 +366,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                             const isJP = row.tier === "jackpot";
                             const prize = isJP
                               ? config.jackpot.seedAmount
-                              : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                              : config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes];
                             return sum + row.probability * prize;
                           }, 0),
                         ),
@@ -378,7 +378,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                           const isJP = row.tier === "jackpot";
                           const prize = isJP
                             ? config.jackpot.seedAmount
-                            : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                            : config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes];
                           const ep = row.probability * prize;
                           return sum + (unitPrice > 0 ? (ep / unitPrice) * 100 : 0);
                         }, 0)

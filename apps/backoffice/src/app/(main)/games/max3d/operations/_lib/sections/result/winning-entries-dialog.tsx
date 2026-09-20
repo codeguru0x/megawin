@@ -41,8 +41,8 @@ import {
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
 function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][number]; winningSet: Set<string> }) {
-  const modeLabel = MAX3D_PLAY_MODE_LABELS[board.playMode as keyof typeof MAX3D_PLAY_MODE_LABELS] ?? board.playMode;
-  const typeLabel = MAX3D_PLAY_TYPE_LABELS[board.playType as keyof typeof MAX3D_PLAY_TYPE_LABELS] ?? board.playType;
+  const modeLabel = MAX3D_PLAY_MODE_LABELS[board.playMode as keyof typeof MAX3D_PLAY_MODE_LABELS];
+  const typeLabel = MAX3D_PLAY_TYPE_LABELS[board.playType as keyof typeof MAX3D_PLAY_TYPE_LABELS];
 
   return (
     <div className="flex items-start gap-2">
@@ -189,15 +189,15 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1.5">
-          {entry.boards.map((b, i) => (
-            <BoardChip key={i} board={b} winningSet={winningSet} />
+          {entry.boards.map((b) => (
+            <BoardChip key={b.boardNo} board={b} winningSet={winningSet} />
           ))}
         </div>
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1">
-          {entry.tiers.map((t, i) => (
-            <TierChip key={i} tier={t} />
+          {entry.tiers.map((t) => (
+            <TierChip key={t.tier} tier={t} />
           ))}
         </div>
       </TableCell>

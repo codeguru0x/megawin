@@ -368,9 +368,9 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         )}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        {board.triplets.map((t, ti) => (
+                        {board.triplets.map((t) => (
                           <TripletDisplay
-                            key={ti}
+                            key={t}
                             value={t}
                             size="sm"
                             variant={resultTriplets.has(t) ? "matched" : "default"}
@@ -411,8 +411,8 @@ function Max3dEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {board.triplets.map((t, ti) => (
-                            <TripletDisplay key={ti} value={t} size="sm" variant="default" />
+                          {board.triplets.map((t) => (
+                            <TripletDisplay key={t} value={t} size="sm" variant="default" />
                           ))}
                         </div>
                       </div>

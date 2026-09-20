@@ -35,10 +35,10 @@ export function EntryList({
   const rows: EntryRow[] = data.map((entry) => ({
     id: entry.id,
     ticketNo: entry.entrySummary.ticketNo,
-    boardCount: entry.entrySummary.boards?.length ?? 0,
+    boardCount: entry.entrySummary.boards.length,
     lineCount: entry.lineCount,
     // betUnitCount fallback cho data cũ chưa có field này
-    betUnitCount: entry.betUnitCount ?? entry.lineCount,
+    betUnitCount: entry.betUnitCount,
     amount: entry.amount,
     payoutAmount: entry.payout?.payoutAmount,
     isSettled: entry.status === "settled",

@@ -502,8 +502,8 @@ function AddTenantDialog({
           <ScrollArea className="h-65 rounded-lg border">
             {isLoadingOptions && (
               <div className="space-y-1 p-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-14 rounded-md" />
+                {(["ts-0", "ts-1", "ts-2", "ts-3"] as const).map((id) => (
+                  <Skeleton key={id} className="h-14 rounded-md" />
                 ))}
               </div>
             )}
@@ -588,8 +588,8 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
 function CardListSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4">
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="bg-card rounded-xl border">
+      {(["sk-0", "sk-1"] as const).map((id) => (
+        <div key={id} className="bg-card rounded-xl border">
           <div className="flex items-center gap-3 border-b px-6 py-4">
             <Skeleton className="size-10 rounded-xl" />
             <div className="space-y-1.5">

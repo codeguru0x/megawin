@@ -21,6 +21,10 @@ interface OutstandingStripProps {
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
+/** Slot id cố định — skeleton tĩnh không reorder; tránh `key={index}`. */
+const METRIC_SLOTS = ["m0", "m1", "m2", "m3", "m4", "m5"] as const;
+const GAME_SLOTS = ["g0", "g1", "g2", "g3", "g4", "g5", "g6"] as const;
+
 export function OutstandingStripSkeleton() {
   return (
     <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-5 dark:border-blue-800/30 dark:bg-blue-950/20">
@@ -28,13 +32,13 @@ export function OutstandingStripSkeleton() {
         <Skeleton className="h-4 w-32" />
       </div>
       <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
+        {METRIC_SLOTS.map((id) => (
+          <Skeleton key={id} className="h-16 rounded-lg" />
         ))}
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+        {GAME_SLOTS.map((id) => (
+          <Skeleton key={id} className="h-24 rounded-lg" />
         ))}
       </div>
     </div>

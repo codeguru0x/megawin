@@ -93,7 +93,7 @@ export function DrawManagementSection() {
       const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
-        label: LOTTO535_PRIZE_TIER_LABELS[tier] ?? String(tier),
+        label: LOTTO535_PRIZE_TIER_LABELS[tier],
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,
@@ -153,7 +153,7 @@ export function DrawManagementSection() {
       vietlottRef: d.vietlottRef
         ? {
             drawPeriod: d.vietlottRef.drawPeriod,
-            drawDate: String(d.vietlottRef.drawDate ?? ""),
+            drawDate: String(d.vietlottRef.drawDate),
           }
         : undefined,
     };

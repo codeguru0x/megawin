@@ -124,14 +124,14 @@ export function ByGameTab() {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-muted h-19 animate-pulse rounded-xl border" />
+          {(["k0", "k1", "k2", "k3", "k4"] as const).map((id) => (
+            <div key={id} className="bg-muted h-19 animate-pulse rounded-xl border" />
           ))}
         </div>
         <Card className="gap-0 py-0">
           <CardContent className="p-0">
-            {[...Array(7)].map((_, i) => (
-              <div key={i} className="h-12 animate-pulse border-b last:border-0" />
+            {(["r0", "r1", "r2", "r3", "r4", "r5", "r6"] as const).map((id) => (
+              <div key={id} className="h-12 animate-pulse border-b last:border-0" />
             ))}
           </CardContent>
         </Card>

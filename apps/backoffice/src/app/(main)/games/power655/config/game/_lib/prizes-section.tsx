@@ -308,7 +308,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                       ? row.tier === "jackpot1"
                         ? config.jackpot.jackpot1.seedAmount
                         : config.jackpot.jackpot2.seedAmount
-                      : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                      : config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes];
                     const expectedPayout = row.probability * defaultPrize;
                     // Tính real-time từ prize/seed hiện tại — không dùng plannedPayoutRate tĩnh trong odds.ts.
                     const payoutRate = unitPrice > 0 ? (expectedPayout / unitPrice) * 100 : 0;
@@ -374,7 +374,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                               ? row.tier === "jackpot1"
                                 ? config.jackpot.jackpot1.seedAmount
                                 : config.jackpot.jackpot2.seedAmount
-                              : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                              : config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes];
                             return sum + row.probability * prize;
                           }, 0),
                         ),
@@ -388,7 +388,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                             ? row.tier === "jackpot1"
                               ? config.jackpot.jackpot1.seedAmount
                               : config.jackpot.jackpot2.seedAmount
-                            : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                            : config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes];
                           const ep = row.probability * prize;
                           return sum + (unitPrice > 0 ? (ep / unitPrice) * 100 : 0);
                         }, 0)

@@ -371,18 +371,18 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       <div className="flex flex-wrap gap-1">
                         {board.playMode === "multiDigit" && board.frontDigits && board.backDigits ? (
                           <>
-                            {board.frontDigits.map((d, j) => (
+                            {board.frontDigits.map((d) => (
                               <span
-                                key={`f-${j}`}
+                                key={`f-${d}`}
                                 className="bg-muted text-muted-foreground text-2xs inline-flex size-6 items-center justify-center rounded font-mono font-bold tabular-nums"
                               >
                                 {d}
                               </span>
                             ))}
                             <span className="text-muted-foreground/40 text-3xs px-0.5 select-none">×</span>
-                            {board.backDigits.map((d, j) => (
+                            {board.backDigits.map((d) => (
                               <span
-                                key={`b-${j}`}
+                                key={`b-${d}`}
                                 className="bg-muted text-muted-foreground text-2xs inline-flex size-6 items-center justify-center rounded font-mono font-bold tabular-nums"
                               >
                                 {d}
@@ -390,9 +390,9 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                             ))}
                           </>
                         ) : (
-                          board.triplets.map((t, j) => (
+                          board.triplets.map((t) => (
                             <TripletDisplay
-                              key={j}
+                              key={t}
                               value={t}
                               size="sm"
                               variant={resultSet.has(t) ? "matched" : "default"}
@@ -438,18 +438,18 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         <div className="flex flex-wrap gap-1">
                           {board.playMode === "multiDigit" && board.frontDigits && board.backDigits ? (
                             <>
-                              {board.frontDigits.map((d, j) => (
+                              {board.frontDigits.map((d) => (
                                 <span
-                                  key={`f-${j}`}
+                                  key={`f-${d}`}
                                   className="bg-muted text-muted-foreground text-2xs inline-flex size-6 items-center justify-center rounded font-mono font-bold tabular-nums"
                                 >
                                   {d}
                                 </span>
                               ))}
                               <span className="text-muted-foreground/40 text-3xs px-0.5 select-none">×</span>
-                              {board.backDigits.map((d, j) => (
+                              {board.backDigits.map((d) => (
                                 <span
-                                  key={`b-${j}`}
+                                  key={`b-${d}`}
                                   className="bg-muted text-muted-foreground text-2xs inline-flex size-6 items-center justify-center rounded font-mono font-bold tabular-nums"
                                 >
                                   {d}
@@ -457,9 +457,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                               ))}
                             </>
                           ) : (
-                            board.triplets.map((t, j) => (
-                              <TripletDisplay key={j} value={t} size="sm" variant="default" />
-                            ))
+                            board.triplets.map((t) => <TripletDisplay key={t} value={t} size="sm" variant="default" />)
                           )}
                         </div>
                       </div>

@@ -470,10 +470,11 @@ export function PublishResultAction({
 
               <div className="bg-muted/30 rounded-lg border p-4" onPaste={handleGridPaste}>
                 <div className="grid grid-cols-3 gap-x-3 gap-y-3">
-                  {dice.map((value, i) => {
+                  {(["d1", "d2", "d3"] as const).map((slotId, i) => {
+                    const value = dice[i];
                     const isDiff = activeDiff != null && activeDiff.diffIndices.has(i);
                     return (
-                      <div key={`slot-${i}`} className="flex flex-col items-center gap-1">
+                      <div key={slotId} className="flex flex-col items-center gap-1">
                         <div className="relative w-full">
                           <span className="bg-muted text-muted-foreground ring-background text-4xs absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full font-semibold ring-2">
                             {i + 1}

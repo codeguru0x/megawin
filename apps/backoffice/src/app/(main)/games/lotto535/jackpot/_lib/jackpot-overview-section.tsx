@@ -124,6 +124,9 @@ export function JackpotHeroCard() {
 
 // ─── JackpotKpiCards ──────────────────────────────────────────────────────────
 
+/** Slot id cố định — skeleton tĩnh không reorder; tránh `key={index}`. */
+const KPI_SKELETON_SLOTS = ["kpi-0", "kpi-1", "kpi-2", "kpi-3"] as const;
+
 /**
  * Grid 4 KPI cards: tích luỹ, đóng góp, đỉnh cao, ngưỡng chia.
  * Dùng độc lập — không kèm hero card.
@@ -134,8 +137,8 @@ export function JackpotKpiCards() {
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-22 rounded-xl" />
+        {KPI_SKELETON_SLOTS.map((id) => (
+          <Skeleton key={id} className="h-22 rounded-xl" />
         ))}
       </div>
     );
@@ -210,8 +213,8 @@ export function JackpotOverviewSection() {
       <div className="space-y-4">
         <Skeleton className="h-50 rounded-2xl" />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-22 rounded-xl" />
+          {KPI_SKELETON_SLOTS.map((id) => (
+            <Skeleton key={id} className="h-22 rounded-xl" />
           ))}
         </div>
       </div>

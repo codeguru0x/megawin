@@ -229,11 +229,11 @@ function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; r
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1.5">
-          {basicBoards.map((b, i) => (
-            <BasicBoardDetail key={`b-${i}`} board={b} winningSet={winningSet} />
+          {basicBoards.map((b) => (
+            <BasicBoardDetail key={b.boardNo} board={b} winningSet={winningSet} />
           ))}
-          {sideBetBoards.map((b, i) => (
-            <SideBetDetail key={`s-${i}`} board={b} />
+          {sideBetBoards.map((b) => (
+            <SideBetDetail key={b.boardNo} board={b} />
           ))}
         </div>
       </TableCell>

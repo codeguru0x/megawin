@@ -144,7 +144,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
       const sets = toNum(payload.sets);
       const amount = toNum(payload.amount);
       const pt = String(payload.playType ?? "");
-      const label = POWER655_PLAY_TYPE_LABELS[pt as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? pt;
+      const label = POWER655_PLAY_TYPE_LABELS[pt as keyof typeof POWER655_PLAY_TYPE_LABELS];
       return {
         summary: `${formatNumber(players)} người chơi cùng dồn 1 bộ số${label ? ` (${label})` : ""} — dấu hiệu syndicate.`,
         chips: [
@@ -158,12 +158,12 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
       const triggered = readBaoTriggered(payload);
       const threshold = toNum(payload.threshold);
       const names = triggered
-        .map((t) => POWER655_PLAY_TYPE_LABELS[t.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? t.playType)
+        .map((t) => POWER655_PLAY_TYPE_LABELS[t.playType as keyof typeof POWER655_PLAY_TYPE_LABELS])
         .join(", ");
       return {
         summary: `Có vé Bao mức cao (${names}) — giá 1 board ≥ ${formatNumber(threshold)} VND.`,
         chips: triggered.map((t) => ({
-          label: POWER655_PLAY_TYPE_LABELS[t.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? t.playType,
+          label: POWER655_PLAY_TYPE_LABELS[t.playType as keyof typeof POWER655_PLAY_TYPE_LABELS],
           value: `${formatNumber(t.boards)} board · ${formatNumber(t.boardPrice)} VND`,
           danger: t.playType === PlayType.Bao18,
         })),
@@ -408,9 +408,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className={cn("size-2 shrink-0 rounded-full", accent.dot)} />
                     {isCritical && activeCount > 0 && <AlertTriangle className="size-3.5 shrink-0 text-red-500" />}
-                    <span className="truncate text-sm font-semibold">
-                      {POWER655_OPS_ALERT_TYPE_LABELS[g.type] ?? g.type}
-                    </span>
+                    <span className="truncate text-sm font-semibold">{POWER655_OPS_ALERT_TYPE_LABELS[g.type]}</span>
                     {/* Badge đếm CHỈ alert cần xử lý — khớp badge header (mới/critical). */}
                     <Badge variant={activeCount > 0 ? "secondary" : "outline"} className="shrink-0 tabular-nums">
                       {formatNumber(activeCount)}
@@ -422,7 +420,7 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
                           severityBadgeClass(g.severity),
                         )}
                       >
-                        {SEVERITY_LABEL[g.severity] ?? g.severity}
+                        {SEVERITY_LABEL[g.severity]}
                       </span>
                     )}
                   </div>
@@ -454,7 +452,7 @@ export function AlertHeaderBadge({
   counts: Record<OpsAlertStatus, number>;
   onClick?: () => void;
 }) {
-  const newCount = counts[OpsAlertStatus.New] ?? 0;
+  const newCount = counts[OpsAlertStatus.New];
   if (newCount === 0) {
     return null;
   }

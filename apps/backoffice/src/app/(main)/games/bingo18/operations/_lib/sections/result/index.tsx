@@ -281,7 +281,7 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
               </div>
               {result.boardPrizes.map((r, idx) => (
                 <div
-                  key={`${r.playType}-${idx}`}
+                  key={r.playType}
                   className={cn(
                     "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
                     idx < result.boardPrizes.length - 1 && "border-border/50 border-b",
@@ -335,7 +335,7 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
               </div>
               {result.sideBetPrizes.map((r, idx) => (
                 <div
-                  key={`${r.playType}-${r.result}-${idx}`}
+                  key={`${r.playType}-${r.result}`}
                   className={cn(
                     "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] items-center gap-x-2 px-3 py-2.5",
                     idx < result.sideBetPrizes.length - 1 && "border-border/50 border-b",
