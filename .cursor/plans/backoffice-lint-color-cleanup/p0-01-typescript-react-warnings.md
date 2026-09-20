@@ -296,6 +296,7 @@ Mỗi slice = 1 commit message dạng:
 | File:line | Rule | Lý do giữ / cần hỏi user |
 |---|---|---|
 | `keno/operations-hub/_lib/hub-alert-banner.tsx:69` | `no-unnecessary-condition` | `window.AudioContext ?? webkitAudioContext` — DOM lib đánh dấu `AudioContext` luôn có; Safari cũ vẫn cần webkit. **Không xoá** — đổi runtime Safari. |
+| `bingo18/operations-hub/_lib/hub-alert-banner.tsx:69` | `no-unnecessary-condition` | Cùng lý do Safari webkit như Keno. |
 
 ---
 
