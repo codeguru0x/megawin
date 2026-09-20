@@ -39,8 +39,8 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
       <CardContent className="px-5 pt-0 pb-4">
         {isLoading && (
           <div className="space-y-3 pt-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between py-1">
+            {["r0", "r1", "r2", "r3", "r4"].map((id) => (
+              <div key={id} className="flex items-center justify-between py-1">
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-4 w-40" />
               </div>
@@ -60,8 +60,8 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
               icon={<Shield className="size-4" />}
               label="Trạng thái"
               value={
-                <Badge variant={STATUS_VARIANT[profile.status] ?? "outline"}>
-                  {AccountStatusLabel[profile.status as AccountStatus] ?? profile.status}
+                <Badge variant={STATUS_VARIANT[profile.status]}>
+                  {AccountStatusLabel[profile.status as AccountStatus]}
                 </Badge>
               }
             />

@@ -429,7 +429,7 @@ export function PublishResultAction({
                     {Array.from({ length: LOTTO535_MAIN_COUNT }, (_, i) => {
                       const isDiff = showMainDiff && mainDiff.diffIndices.has(i);
                       return (
-                        <div key={i} className="flex flex-col items-center gap-1">
+                        <div key={`slot-${i}`} className="flex flex-col items-center gap-1">
                           <div className="relative w-full">
                             <span className="bg-muted text-muted-foreground ring-background text-4xs absolute -top-1.5 -left-1.5 z-10 flex size-4 items-center justify-center rounded-full font-semibold ring-2">
                               {i + 1}
@@ -528,8 +528,8 @@ export function PublishResultAction({
 
               {validation.messages.length > 0 && (
                 <div className="border-destructive/30 bg-destructive/5 space-y-1 rounded-lg border px-4 py-3">
-                  {validation.messages.map((msg, i) => (
-                    <div key={i} className="flex items-start gap-2">
+                  {validation.messages.map((msg) => (
+                    <div key={msg} className="flex items-start gap-2">
                       <AlertCircle className="text-destructive mt-0.5 size-3.5 shrink-0" />
                       <p className="text-destructive text-sm">{msg}</p>
                     </div>

@@ -317,9 +317,9 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                   <p className="text-muted-foreground text-xs font-medium">Kết quả đã sửa</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="flex gap-1">
-                      {mainNumbers.map((n, i) => (
+                      {mainNumbers.map((n) => (
                         <span
-                          key={i}
+                          key={n}
                           className="inline-flex size-7 items-center justify-center rounded-full bg-violet-100 font-mono text-xs font-bold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
                         >
                           {n}
@@ -352,9 +352,9 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
               <p className="text-muted-foreground text-xs font-medium">Kết quả đã sửa</p>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-1">
-                  {mainNumbers.map((n, i) => (
+                  {mainNumbers.map((n) => (
                     <span
-                      key={i}
+                      key={n}
                       className="inline-flex size-7 items-center justify-center rounded-full bg-violet-100 font-mono text-xs font-bold text-violet-700 dark:bg-violet-900/40 dark:text-violet-300"
                     >
                       {n}

@@ -36,10 +36,10 @@ export function DrawBreakdownView({ accountId, financialDate, game, onRowClick }
           <Skeleton className="h-4 w-48" />
         </CardHeader>
         <CardContent className="space-y-0 p-0">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-4 border-b px-4 py-3">
-              {Array.from({ length: 8 }).map((_, j) => (
-                <Skeleton key={j} className="h-3 flex-1" />
+          {["r0", "r1", "r2", "r3", "r4"].map((id) => (
+            <div key={id} className="flex gap-4 border-b px-4 py-3">
+              {["c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7"].map((id) => (
+                <Skeleton key={id} className="h-3 flex-1" />
               ))}
             </div>
           ))}

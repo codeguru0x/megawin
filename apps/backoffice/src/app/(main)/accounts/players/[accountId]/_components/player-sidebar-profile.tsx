@@ -42,8 +42,8 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-4 w-14 rounded-full" />
         </div>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between px-1 py-1.5">
+        {["r0", "r1", "r2"].map((id) => (
+          <div key={id} className="flex items-center justify-between px-1 py-1.5">
             <Skeleton className="h-3 w-12" />
             <Skeleton className="h-3 w-16" />
           </div>
@@ -56,8 +56,8 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
     return null;
   }
 
-  const statusVariant = STATUS_VARIANT[profile.status] ?? "outline";
-  const statusLabel = AccountStatusLabel[profile.status as AccountStatus] ?? profile.status;
+  const statusVariant = STATUS_VARIANT[profile.status];
+  const statusLabel = AccountStatusLabel[profile.status as AccountStatus];
 
   // Tạo initials từ displayName hoặc username: lấy chữ cái đầu mỗi từ (tối đa 2)
   const nameForInitials = profile.displayName || profile.username;

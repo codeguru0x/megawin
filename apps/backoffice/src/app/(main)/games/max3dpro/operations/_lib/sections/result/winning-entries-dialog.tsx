@@ -47,8 +47,13 @@ function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][nu
       </span>
       <div className="flex flex-col gap-0.5">
         <div className="flex max-w-65 flex-wrap items-center gap-1">
-          {board.triplets.map((t, i) => (
-            <TripletDisplay key={i} value={t} variant={winningSet.has(t) ? "matched" : "default"} size="sm" />
+          {board.triplets.map((t) => (
+            <TripletDisplay
+              key={`${board.boardNo}-${t}`}
+              value={t}
+              variant={winningSet.has(t) ? "matched" : "default"}
+              size="sm"
+            />
           ))}
         </div>
         <span className="text-3xs font-medium text-orange-600 dark:text-orange-400">

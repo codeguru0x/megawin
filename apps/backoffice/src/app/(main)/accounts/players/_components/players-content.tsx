@@ -287,9 +287,7 @@ function SearchResultCard({ keyword, toolbarControls }: { keyword: string; toolb
                       </TableCell>
                       <TableCell className="text-sm">{account.displayName}</TableCell>
                       <TableCell>
-                        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
-                          {AccountStatusLabel[status] ?? status}
-                        </Badge>
+                        <Badge variant={STATUS_VARIANT[status]}>{AccountStatusLabel[status]}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground pr-5 text-right text-sm tabular-nums">
                         {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}

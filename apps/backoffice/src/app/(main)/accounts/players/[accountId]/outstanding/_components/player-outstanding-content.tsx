@@ -196,8 +196,8 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
   }, [od, og, data?.entries]);
 
   const view = od ? "entries" : og ? "draws" : "games";
-  const gameLabel = og ? (GAME_LABELS[og as GameProduct] ?? og) : "";
-  const tenantId = data?.entries?.[0]?.tenantId ?? "";
+  const gameLabel = og ? GAME_LABELS[og as GameProduct] : "";
+  const tenantId = data?.entries[0]?.tenantId ?? "";
 
   // Check game co lines khong -- dua tren data thuc te
   const showLineCount = entriesForDraw.some((e) => (e.lineCount ?? 0) > 0);
@@ -394,7 +394,7 @@ function GamesView({
             <TableBody>
               {byGame.map((group) => {
                 const c = getGameColors(group.gameProduct);
-                const label = GAME_LABELS[group.gameProduct as GameProduct] ?? group.gameProduct;
+                const label = GAME_LABELS[group.gameProduct as GameProduct];
                 return (
                   <TableRow
                     key={group.gameProduct}

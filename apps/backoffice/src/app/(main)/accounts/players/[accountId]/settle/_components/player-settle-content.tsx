@@ -84,7 +84,7 @@ export function PlayerSettleContent({ accountId }: PlayerSettleContentProps) {
   };
 
   // ── Breadcrumb ─────────────────────────────────────────────────────────
-  const gameLabel = game ? (GAME_LABELS[game as GameProduct] ?? game) : "";
+  const gameLabel = game ? GAME_LABELS[game as GameProduct] : "";
 
   return (
     <div className="flex flex-col gap-5">

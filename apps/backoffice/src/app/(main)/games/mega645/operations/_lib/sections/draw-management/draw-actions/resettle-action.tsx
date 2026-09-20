@@ -313,9 +313,9 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                 <div className="bg-muted/30 space-y-2 rounded-lg border px-4 py-3">
                   <p className="text-muted-foreground text-xs font-medium">Kết quả đã sửa</p>
                   <div className="flex flex-wrap items-center gap-1">
-                    {numbers.map((n, i) => (
+                    {numbers.map((n) => (
                       <span
-                        key={i}
+                        key={n}
                         className="inline-flex size-7 items-center justify-center rounded-full bg-rose-100 font-mono text-xs font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
                       >
                         {n}
@@ -343,9 +343,9 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
               <p className="text-muted-foreground text-xs font-medium">Kết quả đã sửa</p>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex gap-1">
-                  {numbers.map((n, i) => (
+                  {numbers.map((n) => (
                     <span
-                      key={i}
+                      key={n}
                       className="inline-flex size-7 items-center justify-center rounded-full bg-rose-100 font-mono text-xs font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
                     >
                       {n}

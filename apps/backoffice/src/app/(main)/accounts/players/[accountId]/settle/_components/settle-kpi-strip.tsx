@@ -43,8 +43,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-19 rounded-xl" />
+        {["s0", "s1", "s2", "s3", "s4", "s5"].map((id) => (
+          <Skeleton key={id} className="h-19 rounded-xl" />
         ))}
       </div>
     );

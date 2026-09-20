@@ -41,17 +41,17 @@ function toEntryRow(entry: PlayerSettledEntryResponse): EntryRow {
 export function EntryListView({ accountId, financialDate, game, drawId, playerDisplayName }: EntryListViewProps) {
   const { data: entries, isLoading, isError } = usePlayerEntries(accountId, financialDate, game, drawId);
 
-  const gameLabel = GAME_LABELS[game as GameProduct] ?? game;
+  const gameLabel = GAME_LABELS[game as GameProduct];
   const tenantId = entries?.[0]?.tenantId ?? "";
 
   if (isLoading) {
     return (
       <Card className="gap-0 py-0">
         <CardContent className="space-y-0 p-0">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-4 border-b px-5 py-3">
-              {Array.from({ length: 6 }).map((_, j) => (
-                <Skeleton key={j} className="h-3 flex-1" />
+          {["r0", "r1", "r2", "r3", "r4"].map((id) => (
+            <div key={id} className="flex gap-4 border-b px-5 py-3">
+              {["c0", "c1", "c2", "c3", "c4", "c5"].map((id) => (
+                <Skeleton key={id} className="h-3 flex-1" />
               ))}
             </div>
           ))}

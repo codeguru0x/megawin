@@ -48,8 +48,8 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
     );
   }
 
-  const statusVariant = STATUS_VARIANT[profile.status] ?? "outline";
-  const statusLabel = AccountStatusLabel[profile.status as AccountStatus] ?? profile.status;
+  const statusVariant = STATUS_VARIANT[profile.status];
+  const statusLabel = AccountStatusLabel[profile.status as AccountStatus];
 
   return (
     <div className="bg-card flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-xl border px-5 py-3.5 shadow-sm">

@@ -23,8 +23,8 @@ export function PlayerKpiStrip({ data, isLoading }: PlayerKpiStripProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-18 rounded-xl" />
+        {["s0", "s1", "s2", "s3", "s4"].map((id) => (
+          <Skeleton key={id} className="h-18 rounded-xl" />
         ))}
       </div>
     );

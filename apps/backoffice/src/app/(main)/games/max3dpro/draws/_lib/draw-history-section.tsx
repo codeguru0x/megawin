@@ -106,23 +106,23 @@ export function DrawHistorySection() {
         return (
           <div className="flex flex-col gap-0.5">
             <div className="flex flex-wrap gap-0.5">
-              {special?.map((v, i) => (
-                <TripletDisplay key={`s${i}`} value={v} variant="special" size="sm" />
+              {special?.map((v) => (
+                <TripletDisplay key={`s-${v}`} value={v} variant="special" size="sm" />
               ))}
             </div>
             <div className="flex flex-wrap gap-0.5">
-              {first?.map((v, i) => (
-                <TripletDisplay key={`f${i}`} value={v} variant="first" size="sm" />
+              {first?.map((v) => (
+                <TripletDisplay key={`f-${v}`} value={v} variant="first" size="sm" />
               ))}
             </div>
             <div className="flex flex-wrap gap-0.5">
-              {second?.map((v, i) => (
-                <TripletDisplay key={`sc${i}`} value={v} variant="second" size="sm" />
+              {second?.map((v) => (
+                <TripletDisplay key={`sc-${v}`} value={v} variant="second" size="sm" />
               ))}
             </div>
             <div className="flex flex-wrap gap-0.5">
-              {third?.map((v, i) => (
-                <TripletDisplay key={`t${i}`} value={v} variant="third" size="sm" />
+              {third?.map((v) => (
+                <TripletDisplay key={`t-${v}`} value={v} variant="third" size="sm" />
               ))}
             </div>
           </div>
