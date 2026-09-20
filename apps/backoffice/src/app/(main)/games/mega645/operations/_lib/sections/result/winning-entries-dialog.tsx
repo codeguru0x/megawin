@@ -295,7 +295,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
-  const displayName = toTenantUsername(entry.username) ?? entry.username;
+  const displayName = toTenantUsername(entry.username);
   const hasJackpot = entry.tiers.some((t) => t.tier === PrizeTier.Jackpot && t.hitCount > 0);
 
   return (

@@ -45,7 +45,7 @@ export function EntryList({
 
   const entryMap = new Map<string, TicketEntryEntity>(data.map((e) => [e.id, e]));
 
-  const playerLabel = toTenantUsername(playerDisplayName ?? accountId) ?? accountId;
+  const playerLabel = toTenantUsername(playerDisplayName ?? accountId);
 
   return (
     <GamePlayerEntryList

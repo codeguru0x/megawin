@@ -307,7 +307,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
-  const displayName = toTenantUsername(entry.username) ?? entry.username;
+  const displayName = toTenantUsername(entry.username);
   const hasJp = entry.tiers.some(
     (t) => (t.tier === PrizeTier.Jackpot1 || t.tier === PrizeTier.Jackpot2) && t.hitCount > 0,
   );

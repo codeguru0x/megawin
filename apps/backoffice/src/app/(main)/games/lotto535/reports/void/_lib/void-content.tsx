@@ -85,9 +85,9 @@ function mapPlayerRow(r: {
 function mapEntryRow(entry: TicketEntryEntity): VoidEntryRow {
   return {
     id: entry.id,
-    ticketNo: entry.entrySummary?.ticketNo,
+    ticketNo: entry.entrySummary.ticketNo,
     createdAt: entry.createdAt,
-    boardCount: entry.entrySummary?.boards?.length,
+    boardCount: entry.entrySummary.boards.length,
     lineCount: entry.lineCount ?? undefined,
     originalAmount: entry.amount,
     refundAmount: entry.voidInfo?.refundAmount ?? entry.amount,

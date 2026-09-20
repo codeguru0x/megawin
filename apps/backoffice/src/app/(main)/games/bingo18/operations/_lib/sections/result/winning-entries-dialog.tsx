@@ -167,7 +167,7 @@ function KpiBar({ totalWinningEntries, totalWinAmount }: { totalWinningEntries: 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
-  const displayName = toTenantUsername(entry.username) ?? entry.username;
+  const displayName = toTenantUsername(entry.username);
   const winningSet = new Set(entry.winningNumbers);
 
   const basicBoards = entry.boardDetails.filter((b) => !BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType));

@@ -13,7 +13,8 @@
 | **S2 DONE** (20/09) | `exhaustive-deps` **26→0**: EMPTY_DRAWS / useMemo ổn định array; hub destructure query; tenant `existingSet` memo; players bỏ effect thừa |
 | **S3a DONE** (20/09) | `lib/*` unnecessary-condition **18→0** (auth narrow, hasOwn lookup, nav for…of, theme matchMedia). Tổng rule 562→**544** |
 | **S3b DONE** (20/09) | Keno `no-unnecessary-condition` **64→1** (giữ AudioContext `?? webkit` Safari). `check-types` xanh |
-| Còn lại | ~1.135 warning (ước) |
+| **S3c partial** (20/09) | 6 game còn lại: **401→260** — cùng pattern an toàn (`toTenantUsername`, sales, entrySummary, totalStake, status map). Jackpot/entry-detail còn lại → S3c-2 |
+| Còn lại | ~1.007 warning (ước) |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ## 1. Baseline đo thật (2026-09-20)

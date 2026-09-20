@@ -125,101 +125,94 @@ export function DrawCommandCenter({
     return new Date(draw.drawResultAt) <= new Date(draw.settledAt);
   })();
 
-  const accentGradient =
-    {
-      [DrawStatus.SalesOpen]: "from-emerald-500 via-green-500 to-teal-500",
-      [DrawStatus.SalesClosed]: "from-amber-500 to-orange-500",
-      [DrawStatus.Published]: "from-violet-500 via-purple-500 to-fuchsia-500",
-      [DrawStatus.Settling]: "from-orange-500 to-red-500",
-      [DrawStatus.Settled]: "from-slate-400 to-slate-500",
-      [DrawStatus.Scheduled]: "from-slate-300 to-slate-400",
-      [DrawStatus.Void]: "from-red-600 to-rose-700",
-      [DrawStatus.Voiding]: "from-red-500 to-rose-600",
-    }[status] ?? "from-border to-border";
+  const accentGradient = {
+    [DrawStatus.SalesOpen]: "from-emerald-500 via-green-500 to-teal-500",
+    [DrawStatus.SalesClosed]: "from-amber-500 to-orange-500",
+    [DrawStatus.Published]: "from-violet-500 via-purple-500 to-fuchsia-500",
+    [DrawStatus.Settling]: "from-orange-500 to-red-500",
+    [DrawStatus.Settled]: "from-slate-400 to-slate-500",
+    [DrawStatus.Scheduled]: "from-slate-300 to-slate-400",
+    [DrawStatus.Void]: "from-red-600 to-rose-700",
+    [DrawStatus.Voiding]: "from-red-500 to-rose-600",
+  }[status];
 
   // Card background tint per status
-  const cardBg =
-    {
-      [DrawStatus.SalesOpen]:
-        "bg-linear-to-br from-green-50/60 via-card to-emerald-50/30 dark:from-green-950/20 dark:via-card dark:to-emerald-950/10",
-      [DrawStatus.SalesClosed]:
-        "bg-linear-to-br from-amber-50/60 via-card to-orange-50/30 dark:from-amber-950/20 dark:via-card dark:to-orange-950/10",
-      [DrawStatus.Published]:
-        "bg-linear-to-br from-violet-50/60 via-card to-purple-50/30 dark:from-violet-950/20 dark:via-card dark:to-purple-950/10",
-      [DrawStatus.Settling]:
-        "bg-linear-to-br from-orange-50/60 via-card to-red-50/30 dark:from-orange-950/20 dark:via-card dark:to-red-950/10",
-      [DrawStatus.Settled]:
-        "bg-linear-to-br from-slate-50/60 via-card to-slate-100/30 dark:from-slate-900/20 dark:via-card dark:to-slate-800/10",
-      [DrawStatus.Scheduled]:
-        "bg-linear-to-br from-slate-50/60 via-card to-slate-100/30 dark:from-slate-900/20 dark:via-card dark:to-slate-800/10",
-      [DrawStatus.Void]:
-        "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
-      [DrawStatus.Voiding]:
-        "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
-    }[status] ?? "";
+  const cardBg = {
+    [DrawStatus.SalesOpen]:
+      "bg-linear-to-br from-green-50/60 via-card to-emerald-50/30 dark:from-green-950/20 dark:via-card dark:to-emerald-950/10",
+    [DrawStatus.SalesClosed]:
+      "bg-linear-to-br from-amber-50/60 via-card to-orange-50/30 dark:from-amber-950/20 dark:via-card dark:to-orange-950/10",
+    [DrawStatus.Published]:
+      "bg-linear-to-br from-violet-50/60 via-card to-purple-50/30 dark:from-violet-950/20 dark:via-card dark:to-purple-950/10",
+    [DrawStatus.Settling]:
+      "bg-linear-to-br from-orange-50/60 via-card to-red-50/30 dark:from-orange-950/20 dark:via-card dark:to-red-950/10",
+    [DrawStatus.Settled]:
+      "bg-linear-to-br from-slate-50/60 via-card to-slate-100/30 dark:from-slate-900/20 dark:via-card dark:to-slate-800/10",
+    [DrawStatus.Scheduled]:
+      "bg-linear-to-br from-slate-50/60 via-card to-slate-100/30 dark:from-slate-900/20 dark:via-card dark:to-slate-800/10",
+    [DrawStatus.Void]:
+      "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
+    [DrawStatus.Voiding]:
+      "bg-linear-to-br from-red-50/60 via-card to-rose-50/30 dark:from-red-950/20 dark:via-card dark:to-rose-950/10",
+  }[status];
 
   // Card border per status
-  const cardBorder =
-    {
-      [DrawStatus.SalesOpen]: "border-green-200 dark:border-green-800",
-      [DrawStatus.SalesClosed]: "border-amber-200 dark:border-amber-800",
-      [DrawStatus.Published]: "border-violet-200 dark:border-violet-800",
-      [DrawStatus.Settling]: "border-orange-200 dark:border-orange-800",
-      [DrawStatus.Void]: "border-red-200 dark:border-red-800",
-      [DrawStatus.Voiding]: "border-red-200 dark:border-red-800",
-      [DrawStatus.Settled]: "border-slate-200 dark:border-slate-700",
-      [DrawStatus.Scheduled]: "border-border",
-    }[status] ?? "border-border";
+  const cardBorder = {
+    [DrawStatus.SalesOpen]: "border-green-200 dark:border-green-800",
+    [DrawStatus.SalesClosed]: "border-amber-200 dark:border-amber-800",
+    [DrawStatus.Published]: "border-violet-200 dark:border-violet-800",
+    [DrawStatus.Settling]: "border-orange-200 dark:border-orange-800",
+    [DrawStatus.Void]: "border-red-200 dark:border-red-800",
+    [DrawStatus.Voiding]: "border-red-200 dark:border-red-800",
+    [DrawStatus.Settled]: "border-slate-200 dark:border-slate-700",
+    [DrawStatus.Scheduled]: "border-border",
+  }[status];
 
   // Icon bg/color per status
-  const iconBg =
-    {
-      [DrawStatus.SalesOpen]: "bg-green-100 dark:bg-green-900/60",
-      [DrawStatus.SalesClosed]: "bg-amber-100 dark:bg-amber-900/60",
-      [DrawStatus.Published]: "bg-violet-100 dark:bg-violet-900/60",
-      [DrawStatus.Settling]: "bg-orange-100 dark:bg-orange-900/60",
-      [DrawStatus.Settled]: "bg-slate-100 dark:bg-slate-800",
-      [DrawStatus.Scheduled]: "bg-slate-100 dark:bg-slate-800",
-      [DrawStatus.Void]: "bg-red-100 dark:bg-red-900/60",
-      [DrawStatus.Voiding]: "bg-red-100 dark:bg-red-900/60",
-    }[status] ?? "bg-muted/40";
+  const iconBg = {
+    [DrawStatus.SalesOpen]: "bg-green-100 dark:bg-green-900/60",
+    [DrawStatus.SalesClosed]: "bg-amber-100 dark:bg-amber-900/60",
+    [DrawStatus.Published]: "bg-violet-100 dark:bg-violet-900/60",
+    [DrawStatus.Settling]: "bg-orange-100 dark:bg-orange-900/60",
+    [DrawStatus.Settled]: "bg-slate-100 dark:bg-slate-800",
+    [DrawStatus.Scheduled]: "bg-slate-100 dark:bg-slate-800",
+    [DrawStatus.Void]: "bg-red-100 dark:bg-red-900/60",
+    [DrawStatus.Voiding]: "bg-red-100 dark:bg-red-900/60",
+  }[status];
 
-  const iconColor =
-    {
-      [DrawStatus.SalesOpen]: "text-green-600 dark:text-green-400",
-      [DrawStatus.SalesClosed]: "text-amber-600 dark:text-amber-400",
-      [DrawStatus.Published]: "text-violet-600 dark:text-violet-400",
-      [DrawStatus.Settling]: "text-orange-600 dark:text-orange-400",
-      [DrawStatus.Settled]: "text-slate-500 dark:text-slate-400",
-      [DrawStatus.Scheduled]: "text-slate-500 dark:text-slate-400",
-      [DrawStatus.Void]: "text-red-600 dark:text-red-400",
-      [DrawStatus.Voiding]: "text-red-600 dark:text-red-400",
-    }[status] ?? "text-muted-foreground";
+  const iconColor = {
+    [DrawStatus.SalesOpen]: "text-green-600 dark:text-green-400",
+    [DrawStatus.SalesClosed]: "text-amber-600 dark:text-amber-400",
+    [DrawStatus.Published]: "text-violet-600 dark:text-violet-400",
+    [DrawStatus.Settling]: "text-orange-600 dark:text-orange-400",
+    [DrawStatus.Settled]: "text-slate-500 dark:text-slate-400",
+    [DrawStatus.Scheduled]: "text-slate-500 dark:text-slate-400",
+    [DrawStatus.Void]: "text-red-600 dark:text-red-400",
+    [DrawStatus.Voiding]: "text-red-600 dark:text-red-400",
+  }[status];
 
   // Ping dot color per status
-  const pingColor =
-    {
-      [DrawStatus.SalesOpen]: "bg-green-400",
-      [DrawStatus.SalesClosed]: "bg-amber-400",
-      [DrawStatus.Published]: "bg-violet-400",
-      [DrawStatus.Settling]: "bg-orange-400",
-      [DrawStatus.Settled]: "bg-slate-400",
-      [DrawStatus.Scheduled]: "bg-slate-400",
-      [DrawStatus.Void]: "bg-red-400",
-      [DrawStatus.Voiding]: "bg-red-400",
-    }[status] ?? "";
+  const pingColor = {
+    [DrawStatus.SalesOpen]: "bg-green-400",
+    [DrawStatus.SalesClosed]: "bg-amber-400",
+    [DrawStatus.Published]: "bg-violet-400",
+    [DrawStatus.Settling]: "bg-orange-400",
+    [DrawStatus.Settled]: "bg-slate-400",
+    [DrawStatus.Scheduled]: "bg-slate-400",
+    [DrawStatus.Void]: "bg-red-400",
+    [DrawStatus.Voiding]: "bg-red-400",
+  }[status];
 
-  const dotColor =
-    {
-      [DrawStatus.SalesOpen]: "bg-green-500",
-      [DrawStatus.SalesClosed]: "bg-amber-500",
-      [DrawStatus.Published]: "bg-violet-500",
-      [DrawStatus.Settling]: "bg-orange-500",
-      [DrawStatus.Settled]: "bg-slate-500",
-      [DrawStatus.Scheduled]: "bg-slate-500",
-      [DrawStatus.Void]: "bg-red-500",
-      [DrawStatus.Voiding]: "bg-red-500",
-    }[status] ?? "";
+  const dotColor = {
+    [DrawStatus.SalesOpen]: "bg-green-500",
+    [DrawStatus.SalesClosed]: "bg-amber-500",
+    [DrawStatus.Published]: "bg-violet-500",
+    [DrawStatus.Settling]: "bg-orange-500",
+    [DrawStatus.Settled]: "bg-slate-500",
+    [DrawStatus.Scheduled]: "bg-slate-500",
+    [DrawStatus.Void]: "bg-red-500",
+    [DrawStatus.Voiding]: "bg-red-500",
+  }[status];
 
   // Icon theo status: active = Radio, settled = CalendarCheck, void = Ban, settling = Loader2
   const StatusIcon =

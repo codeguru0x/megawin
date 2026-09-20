@@ -133,7 +133,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
   const resultSet = buildResultSet(entry.result);
 
-  const tenantUsername = toTenantUsername(entry.username) ?? entry.username;
+  const tenantUsername = toTenantUsername(entry.username);
   const playerLink = `/accounts/players/${entry.accountId}` as Route;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
