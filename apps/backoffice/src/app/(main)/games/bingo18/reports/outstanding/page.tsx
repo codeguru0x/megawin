@@ -17,8 +17,8 @@ function OutstandingPageSkeleton() {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-18 w-full rounded-xl" />
+        {Array.from({ length: 4 }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-18 w-full rounded-xl" />
         ))}
       </div>
       <Skeleton className="h-64 w-full rounded-xl" />

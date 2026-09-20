@@ -110,7 +110,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           scheduledDrawAt: remoteDraw.drawTime,
           drawResultAt: remoteDraw.result?.publishedAt,
           status: remoteDraw.status,
-          financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
+          financialDate: remoteDraw.financialDate,
           group: DrawSelectorGroup.Recent,
           // High-water mark — BẮT BUỘC có để nút "Kết sổ lại" hiển thị đúng
           // cho kỳ historical (không nằm trong selector list).

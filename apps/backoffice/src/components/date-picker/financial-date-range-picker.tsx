@@ -302,7 +302,7 @@ export function FinancialDateRangePicker({
   const buttonLabel = isSameDay ? displayDate(from) : `${displayDate(from)} — ${displayDate(to)}`;
 
   const pendingDays =
-    pendingRange?.from && pendingRange?.to ? differenceInCalendarDays(pendingRange.to, pendingRange.from) + 1 : 0;
+    pendingRange?.from && pendingRange.to ? differenceInCalendarDays(pendingRange.to, pendingRange.from) + 1 : 0;
 
   const canConfirm = !!pendingRange?.from;
   const commonPresets = presets.filter((p) => p.group === "common");

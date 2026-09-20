@@ -59,18 +59,19 @@ function diffIndices(lists: string[][]): Set<number> {
 function NumbersRow({ numbers, diff }: { numbers: string[]; diff: Set<number> }) {
   return (
     <div className="flex flex-wrap gap-1">
-      {numbers.map((n, i) => (
-        <span
-          // biome-ignore lint/suspicious/noArrayIndexKey: thứ tự phần tử CHÍNH LÀ dữ liệu hiển thị (không sort lại), số có thể trùng giá trị (VD bingo18) nên không có key nào ổn định hơn index.
-          key={`${i}-${n}`}
-          className={cn(
-            "rounded border px-1.5 py-0.5 font-mono text-xs tabular-nums",
-            diff.has(i) ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-border bg-muted/40",
-          )}
-        >
-          {n}
-        </span>
-      ))}
+      {numbers
+        .map((n, i) => ({ id: `pos-${i}`, n, i }))
+        .map(({ id, n, i }) => (
+          <span
+            key={id}
+            className={cn(
+              "rounded border px-1.5 py-0.5 font-mono text-xs tabular-nums",
+              diff.has(i) ? "border-destructive/50 bg-destructive/10 text-destructive" : "border-border bg-muted/40",
+            )}
+          >
+            {n}
+          </span>
+        ))}
     </div>
   );
 }

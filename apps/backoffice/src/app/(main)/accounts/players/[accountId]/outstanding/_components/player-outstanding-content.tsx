@@ -133,17 +133,18 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
     >();
     for (const entry of data.entries) {
       const gp = entry.gameProduct;
-      if (!map.has(gp)) {
-        map.set(gp, {
+      let group = map.get(gp);
+      if (!group) {
+        group = {
           gameProduct: gp,
           drawCount: 0,
           entryCount: 0,
           totalCommission: 0,
           totalStake: 0,
           drawIds: new Set(),
-        });
+        };
+        map.set(gp, group);
       }
-      const group = map.get(gp)!;
       group.drawIds.add(entry.drawId);
       group.entryCount += 1;
       group.totalCommission += entry.commissionAmount;
@@ -171,15 +172,16 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       }
     >();
     for (const entry of gameEntries) {
-      if (!map.has(entry.drawId)) {
-        map.set(entry.drawId, {
+      let group = map.get(entry.drawId);
+      if (!group) {
+        group = {
           drawId: entry.drawId,
           entryCount: 0,
           totalCommission: 0,
           totalStake: 0,
-        });
+        };
+        map.set(entry.drawId, group);
       }
-      const group = map.get(entry.drawId)!;
       group.entryCount += 1;
       group.totalCommission += entry.commissionAmount;
       group.totalStake += entry.amount;
@@ -310,20 +312,20 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
         <GamesView byGame={byGame} onSelectGame={handleSelectGame} />
       ) : view === "draws" ? (
         <DrawsView byDraw={byDraw} onSelectDraw={handleSelectDraw} />
-      ) : (
+      ) : od && og ? (
         <EntriesView
-          drawId={od!}
+          drawId={od}
           tenantId={tenantId}
-          game={og!}
+          game={og}
           rows={paginatedEntries.map(toOutstandingEntryRow)}
           showLineCount={showLineCount}
           page={safePage}
           totalPages={totalEntryPages}
           totalCount={entriesForDraw.length}
           onPageChange={(p) => void setOdp(p)}
-          onRowClick={(row) => handleSelectEntry(row.id, og!)}
+          onRowClick={(row) => handleSelectEntry(row.id, og)}
         />
-      )}
+      ) : null}
 
       {/* Entry Detail Dialog */}
       <GameEntryDetailDialog

@@ -18,6 +18,7 @@ import { apiClient } from "@megawin/next/client";
 import { useQuery } from "@tanstack/react-query";
 
 import { max3dKeys } from "@/lib/query-keys";
+import { requireQueryParam } from "@/lib/require-query-param";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -93,7 +94,7 @@ export function useMax3DPlayers(drawId: string, tenantId: string | null) {
     queryFn: () =>
       apiClient
         .get<ListPlayerBreakdownOutput>("/max3d/reports/players", {
-          params: { drawId, tenantId: tenantId! },
+          params: { drawId, tenantId: requireQueryParam(tenantId, "tenantId") },
         })
         .then((r) => r.data),
     enabled: !!(drawId && tenantId),

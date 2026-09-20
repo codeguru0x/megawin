@@ -131,10 +131,11 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
 }
 
 function CardListSkeleton() {
+  const slotIds = ["card-0", "card-1"] as const;
   return (
     <div className="grid grid-cols-1 gap-4">
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="bg-card rounded-xl border">
+      {slotIds.map((id) => (
+        <div key={id} className="bg-card rounded-xl border">
           <div className="flex items-center gap-3 border-b px-6 py-4">
             <Skeleton className="size-10 rounded-xl" />
             <div className="space-y-1.5">

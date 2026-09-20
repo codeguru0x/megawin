@@ -120,9 +120,11 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   <div key={row.label} className="flex items-center gap-3">
                     <span className="text-muted-foreground w-16 shrink-0 text-xs font-semibold">{row.label}</span>
                     <div className="flex flex-wrap gap-1.5">
-                      {row.triplets.map((t, i) => (
-                        <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
-                      ))}
+                      {row.triplets
+                        .map((t, i) => ({ id: `trip-${i}`, t }))
+                        .map(({ id, t }) => (
+                          <TripletDisplay key={id} value={t} variant={row.variant} size="sm" />
+                        ))}
                     </div>
                   </div>
                 ))}

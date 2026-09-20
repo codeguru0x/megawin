@@ -144,7 +144,7 @@ function toLiveFeed(entries: LiveEntryItem[] | undefined): LiveFeedEntry[] {
       specialNumbers: firstBoard?.specialNumbers ?? [],
       suffix: baoSuffix(playType),
       amount: e.amount,
-      username: e.username ?? "",
+      username: e.username,
       tenant: e.tenantId,
     };
   });

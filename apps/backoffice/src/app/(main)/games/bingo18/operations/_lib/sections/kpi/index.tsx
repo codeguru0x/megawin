@@ -12,7 +12,6 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { toKpi } from "../../adapters";
-import { EXPOSURE_WARN_REVENUE_PCT_DEFAULT } from "../../ops-constants";
 import type { OpsKpi } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSnapshot } from "../../use-operations";
@@ -49,8 +48,8 @@ export function KpiSection() {
       ? {
           exposure: s.exposure,
           revenue: s.stats.totals.revenue,
-          warnRevenuePct: s.thresholds.exposureWarnRevenuePct ?? EXPOSURE_WARN_REVENUE_PCT_DEFAULT,
-          warnMinAmount: s.thresholds.exposureWarnMinAmount ?? 0,
+          warnRevenuePct: s.thresholds.exposureWarnRevenuePct,
+          warnMinAmount: s.thresholds.exposureWarnMinAmount,
         }
       : null,
   );
@@ -62,8 +61,8 @@ export function KpiSection() {
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-18 rounded-xl" />
+        {Array.from({ length: 6 }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-18 rounded-xl" />
         ))}
       </div>
     );

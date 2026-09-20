@@ -84,7 +84,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
 
   useAiFormDirty("jackpot", form.formState.isDirty);
 
-  const jp1Ratio = useWatch({ control: form.control, name: "jp1ContributionRatio" }) ?? 90;
+  const jp1Ratio = useWatch({ control: form.control, name: "jp1ContributionRatio" });
   const jp2Ratio = 100 - jp1Ratio;
 
   function handleSubmit(values: JackpotFormValues) {
@@ -227,7 +227,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                             <FormControl>
                               <MoneyInput
                                 className="w-20 text-center font-semibold"
-                                value={field.value ?? 90}
+                                value={field.value}
                                 onValueChange={(v) => {
                                   const clamped = Math.min(99, Math.max(1, v ?? 1));
                                   field.onChange(clamped);

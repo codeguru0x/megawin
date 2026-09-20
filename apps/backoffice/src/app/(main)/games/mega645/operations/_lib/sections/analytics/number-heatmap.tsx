@@ -460,7 +460,7 @@ function ComboLookupDialog({
               )}
             >
               Đã chọn {selected.length} số
-              {isValidCount && pt ? ` · ${MEGA645_PLAY_TYPE_LABELS[pt]}` : " · cần 5, 6, 7–15 hoặc 18"}
+              {pt ? ` · ${MEGA645_PLAY_TYPE_LABELS[pt]}` : " · cần 5, 6, 7–15 hoặc 18"}
             </span>
             {selected.length > 0 && (
               <button

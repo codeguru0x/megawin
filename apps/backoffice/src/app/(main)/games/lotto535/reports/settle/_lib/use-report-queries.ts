@@ -18,6 +18,7 @@ import { apiClient } from "@megawin/next/client";
 import { useQuery } from "@tanstack/react-query";
 
 import { lotto535Keys } from "@/lib/query-keys";
+import { requireQueryParam } from "@/lib/require-query-param";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ export function useLotto535Players(drawId: string, tenantId: string | null) {
     queryFn: () =>
       apiClient
         .get<ListPlayerBreakdownOutput>("/lotto535/reports/players", {
-          params: { drawId, tenantId: tenantId! },
+          params: { drawId, tenantId: requireQueryParam(tenantId, "tenantId") },
         })
         .then((r) => r.data),
     enabled: !!(drawId && tenantId),

@@ -4,8 +4,8 @@ export default function MainLoading() {
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+        {Array.from({ length: 4 }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-24 rounded-lg" />
         ))}
       </div>
       <Skeleton className="h-80 w-full rounded-lg" />

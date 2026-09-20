@@ -125,9 +125,11 @@ export function DiceDisplay({ numbers, size = "md", showSum = true, className }:
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {numbers.map((n, i) => (
-        <Bingo18NumberBall key={i} number={n} size={size} highlight={hasDuplicates && (counts[n] ?? 0) >= 2} />
-      ))}
+      {numbers
+        .map((n, i) => ({ id: `die-${i}`, n }))
+        .map(({ id, n }) => (
+          <Bingo18NumberBall key={id} number={n} size={size} highlight={hasDuplicates && (counts[n] ?? 0) >= 2} />
+        ))}
       {showSum && numbers.length > 0 && (
         <div className="ml-1 flex items-center gap-1">
           <span className="text-muted-foreground">=</span>

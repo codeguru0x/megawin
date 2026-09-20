@@ -289,10 +289,7 @@ export function HubQueueTable() {
     const queue = anchorRow.status === DrawStatus.SalesClosed ? [anchorRow, ...after] : after;
     return queue.length > 0 ? queue.map(toPublishResultDraw) : undefined;
   }, [state.rows, publishAnchorId]);
-  // Biến riêng để TS narrow đúng `PublishResultDraw` (không `| undefined`) — truy cập
-  // `publishQueue[0]` trực tiếp trong JSX vẫn giữ union do `noUncheckedIndexedAccess`.
-  const firstQueuedDraw = publishQueue?.[0];
-
+  // `publishQueue?.[0]` — `noUncheckedIndexedAccess`; JSX dùng `publishQueue[0]` sau guard length.
   const canSelectRows = useMemo(() => rows5A.filter((r) => hasAnyAction(r, nowMs)), [rows5A, nowMs]);
   const selectedCount = canSelectRows.filter((r) => validSelection.has(r.drawId)).length;
   const allSelectableSelected = canSelectRows.length > 0 && selectedCount === canSelectRows.length;
@@ -467,9 +464,9 @@ export function HubQueueTable() {
           nên dialog mount ngay khi tồn tại bất kỳ kỳ `SalesClosed`, tức gần như mọi phiên.
           Cờ này CHỈ bật, KHÔNG BAO GIỜ tắt → sau lần mở đầu tiên hành vi mount y hệt bản cũ,
           giữ nguyên fix 09/09 (dialog phải sống sót qua mọi refetch giữa các kỳ trong hàng đợi). */}
-      {publishEverOpened && firstQueuedDraw && publishQueue ? (
+      {publishEverOpened && publishQueue?.[0] ? (
         <PublishResultAction
-          draw={firstQueuedDraw}
+          draw={publishQueue[0]}
           disabled={false}
           open={publishOpen}
           onOpenChange={setPublishOpen}

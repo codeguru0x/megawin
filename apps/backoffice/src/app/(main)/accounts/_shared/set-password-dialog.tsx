@@ -240,9 +240,9 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
                   {passwordValue.length > 0 && (
                     <div className="space-y-1">
                       <div className="flex gap-1">
-                        {Array.from({ length: 4 }).map((_, i) => (
+                        {(["s0", "s1", "s2", "s3"] as const).map((id, i) => (
                           <div
-                            key={i}
+                            key={id}
                             className={cn(
                               "h-1 flex-1 rounded-full transition-all duration-300",
                               i < strength ? (STRENGTH_CONFIG[strength]?.color ?? "bg-muted") : "bg-muted",

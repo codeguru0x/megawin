@@ -91,18 +91,10 @@ function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
             "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
           tier.tier === BasicPrizeTier.Third &&
             "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-          tier.tier === PlusPrizeTier.Fourth && "border-border bg-muted/40 text-muted-foreground",
-          tier.tier === PlusPrizeTier.Fifth && "border-border bg-muted/40 text-muted-foreground",
-          tier.tier === PlusPrizeTier.Sixth && "border-border bg-muted/40 text-muted-foreground",
-          !(
-            tier.tier === BasicPrizeTier.Special ||
-            tier.tier === BasicPrizeTier.First ||
-            tier.tier === BasicPrizeTier.Second ||
-            tier.tier === BasicPrizeTier.Third ||
-            tier.tier === PlusPrizeTier.Fourth ||
+          (tier.tier === PlusPrizeTier.Fourth ||
             tier.tier === PlusPrizeTier.Fifth ||
-            tier.tier === PlusPrizeTier.Sixth
-          ) && "border-border bg-muted/40 text-muted-foreground",
+            tier.tier === PlusPrizeTier.Sixth) &&
+            "border-border bg-muted/40 text-muted-foreground",
         )}
       >
         {label}

@@ -14,6 +14,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 
 import { tenantDispatchKeys } from "@/lib/query-keys";
+import { requireQueryParam } from "@/lib/require-query-param";
 
 /**
  * Serialize cursor object → `"{iso}|{id}"` để server parse lại.
@@ -182,7 +183,8 @@ export function useDispatchDetail(tx: string | null) {
   return useQuery({
     queryKey: tx ? tenantDispatchKeys.byTx(tx) : tenantDispatchKeys.all,
     enabled: !!tx,
-    queryFn: () => apiClient.get<GetOrderByTxOutput>(`/tenant-dispatch/${encodeURIComponent(tx!)}`),
+    queryFn: () =>
+      apiClient.get<GetOrderByTxOutput>(`/tenant-dispatch/${encodeURIComponent(requireQueryParam(tx, "tx"))}`),
   });
 }
 
@@ -197,7 +199,7 @@ export function useBatchProgress(batchKey: string | null) {
     enabled: !!batchKey,
     queryFn: () =>
       apiClient.get<GetBatchProgressOutput>("/tenant-dispatch/batch-progress", {
-        params: { batchKey: batchKey! },
+        params: { batchKey: requireQueryParam(batchKey, "batchKey") },
       }),
     refetchInterval: 30_000,
     staleTime: 15_000,

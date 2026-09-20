@@ -14,6 +14,8 @@
  * override per-tool (nếu có khai ở `tool-renderers/view-spec.ts`).
  */
 
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
+
 import { ChartFieldType, ChartKind, getChartCatalogEntry, suitableChartKinds } from "./chart-catalog";
 
 /** 1 dòng dữ liệu đã rút — giá trị field có thể là bất kỳ kiểu JSON nào lúc đầu vào. */
@@ -379,7 +381,7 @@ function fallbackLabel(key: string): string {
 
 /** Độ dài nhãn trục X DÀI NHẤT — quyết định cột dọc (nhãn ngắn) vs cột ngang (nhãn dài), xem `ChartSuitabilityInput`. */
 function maxLabelLength(rows: readonly ChartRow[], xKey: string): number {
-  return rows.reduce((max, row) => Math.max(max, String(row[xKey] ?? "").length), 0);
+  return rows.reduce((max, row) => Math.max(max, unknownToDisplayString(row[xKey]).length), 0);
 }
 
 /** Tỉa `rows` về tối đa `MAX_POINTS`: time → lấy N gần nhất (giữ nguyên khoảng đều theo sort); category giữ nguyên (đã ≤ 30). */
@@ -407,8 +409,8 @@ function sortByXAxis(rows: ChartRow[], xKey: string, xType: ChartFieldType): Cha
     return rows;
   }
   return rows.toSorted((a, b) => {
-    const av = String(a[xKey] ?? "");
-    const bv = String(b[xKey] ?? "");
+    const av = unknownToDisplayString(a[xKey]);
+    const bv = unknownToDisplayString(b[xKey]);
     return av < bv ? -1 : av > bv ? 1 : 0;
   });
 }

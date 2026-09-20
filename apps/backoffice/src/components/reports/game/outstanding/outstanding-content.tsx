@@ -130,8 +130,8 @@ function OutstandingSkeleton({ showLineCount }: { showLineCount?: boolean }) {
         </div>
       </div>
       <div className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3", cols === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
-        {[...Array(cols)].map((_, i) => (
-          <Skeleton key={i} className="h-18 w-full rounded-xl" />
+        {Array.from({ length: cols }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-18 w-full rounded-xl" />
         ))}
       </div>
       <Skeleton className="h-64 w-full rounded-xl" />

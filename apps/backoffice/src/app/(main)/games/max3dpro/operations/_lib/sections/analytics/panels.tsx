@@ -44,7 +44,11 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
       <CardContent className="px-5 pt-0 pb-4">
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {playTypes.map((r) => {
-            const color = GROUP_COLORS[r.playType] ?? GROUP_COLORS.basicStraight!;
+            const fallback = GROUP_COLORS.basicStraight;
+            if (!fallback) {
+              throw new Error("GROUP_COLORS.basicStraight missing");
+            }
+            const color = GROUP_COLORS[r.playType] ?? fallback;
             return (
               <div key={r.playType} className="border-border/50 bg-muted/10 rounded-lg border p-3">
                 <div className="flex items-center gap-1.5">

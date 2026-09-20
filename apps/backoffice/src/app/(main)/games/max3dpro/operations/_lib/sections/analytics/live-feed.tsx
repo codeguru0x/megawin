@@ -105,9 +105,12 @@ export function LiveFeed({
 
                     {/* Row 2: triplets + meta | amount */}
                     <div className="mt-0.5 flex flex-nowrap items-center gap-1 overflow-hidden">
-                      {e.triplets.slice(0, 4).map((t, idx) => (
-                        <TripletDisplay key={idx} value={t} variant="default" size="sm" />
-                      ))}
+                      {e.triplets
+                        .slice(0, 4)
+                        .map((t, idx) => ({ id: `trip-${idx}`, t }))
+                        .map(({ id, t }) => (
+                          <TripletDisplay key={id} value={t} variant="default" size="sm" />
+                        ))}
                       {e.triplets.length > 4 && (
                         <span className="text-muted-foreground shrink-0 text-xs">+{e.triplets.length - 4}</span>
                       )}

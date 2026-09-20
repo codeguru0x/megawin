@@ -533,7 +533,8 @@ function ComboLookupDialog({
   const isValid = suggestedPt !== null && validation.valid;
 
   const handleLookup = () => {
-    if (isValid && suggestedPt) {
+    // isValid ≡ suggestedPt !== null && validation.valid — gọi thẳng khi đủ chọn.
+    if (suggestedPt !== null && validation.valid) {
       lookup.mutate({
         playType: suggestedPt,
         mainNumbers: selectedMain,

@@ -54,7 +54,7 @@ export function DispatchContent() {
   const rows = useMemo(() => listQuery.data?.pages.flatMap((p) => p.data) ?? [], [listQuery.data]);
 
   // Drawer ưu tiên `detail` > `tx` identity (tx identity cũng là 1 order cụ thể).
-  const drawerTx = f.detail || (f.tx ?? null);
+  const drawerTx = f.detail || f.tx;
 
   return (
     <div className="flex flex-col gap-4">

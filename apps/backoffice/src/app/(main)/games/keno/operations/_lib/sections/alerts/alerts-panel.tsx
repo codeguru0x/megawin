@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
 import { cn } from "@/lib/utils";
 
 import { KENO_OPS_ALERT_TYPE_LABELS } from "../../ops-constants";
@@ -129,8 +130,8 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
     case KenoOpsAlertType.SidebetSkew: {
       const pct = toNum(payload.pct);
       const total = toNum(payload.total);
-      const dir = String(payload.direction ?? "");
-      const pair = String(payload.pair ?? "");
+      const dir = unknownToDisplayString(payload.direction);
+      const pair = unknownToDisplayString(payload.pair);
       return {
         summary: `Tiền cược ${pair} dồn ${pct}% về một hướng (${dir}).`,
         chips: [
@@ -141,7 +142,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
       };
     }
     case KenoOpsAlertType.CapSetsNear: {
-      const pick = String(payload.pick ?? "");
+      const pick = unknownToDisplayString(payload.pick);
       const sets = toNum(payload.sets);
       const capAt = toNum(payload.capAt);
       return {
@@ -172,7 +173,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
         if (v === null || v === undefined || typeof v === "object") {
           continue;
         }
-        chips.push({ label: k, value: typeof v === "number" ? formatNumber(v) : String(v) });
+        chips.push({ label: k, value: typeof v === "number" ? formatNumber(v) : unknownToDisplayString(v) });
       }
       return { summary: "", chips };
     }
@@ -362,8 +363,8 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Skeleton key={i} className="h-11 rounded-xl" />
+        {Array.from({ length: 2 }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-11 rounded-xl" />
         ))}
       </div>
     );

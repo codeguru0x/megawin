@@ -109,11 +109,13 @@ export function GameDrawKpiStrip({ data, drawCountSub = "kỳ đã settle" }: Ga
 }
 
 /** Skeleton placeholder match số lượng và layout của GameDrawKpiStrip. */
+const KPI_SKELETON_SLOTS = ["kpi-0", "kpi-1", "kpi-2", "kpi-3", "kpi-4", "kpi-5"] as const;
+
 export function GameDrawKpiStripSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className="bg-muted h-19 w-full animate-pulse rounded-xl border" />
+      {KPI_SKELETON_SLOTS.map((id) => (
+        <div key={id} className="bg-muted h-19 w-full animate-pulse rounded-xl border" />
       ))}
     </div>
   );

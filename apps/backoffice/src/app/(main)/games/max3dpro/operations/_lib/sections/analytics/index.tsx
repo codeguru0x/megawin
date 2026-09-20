@@ -80,7 +80,7 @@ export function AnalyticsSection({ active }: { active: boolean }) {
         lineCount: firstBoard?.lineCount ?? 1,
         betCount: firstBoard?.betCount ?? 1,
         amount: e.amount,
-        username: e.username ?? "",
+        username: e.username,
         tenant: e.tenantId,
       };
     });

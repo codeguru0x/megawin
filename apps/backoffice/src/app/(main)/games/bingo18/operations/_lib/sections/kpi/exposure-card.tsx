@@ -24,14 +24,16 @@ import { cn } from "@/lib/utils";
 function DiceBadges({ numbers }: { numbers: [number, number, number] }) {
   return (
     <span className="inline-flex items-center gap-1">
-      {numbers.map((n, i) => (
-        <span
-          key={i}
-          className="text-2xs inline-flex size-5 items-center justify-center rounded bg-red-500/10 font-bold text-red-700 tabular-nums dark:text-red-300"
-        >
-          {n}
-        </span>
-      ))}
+      {numbers
+        .map((n, i) => ({ id: `die-${i}`, n }))
+        .map(({ id, n }) => (
+          <span
+            key={id}
+            className="text-2xs inline-flex size-5 items-center justify-center rounded bg-red-500/10 font-bold text-red-700 tabular-nums dark:text-red-300"
+          >
+            {n}
+          </span>
+        ))}
     </span>
   );
 }

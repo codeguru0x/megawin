@@ -110,14 +110,16 @@ function FeedRow({
               <span className="text-muted-foreground text-xs italic">—</span>
             )
           ) : entry.numbers.length > 0 ? (
-            entry.numbers.map((n, idx) => (
-              <span
-                key={`n-${idx}`}
-                className="text-2xs inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500 font-bold text-white tabular-nums"
-              >
-                {n}
-              </span>
-            ))
+            entry.numbers
+              .map((n, idx) => ({ id: `n-${idx}`, n }))
+              .map(({ id, n }) => (
+                <span
+                  key={id}
+                  className="text-2xs inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-green-500 font-bold text-white tabular-nums"
+                >
+                  {n}
+                </span>
+              ))
           ) : null}
         </div>
         <div className="flex items-start justify-end">

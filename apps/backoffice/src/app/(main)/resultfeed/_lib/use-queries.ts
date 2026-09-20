@@ -13,6 +13,7 @@ import { keepPreviousData, noop, useMutation, useQuery, useQueryClient, type Que
 import { toast } from "sonner";
 
 import { resultfeedKeys, type ConsensusListFilters } from "@/lib/query-keys";
+import { requireQueryParam } from "@/lib/require-query-param";
 
 /** Shape trả về của `GET /api/resultfeed/consensus` — mirror `ListConsensusOutput`. */
 export interface ConsensusListPage {
@@ -58,7 +59,7 @@ export function useConsensusPeriod(gameKey: string | null, drawPeriod: string | 
     queryKey: resultfeedKeys.consensusPeriod(gameKey ?? "", drawPeriod ?? ""),
     queryFn: () =>
       apiClient.get<ConsensusPeriodDetail>(
-        `/resultfeed/consensus/${encodeURIComponent(gameKey!)}/${encodeURIComponent(drawPeriod!)}`,
+        `/resultfeed/consensus/${encodeURIComponent(requireQueryParam(gameKey, "gameKey"))}/${encodeURIComponent(requireQueryParam(drawPeriod, "drawPeriod"))}`,
       ),
     enabled: !!gameKey && !!drawPeriod,
   });
@@ -116,7 +117,7 @@ export function useObservationsByGame(gameKey: ResultFeedGameKey | null, limit?:
     queryKey: resultfeedKeys.observations(gameKey ?? "", limit),
     queryFn: () =>
       apiClient.get<ObservationEntity[]>("/resultfeed/observations", {
-        params: { gameKey: gameKey!, ...(limit ? { limit: String(limit) } : {}) },
+        params: { gameKey: requireQueryParam(gameKey, "gameKey"), ...(limit ? { limit: String(limit) } : {}) },
       }),
     enabled: !!gameKey,
   });

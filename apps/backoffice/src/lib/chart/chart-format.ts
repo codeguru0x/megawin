@@ -12,6 +12,8 @@
 
 import { formatCurrency, formatNumber, formatPercent, formatVND } from "@megawin/shared/utils";
 
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
+
 import { ChartFieldType } from "./chart-catalog";
 import { DRAW_ID_PATTERN, ISO_DATE_PATTERN, ISO_MONTH_PATTERN } from "./chart-inference";
 
@@ -206,12 +208,12 @@ export function formatTooltipValue(value: number, type: ChartFieldType): string 
  */
 export function formatXAxisTick(value: unknown, type: ChartFieldType, now: Date = new Date()): string {
   if (type === ChartFieldType.Time) {
-    return formatTimeAxisTick(String(value ?? ""), now);
+    return formatTimeAxisTick(unknownToDisplayString(value), now);
   }
   if (type === ChartFieldType.Number || type === ChartFieldType.Currency || type === ChartFieldType.Percent) {
     return formatAxisTick(Number(value ?? 0), type);
   }
-  return truncateLabel(String(value ?? ""));
+  return truncateLabel(unknownToDisplayString(value));
 }
 
 /**
@@ -222,7 +224,7 @@ export function formatXAxisTick(value: unknown, type: ChartFieldType, now: Date 
  * `"Tháng 3/2026"`, và nhãn category dài bị `…` cả ở chỗ không cần cắt.
  */
 export function formatXAxisFullLabel(value: unknown, type: ChartFieldType): string {
-  const text = String(value ?? "");
+  const text = unknownToDisplayString(value);
   if (type === ChartFieldType.Time) {
     return formatTimeTooltip(text);
   }

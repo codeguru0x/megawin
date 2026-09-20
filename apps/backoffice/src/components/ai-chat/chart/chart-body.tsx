@@ -66,6 +66,7 @@ import {
   type ChartRow,
   type ChartSeries,
 } from "@/lib/chart";
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
 import { cn } from "@/lib/utils";
 
 /** Nhãn lát gộp phần dư của pie/donut/radialBar khi vượt {@link MAX_PROPORTION_SLICES}. */
@@ -142,10 +143,10 @@ function buildProportionConfig(
   const valueKey = model.series[0]?.dataKey ?? "";
   config[valueKey] = { label: prettifyLabel(valueKey, reportLabels) };
   rows.forEach((row) => {
-    const name = String(row[model.x.dataKey] ?? "");
+    const name = unknownToDisplayString(row[model.x.dataKey]);
     config[name] = {
       label: xValueFull(model, name),
-      color: String(row.fill ?? ""),
+      color: unknownToDisplayString(row.fill),
     };
   });
   return config;
@@ -159,12 +160,12 @@ function buildProportionConfig(
  * hiện hai tên khác nhau trong cùng một card.
  */
 function xValueFull(model: ChartModel, value: unknown): string {
-  return model.xLabel?.(String(value ?? "")) ?? formatXAxisFullLabel(value, model.x.type);
+  return model.xLabel?.(unknownToDisplayString(value)) ?? formatXAxisFullLabel(value, model.x.type);
 }
 
 /** Nhãn giá trị trục X dạng NGẮN (tick trục) — `xLabel` không rút gọn, nhãn game vốn đã ngắn. */
 function xValueTick(model: ChartModel, value: unknown): string {
-  return model.xLabel?.(String(value ?? "")) ?? formatXAxisTick(value, model.x.type);
+  return model.xLabel?.(unknownToDisplayString(value)) ?? formatXAxisTick(value, model.x.type);
 }
 
 function typeForSeries(model: ChartModel, dataKey: string): ChartFieldType {

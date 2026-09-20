@@ -235,7 +235,7 @@ export function PlayTypeCard({ distribution }: { distribution: PlayTypeRow[] }) 
     (pt) =>
       byType.get(pt) ?? {
         playType: pt,
-        label: POWER655_PLAY_TYPE_LABELS[pt] ?? pt,
+        label: POWER655_PLAY_TYPE_LABELS[pt],
         sets: 0,
         boards: 0,
         revenue: 0,

@@ -105,7 +105,7 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
     accountId: p.accountId,
     displayName: toTenantUsername(p.username),
     entryCount: p.entryCount,
-    lineCount: p.lineCount ?? 0,
+    lineCount: p.lineCount,
     totalStake: p.totalStake,
     totalWin: p.totalWin,
     totalPayout: p.totalPayout,

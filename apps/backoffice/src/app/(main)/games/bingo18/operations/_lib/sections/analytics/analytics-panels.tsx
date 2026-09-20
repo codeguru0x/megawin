@@ -166,7 +166,11 @@ function BasicCard({ row }: { row: PlayTypeRow }) {
 // ─── Side Bet Card (larger, full height) ──────────────────────────────────────
 
 function SideBetCard({ row }: { row: PlayTypeRow }) {
-  const s = SIDE_BET_STYLES[row.playType] ?? SIDE_BET_STYLES.sumTotal!;
+  const fallbackStyle = SIDE_BET_STYLES.sumTotal;
+  if (!fallbackStyle) {
+    throw new Error("SIDE_BET_STYLES.sumTotal missing");
+  }
+  const s = SIDE_BET_STYLES[row.playType] ?? fallbackStyle;
   return (
     <div className={cn("flex flex-1 flex-col gap-2 rounded-xl border p-3.5 transition-all", s.bg, s.border)}>
       <div className="flex items-center gap-2">

@@ -35,6 +35,7 @@ import {
   type ChartModel,
   type ChartRow,
 } from "@/lib/chart";
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
 
 import { CellFormat } from "../tool-renderers/format-cell";
 import { CardShell, DataTable } from "../tool-renderers/generic-tool-view";
@@ -89,7 +90,7 @@ function buildTableRows(model: ChartModel): ChartRow[] {
     return model.rows;
   }
   const key = model.x.dataKey;
-  return model.rows.map((row) => ({ ...row, [key]: model.xLabel?.(String(row[key] ?? "")) ?? row[key] }));
+  return model.rows.map((row) => ({ ...row, [key]: model.xLabel?.(unknownToDisplayString(row[key])) ?? row[key] }));
 }
 
 /** Panel docked hẹp (~360px, xem `financial-report-ui.mdc`) — toggle icon-only vẫn giữ tooltip tên loại. */

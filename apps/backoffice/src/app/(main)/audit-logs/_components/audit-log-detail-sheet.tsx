@@ -51,10 +51,18 @@ function formatValue(value: unknown): string {
     try {
       return JSON.stringify(value, null, 2);
     } catch {
-      return String(value);
+      return "[unserializable]";
     }
   }
-  return String(value);
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint"
+  ) {
+    return String(value);
+  }
+  return "";
 }
 
 /**
@@ -226,7 +234,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           {log.changes?.before !== undefined ? (
             <div className="grid grid-cols-2 gap-2">
               <DiffPane title="Trước" value={log.changes.before} highlight={diffKeys} />
-              <DiffPane title="Sau" value={log.changes?.after} highlight={diffKeys} />
+              <DiffPane title="Sau" value={log.changes.after} highlight={diffKeys} />
             </div>
           ) : (
             <DiffPane title="Giá trị mới" value={log.changes?.after} highlight={diffKeys} />

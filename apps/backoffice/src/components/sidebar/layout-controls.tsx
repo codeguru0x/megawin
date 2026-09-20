@@ -143,7 +143,7 @@ export function LayoutControls() {
                         style={
                           {
                             "--preset-swatch":
-                              (resolvedThemeMode ?? "light") === "dark" ? preset.primary.dark : preset.primary.light,
+                              resolvedThemeMode === "dark" ? preset.primary.dark : preset.primary.light,
                           } as CSSProperties
                         }
                       />

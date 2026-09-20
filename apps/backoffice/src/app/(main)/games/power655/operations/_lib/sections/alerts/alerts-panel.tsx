@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
 import { cn } from "@/lib/utils";
 
 import { POWER655_OPS_ALERT_TYPE_LABELS } from "../../ops-constants";
@@ -143,7 +144,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
       const players = toNum(payload.players);
       const sets = toNum(payload.sets);
       const amount = toNum(payload.amount);
-      const pt = String(payload.playType ?? "");
+      const pt = unknownToDisplayString(payload.playType);
       const label = POWER655_PLAY_TYPE_LABELS[pt as keyof typeof POWER655_PLAY_TYPE_LABELS];
       return {
         summary: `${formatNumber(players)} người chơi cùng dồn 1 bộ số${label ? ` (${label})` : ""} — dấu hiệu syndicate.`,
@@ -176,7 +177,7 @@ function describeAlert(type: string, payload: Record<string, unknown>): AlertDes
         if (v === null || v === undefined || typeof v === "object") {
           continue;
         }
-        chips.push({ label: k, value: typeof v === "number" ? formatNumber(v) : String(v) });
+        chips.push({ label: k, value: typeof v === "number" ? formatNumber(v) : unknownToDisplayString(v) });
       }
       return { summary: "", chips };
     }
@@ -364,8 +365,8 @@ export function AlertsPanel({ drawId, active }: { drawId: string | undefined; ac
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Skeleton key={i} className="h-11 rounded-xl" />
+        {Array.from({ length: 2 }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-11 rounded-xl" />
         ))}
       </div>
     );

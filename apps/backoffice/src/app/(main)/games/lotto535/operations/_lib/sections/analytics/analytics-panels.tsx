@@ -580,7 +580,7 @@ function TenantDetailCard({ tenant, rank, maxRevenue }: { tenant: TenantRow; ran
         <TenantMetric
           icon={Users}
           label="Người chơi"
-          value={tenant.players === null ? "—" : formatNumber(tenant.players)}
+          value={"—"}
           sub={`${formatNumber(tenant.entries)} vé`}
           accent="text-foreground"
         />
@@ -641,9 +641,7 @@ function TenantTable({ tenants, maxRevenue }: { tenants: TenantRow[]; maxRevenue
               <span className="text-muted-foreground/50 shrink-0 text-xs">{t.pct.toFixed(0)}%</span>
             </div>
             <span className="relative text-right text-sm tabular-nums">{formatNumber(t.entries)}</span>
-            <span className="text-muted-foreground relative text-right text-sm tabular-nums">
-              {t.players === null ? "—" : formatNumber(t.players)}
-            </span>
+            <span className="text-muted-foreground relative text-right text-sm tabular-nums">{"—"}</span>
             <span className="relative text-right text-sm font-medium tabular-nums">{formatNumber(t.revenue)}</span>
           </div>
         ))}

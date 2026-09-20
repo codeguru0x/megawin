@@ -55,7 +55,7 @@ export function ExposureCard({
           ? (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onOpenAnalysis?.();
+                onOpenAnalysis();
               }
             }
           : undefined

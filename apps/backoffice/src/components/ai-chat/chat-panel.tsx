@@ -222,7 +222,7 @@ export function ChatPanel({ header }: { header: ReactNode }) {
         }
         const prompt = candidate.parts
           .filter((part) => part.type === "text")
-          .map((part) => (part.type === "text" ? part.text : ""))
+          .map((part) => part.text)
           .join("\n\n")
           .trim();
         if (prompt === "") {

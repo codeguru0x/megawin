@@ -21,7 +21,10 @@
 | **S3e + S6b** (20/09) | Accounts/agents tables LABEL+mfa; create-account ROLE_META/strength; profile labels; entry-detail LABEL/`??` (lotto/mega/max3d/max3dpro/power); bingo18 `key={boardNo}`; max3dpro playMode dead branch. |
 | **S3f + S6c** (20/09) | Players STATUS/GAME_LABELS; outstanding `entries[0]`; resettle `key={n}`; publish `slot-${i}`/`msg`; draw-history/winning triplets; player settle skeletons. |
 | **S3g + S6d** (20/09) | Alerts LABEL/counts; draw-mgmt LABEL+cast; entry-list `boards.length`; draw-history `special.map`; prizes `defaultPrizes`; dashboard/jackpot/tenant/by-game slot keys; winning `boardNo`/`tier`; bingo18 publish `d1..d3`. ops-section `config.ops ??` **giữ** (tsc optional). |
-| Còn lại | unnecessary **112**; array-index **62**; non-null 173; set-state 53 |
+| **S6e DONE** (20/09) | `no-array-index-key` **→ 0** — skeleton `Array.from(…, (_, i) => \`slot-${i}\`).map((id) => <… key={id}>)`. Sửa regression `key={id}\`}` (regex nested `${i}`). |
+| **S3h + S7b DONE** (20/09) | UC **69→58**: render-message narrow; username/theme/jp ratio/counts; dispatch `nextAttemptAt`; bingo hub publishQueue; max3d badge dùng `TIER_CONFIG` (fix bug class orange luôn bật). `no-base-to-string` **33→0** qua `unknownToDisplayString` (alerts×7 + chart + format-cell + audit). |
+| **S5a DONE** (20/09) | `requireQueryParam` — thay `tx!`/`batchId!`/`tenantId!`/`gameKey!` trong dispatch/api-logs/resultfeed/use-report-queries×7; map.get → let+set; style fallback narrow. NN **173→147** (còn chủ yếu `session!` trên API routes). |
+| Còn lại | unnecessary **58** (≈43 ngoài ai-elements/evals — chủ yếu LABEL `??` + useDrawDetail + accountId `?? ""`); array-index **0**; non-null **147** (≈97 `session!`); set-state 53; any 127 |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ### Ma trận rủi ro S3→S9 (quyết định tiếp tục)
@@ -30,8 +33,8 @@
 |---|---|---|
 | **S3/S4** unnecessary `?.` đã chứng minh type | Thấp | **Tiếp tục** từng batch nhỏ + check-types |
 | **S5** `!` còn lại | Trung bình | Làm case có narrow rõ; không `as NonNullable` |
-| **S6** array-index (skeleton / boardNo / label) | Thấp | **Tiếp tục** — list reorder mới cần id nghiệp vụ |
-| **S7** sort-compare | Thấp | **DONE** 0; `any`/`base-to-string` còn — làm riêng |
+| **S6** array-index (skeleton / boardNo / label) | Thấp | **DONE** 0 |
+| **S7** sort-compare / base-to-string | Thấp | sort **DONE**; base-to-string **DONE** 0; `any` còn — làm riêng |
 | **S8** set-state-in-effect / refs | Cao | **Defer** — dễ đổi timing UI |
 | **S9** always-truthy/falsy + `if (!data)` API | Trung bình–cao | Review tay; ghi §7 (vd useDrawDetail) |
 
@@ -314,8 +317,13 @@ Mỗi slice = 1 commit message dạng:
 | File:line | Rule | Lý do giữ / cần hỏi user |
 |---|---|---|
 | `*/reports/outstanding` (bingo18/keno/max3d/max3dpro/power655) | `no-unnecessary-condition` | `mapEntryRow` khai **inline optional type** lỏng hơn `TicketEntryEntity` — `?.` khớp type khai báo; siết type → TicketEntity là S3c-3 (không đụng trong slice này). |
-| `*/operations/_lib/use-operations.ts` `useDrawDetail` `if (!data)` | `no-unnecessary-condition` (always falsy) | `apiClient.get` typed non-null; giữ guard runtime phòng 204/empty — S9 review (không xoá trong S3d). |
+| `*/operations/_lib/use-operations.ts` `useDrawDetail` `if (!data)` (mega645/power655) | `no-unnecessary-condition` (always falsy) | `apiClient.get` typed non-null; giữ guard runtime phòng 204/empty — S9 review (không xoá trong S3d). |
 | `components/ai-elements/*` | unnecessary / any | shadcn AI scaffold — batch riêng hoặc bỏ qua nếu upstream. |
+| `*_LABELS[x] ?? fallback` (alerts/analytics/result/workers/audit) | `no-unnecessary-condition` | Cast `as keyof` làm TS nghĩ lookup luôn có — **giữ `??`** runtime cho giá trị lạ từ DB/API. |
+| `api/me/audit-logs` `accountId ?? ""` | `no-unnecessary-condition` | Comment nghiệp vụ: thiếu accountId → ép `""` không lộ log — **giữ**. |
+| `mega645/.../ops-section` `config.ops ?? DEFAULT` | `no-unnecessary-condition` | tsc vẫn coi `ops` optional ở một số merge path — **giữ**. |
+| `getToolLabel` `label !== undefined` | `no-unnecessary-condition` | Cast `as LabeledToolName` → TS luôn thấy string; fallback log unlabeled tool — **giữ**. |
+| `bingo18/.../prizes-section` `if (!data)` | `no-unnecessary-condition` | Giống useDrawDetail — S9. |
 
 ---
 

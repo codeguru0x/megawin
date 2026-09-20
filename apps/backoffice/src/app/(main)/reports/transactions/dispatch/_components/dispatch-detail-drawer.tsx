@@ -35,7 +35,7 @@ function prettyJSON(value: unknown): string {
   try {
     return JSON.stringify(value, null, 2);
   } catch {
-    return String(value);
+    return "[unserializable]";
   }
 }
 
@@ -262,7 +262,7 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
           </span>
         </Field>
       )}
-      {isPending && order.nextAttemptAt && (
+      {isPending && (
         <Field label="Next attempt">
           <span className="font-mono text-sm tabular-nums">{displayVNDateTime(order.nextAttemptAt)}</span>
         </Field>

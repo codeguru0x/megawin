@@ -299,9 +299,11 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Kết quả</p>
               <div className="mb-4 flex flex-col items-center gap-3">
                 <div className="flex items-center gap-4">
-                  {drawNumbers.map((num, i) => (
-                    <Bingo18MatchDie key={`die-${i}-${num}`} n={num} variant="result" size="lg" />
-                  ))}
+                  {drawNumbers
+                    .map((num, i) => ({ id: `die-${i}`, num }))
+                    .map(({ id, num }) => (
+                      <Bingo18MatchDie key={id} n={num} variant="result" size="lg" />
+                    ))}
                 </div>
                 {drawSum > 0 && (
                   <span className="bg-muted text-muted-foreground inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold tabular-nums">

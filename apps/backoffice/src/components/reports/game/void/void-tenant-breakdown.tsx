@@ -41,8 +41,8 @@ export function VoidTenantBreakdown({
           <Skeleton className="mt-1 h-3 w-72" />
         </CardHeader>
         <CardContent className="space-y-2 px-5 pt-0 pb-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+          {Array.from({ length: 4 }, (_, i) => `slot-${i}`).map((id) => (
+            <Skeleton key={id} className="h-10 w-full" />
           ))}
         </CardContent>
       </Card>

@@ -90,7 +90,12 @@ function MiniDonut({
 
 function PickCard({ row }: { row: PlayTypeRow }) {
   const n = parseInt(row.playType.replace("pick", ""), 10);
-  const s = KENO_PICK_STYLES[n] ?? KENO_PICK_STYLES[5]!;
+  // Fallback pick5 luôn có trong `KENO_PICK_STYLES` (ops-constants) — narrow tường minh thay `!`.
+  const fallback = KENO_PICK_STYLES[5];
+  if (!fallback) {
+    throw new Error("KENO_PICK_STYLES[5] missing");
+  }
+  const s = KENO_PICK_STYLES[n] ?? fallback;
   const isEmpty = row.sets === 0;
 
   return (
@@ -250,7 +255,7 @@ export function PlayTypeCard({
 
   // Side bet render từ sideBetPairs (đã tách hướng) — mỗi cặp 1 card compact gộp
   // phân bổ + split bar hướng lệch. Style theo thứ tự cố định [bigSmall, evenOdd].
-  const sideBetStyles = [KENO_SIDE_BET_STYLES.bigSmall, KENO_SIDE_BET_STYLES.evenOdd];
+  const sideBetStyles = [KENO_SIDE_BET_STYLES.bigSmall, KENO_SIDE_BET_STYLES.evenOdd] as const;
 
   const totalSets = playTypes.reduce((a, r) => a + r.sets, 0);
   const totalRevenue = playTypes.reduce((a, r) => a + r.revenue, 0);
@@ -308,7 +313,7 @@ export function PlayTypeCard({
                     <SideBetPairCard
                       key={pair.label}
                       pair={pair}
-                      playStyle={sideBetStyles[i] ?? sideBetStyles[0]!}
+                      playStyle={sideBetStyles[i] ?? sideBetStyles[0]}
                       skewPct={sidebetSkewPct}
                     />
                   ))}

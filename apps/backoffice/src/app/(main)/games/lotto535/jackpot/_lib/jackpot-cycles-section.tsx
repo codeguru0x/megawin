@@ -242,9 +242,9 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
     <div>
       <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Người trúng Jackpot</p>
       <div className="space-y-2">
-        {winners.map((w, idx) => (
+        {winners.map((w) => (
           <button
-            key={`${w.entryId}-${idx}`}
+            key={w.entryId}
             type="button"
             onClick={() => setSelectedEntryId(w.entryId)}
             className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3.5 text-left transition-colors hover:border-green-400 hover:bg-green-100/60 focus-visible:ring-2 focus-visible:ring-green-500/50 focus-visible:outline-none dark:border-green-800/50 dark:bg-green-950/20 dark:hover:border-green-700 dark:hover:bg-green-950/40"

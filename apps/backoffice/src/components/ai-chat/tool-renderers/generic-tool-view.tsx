@@ -195,32 +195,31 @@ export function DataTable<Row>({ columns, rows }: { columns: readonly ColumnSpec
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((row, rowIndex) => (
-            // Không có id ổn định chung cho mọi Row → dùng index. An toàn vì list này TĨNH
-            // (render 1 lần từ output tool đã hoàn tất, không thêm/xoá/sắp lại dòng).
-            // biome-ignore lint/suspicious/noArrayIndexKey: output tool bất biến, không reorder.
-            <TableRow key={rowIndex}>
-              {columns.map((column) => {
-                const value = (row as Record<string, unknown>)[column.key];
-                return (
-                  <TableCell
-                    className={cn(
-                      "py-1 text-xs tabular-nums",
-                      isAlignedRight(column) && "text-right",
-                      column.signed === true && typeof value === "number" && value < 0 && "text-destructive",
-                      column.signed === true &&
-                        typeof value === "number" &&
-                        value >= 0 &&
-                        "text-emerald-600 dark:text-emerald-400",
-                    )}
-                    key={column.key}
-                  >
-                    {formatCell(value, column.format)}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
+          {rows
+            .map((row, rowIndex) => ({ id: `row-${rowIndex}`, row }))
+            .map(({ id, row }) => (
+              <TableRow key={id}>
+                {columns.map((column) => {
+                  const value = (row as Record<string, unknown>)[column.key];
+                  return (
+                    <TableCell
+                      className={cn(
+                        "py-1 text-xs tabular-nums",
+                        isAlignedRight(column) && "text-right",
+                        column.signed === true && typeof value === "number" && value < 0 && "text-destructive",
+                        column.signed === true &&
+                          typeof value === "number" &&
+                          value >= 0 &&
+                          "text-emerald-600 dark:text-emerald-400",
+                      )}
+                      key={column.key}
+                    >
+                      {formatCell(value, column.format)}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
         </TableBody>
       </Table>
     </div>

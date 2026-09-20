@@ -201,8 +201,8 @@ function SystemOutstandingContent() {
             </div>
           ) : isLoading ? (
             <div className="space-y-2 px-5 py-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-11 w-full" />
+              {Array.from({ length: 5 }, (_, i) => `slot-${i}`).map((id) => (
+                <Skeleton key={id} className="h-11 w-full" />
               ))}
             </div>
           ) : rows.length === 0 ? (
@@ -304,8 +304,8 @@ export default function SystemOutstandingPage() {
 
           {/* KPI skeleton */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            {Array.from({ length: 4 }, (_, i) => `slot-${i}`).map((id) => (
+              <Skeleton key={id} className="h-24 w-full rounded-xl" />
             ))}
           </div>
 

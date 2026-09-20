@@ -8,6 +8,8 @@
 
 import { formatNumber, formatPercent, formatVND, formatVNDCompact } from "@megawin/shared/utils";
 
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
+
 /**
  * Cách hiển thị 1 giá trị. Cố tình HẸP — thêm biến thể mới phải cân nhắc: nếu cần logic điều
  * kiện theo dữ liệu thì đó là dấu hiệu phải viết renderer bespoke, không nới DSL này.
@@ -47,11 +49,18 @@ export function formatCell(value: unknown, format: CellFormat = CellFormat.Text)
   }
 
   if (format === CellFormat.Text) {
-    return String(value);
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return "—";
+      }
+    }
+    return unknownToDisplayString(value, "—");
   }
 
   if (format === CellFormat.Date) {
-    return typeof value === "string" ? formatDateCell(value) : String(value);
+    return typeof value === "string" ? formatDateCell(value) : "—";
   }
 
   if (typeof value !== "number" || !Number.isFinite(value)) {

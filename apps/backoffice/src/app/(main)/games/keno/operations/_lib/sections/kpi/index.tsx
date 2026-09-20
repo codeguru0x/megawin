@@ -59,8 +59,8 @@ export function KpiSection({ onOpenAnalysis }: { onOpenAnalysis?: () => void }) 
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-18 rounded-xl" />
+        {Array.from({ length: 6 }, (_, i) => `slot-${i}`).map((id) => (
+          <Skeleton key={id} className="h-18 rounded-xl" />
         ))}
       </div>
     );

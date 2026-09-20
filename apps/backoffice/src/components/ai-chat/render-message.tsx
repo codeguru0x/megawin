@@ -363,7 +363,8 @@ function InputRequestActions({
     return null;
   }
 
-  const inputResponse = part.toolMetadata?.eve?.inputResponse;
+  // Sau guard `inputRequest`: `toolMetadata.eve` đã narrowed — không cần `?.` lần hai.
+  const inputResponse = part.toolMetadata.eve.inputResponse;
   const selectedOption = inputRequest.options?.find((option) => option.id === inputResponse?.optionId);
   const prompt = resolveHitlPrompt(inputRequest, getToolLabel(part.toolName));
 

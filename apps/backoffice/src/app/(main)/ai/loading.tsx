@@ -43,9 +43,8 @@ export default function AiLoading() {
           `ai_threads_panel` mặc định "open", và vẽ rồi ẩn còn đỡ giật hơn ẩn rồi vẽ thêm. */}
       <div className="hidden w-72 shrink-0 space-y-3 border-l p-3 md:block">
         <Skeleton className="h-9 w-full rounded-md" />
-        {Array.from({ length: 5 }).map((_, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: skeleton tĩnh, không reorder — index là key ổn định duy nhất có sẵn.
-          <Skeleton className="h-8 w-full rounded-md" key={index} />
+        {(["t0", "t1", "t2", "t3", "t4"] as const).map((id) => (
+          <Skeleton className="h-8 w-full rounded-md" key={id} />
         ))}
       </div>
     </div>

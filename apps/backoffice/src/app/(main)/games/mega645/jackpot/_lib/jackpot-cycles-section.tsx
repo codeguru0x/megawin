@@ -181,9 +181,9 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
     <div>
       <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Người trúng Jackpot</p>
       <div className="space-y-2">
-        {winners.map((w, idx) => (
+        {winners.map((w) => (
           <button
-            key={`${w.entryId}-${idx}`}
+            key={w.entryId}
             type="button"
             onClick={() => setSelectedEntryId(w.entryId)}
             className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/50 p-3.5 text-left transition-colors hover:border-teal-400 hover:bg-teal-100/60 focus-visible:ring-2 focus-visible:ring-teal-500/50 focus-visible:outline-none dark:border-teal-800/50 dark:bg-teal-950/20 dark:hover:border-teal-700 dark:hover:bg-teal-950/40"
@@ -192,7 +192,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
               <User className="size-4.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{toTenantUsername(w.username ?? "")}</p>
+              <p className="text-sm font-semibold">{toTenantUsername(w.username)}</p>
               <p className="text-muted-foreground text-xs">
                 Đại lý: {w.tenantId} · Kỳ: {w.drawId}
               </p>

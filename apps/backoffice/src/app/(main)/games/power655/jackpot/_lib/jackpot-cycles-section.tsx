@@ -221,11 +221,11 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
     <div>
       <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">Người trúng Jackpot</p>
       <div className="space-y-2">
-        {winners.map((w, idx) => {
+        {winners.map((w) => {
           const jpBadge = JP_TYPE_BADGE[w.jackpotType];
           return (
             <button
-              key={`${w.entryId}-${idx}`}
+              key={w.entryId}
               type="button"
               onClick={() => setSelectedEntryId(w.entryId)}
               className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-orange-200 bg-orange-50/50 p-3.5 text-left transition-colors hover:border-orange-400 hover:bg-orange-100/60 focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:outline-none dark:border-orange-800/50 dark:bg-orange-950/20 dark:hover:border-orange-700 dark:hover:bg-orange-950/40"
@@ -235,7 +235,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold">{toTenantUsername(w.username ?? "")}</p>
+                  <p className="text-sm font-semibold">{toTenantUsername(w.username)}</p>
                   {jpBadge && (
                     <span className={cn("rounded px-1.5 py-0.5 text-xs font-semibold", jpBadge.className)}>
                       {jpBadge.label}

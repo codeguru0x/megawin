@@ -45,6 +45,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 
 import { buildChartModel, CHART_KIND_VALUES, getChartLabel, type ChartRow } from "@/lib/chart";
+import { unknownToDisplayString } from "@/lib/unknown-to-display-string";
 
 /** Giới hạn số dòng model có thể gửi ở chế độ `rows` — FE vẫn tự tỉa về `MAX_POINTS` (60) khi vẽ, giới hạn này chỉ chặn payload input quá khổ. */
 const MAX_INPUT_ROWS = 200;
@@ -205,7 +206,7 @@ function chartHighlights(model: NonNullable<ReturnType<typeof buildChartModel>>)
     const zeroAt: string[] = [];
 
     for (const row of model.rows) {
-      const at = String(row[xKey] ?? "");
+      const at = unknownToDisplayString(row[xKey]);
       const raw = row[key];
       // Mốc thiếu số (null/rỗng) tính là 0 — giống hệt cách chart vẽ khoảng trống, để nhận xét không
       // mô tả một đường khác với đường người dùng đang nhìn.

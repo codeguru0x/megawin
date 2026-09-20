@@ -6,12 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function TableSkeleton({ rows = 8 }: { rows?: number }) {
+  const slotIds = Array.from({ length: rows }, (_, i) => `slot-${i}`);
   return (
     <Card className="gap-0 py-0">
       <CardContent className="p-0">
         <div className="space-y-0">
-          {[...Array(rows)].map((_, i) => (
-            <div key={i} className="border-b px-5 py-3">
+          {slotIds.map((id) => (
+            <div key={id} className="border-b px-5 py-3">
               <Skeleton className="h-4 w-full" />
             </div>
           ))}

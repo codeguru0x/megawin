@@ -124,31 +124,7 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
               ) : (
                 <span className="size-3.5 shrink-0" />
               )}
-              <Badge
-                variant="outline"
-                className={cn(
-                  "h-5 border py-0",
-                  tier.tier === "special" &&
-                    "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-                  tier.tier === "first" &&
-                    "border-yellow-300 bg-yellow-50 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300",
-                  "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
-                  tier.tier === "third" &&
-                    "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-                  tier.tier === "fourth" && "border-border bg-muted/40 text-muted-foreground",
-                  tier.tier === "fifth" && "border-border bg-muted/40 text-muted-foreground",
-                  tier.tier === "sixth" && "border-border bg-muted/40 text-muted-foreground",
-                  !(
-                    tier.tier === "special" ||
-                    tier.tier === "first" ||
-                    tier.tier === "second" ||
-                    tier.tier === "third" ||
-                    tier.tier === "fourth" ||
-                    tier.tier === "fifth" ||
-                    tier.tier === "sixth"
-                  ) && "border-border bg-muted/40 text-muted-foreground",
-                )}
-              >
+              <Badge variant="outline" className={cn("h-5 border py-0", cfg.badge)}>
                 {label}
               </Badge>
             </div>
@@ -250,9 +226,11 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   <div key={row.label} className="flex items-center gap-3">
                     <span className="text-muted-foreground w-16 shrink-0 text-xs font-semibold">{row.label}</span>
                     <div className="flex flex-wrap gap-1.5">
-                      {row.triplets.map((t, i) => (
-                        <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
-                      ))}
+                      {row.triplets
+                        .map((t, i) => ({ id: `trip-${i}`, t }))
+                        .map(({ id, t }) => (
+                          <TripletDisplay key={id} value={t} variant={row.variant} size="sm" />
+                        ))}
                     </div>
                   </div>
                 ))}
