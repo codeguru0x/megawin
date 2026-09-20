@@ -63,8 +63,8 @@ export function OutstandingEntryList({
           <Skeleton className="mt-1 h-3 w-72" />
         </CardHeader>
         <CardContent className="space-y-2 px-5 pt-0 pb-4">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+          {(["sk-0", "sk-1", "sk-2", "sk-3", "sk-4"] as const).map((id) => (
+            <Skeleton key={id} className="h-10 w-full" />
           ))}
         </CardContent>
       </Card>

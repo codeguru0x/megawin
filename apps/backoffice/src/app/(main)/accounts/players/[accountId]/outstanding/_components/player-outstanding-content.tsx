@@ -620,14 +620,18 @@ function EntriesView({
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
+/** Slot id cố định — skeleton tĩnh không reorder. */
+const TABLE_SKELETON_ROWS = ["row-0", "row-1", "row-2", "row-3", "row-4"] as const;
+
 function TableSkeleton({ cols }: { cols: number }) {
+  const colSlots = Array.from({ length: cols }, (_, j) => `col-${j}`);
   return (
     <Card className="gap-0 py-0">
       <CardContent className="p-0">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex gap-4 border-b px-5 py-3">
-            {Array.from({ length: cols }).map((_, j) => (
-              <Skeleton key={j} className="h-3 flex-1" />
+        {TABLE_SKELETON_ROWS.map((rowId) => (
+          <div key={rowId} className="flex gap-4 border-b px-5 py-3">
+            {colSlots.map((colId) => (
+              <Skeleton key={colId} className="h-3 flex-1" />
             ))}
           </div>
         ))}

@@ -13,6 +13,12 @@ import { Loader2 } from "lucide-react";
 
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+/** Slot id cố định — skeleton tĩnh không reorder; tránh `key={index}`. */
+const META_SLOTS = ["meta-0", "meta-1", "meta-2", "meta-3"] as const;
+const KPI_SLOTS = ["kpi-0", "kpi-1", "kpi-2", "kpi-3"] as const;
+const BALL_SLOTS = ["ball-0", "ball-1", "ball-2", "ball-3", "ball-4", "ball-5"] as const;
+const BOARD_SLOTS = ["board-0", "board-1", "board-2"] as const;
+
 export function EntryDetailSkeleton() {
   return (
     <div className="animate-pulse space-y-4 pr-2">
@@ -23,8 +29,8 @@ export function EntryDetailSkeleton() {
       <div className="bg-muted/70 h-3 w-32 rounded" />
 
       <div className="bg-muted/50 grid grid-cols-2 gap-x-8 gap-y-2.5 rounded-lg px-4 py-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center justify-between gap-2">
+        {META_SLOTS.map((id) => (
+          <div key={id} className="flex items-center justify-between gap-2">
             <div className="bg-muted h-3 w-20 rounded" />
             <div className="bg-muted h-3 w-16 rounded" />
           </div>
@@ -32,8 +38,8 @@ export function EntryDetailSkeleton() {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
+        {KPI_SLOTS.map((id) => (
+          <div key={id} className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
             <div className="bg-muted size-8 shrink-0 rounded-md" />
             <div className="flex-1 space-y-1.5">
               <div className="bg-muted h-2.5 w-16 rounded" />
@@ -46,14 +52,14 @@ export function EntryDetailSkeleton() {
       <div className="rounded-lg border p-4">
         <div className="bg-muted mb-3 h-2.5 w-20 rounded" />
         <div className="mb-4 flex flex-wrap justify-center gap-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-muted size-8 shrink-0 rounded-full" />
+          {BALL_SLOTS.map((id) => (
+            <div key={id} className="bg-muted size-8 shrink-0 rounded-full" />
           ))}
         </div>
         <div className="mb-3 border-t" />
         <div className="space-y-2.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-muted/60 h-9 rounded-md" />
+          {BOARD_SLOTS.map((id) => (
+            <div key={id} className="bg-muted/60 h-9 rounded-md" />
           ))}
         </div>
       </div>

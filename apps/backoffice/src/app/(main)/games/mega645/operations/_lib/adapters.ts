@@ -86,7 +86,7 @@ export function toPlayTypeRows(stats: Stats): PlayTypeRow[] {
     const s = bp[pt];
     return {
       playType: pt,
-      label: MEGA645_PLAY_TYPE_LABELS[pt] ?? pt,
+      label: MEGA645_PLAY_TYPE_LABELS[pt],
       sets: s.sets,
       boards: s.boards,
       revenue: s.amount,

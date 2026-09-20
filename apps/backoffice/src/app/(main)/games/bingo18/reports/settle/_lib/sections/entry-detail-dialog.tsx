@@ -300,7 +300,7 @@ function Bingo18EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="mb-4 flex flex-col items-center gap-3">
                 <div className="flex items-center gap-4">
                   {drawNumbers.map((num, i) => (
-                    <Bingo18MatchDie key={i} n={num} variant="result" size="lg" />
+                    <Bingo18MatchDie key={`die-${i}-${num}`} n={num} variant="result" size="lg" />
                   ))}
                 </div>
                 {drawSum > 0 && (

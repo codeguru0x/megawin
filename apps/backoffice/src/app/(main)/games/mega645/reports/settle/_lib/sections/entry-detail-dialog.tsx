@@ -302,13 +302,13 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2.5">
-                {boards.map((board, i) => {
+                {boards.map((board) => {
                   const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
                   const isStandard = board.playType === PlayType.Standard;
                   const boardColor = boardColorVar(board.boardNo);
                   return (
                     <div
-                      key={i}
+                      key={board.boardNo}
                       className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
@@ -344,13 +344,13 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="rounded-lg border p-4">
                 <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2.5">
-                  {boards.map((board, i) => {
+                  {boards.map((board) => {
                     const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
                     const isStandard = board.playType === PlayType.Standard;
                     const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
-                        key={i}
+                        key={board.boardNo}
                         className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
@@ -394,9 +394,9 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       MEGA645_PRIZE_TIER_ORDER.indexOf(a.tier as PrizeTier) -
                       MEGA645_PRIZE_TIER_ORDER.indexOf(b.tier as PrizeTier),
                   )
-                  .map((tier, i: number) => (
+                  .map((tier) => (
                     <div
-                      key={i}
+                      key={tier.tier}
                       className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2">

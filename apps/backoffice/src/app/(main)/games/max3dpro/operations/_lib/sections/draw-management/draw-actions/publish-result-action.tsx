@@ -485,7 +485,7 @@ export function PublishResultAction({
                       <div className="grid grid-cols-6 gap-x-2 gap-y-3">
                         {Array.from({ length: tier.count }, (_, i) => {
                           const flatIndex = tier.offset + i;
-                          const isDiff = showTierDiff && tierDiff?.diffIndices.has(i);
+                          const isDiff = showTierDiff && tierDiff.diffIndices.has(i);
                           return (
                             <div key={i} className="flex flex-col items-center gap-1">
                               <div className="relative w-full">

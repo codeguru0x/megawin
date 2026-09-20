@@ -88,8 +88,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
   // Đổi giờ quay hoặc ngày quay trong tuần làm mã kỳ Vietlott (nếu đã cấu hình) mất
   // hiệu lực — mọi phép gợi ý dựa trên mã kỳ cũ sẽ sai kể từ đây. Chỉ cảnh báo khi ĐÃ có
   // mã kỳ (config.vietlott) — chưa cấu hình thì đổi lịch quay không ảnh hưởng gì.
-  const currentDrawDaysSorted = [...config.play.drawDaysOfWeek].sort();
-  const watchedDrawDaysSorted = [...drawDays].sort();
+  const currentDrawDaysSorted = [...config.play.drawDaysOfWeek].sort((a, b) => a - b);
+  const watchedDrawDaysSorted = [...drawDays].sort((a, b) => a - b);
   const drawDaysChanged =
     currentDrawDaysSorted.length !== watchedDrawDaysSorted.length ||
     currentDrawDaysSorted.some((d, i) => d !== watchedDrawDaysSorted[i]);
@@ -98,7 +98,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
 
   function toggleDay(day: number) {
     const current = form.getValues("drawDaysOfWeek");
-    const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort();
+    const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort((a, b) => a - b);
     form.setValue("drawDaysOfWeek", next, { shouldDirty: true });
     // drawsPerWeek luôn khớp số ngày quay đã chọn — tránh lệch 2 field độc lập.
     form.setValue("drawsPerWeek", next.length, { shouldDirty: true });

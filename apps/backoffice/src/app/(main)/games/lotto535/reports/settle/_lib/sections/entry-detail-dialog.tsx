@@ -311,7 +311,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               {/* Từng board của khách */}
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2.5">
-                {boards.map((board, i) => {
+                {boards.map((board) => {
                   const playLabel =
                     board.playType === "standard"
                       ? null
@@ -319,7 +319,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   const boardColor = boardColorVar(board.boardNo);
                   return (
                     <div
-                      key={i}
+                      key={board.boardNo}
                       className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
@@ -372,7 +372,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="rounded-lg border p-4">
                 <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2.5">
-                  {boards.map((board, i) => {
+                  {boards.map((board) => {
                     const playLabel =
                       board.playType === "standard"
                         ? null
@@ -380,7 +380,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
-                        key={i}
+                        key={board.boardNo}
                         className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
@@ -424,25 +424,22 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             <div className="border-profit/30 bg-profit/5 rounded-lg border p-4">
               <p className="text-profit text-2xs mb-3 font-medium tracking-wide uppercase">Giải trúng</p>
               <div className="space-y-2">
-                {tiers.map(
-                  (tier: { tier: string; hitCount: number; unitAmount: number; amount: number }, i: number) => (
-                    <div
-                      key={i}
-                      className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {LOTTO535_PRIZE_TIER_LABELS[tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS] ??
-                            tier.tier}
-                        </Badge>
-                        <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
-                          ×{tier.hitCount} lần
-                        </span>
-                      </div>
-                      <span className="text-profit font-bold tabular-nums">{formatNumber(tier.amount)}</span>
+                {tiers.map((tier: { tier: string; hitCount: number; unitAmount: number; amount: number }) => (
+                  <div
+                    key={tier.tier}
+                    className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {LOTTO535_PRIZE_TIER_LABELS[tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS] ?? tier.tier}
+                      </Badge>
+                      <span className="bg-profit/15 text-profit text-2xs inline-flex items-center rounded-full px-2 py-0.5 font-bold tabular-nums">
+                        ×{tier.hitCount} lần
+                      </span>
                     </div>
-                  ),
-                )}
+                    <span className="text-profit font-bold tabular-nums">{formatNumber(tier.amount)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}

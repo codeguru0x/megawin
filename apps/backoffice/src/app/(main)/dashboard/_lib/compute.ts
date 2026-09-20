@@ -52,7 +52,7 @@ export function computeDayKpis(data: DashboardGameDailyData[], financialDate: st
   const totalGgr = totalStake - totalPayout;
   const totalProfit = totalGgr - totalCommission;
   const totalEntries = dayData.reduce((s, r) => s + r.entryCount, 0);
-  const totalPlayers = dayData.reduce((s, r) => s + (r.playerCount ?? 0), 0);
+  const totalPlayers = dayData.reduce((s, r) => s + r.playerCount, 0);
   const totalDraws = dayData.reduce((s, r) => s + r.drawCount, 0);
   const payoutRatio = totalStake > 0 ? totalPayout / totalStake : 0;
 

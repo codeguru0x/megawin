@@ -19,5 +19,10 @@ import { useAuth } from "@/providers/auth-provider";
 export function useUserRoles(): AccountRole[] {
   const { session } = useAuth();
 
-  return useMemo(() => parseAccountRoles((session?.user as Record<string, unknown>)?.roles), [session]);
+  return useMemo(() => {
+    if (!session?.user) {
+      return [];
+    }
+    return parseAccountRoles((session.user as Record<string, unknown>).roles);
+  }, [session]);
 }

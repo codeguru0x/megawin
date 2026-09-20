@@ -93,7 +93,7 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
   return (
     <div className="flex w-full items-start">
       {steps.map((step, i) => (
-        <div key={i} className="flex min-w-0 flex-1 items-start">
+        <div key={step.label} className="flex min-w-0 flex-1 items-start">
           <div className="flex shrink-0 flex-col items-center gap-1">
             <div
               className={cn(

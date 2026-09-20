@@ -86,7 +86,7 @@ export function toPlayTypeRows(stats: Stats): PlayTypeRow[] {
     const s = bp[pt];
     return {
       playType: pt,
-      label: POWER655_PLAY_TYPE_LABELS[pt] ?? pt,
+      label: POWER655_PLAY_TYPE_LABELS[pt],
       sets: s.sets,
       boards: s.boards,
       revenue: s.amount,

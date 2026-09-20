@@ -350,12 +350,12 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2">
-                {boards.map((board, i) => {
+                {boards.map((board) => {
                   const modeLabel = playModeLabel(board);
                   const boardColor = boardColorVar(board.boardNo);
                   return (
                     <div
-                      key={i}
+                      key={board.boardNo}
                       className="grid [grid-template-columns:2rem_5rem_1fr] items-start gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pr-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
@@ -417,12 +417,12 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="rounded-lg border p-4">
                 <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2">
-                  {boards.map((board, i) => {
+                  {boards.map((board) => {
                     const modeLabel = playModeLabel(board);
                     const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
-                        key={i}
+                        key={board.boardNo}
                         className="grid [grid-template-columns:2rem_5rem_1fr] items-start gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pr-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
@@ -487,9 +487,9 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     (a, b) =>
                       (PRIZE_TIER_ORDER.indexOf(a.tier) + 1 || 999) - (PRIZE_TIER_ORDER.indexOf(b.tier) + 1 || 999),
                   )
-                  .map((tier: EntryPayoutTier, i: number) => (
+                  .map((tier: EntryPayoutTier) => (
                     <div
-                      key={i}
+                      key={tier.tier}
                       className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2">

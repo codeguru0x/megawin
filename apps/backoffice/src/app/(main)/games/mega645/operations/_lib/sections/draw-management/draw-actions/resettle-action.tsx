@@ -278,7 +278,7 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
   };
 
   // Chỉ LEDGER_MISSING bị chặn — bất thường data integrity. TYPE_B2 cho phép cascade từng kỳ.
-  const canTrigger = preflightResult !== null && preflightResult.scenario !== "LEDGER_MISSING";
+  // Nút confirm: `preflightResult && scenario !== LEDGER_MISSING` (narrow + cùng điều kiện cũ).
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -383,11 +383,11 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
               <Button variant="outline" size="sm" onClick={() => setStep("preflight")} disabled={isTriggering}>
                 ← Quay lại
               </Button>
-              {canTrigger && (
+              {preflightResult && preflightResult.scenario !== "LEDGER_MISSING" && (
                 <Button
                   size="sm"
                   className={
-                    preflightResult?.scenario === "TYPE_B1"
+                    preflightResult.scenario === "TYPE_B1"
                       ? "bg-red-600 text-white hover:bg-red-700"
                       : "bg-orange-600 text-white hover:bg-orange-700"
                   }
@@ -398,11 +398,11 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                     <>
                       <Loader2 className="mr-1.5 size-3.5 animate-spin" /> Đang khởi chạy...
                     </>
-                  ) : preflightResult?.scenario === "TYPE_B1" ? (
+                  ) : preflightResult.scenario === "TYPE_B1" ? (
                     <>
                       <AlertTriangle className="mr-1.5 size-3.5" /> Đã báo Admin — Kết sổ lại
                     </>
-                  ) : preflightResult?.scenario === "TYPE_B2" ? (
+                  ) : preflightResult.scenario === "TYPE_B2" ? (
                     <>
                       <AlertTriangle className="mr-1.5 size-3.5" /> Đã báo Admin — Kết sổ lại
                     </>

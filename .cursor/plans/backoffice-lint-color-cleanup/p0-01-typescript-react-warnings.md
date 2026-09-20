@@ -15,8 +15,22 @@
 | **S3b DONE** (20/09) | Keno `no-unnecessary-condition` **64→1** (giữ AudioContext `?? webkit` Safari). `check-types` xanh |
 | **S3c partial** (20/09) | 6 game còn lại: **401→260** — cùng pattern an toàn (`toTenantUsername`, sales, entrySummary, totalStake, status map). Jackpot/entry-detail còn lại → S3c-2 |
 | **S3c-2** (20/09) | Xóa dead `playPing`/AudioContext (keno+bingo18); jackpot mega645 `progress` required; play-rules/entry-detail/outstanding (TicketEntity). 6 game **~187**; keno **0**. |
-| Còn lại | ~930 warning (ước) |
+| **S7a DONE** (20/09) | `require-array-sort-compare` **12→0** — play-rules mega645/power655/max3d/max3dpro `.sort((a,b)=>a-b)`. |
+| **S6 partial** (20/09) | Shared skeleton slots + lifecycle `key={step.label}` + outstanding TableSkeleton + settle `key={board.boardNo}` (5 game). array-index còn ~160. |
+| **S3d partial** (20/09) | Snapshot `stats?.updatedAt.getTime`; adapters LABEL; resettle narrow `preflightResult`; publish `showDiff && diff.diffIndices`; compute `playerCount`; `useUserRoles` guard. |
+| Còn lại | unnecessary ~250; non-null 173; array-index ~160; set-state 53; base-to-string 33; any 128 |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
+
+### Ma trận rủi ro S3→S9 (quyết định tiếp tục)
+
+| Slice | Rủi ro | Quyết định |
+|---|---|---|
+| **S3/S4** unnecessary `?.` đã chứng minh type | Thấp | **Tiếp tục** từng batch nhỏ + check-types |
+| **S5** `!` còn lại | Trung bình | Làm case có narrow rõ; không `as NonNullable` |
+| **S6** array-index (skeleton / boardNo / label) | Thấp | **Tiếp tục** — list reorder mới cần id nghiệp vụ |
+| **S7** sort-compare | Thấp | **DONE** 0; `any`/`base-to-string` còn — làm riêng |
+| **S8** set-state-in-effect / refs | Cao | **Defer** — dễ đổi timing UI |
+| **S9** always-truthy/falsy + `if (!data)` API | Trung bình–cao | Review tay; ghi §7 (vd useDrawDetail) |
 
 ## 1. Baseline đo thật (2026-09-20)
 
@@ -297,6 +311,8 @@ Mỗi slice = 1 commit message dạng:
 | File:line | Rule | Lý do giữ / cần hỏi user |
 |---|---|---|
 | `*/reports/outstanding` (bingo18/keno/max3d/max3dpro/power655) | `no-unnecessary-condition` | `mapEntryRow` khai **inline optional type** lỏng hơn `TicketEntryEntity` — `?.` khớp type khai báo; siết type → TicketEntity là S3c-3 (không đụng trong slice này). |
+| `*/operations/_lib/use-operations.ts` `useDrawDetail` `if (!data)` | `no-unnecessary-condition` (always falsy) | `apiClient.get` typed non-null; giữ guard runtime phòng 204/empty — S9 review (không xoá trong S3d). |
+| `components/ai-elements/*` | unnecessary / any | shadcn AI scaffold — batch riêng hoặc bỏ qua nếu upstream. |
 
 ---
 

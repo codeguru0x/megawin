@@ -427,7 +427,7 @@ export function PublishResultAction({
                 <div className="space-y-2">
                   <div className="grid grid-cols-5 gap-x-2 gap-y-3">
                     {Array.from({ length: LOTTO535_MAIN_COUNT }, (_, i) => {
-                      const isDiff = showMainDiff && mainDiff?.diffIndices.has(i);
+                      const isDiff = showMainDiff && mainDiff.diffIndices.has(i);
                       return (
                         <div key={i} className="flex flex-col items-center gap-1">
                           <div className="relative w-full">
@@ -493,7 +493,7 @@ export function PublishResultAction({
                           validation.specialError && "border-destructive",
                           !validation.specialError &&
                             showSpecialDiff &&
-                            specialDiff?.diffIndices.has(0) &&
+                            specialDiff.diffIndices.has(0) &&
                             "border-amber-400 bg-amber-50/50 dark:bg-amber-900/20",
                         )}
                       />
@@ -502,7 +502,7 @@ export function PublishResultAction({
                       <span
                         className={cn(
                           "text-3xs inline-flex h-4.5 items-center rounded-full px-1.5 font-mono font-semibold tabular-nums",
-                          specialDiff?.diffIndices.has(0)
+                          specialDiff.diffIndices.has(0)
                             ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
                             : "invisible",
                         )}

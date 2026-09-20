@@ -367,7 +367,7 @@ export function PublishResultAction({
 
                 <div className="grid grid-cols-6 gap-x-2 gap-y-3">
                   {Array.from({ length: MEGA645_NUMBER_COUNT }, (_, i) => {
-                    const isDiff = showDiff && diff?.diffIndices.has(i);
+                    const isDiff = showDiff && diff.diffIndices.has(i);
                     return (
                       <div key={i} className="flex flex-col items-center gap-1">
                         <div className="relative w-full">

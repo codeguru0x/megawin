@@ -311,12 +311,12 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
 
               <p className="text-muted-foreground text-2xs mb-2 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
               <div className="space-y-2">
-                {boards.map((board, i) => {
+                {boards.map((board) => {
                   const playLabel = getPower655PlayTypeLabel(board.playType);
                   const boardColor = boardColorVar(board.boardNo);
                   return (
                     <div
-                      key={i}
+                      key={board.boardNo}
                       className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                       style={{ "--board-color": boardColor } as CSSProperties}
                     >
@@ -358,12 +358,12 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="rounded-lg border p-4">
                 <p className="text-muted-foreground text-2xs mb-3 font-medium tracking-wide uppercase">Bộ số đã chọn</p>
                 <div className="space-y-2">
-                  {boards.map((board, i) => {
+                  {boards.map((board) => {
                     const playLabel = getPower655PlayTypeLabel(board.playType);
                     const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
-                        key={i}
+                        key={board.boardNo}
                         className="grid [grid-template-columns:2rem_4rem_1fr] items-center gap-x-3 rounded-md border-l-3 border-l-(--board-color) py-2 pl-3"
                         style={{ "--board-color": boardColor } as CSSProperties}
                       >
@@ -399,9 +399,9 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
             <div className="border-profit/30 bg-profit/5 rounded-lg border p-4">
               <p className="text-profit text-2xs mb-3 font-medium tracking-wide uppercase">Giải trúng</p>
               <div className="space-y-2">
-                {sortedTiers.map((tier: EntryPayoutTier, i: number) => (
+                {sortedTiers.map((tier: EntryPayoutTier) => (
                   <div
-                    key={i}
+                    key={tier.tier}
                     className="bg-background/60 flex items-center justify-between rounded-md px-3 py-1.5 text-sm"
                   >
                     <div className="flex items-center gap-2">

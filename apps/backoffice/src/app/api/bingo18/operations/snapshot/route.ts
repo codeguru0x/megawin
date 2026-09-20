@@ -26,7 +26,7 @@ export const GET = withApi()
     const data = await useCase.getData({ drawId: query.drawId });
 
     // ETag đại diện state snapshot: updatedAt stats + số alert (đổi khi 1 trong 2 đổi).
-    const stamp = data.stats?.updatedAt?.getTime() ?? 0;
+    const stamp = data.stats?.updatedAt.getTime() ?? 0;
     const etag = `"${data.drawId}:${stamp}:${data.alertCounts.new}:${data.alertCounts.critical}"`;
 
     // Client gửi If-None-Match khớp → 304, không trả body (tiết kiệm băng thông + re-render).
