@@ -15,10 +15,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useTenantOptions } from "@/hooks/use-tenant-options";
+import { useTenantOptions, type TenantOption } from "@/hooks/use-tenant-options";
 
 import { useSearchPlayerAccounts } from "../../_shared/queries";
 import { PlayersTable } from "./players-table";
+
+/** Stable empty — tránh `?? []` tạo array mới mỗi render (exhaustive-deps trên `tenants`). */
+const EMPTY_TENANTS: TenantOption[] = [];
 
 export function PlayersContent() {
   // URL state — tất cả params trong 1 object:
@@ -36,9 +39,10 @@ export function PlayersContent() {
   );
 
   const { data, isLoading: isLoadingOptions } = useTenantOptions();
-  const tenants = data?.tenants ?? [];
+  const tenants = data?.tenants ?? EMPTY_TENANTS;
 
   // isSearchOpen: local state — ô input search có visible không.
+  // Init từ URL (`!!activeSearch`) — không cần effect mount riêng.
   const [isSearchOpen, setIsSearchOpen] = useState(!!activeSearch);
   const [inputValue, setInputValue] = useState(activeSearch);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,14 +67,6 @@ export function PlayersContent() {
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [isSearchOpen]);
-
-  // Khởi tạo isSearchOpen từ URL khi mount lần đầu — chỉ chạy 1 lần, không theo activeSearch thay đổi sau đó.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: chỉ chạy 1 lần lúc mount, không muốn re-run khi activeSearch đổi.
-  useEffect(() => {
-    if (activeSearch) {
-      setIsSearchOpen(true);
-    }
-  }, []);
 
   const handleOpenSearch = () => setIsSearchOpen(true);
 

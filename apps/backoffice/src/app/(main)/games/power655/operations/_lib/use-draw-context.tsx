@@ -38,6 +38,9 @@ interface DrawContextValue {
 
 const DrawContext = createContext<DrawContextValue | null>(null);
 
+/** Stable empty — tránh `?? []` tạo array mới mỗi render (exhaustive-deps). */
+const EMPTY_DRAWS: DrawSelectorItem[] = [];
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function DrawContextProvider({ children }: { children: ReactNode }) {
@@ -45,7 +48,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const [selectedDrawId, setSelectedDrawId] = useQueryState("drawId", { defaultValue: "" });
 
   const { data: selectorData, isLoading: selectorLoading } = useDrawSelectorList();
-  const draws = selectorData?.draws ?? [];
+  const draws = selectorData?.draws ?? EMPTY_DRAWS;
 
   const selectedInList = selectedDrawId ? draws.some((d) => d.drawId === selectedDrawId) : false;
 

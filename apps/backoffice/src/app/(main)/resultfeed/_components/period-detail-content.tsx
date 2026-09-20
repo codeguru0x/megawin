@@ -152,7 +152,7 @@ export function PeriodDetailContent({ gameKey, drawPeriod, readOnly, onDone }: P
     setMismatchWarning(null);
   }, []);
 
-  const observations = query.data?.observations ?? [];
+  const observations = useMemo(() => query.data?.observations ?? [], [query.data?.observations]);
   const consensus = query.data?.consensus;
 
   const diff = useMemo(() => diffIndices(observations.map((o) => o.numbersDisplay)), [observations]);

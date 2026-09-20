@@ -10,7 +10,8 @@
 | Baseline đo 20/09 | xem bảng §1 |
 | Đã xong trước đó | `no-floating-promises` → **0** (commit `a947d859`) |
 | **S1 DONE** (20/09) | `requireDrawId` helper + thay 32× `drawId!` trong `use-operations` ×7; `no-non-null-assertion` 206→**174**; `check-types` xanh |
-| Còn lại | ~1.243 warning (ước) |
+| **S2 DONE** (20/09) | `exhaustive-deps` **26→0**: EMPTY_DRAWS / useMemo ổn định array; hub destructure query; tenant `existingSet` memo; players bỏ effect thừa |
+| Còn lại | ~1.217 warning (ước) |
 | Visual track | **TẠM DỪNG** — làm P0-01 trước (ít rủi ro, nhanh) |
 
 ## 1. Baseline đo thật (2026-09-20)

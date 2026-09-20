@@ -74,7 +74,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
   const preview = usePreviewDraws(open ? count : 0);
   const createDraw = useCreateDraw();
 
-  const availableDraws = preview.data?.draws ?? [];
+  const availableDraws = useMemo(() => preview.data?.draws ?? [], [preview.data?.draws]);
 
   const rows = useMemo<DrawRow[]>(
     () =>

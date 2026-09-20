@@ -141,7 +141,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
   const preview = usePreviewDraws(open ? drawDate : "");
   const createDraw = useCreateDraw();
 
-  const availableDraws = preview.data?.draws ?? [];
+  const availableDraws = useMemo(() => preview.data?.draws ?? [], [preview.data?.draws]);
 
   /**
    * Tự nhảy sang NGÀY MAI khi mở dialog mà hôm nay đã hết kỳ (qua giờ quay kỳ cuối, hoặc đã

@@ -433,7 +433,7 @@ function AddTenantDialog({
   const [dialogSearch, setDialogSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
 
-  const existingSet = new Set(existingIds);
+  const existingSet = useMemo(() => new Set(existingIds), [existingIds]);
 
   const available = useMemo(() => {
     if (!tenantOptions) {

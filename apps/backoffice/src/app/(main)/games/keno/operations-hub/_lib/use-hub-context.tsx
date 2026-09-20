@@ -310,19 +310,25 @@ export function HubProvider({ children }: { children: ReactNode }) {
     return next;
   }, [queueTables.rows5A, selectedIds]);
 
+  const snapshot = query.data;
+  const isLoading = query.isLoading;
+  const isFetching = query.isFetching;
+  const isError = query.isError;
+  const refetch = query.refetch;
+
   const value = useMemo<HubContextValue>(
     () => ({
       state: {
-        snapshot: query.data,
+        snapshot,
         rows: derived.rows,
         funnel: derived.funnel,
         selling: derived.selling,
         boundaryDrawId: derived.boundaryDrawId,
         dayFlow: derived.dayFlow,
         stuckCount: derived.stuckCount,
-        isLoading: query.isLoading,
-        isFetching: query.isFetching,
-        isError: query.isError,
+        isLoading,
+        isFetching,
+        isError,
         activeTab,
         sortKey,
         sortDir,
@@ -336,7 +342,7 @@ export function HubProvider({ children }: { children: ReactNode }) {
       },
       actions: {
         refresh: () => {
-          void query.refetch();
+          void refetch();
         },
         toggleSelect,
         setSelection,
@@ -346,11 +352,11 @@ export function HubProvider({ children }: { children: ReactNode }) {
       meta: { getNowMs },
     }),
     [
-      query.data,
-      query.isLoading,
-      query.isFetching,
-      query.isError,
-      query.refetch,
+      snapshot,
+      isLoading,
+      isFetching,
+      isError,
+      refetch,
       derived,
       getNowMs,
       activeTab,
