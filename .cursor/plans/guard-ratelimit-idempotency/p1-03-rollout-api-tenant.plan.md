@@ -5,6 +5,14 @@
 
 Bật rate limit cho `api-tenant` — traffic **server-to-server** từ tenant, đặc tính khác hẳn player.
 
+---
+
+# PHẦN A — KHAI BÁO (AI agent implement)
+
+> Chỉ thêm khai báo `rateLimit` (+ lớp per-player ở Endpoint 1). Kết thúc Phần A: `check-types` +
+> `oxlint` xanh, **không** đụng `serverless.yml`, **không** đụng `.env*`.
+> Test đỏ ở Phần B → sửa khai báo, ghi `A-fix: <lý do>`.
+
 ## Phát hiện quan trọng: chỉ 3/6 handler được deploy
 
 Đã verify: `apps/api-tenant/src/handlers/` có 6 file nhưng `src/functions/*.yml` chỉ khai **3 route**.
@@ -89,23 +97,87 @@ Chuyển `enforce` cần thêm một bước mà `p1-02` không có: **thông b�
 tác B2B có hợp đồng; bất ngờ nhận 429 trên production là sự cố quan hệ, không chỉ là sự cố kỹ thuật.
 Cần chốt với business: thông báo qua đâu, trước bao lâu, ngưỡng có ghi vào tài liệu tích hợp không.
 
-## Test
+---
 
-- Unit: resolve `tenantId` đúng từ `event.tenant`; thiếu `tenant` → fallback IP + log.
-- Integration: vượt ngưỡng per-tenant → 429; tenant A vượt **không** ảnh hưởng tenant B (test cô lập
-  key — đây là test dễ bị bỏ sót và hậu quả nghiêm trọng).
-- Endpoint 1: per-player và per-tenant hoạt động **độc lập** (vượt per-player không làm hụt quota
-  per-tenant của player khác).
+# PHẦN B — TEST (viết SAU khi khai báo xong)
+
+> Không lặp lại test của `p0-01`/`p1-01`. Ở đây chỉ test **đặc thù `api-tenant`**: subject là tenant,
+> Endpoint 1 có **2 lớp**, và ranh giới cô lập giữa các tenant.
+
+## B0 — Xác nhận môi trường
+
+| # | Việc | Kỳ vọng | Nếu sai |
+|---|---|---|---|
+| 0a | Redis 8.6 container up | `redis_version:8.6.x` | Dừng |
+| 0b | `rg -n REDIS_URI apps/api-tenant/serverless.yml` | Có (dòng 81 — đã verify) | **Có** rồi nên không sửa gì; nếu mất thì báo, không tự thêm |
+| 0c | Xác nhận đúng **3** handler được deploy | Đối chiếu `serverless.yml` với `src/handlers/` | Test 3 handler chưa deploy là công vô ích |
+
+## B1 — Unit test (mock rate limiter)
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 1 | `event.tenant.tenantId` → key theo tenant | Key chứa hash tenantId | Đường chính của app này |
+| 2 | Thiếu `event.tenant` → **fallback IP** + `logError` | Có key IP **và** spy log | Cấu hình sai không được thành "bỏ qua im lặng" |
+| 3 | `tenantId` đã `hashKeyPart()` | Key **không** chứa tenantId nguyên bản | `tenantId` là danh tính đối tác B2B, lộ trong log Redis |
+| 4 | 2 tenant khác → 2 key khác; cùng tenant → cùng key | Tất định | Nền của test cô lập #8 |
+| 5 | Endpoint 1: **2 lớp** (per-player + per-tenant) cùng được gọi | Spy 2 lần với 2 key khác nhau | Sót 1 lớp = mất nửa phòng thủ mà không ai biết |
+| 6 | Endpoint 1: lớp per-player denied → per-tenant **không** bị trừ quota | Kiểm giá trị key per-tenant | Nếu trừ, 1 player xấu làm hụt quota cả tenant → chặn oan mọi player khác |
+| 7 | `route` của 3 endpoint **duy nhất**, đúng format | `new Set(...)` | Trùng `route` = dùng chung quota |
+
+## B2 — Integration test (Redis 8.6 thật)
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 8 | **Tenant A vượt ngưỡng KHÔNG ảnh hưởng tenant B** | A nhận 429 (ở `enforce` test-only), B vẫn 200 | **Test quan trọng nhất của plan.** Dễ bỏ sót, hậu quả: 1 tenant làm chết dịch vụ của mọi tenant còn lại — sự cố hợp đồng, không chỉ kỹ thuật |
+| 9 | `POST /player/login`: per-player độc lập giữa 2 player **cùng** tenant | Player 1 bị chặn, player 2 vẫn 200 | Lớp per-player phải thật sự per-player |
+| 10 | `POST /player/login`: vượt **per-tenant** → chặn cả tenant đó, tenant khác không ảnh hưởng | — | Lớp thứ 2 hoạt động độc lập lớp thứ 1 |
+| 11 | 3 endpoint có quota **riêng** | Vượt `login` không làm `bets/feed` bị 429 | `route` nằm trong key |
+| 12 | `shadow` (mặc định): vượt ngưỡng → **200** + có log | — | Trạng thái deploy thật |
+| 13 | Redis chết → cả 3 endpoint **vẫn 200** | — | Fail-open ở app thật |
+
+## B3 — Không regress
+
+| # | Lệnh | Kỳ vọng |
+|---|---|---|
+| 14 | `pnpm --filter @megawin/api-tenant test` | Xanh toàn bộ |
+| 15 | `pnpm --filter @megawin/api-tenant check-types` | Xanh |
+| 16 | `oxlint apps/api-tenant` | Không error |
+| 17 | `git diff --stat apps/api-tenant` | **Không** có `serverless.yml`; thân handler/use-case 0 dòng đổi |
+| 18 | `git status --short \| rg '\.env'` | **Không kết quả** |
+| 19 | `rg -n 'enforce' apps/api-tenant` | Không có ở code/config deploy |
+
+## B4 — Xác nhận thủ công
+
+1. **Đối chiếu ngưỡng với số liệu thật per-tenant**: mỗi tenant có pattern gọi khác nhau (tenant lớn
+   gọi nhiều hơn tenant nhỏ). Ghi bảng: tenant | req/phút quan sát | ngưỡng đặt. Ngưỡng chung phải
+   chịu được **tenant lớn nhất**, không phải tenant trung bình.
+2. **Đọc log shadow ≥1 chu kỳ** gồm giờ cao điểm. Nếu tenant thật vượt ngưỡng → ngưỡng sai.
+3. **Xác nhận `tenantId` không lộ**: `KEYS guard:*` trên Redis, đọc bằng mắt.
+4. **Trước khi cân nhắc `enforce`** (ngoài scope plan này, nhưng phải chuẩn bị): chốt với business
+   thông báo tenant qua đâu, trước bao lâu, có ghi ngưỡng vào tài liệu tích hợp không. Tenant là đối
+   tác B2B có hợp đồng — bất ngờ nhận 429 là sự cố quan hệ.
 
 ## Definition of done
 
-- [ ] 3 endpoint deployed đã bật shadow mode ở `dev` + `prod`.
-- [ ] Endpoint 1 có cả 2 lớp; lựa chọn vị trí lớp per-player đã ghi lý do vào code comment.
-- [ ] Test cô lập giữa các tenant đã pass.
-- [ ] Ngưỡng đã đối chiếu số liệu thật, không giữ nguyên số suy đoán.
+**Phần A (khai báo):**
+
+- [ ] 3 endpoint deployed đã thêm `rateLimit` (shadow mode).
+- [ ] Endpoint 1 có **cả 2 lớp**; lý do chọn vị trí lớp per-player đã ghi vào code comment.
+- [ ] `@megawin/guard` thêm vào `package.json` **chỉ khi** handler gọi trực tiếp `RateLimiter`.
 - [ ] `check-types` + `oxlint` + `prettier` xanh.
 - [ ] **Không** sửa `serverless.yml`, **không** sửa `.env*`.
 - [ ] `enforce` **chưa** bật; đã nêu yêu cầu thông báo tenant trong PR description.
+
+**Phần B (test):**
+
+- [ ] B0: 3 xác nhận môi trường xong (0c: đúng 3 handler deployed).
+- [ ] 7 unit test (B1) xanh — đặc biệt **#5–6 (2 lớp độc lập)** và #3 (không lộ `tenantId`).
+- [ ] 6 integration test (B2) xanh — **#8 (cô lập tenant) là bắt buộc, không được hoãn**.
+- [ ] B3 #17 xác nhận không đụng `serverless.yml`; #18 không đụng `.env*`.
+- [ ] B4: **đã ghi bảng số liệu thật per-tenant**, ngưỡng chịu được tenant lớn nhất.
+- [ ] B4: đã xác nhận `tenantId` không lộ trong key Redis (đọc bằng mắt).
+- [ ] Mọi `A-fix` (sửa ngưỡng sau khi đọc log) đã ghi lại kèm lý do.
+
 
 ## Không làm trong plan này
 

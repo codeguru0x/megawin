@@ -6,7 +6,9 @@
  * từ `@megawin/cache/stores` — adapter fail-open trên RedisRepository.
  */
 export { getRedisClient } from "./client";
+export { RedisCircuitOpenError } from "./errors";
 export { RedisRepository } from "./repository";
+export { DeadlineExceededError, withDeadline } from "./with-deadline";
 export type {
   ExpireMode,
   RedisClient,

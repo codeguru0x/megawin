@@ -25,6 +25,24 @@ export type RedisClient = RedisClientType;
 /** Alias type multi/transaction trả ra từ `client.multi()`. */
 export type RedisMultiCommand = ReturnType<RedisClient["multi"]>;
 
+/**
+ * State của Redis client factory cho 1 process — xem `redis/client.ts`.
+ *
+ * Khai ở đây (không phải trong `client.ts`) để `types/declarations/global.ts`
+ * import được mà không tạo vòng import với `client.ts`.
+ *
+ * Khoá của cả 3 Map là `redisEnvKey` — mỗi env key đúng 1 connection dùng chung
+ * cho toàn bộ consumer (cache lẫn `RedisRepository`).
+ */
+export interface RedisProcessState {
+  /** Client đã connect theo env key — dùng lại cho mọi command. */
+  clients: Map<string, RedisClientType>;
+  /** Connect đang chạy theo env key — lời gọi concurrent join vào đây. */
+  connecting: Map<string, Promise<RedisClientType>>;
+  /** Circuit: mốc epoch ms mà trước đó mọi lời gọi throw ngay. Không có entry = cho đi. */
+  circuitOpenUntilMs: Map<string, number>;
+}
+
 /** Mode cho EXPIRE/PEXPIRE — NX: chỉ khi chưa có TTL, XX: chỉ khi đã có, GT/LT: chỉ khi lớn/nhỏ hơn TTL hiện tại. */
 export type ExpireMode = "NX" | "XX" | "GT" | "LT";
 

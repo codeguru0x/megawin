@@ -2,7 +2,7 @@
  * RedisCacheStore — integration tests trên Redis Testcontainers.
  *
  * Cover roundtrip, Date codec, ttlSec<=0 no-op, delete/deleteByPrefix.
- * Fail-open khi Redis down: không cover ở phase này (xem plan p0-03).
+ * Fail-open khi Redis down / command hang: `redis-fail-open.test.ts` (p0-00).
  */
 
 import { beforeEach, describe, expect, it } from "vitest";

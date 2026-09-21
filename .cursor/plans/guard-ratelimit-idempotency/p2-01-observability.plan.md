@@ -5,6 +5,16 @@
 
 Plan này là **điều kiện tiên quyết để tắt shadow mode**. Không có số liệu thì bật `enforce` là canh bạc.
 
+---
+
+# PHẦN A — CODE LOG/ALERT (AI agent implement)
+
+> Chỉ code sinh log + cấu hình alert. **Không** viết test ở Phần A. Kết thúc Phần A: `check-types` +
+> `oxlint` xanh. Test đỏ ở Phần B → quay lại đây, ghi `A-fix: <lý do>`.
+>
+> ⚠️ Phần lớn giá trị của plan này nằm ở **Phần B mục B3 (xác nhận thủ công)** — alert chưa từng bắn
+> và số liệu chưa đủ 7 ngày thì plan **chưa** xong, dù code log đã viết.
+
 ## Hai câu hỏi plan này phải trả lời được
 
 1. **"Ngưỡng hiện tại có chặn oan traffic thật không?"** → không trả lời được thì không được bật `enforce`.
@@ -88,16 +98,69 @@ giây không?**
 **7 ngày liên tục** ở shadow mode trên production, bao gồm **ít nhất 1 ngày cuối tuần** (traffic xổ số
 có chu kỳ theo lịch quay — mẫu ngày thường không đại diện).
 
+---
+
+# PHẦN B — TEST
+
+> Plan này sinh ra **log + alert + báo cáo**, không sinh logic nghiệp vụ. Nên test chia 2 loại rất
+> khác nhau: phần **shape của log** test tự động được; phần **alert + số liệu thật** chỉ xác nhận
+> bằng tay. Không được lấy "log shape test xanh" làm bằng chứng cho "observability đã dùng được".
+
+## B1 — Unit test: shape của log (tự động)
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 1 | 3 loại event có **label cố định** (hằng, không literal rải rác) | Đối chiếu với `const object as const` | Label lệch chính tả → query Axiom rỗng mà không ai biết |
+| 2 | Mỗi event có **đủ** field cần cho báo cáo 5 cột | Assert từng key có mặt | Thiếu 1 field = phải chờ thêm 7 ngày nữa để thu lại |
+| 3 | Log **không** chứa PII thô: IP/accountId/tenantId nguyên bản | `not.toContain(rawValue)` | Log đi vào Axiom — nơi lưu ngoài tầm kiểm soát trực tiếp |
+| 4 | Phân biệt rõ `denied` (chặn thật) vs `failedOpen` (Redis chết) | 2 field/2 event khác nhau | Trộn 2 khái niệm làm báo cáo vô nghĩa: không biết "vượt ngưỡng" hay "hạ tầng lỗi" |
+| 5 | Log có ở **cả** `shadow` và `enforce` | Gọi 2 mode, assert đều có | Chỉ log ở shadow → tắt shadow là mất quan sát |
+| 6 | `mode` là field trong log | — | Đọc log phải biết request đó có bị chặn thật hay không |
+| 7 | Log không throw khi field optional thiếu | Gọi với event tối giản | Log lỗi làm chết request là nghịch lý |
+
+## B2 — Integration test: log ra thật qua đường end-to-end
+
+| # | Test | Cách xác nhận PASS |
+|---|---|---|
+| 8 | Vượt ngưỡng ở `shadow` → **đúng 1** log event `denied`, request vẫn 200 | Spy/capture logger |
+| 9 | Redis chết → log event `failedOpen`, **không** log `denied` | Phân biệt được 2 ca |
+| 10 | Request bình thường (không vượt) → **không** log spam | `toHaveBeenCalledTimes(0)` — log mỗi request sẽ làm nổ chi phí Axiom |
+
+## B3 — Xác nhận thủ công (phần chính của plan này)
+
+Không có test tự động nào thay được các mục dưới đây. **Phải ghi số liệu cụ thể**, không ghi "đã làm".
+
+| # | Việc | Bằng chứng phải ghi lại |
+|---|---|---|
+| 11 | **Alert fail-open bắn thật**: chủ động làm Redis lỗi ở `dev` ≥5 phút | Thời điểm gây lỗi, thời điểm alert đến, kênh nhận. Alert cấu hình mà chưa từng bắn = **chưa có alert** |
+| 12 | Alert **tự tắt** khi Redis hồi phục | Thời điểm hồi phục, thời điểm alert clear |
+| 13 | Xác định hạ tầng alert **thật** đang dùng (không giả định) | Tên dịch vụ + nơi cấu hình, ghi vào plan |
+| 14 | Query Axiom lấy được **cả 3** loại event | Câu query cụ thể + số bản ghi trả về |
+| 15 | Thu **7 ngày liên tục** production shadow, gồm **≥1 ngày cuối tuần** | Khoảng ngày cụ thể. Traffic xổ số có chu kỳ theo lịch quay — mẫu ngày thường không đại diện |
+| 16 | Báo cáo 5 cột cho **từng** route đã bật shadow | Bảng đầy đủ, không bỏ route nào |
+| 17 | Khuyến nghị per-route: `enforce` / nâng ngưỡng / giữ shadow | **Kèm số liệu** cho từng khuyến nghị, không kèm cảm nhận |
+| 18 | Kết luận cửa sổ fingerprint 5s: giữ / giảm / bỏ | Số lần guard bắn + tỉ lệ false positive quan sát được |
+
 ## Definition of done
 
-- [ ] 3 loại log event có label cố định, context đủ field, **không PII thô**.
-- [ ] Log hoạt động ở **cả** shadow và enforce.
-- [ ] Alert fail-open ≥5 phút đã cấu hình **và test được** (chủ động làm Redis lỗi ở dev → alert bắn).
-- [ ] Đã xác định hạ tầng alert thật (không giả định), ghi rõ vào plan.
-- [ ] Báo cáo 5 cột cho từng route đã bật shadow.
-- [ ] Đã thu **7 ngày liên tục** gồm ít nhất 1 cuối tuần.
-- [ ] Có khuyến nghị rõ ràng cho từng route: bật `enforce` / nâng ngưỡng / giữ shadow — **kèm số liệu**.
-- [ ] Có kết luận về cửa sổ fingerprint 5s.
+**Phần A (code log/alert):**
+
+- [ ] 3 loại log event có label cố định (hằng), context đủ field, **không PII thô**.
+- [ ] Log hoạt động ở **cả** shadow và enforce; có field `mode`.
+- [ ] Không log mỗi request — chỉ log event đáng quan tâm.
+- [ ] `oxlint` + `prettier` xanh.
+
+**Phần B (test):**
+
+- [ ] 7 unit test (B1) xanh — đặc biệt #3 (không PII) và #4 (phân biệt `denied` vs `failedOpen`).
+- [ ] 3 integration test (B2) xanh, gồm #10 (không log spam).
+- [ ] B3 #11–12: alert đã **bắn thật và tự tắt**, có ghi thời điểm. Không có bằng chứng này thì alert
+      coi như chưa tồn tại.
+- [ ] B3 #13: hạ tầng alert thật đã xác định và ghi vào plan (không giả định).
+- [ ] B3 #15: đã thu **7 ngày liên tục** gồm ≥1 cuối tuần, có ghi khoảng ngày.
+- [ ] B3 #16–17: báo cáo 5 cột đầy đủ + khuyến nghị per-route **kèm số liệu**.
+- [ ] B3 #18: có kết luận về cửa sổ fingerprint 5s.
+
 
 ## Không làm trong plan này
 

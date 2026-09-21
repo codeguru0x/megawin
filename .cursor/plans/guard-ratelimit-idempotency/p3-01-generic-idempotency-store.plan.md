@@ -35,6 +35,15 @@ Mongo-native với **0 RTT thêm** và **không thêm điểm chết**. Plan nà
 lần) → Redis trở thành **single point of failure của luồng thanh toán**. Đây chính là lý do `p0-02`
 không dùng phương án này.
 
+---
+
+# PHẦN A — CODE (AI agent implement)
+
+> 🧊 Deferred. Chỉ code production, **không** viết test ở Phần A. Kết thúc Phần A: `check-types` +
+> `oxlint` xanh. Test đỏ ở Phần B → quay lại đây, ghi `A-fix: <lý do>`.
+>
+> ⚠️ Plan này **fail-CLOSED** — ngược với `p0-01`. Đừng copy code hay test từ đó sang.
+
 ## Thiết kế (khi đủ điều kiện)
 
 ### State machine
@@ -101,28 +110,87 @@ Redis lỗi/timeout → AppException.serviceUnavailable("Hệ thống đang bậ
 Trong code, mỗi chỗ chọn fail-open/closed **phải có comment nói rõ vì sao** — trộn lẫn 2 triết lý này
 là cách tạo bug tài chính.
 
-## Test
+---
 
-- Replay trả **đúng byte-for-byte** response cũ (status + body).
-- `IN_FLIGHT` → 409, **không** chạy handler lần 2 (assert bằng spy trên handler).
-- Cùng key + body khác → 422.
-- Handler throw 5xx → key **bị xoá** → retry chạy lại handler được.
-- Handler throw 4xx → key **giữ** → retry trả lại cùng lỗi, không chạy handler.
-- **Redis down → 503, KHÔNG cho qua** (test quan trọng nhất — ngược với test fail-open của `p0-01`).
-- TTL `IN_FLIGHT` hết → retry chạy lại được (mô phỏng Lambda crash).
-- Response > giới hạn → không cache, trả 409.
+# PHẦN B — TEST
+
+> 🧊 Plan deferred — Phần B chỉ thực thi khi điều kiện khởi động ở đầu plan được thoả.
+>
+> **Điểm khác biệt sống còn với `p0-01`:** plan này **fail-CLOSED**. Mọi test fail-open của `p0-01`
+> phải có test **ngược lại** ở đây. Copy test từ `p0-01` sang là bug tài chính.
+
+## B0 — Xác nhận môi trường
+
+| # | Việc | Kỳ vọng |
+|---|---|---|
+| 0a | Redis 8.6 container up | `redis_version:8.6.x` |
+| 0b | `docker exec <c> redis-cli SET k v NX PX 1000` → `OK`, gọi lại → `nil` | Xác nhận `SET NX PX` atomic **một lệnh** hoạt động đúng trên 8.6 trước khi dựa vào nó |
+
+## B1 — Unit test (PURE)
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 1 | `canonicalBody` **dùng lại** từ `p0-02`, không định nghĩa mới | Import từ package `p0-02`; grep không có bản copy | 2 bản canonical lệch nhau = fingerprint lệch = bug im lặng |
+| 2 | State machine: mọi chuyển trạng thái hợp lệ đúng bảng | Vector cố định cho từng cặp (state, event) | Bảng state machine là contract |
+| 3 | Chuyển trạng thái **không** hợp lệ → throw | — | Trạng thái lạ phải nổ, không đi tiếp im lặng |
+| 4 | TTL `IN_FLIGHT` ≈ Lambda timeout + margin, là **hằng số** | So với hằng, không số ma | TTL ngắn hơn Lambda → key hết hạn giữa lúc đang chạy → chạy lại handler → double-execute |
+| 5 | Phân loại 4xx vs 5xx đúng bảng | Vector cho từng status | Sai hướng: 5xx giữ key → retry không bao giờ chạy lại được |
+| 6 | Giới hạn kích thước response có hằng số, vượt → xử lý đúng | — | Nhồi response lớn vào Redis làm nổ memory |
+
+## B2 — Integration test (Redis 8.6 thật) — chú ý dấu ngược với `p0-01`
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 7 | **Redis down → 503, KHÔNG cho qua** | `statusCode === 503`, handler **không** được gọi | **Test quan trọng nhất của plan.** Ngược hoàn toàn test #23 của `p0-01`. Nếu test này trả 200 → đã vô tình copy triết lý fail-open sang đường tiền |
+| 8 | Replay trả **đúng byte-for-byte** response cũ (status + body) | So chuỗi thô, không so object đã parse | Parse rồi so sẽ bỏ qua khác biệt định dạng số/ngày mà client thấy được |
+| 9 | `IN_FLIGHT` → 409, handler **không** chạy lần 2 | Spy handler `toHaveBeenCalledTimes(1)` | Chạy 2 lần = double mutation |
+| 10 | Cùng key + body khác → **422** | — | Key reuse sai (khác 409 của `IN_FLIGHT`) |
+| 11 | Handler throw **5xx** → key **bị xoá** → retry chạy lại handler được | Gọi lại, spy `toHaveBeenCalledTimes(2)` | Lỗi tạm thời không được khoá vĩnh viễn |
+| 12 | Handler throw **4xx** → key **giữ** → retry trả **cùng** lỗi, handler **không** chạy | Spy vẫn 1 lần | Lỗi do client thì retry y hệt cũng sai y hệt |
+| 13 | TTL `IN_FLIGHT` hết → retry chạy lại được | `sleep(ttl)` rồi gọi lại | Mô phỏng Lambda crash giữa xử lý — không có thì key kẹt `IN_FLIGHT` vĩnh viễn |
+| 14 | Response vượt giới hạn → không cache, trả 409 | — | Biên |
+| 15 | **Song song**: `Promise.all` n request cùng key → đúng **1** lần chạy handler | Spy | Race — `SET NX` phải thật sự atomic |
+| 16 | 2 key khác nhau → độc lập, cùng chạy được | — | Không chặn oan |
+
+## B3 — Không regress
+
+| # | Lệnh | Kỳ vọng |
+|---|---|---|
+| 17 | `pnpm --filter @megawin/guard test` | Xanh — **cả** test fail-open của `p0-01` vẫn xanh. Hai triết lý cùng tồn tại trong 1 package mà không lây sang nhau |
+| 18 | `pnpm check-types` | Xanh |
+| 19 | `rg -n "place-bet" packages/guard/src` | **Không kết quả** — `place-bet` giữ nguyên cơ chế `p0-02`, không chuyển sang store này |
+
+## B4 — Xác nhận thủ công
+
+1. **Ghi rõ consumer thật** đang dùng store này (endpoint nào, app nào). Không có consumer → plan
+   không được làm.
+2. **Đo latency thêm**: store này tốn **+2 RTT**. Ghi số thật — đây là lý do `p0-02` không dùng nó.
+3. **Gây lỗi Redis có chủ đích trên `dev`** và xác nhận endpoint trả 503 (không phải 200). Test tự động
+   #7 đã cover, nhưng phải thấy bằng mắt một lần vì đây là hành vi ngược trực giác với phần còn lại
+   của hệ thống.
 
 ## Definition of done
+
+**Phần A (code):**
 
 - [ ] **Đã xác nhận có consumer thật** (ghi rõ endpoint nào, thuộc app nào) — không có thì không làm.
 - [ ] `SET NX PX` một lệnh atomic, không `SETNX` + `EXPIRE` rời.
 - [ ] TTL `IN_FLIGHT` ≈ Lambda timeout + margin, là hằng số có JSDoc giải thích.
-- [ ] Phân biệt 4xx/5xx đúng như bảng state machine.
-- [ ] Fail-**closed**, có comment giải thích vì sao khác rate limit.
+- [ ] Phân biệt 4xx/5xx đúng bảng state machine.
+- [ ] Fail-**closed**, mỗi chỗ chọn fail-closed **có comment** giải thích vì sao khác rate limit.
 - [ ] `canonicalBody` **dùng lại** từ `p0-02`, không viết lại.
 - [ ] Giới hạn kích thước response có hằng số + xử lý vượt ngưỡng.
-- [ ] Toàn bộ test ở trên xanh, đặc biệt test Redis-down-trả-503.
 - [ ] `oxlint` + `prettier` xanh.
+
+**Phần B (test):**
+
+- [ ] B0 #0b: xác nhận `SET NX PX` atomic trên Redis 8.6 thật.
+- [ ] 6 unit test (B1) xanh — gồm #1 (dùng lại `canonicalBody`) và #4 (TTL vs Lambda timeout).
+- [ ] 10 integration test (B2) xanh — **#7 (Redis down → 503) là bắt buộc** và #15 (song song).
+- [ ] B3 #17: test fail-**open** của `p0-01` **vẫn xanh** — 2 triết lý không lây sang nhau.
+- [ ] B3 #19: `place-bet` **không** chuyển sang store này.
+- [ ] B4: đã ghi consumer thật + số đo +2 RTT + thấy 503 bằng mắt trên `dev`.
+
 
 ## Không làm trong plan này
 

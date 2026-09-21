@@ -9,6 +9,49 @@
  * thuần trên hot path (chấp nhận miss khi Redis down), dùng `RedisCacheStore`
  * (@megawin/cache/stores) — adapter fail-open bọc ngoài repo này.
  *
+ * `getClient()` cũng có thể throw ngay khi circuit đang mở (p0-00) —
+ * caller fail-open phải coi đó là lỗi bình thường (degrade), không log ở mức
+ * error như thể bug ứng dụng.
+ *
+ * ## ⚠️ THROW ≠ "LỆNH CHƯA CHẠY" — đọc trước khi viết lock/idempotency/ví
+ *
+ * Phân biệt 3 loại lỗi, vì đường tiền xử lý KHÁC NHAU hoàn toàn:
+ *
+ * | Lỗi | Lệnh đã chạy trên Redis chưa? | Caller được phép làm gì |
+ * |---|---|---|
+ * | `RedisCircuitOpenError` | **CHẮC CHẮN CHƯA** — chưa gửi byte nào | Coi như "không thực hiện được", retry / fail-closed tuỳ nghiệp vụ |
+ * | Lỗi socket / `ClientClosedError` trước khi gửi | Chưa | Như trên |
+ * | `DeadlineExceededError` | **KHÔNG BIẾT** | **KHÔNG được suy ra "chưa chạy"** |
+ *
+ * Vì sao `DeadlineExceededError` là UNKNOWN: `withDeadline` dùng `Promise.race`
+ * — chỉ bỏ **chờ kết quả**, không huỷ được lệnh đã ghi vào socket. Redis có thể
+ * đã thực thi xong và reply về muộn. Nặng hơn: khi client đang reconnect
+ * (`isOpen && !isReady`) node-redis xếp lệnh vào **offline queue** và **gửi
+ * THẬT** sau khi reconnect xong — tức lệnh chạy MUỘN, sau khi app đã kết luận
+ * "thất bại" và có thể đã đi nhánh bù trừ. Đó là nguồn của double-write.
+ *
+ * Hệ quả bắt buộc cho code tiền (settle, payout, wallet, idempotency, lock):
+ * 1. Dùng primitive **1 lệnh, idempotent** (`SET key token NX EX`, Lua script),
+ *    KHÔNG chuỗi nhiều lệnh read-modify-write qua nhiều round-trip.
+ * 2. Timeout → **đọc lại để xác nhận** trạng thái thật, hoặc fail-closed. Không
+ *    bao giờ "thử lại với semantics khác".
+ * 3. Node-redis xếp lệnh gọi lúc đang reconnect vào offline queue rồi gửi THẬT
+ *    khi reconnect xong — đúng nguồn double-write ở trên. Khi thực sự cần chặn
+ *    ca này (p0-02 lock/idempotency), thêm option `disableOfflineQueue` tại
+ *    `createClient` (`client.ts`) lúc đó — chưa làm trước vì chưa có caller nào
+ *    dùng, thêm sớm chỉ là API không ai gọi.
+ *
+ * ## Vì sao method KHÔNG nhận `commandOptions`
+ *
+ * Trước đây mọi method có tham số cuối `commandOptions?: RedisCommandOptions` với
+ * gợi ý "timeout ngắn cho hot path". Đã **bỏ** (review 2026-09-21) vì 2 lý do:
+ * `commandOptions.timeout` của redis@6 **không cắt được** lệnh đã gửi mà không có
+ * reply (node-redis tháo timeout listener khi command rời queue — xem
+ * `with-deadline.ts`), nên gợi ý đó dẫn người đọc tới đúng cái bẫy mà
+ * `withDeadline` tồn tại để vá; và không có caller nào trong monorepo dùng nó.
+ * Cần command options thật (abortSignal, typeMapping) → lấy proxy client qua
+ * {@link RedisRepository.getClient} rồi gọi lệnh trực tiếp.
+ *
  * @example Subclass để đóng gói domain-specific command
  * class RateLimitRepository extends RedisRepository {
  *   async hit(userId: string): Promise<number> {
@@ -40,6 +83,7 @@ export class RedisRepository {
 
   /**
    * Tạo Redis repository.
+   *
    * @param redisEnvKey - env key chứa Redis URI
    */
   constructor(redisEnvKey: string = DEFAULT_REDIS_ENV_KEY) {
@@ -48,15 +92,19 @@ export class RedisRepository {
 
   /**
    * Lấy Redis client (singleton per env key, tự connect lần đầu).
-   * Throw nếu thiếu env hoặc connect thất bại.
+   * Throw nếu thiếu env, circuit open, hoặc connect thất bại.
    *
    * @param commandOptions - Nếu truyền, trả về "proxy client" (theo doc redis@6)
-   *   với command options này (timeout, abortSignal…) áp cho mọi lệnh gọi qua
-   *   proxy. Proxy chỉ là `Object.create(client)` + ghi đè `_commandOptions` —
-   *   KHÔNG mở connection mới, dùng chung socket/queue với client gốc, chi phí
-   *   tạo không đáng kể so với 1 round-trip Redis. KHÔNG cache proxy: client gốc
-   *   giữ default `timeout` 5s nên lock/ví… trỏ cùng instance không bị ép 300ms.
-   *   Không truyền → dùng thẳng client gốc.
+   *   với command options này (abortSignal, typeMapping, asap…) áp cho mọi lệnh
+   *   gọi qua proxy. Proxy chỉ là `Object.create(client)` + ghi đè
+   *   `_commandOptions` — KHÔNG mở connection mới, dùng chung socket/queue với
+   *   client gốc. KHÔNG cache proxy: client gốc giữ default `timeout` 5s nên
+   *   lock/ví… trỏ cùng instance không bị ép trần hot-path của cache store.
+   *
+   *   ⚠️ **Đừng dùng `timeout` ở đây để chống stall.** node-redis tháo timeout
+   *   listener ngay khi command rời queue sang chờ reply, nên nó chỉ phủ pha CHƯA
+   *   gửi; lệnh đã gửi mà không có reply vẫn treo (đo probe: `timeout: 300` treo
+   *   >10s). Trần thật cho pha command là `withDeadline` (xem `stores/redis-store.ts`).
    */
   public async getClient(commandOptions?: RedisCommandOptions): Promise<RedisClient> {
     const client = await getRedisClient(this.redisEnvKey);
@@ -68,27 +116,18 @@ export class RedisRepository {
   /**
    * SET value dạng JSON với TTL tuỳ chọn.
    * `undefined` được chuẩn hoá thành `null` (JSON không có undefined).
-   *
-   * @param commandOptions - Command options (VD timeout ngắn cho hot path cache).
    */
-  public async setJson<T>(
-    key: string,
-    value: T,
-    expiresInSec?: number,
-    commandOptions?: RedisCommandOptions,
-  ): Promise<void> {
-    await this.set(key, JSON.stringify(value ?? null), expiresInSec, commandOptions);
+  public async setJson<T>(key: string, value: T, expiresInSec?: number): Promise<void> {
+    await this.set(key, JSON.stringify(value ?? null), expiresInSec);
   }
 
   /**
    * GET value dạng JSON.
    * Trả `null` khi key không tồn tại HOẶC value không parse được (data corrupt
    * coi như miss — không throw để caller không nổ vì rác trong Redis).
-   *
-   * @param commandOptions - Command options (VD timeout ngắn cho hot path cache).
    */
-  public async getJson<T>(key: string, commandOptions?: RedisCommandOptions): Promise<T | null> {
-    const raw = await this.get(key, commandOptions);
+  public async getJson<T>(key: string): Promise<T | null> {
+    const raw = await this.get(key);
     if (raw === null) {
       return null;
     }
@@ -102,29 +141,18 @@ export class RedisRepository {
 
   // ── String layer ───────────────────────────────────────────────────────────
 
-  /**
-   * GET string thô. Key không tồn tại → `null`.
-   *
-   * @param commandOptions - Command options (VD timeout ngắn cho hot path cache).
-   */
-  public async get(key: string, commandOptions?: RedisCommandOptions): Promise<string | null> {
-    const client = await this.getClient(commandOptions);
+  /** GET string thô. Key không tồn tại → `null`. */
+  public async get(key: string): Promise<string | null> {
+    const client = await this.getClient();
     return await client.get(key);
   }
 
   /**
    * SET string thô. `expiresInSec > 0` → kèm `EX` (TTL seconds);
    * bỏ trống → key sống vô hạn (chỉ dùng cho data chủ động quản lý lifecycle).
-   *
-   * @param commandOptions - Command options (VD timeout ngắn cho hot path cache).
    */
-  public async set(
-    key: string,
-    value: string,
-    expiresInSec?: number,
-    commandOptions?: RedisCommandOptions,
-  ): Promise<void> {
-    const client = await this.getClient(commandOptions);
+  public async set(key: string, value: string, expiresInSec?: number): Promise<void> {
+    const client = await this.getClient();
 
     if (expiresInSec !== undefined && expiresInSec > 0) {
       await client.set(key, value, { EX: expiresInSec });
@@ -136,16 +164,15 @@ export class RedisRepository {
   /**
    * DEL 1 hoặc nhiều keys trong 1 command.
    *
-   * @param commandOptions - Command options (VD timeout ngắn cho hot path cache).
    * @returns Số key thực sự bị xoá (key không tồn tại không tính).
    */
-  public async delete(keys: string | string[], commandOptions?: RedisCommandOptions): Promise<number> {
+  public async delete(keys: string | string[]): Promise<number> {
     const list = Array.isArray(keys) ? keys : [keys];
     if (list.length === 0) {
       return 0;
     }
 
-    const client = await this.getClient(commandOptions);
+    const client = await this.getClient();
     return await client.del(list);
   }
 
@@ -153,6 +180,10 @@ export class RedisRepository {
    * Xoá mọi key bắt đầu bằng prefix — SCAN cursor-based + DEL theo batch.
    * KHÔNG dùng KEYS (block Redis với keyspace lớn). Thao tác admin
    * (invalidate namespace, bump version) — không gọi trên hot path.
+   *
+   * Trần thời gian là việc của caller: `RedisCacheStore.deleteByPrefix` bọc
+   * `DEFAULT_REDIS_ADMIN_TIMEOUT_MS` (15s) vì SCAN keyspace lớn kéo dài hợp lệ.
+   *
    * @returns Tổng số key đã xoá.
    */
   public async deleteByPrefix(prefix: string): Promise<number> {
@@ -351,7 +382,12 @@ export class RedisRepository {
 
   /**
    * ZREMRANGEBYSCORE — xoá members có score trong [min, max].
-   * Dùng cho sliding-window rate-limit: xoá event cũ hơn window trước khi ZCARD đếm.
+   *
+   * ⚠️ Sliding-window rate-limit **không** nên ghép tay 3 lệnh
+   * (ZREMRANGEBYSCORE → ZADD → ZCARD): 3 round-trip = 3 lần có thể timeout, mỗi
+   * lần là 1 trạng thái UNKNOWN (xem đầu file), và không atomic với request khác.
+   * Dùng 1 Lua script qua `getClient()` để cả window logic chạy trong 1 lệnh.
+   *
    * @returns Số member đã xoá.
    */
   public async zRemRangeByScore(key: string, min: number | string, max: number | string): Promise<number> {
@@ -359,7 +395,10 @@ export class RedisRepository {
     return await client.zRemRangeByScore(key, min, max);
   }
 
-  /** ZREM — xoá 1 hoặc nhiều members khỏi sorted set. @returns Số member đã xoá. */
+  /**
+   * ZREM — xoá 1 hoặc nhiều members khỏi sorted set.
+   * @returns Số member đã xoá.
+   */
   public async zRem(key: string, members: string | string[]): Promise<number> {
     const client = await this.getClient();
     return await client.zRem(key, members);

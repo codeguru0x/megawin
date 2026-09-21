@@ -41,14 +41,114 @@ export const DEFAULT_L1_MAX = 1000;
 export const DEFAULT_L1_TTL_SEC = 5;
 
 /**
- * Timeout mỗi Redis command HOT PATH (ms) trong `RedisCacheStore`.
+ * Trần thời gian mỗi Redis command trên HOT PATH (ms).
  *
- * Truyền vào `commandOptions.timeout` của redis@6: quá hạn → redis tự HỦY
- * command (AbortSignal, bỏ khỏi queue nếu chưa ghi socket) và reject → store
- * bắt lỗi, degrade fail-open (miss). Cache chậm hơn DB thì vô nghĩa → trần ngắn.
- * KHÔNG áp cho `deleteByPrefix` (admin, giữ default 5s của redis@6).
+ * Truyền vào `withDeadline` ở `RedisCacheStore` → quá hạn thì **bỏ qua lệnh đó**
+ * và degrade fail-open (miss/no-op), connection giữ nguyên. Cache chậm hơn DB
+ * thì vô nghĩa → trần ngắn. KHÔNG áp cho `deleteByPrefix` (admin, có thể kéo
+ * dài hợp lệ).
+ *
+ * Quá hạn ghi `logError` kèm hướng dẫn tăng hằng này (xem `RedisCacheStore`):
+ * vượt deadline có thể là latency spike (bỏ qua được) hoặc trần đặt quá thấp so
+ * với p99 thật — chỉ tần suất log phân biệt được 2 ca.
+ *
+ * ⚠️ KHÔNG dùng `commandOptions.timeout` của redis@6 cho việc này: node-redis
+ * tháo timeout listener ngay khi command rời queue ghi sang chờ reply, nên
+ * command đã gửi mà không có reply treo vĩnh viễn (đo probe: `timeout: 300`
+ * vẫn treo >10s khi network stall). Chi tiết ở `redis/with-deadline.ts`.
+ *
+ * ⚠️ Chỉ phủ pha **command** (sau khi client đã connect). Pha connect được siết
+ * bởi {@link DEFAULT_REDIS_CONNECT_TIMEOUT_MS} + {@link DEFAULT_REDIS_CONNECT_MAX_RETRIES}
+ * + circuit {@link REDIS_CIRCUIT_OPEN_MS} — xem `redis/client.ts`.
  */
-export const DEFAULT_REDIS_COMMAND_TIMEOUT_MS = 300;
+export const DEFAULT_REDIS_COMMAND_TIMEOUT_MS = 500;
+
+/**
+ * Trần thời gian cho thao tác Redis **ADMIN** (`deleteByPrefix` — SCAN + DEL
+ * batch), tính bằng ms.
+ *
+ * Rộng gấp nhiều lần hot path vì SCAN cả keyspace lớn có thể kéo dài HỢP LỆ.
+ * Nhưng vẫn PHẢI có trần: node-redis không cắt được command đã gửi mà không có
+ * reply (xem `redis/with-deadline.ts`), nên "không truyền timeout" nghĩa là
+ * **treo tới khi Lambda/Vercel giết request** — kể cả khi hàm đó đã fail-open.
+ */
+export const DEFAULT_REDIS_ADMIN_TIMEOUT_MS = 15_000;
+
+/**
+ * Trần thời gian **một lần** TCP(+TLS) handshake khi connect Redis (ms).
+ *
+ * Rộng hơn {@link DEFAULT_REDIS_COMMAND_TIMEOUT_MS} vì handshake TLS cross-AZ
+ * có thể ~200ms; trả giá **1 lần/process**, không phải mỗi request. Default
+ * của node-redis là 5000ms — quá dài cho hot path fail-open.
+ *
+ * ⚠️ **3000ms** là số phỏng đoán (nới từ 1000ms ban đầu để chứa TLS Redis Cloud
+ * cross-AZ), **CHƯA đo p99 trên prod**. Đặt thấp hơn p99 connect thật → mọi cold
+ * start fail-open âm thầm (app không lỗi nhưng mất cache trọn
+ * {@link REDIS_CIRCUIT_OPEN_MS}). `connectClient` (`redis/client.ts`) ghi
+ * `logError` mỗi lần vượt trần chính là để phát hiện ca này: thấy log đó trong
+ * khi Redis Cloud vẫn healthy = trần quá thấp, đo p99 rồi tăng cả hằng này và
+ * {@link DEFAULT_REDIS_CONNECT_DEADLINE_MS} lên trên p99.
+ */
+export const DEFAULT_REDIS_CONNECT_TIMEOUT_MS = 3000;
+
+/**
+ * Số lần thử LẠI khi connect thất bại (tổng lần thử = 1 + giá trị này).
+ *
+ * **KHÔNG được đặt 0 / dùng `reconnectStrategy: false`.** node-redis gọi
+ * `#shouldReconnect(0, err)` khi socket đứt **sau khi đã ready**
+ * (`@redis/client` `socket.js` quanh dòng 313–334): `false` tại `retries = 0`
+ * làm client **không bao giờ tự reconnect** sau blip mạng bình thường.
+ * Dạng `(retries) => retries >= N ? false : 50` trả số ở `retries = 0` → cho
+ * phép reconnect, vẫn dừng sau N lần thử lại.
+ */
+export const DEFAULT_REDIS_CONNECT_MAX_RETRIES = 1;
+
+/**
+ * Backstop cứng cho **toàn bộ** pha connect (ms) — bọc `connect()` bằng
+ * `withDeadline`. Đây là trần tổng, **không** thay `connectTimeout` +
+ * `reconnectStrategy` (cơ chế huỷ thật).
+ *
+ * Công thức: `CONNECT_TIMEOUT(3000) + headroom sự cố (~2000)` = **5000**.
+ * Headroom gồm RESP handshake HELLO/AUTH, jitter, và biên độ khi mạng/TLS chậm
+ * (cross-AZ spike, Redis Cloud failover). Đổi
+ * {@link DEFAULT_REDIS_CONNECT_TIMEOUT_MS} **phải** tính lại hằng này — luôn
+ * `DEADLINE > CONNECT_TIMEOUT`.
+ *
+ * ⚠️ KHÔNG nhân theo {@link DEFAULT_REDIS_CONNECT_MAX_RETRIES}. Bản cũ 2500
+ * (= 1000 × 2 lần thử + backoff) "chứa đủ" cả retry → black-hole làm 50 request
+ * đồng thời đều tốn ~2500ms vì `connecting` gộp chúng. Trả giá 2 lần handshake là
+ * vô nghĩa khi {@link REDIS_CIRCUIT_OPEN_MS} đã cho thử lại sau 5s. Retry là
+ * **best-effort trong budget**: fail nhanh (ECONNREFUSED ~1ms) vẫn kịp lần 2;
+ * fail chậm (black-hole) bị cắt đúng hằng này.
+ *
+ * ⚠️ Cận dưới hợp lệ là {@link DEFAULT_REDIS_CONNECT_TIMEOUT_MS}: thấp hơn thì
+ * **1** handshake hợp lệ cũng không kịp → cache tắt vĩnh viễn, fail-open âm thầm.
+ *
+ * ⚠️ 5000ms vẫn **chưa đo p99 trên prod**. Nếu p99 connect thật > 5000ms thì mọi
+ * cold start fail-open âm thầm — `logError` ở `connectClient` là cách duy nhất
+ * biết điều đó đang xảy ra.
+ */
+export const DEFAULT_REDIS_CONNECT_DEADLINE_MS = 5000;
+
+/**
+ * Thời gian circuit "mở" sau connect fail (ms) — trong cửa sổ này mọi lời gọi
+ * `getRedisClient` throw ngay (0 RTT) thay vì trả giá connect lại.
+ *
+ * Không có circuit, Redis down khiến MỖI lời gọi cache cộng thêm tới
+ * {@link DEFAULT_REDIS_CONNECT_DEADLINE_MS} — đường "fail-open" biến thành
+ * đường chậm. Thiết yếu cho cả Vercel (nhiều request/process) và Lambda (nhiều
+ * cache call trong 1 invocation).
+ *
+ * 5s: đủ ngắn để tự phục hồi sau blip, đủ dài để 1 invocation Lambda không trả
+ * giá connect 2 lần.
+ *
+ * ⚠️ ĐÃ CÂN NHẮC VÀ BỎ: bậc thang lũy tiến `[5s, 15s, 60s]` theo số lần fail
+ * liên tiếp. Redis Cloud phục hồi nhanh (HA + proxy failover), nên sự cố dài —
+ * đúng ca mà bậc thang tối ưu — là ca hiếm; đổi lại nó đòi thêm 1 Map
+ * `connectFailures` phải reset đúng ở mọi nhánh, và làm thời gian mất cache sau
+ * một blip xấu nhất dài gấp 12 lần. Giữ 1 hằng phẳng.
+ */
+export const REDIS_CIRCUIT_OPEN_MS = 5000;
 
 /**
  * Số key xoá mỗi batch trong `deleteByPrefix` (SCAN + DEL theo lô).

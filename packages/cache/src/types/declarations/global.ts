@@ -10,14 +10,14 @@
  * không cần import ở nơi sử dụng, không cần cấu hình tsconfig thêm.
  */
 
-import type { RedisClientType } from "redis";
-
+import type { RedisProcessState } from "../../redis/types";
 import type { CacheStore } from "../../types";
 
 declare global {
   // Cache store singleton cho Next.js dev HMR — tránh tạo lại mỗi lần reload.
   var __megawinDefaultCacheStore: CacheStore | undefined;
 
-  // Redis clients cache (theo env key) cho Next.js dev HMR — tránh connect lại.
-  var __nextJsRedisClients: Map<string, RedisClientType> | undefined;
+  // State của Redis client factory (clients + connecting + circuit) cho Next.js
+  // dev HMR — tránh connect lại / reset circuit mỗi lần reload module (p0-00).
+  var __nextJsRedisState: RedisProcessState | undefined;
 }

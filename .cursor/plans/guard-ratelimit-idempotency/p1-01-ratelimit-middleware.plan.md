@@ -19,6 +19,14 @@ handler trong `api-player` + `api-tenant`. Cả 5 wrapper đi qua đây:
 | `withTenantAuth` (`tenant/with-tenant-auth.ts:20-28`) | `event.tenant.tenantId` |
 | `withPublicHandler` | **không có** → chỉ IP (`handler-wrappers.ts:143-150` đã ghi rõ dự tính này) |
 
+---
+
+# PHẦN A — CODE (AI agent implement)
+
+> Chỉ code production. **Không** viết test ở Phần A. Kết thúc Phần A: `check-types` xanh cho
+> `packages/auth`, `apps/api-player`, `apps/api-tenant` + `oxlint` không error.
+> Test đỏ ở Phần B → quay lại đây, ghi `A-fix: <lý do>`.
+
 ## Bước 1 — Vị trí trong chain
 
 ```
@@ -122,27 +130,125 @@ transitively qua `game-*-application`). Thêm `@megawin/guard` vào:
 ⚠️ **Phải kiểm tra `apps/api-tenant/serverless.yml` có `REDIS_URI` chưa** — nếu chưa, thêm là việc của
 `p1-03` (nơi bật rate limit cho app đó), không phải plan này.
 
-## Test
+---
 
-**Unit** (mock rate limiter, không cần Redis):
-- Resolve subject đúng cho từng `subject` type; fallback IP khi thiếu identity (+ có log).
-- `shadow` → luôn cho qua kể cả khi decision là `denied`, **và** có log.
-- `enforce` + denied → `earlyResponse` 429, header `Retry-After` đúng giây (làm tròn lên), body đúng envelope.
-- `off` → **không** gọi rate limiter (assert bằng spy — chứng minh không tốn RTT).
-- `failedOpen: true` → cho qua kể cả ở `enforce`.
+# PHẦN B — TEST (viết SAU khi Phần A xong)
 
-**Integration** (Redis thật, 1 handler giả):
-- Vượt ngưỡng ở `enforce` → 429 thật; `shadow` → 200.
-- Redis chết → vẫn 200 (fail-open end-to-end).
+> Không sửa `src/` ở Phần B. Test đỏ = Phần A sai.
+
+## B0 — Xác nhận môi trường
+
+| # | Việc | Kỳ vọng | Nếu sai |
+|---|---|---|---|
+| 0a | `docker info` + Redis 8.6 container | Up, `redis_version:8.6.x` | Dừng |
+| 0b | `rg REDIS_URI apps/api-tenant/serverless.yml` | Có (đã verify: dòng 81) | Thiếu → là việc của `p1-03`, ghi lại, **không** tự thêm ở plan này |
+| 0c | `packages/auth` có `vitest.config.ts` chưa | Nếu chưa → tạo, copy khuôn `packages/cache/vitest.config.ts` (2 project unit/integration, `globalSetup` redis cho integration). **Không** tạo `.oxlintrc*`/`.prettierrc*` riêng | — |
+
+## B1 — Unit test (mock rate limiter, KHÔNG cần Redis)
+
+`packages/auth/test/unit/` · `pnpm --filter @megawin/auth test:unit`
+
+Mock `RateLimiter` ở đây là **đúng**: đang test middleware, không test rate limiter (đã test ở `p0-01`).
+
+### `resolve-subject.test.ts`
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 1 | `subject: "account"` + `event.user.accountId` → dùng accountId | Key chứa hash của accountId | Đường chính |
+| 2 | `subject: "tenant"` + `event.tenant.tenantId` → dùng tenantId | — | `withTenantAuth` |
+| 3 | `subject: "tenant"` **không** có `event.tenant` nhưng có `event.user.tenantId` → dùng cái sau | — | Thứ tự ưu tiên ở Bước 3 |
+| 4 | `subject: "ip"` → dùng `extractClientIpFromApiGatewayV2` | — | `withPublicHandler` |
+| 5 | Khai `"account"` nhưng event **không** có identity → **fallback IP** + `logError` | Có key IP **và** spy log được gọi | Lập trình viên gắn sai wrapper. Im lặng bỏ qua rate limit là tệ nhất |
+| 6 | Không lấy được IP → **bỏ qua** rate limit + log, **không** chặn | Rate limiter **không** được gọi; request đi tiếp | Chặn hết vì không đọc được IP = tự gây sự cố |
+| 7 | 2 event khác subject → 2 key khác nhau | `not.toBe()` | Cô lập |
+
+### `rate-limit-mode.test.ts`
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 8 | `shadow` + decision denied → **vẫn cho qua** | Handler **được** gọi (spy) **và** có log | Mặc định an toàn |
+| 9 | `shadow` + denied → log có đủ field cho `p2-01` (route, subjectType, decision) | Kiểm field trong payload log | Log thiếu field = `p2-01` không quyết được ngưỡng |
+| 10 | `enforce` + denied → `earlyResponse` 429, handler **không** được gọi | Spy handler `not.toHaveBeenCalled()` | Chặn thật |
+| 11 | `enforce` + allowed → handler được gọi | — | Không chặn oan |
+| 12 | `off` → rate limiter **không** được gọi lần nào | Spy `not.toHaveBeenCalled()` | Chứng minh 0 RTT — tắt khẩn cấp phải thật sự rẻ |
+| 13 | Không khai `rateLimit` → rate limiter không được gọi | Spy | Mặc định không bật |
+| 14 | Mode mặc định khi không có env → **`shadow`** | — | Deploy quên set env **không** được thành `enforce` |
+| 15 | Env `GUARD_RATELIMIT_MODE` đổi được mode, giá trị **rác** → fallback `shadow` + log | Không crash | Typo env không được làm chết app hoặc bật chặn ngoài ý muốn |
+| 16 | `failedOpen: true` → cho qua **kể cả ở `enforce`** | Handler được gọi | Redis chết không được thành outage |
+
+### `429-response.test.ts`
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 17 | Body đúng envelope `{ success: false, error: { code, message } }` | So **cấu trúc lồng**, không so chuỗi phẳng | Bug 14/08/2026 (JSDoc `validator-zod.ts:70-81`): body phẳng → client bóc `json.error.code` nhận `undefined` |
+| 18 | `code === "TOO_MANY_REQUESTS"` | Dùng hằng từ `error-codes.ts`, **không** literal | Code mới sẽ không map được 429 |
+| 19 | `statusCode === 429` | — | — |
+| 20 | `Retry-After` là **giây**, làm tròn **lên**: `retryAfterMs: 1500` → `"2"` | `toBe("2")` | RFC dùng giây. Làm tròn xuống → client retry quá sớm |
+| 21 | `retryAfterMs: 100` → `Retry-After: "1"` (tối thiểu 1) | `toBe("1")` | `"0"` làm client retry tức thì → bão request |
+| 22 | Header có `Content-Type: application/json` | — | `earlyResponse` không tự thêm |
+| 23 | Message là tiếng Việt, **không** chứa ngưỡng/route/tên class | `not.toMatch(/limit\|route\|RateLimiter\|\d+\/\d+/)` | Message là **UI** (`error-handling-conventions.mdc`); lộ ngưỡng giúp kẻ tấn công dò |
+| 24 | **Không** có `details` chứa chi tiết kỹ thuật | `details` undefined hoặc sạch | `details` cũng trả nguyên văn cho client |
+
+### `chain-order.test.ts`
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 25 | Thứ tự: `auth` → `rateLimit` → `validatorZod` | Ghi thứ tự gọi qua spy, so mảng | **Sau auth**: cần identity. **Trước Zod**: không tốn CPU parse body kẻ spam. Đảo thứ tự là bug im lặng |
+| 26 | `enforce` + denied → `validatorZod` **không** chạy | Spy | Chứng minh tiết kiệm CPU thật |
+| 27 | Cả 5 wrapper (`withPlayerAuth`, `withAgentAuth`, `withCompanyAuth`, `withTenantAuth`, `withPublicHandler`) truyền `rateLimit` qua được | Vòng lặp 5 wrapper | Sót 1 wrapper = rollout sau đó im lặng không bật |
+| 28 | Handler **cũ** (không khai `rateLimit`) hành vi **không đổi** | So response trước/sau | Không breaking change |
+
+## B2 — Integration test (Redis 8.6 thật, handler giả)
+
+`packages/auth/test/integration/` · `flushDb()` trong `beforeEach`.
+
+| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
+|---|---|---|---|
+| 29 | `enforce`: vượt ngưỡng → **429 thật** end-to-end | Gọi n+1 lần qua handler giả | Unit test dùng mock; test này chứng minh Lua + middleware khớp nhau |
+| 30 | `shadow`: vượt ngưỡng → **200** | — | Mặc định không chặn |
+| 31 | Sau khi chờ `Retry-After` giây → 200 lại | `sleep(retryAfter * 1000)` | Giá trị header **đúng thật**, không chỉ đúng công thức |
+| 32 | Redis chết → **200** (fail-open end-to-end) | Redis container stop hoặc env broken | Chỉ pass sau `p0-00` |
+| 33 | Redis chết → latency thêm **nhỏ** | Đo, assert `< DEFAULT_REDIS_CONNECT_DEADLINE_MS` | Fail-open mà chậm 5s vẫn là outage |
+| 34 | 2 subject khác nhau độc lập end-to-end | A bị 429, B vẫn 200 | Chặn oan hàng loạt |
+| 35 | 2 route khác nhau cùng subject độc lập | `place-bet` bị 429, `list-tickets` vẫn 200 | `route` phải nằm trong key |
+
+## B3 — Không regress
+
+| # | Lệnh | Kỳ vọng |
+|---|---|---|
+| 36 | `pnpm --filter @megawin/auth test` | Xanh toàn bộ |
+| 37 | `pnpm --filter @megawin/auth check-types` + `api-player` + `api-tenant` | Xanh |
+| 38 | `oxlint packages/auth` | Không error, **không** import cycle (`import/no-cycle`) |
+| 39 | `rg -n "rateLimit" apps/api-player/src/handlers apps/api-tenant/src/handlers` | **Không kết quả** — chưa endpoint thật nào bật (rollout là `p1-02`/`p1-03`) |
+| 40 | `git status --short \| rg '\.env'` | **Không kết quả** — không file `.env*` nào bị tạo/sửa |
+
+## B4 — Xác nhận thủ công
+
+1. **Đo latency thêm** của middleware khi Redis sống, ở `shadow` và `enforce`. Ghi số — đây là cơ sở
+   quyết định ngưỡng ở `p1-02`.
+2. **Đổi mode bằng env, không deploy lại code**: chạy handler giả với `GUARD_RATELIMIT_MODE=off` →
+   xác nhận Redis **không** bị gọi (`MONITOR` hoặc `INFO commandstats`). Đây là yêu cầu vận hành, phải
+   chứng minh được bằng tay.
+3. **Đọc log shadow mode thật**: xác nhận payload đủ field để `p2-01` dùng được, không phải chuỗi tự do.
 
 ## Definition of done
 
+**Phần A (code):**
+
 - [ ] `buildHandler` nhận `rateLimit` optional; 5 wrapper truyền qua, **không** breaking change.
 - [ ] Chain đúng thứ tự: sau `auth`, trước `validatorZod`.
-- [ ] 3 mode, mặc định `shadow`, đổi được qua **env** không cần deploy.
+- [ ] 3 mode (`const object as const`), mặc định `shadow`, đổi được qua **env** không cần deploy.
 - [ ] 429 qua `earlyResponse`, có `Retry-After`, body đúng envelope `{ success, error: { code, message } }`.
-- [ ] Fail-open end-to-end đã test.
-- [ ] `check-types` xanh cho `packages/auth`, `apps/api-player`, `apps/api-tenant`.
+- [ ] `@megawin/guard` thêm vào `packages/auth/package.json`, không tạo import cycle.
 - [ ] `oxlint` + `prettier` đã chạy.
-- [ ] **Chưa endpoint thật nào bật `rateLimit`** — rollout là `p1-02`/`p1-03`.
 - [ ] **Không** file `.env*` nào bị tạo/sửa.
+
+**Phần B (test):**
+
+- [ ] B0: 3 xác nhận môi trường xong (0b chỉ **ghi lại**, không tự sửa `serverless.yml`).
+- [ ] 28 unit test (B1) xanh — gồm #14 (mặc định `shadow`), #17 (envelope), #20–21 (`Retry-After`), #25 (thứ tự chain).
+- [ ] 7 integration test (B2) xanh — gồm #32–33 (fail-open + latency), #35 (cô lập theo route).
+- [ ] B3 #39 xác nhận **chưa endpoint thật nào** bật `rateLimit`; #40 xác nhận không đụng `.env*`.
+- [ ] B4 đã làm tay, có số đo latency + bằng chứng `off` không gọi Redis.
+- [ ] Mọi `A-fix` phát sinh đã ghi lại.
+
