@@ -153,7 +153,8 @@ packages/player-sdk/
     client.ts             # Facade compose modules
     endpoints.ts          # URL registry tập trung
     http-client.ts        # HTTP client (inline, zero deps)
-    api-types.ts          # API response types
+    helpers/              # Helper dùng chung (createIdempotencyKey, …)
+    types/                # Type dùng chung (API envelope, ticket/entry status)
     auth/                 # Auth module
       types.ts            # AuthTokens, AuthResult, TokenStorage
       token-manager.ts    # Token lifecycle + storage implementations

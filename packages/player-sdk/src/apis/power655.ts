@@ -4,6 +4,7 @@
  */
 
 import { ENDPOINTS } from "../endpoints";
+import { IDEMPOTENCY_KEY_HEADER } from "../helpers";
 import type { HttpClient } from "../http-client";
 import type {
   Power655ComboPopularityParams,
@@ -100,11 +101,17 @@ export interface Power655Api {
    * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema (số sai range, thiếu field, playType không được chấp nhận...)
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — thiếu hoặc sai format header `mw-idempotency-key`
+   * @throws {@link ApiClientError} code `IDEMPOTENCY_CONFLICT` — cùng mã đang xử lý hoặc giao dịch trước không replay được (409)
+   * @throws {@link ApiClientError} code `TOO_MANY_REQUESTS` — gửi quá nhanh (429)
    * @example
    * ```ts
+   * import { createIdempotencyKey } from "@megawin/player-sdk";
    * import type { Power655TicketPurchaseInput } from "@megawin/player-sdk/power655";
    *
+   * const idempotencyKey = createIdempotencyKey();
    * const result = await client.power655.placeBet({
+   *   idempotencyKey,
    *   drawIds: ["2026-03-07.001"],
    *   boards: [{
    *     boardNo: "A",
@@ -320,8 +327,11 @@ export function createPower655Api(http: HttpClient): Power655Api {
     async getJackpot() {
       return http.get<Power655JackpotResponse>(ENDPOINTS.power655.getJackpot);
     },
-    async placeBet(input) {
-      return http.post<Power655PlaceBetResponse>(ENDPOINTS.power655.placeBet, input);
+    async placeBet(input: Power655TicketPurchaseInput): Promise<Power655PlaceBetResponse> {
+      const { idempotencyKey, ...body } = input;
+      return http.post<Power655PlaceBetResponse>(ENDPOINTS.power655.placeBet, body, {
+        headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
+      });
     },
     async listPendingTickets(params) {
       return http.get<Power655ListTicketsResponse>(ENDPOINTS.power655.listPendingTickets, {

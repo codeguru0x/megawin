@@ -4,7 +4,7 @@
  * @module
  */
 
-import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../types";
 import type { Mega645PlayType, Mega645PrizeTier } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -52,9 +52,12 @@ export interface Mega645BoardInput {
  *
  * @example
  * ```ts
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
  * import type { Mega645TicketPurchaseInput } from "@megawin/player-sdk/mega645";
  *
+ * const idempotencyKey = createIdempotencyKey();
  * const input: Mega645TicketPurchaseInput = {
+ *   idempotencyKey,
  *   drawIds: ["2026-03-07.001", "2026-03-14.001"],
  *   boards: [
  *     {
@@ -70,6 +73,12 @@ export interface Mega645BoardInput {
  * ```
  */
 export interface Mega645TicketPurchaseInput {
+  /**
+   * Mã do tenant kiểm soát. Gửi lại cùng giá trị khi retry để server không tạo vé thứ hai.
+   * SDK gắn vào header `mw-idempotency-key` — không nằm trong body.
+   * Độ dài 8–128, charset chữ, số, gạch ngang hoặc gạch dưới. Tạo bằng `createIdempotencyKey()` từ `@megawin/player-sdk`. Giữ giá trị khi retry.
+   */
+  idempotencyKey: string;
   /**
    * Danh sách drawId các kỳ quay tham gia.
    *

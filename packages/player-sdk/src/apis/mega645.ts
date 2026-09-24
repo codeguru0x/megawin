@@ -4,6 +4,7 @@
  */
 
 import { ENDPOINTS } from "../endpoints";
+import { IDEMPOTENCY_KEY_HEADER } from "../helpers";
 import type { HttpClient } from "../http-client";
 import type {
   Mega645ComboPopularityParams,
@@ -95,11 +96,17 @@ export interface Mega645Api {
    * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema (số sai range, thiếu field...)
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — thiếu hoặc sai format header `mw-idempotency-key`
+   * @throws {@link ApiClientError} code `IDEMPOTENCY_CONFLICT` — cùng mã đang xử lý hoặc giao dịch trước không replay được (409)
+   * @throws {@link ApiClientError} code `TOO_MANY_REQUESTS` — gửi quá nhanh (429)
    * @example
    * ```ts
+   * import { createIdempotencyKey } from "@megawin/player-sdk";
    * import type { Mega645TicketPurchaseInput } from "@megawin/player-sdk/mega645";
    *
+   * const idempotencyKey = createIdempotencyKey();
    * const result = await client.mega645.placeBet({
+   *   idempotencyKey,
    *   drawIds: ["2026-03-07.001"],
    *   boards: [{
    *     boardNo: "A",
@@ -319,8 +326,11 @@ export function createMega645Api(http: HttpClient): Mega645Api {
     async getJackpot() {
       return http.get<Mega645JackpotResponse>(ENDPOINTS.mega645.getJackpot);
     },
-    async placeBet(input) {
-      return http.post<Mega645PlaceBetResponse>(ENDPOINTS.mega645.placeBet, input);
+    async placeBet(input: Mega645TicketPurchaseInput): Promise<Mega645PlaceBetResponse> {
+      const { idempotencyKey, ...body } = input;
+      return http.post<Mega645PlaceBetResponse>(ENDPOINTS.mega645.placeBet, body, {
+        headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
+      });
     },
     async listPendingTickets(params) {
       return http.get<Mega645ListTicketsResponse>(ENDPOINTS.mega645.listPendingTickets, {

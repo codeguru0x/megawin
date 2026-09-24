@@ -38,7 +38,10 @@ import { Bingo18BigSmallBet, Bingo18PlayType, Bingo18TripleKind } from "@megawin
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 import { bingo18DrawIdSchema, bingo18NumberSchema, bingo18SumSchema } from "@megawin/game-bingo18/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import {
+  extractClientIpFromApiGatewayV2,
+  extractIdempotencyKeyFromApiGatewayV2,
+} from "@megawin/shared/utils/api-gateway-v2";
 import z from "zod";
 
 import { boardsSequentialRefine } from "../../lib/schemas";
@@ -150,6 +153,7 @@ export const handler = withPlayerAuth(
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards } = event.schema.body;
     const ipAddress = extractClientIpFromApiGatewayV2(event);
+    const idempotencyKey = extractIdempotencyKeyFromApiGatewayV2(event);
 
     return useCase.run({
       tenantId,
@@ -157,6 +161,7 @@ export const handler = withPlayerAuth(
       username,
       channel: TicketChannel.Sdk,
       ipAddress,
+      idempotencyKey,
       drawIds,
       boards,
     });

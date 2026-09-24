@@ -43,7 +43,12 @@ export {
 /** Handler wrappers — all-in-one (auth + validator + success envelope + error handler) */
 export {
   buildHandler,
+  type BuildHandlerOptions,
+  type HandlerRateLimitOptions,
   type InferSchema,
+  RateLimitMode,
+  resolveRateLimitMode,
+  resolveRateLimitSubject,
   type WithSchema,
   withAgentAuth,
   withCompanyAuth,

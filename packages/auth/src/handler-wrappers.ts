@@ -46,6 +46,10 @@ import {
   type TenantUserEvent,
   type UserAuthOptions,
 } from "./authorization-middleware";
+import { rateLimitMiddleware, type HandlerRateLimitOptions } from "./rate-limit";
+
+export type { HandlerRateLimitOptions };
+export { RateLimitMode, resolveRateLimitMode, resolveRateLimitSubject } from "./rate-limit";
 
 export type { CompanyUserEvent, TenantUserEvent };
 
@@ -88,17 +92,27 @@ export type WithSchema<TBase, TSchemas> = TSchemas extends ApiGatewayZodSchemas
 
 // ============ Internal builder ============
 
+/** Options nội bộ của `buildHandler` — không export positional param mới ra `apps/`. */
+export interface BuildHandlerOptions {
+  schemas?: ApiGatewayZodSchemas;
+  auth?: AnyMiddleware;
+  rateLimit?: HandlerRateLimitOptions;
+}
+
 /**
  * Builder duy nhất cho mọi wrapper. `auth` optional — không truyền = endpoint public.
  *
- * THỨ TỰ middleware quan trọng: middy chạy `before` theo thứ tự push, nên auth phải đứng
- * trước validator (validator chỉ nên chạy sau khi request đã qua auth), và error handler
- * đứng cuối để bắt lỗi của mọi tầng trên.
+ * THỨ TỰ middleware: auth → rateLimit → validatorZod → success envelope → error handler.
+ * Rate limit sau auth (cần identity), trước Zod (không parse body kẻ spam).
  */
-export function buildHandler(fn: RawHandler, schemas?: ApiGatewayZodSchemas, auth?: AnyMiddleware) {
+export function buildHandler(fn: RawHandler, options: BuildHandlerOptions = {}) {
+  const { schemas, auth, rateLimit } = options;
   const middlewares: AnyMiddleware[] = [];
   if (auth) {
     middlewares.push(auth);
+  }
+  if (rateLimit) {
+    middlewares.push(rateLimitMiddleware(rateLimit));
   }
   if (schemas) {
     middlewares.push(validatorZodMiddleware(schemas));
@@ -112,30 +126,30 @@ export function buildHandler(fn: RawHandler, schemas?: ApiGatewayZodSchemas, aut
 
 export function withPlayerAuth<TSchemas extends ApiGatewayZodSchemas | undefined = undefined>(
   fn: (event: WithSchema<TenantUserEvent, TSchemas>) => Promise<unknown>,
-  options?: UserAuthOptions & { schemas?: TSchemas },
+  options?: UserAuthOptions & { schemas?: TSchemas; rateLimit?: HandlerRateLimitOptions },
 ) {
-  const { schemas, ...authOptions } = options ?? {};
-  return buildHandler(fn, schemas, playerAuth(authOptions));
+  const { schemas, rateLimit, ...authOptions } = options ?? {};
+  return buildHandler(fn, { schemas, auth: playerAuth(authOptions), rateLimit });
 }
 
 // ============ Agent ============
 
 export function withAgentAuth<TSchemas extends ApiGatewayZodSchemas | undefined = undefined>(
   fn: (event: WithSchema<TenantUserEvent, TSchemas>) => Promise<unknown>,
-  options?: UserAuthOptions & { schemas?: TSchemas },
+  options?: UserAuthOptions & { schemas?: TSchemas; rateLimit?: HandlerRateLimitOptions },
 ) {
-  const { schemas, ...authOptions } = options ?? {};
-  return buildHandler(fn, schemas, agentAuth(authOptions));
+  const { schemas, rateLimit, ...authOptions } = options ?? {};
+  return buildHandler(fn, { schemas, auth: agentAuth(authOptions), rateLimit });
 }
 
 // ============ Company ============
 
 export function withCompanyAuth<TSchemas extends ApiGatewayZodSchemas | undefined = undefined>(
   fn: (event: WithSchema<CompanyUserEvent, TSchemas>) => Promise<unknown>,
-  options?: CompanyAuthOptions & { schemas?: TSchemas },
+  options?: CompanyAuthOptions & { schemas?: TSchemas; rateLimit?: HandlerRateLimitOptions },
 ) {
-  const { schemas, ...authOptions } = options ?? {};
-  return buildHandler(fn, schemas, companyAuth(authOptions));
+  const { schemas, rateLimit, ...authOptions } = options ?? {};
+  return buildHandler(fn, { schemas, auth: companyAuth(authOptions), rateLimit });
 }
 
 // ============ Public (KHÔNG auth) ============
@@ -150,7 +164,7 @@ export function withCompanyAuth<TSchemas extends ApiGatewayZodSchemas | undefine
  */
 export function withPublicHandler<TSchemas extends ApiGatewayZodSchemas | undefined = undefined>(
   fn: (event: WithSchema<APIGatewayProxyEventV2, TSchemas>) => Promise<unknown>,
-  options?: { schemas?: TSchemas },
+  options?: { schemas?: TSchemas; rateLimit?: HandlerRateLimitOptions },
 ) {
-  return buildHandler(fn, options?.schemas);
+  return buildHandler(fn, { schemas: options?.schemas, rateLimit: options?.rateLimit });
 }

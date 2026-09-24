@@ -14,21 +14,23 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 import type {
   Board,
+  DrawEntity,
   EntryBoardSnapshot,
   EntrySummary,
   TicketDoc,
   TicketEntryDoc,
 } from "@megawin/game-bingo18/entities";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { DebitPlayerService } from "@megawin/game-core-application/services";
+import { DebitPlayerService, type DebitPlayerInput } from "@megawin/game-core-application/services";
 import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
-import { AppException } from "@megawin/shared/errors";
+import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { Currency } from "@megawin/shared/types";
 import { getFinancialDate, nowVN } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
+import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
@@ -40,9 +42,10 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
   private readonly debitService = new DebitPlayerService();
+  private readonly ticketRepo = new TicketRepository();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
+    const { tenantId, accountId, username, channel, ipAddress, idempotencyKey, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -86,6 +89,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     const draws = await this.drawRepo.getDrawsByIds(drawIds);
 
     const drawMap = new Map(draws.map((d) => [d.drawId, d]));
+    const validatedDraws: DrawEntity[] = [];
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId);
@@ -100,6 +104,8 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
+
+      validatedDraws.push(draw);
     }
 
     // ── 6. Load commission rate ──
@@ -124,8 +130,8 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     const ticketNo = buildTicketNo(GameProduct.Bingo18, date, seq);
     const drawCount = drawIds.length;
 
-    // tx (UUIDv7) generate sớm để gán vào ticketDoc — link ticket ↔ WAL.
-    const tx = this.debitService.generateTx();
+    // tx từ Idempotency-Key: cùng input → cùng tx, unique WAL chặn trùng.
+    const tx = this.debitService.deriveTx(accountId, idempotencyKey);
 
     // _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
     const ticketObjectId = new ObjectId();
@@ -176,8 +182,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     // ── 10. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
 
-    for (const drawId of drawIds) {
-      const draw = drawMap.get(drawId)!;
+    for (const draw of validatedDraws) {
       entryDocs.push({
         tenantId,
         accountId,
@@ -202,7 +207,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     }
 
     // ── 11. Debit player via WAL — ngay trước save để giảm cửa sổ crash ──
-    const { balance } = await this.debitService.debit({
+    const debitInput = {
       tx,
       tenantId,
       accountId,
@@ -213,7 +218,18 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       roundIds: drawIds,
       description: `Đặt cược Bingo 18 ${drawCount} kỳ ${drawIds[0]}${drawCount > 1 ? `→${drawIds[drawCount - 1]}` : ""}`,
       metadata: { ticketNo },
-    });
+    };
+
+    let balance: number;
+    try {
+      const result = await this.debitService.debit(debitInput);
+      balance = result.balance;
+    } catch (error) {
+      if (!(error instanceof AppException) || error.code !== APP_ERROR_CODES.IDEMPOTENCY_CONFLICT) {
+        throw error;
+      }
+      return await this.replayCompletedBet(tx, debitInput);
+    }
 
     // ── 12. Save ticket + entries atomically ──
     await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
@@ -239,6 +255,31 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       },
       boardCount: builtBoards.length,
       entryCount: drawCount,
+    };
+  }
+
+  /**
+   * Replay place-bet khi WAL đã COMPLETED — `replayCompletedDebit` đã xử lý phần
+   * "được replay không" (throw 409 nếu không), ở đây chỉ còn lấy vé cũ theo `tx`
+   * để build lại đúng response ban đầu.
+   */
+  private async replayCompletedBet(tx: string, debitInput: DebitPlayerInput): Promise<PlaceBetOutput> {
+    const { balance } = await this.debitService.replayCompletedDebit(debitInput);
+
+    const ticket = await this.ticketRepo.findByTx(tx);
+    if (!ticket) {
+      throw new AppException(APP_ERROR_CODES.IDEMPOTENCY_CONFLICT, "Không tìm thấy vé của giao dịch trước.");
+    }
+
+    return {
+      ticketId: ticket.id,
+      ticketNo: ticket.ticketNo,
+      status: ticket.status,
+      balance,
+      drawPlan: ticket.drawPlan,
+      pricing: ticket.pricing,
+      boardCount: ticket.boards.length,
+      entryCount: ticket.drawPlan.drawCount,
     };
   }
 }

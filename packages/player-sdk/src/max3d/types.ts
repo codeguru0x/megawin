@@ -3,7 +3,7 @@
  * @module
  */
 
-import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../types";
 import type { Max3dPlayMode, Max3dPlayType } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -39,9 +39,12 @@ export interface Max3dBoardInput {
  *
  * @example
  * ```ts
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
  * import type { Max3dTicketPurchaseInput } from "@megawin/player-sdk/max3d";
  *
+ * const idempotencyKey = createIdempotencyKey();
  * const input: Max3dTicketPurchaseInput = {
+ *   idempotencyKey,
  *   drawIds: ["2026-03-07.001", "2026-03-10.001"],
  *   boards: [
  *     {
@@ -55,6 +58,12 @@ export interface Max3dBoardInput {
  * ```
  */
 export interface Max3dTicketPurchaseInput {
+  /**
+   * Mã do tenant kiểm soát. Gửi lại cùng giá trị khi retry để server không tạo vé thứ hai.
+   * SDK gắn vào header `mw-idempotency-key` — không nằm trong body.
+   * Độ dài 8–128, charset chữ, số, gạch ngang hoặc gạch dưới. Tạo bằng `createIdempotencyKey()` từ `@megawin/player-sdk`. Giữ giá trị khi retry.
+   */
+  idempotencyKey: string;
   /**
    * Danh sách drawId các kỳ quay tham gia.
    *

@@ -17,6 +17,10 @@ export interface IndexSpec {
      * (xem `mongodb.mdc` §7) thay cho cleanup batch tự viết trong worker.
      */
     expireAfterSeconds?: number;
+    /**
+     * Partial filter — chỉ index document thoả điều kiện (vd field `tx` là string).
+     */
+    partialFilterExpression?: Record<string, unknown>;
   };
   purpose: string;
 }
@@ -33,6 +37,16 @@ export const MAX3D_PRO_INDEXES: readonly IndexSpec[] = [
     key: { accountId: 1, ticketNo: 1 },
     options: { unique: true, name: "idx_account_ticketNo_unique" },
     purpose: "Mã vé unique per account",
+  },
+  {
+    collection: Max3dproCollections.Tickets,
+    key: { tx: 1 },
+    options: {
+      unique: true,
+      name: "idx_tx_unique",
+      partialFilterExpression: { tx: { $type: "string" } },
+    },
+    purpose: "Tra ticket theo tx cho idempotent replay; unique chặn 2 vé cùng 1 giao dịch",
   },
   {
     collection: Max3dproCollections.Tickets,

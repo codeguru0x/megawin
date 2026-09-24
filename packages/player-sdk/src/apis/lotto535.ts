@@ -7,6 +7,7 @@
  */
 
 import { ENDPOINTS } from "../endpoints";
+import { IDEMPOTENCY_KEY_HEADER } from "../helpers";
 import type { HttpClient } from "../http-client";
 import type {
   Lotto535ComboPopularityParams,
@@ -33,7 +34,7 @@ import type {
  *
  * @example
  * ```ts
- * import { createPlayerClient } from "@megawin/player-sdk";
+ * import { createIdempotencyKey, createPlayerClient } from "@megawin/player-sdk";
  * import type { Lotto535TicketPurchaseInput } from "@megawin/player-sdk/lotto535";
  *
  * const client = createPlayerClient({
@@ -46,7 +47,9 @@ import type {
  * const jackpot = await client.lotto535.getJackpot();
  *
  * // Đặt cược
+ * const idempotencyKey = createIdempotencyKey();
  * const bet = await client.lotto535.placeBet({
+ *   idempotencyKey,
  *   drawIds: [draw.currentDraw!.drawId],
  *   boards: [{
  *     boardNo: "A",
@@ -158,10 +161,17 @@ export interface Lotto535Api {
    * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — thiếu hoặc sai format header `mw-idempotency-key`
+   * @throws {@link ApiClientError} code `IDEMPOTENCY_CONFLICT` — cùng mã đang xử lý hoặc giao dịch trước không replay được (409)
+   * @throws {@link ApiClientError} code `TOO_MANY_REQUESTS` — gửi quá nhanh (429)
    * @example
    * ```ts
+   * import { createIdempotencyKey } from "@megawin/player-sdk";
+   *
    * // Vé Standard: 5 số chính + 1 số đặc biệt, 1 kỳ
+   * const idempotencyKey = createIdempotencyKey();
    * const result = await client.lotto535.placeBet({
+   *   idempotencyKey,
    *   drawIds: ["2026-03-05.001"],
    *   boards: [{
    *     boardNo: "A",
@@ -176,8 +186,10 @@ export interface Lotto535Api {
    * console.log(result.pricing.totalAmount); // 30000
    * console.log(result.balance);     // 970000
    *
-   * // Vé Bao (MainCover): 8 số chính + 1 số đặc biệt, 3 kỳ
+   * // Ý định cược khác — tạo mã mới, giữ khi retry ý định đó
+   * const idempotencyKey2 = createIdempotencyKey();
    * const result2 = await client.lotto535.placeBet({
+   *   idempotencyKey: idempotencyKey2,
    *   drawIds: ["2026-03-05.001", "2026-03-12.001", "2026-03-19.001"],
    *   boards: [
    *     {
@@ -461,7 +473,10 @@ export function createLotto535Api(http: HttpClient): Lotto535Api {
     },
 
     async placeBet(input: Lotto535TicketPurchaseInput): Promise<Lotto535PlaceBetResponse> {
-      return http.post<Lotto535PlaceBetResponse>(ENDPOINTS.lotto535.placeBet, input);
+      const { idempotencyKey, ...body } = input;
+      return http.post<Lotto535PlaceBetResponse>(ENDPOINTS.lotto535.placeBet, body, {
+        headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
+      });
     },
 
     async listPendingTickets(params?: Lotto535ListTicketsParams): Promise<Lotto535ListTicketsResponse> {

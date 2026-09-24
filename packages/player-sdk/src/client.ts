@@ -13,7 +13,6 @@
  * @module
  */
 
-import type { ApiClientError } from "./api-types";
 import { createBingo18Api, type Bingo18Api } from "./apis/bingo18";
 import { createGameApi, type GameApi } from "./apis/game";
 import { createKenoApi, type KenoApi } from "./apis/keno";
@@ -27,6 +26,7 @@ import { SessionStorageTokenStorage, TokenManager } from "./auth/token-manager";
 import type { AuthTokens, TokenStorage } from "./auth/types";
 /// <reference lib="dom" />
 import { createHttpClient, type HttpClient, type RequestConfig } from "./http-client";
+import type { ApiClientError } from "./types";
 
 // ============ Config ============
 

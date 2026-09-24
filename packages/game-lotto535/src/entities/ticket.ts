@@ -256,9 +256,10 @@ export interface TicketDoc {
   version: number;
 
   /**
-   * Transaction ID (UUIDv7) — link ticket ↔ WAL (tx_intents).
-   * Dùng bởi recovery scheduler để check ticket tồn tại khi xử lý orphan WAL.
-   * Tickets cũ chưa có field này sẽ là null trong DB — không ảnh hưởng vì không cần re-process.
+   * Transaction ID — lookup key, UUIDv5 (cùng input → cùng `tx`) từ `accountId` + header `mw-idempotency-key`.
+   * Link ticket ↔ WAL (`tx_intents`) ↔ tenant debit. Chỉ equality (`findByTx` / unique `{tx}`).
+   * Không time-sortable (khác UUIDv7). Sort/list vé dùng `createdAt` / `_id`.
+   * Recovery scheduler check ticket tồn tại khi xử lý orphan WAL.
    */
   tx: string;
 

@@ -93,17 +93,17 @@ const kenoResult = await client.keno.placeBet({ ... });
 
 ## Imports
 
-| Import path                    | Nội dung                 |
-| ------------------------------ | ------------------------ |
-| `@megawin/player-sdk`          | Client, auth, API types  |
-| `@megawin/player-sdk/keno`     | Keno enums + types       |
-| `@megawin/player-sdk/lotto535` | Lotto 5/35 enums + types |
-| `@megawin/player-sdk/mega645`  | Mega 6/45 enums + types  |
-| `@megawin/player-sdk/power655` | Power 6/55 enums + types |
-| `@megawin/player-sdk/max3d`    | Max 3D enums + types     |
-| `@megawin/player-sdk/max3dpro` | Max 3D Pro enums + types |
-| `@megawin/player-sdk/bingo18`  | Bingo 18 enums + types   |
-| `@megawin/player-sdk/game`     | Jackpot gộp cross-game   |
+| Import path                    | Nội dung                                        |
+| ------------------------------ | ----------------------------------------------- |
+| `@megawin/player-sdk`          | Client, auth, `createIdempotencyKey`, API types |
+| `@megawin/player-sdk/keno`     | Keno enums + types                              |
+| `@megawin/player-sdk/lotto535` | Lotto 5/35 enums + types                        |
+| `@megawin/player-sdk/mega645`  | Mega 6/45 enums + types                         |
+| `@megawin/player-sdk/power655` | Power 6/55 enums + types                        |
+| `@megawin/player-sdk/max3d`    | Max 3D enums + types                            |
+| `@megawin/player-sdk/max3dpro` | Max 3D Pro enums + types                        |
+| `@megawin/player-sdk/bingo18`  | Bingo 18 enums + types                          |
+| `@megawin/player-sdk/game`     | Jackpot gộp cross-game                          |
 
 ## Khởi tạo client
 
@@ -149,6 +149,7 @@ const client = createPlayerClient({
 ### `client.keno` — Game Keno
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { KenoTicketPurchaseInput } from "@megawin/player-sdk/keno";
 
 // Lấy cấu hình game
@@ -162,7 +163,10 @@ console.log(draw.currentDraw?.sales.closeAt); // "2026-03-07T13:04:50.000Z"
 
 // Đặt cược — số Keno dạng string zero-padded: "01" đến "80"
 // playType bắt buộc trên mọi board (chọn số lẫn cược bổ sung)
+// Tạo key một lần; retry cùng ý định thì gửi lại cùng giá trị
+const idempotencyKey = createIdempotencyKey();
 const result = await client.keno.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.095", "2026-03-07.096"],
   boards: [
     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
@@ -196,6 +200,7 @@ for (const prize of detail.prizes) {
 ### `client.lotto535` — Game Lotto 5/35
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { Lotto535TicketPurchaseInput } from "@megawin/player-sdk/lotto535";
 
 // Lấy cấu hình game + Jackpot
@@ -204,7 +209,9 @@ const jackpot = await client.lotto535.getJackpot();
 console.log(jackpot.currentAmount); // 15000000000
 
 // Đặt cược — số chính: "01"-"35", số đặc biệt: "01"-"12"
+const idempotencyKey = createIdempotencyKey();
 const result = await client.lotto535.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.001", "2026-03-14.001", "2026-03-21.001"],
   boards: [
     {
@@ -254,6 +261,7 @@ for (const prize of detail.prizes) {
 ### `client.mega645` — Game Mega 6/45
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { Mega645TicketPurchaseInput } from "@megawin/player-sdk/mega645";
 
 // Lấy kỳ quay hiện tại + Jackpot
@@ -262,7 +270,9 @@ const jackpot = await client.mega645.getJackpot();
 console.log(jackpot.currentAmount); // 8500000000
 
 // Đặt cược — số dạng string zero-padded: "01"-"45"
+const idempotencyKey = createIdempotencyKey();
 const result = await client.mega645.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.001"],
   boards: [
     {
@@ -285,6 +295,7 @@ for (const ticket of pending.tickets) {
 ### `client.power655` — Game Power 6/55
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { Power655TicketPurchaseInput } from "@megawin/player-sdk/power655";
 
 // Lấy kỳ quay + Jackpot (Power 6/55 có 2 mức: JP1 và JP2)
@@ -294,7 +305,9 @@ console.log(jackpot.jackpot1CurrentAmount); // 45000000000 — JP1 (trùng 6/6)
 console.log(jackpot.jackpot2CurrentAmount); // 4500000000  — JP2 (trùng 5/6 + bonus)
 
 // Đặt cược — số dạng string zero-padded: "01"-"55"
+const idempotencyKey = createIdempotencyKey();
 const result = await client.power655.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.001"],
   boards: [
     {
@@ -311,10 +324,13 @@ console.log(result.pricing.totalAmount); // 10000
 ### `client.max3d` — Game Max 3D
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { Max3dTicketPurchaseInput } from "@megawin/player-sdk/max3d";
 
 // Đặt cược Max 3D — bộ số 3 chữ số "000"-"999"
+const idempotencyKey = createIdempotencyKey();
 const result = await client.max3d.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.001", "2026-03-10.001"],
   boards: [
     { boardNo: "A", playMode: "basic", playType: "straight", triplets: ["123"] },
@@ -328,10 +344,13 @@ console.log(result.pricing.totalAmount); // 40000
 ### `client.max3dpro` — Game Max 3D Pro
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { Max3dproTicketPurchaseInput } from "@megawin/player-sdk/max3dpro";
 
 // Tương tự Max 3D với thêm kiểu chơi "plus" (2 bộ ba số)
+const idempotencyKey = createIdempotencyKey();
 const result = await client.max3dpro.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.001"],
   boards: [{ boardNo: "A", playMode: "plus", playType: "straight", triplets: ["123", "456"] }],
 });
@@ -341,11 +360,14 @@ console.log(result.ticketId); // "65abc..."
 ### `client.bingo18` — Game Bingo 18
 
 ```typescript
+import { createIdempotencyKey } from "@megawin/player-sdk";
 import type { Bingo18TicketPurchaseInput } from "@megawin/player-sdk/bingo18";
 
 // Đặt cược Bingo 18 — chọn các kỳ quay trong ngày.
 // boardNo client PHẢI tự cung cấp, liên tục từ "A" (server chỉ validate thứ tự, không tự sinh).
+const idempotencyKey = createIdempotencyKey();
 const result = await client.bingo18.placeBet({
+  idempotencyKey,
   drawIds: ["2026-03-07.001", "2026-03-07.002"],
   boards: [
     { boardNo: "A", playType: "singleNum", number: 7 },

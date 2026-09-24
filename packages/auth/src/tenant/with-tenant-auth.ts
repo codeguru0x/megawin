@@ -13,7 +13,7 @@
  * }, { schemas: { query: querySchema } });
  */
 
-import { buildHandler, type WithSchema } from "../handler-wrappers";
+import { buildHandler, type HandlerRateLimitOptions, type WithSchema } from "../handler-wrappers";
 import type { ApiGatewayEventWithTenant, ApiGatewayZodSchemas } from "../index";
 import { tenantAuth } from "./tenant-auth";
 
@@ -22,8 +22,9 @@ export function withTenantAuth<TSchemas extends ApiGatewayZodSchemas | undefined
   options?: {
     schemas?: TSchemas;
     allowedStatuses?: string[];
+    rateLimit?: HandlerRateLimitOptions;
   },
 ) {
   const middleware = tenantAuth(options?.allowedStatuses ? { allowedStatuses: options.allowedStatuses } : undefined);
-  return buildHandler(fn, options?.schemas, middleware);
+  return buildHandler(fn, { schemas: options?.schemas, auth: middleware, rateLimit: options?.rateLimit });
 }

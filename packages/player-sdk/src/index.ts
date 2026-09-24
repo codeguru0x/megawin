@@ -5,7 +5,7 @@
  *
  * @example
  * ```ts
- * import { createPlayerClient } from "@megawin/player-sdk";
+ * import { createIdempotencyKey, createPlayerClient } from "@megawin/player-sdk";
  * import type { KenoTicketPurchaseInput } from "@megawin/player-sdk/keno";
  * import type { Lotto535TicketPurchaseInput } from "@megawin/player-sdk/lotto535";
  *
@@ -30,7 +30,7 @@ export {
   type ApiSuccessResponse,
   isApiError,
   isApiSuccess,
-} from "./api-types";
+} from "./types";
 export type { Bingo18Api } from "./apis/bingo18";
 export type { GameApi, GameJackpotsApi } from "./apis/game";
 export type { KenoApi } from "./apis/keno";
@@ -75,8 +75,9 @@ export type {
 export { Bingo18BigSmallBet, Bingo18TripleKind } from "./bingo18";
 // ---- Client ----
 export { createPlayerClient, type PlayerClient, type PlayerSdkConfig } from "./client";
+export { createIdempotencyKey, IDEMPOTENCY_KEY_HEADER } from "./helpers";
 // ---- Ticket/Entry status & outcome (dùng chung cho tất cả game) ----
-export { EntryOutcome, EntryStatus, TicketStatus } from "./common-types";
+export { EntryOutcome, EntryStatus, TicketStatus } from "./types";
 // ---- Game aggregate types (cross-game) ----
 export type {
   JackpotDetails,

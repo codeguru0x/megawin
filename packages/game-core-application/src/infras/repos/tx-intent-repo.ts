@@ -129,6 +129,14 @@ export class TxIntentRepository extends MegawinTenantCoreBaseRepo<TxIntentEntity
     return await this.deleteOne({ tx });
   }
 
+  /**
+   * Đọc WAL theo `tx` — dùng khi unique index `{tx}` báo trùng để phân nhánh
+   * replay / 409 theo `phase`.
+   */
+  async findByTx(tx: string): Promise<TxIntentEntity | null> {
+    return await this.findOne({ tx });
+  }
+
   // ── Recovery ───────────────────────────────────────────────────────────
 
   /**

@@ -34,6 +34,12 @@ export interface PlaceBetInput {
   ipAddress?: string;
 
   /**
+   * Mã Idempotency-Key do client gửi (header). Bắt buộc — cùng mã khi retry
+   * để server không tạo vé / debit lần hai.
+   */
+  idempotencyKey: string;
+
+  /**
    * Danh sách drawIds mà player muốn cược.
    * Tất cả draws phải đang mở bán (salesOpen) và chưa hết hạn nhận cược.
    * All-or-nothing: 1 draw không hợp lệ → reject toàn bộ.

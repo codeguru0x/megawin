@@ -8,9 +8,13 @@ lần debit ví thật**. Plan này vá lỗ đó.
 
 > **Bối cảnh đã chốt (2026-09-22): hệ thống CHƯA deploy production, chưa tenant nào tích hợp thật.**
 > Vì vậy plan làm **một cách duy nhất, không back-compat, không dual-path**:
-> `Idempotency-Key` là **BẮT BUỘC**, `generateTx()` bị **xoá**, fingerprint guard **không làm**.
+> header `mw-idempotency-key` là **BẮT BUỘC**, `generateTx()` bị **xoá**, fingerprint guard **không làm**.
 > Mọi nơi (7 game + SDK) cập nhật trong cùng PR; deploy staging là trạng thái cuối, không có
 > "tenant chưa cập nhật" cần chiều.
+>
+> **Tên header đã đổi khi implement (2026-09-24):** plan gốc ghi `Idempotency-Key`. Wire name
+> chính thức là `mw-idempotency-key` (lowercase, prefix `mw-`). Chi tiết + các quyết định khác
+> không có trong bản gốc → mục **«Đã chốt khi implement»** ở cuối file.
 
 ## Vấn đề chính xác (đã verify, không phỏng đoán)
 
@@ -27,11 +31,11 @@ Ba lớp trông như chống trùng nhưng **không lớp nào chặn**:
 | Tenant debit idempotent theo `tx` | `packages/tenant-gateway/src/transaction/types.ts:127` | Cùng lý do |
 | Ticket unique `{accountId, ticketNo}` | `packages/game-keno/src/indexes/index.ts:70-74` | `ticketNo` từ counter `ticket_counters` tăng dần (`ticket-counter-repo.ts:42-62`) → luôn khác |
 
-## Giải pháp: `tx` dẫn xuất tất định (Mongo-native, 0 RTT thêm)
+## Giải pháp: `tx` cùng input → cùng giá trị (Mongo-native, 0 RTT thêm)
 
 WAL insert **đã nằm đúng chỗ cần thiết** — trước khi gọi tenant debit
 (`debit-player-service.ts:191` rồi `:195`) — và **đã có unique index `{tx}`**. Nó đã là idempotency
-store bền vững, chỉ thiếu một thứ: `tx` phải tất định.
+store bền vững, chỉ thiếu một thứ: cùng `(accountId, key)` phải ra cùng `tx`.
 
 ```
 Request 1: tx = derive(accountId, key) = X → insert WAL OK → debit → save → COMPLETED
@@ -41,11 +45,11 @@ Request 2: tx = derive(accountId, key) = X → insert WAL DUPLICATE KEY
                                               DEBIT_PENDING → 409 IDEMPOTENCY_CONFLICT (đang xử lý)
 ```
 
-## Một đường duy nhất: `Idempotency-Key` BẮT BUỘC
+## Một đường duy nhất: `mw-idempotency-key` BẮT BUỘC
 
 | Quyết định | Giá trị | Hệ quả |
 |---|---|---|
-| Header `Idempotency-Key` | **BẮT BUỘC** — thiếu → `400` | Không tồn tại nhánh "không có key" → **không** cần fingerprint guard, **không** cần Redis |
+| Header `mw-idempotency-key` | **BẮT BUỘC** — thiếu → `400` | Không tồn tại nhánh "không có key" → **không** cần fingerprint guard, **không** cần Redis |
 | `tx` | Luôn `deriveTx(accountId, idempotencyKey)` | Không còn nhánh `generateTx()` → xoá method đó |
 | Phụ thuộc Redis của `place-bet` | **0** | Ràng buộc tài chính dựa 100% vào Mongo (unique index) — điểm chết ít nhất |
 
@@ -88,7 +92,7 @@ Vị trí: `packages/game-core-application/src/services/debit-player-service.ts`
 
 ```ts
 /**
- * Dẫn xuất `tx` TẤT ĐỊNH từ idempotency key của client — cùng input luôn cho cùng `tx`.
+ * Dẫn xuất `tx` từ idempotency key của client — cùng input luôn cho cùng `tx`.
  *
  * Nhờ đó request trùng đập vào unique index `{tx}` của `tx_intents` và bị phát hiện,
  * thay vì tạo giao dịch thứ hai. Dùng UUIDv5 (namespace + name) để kết quả vẫn là
@@ -112,11 +116,12 @@ Ràng buộc bắt buộc:
 - **Unit test vector cố định**: input cụ thể → output hex cụ thể, hard-code trong test. Đổi công thức
   = test đỏ. Đây là test quan trọng nhất của plan.
 
-## Bước 2 — Nhận `Idempotency-Key` từ HTTP (BẮT BUỘC)
+## Bước 2 — Nhận `mw-idempotency-key` từ HTTP (BẮT BUỘC)
 
-`extractClientIpFromApiGatewayV2` (`@megawin/shared/utils/ip`) là tiền lệ cho việc đọc từ event
-(`handlers/keno/place-bet.ts:154`). Làm tương tự cho header — 1 helper dùng chung cho cả 7 handler,
-**không** copy-paste 7 lần.
+Đọc event API Gateway v2 **một chỗ**: `packages/shared/src/utils/api-gateway-v2.ts`
+(`getHeaderFromApiGatewayV2` + `extractIdempotencyKeyFromApiGatewayV2` +
+`extractClientIpFromApiGatewayV2`). 1 helper dùng chung cho cả 7 handler, **không**
+copy-paste 7 lần, **không** file `utils/idempotency-key.ts` riêng.
 
 - Header đọc **case-insensitive** (API Gateway v2 thường lowercase nhưng không được giả định).
 - Validate: độ dài 8–128, charset `[A-Za-z0-9_-]`. **Thiếu header** hoặc sai format → `400` với
@@ -235,7 +240,11 @@ cùng PR. `pnpm --filter @megawin/player-sdk check-types` PASS **không** nghĩa
   mới = idempotency vô nghĩa.
 - JSDoc: `@throws {@link ApiClientError}` cho `IDEMPOTENCY_CONFLICT` (409), `TOO_MANY_REQUESTS` (429),
   và `BAD_REQUEST` khi thiếu/sai format key.
-- `@example` phải **copy-paste chạy được** với field mới (gồm cách tạo key, vd `crypto.randomUUID()`).
+- `@example` phải **copy-paste chạy được**: `const idempotencyKey = createIdempotencyKey()` **ngoài**
+  object rồi truyền biến vào `placeBet` — **cấm** `idempotencyKey: createIdempotencyKey()` inline
+  (mỗi lần đọc example / mỗi call = key mới = idempotency vô nghĩa).
+- Helper `createIdempotencyKey()` + hằng `IDEMPOTENCY_KEY_HEADER` export từ `@megawin/player-sdk`
+  (`src/helpers/`). SDK **không** tự điền key khi tenant bỏ trống.
 - **Cấm leak backend** (`player-sdk-jsdoc.mdc`): không nhắc `tx_intents`, `WAL`, `MongoDB`, `UseCase`,
   đường dẫn `packages/...`. Diễn đạt theo hợp đồng HTTP: *"gửi lại cùng `idempotencyKey` khi retry để
   server không tạo vé thứ hai"*.
@@ -278,11 +287,11 @@ cùng PR. `pnpm --filter @megawin/player-sdk check-types` PASS **không** nghĩa
 | # | Test | Cách xác nhận PASS | Vì sao tồn tại |
 |---|---|---|---|
 | 1 | **Vector cố định**: input cụ thể → output hex **hard-code trong test** | `toBe("<hex>")` | Công thức là **contract**. Đổi nó làm mọi key đã phát hành mất tính idempotent. Đây là test duy nhất chặn được việc đó |
-| 2 | Gọi 100 lần cùng input → cùng output | `new Set(results).size === 1` | Tất định. Lẫn `Date.now()`/random vào là hỏng toàn bộ thiết kế |
+| 2 | Gọi 100 lần cùng input → cùng output | `new Set(results).size === 1` | Cùng input → cùng `tx`. Lẫn `Date.now()`/random vào là hỏng toàn bộ thiết kế |
 | 3 | `accountId` khác, key giống → `tx` **khác** | `not.toBe()` | Thiếu → player A replay được key của player B |
 | 4 | `accountId` giống, key khác → `tx` khác | `not.toBe()` | Cơ bản |
 | 5 | Độ dài/charset output khớp ràng buộc field `tx` | Regex + length | `tx` ghi vào Mongo + gửi sang tenant; vượt giới hạn là lỗi runtime |
-| 6 | Ký tự unicode/emoji/khoảng trắng trong key → không crash, vẫn tất định | Gọi 2 lần, so | Header do client kiểm soát |
+| 6 | Ký tự unicode/emoji/khoảng trắng trong key → không crash, vẫn cùng input → cùng `tx` | Gọi 2 lần, so | Header do client kiểm soát |
 
 ### `canonical-body.test.ts` — **ĐÃ BỎ**
 
@@ -296,7 +305,7 @@ tại trong PR, nghĩa là Phần A đã implement thứ không nằm trong scop
 | 7 | Key hợp lệ → pass | Không throw |
 | 8 | Key quá dài / rỗng / ký tự cấm → **400**, message tiếng Việt | `toThrow` + message **không** chứa tên class/field (`error-handling-conventions.mdc`) |
 | 9 | **Thiếu hẳn header** → **400** (không fallback sinh key) | `toThrow`; xác nhận **không** có `tx` nào được sinh | Fallback là nhánh vừa bị xoá — test này khoá việc nó bị thêm lại |
-| 10 | Header viết hoa/thường khác nhau (`Idempotency-Key`, `idempotency-key`, `IDEMPOTENCY-KEY`) → đều đọc được | 3 biến thể cùng ra 1 key | API Gateway không đảm bảo case |
+| 10 | Header viết hoa/thường khác nhau (`mw-idempotency-key`, `MW-Idempotency-Key`, `MW-IDEMPOTENCY-KEY`) → đều đọc được | 3 biến thể cùng ra 1 key | API Gateway không đảm bảo case |
 
 ## B2 — Integration test (Mongo + Redis thật)
 
@@ -307,7 +316,7 @@ cả 7 chỗ, không chỉ chỗ đầu).
 
 | # | Test | Cách xác nhận PASS — **đếm DB, không đọc status** | Vì sao tồn tại |
 |---|---|---|---|
-| 11 | 2 request **cùng** `Idempotency-Key` | `countDocuments(ticket) === 1` **và** `countDocuments(tx_intents) === 1` **và** tenant debit được gọi đúng **1 lần** (spy) | Chính là bug plan này vá |
+| 11 | 2 request **cùng** `mw-idempotency-key` | `countDocuments(ticket) === 1` **và** `countDocuments(tx_intents) === 1` **và** tenant debit được gọi đúng **1 lần** (spy) | Chính là bug plan này vá |
 | 12 | Request 2 trả **đúng** payload của request 1 | So **từng field** `PlaceBetOutput` (`ticketNo`, `ticketId`, `totalAmount`…) | Replay trả thiếu field làm client hiểu sai là vé mới |
 | 13 | Request 2 khi request 1 còn `DEBIT_PENDING` → **409**, **không** tạo vé | `countDocuments(ticket) === 1` (chỉ vé của req 1, hoặc 0 nếu chưa save) | Trả 200 lúc này = client tưởng thành công khi chưa chắc |
 | 14 | Cùng key, **body khác** → 409 | Không tạo vé thứ 2 | Bắt key reuse sai |
@@ -345,14 +354,14 @@ Ghi lại kết quả cụ thể, không ghi "đã kiểm tra":
 1. **Tạo unique index trên staging**: chạy migration index cho **cả 7** collection. Nếu fail vì trùng
    → drop collection ticket staging (được phép, chưa có dữ liệu thật) rồi chạy lại. Ghi lại
    collection nào phải drop.
-2. **Double-tap tay**: gửi 2 request giống hệt (cùng `Idempotency-Key`) từ client thật (curl/Postman)
+2. **Double-tap tay**: gửi 2 request giống hệt (cùng `mw-idempotency-key`) từ client thật (curl/Postman)
    trong < 1s, rồi query DB đếm vé. Ghi số.
-3. **Thiếu header tay**: gửi request **không** có `Idempotency-Key` → phải nhận `400`; query DB xác
-   nhận **0 vé, 0 WAL**. Ghi lại response body.
+3. **Thiếu header tay**: gửi request **không** có `mw-idempotency-key` → phải nhận `400`; query DB xác
+   nhận **0 vé, 0 WAL**. Ghi lại response body. Header cũ `Idempotency-Key` cũng là thiếu → `400`.
 4. **Xác nhận ví**: kiểm tra số dư tenant thay đổi **đúng 1 lần** ở case #11. Đây là điều test spy
    không chứng minh được hoàn toàn.
 5. **Xác nhận SDK thật**: build SDK rồi gọi `placeBet` từ một script tenant mô phỏng — xác nhận header
-   `Idempotency-Key` **thực sự** xuất hiện trên wire (đọc network log), không chỉ có trong type.
+   `mw-idempotency-key` **thực sự** xuất hiện trên wire (đọc network log), không chỉ có trong type.
 
 ## Definition of done
 
@@ -360,7 +369,7 @@ Ghi lại kết quả cụ thể, không ghi "đã kiểm tra":
 
 - [ ] `deriveTx` có JSDoc cảnh báo "công thức là contract"; là hàm **pure** (điều kiện để B1 tồn tại).
 - [ ] `generateTx()` **đã xoá**; 5 chỗ JSDoc của `DebitPlayerService` mô tả flow cũ đã cập nhật.
-- [ ] `Idempotency-Key` **bắt buộc**, đọc case-insensitive, validate, truyền tới use-case ở **cả 7**
+- [ ] `mw-idempotency-key` **bắt buộc**, đọc case-insensitive, validate, truyền tới use-case ở **cả 7**
       game; `idempotencyKey: string` là **required** trong DTO (không `?`).
 - [ ] Duplicate key nhận diện theo **code 11000**, không theo message; `insertWal` không còn nuốt nó
       thành `serviceUnavailable`.
@@ -396,3 +405,168 @@ Ghi lại kết quả cụ thể, không ghi "đã kiểm tra":
   implement, không test, không để lại code chờ.
 - ❌ Back-compat cho client không gửi header — hệ thống chưa deploy, không có client cũ cần chiều.
 - ❌ Giữ `generateTx()` "để dùng sau" — xoá hẳn.
+- ❌ Auto-fill `idempotencyKey` trong `placeBet` / trên server khi tenant bỏ trống — mỗi HTTP call
+  một key mới = 2 vé. Helper `createIdempotencyKey()` chỉ sinh key **ý định mới**; tenant phải lưu
+  và gửi lại khi retry.
+- ❌ Đổi `tx` payout / refund / rollback / dispatch sang UUIDv5 — những đường đó **không** đi qua
+  `deriveTx`; vẫn `generateId()` (UUIDv7). Chỉ place-bet debit dùng v5.
+
+---
+
+# Đã chốt khi implement (2026-09-24) — không có trong bản plan gốc
+
+Các mục dưới đây **thắng** wording cũ phía trên nếu lệch. Phần B test / B4 curl phải theo đây.
+
+## 1. Tên header trên wire: `mw-idempotency-key`
+
+Plan gốc: `Idempotency-Key`. Đã đổi để tránh trùng header generic của proxy/app khác.
+
+| Chỗ | Giá trị |
+|---|---|
+| Wire name | `mw-idempotency-key` (lowercase) |
+| Hằng SDK | `IDEMPOTENCY_KEY_HEADER` — `packages/player-sdk/src/helpers/idempotency-key.ts` |
+| Hằng server | `IDEMPOTENCY_KEY_HEADER` — `packages/shared/src/constants/http-headers.ts` (re-export từ `utils/api-gateway-v2`) |
+| Lookup | `getHeaderFromApiGatewayV2(event, IDEMPOTENCY_KEY_HEADER)` — case-insensitive |
+| 7 SDK `placeBet` | `headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey }` |
+| Message 400 thiếu | *"Thiếu header mw-idempotency-key..."* |
+| Message 400 sai format | *"Mã mw-idempotency-key không hợp lệ..."* |
+
+SDK **không** import `@megawin/shared` — hai hằng **trùng value**, comment hai phía nhắc phải khớp.
+Header cũ `Idempotency-Key` **không** được nhận → `400` (không dual-read).
+
+## 2. SDK helper — tenant tự tạo key, SDK không auto-fill
+
+| Quyết định | Lý do |
+|---|---|
+| Export `createIdempotencyKey()` = `crypto.randomUUID()` | DX: tenant không tự viết; **một ý định cược = một lần gọi helper, rồi lưu** |
+| `placeBet` **không** tự sinh key nếu thiếu | Auto-fill mỗi HTTP call = key mới = **2 vé** — không phải "compatible" |
+| Server **không** auto-fill | Thiếu header → `400` **trước** use-case / WAL / debit |
+
+## 3. Layout `packages/player-sdk/src`
+
+Tránh chồng file ở root:
+
+```
+src/helpers/idempotency-key.ts   ← createIdempotencyKey, IDEMPOTENCY_KEY_HEADER
+src/helpers/index.ts
+src/types/api-types.ts
+src/types/common-types.ts
+src/types/index.ts
+```
+
+Barrel `@megawin/player-sdk` re-export helper + types. File root cũ (`api-types.ts`,
+`common-types.ts`, `idempotency-key.ts`) đã chuyển vào thư mục trên.
+
+## 4. Ví dụ JSDoc / TypeDoc
+
+`const idempotencyKey = createIdempotencyKey()` **ngoài** object, rồi `placeBet({ …, idempotencyKey })`.
+Hai ý định cược → hai biến. Inline `idempotencyKey: createIdempotencyKey()` trong example = sai
+ngữ nghĩa, **cấm**.
+
+## 5. Replay debit: method mới `replayDebit()` → sau đó gộp thành `replayCompletedDebit()` (§9)
+
+Plan gốc: "gọi lại tenant debit cùng `tx`". **Không** tái sử dụng `callTenantDebit` — hàm đó có
+nhánh xoá WAL khi COMPLETED. Replay chỉ gọi tenant lấy `duplicate + balance`, **không** insert /
+delete WAL. `AppException` conflict: `new AppException(IDEMPOTENCY_CONFLICT, msg)` **không** truyền
+`statusCode` để `CODE_STATUS_MAP` map 409 (`AppException.error()` hardcode 400).
+
+> Method `replayDebit()` mô tả ở đây ban đầu tách riêng khỏi `resolveIdempotencyConflict()` —
+> sau đó cả hai được **gộp thành `replayCompletedDebit()`**, xem chi tiết ở §9 cuối file.
+
+## 6. CHANGELOG SDK
+
+Plan gốc đề xuất bump major `2.0.0`. Implement ghi entry **1.0.22** (BREAKING trong prose +
+Migration). **Vẫn không** tự bump `package.json` — bước manual sau review.
+
+## 7. `tx` place-bet = UUIDv5 — **không** ảnh hưởng sort/list của MegaWin
+
+Câu hỏi: đổi `ticket.tx` từ UUIDv7 (có timestamp, lex ≈ time) sang UUIDv5 (SHA-1, không time-order)
+có phá sort / lấy dữ liệu transaction không?
+
+**Giữ v5.** Idempotency **bắt buộc** cùng `(accountId, key)` → cùng `tx`. UUIDv7
+`generateId()` mỗi call một giá trị khác → unique `{tx}` trên WAL **không** chặn double-submit.
+Không thể vừa «cùng input → cùng `tx`» vừa nhét timestamp vào 48 bit đầu — thời gian đã có field riêng.
+
+Đã đọc code (không kết luận từ graph; `deriveTx` chưa có trong index GitNexus vì chưa commit):
+
+| Đường | Sort / lookup thật | Ảnh hưởng v5? |
+|---|---|---|
+| List ticket (7 game) | `{ _id: -1 }` / `createdAt`; cursor ObjectId | **Không** — không sort theo `tx` |
+| `findByTx` / recovery `exists({ tx })` | Equality | **Không** |
+| Unique `{ tx: 1 }` ticket ×7 | Unique string | **Không** — unique không cần thứ tự thời gian |
+| WAL `findByTx` | Equality | **Không** |
+| WAL `findOrphans` | filter `phase` + `createdAt < cutoff`, **sort `{ createdAt: 1 }`** | **Không** |
+| Recovery rollback | `generateId()` **v7 mới**; `metadata.refTx` = tx gốc | **Không** |
+| Tenant debit / `GET …/transaction/:tx/status` | Exact string | **Không** — hợp đồng là cùng `tx` = cùng ý định |
+| `tx_logs` list mặc định | `createdAt DESC, _id DESC` | **Không** |
+| `tx_logs` list-by-batch | `sort { tx: 1 }` + cursor `$gt` tx — **giả định v7** | Place-bet: `batchId = tx`, **1 dòng** → sort vô nghĩa. Payout/credit batch **vẫn v7** (`generateId()`) |
+| `tenant-dispatch` unique `{ tx }` | Payout order, vẫn v7 | **Không** đụng |
+
+**Kết luận vận hành:**
+
+- MegaWin **không** dùng `tx` làm trục thời gian cho ticket / WAL / tx-log mặc định. Thời gian =
+  `createdAt` / `_id`.
+- Tenant **nếu** sort sổ cái theo `tx` lex sẽ thấy place-bet **không** theo giờ — họ phải sort
+  `processedAt` / `createdAt`. Format vẫn UUID hợp lệ.
+- **Không** revert `deriveTx` về v7. **Không** đổi payout/refund sang v5.
+- JSDoc `ticket.tx` ×7 + `TicketExistsFn`: ghi rõ lookup key, không time-sortable.
+
+```
+UUIDv7  = unique-per-call + time-order     → payout / refund / rollback / dispatch
+UUIDv5  = deterministic lookup             → place-bet debit only (deriveTx)
+Time    = createdAt / _id / processedAt    → mọi list/sort
+```
+
+## 8. Đọc API Gateway v2 — một module, không file `idempotency-key.ts`
+
+Plan gốc: "làm tương tự `extractClientIpFromApiGatewayV2` trong `utils/ip`". Implement lần đầu
+tạo `utils/idempotency-key.ts` + `ApiGatewayV2HeadersSource` riêng → hai chỗ parse event.
+
+Đã gộp vào `packages/shared/src/utils/api-gateway-v2.ts`:
+
+| Export | Việc |
+|---|---|
+| `getHeaderFromApiGatewayV2(event, name)` | Primitive — case-insensitive, trim |
+| `extractIdempotencyKeyFromApiGatewayV2` | Header bắt buộc + validate 8–128 |
+| `extractClientIpFromApiGatewayV2` | CHỈ `requestContext.http.sourceIp` (chuyển từ `ip.ts`) |
+| `ApiGatewayV2EventSource` | Shape event dùng chung |
+
+`ip.ts` giữ chain header tin cậy (Next.js / nginx): `extractClientIp`,
+`extractClientIpFromWebHeaders`, `extractHttpContext*`. **Không** đọc Lambda event.
+
+7 handler `place-bet` import cả IP + key từ `@megawin/shared/utils/api-gateway-v2`.
+`tenant-api-key-auth` / resultfeed api-key **chưa** chuyển — header app-specific + query
+fallback; không thuộc place-bet.
+
+Xoá `packages/shared/src/utils/idempotency-key.ts`.
+
+## 9. Gộp `resolveIdempotencyConflict()` + `replayDebit()` → `replayCompletedDebit()`
+
+Plan gốc mục 5 (trên) tách 2 method: `resolveIdempotencyConflict(tx)` đọc phase WAL + throw 409,
+`replayDebit(input)` gọi lại tenant. Cả 7 use-case place-bet luôn gọi **liền nhau, đúng thứ tự đó,
+không có nhánh nào gọi riêng lẻ** — tách 2 method chỉ tạo thêm 1 lời gọi thừa không có lý do
+nghiệp vụ độc lập.
+
+**Đã gộp thành một method trên `DebitPlayerService`:**
+
+```typescript
+async replayCompletedDebit(input: DebitPlayerInput): Promise<DebitPlayerResult>
+```
+
+- Đọc WAL theo `input.tx`, switch theo `phase`:
+  - `DebitPending` / `RolledBack` / `ManualReview` / không còn WAL → throw `IDEMPOTENCY_CONFLICT`
+    (409) ngay, không chạm network — giữ nguyên đúng message cũ của từng nhánh.
+  - `Completed` → tiếp tục gọi tenant debit cùng `tx`, trả `{ balance }` (logic thân cũ của
+    `replayDebit`, không đổi).
+- 7 use-case `place-bet.ts` (`replayCompletedBet`) đổi 2 dòng
+  `resolveIdempotencyConflict(tx); return replayCompletedBet(tx, debitInput);` thành 1 dòng
+  `return replayCompletedBet(tx, debitInput);`; trong `replayCompletedBet` gọi
+  `debitService.replayCompletedDebit(debitInput)` trước, `ticketRepo.findByTx(tx)` sau (đảo thứ
+  tự — nếu WAL chưa `Completed` thì throw 409 trước khi tốn 1 query tìm vé).
+- `findWal(tx)` giữ nguyên (dùng ở test #13 đọc phase độc lập, và có thể dùng bởi caller khác
+  ngoài place-bet).
+- Test `idempotent-place-bet.test.ts` #12/#13/#14: thay `resolveIdempotencyConflict` + `replayDebit`
+  bằng 1 lời gọi `replayCompletedDebit`.
+
+**Không đổi hành vi** — 4 nhánh phase, message, mã lỗi, và điều kiện gọi tenant giữ nguyên 100%.
+Đây là gộp code, không phải đổi logic nghiệp vụ.

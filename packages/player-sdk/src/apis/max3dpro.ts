@@ -4,6 +4,7 @@
  */
 
 import { ENDPOINTS } from "../endpoints";
+import { IDEMPOTENCY_KEY_HEADER } from "../helpers";
 import type { HttpClient } from "../http-client";
 import type {
   Max3dproCurrentDrawResponse,
@@ -79,12 +80,18 @@ export interface Max3dproApi {
    * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — thiếu hoặc sai format header `mw-idempotency-key`
+   * @throws {@link ApiClientError} code `IDEMPOTENCY_CONFLICT` — cùng mã đang xử lý hoặc giao dịch trước không replay được (409)
+   * @throws {@link ApiClientError} code `TOO_MANY_REQUESTS` — gửi quá nhanh (429)
    * @example
    * ```ts
+   * import { createIdempotencyKey } from "@megawin/player-sdk";
    * import type { Max3dproTicketPurchaseInput } from "@megawin/player-sdk/max3dpro";
    *
    * // multiNumber: 3 bộ ba → P(3,2) = 3×2 = 6 ordered pairs
+   * const idempotencyKey = createIdempotencyKey();
    * const result = await client.max3dpro.placeBet({
+   *   idempotencyKey,
    *   drawIds: ["2026-03-07.001"],
    *   boards: [{
    *     boardNo: "A",
@@ -245,8 +252,11 @@ export function createMax3dproApi(http: HttpClient): Max3dproApi {
     async getCurrentDraw() {
       return http.get<Max3dproCurrentDrawResponse>(ENDPOINTS.max3dpro.getCurrentDraw);
     },
-    async placeBet(input) {
-      return http.post<Max3dproPlaceBetResponse>(ENDPOINTS.max3dpro.placeBet, input);
+    async placeBet(input: Max3dproTicketPurchaseInput): Promise<Max3dproPlaceBetResponse> {
+      const { idempotencyKey, ...body } = input;
+      return http.post<Max3dproPlaceBetResponse>(ENDPOINTS.max3dpro.placeBet, body, {
+        headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
+      });
     },
     async listPendingTickets(params) {
       return http.get<Max3dproListTicketsResponse>(ENDPOINTS.max3dpro.listPendingTickets, {

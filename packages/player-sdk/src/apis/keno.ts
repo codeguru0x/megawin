@@ -7,6 +7,7 @@
  */
 
 import { ENDPOINTS } from "../endpoints";
+import { IDEMPOTENCY_KEY_HEADER } from "../helpers";
 import type { HttpClient } from "../http-client";
 import type {
   KenoComboPopularityParams,
@@ -35,7 +36,7 @@ import type {
  *
  * @example
  * ```ts
- * import { createPlayerClient } from "@megawin/player-sdk";
+ * import { createIdempotencyKey, createPlayerClient } from "@megawin/player-sdk";
  *
  * const client = createPlayerClient({
  *   baseUrl: "https://api.domain.com",
@@ -46,7 +47,9 @@ import type {
  * const draw = await client.keno.getCurrentDraw();
  *
  * // Đặt cược
+ * const idempotencyKey = createIdempotencyKey();
  * const bet = await client.keno.placeBet({
+ *   idempotencyKey,
  *   drawIds: [draw.currentDraw!.drawId],
  *   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
  * });
@@ -138,10 +141,17 @@ export interface KenoApi {
    * @throws {@link ApiClientError} code `VALIDATION` — input không đúng schema
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — thiếu hoặc sai format header `mw-idempotency-key`
+   * @throws {@link ApiClientError} code `IDEMPOTENCY_CONFLICT` — cùng mã đang xử lý hoặc giao dịch trước không replay được (409)
+   * @throws {@link ApiClientError} code `TOO_MANY_REQUESTS` — gửi quá nhanh (429)
    * @example
    * ```ts
+   * import { createIdempotencyKey } from "@megawin/player-sdk";
+   *
    * // Cược cơ bản: chọn 5 số, 1 kỳ
+   * const idempotencyKey = createIdempotencyKey();
    * const result = await client.keno.placeBet({
+   *   idempotencyKey,
    *   drawIds: ["2026-02-25.001"],
    *   boards: [
    *     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
@@ -151,8 +161,10 @@ export interface KenoApi {
    * console.log(result.pricing.totalAmount);  // 10000
    * console.log(result.balance);              // 990000
    *
-   * // Cược nhiều kỳ + board cược bổ sung
+   * // Ý định cược khác — tạo mã mới, giữ khi retry ý định đó
+   * const idempotencyKey2 = createIdempotencyKey();
    * const result2 = await client.keno.placeBet({
+   *   idempotencyKey: idempotencyKey2,
    *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
    *   boards: [
    *     { boardNo: "A", playType: "pick3", numbers: ["22", "44", "66"] },
@@ -370,7 +382,10 @@ export function createKenoApi(http: HttpClient): KenoApi {
     },
 
     async placeBet(input: KenoTicketPurchaseInput): Promise<KenoPlaceBetResponse> {
-      return http.post<KenoPlaceBetResponse>(ENDPOINTS.keno.placeBet, input);
+      const { idempotencyKey, ...body } = input;
+      return http.post<KenoPlaceBetResponse>(ENDPOINTS.keno.placeBet, body, {
+        headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
+      });
     },
 
     async listPendingTickets(params?: KenoListTicketsParams): Promise<KenoListTicketsResponse> {

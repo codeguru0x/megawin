@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { ApiClientError, type ApiResponse } from "./api-types";
+import { ApiClientError, type ApiResponse } from "./types";
 
 // ============ Types ============
 

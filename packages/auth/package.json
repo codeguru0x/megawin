@@ -13,8 +13,9 @@
     "pretest": "pnpm build:deps",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "clean": "rm -rf dist",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "clean": "rm -rf dist"
   },
   "exports": {
     ".": {
@@ -30,6 +31,7 @@
   },
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/guard": "workspace:*",
     "@megawin/identity": "workspace:*",
     "@megawin/identity-application": "workspace:*",
     "@megawin/shared": "workspace:*",
@@ -37,6 +39,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@megawin/cache": "workspace:*",
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/aws-lambda": "^8.10.161",

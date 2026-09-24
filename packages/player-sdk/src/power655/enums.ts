@@ -27,8 +27,12 @@
  *
  * @example
  * ```typescript
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
+ *
  * // Đặt cược Bao 5: chọn 5 số, hệ thống ghép 50 số còn lại = 50 lines
+ * const idempotencyKey = createIdempotencyKey();
  * await client.power655.placeBet({
+ *   idempotencyKey,
  *   drawIds: ["2026-03-18.001"],
  *   boards: [{
  *     boardNo: "A",

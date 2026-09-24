@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # p1-01 — Rate Limit Middleware (enforce ngay)
 
 > Nguồn: `.cursor/analysis/system-ratelimit-idempotency.analysis.md`
@@ -76,8 +83,8 @@ Thứ tự ưu tiên, dừng ở cái đầu tiên có:
 
 1. `subject: "account"` → `event.user.accountId`
 2. `subject: "tenant"` → `event.tenant.tenantId` hoặc `event.user.tenantId`
-3. `subject: "ip"` → `extractClientIpFromApiGatewayV2(event)` (`@megawin/shared/utils/ip`, tiền lệ
-   `handlers/keno/place-bet.ts:154`)
+3. `subject: "ip"` → `extractClientIpFromApiGatewayV2(event)` (`@megawin/shared/utils/api-gateway-v2`,
+   cùng module với `extractIdempotencyKeyFromApiGatewayV2`)
 
 Xử lý biên **bắt buộc**:
 

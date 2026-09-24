@@ -34,6 +34,12 @@ export interface PlaceBetInput {
   channel: TicketChannel;
   /** IP address của player lúc đặt cược. Lấy từ CF-Connecting-IP hoặc X-Forwarded-For. */
   ipAddress?: string;
+
+  /**
+   * Mã Idempotency-Key do client gửi (header). Bắt buộc — cùng mã khi retry
+   * để server không tạo vé / debit lần hai.
+   */
+  idempotencyKey: string;
   /**
    * Danh sách ID các kỳ quay muốn tham gia.
    * Hỗ trợ mua nhiều kỳ (multi-draw), mỗi drawId tạo 1 entry.

@@ -1154,6 +1154,9 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../app-core
+      '@megawin/guard':
+        specifier: workspace:*
+        version: link:../guard
       '@megawin/identity':
         specifier: workspace:*
         version: link:../identity
@@ -1170,6 +1173,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@megawin/cache':
+        specifier: workspace:*
+        version: link:../cache
       '@megawin/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
@@ -1385,6 +1391,9 @@ importers:
       mongodb:
         specifier: ^7.6.0
         version: 7.6.0
+      uuid:
+        specifier: ^14.0.0
+        version: 14.0.0
     devDependencies:
       '@megawin/typescript-config':
         specifier: workspace:*

@@ -15,7 +15,10 @@ import {
   lotto535MainNumberSchema,
   lotto535SpecialNumberSchema,
 } from "@megawin/game-lotto535/schemas";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import {
+  extractClientIpFromApiGatewayV2,
+  extractIdempotencyKeyFromApiGatewayV2,
+} from "@megawin/shared/utils/api-gateway-v2";
 import z from "zod";
 
 import { boardsSequentialRefine } from "../../lib/schemas";
@@ -152,6 +155,7 @@ export const handler = withPlayerAuth(
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
     const ipAddress = extractClientIpFromApiGatewayV2(event);
+    const idempotencyKey = extractIdempotencyKeyFromApiGatewayV2(event);
 
     // String zero-padded — truyền thẳng, không cần parseInt
     const boards = rawBoards.map((b: Lotto535Board) => ({
@@ -161,7 +165,7 @@ export const handler = withPlayerAuth(
         mainNumbers: b.selection.mainNumbers,
         specialNumbers: b.selection.specialNumbers,
       },
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     }));
 
     return useCase.run({
@@ -170,6 +174,7 @@ export const handler = withPlayerAuth(
       username,
       channel: TicketChannel.Sdk,
       ipAddress,
+      idempotencyKey,
       drawIds,
       boards,
     });

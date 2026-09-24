@@ -6,7 +6,7 @@
  * @module
  */
 
-import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../types";
 import type { Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -99,10 +99,13 @@ export interface Bingo18BoardInput {
  *
  * @example
  * ```ts
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
  * import type { Bingo18TicketPurchaseInput } from "@megawin/player-sdk/bingo18";
  *
  * // Cược cơ bản 1 kỳ + cược bổ sung
+ * const idempotencyKey = createIdempotencyKey();
  * const input: Bingo18TicketPurchaseInput = {
+ *   idempotencyKey,
  *   drawIds: ["2026-03-07.001"],
  *   boards: [
  *     { boardNo: "A", playType: "singleNum", number: 5 },
@@ -110,8 +113,10 @@ export interface Bingo18BoardInput {
  *   ],
  * };
  *
- * // Cược nhiều kỳ + nhiều loại board
+ * // Ý định cược khác — tạo mã mới, giữ khi retry ý định đó
+ * const idempotencyKey2 = createIdempotencyKey();
  * const input2: Bingo18TicketPurchaseInput = {
+ *   idempotencyKey: idempotencyKey2,
  *   drawIds: ["2026-03-07.001", "2026-03-07.002", "2026-03-07.003"],
  *   boards: [
  *     { boardNo: "A", playType: "singleNum", number: 3 },
@@ -123,6 +128,12 @@ export interface Bingo18BoardInput {
  * ```
  */
 export interface Bingo18TicketPurchaseInput {
+  /**
+   * Mã do tenant kiểm soát. Gửi lại cùng giá trị khi retry để server không tạo vé thứ hai.
+   * SDK gắn vào header `mw-idempotency-key` — không nằm trong body.
+   * Độ dài 8–128, charset chữ, số, gạch ngang hoặc gạch dưới. Tạo bằng `createIdempotencyKey()` từ `@megawin/player-sdk`. Giữ giá trị khi retry.
+   */
+  idempotencyKey: string;
   /**
    * Danh sách drawId các kỳ quay tham gia.
    *
@@ -704,7 +715,11 @@ export interface Bingo18TicketEntriesResponse {
  *
  * @example
  * ```ts
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
+ *
+ * const idempotencyKey = createIdempotencyKey();
  * const result = await client.bingo18.placeBet({
+ *   idempotencyKey,
  *   drawIds: ["2026-03-07.001"],
  *   boards: [
  *     { boardNo: "A", playType: "singleNum", number: 5, betCount: 1 },

@@ -1,4 +1,5 @@
 export * from "./alpha-label";
+export * from "./api-gateway-v2";
 export * from "./array";
 export * from "./async";
 export * from "./date";

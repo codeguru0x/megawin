@@ -17,6 +17,7 @@ import type {
   Bingo18TicketPurchaseInput,
 } from "../bingo18";
 import { ENDPOINTS } from "../endpoints";
+import { IDEMPOTENCY_KEY_HEADER } from "../helpers";
 import type { HttpClient } from "../http-client";
 
 /**
@@ -80,11 +81,17 @@ export interface Bingo18Api {
    * @throws {@link ApiClientError} code `VALIDATION` — input sai schema (thiếu field, kiểu dữ liệu sai)
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
+   * @throws {@link ApiClientError} code `BAD_REQUEST` — thiếu hoặc sai format header `mw-idempotency-key`
+   * @throws {@link ApiClientError} code `IDEMPOTENCY_CONFLICT` — cùng mã đang xử lý hoặc giao dịch trước không replay được (409)
+   * @throws {@link ApiClientError} code `TOO_MANY_REQUESTS` — gửi quá nhanh (429)
    * @example
    * ```ts
+   * import { createIdempotencyKey } from "@megawin/player-sdk";
    * import type { Bingo18TicketPurchaseInput } from "@megawin/player-sdk/bingo18";
    *
+   * const idempotencyKey = createIdempotencyKey();
    * const result = await client.bingo18.placeBet({
+   *   idempotencyKey,
    *   drawIds: ["2026-03-07.001", "2026-03-07.002"],
    *   boards: [
    *     { boardNo: "A", playType: "singleNum", number: 5 },
@@ -228,8 +235,11 @@ export function createBingo18Api(http: HttpClient): Bingo18Api {
     async getCurrentDraw() {
       return http.get<Bingo18CurrentDrawResponse>(ENDPOINTS.bingo18.getCurrentDraw);
     },
-    async placeBet(input) {
-      return http.post<Bingo18PlaceBetResponse>(ENDPOINTS.bingo18.placeBet, input);
+    async placeBet(input: Bingo18TicketPurchaseInput): Promise<Bingo18PlaceBetResponse> {
+      const { idempotencyKey, ...body } = input;
+      return http.post<Bingo18PlaceBetResponse>(ENDPOINTS.bingo18.placeBet, body, {
+        headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey },
+      });
     },
     async listPendingTickets(params) {
       return http.get<Bingo18ListTicketsResponse>(ENDPOINTS.bingo18.listPendingTickets, {

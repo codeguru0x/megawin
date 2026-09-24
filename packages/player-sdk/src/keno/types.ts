@@ -7,7 +7,7 @@
  * @module
  */
 
-import type { EntryOutcome, EntryStatus, TicketStatus } from "../common-types";
+import type { EntryOutcome, EntryStatus, TicketStatus } from "../types";
 import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
 
 // ─────────────────────────────────────────────
@@ -153,18 +153,23 @@ export type KenoBoardInput = KenoPickBoardInput | KenoBigSmallBoardInput | KenoE
  *
  * @example
  * ```ts
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
  * import type { KenoTicketPurchaseInput } from "@megawin/player-sdk/keno";
  *
  * // Cược cơ bản 1 kỳ — playType bắt buộc
+ * const idempotencyKey = createIdempotencyKey();
  * const input: KenoTicketPurchaseInput = {
+ *   idempotencyKey,
  *   drawIds: ["2026-02-25.001"],
  *   boards: [
  *     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
  *   ],
  * };
  *
- * // Cược nhiều kỳ + board cược bổ sung
+ * // Ý định cược khác — tạo mã mới, giữ khi retry ý định đó
+ * const idempotencyKey2 = createIdempotencyKey();
  * const input2: KenoTicketPurchaseInput = {
+ *   idempotencyKey: idempotencyKey2,
  *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
  *   boards: [
  *     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
@@ -175,6 +180,12 @@ export type KenoBoardInput = KenoPickBoardInput | KenoBigSmallBoardInput | KenoE
  * ```
  */
 export interface KenoTicketPurchaseInput {
+  /**
+   * Mã do tenant kiểm soát. Gửi lại cùng giá trị khi retry để server không tạo vé thứ hai.
+   * SDK gắn vào header `mw-idempotency-key` — không nằm trong body.
+   * Độ dài 8–128, charset chữ, số, gạch ngang hoặc gạch dưới. Tạo bằng `createIdempotencyKey()` từ `@megawin/player-sdk`. Giữ giá trị khi retry.
+   */
+  idempotencyKey: string;
   /**
    * Danh sách drawId các kỳ quay tham gia.
    *
@@ -620,7 +631,11 @@ export interface KenoTicketEntriesResponse {
  *
  * @example
  * ```ts
+ * import { createIdempotencyKey } from "@megawin/player-sdk";
+ *
+ * const idempotencyKey = createIdempotencyKey();
  * const result = await client.keno.placeBet({
+ *   idempotencyKey,
  *   drawIds: ["2026-02-25.001"],
  *   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
  * });

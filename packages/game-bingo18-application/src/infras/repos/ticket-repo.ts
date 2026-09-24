@@ -190,4 +190,11 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   async existsByTx(tx: string): Promise<boolean> {
     return await this.exists({ tx });
   }
+
+  /**
+   * Tra ticket theo `tx` — dùng khi replay place-bet sau unique `{tx}` trên WAL.
+   */
+  async findByTx(tx: string): Promise<TicketEntity | null> {
+    return await this.findOne({ tx });
+  }
 }

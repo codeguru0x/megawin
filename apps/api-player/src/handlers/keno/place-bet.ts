@@ -36,7 +36,10 @@ import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-
 import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
 import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 import { kenoDrawIdSchema, kenoNumberSchema } from "@megawin/game-keno/schemas";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import {
+  extractClientIpFromApiGatewayV2,
+  extractIdempotencyKeyFromApiGatewayV2,
+} from "@megawin/shared/utils/api-gateway-v2";
 import z from "zod";
 
 import { boardsSequentialRefine } from "../../lib/schemas";
@@ -152,6 +155,7 @@ export const handler = withPlayerAuth(
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards } = event.schema.body;
     const ipAddress = extractClientIpFromApiGatewayV2(event);
+    const idempotencyKey = extractIdempotencyKeyFromApiGatewayV2(event);
 
     return useCase.run({
       tenantId,
@@ -159,9 +163,12 @@ export const handler = withPlayerAuth(
       username,
       channel: TicketChannel.Sdk,
       ipAddress,
+      idempotencyKey,
       drawIds,
       boards,
     });
   },
-  { schemas: { body: kenoPlaceBetBodySchema } },
+  {
+    schemas: { body: kenoPlaceBetBodySchema },
+  },
 );

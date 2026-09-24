@@ -32,7 +32,7 @@ Bạn vừa mở/sửa một trong các nhóm file sau (khớp glob của rule n
 | `packages/game-{game}-application/src/use-cases/place-bet/dto/place-bet.dto.ts` | `{Game}TicketPurchaseInput`, `{Game}PlaceBetResponse` |
 | `packages/game-{game}/src/entities/enums.ts` (`PlayType`, `PrizeTier`, …) | `{Game}PlayType`, `{Game}PrizeTier`, … ở `packages/player-sdk/src/{game}/enums.ts` — cả **giá trị** lẫn **ý nghĩa JSDoc** (semantic, không chỉ tên) |
 | Thêm/xoá/đổi tên **endpoint** (route mới trong `*-endpoint.yml`, handler mới) | `packages/player-sdk/src/endpoints.ts` + method mới trên `{Game}Api` (`apis/{game}.ts`) |
-| `packages/game-core/src/entities/game-core.enums.ts` (`TicketStatus`, `EntryStatus`, `EntryOutcome`, `DrawStatus`) | Giá trị mirror ở `packages/player-sdk/src/common-types.ts` (`TicketStatus`, `EntryStatus`, `EntryOutcome` — export từ root `index.ts`, dùng chung cho field `status`/`outcome` ở **tất cả 7 game**). Đổi giá trị/thêm/xoá member ở game-core → PHẢI sửa `common-types.ts` cùng lúc; đổi ý nghĩa (không đổi giá trị) → chỉ cần sửa JSDoc `common-types.ts`, KHÔNG cần sửa từng game (đã tham chiếu type dùng chung). |
+| `packages/game-core/src/entities/game-core.enums.ts` (`TicketStatus`, `EntryStatus`, `EntryOutcome`, `DrawStatus`) | Giá trị mirror ở `packages/player-sdk/src/types/common-types.ts` (`TicketStatus`, `EntryStatus`, `EntryOutcome` — export từ root `index.ts`, dùng chung cho field `status`/`outcome` ở **tất cả 7 game**). Đổi giá trị/thêm/xoá member ở game-core → PHẢI sửa `src/types/common-types.ts` cùng lúc; đổi ý nghĩa (không đổi giá trị) → chỉ cần sửa JSDoc file đó, KHÔNG cần sửa từng game (đã tham chiếu type dùng chung). |
 
 ## Việc BẮT BUỘC trước khi coi PR là xong
 
@@ -41,7 +41,7 @@ Bạn vừa mở/sửa một trong các nhóm file sau (khớp glob của rule n
 2. Mở `packages/player-sdk/src/{game}/types.ts` (và `enums.ts` nếu đổi enum) — sửa type tương ứng
    field-by-field. KHÔNG đoán field nhìn tên giống — đọc đúng type/return value thật. Field
    `status` (ticket/entry) và `outcome` (entry) dùng chung `TicketStatus`/`EntryStatus`/
-   `EntryOutcome` từ `packages/player-sdk/src/common-types.ts` — KHÔNG tự khai lại union string
+   `EntryOutcome` từ `packages/player-sdk/src/types/common-types.ts` — KHÔNG tự khai lại union string
    riêng cho từng game.
 3. Nếu field đó cũng có mặt ở type aggregate cross-game (`packages/player-sdk/src/game/types.ts`,
    VD `*JackpotDetails`) — cập nhật ở ĐÓ nữa. Không có gì tự lan truyền.

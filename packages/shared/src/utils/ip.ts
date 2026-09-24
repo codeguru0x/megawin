@@ -1,8 +1,9 @@
 /**
- * IP Address Extraction Utility — nguồn chân lý DUY NHẤT cho toàn hệ thống.
+ * IP Address Extraction Utility — nguồn chân lý cho IP sau trusted proxy
+ * (Next.js / nginx / Cloudflare ghi đè header).
  *
- * Mọi nơi cần IP client (audit forensic, rate-limit, place-bet, auth hook) đều
- * đi qua đây để logic thống nhất. KHÔNG tự parse header rời rạc ở từng app.
+ * Mọi nơi cần IP client từ header (audit forensic, auth hook) đi qua đây.
+ * KHÔNG tự parse header rời rạc ở từng app.
  *
  * Fallback chain (thứ tự ưu tiên, dừng ở giá trị đầu tiên có mặt):
  *   1. `cf-connecting-ip`  — Cloudflare inject IP thực client, không thể giả mạo
@@ -10,53 +11,31 @@
  *   2. `x-forwarded-for`   — lấy phần tử ĐẦU (client gốc): "client, proxy1, proxy2".
  *   3. `x-real-ip`         — fallback nginx / reverse proxy đơn tầng.
  *
- * ⚠️ Chain trên (cả `cf-connecting-ip`) chỉ đáng tin sau trusted proxy
- * (nginx / Next.js edge / Cloudflare thực sự ghi đè header). Ở API Gateway v2
- * origin public trần: client bypass CF gọi thẳng có thể tự set MỌI header (kể cả
- * `cf-connecting-ip`) → {@link extractClientIpFromApiGatewayV2} cố tình bỏ qua
- * toàn bộ header, CHỈ dùng `requestContext.http.sourceIp` (peer IP TCP, không spoof).
+ * ⚠️ Chain trên chỉ đáng tin sau trusted proxy. Lambda API Gateway v2 origin
+ * public trần: client bypass CF tự set mọi header → IP Lambda **không** lấy ở
+ * đây. Dùng `extractClientIpFromApiGatewayV2` trong `./api-gateway-v2`
+ * (chỉ `requestContext.http.sourceIp`).
  *
- * 3 entrypoint theo runtime — cùng nguồn logic nhưng KHÁC mức tin cậy:
- *   - {@link extractClientIp}             — plain object headers, full chain (proxy tin cậy).
- *   - {@link extractClientIpFromWebHeaders} — Web `Headers` (Next.js, better-auth hook), full chain.
- *   - {@link extractClientIpFromApiGatewayV2} — Lambda, CHỈ `sourceIp` (peer IP TCP, bỏ hết header).
+ * 2 entrypoint header (proxy tin cậy):
+ *   - {@link extractClientIp}               — plain object headers, full chain.
+ *   - {@link extractClientIpFromWebHeaders} — Web `Headers` (Next.js, better-auth).
  */
 
 /**
- * HTTP request headers dạng plain object. Tương thích `event.headers` của
- * API Gateway (keys đã lowercase). Cho phép `null`/`undefined` để gọi an toàn.
+ * HTTP request headers dạng plain object (Next.js / nginx / hook).
+ * Cho phép `null`/`undefined` để gọi an toàn.
+ * Header từ Lambda event: dùng `getHeaderFromApiGatewayV2` trong `./api-gateway-v2`.
  */
 export type HttpHeaders = Record<string, string | undefined> | null | undefined;
-
-/**
- * Shape tối thiểu của API Gateway HTTP API v2 event mà util này cần —
- * chỉ `requestContext.http.sourceIp` (peer IP TCP).
- *
- * `headers` để optional cho tương thích ngược: caller truyền nguyên
- * `APIGatewayProxyEventV2` vẫn gán được, nhưng
- * {@link extractClientIpFromApiGatewayV2} KHÔNG đọc header nào.
- *
- * Khai báo structural (không import `aws-lambda`) để `@megawin/shared` không
- * phải kéo dependency nặng; `APIGatewayProxyEventV2` thật vẫn gán được nhờ
- * structural typing của TypeScript.
- */
-export interface ApiGatewayV2IpSource {
-  headers?: HttpHeaders;
-  requestContext?: {
-    http?: {
-      sourceIp?: string;
-    };
-  };
-}
 
 /**
  * Core: trích IP client từ plain-object headers theo fallback chain
  * `cf-connecting-ip` → `x-forwarded-for` (đầu) → `x-real-ip`.
  *
- * Chỉ đọc headers — không phụ thuộc cấu trúc event. Dùng được ở Lambda handler,
- * middleware, hoặc bất kỳ nơi nào có headers dạng object.
+ * Chỉ đọc headers sau trusted proxy — không phụ thuộc cấu trúc event.
+ * IP Lambda: `extractClientIpFromApiGatewayV2` trong `./api-gateway-v2`.
  *
- * @param headers - Headers dạng object (keys lowercase, như API Gateway chuẩn hoá).
+ * @param headers - Headers dạng object (Next.js / nginx).
  * @returns IP client, hoặc `undefined` nếu không header nào xác định được.
  */
 export function extractClientIp(headers: HttpHeaders): string | undefined {
@@ -120,32 +99,6 @@ export function extractClientIpFromWebHeaders(headers: Headers | null | undefine
 }
 
 /**
- * Adapter cho API Gateway HTTP API v2 event (Lambda handler) — CHỈ tin peer IP
- * TCP, KHÁC hẳn {@link extractClientIp}. Không đọc bất kỳ header nào.
- *
- * Tại Lambda, `requestContext.http.sourceIp` là **peer IP của kết nối TCP** mà
- * API Gateway nhìn thấy — client KHÔNG giả mạo được. Mọi header IP
- * (`cf-connecting-ip`, `x-forwarded-for`, `x-real-ip`) chỉ là giá trị client/
- * proxy tự set → spoof được, và ở đây origin là public trần: attacker gọi thẳng
- * API Gateway (bypass Cloudflare) có thể bơm `cf-connecting-ip: <bất kỳ>`. Không
- * có trusted proxy nội bộ nào ghi đè, nên KHÔNG tin header nào cả.
- *
- * Trade-off: khi request thực sự qua Cloudflare, `sourceIp` = IP edge CF (không
- * phải IP gốc client). Forensic vẫn truy được về CF; đổi lại IP audit KHÔNG BAO
- * GIỜ bị spoof. Nếu sau này khoá origin bằng shared secret / IP range CF, mới
- * cân nhắc tin lại `cf-connecting-ip`.
- *
- * @param event - API Gateway v2 event (chỉ cần `requestContext.http.sourceIp`).
- * @returns Peer IP TCP, hoặc `undefined` nếu event thiếu `sourceIp`.
- */
-export function extractClientIpFromApiGatewayV2(event: ApiGatewayV2IpSource): string | undefined {
-  // Chỉ dùng peer IP TCP do API Gateway điền — không spoof được.
-  // KHÔNG đọc header (cf-connecting-ip/x-forwarded-for/x-real-ip): origin public
-  // trần, client bypass CF có thể tự set mọi header → luôn spoof được.
-  return event.requestContext?.http?.sourceIp?.trim() || undefined;
-}
-
-/**
  * HTTP context KHÔNG index của request — `userAgent` + `requestId`.
  *
  * Song hành với IP nhưng KHÁC bản chất: đây là các field **chỉ hiển thị +
@@ -170,8 +123,8 @@ function cleanHeader(value: string | undefined | null): string | undefined {
 }
 
 /**
- * Trích {@link HttpRequestContext} từ plain-object headers (Lambda `event.headers`,
- * keys lowercase). `requestId` ưu tiên `x-request-id` → `x-amzn-trace-id`.
+ * Trích {@link HttpRequestContext} từ plain-object headers (Next.js / hook).
+ * `requestId` ưu tiên `x-request-id` → `x-amzn-trace-id`.
  *
  * @param headers - Headers dạng object (keys lowercase).
  * @returns `{ userAgent?, requestId? }` — mỗi field `undefined` nếu không có.

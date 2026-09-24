@@ -7,7 +7,7 @@
  * tenant debit API, đảm bảo recovery nếu Lambda crash giữa chừng.
  *
  * FLOW (hot path — place-bet):
- *   1. Generate tx (UUIDv7)
+ *   1. deriveTx(accountId, idempotencyKey) — UUIDv5, cùng input → cùng `tx`
  *   2. Insert tx_intents (DEBIT_PENDING)
  *   3. Gọi tenant debit(tx)
  *      - 4xx → xoá WAL → throw (inline, scheduler không cần xử lý)

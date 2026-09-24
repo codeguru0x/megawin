@@ -1,22 +1,24 @@
 import { UseCase } from "@megawin/app-core/use-cases";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { DebitPlayerService } from "@megawin/game-core-application/services";
+import { DebitPlayerService, type DebitPlayerInput } from "@megawin/game-core-application/services";
 import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import {
   PlayType,
   type Board,
+  type DrawEntity,
   type EntryBoardSnapshot,
   type TicketDoc,
   type TicketEntryDoc,
 } from "@megawin/game-mega645/entities";
 import { calculateLineCount, getRequiredNumberCount } from "@megawin/game-mega645/rules/play-types";
-import { AppException } from "@megawin/shared/errors";
+import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { Currency } from "@megawin/shared/types";
 import { getFinancialDate, nowVN } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
+import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
@@ -28,9 +30,10 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
   private readonly debitService = new DebitPlayerService();
+  private readonly ticketRepo = new TicketRepository();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
+    const { tenantId, accountId, username, channel, ipAddress, idempotencyKey, drawIds, boards: boardInputs } = input;
 
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
@@ -47,8 +50,8 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     let totalLinesPerDraw = 0;
 
     // Validate betCount per board theo config
-    const minBetCount = play.minBetCount ?? 1;
-    const maxBetCount = play.maxBetCount ?? 10;
+    const minBetCount = play.minBetCount;
+    const maxBetCount = play.maxBetCount;
 
     for (const bi of boardInputs) {
       const playType = bi.playType as PlayType;
@@ -78,6 +81,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     const now = nowVN();
     const draws = await this.drawRepo.getDrawsByIds(drawIds);
     const drawMap = new Map(draws.map((d) => [d.drawId, d]));
+    const validatedDraws: DrawEntity[] = [];
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId);
@@ -93,6 +97,8 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
+
+      validatedDraws.push(draw);
     }
 
     const drawCount = drawIds.length;
@@ -117,8 +123,8 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     // Gọi api để tính tiền xong mới cập nhập status
     const ticketStatus = TicketStatus.Paid;
 
-    // tx (UUIDv7) generate sớm để gán vào ticketDoc — link ticket ↔ WAL.
-    const tx = this.debitService.generateTx();
+    // tx từ Idempotency-Key: cùng input → cùng tx, unique WAL chặn trùng.
+    const tx = this.debitService.deriveTx(accountId, idempotencyKey);
 
     // _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
     const ticketObjectId = new ObjectId();
@@ -166,8 +172,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
 
-    for (let i = 0; i < drawIds.length; i++) {
-      const draw = drawMap.get(drawIds[i]!)!;
+    for (const draw of validatedDraws) {
       entryDocs.push({
         tenantId,
         accountId,
@@ -192,7 +197,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     }
 
     // ── Debit player via WAL — ngay trước save để giảm cửa sổ crash ──
-    const { balance } = await this.debitService.debit({
+    const debitInput = {
       tx,
       tenantId,
       accountId,
@@ -203,7 +208,18 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       roundIds: drawIds,
       description: `Đặt cược Mega 6/45 ${drawCount} kỳ ${drawIds[0]}${drawCount > 1 ? `→${drawIds[drawCount - 1]}` : ""}`,
       metadata: { ticketNo },
-    });
+    };
+
+    let balance: number;
+    try {
+      const result = await this.debitService.debit(debitInput);
+      balance = result.balance;
+    } catch (error) {
+      if (!(error instanceof AppException) || error.code !== APP_ERROR_CODES.IDEMPOTENCY_CONFLICT) {
+        throw error;
+      }
+      return await this.replayCompletedBet(tx, debitInput);
+    }
 
     await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
 
@@ -227,6 +243,32 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       },
       boardCount: builtBoards.length,
       entryCount: drawCount,
+    };
+  }
+
+  /**
+   * Replay place-bet khi WAL đã COMPLETED — `replayCompletedDebit` đã xử lý phần
+   * "được replay không" (throw 409 nếu không), ở đây chỉ còn lấy vé cũ theo `tx`
+   * để build lại đúng response ban đầu.
+   */
+  private async replayCompletedBet(tx: string, debitInput: DebitPlayerInput): Promise<PlaceBetOutput> {
+    const { balance } = await this.debitService.replayCompletedDebit(debitInput);
+
+    const ticket = await this.ticketRepo.findByTx(tx);
+
+    if (!ticket) {
+      throw new AppException(APP_ERROR_CODES.IDEMPOTENCY_CONFLICT, "Không tìm thấy vé của giao dịch trước.");
+    }
+
+    return {
+      ticketId: ticket.id,
+      ticketNo: ticket.ticketNo,
+      status: ticket.status,
+      balance,
+      drawPlan: ticket.drawPlan,
+      pricing: ticket.pricing,
+      boardCount: ticket.boards.length,
+      entryCount: ticket.drawPlan.drawCount,
     };
   }
 }

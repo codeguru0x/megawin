@@ -15,7 +15,10 @@ import { PlayType } from "@megawin/game-power655/entities";
 import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
 import { power655DrawIdSchema, power655MainNumberSchema } from "@megawin/game-power655/schemas";
 import { isUnique } from "@megawin/shared/utils";
-import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
+import {
+  extractClientIpFromApiGatewayV2,
+  extractIdempotencyKeyFromApiGatewayV2,
+} from "@megawin/shared/utils/api-gateway-v2";
 import z from "zod";
 
 import { boardsSequentialRefine } from "../../lib/schemas";
@@ -196,6 +199,7 @@ export const handler = withPlayerAuth(
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
     const ipAddress = extractClientIpFromApiGatewayV2(event);
+    const idempotencyKey = extractIdempotencyKeyFromApiGatewayV2(event);
 
     const boards = rawBoards.map((b: Power655Board) => ({
       boardNo: b.boardNo,
@@ -212,6 +216,7 @@ export const handler = withPlayerAuth(
       username,
       channel: TicketChannel.Sdk,
       ipAddress,
+      idempotencyKey,
       drawIds,
       boards,
     });

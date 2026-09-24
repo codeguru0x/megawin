@@ -61,7 +61,8 @@
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
-    "mongodb": "^7.6.0"
+    "mongodb": "^7.6.0",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",

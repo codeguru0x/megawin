@@ -26,23 +26,25 @@
 
 import { UseCase } from "@megawin/app-core/use-cases";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { DebitPlayerService } from "@megawin/game-core-application/services";
+import { DebitPlayerService, type DebitPlayerInput } from "@megawin/game-core-application/services";
 import { buildTicketNo, DrawStatus, EntryStatus, GameProduct, TicketStatus } from "@megawin/game-core/entities";
 import {
   KENO_BASIC_PLAY_TYPE_SET,
   type Board,
+  type DrawEntity,
   type EntryBoardSnapshot,
   type TicketDoc,
   type TicketEntryDoc,
 } from "@megawin/game-keno/entities";
 import { getPlayTypeFromPickCount } from "@megawin/game-keno/rules";
-import { AppException } from "@megawin/shared/errors";
+import { APP_ERROR_CODES, AppException } from "@megawin/shared/errors";
 import { Currency } from "@megawin/shared/types";
 import { getFinancialDate, nowVN } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
+import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
@@ -54,9 +56,10 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly getGlobalConfig = new GetGlobalConfigUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
   private readonly debitService = new DebitPlayerService();
+  private readonly ticketRepo = new TicketRepository();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
+    const { tenantId, accountId, username, channel, ipAddress, idempotencyKey, drawIds, boards: boardInputs } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -82,7 +85,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     const maxBetCount = play.maxBetCount;
 
     for (const bi of boardInputs) {
-      const bc = bi.betCount ?? 1;
+      const bc = bi.betCount;
 
       if (bc < minBetCount || bc > maxBetCount) {
         throw AppException.badRequest(
@@ -93,16 +96,19 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
 
     // ── 4. Build boards (unified: cơ bản + bổ sung) ──
     const builtBoards: Board[] = boardInputs.map((bi) => {
-      const isBasic = KENO_BASIC_PLAY_TYPE_SET.has(bi.playType);
-
-      if (isBasic) {
+      if (KENO_BASIC_PLAY_TYPE_SET.has(bi.playType)) {
         // Cơ bản (pick1-pick10): playType xác định từ số lượng số chọn.
-        // Zod đã đảm bảo numbers tồn tại và đúng length ∈ [1,10].
-        const playType = getPlayTypeFromPickCount(bi.numbers!.length);
+        // Zod đã đảm bảo numbers tồn tại và đúng length ∈ [1,10] — check lại để
+        // narrow type (không dùng `!`) và reject nếu caller bỏ qua Zod.
+        const { numbers } = bi;
+        if (numbers == null) {
+          throw AppException.badRequest(`Board ${bi.boardNo} thiếu danh sách số.`);
+        }
+        const playType = getPlayTypeFromPickCount(numbers.length);
         return {
           boardNo: bi.boardNo,
           playType,
-          numbers: [...bi.numbers!].sort(),
+          numbers: [...numbers].sort(),
           betCount: bi.betCount,
         };
       }
@@ -117,8 +123,12 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     });
 
     // ── 5. Validate tất cả draws – all-or-nothing ──
+    // nowVN() 1 lần: so sánh closeAt + timestamp ticket/entry dùng cùng instant.
+    // DrawSales.closeAt là Date bắt buộc (DrawDoc.sales: DrawSales) — không optional-chain.
+    const now = nowVN();
     const draws = await this.drawRepo.getDrawsByIds(drawIds);
     const drawMap = new Map(draws.map((d) => [d.drawId, d]));
+    const validatedDraws: DrawEntity[] = [];
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId);
@@ -130,9 +140,11 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
         throw AppException.badRequest(`Kỳ quay ${drawId} không đang mở bán.`);
       }
 
-      if (draw.sales?.closeAt && new Date() >= draw.sales.closeAt) {
+      if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
+
+      validatedDraws.push(draw);
     }
 
     // ── 6. Calculate pricing ──
@@ -148,13 +160,12 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
     // ── 7. Build ticket document ──
-    const now = nowVN();
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
     const drawCount = drawIds.length;
 
-    // tx (UUIDv7) generate sớm để gán vào ticketDoc — link ticket ↔ WAL.
-    const tx = this.debitService.generateTx();
+    // tx từ Idempotency-Key: cùng input → cùng tx, unique WAL chặn trùng.
+    const tx = this.debitService.deriveTx(accountId, idempotencyKey);
 
     // _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
     const ticketObjectId = new ObjectId();
@@ -205,8 +216,7 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
     // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
 
-    for (const drawId of drawIds) {
-      const draw = drawMap.get(drawId)!;
+    for (const draw of validatedDraws) {
       entryDocs.push({
         tenantId,
         accountId,
@@ -232,11 +242,12 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
 
     // ── 10. Debit player via WAL — ngay trước save để giảm cửa sổ crash ──
     // Ghi WAL (DEBIT_PENDING) → gọi tenant debit → return balance.
-    // tx đã generate ở bước 7 và gán vào ticketDoc.tx.
+    // tx đã derive ở bước build ticket và gán vào ticketDoc.tx.
     // Nếu tenant reject (insufficient balance, etc.) → throw AppException (WAL xoá).
     // Nếu tenant unreachable → throw serviceUnavailable (WAL giữ, scheduler xử lý).
-    // Nếu WAL insert fail (MongoDB down) → throw serviceUnavailable (chưa debit, an toàn).
-    const { balance } = await this.debitService.debit({
+    // Nếu WAL insert trùng `{tx}` (11000) → IDEMPOTENCY_CONFLICT → đọc phase (COMPLETED replay / còn lại 409).
+    // Nếu WAL insert fail khác (MongoDB down) → throw serviceUnavailable (chưa debit, an toàn).
+    const debitInput = {
       tx,
       tenantId,
       accountId,
@@ -247,7 +258,18 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       roundIds: drawIds,
       description: `Đặt cược Keno ${drawCount} kỳ ${drawIds[0]}${drawCount > 1 ? `→${drawIds[drawCount - 1]}` : ""}`,
       metadata: { ticketNo },
-    });
+    };
+
+    let balance: number;
+    try {
+      const result = await this.debitService.debit(debitInput);
+      balance = result.balance;
+    } catch (error) {
+      if (!(error instanceof AppException) || error.code !== APP_ERROR_CODES.IDEMPOTENCY_CONFLICT) {
+        throw error;
+      }
+      return await this.replayCompletedBet(tx, debitInput);
+    }
 
     // ── 11. Save ticket + entries atomically ──
     // Nếu crash SAU đây nhưng TRƯỚC markCompleted:
@@ -277,6 +299,31 @@ export class PlaceBetUseCase extends UseCase<PlaceBetInput, PlaceBetOutput> {
       },
       boardCount: builtBoards.length,
       entryCount: drawCount,
+    };
+  }
+
+  /**
+   * Replay place-bet khi WAL đã COMPLETED — `replayCompletedDebit` đã xử lý phần
+   * "được replay không" (throw 409 nếu không), ở đây chỉ còn lấy vé cũ theo `tx`
+   * để build lại đúng response ban đầu.
+   */
+  private async replayCompletedBet(tx: string, debitInput: DebitPlayerInput): Promise<PlaceBetOutput> {
+    const { balance } = await this.debitService.replayCompletedDebit(debitInput);
+
+    const ticket = await this.ticketRepo.findByTx(tx);
+    if (!ticket) {
+      throw new AppException(APP_ERROR_CODES.IDEMPOTENCY_CONFLICT, "Không tìm thấy vé của giao dịch trước.");
+    }
+
+    return {
+      ticketId: ticket.id,
+      ticketNo: ticket.ticketNo,
+      status: ticket.status,
+      balance,
+      drawPlan: ticket.drawPlan,
+      pricing: ticket.pricing,
+      boardCount: ticket.boards.length,
+      entryCount: ticket.drawPlan.drawCount,
     };
   }
 }

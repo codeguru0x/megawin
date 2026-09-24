@@ -72,7 +72,7 @@ import { TxIntentRepository } from "../infras/repos/tx-intent-repo";
  * Map gameId → game-specific TicketLookupService.existsByTx().
  *
  * @param gameId - Mã sản phẩm game (VD: "keno", "mega645")
- * @param tx - Transaction ID (UUIDv7) gắn trong ticketDoc.tx
+ * @param tx - Transaction ID (UUIDv5 place-bet / UUIDv7 payout) gắn trong ticketDoc.tx
  * @returns true nếu ticket với tx đó đã được save
  */
 export type TicketExistsFn = (gameId: string, tx: string) => Promise<boolean>;
