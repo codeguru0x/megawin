@@ -10,6 +10,25 @@ của ~76 endpoint `api-player` + `api-tenant`. Hai năng lực: **rate limit** 
 **Mục tiêu số 1 không phải rate limit** mà là vá một bug tài chính đang mở: `place-bet` hiện cho phép
 duplicate submit → 2 vé + 2 lần debit ví thật (analysis §2.3). Xem `p0-02`.
 
+## Bối cảnh: chưa deploy production (chốt 2026-09-22)
+
+Hệ thống **chưa deploy production, chưa tenant nào tích hợp thật**. Hệ quả cho toàn bộ bộ plan:
+
+| Bỏ | Lý do |
+|---|---|
+| **Back-compat / dual-path** | Không có client cũ cần chiều. Giữ nhánh cũ = rác code ngay từ lúc sinh ra |
+| **Shadow mode** (rate limit) | Tồn tại để thu số liệu traffic thật trước khi chặn — chưa có traffic thật. Thay bằng **load test staging** |
+| **Fingerprint guard** (idempotency nhánh B) | Tồn tại để che cho client chưa gửi `Idempotency-Key` — header giờ **bắt buộc**, không còn gì cần che |
+| **Chia đợt rollout** | Tồn tại để giới hạn bán kính sự cố khi có user thật. Không có user thật thì chỉ là 3 lần lặp + giai đoạn nửa vời không ai theo dõi |
+| **Thông báo trước cho tenant** (429) | Chưa tenant nào chạy. Thay bằng **ghi ngưỡng vào tài liệu tích hợp** ngay từ đầu |
+| **Đếm trùng dữ liệu production** trước khi tạo unique index | Không có dữ liệu production. Staging trùng → drop collection |
+
+**Deploy staging = trạng thái cuối:** mọi nơi đã cập nhật, `enforce` đã bật, `Idempotency-Key` đã bắt
+buộc. Không có giai đoạn chuyển tiếp nào cần duy trì.
+
+Giữ lại (vẫn cần thật): **fail-open** khi Redis chết, **van tắt `off` qua env**, và toàn bộ ràng buộc
+test/đường tiền.
+
 ## Quyết định đã chốt (không mở lại trong plan)
 
 | Quyết định | Chốt | Lý do gọn |
@@ -18,11 +37,11 @@ duplicate submit → 2 vé + 2 lần debit ví thật (analysis §2.3). Xem `p0-
 | Redis version & Lua | **Redis 8.6**; Lua `EVAL` là lựa chọn **duy nhất**, không phải tạm bợ | Verify 2026-09-21: 8.6 không có lệnh rate limit native. Lệnh `GCRA` (PR #14826, dựa redis-cell) có ở 8.8-M02 nhưng **bị rút trước GA** (PR #15191 — compile out, command inaccessible). 8.8 chỉ có `INCREX` (window counter), 8.10 không thêm. `CL.THROTTLE` là module redis-cell, **không** bundle trong image official |
 | Image test container | **Pin `redis:8.6`** = đúng version prod | Tag `redis:8` là floating — 2026-09-21 resolve ra **8.10.1**, lệch 2 minor với prod. Sửa ở `p0-00` B0.1 |
 | Idempotency `place-bet` | **Mongo-native**: `tx` dẫn xuất tất định + unique index `{tx}` trên WAL | **0 RTT thêm**, bền bằng chính giao dịch, không thêm điểm chết (analysis §3.3 phương án B) |
-| `Idempotency-Key` | **Tùy chọn** + **fingerprint guard** khi không gửi | Bắt double-tap mà tenant không phải đổi code; không breaking change (analysis §5.2) |
-| Redis down | Rate limit + fingerprint guard **fail-open**; nhánh có `Idempotency-Key` **không phụ thuộc Redis** | Phòng thủ không được tự tạo sự cố; ràng buộc tài chính thì dựa vào Mongo (analysis §3.4) |
-| Fail-open phải **sửa ở tầng `@megawin/cache` trước** | `p0-00` chặn `p0-01` | Đo 2026-09-21: `@megawin/cache` **chưa** thật sự fail-open — Redis down làm `connect()` retry vô hạn, **treo tới Lambda timeout** (12s+ chưa settle). Dựng guard trên nền này = guard cũng treo |
+| `Idempotency-Key` | **BẮT BUỘC** (thiếu → 400). `generateTx()` bị xoá | Chưa có client cũ → một đường duy nhất, không fingerprint guard, không Redis trên đường tiền (2026-09-22, thay quyết định cũ "tùy chọn + fingerprint") |
+| Redis down | Rate limit **fail-open**; `place-bet` **không phụ thuộc Redis** chút nào | Phòng thủ không được tự tạo sự cố; ràng buộc tài chính dựa 100% vào Mongo (analysis §3.4) |
 | Thư viện ngoài | **Không** dùng `rate-limiter-flexible` / `@upstash/ratelimit` | Sẽ tạo hệ key thứ hai không qua `CacheNamespace` registry — trái `cache-design.mdc` §2.1 |
-| Bật chặn ngay | **Không** — shadow mode (log-only) trước | Ngưỡng hiện tại là suy đoán, chưa có số liệu thật |
+| Mode rate limit | **2 mode**: `enforce` (mặc định) + `off` (van tắt qua env). **Không** có `shadow` | Chưa có traffic thật để thu số liệu; hiệu chỉnh ngưỡng bằng load test staging (2026-09-22) |
+| Fail-open phải **sửa ở tầng `@megawin/cache` trước** | `p0-00` chặn `p0-01` | Đo 2026-09-21: `@megawin/cache` **chưa** thật sự fail-open — Redis down làm `connect()` retry vô hạn, **treo tới Lambda timeout** (12s+ chưa settle). Dựng guard trên nền này = guard cũng treo |
 
 ## Bảng trạng thái
 
@@ -35,12 +54,13 @@ Ký hiệu: ⏳ pending · 🔄 in-progress · ✅ done · ❌ failing · 🧊 d
 | Plan | Phase | Code | Test | Ghi chú |
 |---|---|---|---|---|
 | `p0-00-redis-failopen-hardening` | P0 | ✅ done | ⏳ pending | Fail-open tầng connect đã vá (Phần A 2026-09-21). Phần B test để sau |
-| `p0-01-guard-package-foundation` | P0 | ⏳ pending | ⏳ pending | Chặn mọi plan khác |
-| `p0-02-idempotent-place-bet` | P0 | ⏳ pending | ⏳ pending | **Ưu tiên nghiệp vụ cao nhất** — vá bug tài chính |
-| `p1-01-ratelimit-middleware` | P1 | ⏳ pending | ⏳ pending | Shadow mode bật trước khi chặn |
-| `p1-02-rollout-api-player` | P1 | ⏳ pending | ⏳ pending | |
+| `p0-01-guard-package-foundation` | P0 | ✅ done | ✅ done | Code 2026-09-21, Test 2026-09-22 (13 unit + 14 integration) |
+| `p0-01b-lua-eval-review-fixes` | P0 | ✅ done | ✅ done | Code + Test 2026-09-23 (23 unit + 30 integration). Q1=B, Q2=A. **Mở `p1-01`** |
+| `p0-02-idempotent-place-bet` | P0 | ⏳ pending | ⏳ pending | **Ưu tiên nghiệp vụ cao nhất** — vá bug tài chính. **Độc lập hoàn toàn** (fingerprint guard đã bỏ → 0 Redis) |
+| `p1-01-ratelimit-middleware` | P1 | ⏳ pending | ⏳ pending | 2 mode: `enforce` (mặc định) + `off`. **Không** có shadow |
+| `p1-02-rollout-api-player` | P1 | ⏳ pending | ⏳ pending | Bật hết 1 lần, `enforce` ngay |
 | `p1-03-rollout-api-tenant` | P1 | ⏳ pending | ⏳ pending | Song song được với `p1-02` |
-| `p2-01-observability` | P2 | ⏳ pending | ⏳ pending | Bắt buộc trước khi tắt shadow mode |
+| `p2-01-observability` | P2 | ⏳ pending | ⏳ pending | Không còn chặn việc bật `enforce`; giá trị chính là **alert fail-open** |
 | `p3-01-generic-idempotency-store` | P3 | 🧊 deferred | 🧊 deferred | Chỉ khi operator/mutation không-WAL xuất hiện |
 
 ## Thứ tự phụ thuộc
@@ -48,26 +68,32 @@ Ký hiệu: ⏳ pending · 🔄 in-progress · ✅ done · ❌ failing · 🧊 d
 ```
 p0-00 (sửa fail-open @megawin/cache: connect timeout + circuit breaker)
   │
-  └──→ p0-01 (foundation: @megawin/guard + eval/evalSha + Lua GCRA)
-         │
-         ├──→ p0-02 (idempotent place-bet)  ← ưu tiên nghiệp vụ cao nhất
-         │
-         ├──→ p1-01 (ratelimit middleware + shadow mode)
-         │       ├──→ p1-02 (rollout api-player) ──→ p2-01 (observability)
-         │       └──→ p1-03 (rollout api-tenant)
-         │
-         └──→ p3-01 (generic idempotency store — deferred)
+  ├──→ p0-01 (foundation: @megawin/guard + eval/evalSha + Lua GCRA)
+  │      │
+  │      ├──→ p0-01b (sửa lỗi Lua EVAL: SHA local, clamp ei, trần connect)
+  │      │       │
+  │      │       └──→ p1-01 (ratelimit middleware, enforce mặc định)
+  │      │               ├──→ p1-02 (rollout api-player) ──→ p2-01 (observability/alert)
+  │      │               └──→ p1-03 (rollout api-tenant)
+  │      │
+  │      └──→ p3-01 (generic idempotency store — deferred)
+  │
+p0-02 (idempotent place-bet) — ĐỘC LẬP, không chặn bởi plan nào, làm được ngay
 ```
+
+`p0-02` **không còn phụ thuộc gì** (đổi 2026-09-22): trước đây cần `p0-01` vì nhánh fingerprint guard
+dùng Redis. Nhánh đó đã bị loại → `place-bet` idempotency 100% Mongo-native. Đây là plan ưu tiên cao
+nhất nên thứ tự mới có lợi thật: làm ngay, không chờ chuỗi `p0-00 → p0-01 → p0-01b`.
+
+`p0-01b` chặn `p1-01` (không chặn `p0-02`): Q2 giữ nguyên giá trị `remainingBurst`, nhưng đổi
+**object identity** của decision fail-open và khoá contract lower-bound mà `p1-01` map ra header.
+Middleware viết trước dễ mutate shared reference hoặc "sửa" công thức Lua. `p0-02` không đụng
+`RateLimiter` nên chạy song song được.
 
 `p0-00` **chặn cứng** `p0-01`: `RateLimiter` của `p0-01` hứa "Redis lỗi → trả `{allowed: true,
 failedOpen: true}`". Lời hứa đó **không thực hiện được** trên code hiện tại vì `getClient()` treo
 trước khi tới được `try/catch`. Làm `p0-01` trước = viết test fail-open **xanh giả** (test dùng
 Redis sống hoặc URI sai cú pháp, không phải Redis không tới được).
-
-Ghi chú về thứ tự: `p0-02` **cần** `p0-01` chỉ vì nhánh **fingerprint guard** (không có
-`Idempotency-Key`) dùng Redis. Nhánh **có** `Idempotency-Key` hoàn toàn Mongo-native. Nếu cần ship
-gấp phần vá tài chính, có thể làm `p0-02` nhánh Mongo trước và hoãn fingerprint guard — nhưng khi đó
-tenant chưa cập nhật SDK **vẫn không được bảo vệ**, phải nêu rõ khi quyết.
 
 `p1-02` và `p1-03` độc lập nhau, chạy song song được.
 

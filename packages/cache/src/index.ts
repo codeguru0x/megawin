@@ -14,6 +14,7 @@
  */
 
 export { createCachedFetcher } from "./cached-fetcher";
+export { DEFAULT_REDIS_CONNECT_DEADLINE_MS, DEFAULT_REDIS_ENV_KEY } from "./constants";
 export { cacheKey, hashKeyPart } from "./keys";
 export { CacheNamespace } from "./namespaces";
 export type { MemoryCacheStoreOptions, RedisCacheStoreOptions, TieredCacheOptions } from "./stores";

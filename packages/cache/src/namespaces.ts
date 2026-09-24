@@ -22,6 +22,8 @@ export const CacheNamespace = {
   Bingo18: "bingo18",
   TenantGw: "tenant-gw",
   Identity: "identity",
+  /** Lớp phòng thủ (rate limit, idempotency) — KHÔNG phải cache, shared state phải đúng. */
+  Guard: "guard",
 } as const;
 
 /** Union các namespace hợp lệ — dùng để ràng buộc type khi khai key. */

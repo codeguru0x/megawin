@@ -69,8 +69,13 @@ Ba điểm phải làm đúng, mỗi điểm là một cách hỏng kinh điển
 Cùng `Idempotency-Key` nhưng **body khác** → `422` (không phải 409). Nghĩa là client dùng sai key, khác
 hẳn với "đây là retry của cùng request".
 
-Dùng lại `canonicalBody` từ `p0-02` Bước 7 — **không** viết lại (phải sort key/array ổn định, đây là
-chỗ đã cảnh báo ở `cache-design.mdc` §2.3).
+⚠️ **`canonicalBody` KHÔNG tồn tại** — `p0-02` đã bỏ nhánh fingerprint (2026-09-22), nên plan này phải
+**tự viết** hàm canonical hoá body. Yêu cầu (đây là chỗ `cache-design.mdc` §2.3 đã cảnh báo cho `keyOf`):
+
+- Sort key object đệ quy, sort array có thứ tự không quan trọng theo thứ tự tường minh.
+- **Không** `JSON.stringify` thô — thứ tự field khác → fingerprint khác → guard vô dụng.
+- Field `undefined` và field **thiếu** phải cho cùng kết quả.
+- Đặt trong `@megawin/guard` (pure, unit-testable không cần Redis), **không** trong app.
 
 ### Key
 
@@ -104,8 +109,8 @@ Redis lỗi/timeout → AppException.serviceUnavailable("Hệ thống đang bậ
 | Lớp | Redis down | Vì sao |
 |---|---|---|
 | Rate limit | fail-**open** | Phòng thủ; chặn hết traffic thật là tự gây sự cố |
-| Fingerprint guard (`p0-02`) | fail-**open** | Suy đoán ý định người dùng, không phải ràng buộc |
 | Idempotency store này | fail-**closed** | Đường tiền; thà từ chối còn hơn trừ tiền 2 lần |
+| `place-bet` (`p0-02`) | **không dùng Redis** | Ràng buộc tài chính đặt ở Mongo (unique index `{tx}`) — không có gì để fail |
 
 Trong code, mỗi chỗ chọn fail-open/closed **phải có comment nói rõ vì sao** — trộn lẫn 2 triết lý này
 là cách tạo bug tài chính.
@@ -130,7 +135,7 @@ là cách tạo bug tài chính.
 
 | # | Test | Cách xác nhận PASS | Vì sao tồn tại |
 |---|---|---|---|
-| 1 | `canonicalBody` **dùng lại** từ `p0-02`, không định nghĩa mới | Import từ package `p0-02`; grep không có bản copy | 2 bản canonical lệch nhau = fingerprint lệch = bug im lặng |
+| 1 | `canonicalBody`: đổi thứ tự field → **cùng** fingerprint; đổi **giá trị** → fingerprint **khác**; `undefined` vs thiếu field → cùng | 3 assertion riêng | Hàm này tự viết ở plan này (`p0-02` đã bỏ nhánh fingerprint) → không có bản nào đã được test sẵn. Sai hướng "cùng ý định" = chặn oan request thật |
 | 2 | State machine: mọi chuyển trạng thái hợp lệ đúng bảng | Vector cố định cho từng cặp (state, event) | Bảng state machine là contract |
 | 3 | Chuyển trạng thái **không** hợp lệ → throw | — | Trạng thái lạ phải nổ, không đi tiếp im lặng |
 | 4 | TTL `IN_FLIGHT` ≈ Lambda timeout + margin, là **hằng số** | So với hằng, không số ma | TTL ngắn hơn Lambda → key hết hạn giữa lúc đang chạy → chạy lại handler → double-execute |
@@ -178,14 +183,14 @@ là cách tạo bug tài chính.
 - [ ] TTL `IN_FLIGHT` ≈ Lambda timeout + margin, là hằng số có JSDoc giải thích.
 - [ ] Phân biệt 4xx/5xx đúng bảng state machine.
 - [ ] Fail-**closed**, mỗi chỗ chọn fail-closed **có comment** giải thích vì sao khác rate limit.
-- [ ] `canonicalBody` **dùng lại** từ `p0-02`, không viết lại.
+- [ ] `canonicalBody` **tự viết trong `@megawin/guard`** (pure), có JSDoc nêu rõ quy tắc sort.
 - [ ] Giới hạn kích thước response có hằng số + xử lý vượt ngưỡng.
 - [ ] `oxlint` + `prettier` xanh.
 
 **Phần B (test):**
 
 - [ ] B0 #0b: xác nhận `SET NX PX` atomic trên Redis 8.6 thật.
-- [ ] 6 unit test (B1) xanh — gồm #1 (dùng lại `canonicalBody`) và #4 (TTL vs Lambda timeout).
+- [ ] 6 unit test (B1) xanh — gồm #1 (`canonicalBody` ổn định 3 hướng) và #4 (TTL vs Lambda timeout).
 - [ ] 10 integration test (B2) xanh — **#7 (Redis down → 503) là bắt buộc** và #15 (song song).
 - [ ] B3 #17: test fail-**open** của `p0-01` **vẫn xanh** — 2 triết lý không lây sang nhau.
 - [ ] B3 #19: `place-bet` **không** chuyển sang store này.

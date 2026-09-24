@@ -30,7 +30,7 @@ import { sha256Hex } from "@megawin/shared/utils";
  * discriminator KHÔNG nối ở đây → truyền qua fetch("u_123") → "identity:user:v1:u_123"
  */
 export function cacheKey(...parts: string[]): string {
-  if (parts == null || parts.length === 0) {
+  if (parts.length === 0) {
     throw new Error("cacheKey parts không được rỗng");
   }
 
@@ -54,7 +54,7 @@ export function cacheKey(...parts: string[]): string {
  * cacheKey("identity", "tenant-by-apikey", "v1", hashKeyPart(apiKey))
  */
 export function hashKeyPart(raw: string): string {
-  if (raw == null || raw.length === 0) {
+  if (raw.length === 0) {
     throw new Error("hashKeyPart raw không được rỗng");
   }
 

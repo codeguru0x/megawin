@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # p0-01 — `@megawin/guard` Foundation
 
 > Nguồn: `.cursor/analysis/system-ratelimit-idempotency.analysis.md`
@@ -291,24 +298,59 @@ Ghi kết quả 0b + 0c vào phần ghi chú thực thi — đây là bằng ch�
 
 **Phần A (code):**
 
-- [ ] `RedisRepository` có `eval`/`evalSha`/`scriptLoad`, JSDoc đầy đủ, vẫn fail-fast, không `any`.
-- [ ] `CacheNamespace.Guard` đã thêm (1 dòng, có JSDoc).
-- [ ] `gcra-math.ts` là **pure** (không import Redis) — điều kiện để B1 tồn tại.
-- [ ] Lua script **không** dùng `TIME`; mỗi `ARGV[n]` có comment ghi đơn vị.
-- [ ] `RateLimitDecision` có `failedOpen`; `RateLimiter` **không bao giờ throw**.
-- [ ] Timeout 100ms qua `commandOptions`; `redisEnvKey` optional.
-- [ ] `GuardSubjectType` dùng `const object as const`.
-- [ ] `packages/guard` build + `check-types` xanh; `oxlint packages/guard packages/cache` không error;
+- [x] `RedisRepository` có `eval`/`evalSha`/`scriptLoad`, JSDoc đầy đủ, vẫn fail-fast, không `any`.
+- [x] `CacheNamespace.Guard` đã thêm (1 dòng, có JSDoc).
+- [x] `gcra-math.ts` là **pure** (không import Redis) — điều kiện để B1 tồn tại.
+- [x] Lua script **không** dùng `TIME`; mỗi `ARGV[n]` có comment ghi đơn vị.
+- [x] `RateLimitDecision` có `failedOpen`; `RateLimiter` **không bao giờ throw**.
+- [x] Timeout 100ms qua `withDeadline` (thay `commandOptions` — đã bỏ ở p0-00); `redisEnvKey` optional.
+- [x] `GuardSubjectType` dùng `const object as const`.
+- [x] `packages/guard` build + `check-types` xanh; `oxlint packages/guard packages/cache` không error;
       `prettier --write` đã chạy.
 
 **Phần B (test):**
 
-- [ ] B0: 4 xác nhận môi trường xong, kết quả 0b+0c **đã ghi lại**.
-- [ ] 13 unit test (B1) xanh — gồm vector cố định #1–2, biên #3–5, anti-leak key #9.
-- [ ] 14 integration test (B2) xanh — gồm #22 (`FLUSHALL` phục hồi), #24 (deadline), #27 (reply rác).
-- [ ] B3 #31 xác nhận **chưa handler nào** import `@megawin/guard`.
-- [ ] B4 đã làm tay, có số đo latency + kết quả blip stop/start.
-- [ ] Mọi `A-fix` phát sinh đã ghi lại.
+- [x] B0: 4 xác nhận môi trường xong (agent 2026-09-22, ngoài Seatbelt):
+  0a Docker OK · 0b `redis_version:8.6.6` · 0c GCRA/INCREX/CL.THROTTLE **cả 3 nil** · 0d EVAL=1.
+- [x] 13 unit test (B1) xanh — `pnpm test:unit` → 13 passed (2026-09-21; re-run 2026-09-22).
+- [x] 14 integration test (B2) xanh — agent 2026-09-22:
+  `rate-limiter` 9 + `rate-limiter-fail-open` 5 = **14 passed** (exit 0).
+  stderr `ECONNREFUSED` / `reply sai shape` là **kỳ vọng** (fail-open path).
+- [x] B3 #31 xác nhận **chưa handler nào** import `@megawin/guard`.
+- [x] B3 #29–#30: `guard` build + `tsc --noEmit` xanh (agent, 2026-09-22).
+- [x] B3 #28: `pnpm --filter @megawin/cache test` → **75 passed** / 8 files (agent 2026-09-22).
+- [x] B4 đã làm tay (agent 2026-09-22): latency avg **0.6ms** (5 calls);
+  `KEYS guard:*` hashed (`ip_<hex>`), **không** lộ IP/account;
+  blip stop → `failedOpen: true`; sau start + circuit 5s + đúng port → `failedOpen: false`, `remainingBurst: 4`.
+- [x] Mọi `A-fix` phát sinh đã ghi lại.
+
+## Ghi chú thực thi Phần A (2026-09-21)
+
+- **A-adapt:** Plan gốc nói timeout qua `commandOptions` trên mọi method repo. p0-00 đã **bỏ**
+  tham số đó (node-redis `timeout` không cắt được lệnh đã gửi). `RateLimiter` dùng
+  `withDeadline(100ms)` giống `RedisCacheStore` — đạt cùng mục tiêu fail-open nhanh.
+- Export thêm `DEFAULT_REDIS_ENV_KEY` từ `@megawin/cache` (trước chỉ dùng nội bộ) để guard
+  không hard-code `"REDIS_URI"`.
+- Subpath `./middleware` chỉ là stub `export {}` — implement thật ở `p1-01`.
+- Chưa có consumer ngoài `packages/guard` (đã `rg` xác nhận).
+
+## Ghi chú thực thi Phần B (2026-09-21)
+
+- **A-fix (B1 #12):** comment trong `gcra.lua.ts` chứa chữ `TIME` ("KHÔNG dùng TIME") →
+  `not.toMatch(/\bTIME\b/)` đỏ giả. Đổi comment sang "KHÔNG lấy đồng hồ Redis" — script vẫn
+  không gọi lệnh `TIME`.
+- **A-fix (B2 #24):** export `DEFAULT_REDIS_CONNECT_DEADLINE_MS` từ `@megawin/cache` index
+  (trước chỉ import được relative trong package cache) để test assert hằng thật, không số ma.
+- File test đã tạo:
+  - `test/unit/gcra-math.test.ts` (#1–6)
+  - `test/unit/keys.test.ts` (#7–11)
+  - `test/unit/lua-script.test.ts` (#12–13)
+  - `test/integration/rate-limiter.test.ts` (#14–22)
+  - `test/integration/rate-limiter-fail-open.test.ts` (#23–27)
+- **B0/B2/B3#28/B4:** xanh 2026-09-22 qua `required_permissions: ["all"]` (Seatbelt vẫn
+  chặn `docker.sock` dù có `.cursor/sandbox.json` `insecure_none` — cần escape sandbox từng lệnh).
+  Log: `packages/guard/test/p0-01-part-b.out.txt`. Script B4 cần `./node_modules/.bin/tsx`
+  (không phải `node --import tsx` từ root).
 
 ## Không làm trong plan này (chống scope creep)
 

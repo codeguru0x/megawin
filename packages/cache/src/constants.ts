@@ -89,7 +89,7 @@ export const DEFAULT_REDIS_ADMIN_TIMEOUT_MS = 15_000;
  * khi Redis Cloud vẫn healthy = trần quá thấp, đo p99 rồi tăng cả hằng này và
  * {@link DEFAULT_REDIS_CONNECT_DEADLINE_MS} lên trên p99.
  */
-export const DEFAULT_REDIS_CONNECT_TIMEOUT_MS = 3000;
+export const DEFAULT_REDIS_CONNECT_TIMEOUT_MS = 2000;
 
 /**
  * Số lần thử LẠI khi connect thất bại (tổng lần thử = 1 + giá trị này).
@@ -157,3 +157,27 @@ export const REDIS_CIRCUIT_OPEN_MS = 5000;
  * mỗi lệnh DEL (batch quá lớn → command dài, chiếm event loop Redis lâu hơn).
  */
 export const DELETE_BATCH_SIZE = 100;
+
+/**
+ * Giới hạn độ dài internal command queue của node-redis (`#toWrite` +
+ * `#waitingForReply`), truyền vào `createClient({ commandsQueueMaxLength })`.
+ *
+ * Với `disableOfflineQueue: false` (mặc định, giữ nguyên — xem `client.ts` cho
+ * lý do KHÔNG set `true`), lệnh gọi lúc client đang reconnect (`isOpen &&
+ * !isReady`) được node-redis **xếp vào queue trong RAM** rồi gửi thật khi
+ * reconnect xong, KHÔNG reject ngay. Không có trần, queue phình vô hạn nếu
+ * traffic dồn trong lúc Redis down kéo dài (nhiều request/container trên
+ * Vercel, nhiều cache call/invocation trên Lambda) → leak RAM, và mỗi lệnh kẹt
+ * trong queue vẫn phải chờ hết `commandDeadlineMs` của `RedisCacheStore` mới
+ * được coi là miss (không giúp fail nhanh hơn).
+ *
+ * Vượt ngưỡng → node-redis reject `Error("The queue is full")` ngay (0 RTT) —
+ * store bọc bằng `runCommand`/`withDeadline` nên lỗi này đi thẳng vào nhánh
+ * fail-open (miss/no-op) giống mọi lỗi Redis khác, KHÔNG throw ra consumer.
+ *
+ * 1000: đủ lớn để không chặn burst traffic bình thường (mỗi container/process
+ * hiếm khi có >1000 lệnh Redis đang chờ đồng thời), đủ nhỏ để chặn leak RAM khi
+ * Redis down kéo dài. Chưa đo p99 concurrent command trên prod — nếu log
+ * "The queue is full" xuất hiện thường xuyên dù Redis khoẻ, tăng hằng này.
+ */
+export const DEFAULT_REDIS_COMMANDS_QUEUE_MAX_LENGTH = 1000;

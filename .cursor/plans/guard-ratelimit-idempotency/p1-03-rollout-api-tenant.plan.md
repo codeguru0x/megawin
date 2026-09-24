@@ -5,12 +5,19 @@
 
 Bật rate limit cho `api-tenant` — traffic **server-to-server** từ tenant, đặc tính khác hẳn player.
 
+> **Bối cảnh đã chốt (2026-09-22): chưa deploy production, chưa tenant nào tích hợp thật.** Vì vậy:
+> - **Shadow mode** không còn tồn tại (`p1-01`) → 3 endpoint bật `enforce` ngay.
+> - **Bỏ yêu cầu "thông báo trước cho tenant"** — chưa có tenant nào đang chạy để phải thông báo.
+>   Thay bằng: **ghi ngưỡng vào tài liệu tích hợp** ngay từ đầu, để tenant biết trước khi tích hợp.
+>   Đây là cách xử lý đúng và rẻ hơn hẳn việc thông báo thay đổi sau.
+> - Hiệu chỉnh ngưỡng bằng **load test staging**, không bằng đọc log shadow production.
+
 ---
 
 # PHẦN A — KHAI BÁO (AI agent implement)
 
-> Chỉ thêm khai báo `rateLimit` (+ lớp per-player ở Endpoint 1). Kết thúc Phần A: `check-types` +
-> `oxlint` xanh, **không** đụng `serverless.yml`, **không** đụng `.env*`.
+> Chỉ thêm khai báo `rateLimit` (+ lớp per-player ở Endpoint 1) + tài liệu tích hợp. Kết thúc Phần A:
+> `check-types` + `oxlint` xanh, **không** đụng `serverless.yml`, **không** đụng `.env*`.
 > Test đỏ ở Phần B → sửa khai báo, ghi `A-fix: <lý do>`.
 
 ## Phát hiện quan trọng: chỉ 3/6 handler được deploy
@@ -46,27 +53,27 @@ hạn tần suất → tenant (hoặc code lỗi của tenant) có thể **enume
 
 Cần **2 lớp** (đây là endpoint duy nhất cần 2 lớp):
 
-| Lớp | Rule đề xuất | Chặn gì |
+| Lớp | Rule | Chặn gì |
 |---|---|---|
 | Per-player | `limit: 10, windowSec: 60, subject: "tenant"` nhưng key gồm cả `playerExternalId` | Brute-force/spam 1 player cụ thể |
 | Per-tenant | `limit: 600, windowSec: 60, subject: "tenant"` | Enumeration hàng loạt |
 
 ⚠️ Lớp per-player cần key gồm **giá trị từ body** (`playerExternalId`) → chỉ có sau `validatorZod`,
-nhưng `p1-01` đặt middleware **trước** `validatorZod`. Hai đường ra:
+nhưng `p1-01` đặt middleware **trước** `validatorZod`. **Đã chốt:** lớp per-tenant ở middleware (trước
+validate), lớp per-player **trong handler** bằng cách gọi trực tiếp `RateLimiter` của `@megawin/guard`.
+Handler vẫn mỏng (1 lời gọi), và không phải đảo thứ tự chain vì một endpoint.
 
-- **Khuyến nghị:** làm lớp per-tenant ở middleware (trước validate), lớp per-player **trong handler**
-  bằng cách gọi trực tiếp `RateLimiter` của `@megawin/guard`. Handler vẫn mỏng (1 lời gọi), và không
-  phải đảo thứ tự chain vì một endpoint.
-- Không khuyến nghị: thêm cơ chế `subjectFromBody` vào middleware → buộc chuyển middleware xuống sau
-  `validatorZod`, mất lợi ích "từ chối trước khi parse body" cho **mọi** endpoint khác.
+Phương án bị loại: thêm `subjectFromBody` vào middleware → buộc chuyển middleware xuống sau
+`validatorZod`, mất lợi ích "từ chối trước khi parse body" cho **mọi** endpoint khác. Không đánh đổi
+kiến trúc toàn app cho 1 endpoint.
 
-Ghi rõ lựa chọn vào code comment kèm lý do.
+Ghi rõ lựa chọn này vào code comment kèm lý do.
 
 ## Endpoint 2 — `GET /tenant/bets/feed`
 
 `docs/cache/04` §2.1 ghi rõ endpoint này *"bị tenant poll liên tục"*.
 
-- Rule đề xuất: `limit: 60, windowSec: 60, burst: 10, subject: "tenant"`.
+- Rule: `limit: 60, windowSec: 60, burst: 10, subject: "tenant"`.
 - `burst: 10` cao hơn player vì tenant batch-poll nhiều page liên tiếp là hành vi hợp lệ (endpoint có
   cursor pagination).
 - **Giá trị thật của rate limit ở đây**: biến poll storm thành **lỗi rõ ràng** (429 + log) thay vì âm
@@ -76,7 +83,7 @@ Ghi rõ lựa chọn vào code comment kèm lý do.
 
 ## Endpoint 3 — `GET /tenant/reports/revenue`
 
-- Rule đề xuất: `limit: 20, windowSec: 60, subject: "tenant"`.
+- Rule: `limit: 20, windowSec: 60, subject: "tenant"`.
 - Query nặng nhất app → ngưỡng chặt nhất.
 - Report thường được gọi theo giờ/ngày, không realtime → 20/phút đã rất rộng tay.
 
@@ -89,13 +96,19 @@ Ghi rõ lựa chọn vào code comment kèm lý do.
   `RateLimiter` (trường hợp lớp per-player ở Endpoint 1). Nếu chỉ dùng qua middleware thì không cần —
   đã đến qua `@megawin/auth` (`p1-01` Bước 6).
 
-## Rollout
+## Tài liệu tích hợp tenant (thay cho "thông báo trước")
 
-Cả 3 endpoint vào **shadow mode** cùng lúc — app nhỏ (3 route), không cần chia đợt như `p1-02`.
+Vì chưa tenant nào tích hợp, cách đúng là **ghi ngưỡng vào tài liệu ngay từ đầu** — tenant đọc docs
+rồi mới viết code, không bao giờ gặp 429 bất ngờ.
 
-Chuyển `enforce` cần thêm một bước mà `p1-02` không có: **thông báo trước cho tenant**. Tenant là đối
-tác B2B có hợp đồng; bất ngờ nhận 429 trên production là sự cố quan hệ, không chỉ là sự cố kỹ thuật.
-Cần chốt với business: thông báo qua đâu, trước bao lâu, ngưỡng có ghi vào tài liệu tích hợp không.
+Phải làm trong cùng PR:
+
+- Bảng 3 endpoint × ngưỡng × `subject` trong tài liệu tích hợp tenant.
+- Giải thích `Retry-After` và cách xử lý 429 đúng (backoff, **không** retry ngay).
+- Riêng `bets/feed`: hướng dẫn dùng cursor pagination thay vì poll lại từ đầu.
+
+Đây là **deliverable bắt buộc**, không phải "nice to have": rate limit không được ghi vào docs sẽ
+thành sự cố tích hợp của tenant đầu tiên.
 
 ---
 
@@ -128,11 +141,11 @@ Cần chốt với business: thông báo qua đâu, trước bao lâu, ngưỡng
 
 | # | Test | Cách xác nhận PASS | Vì sao tồn tại |
 |---|---|---|---|
-| 8 | **Tenant A vượt ngưỡng KHÔNG ảnh hưởng tenant B** | A nhận 429 (ở `enforce` test-only), B vẫn 200 | **Test quan trọng nhất của plan.** Dễ bỏ sót, hậu quả: 1 tenant làm chết dịch vụ của mọi tenant còn lại — sự cố hợp đồng, không chỉ kỹ thuật |
+| 8 | **Tenant A vượt ngưỡng KHÔNG ảnh hưởng tenant B** | A nhận 429, B vẫn 200 | **Test quan trọng nhất của plan.** Dễ bỏ sót, hậu quả: 1 tenant làm chết dịch vụ của mọi tenant còn lại — sự cố hợp đồng, không chỉ kỹ thuật |
 | 9 | `POST /player/login`: per-player độc lập giữa 2 player **cùng** tenant | Player 1 bị chặn, player 2 vẫn 200 | Lớp per-player phải thật sự per-player |
 | 10 | `POST /player/login`: vượt **per-tenant** → chặn cả tenant đó, tenant khác không ảnh hưởng | — | Lớp thứ 2 hoạt động độc lập lớp thứ 1 |
 | 11 | 3 endpoint có quota **riêng** | Vượt `login` không làm `bets/feed` bị 429 | `route` nằm trong key |
-| 12 | `shadow` (mặc định): vượt ngưỡng → **200** + có log | — | Trạng thái deploy thật |
+| 12 | Dưới ngưỡng → **200** suốt ở cả 3 endpoint | Gọi n lần | Không chặn oan — `enforce` là mặc định nên đây là ca thật, không phải giả định |
 | 13 | Redis chết → cả 3 endpoint **vẫn 200** | — | Fail-open ở app thật |
 
 ## B3 — Không regress
@@ -142,46 +155,50 @@ Cần chốt với business: thông báo qua đâu, trước bao lâu, ngưỡng
 | 14 | `pnpm --filter @megawin/api-tenant test` | Xanh toàn bộ |
 | 15 | `pnpm --filter @megawin/api-tenant check-types` | Xanh |
 | 16 | `oxlint apps/api-tenant` | Không error |
-| 17 | `git diff --stat apps/api-tenant` | **Không** có `serverless.yml`; thân handler/use-case 0 dòng đổi |
+| 17 | `git diff --stat apps/api-tenant` | **Không** có `serverless.yml`; thân handler/use-case 0 dòng đổi (trừ 1 lời gọi `RateLimiter` ở Endpoint 1) |
 | 18 | `git status --short \| rg '\.env'` | **Không kết quả** |
-| 19 | `rg -n 'enforce' apps/api-tenant` | Không có ở code/config deploy |
+| 19 | `rg -ni 'shadow' apps/api-tenant` | **Không kết quả** — mode shadow không tồn tại |
 
 ## B4 — Xác nhận thủ công
 
-1. **Đối chiếu ngưỡng với số liệu thật per-tenant**: mỗi tenant có pattern gọi khác nhau (tenant lớn
-   gọi nhiều hơn tenant nhỏ). Ghi bảng: tenant | req/phút quan sát | ngưỡng đặt. Ngưỡng chung phải
-   chịu được **tenant lớn nhất**, không phải tenant trung bình.
-2. **Đọc log shadow ≥1 chu kỳ** gồm giờ cao điểm. Nếu tenant thật vượt ngưỡng → ngưỡng sai.
+1. **Load test staging per-endpoint**: mô phỏng nhịp gọi của tenant dự kiến (batch job, poll loop,
+   report theo giờ). Ghi bảng: endpoint | nhịp mô phỏng | ngưỡng đặt | có 429 không. Ngưỡng phải chịu
+   được **tenant lớn nhất dự kiến**, không phải tenant trung bình — không có số liệu thật thì chọn
+   rộng tay.
+2. **Load test 2 lớp của Endpoint 1 cùng lúc**: bắn nhiều player khác nhau trong cùng tenant tới sát
+   `limit: 600` per-tenant → xác nhận per-player **không** bị trừ oan và ngược lại. Ghi số.
 3. **Xác nhận `tenantId` không lộ**: `KEYS guard:*` trên Redis, đọc bằng mắt.
-4. **Trước khi cân nhắc `enforce`** (ngoài scope plan này, nhưng phải chuẩn bị): chốt với business
-   thông báo tenant qua đâu, trước bao lâu, có ghi ngưỡng vào tài liệu tích hợp không. Tenant là đối
-   tác B2B có hợp đồng — bất ngờ nhận 429 là sự cố quan hệ.
+4. **Xác nhận tài liệu tích hợp đã có bảng ngưỡng** + hướng dẫn xử lý 429 (`Retry-After`, backoff,
+   cursor cho `bets/feed`). Ghi link tới trang tài liệu.
+5. **Xác nhận van tắt**: `GUARD_RATELIMIT_MODE=off` trên staging → vượt ngưỡng vẫn 200.
 
 ## Definition of done
 
 **Phần A (khai báo):**
 
-- [ ] 3 endpoint deployed đã thêm `rateLimit` (shadow mode).
+- [ ] 3 endpoint deployed đã thêm `rateLimit`, chạy `enforce` (mặc định toàn cục).
 - [ ] Endpoint 1 có **cả 2 lớp**; lý do chọn vị trí lớp per-player đã ghi vào code comment.
 - [ ] `@megawin/guard` thêm vào `package.json` **chỉ khi** handler gọi trực tiếp `RateLimiter`.
+- [ ] **Tài liệu tích hợp tenant** đã có bảng ngưỡng + hướng dẫn xử lý 429 (deliverable bắt buộc).
 - [ ] `check-types` + `oxlint` + `prettier` xanh.
 - [ ] **Không** sửa `serverless.yml`, **không** sửa `.env*`.
-- [ ] `enforce` **chưa** bật; đã nêu yêu cầu thông báo tenant trong PR description.
 
 **Phần B (test):**
 
 - [ ] B0: 3 xác nhận môi trường xong (0c: đúng 3 handler deployed).
 - [ ] 7 unit test (B1) xanh — đặc biệt **#5–6 (2 lớp độc lập)** và #3 (không lộ `tenantId`).
-- [ ] 6 integration test (B2) xanh — **#8 (cô lập tenant) là bắt buộc, không được hoãn**.
-- [ ] B3 #17 xác nhận không đụng `serverless.yml`; #18 không đụng `.env*`.
-- [ ] B4: **đã ghi bảng số liệu thật per-tenant**, ngưỡng chịu được tenant lớn nhất.
-- [ ] B4: đã xác nhận `tenantId` không lộ trong key Redis (đọc bằng mắt).
-- [ ] Mọi `A-fix` (sửa ngưỡng sau khi đọc log) đã ghi lại kèm lý do.
-
+- [ ] 6 integration test (B2) xanh — **#8 (cô lập tenant) là bắt buộc, không được hoãn**; #12 (dưới
+      ngưỡng không chặn oan).
+- [ ] B3 #17 xác nhận không đụng `serverless.yml`; #18 không đụng `.env*`; #19 không còn `shadow`.
+- [ ] B4 #1–2: **đã ghi bảng load test staging**, gồm ca 2 lớp của Endpoint 1.
+- [ ] B4 #3: đã xác nhận `tenantId` không lộ trong key Redis (đọc bằng mắt).
+- [ ] B4 #4: đã xác nhận tài liệu tích hợp có bảng ngưỡng, có link.
+- [ ] B4 #5: van tắt `off` hoạt động trên staging.
+- [ ] Mọi `A-fix` (sửa ngưỡng sau load test) đã ghi lại kèm lý do.
 
 ## Không làm trong plan này
 
-- ❌ Bật `enforce`.
+- ❌ **Shadow mode** — không còn tồn tại (`p1-01`).
 - ❌ Rate limit cho 3 handler chưa deploy (`list-players`, `get-player-detail`, `suspend-player`).
 - ❌ Idempotency cho `suspend-player` — endpoint chưa deploy, và idempotent tự nhiên (suspend 2 lần =
   suspend). Nếu sau này cần → `p3-01`.

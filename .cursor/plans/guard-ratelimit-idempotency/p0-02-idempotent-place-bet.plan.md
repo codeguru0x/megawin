@@ -1,10 +1,16 @@
 # p0-02 — Idempotent `place-bet` (vá bug tài chính)
 
 > Nguồn: `.cursor/analysis/system-ratelimit-idempotency.analysis.md`
-> Overview: `./00-overview.md` · Phase P0 · Chặn bởi: `p0-01` (chỉ nhánh fingerprint guard)
+> Overview: `./00-overview.md` · Phase P0 · **Không bị chặn bởi plan nào** (Mongo-native, 0 Redis)
 
 **Đây là plan quan trọng nhất của cả bộ.** Hiện tại `place-bet` cho phép duplicate submit → **2 vé + 2
 lần debit ví thật**. Plan này vá lỗ đó.
+
+> **Bối cảnh đã chốt (2026-09-22): hệ thống CHƯA deploy production, chưa tenant nào tích hợp thật.**
+> Vì vậy plan làm **một cách duy nhất, không back-compat, không dual-path**:
+> `Idempotency-Key` là **BẮT BUỘC**, `generateTx()` bị **xoá**, fingerprint guard **không làm**.
+> Mọi nơi (7 game + SDK) cập nhật trong cùng PR; deploy staging là trạng thái cuối, không có
+> "tenant chưa cập nhật" cần chiều.
 
 ## Vấn đề chính xác (đã verify, không phỏng đoán)
 
@@ -35,21 +41,26 @@ Request 2: tx = derive(accountId, key) = X → insert WAL DUPLICATE KEY
                                               DEBIT_PENDING → 409 IDEMPOTENCY_CONFLICT (đang xử lý)
 ```
 
-Vì sao đúng về tiền: kể cả khi race lọt qua, cùng `tx` → tenant trả `duplicate: true` và **không
-double-debit** (`transaction/types.ts:127,280`). Unique index là lớp chặn, invariant tenant là lưới an toàn.
+## Một đường duy nhất: `Idempotency-Key` BẮT BUỘC
 
-## Hai nhánh, phụ thuộc khác nhau
+| Quyết định | Giá trị | Hệ quả |
+|---|---|---|
+| Header `Idempotency-Key` | **BẮT BUỘC** — thiếu → `400` | Không tồn tại nhánh "không có key" → **không** cần fingerprint guard, **không** cần Redis |
+| `tx` | Luôn `deriveTx(accountId, idempotencyKey)` | Không còn nhánh `generateTx()` → xoá method đó |
+| Phụ thuộc Redis của `place-bet` | **0** | Ràng buộc tài chính dựa 100% vào Mongo (unique index) — điểm chết ít nhất |
 
-| Nhánh | Khi nào | Cơ chế | Redis? |
-|---|---|---|---|
-| **A. Có `Idempotency-Key`** | Tenant gửi header | `tx` tất định + WAL unique index | ❌ Không cần |
-| **B. Không có key** (fingerprint guard) | Tenant chưa cập nhật | `hash(accountId + canonical(body))` trong cửa sổ ngắn → 409 | ✅ Cần (`p0-01`), **fail-open** |
+Vì sao **không** làm fingerprint guard (nhánh `hash(body)` trong cửa sổ 5s) nữa:
 
-Nhánh A là ràng buộc tài chính → phải luôn đúng → Mongo. Nhánh B là suy đoán ý định người dùng →
-fail-open, Redis down thì cho qua. **Không được** đảo hai triết lý này.
+1. Nó tồn tại **chỉ để** che cho client chưa gửi header. Header đã bắt buộc → client không gửi thì
+   bị `400` ngay, không có gì cần che.
+2. Nó là suy đoán ý định người dùng (2 vé giống hệt trong 5s là double-tap hay 2 lần cược thật?) —
+   câu hỏi này không có dữ liệu để trả lời, và trả lời sai = **chặn oan cược thật**.
+3. Nó kéo Redis vào đường tiền dưới dạng fail-open → thêm code, thêm test, thêm mode shadow/enforce
+   phải canh, mà giá trị chỉ là lớp phủ cho tình huống vừa bị loại bỏ. Đúng định nghĩa **rác code**.
 
-Nếu cần ship gấp: làm nhánh A trước, hoãn B. Nhưng khi đó tenant chưa cập nhật SDK **vẫn không được
-bảo vệ** — phải nêu rõ khi quyết.
+Vì sao đúng về tiền: cùng `tx` → unique index `{tx}` trên `tx_intents` chặn request thứ hai; kể cả
+khi race lọt qua, tenant trả `duplicate: true` và **không double-debit**
+(`transaction/types.ts:127,280`). Unique index là lớp chặn, invariant tenant là lưới an toàn.
 
 ---
 
@@ -62,10 +73,18 @@ bảo vệ** — phải nêu rõ khi quyết.
 > **không được** disable ở bất kỳ file nào trong plan (`oxlint-lint-conventions.mdc` §d) — mọi
 > Promise phải `await` hoặc `void` tường minh.
 
-## Bước 1 — Hàm derive `tx` (pure, phải test bằng vector cố định)
+## Bước 1 — Thay `generateTx()` bằng `deriveTx()` (pure, phải test bằng vector cố định)
 
-Vị trí: `packages/game-core-application/src/services/debit-player-service.ts` — thêm method cạnh
-`generateTx()` để developer chỉ cần biết `DebitPlayerService` (đúng lý do đã ghi ở JSDoc `:170-173`).
+Vị trí: `packages/game-core-application/src/services/debit-player-service.ts`.
+
+**Xoá `generateTx()`** (`:175-177`) — đã verify chỉ có **7 caller**, đúng 7 `place-bet.ts`
+(`keno:157`, `lotto535:156`, `power655:147`, `max3d:144`, `max3dpro:142`, `mega645:121`,
+`bingo18:128`), tất cả đều được sửa trong plan này → giữ lại là dead code + mở đường cho người sau
+"tạm dùng" nhánh không idempotent. Cập nhật **cả JSDoc class** (`:5`, `:15`, `:71`, `:76`, `:146`) —
+5 chỗ đang mô tả flow `generateTx()`, để nguyên là comment sai (`code-quality-standards.mdc` §4).
+
+⚠️ `generateId()` **vẫn được dùng rộng** cho `payoutTx`/`refundTx`/`reversalTx`/`resettleId`
+(≥25 chỗ) — **không** đụng tới. Chỉ xoá đúng wrapper `generateTx()` của `DebitPlayerService`.
 
 ```ts
 /**
@@ -93,26 +112,27 @@ Ràng buộc bắt buộc:
 - **Unit test vector cố định**: input cụ thể → output hex cụ thể, hard-code trong test. Đổi công thức
   = test đỏ. Đây là test quan trọng nhất của plan.
 
-## Bước 2 — Nhận `Idempotency-Key` từ HTTP
+## Bước 2 — Nhận `Idempotency-Key` từ HTTP (BẮT BUỘC)
 
 `extractClientIpFromApiGatewayV2` (`@megawin/shared/utils/ip`) là tiền lệ cho việc đọc từ event
-(`handlers/keno/place-bet.ts:154`). Làm tương tự cho header.
+(`handlers/keno/place-bet.ts:154`). Làm tương tự cho header — 1 helper dùng chung cho cả 7 handler,
+**không** copy-paste 7 lần.
 
 - Header đọc **case-insensitive** (API Gateway v2 thường lowercase nhưng không được giả định).
-- Validate: độ dài 8–128, charset an toàn (`[A-Za-z0-9_-]`). Sai → `400` qua Zod, **không** im lặng bỏ.
-- **Không** thêm vào body schema — đây là header, không phải payload. Body schema
-  (`kenoPlaceBetBodySchema`) giữ nguyên → không breaking change.
-- Truyền xuống use-case qua `PlaceBetInput` thành field mới **optional**: `idempotencyKey?: string`.
-  Sửa DTO ở cả 7 game (`packages/game-{game}-application/.../place-bet/dto/place-bet.dto.ts`).
+- Validate: độ dài 8–128, charset `[A-Za-z0-9_-]`. **Thiếu header** hoặc sai format → `400` với
+  message tiếng Việt. **Không** fallback sinh key server-side — fallback là đúng cái nhánh vừa bị xoá.
+- **Không** thêm vào body schema — đây là header, không phải payload. `kenoPlaceBetBodySchema` và 6
+  schema tương ứng giữ nguyên.
+- Truyền xuống use-case qua `PlaceBetInput` thành field **required**: `idempotencyKey: string`
+  (**không** `?`). Sửa DTO ở cả 7 game (`packages/game-{game}-application/.../place-bet/dto/place-bet.dto.ts`).
+  Required là chủ đích: compiler bắt mọi caller thiếu — đó là lưới an toàn thay cho back-compat.
 
 ## Bước 3 — Luồng trong `PlaceBetUseCase` (×7 game)
 
-Sửa tại chỗ `tx` đang được sinh (keno: `place-bet.ts:157`):
+Sửa tại chỗ `tx` đang được sinh (keno: `place-bet.ts:157`) — **một dòng, không nhánh**:
 
 ```ts
-const tx = input.idempotencyKey
-  ? this.debitService.deriveTx(input.accountId, input.idempotencyKey)
-  : this.debitService.generateTx();   // giữ nguyên hành vi cũ khi không có key
+const tx = this.debitService.deriveTx(input.accountId, input.idempotencyKey);
 ```
 
 Rồi bắt duplicate key error ở bước debit và xử lý replay. Yêu cầu:
@@ -172,19 +192,12 @@ hiện có (`collection` / `key` / `options` / `purpose`):
 },
 ```
 
-⚠️ **Kiểm tra dữ liệu trước khi tạo unique index trên production.** Ticket cũ có thể `tx` null/thiếu
-hoặc (nếu từng có bug) trùng. `partialFilterExpression` loại doc không có `tx` dạng string, nhưng
-**vẫn phải** chạy query đếm trùng trước:
+⚠️ **Không cần** đếm trùng dữ liệu cũ: hệ thống chưa deploy production, mọi DB là staging/test → xoá
+sạch collection ticket rồi tạo index là hợp lệ. Nhưng **vẫn giữ** `partialFilterExpression` trong
+spec vì nó là ràng buộc đúng về lâu dài (doc thiếu `tx` không nên chiếm slot unique).
 
-```js
-db.kenoTickets.aggregate([
-  { $match: { tx: { $type: "string" } } },
-  { $group: { _id: "$tx", n: { $sum: 1 } } },
-  { $match: { n: { $gt: 1 } } },
-])
-```
-
-Có trùng → **dừng, báo cáo**, không tự xoá dữ liệu vé.
+Nếu `createIndex` fail vì trùng trên staging → **drop collection ticket của staging**, không nới
+index. Ghi lại việc đã drop vào PR.
 
 ## Bước 6 — Map `IDEMPOTENCY_CONFLICT` → 409
 
@@ -197,34 +210,40 @@ Có trùng → **dừng, báo cáo**, không tự xoá dữ liệu vé.
 
 Code đã có sẵn ở `error-codes.ts:58` — **không** tạo code mới.
 
-## Bước 7 — Fingerprint guard (nhánh B, cần `p0-01`)
+## Bước 7 — ~~Fingerprint guard~~ **ĐÃ BỎ**
 
-Khi **không** có `Idempotency-Key`: `@megawin/guard` chặn cùng `accountId` + cùng body trong cửa sổ ngắn.
+Nhánh này đã bị loại khỏi scope (xem mục "Một đường duy nhất" ở đầu plan). **Không** implement
+`canonicalBody`, **không** thêm key `guard:idem-fp:*`, **không** thêm shadow/enforce mode cho
+idempotency, **không** import `@megawin/guard` vào đường `place-bet`.
 
-- Key: `guard:idem-fp:v1:place-bet:{hashKeyPart(accountId + canonicalBody)}`.
-- `canonicalBody` **phải ổn định**: sort key object, sort `drawIds`, sort `boards` theo thứ tự tường
-  minh. **Không** `JSON.stringify` thô (thứ tự field khác → fingerprint khác → guard vô dụng). Đây
-  chính là lỗi `cache-design.mdc` §2.3 đã cảnh báo cho `keyOf`.
-- Cửa sổ mặc định **5s**, là **hằng số trong `constants.ts`**, không rải rác.
-- **Fail-open**: Redis lỗi → cho qua + log.
-- **Shadow mode trước**: chỉ log, không chặn, cho tới khi `p2-01` có số liệu xác nhận player thật
-  không bấm 2 vé giống hệt trong 5s. Bật chặn là bước riêng, có chủ đích.
+Hệ quả kéo theo — phải kiểm bằng grep, không bằng niềm tin:
+
+- `place-bet` (7 game) **không** import gì từ `@megawin/guard` / `@megawin/cache` / Redis.
+- `@megawin/guard` **không** cần thêm `CacheNamespace` / key mới nào cho plan này.
+- `p0-01` **không** còn chặn plan này — cập nhật `00-overview.md` (đã làm).
 
 ## Bước 8 — Đồng bộ `player-sdk` (BẮT BUỘC, không có compiler bảo vệ)
 
 `api-player-sdk-sync.mdc`: sửa `apps/api-player/src/handlers/{game}/place-bet.ts` → **phải** sửa SDK
 cùng PR. `pnpm --filter @megawin/player-sdk check-types` PASS **không** nghĩa là đã đồng bộ.
 
-- Thêm cách truyền `Idempotency-Key` vào `placeBet` của **cả 7** `packages/player-sdk/src/apis/{game}.ts`.
-- JSDoc: `@throws {@link ApiClientError}` cho `IDEMPOTENCY_CONFLICT` (409) và `TOO_MANY_REQUESTS` (429).
-- `@example` phải **copy-paste chạy được** với field mới.
+- `idempotencyKey` là **required** trong input `placeBet` của **cả 7** `packages/player-sdk/src/{game}/types.ts`
+  — khai `idempotencyKey: string` (không `?`), khớp đúng phía server. SDK tự gắn vào header khi gửi;
+  tenant **không** phải tự set header tay.
+- Nếu SDK tự sinh key khi tenant không truyền: **không làm**. Key phải do tenant kiểm soát, vì chỉ
+  tenant biết "retry này là cùng một ý định cược" hay "lần cược mới". SDK tự sinh = mỗi retry một key
+  mới = idempotency vô nghĩa.
+- JSDoc: `@throws {@link ApiClientError}` cho `IDEMPOTENCY_CONFLICT` (409), `TOO_MANY_REQUESTS` (429),
+  và `BAD_REQUEST` khi thiếu/sai format key.
+- `@example` phải **copy-paste chạy được** với field mới (gồm cách tạo key, vd `crypto.randomUUID()`).
 - **Cấm leak backend** (`player-sdk-jsdoc.mdc`): không nhắc `tx_intents`, `WAL`, `MongoDB`, `UseCase`,
-  đường dẫn `packages/...`. Diễn đạt theo hợp đồng HTTP: *"gửi cùng `Idempotency-Key` khi retry để
+  đường dẫn `packages/...`. Diễn đạt theo hợp đồng HTTP: *"gửi lại cùng `idempotencyKey` khi retry để
   server không tạo vé thứ hai"*.
 - Ghi chú maintainer (nếu cần) bằng `//`, **không** trong `/** */` — đã có sự cố leak rule nội bộ ra
   TypeDoc công khai.
-- `CHANGELOG.md`: mục `### Added`. **Không** breaking (header tùy chọn) → **MINOR**. **Không tự bump**
-  `version` trong `package.json`.
+- `CHANGELOG.md`: đây là **BREAKING** (thêm required field vào input interface — đúng tiêu chí #2 của
+  `player-sdk-jsdoc.mdc`) → mục `### Changed` + block **Migration**. Phiên bản hiện tại `1.0.21` →
+  đề xuất `2.0.0`. **Không tự bump** `version` trong `package.json`.
 - Verify bằng grep checklist của `player-sdk-jsdoc.mdc`, và nếu sửa JSDoc thì build TypeDoc thật
   (`cd packages/player-sdk && npx typedoc`) rồi grep `docs/` — không đoán từ source.
 
@@ -243,9 +262,12 @@ cùng PR. `pnpm --filter @megawin/player-sdk check-types` PASS **không** nghĩa
 | # | Việc | Kỳ vọng | Nếu sai |
 |---|---|---|---|
 | 0a | `docker info` | Daemon chạy | Dừng |
-| 0b | Mongo container qua `global-setup-mongo`; Redis 8.6 qua `global-setup-redis` (chỉ cần cho nhánh B) | Cả 2 up | Dừng |
+| 0b | Mongo container qua `global-setup-mongo` | Up | Dừng |
 | 0c | Mongo container là **replica set** | `rs.status()` OK | Không có RS thì không test được transaction/session — báo lại trước khi viết test |
 | 0d | Dữ liệu test **scope đúng DB test** | `test-data-safety.mdc` | **CẤM** nới filter cleanup không scope — xoá nhầm là mất data thật |
+
+> **Redis KHÔNG cần** cho plan này (nhánh fingerprint đã bỏ). Nếu thấy mình đang cần Redis để test
+> `place-bet` → đã implement sai, quay lại Phần A.
 
 ## B1 — Unit test (PURE, không DB)
 
@@ -262,105 +284,115 @@ cùng PR. `pnpm --filter @megawin/player-sdk check-types` PASS **không** nghĩa
 | 5 | Độ dài/charset output khớp ràng buộc field `tx` | Regex + length | `tx` ghi vào Mongo + gửi sang tenant; vượt giới hạn là lỗi runtime |
 | 6 | Ký tự unicode/emoji/khoảng trắng trong key → không crash, vẫn tất định | Gọi 2 lần, so | Header do client kiểm soát |
 
-### `canonical-body.test.ts`
+### `canonical-body.test.ts` — **ĐÃ BỎ**
 
-| # | Test | Cách xác nhận PASS | Vì sao tồn tại |
-|---|---|---|---|
-| 7 | Đổi **thứ tự field** → **cùng** fingerprint | `toBe()` | JSON không đảm bảo thứ tự key; thiếu → double-tap không bị bắt |
-| 8 | Đổi thứ tự trong `drawIds` → **cùng** fingerprint | `toBe()` | Cùng ý định người dùng |
-| 9 | Đổi **giá trị** (`amount`, `numbers`) → fingerprint **khác** | `not.toBe()` | Đây là ranh giới "cùng ý định" vs "cược khác". Sai hướng này = chặn oan cược thật |
-| 10 | Field `undefined` vs **thiếu** field → cùng fingerprint | `toBe()` | SDK khác nhau serialize khác nhau |
-| 11 | Nested object/array lồng nhau → vẫn tất định | Gọi 2 lần | Body `place-bet` có `boards[]` lồng |
+Nhánh fingerprint bị loại → không có `canonicalBody` → **không viết file test này**. Nếu thấy nó tồn
+tại trong PR, nghĩa là Phần A đã implement thứ không nằm trong scope.
 
 ### `idempotency-key-validation.test.ts`
 
 | # | Test | Cách xác nhận PASS |
 |---|---|---|
-| 12 | Key hợp lệ → pass | Không throw |
-| 13 | Key quá dài / rỗng / ký tự cấm → **400**, message tiếng Việt | `toThrow` + message **không** chứa tên class/field (`error-handling-conventions.mdc`) |
+| 7 | Key hợp lệ → pass | Không throw |
+| 8 | Key quá dài / rỗng / ký tự cấm → **400**, message tiếng Việt | `toThrow` + message **không** chứa tên class/field (`error-handling-conventions.mdc`) |
+| 9 | **Thiếu hẳn header** → **400** (không fallback sinh key) | `toThrow`; xác nhận **không** có `tx` nào được sinh | Fallback là nhánh vừa bị xoá — test này khoá việc nó bị thêm lại |
+| 10 | Header viết hoa/thường khác nhau (`Idempotency-Key`, `idempotency-key`, `IDEMPOTENCY-KEY`) → đều đọc được | 3 biến thể cùng ra 1 key | API Gateway không đảm bảo case |
 
 ## B2 — Integration test (Mongo + Redis thật)
 
 ### `idempotent-place-bet.test.ts` — đường tiền, không được bỏ test nào
 
-Chạy **tối thiểu 1 game đầy đủ** (Keno) + **smoke 6 game còn lại** cho case #14 (chứng minh đã sửa
+Chạy **tối thiểu 1 game đầy đủ** (Keno) + **smoke 6 game còn lại** cho case #11 (chứng minh đã sửa
 cả 7 chỗ, không chỉ chỗ đầu).
 
 | # | Test | Cách xác nhận PASS — **đếm DB, không đọc status** | Vì sao tồn tại |
 |---|---|---|---|
-| 14 | 2 request **cùng** `Idempotency-Key` | `countDocuments(ticket) === 1` **và** `countDocuments(tx_intents) === 1` **và** tenant debit được gọi đúng **1 lần** (spy) | Chính là bug plan này vá |
-| 15 | Request 2 trả **đúng** payload của request 1 | So **từng field** `PlaceBetOutput` (`ticketNo`, `ticketId`, `totalAmount`…) | Replay trả thiếu field làm client hiểu sai là vé mới |
-| 16 | Request 2 khi request 1 còn `DEBIT_PENDING` → **409**, **không** tạo vé | `countDocuments(ticket) === 1` (chỉ vé của req 1, hoặc 0 nếu chưa save) | Trả 200 lúc này = client tưởng thành công khi chưa chắc |
-| 17 | Cùng key, **body khác** → 409 | Không tạo vé thứ 2 | Bắt key reuse sai |
-| 18 | Key khác nhau, body giống → **2 vé** (đúng ý định cược 2 lần) | `countDocuments === 2` | Chặn oan hướng ngược lại cũng là bug |
-| 19 | **Song song thật**: `Promise.all` 5 request cùng key | `countDocuments(ticket) === 1`, tenant debit **1 lần**; 4 request còn lại 409 hoặc replay — **không** cái nào tạo vé | Race condition. Test tuần tự **không** bắt được. Đây là test dễ bỏ sót nhất và hậu quả nặng nhất |
-| 20 | Không gửi key + fingerprint guard **shadow** → 2 vé (hành vi cũ) | `countDocuments === 2` | Chứng minh không breaking change |
-| 21 | Không gửi key + fingerprint guard **enforce** → vé thứ 2 bị chặn | `countDocuments === 1` | Nhánh B hoạt động khi bật |
-| 22 | Nhánh B + **Redis chết** → vẫn cho qua (2 vé), không lỗi | `countDocuments === 2`, không 5xx | Fail-open nhánh B (ngược nhánh A) |
-| 23 | Nhánh A + **Redis chết** → vẫn idempotent (1 vé) | `countDocuments === 1` | **Khoá kiến trúc**: nhánh A không phụ thuộc Redis. Nếu test này đỏ → đã vô tình đặt Redis vào đường tài chính |
+| 11 | 2 request **cùng** `Idempotency-Key` | `countDocuments(ticket) === 1` **và** `countDocuments(tx_intents) === 1` **và** tenant debit được gọi đúng **1 lần** (spy) | Chính là bug plan này vá |
+| 12 | Request 2 trả **đúng** payload của request 1 | So **từng field** `PlaceBetOutput` (`ticketNo`, `ticketId`, `totalAmount`…) | Replay trả thiếu field làm client hiểu sai là vé mới |
+| 13 | Request 2 khi request 1 còn `DEBIT_PENDING` → **409**, **không** tạo vé | `countDocuments(ticket) === 1` (chỉ vé của req 1, hoặc 0 nếu chưa save) | Trả 200 lúc này = client tưởng thành công khi chưa chắc |
+| 14 | Cùng key, **body khác** → 409 | Không tạo vé thứ 2 | Bắt key reuse sai |
+| 15 | Key khác nhau, body giống → **2 vé** (đúng ý định cược 2 lần) | `countDocuments === 2` | Chặn oan hướng ngược lại cũng là bug |
+| 16 | **Song song thật**: `Promise.all` 5 request cùng key | `countDocuments(ticket) === 1`, tenant debit **1 lần**; 4 request còn lại 409 hoặc replay — **không** cái nào tạo vé | Race condition. Test tuần tự **không** bắt được. Đây là test dễ bỏ sót nhất và hậu quả nặng nhất |
+| 17 | **Không** gửi header → `400`, **0 vé**, **0 doc WAL** | `countDocuments(ticket) === 0` **và** `countDocuments(tx_intents) === 0` | Header bắt buộc phải chặn **trước** khi chạm DB. Nếu có doc WAL nghĩa là validate đặt sai chỗ |
+| 18 | 2 account khác nhau dùng **cùng** giá trị key → **2 vé riêng** | `countDocuments === 2`, `tx` khác nhau | Key scope theo `accountId`; thiếu → player A chiếm được key của player B |
+| 19 | Idempotent **không** phụ thuộc Redis: chạy toàn bộ #11–#16 khi **không có Redis nào chạy** | Tất cả xanh, không 5xx, không log timeout Redis | **Khoá kiến trúc.** Test này đỏ = đã vô tình đặt Redis vào đường tài chính |
 
 ### `unique-index.test.ts`
 
 | # | Test | Cách xác nhận PASS |
 |---|---|---|
-| 24 | Insert 2 doc cùng `{tx}` → lỗi có `code === 11000` | Assert **`err.code`**, **không** assert message — message khác nhau giữa version Mongo |
-| 25 | `insertWal` map 11000 thành nhánh idempotent, **không** thành `serviceUnavailable` | Bắt đúng loại lỗi | Bug hiện tại đang nuốt 11000 thành 503 |
-| 26 | Index `{tx}` tồn tại và **unique** ở **cả 7** game | `listIndexes()`, vòng lặp 7 collection | Sót 1 game = 1 game vẫn có bug |
+| 20 | Insert 2 doc cùng `{tx}` → lỗi có `code === 11000` | Assert **`err.code`**, **không** assert message — message khác nhau giữa version Mongo |
+| 21 | `insertWal` map 11000 thành nhánh idempotent, **không** thành `serviceUnavailable` | Bắt đúng loại lỗi | Bug hiện tại đang nuốt 11000 thành 503 |
+| 22 | Index `{tx}` tồn tại và **unique** ở **cả 7** game | `listIndexes()`, vòng lặp 7 collection | Sót 1 game = 1 game vẫn có bug |
+| 23 | `generateTx` **không còn tồn tại** trên `DebitPlayerService` | `expect((svc as Record<string, unknown>).generateTx).toBeUndefined()` + grep repo 0 match | Giữ lại = dead code + đường lách không idempotent |
 
 ## B3 — Không regress
 
 | # | Lệnh / việc | Kỳ vọng |
 |---|---|---|
-| 27 | `pnpm --filter "@megawin/game-*-application" test` | Xanh **toàn bộ** — place-bet 7 game bị sửa |
-| 28 | `pnpm --filter @megawin/player-sdk check-types` | Xanh. ⚠️ **PASS không nghĩa là đã đồng bộ** — phải đối chiếu DTO **bằng mắt**, field-by-field (`api-player-sdk-sync.mdc`) |
-| 29 | `pnpm check-types` | Xanh toàn repo |
-| 30 | Grep leak SDK: pattern ở `player-sdk-jsdoc.mdc` trên `packages/player-sdk/src` | Không match trong JSDoc public export |
-| 31 | `cd packages/player-sdk && npx typedoc` rồi grep `docs/` các từ `tx_intents`, `WAL`, `MongoDB`, `UseCase` | Không match — **phải build thật, không đoán từ source** |
+| 24 | `pnpm --filter "@megawin/game-*-application" test` | Xanh **toàn bộ** — place-bet 7 game bị sửa |
+| 25 | `pnpm --filter @megawin/player-sdk check-types` | Xanh. ⚠️ **PASS không nghĩa là đã đồng bộ** — phải đối chiếu DTO **bằng mắt**, field-by-field (`api-player-sdk-sync.mdc`) |
+| 26 | `pnpm check-types` | Xanh toàn repo |
+| 27 | Grep leak SDK: pattern ở `player-sdk-jsdoc.mdc` trên `packages/player-sdk/src` | Không match trong JSDoc public export |
+| 28 | `cd packages/player-sdk && npx typedoc` rồi grep `docs/` các từ `tx_intents`, `WAL`, `MongoDB`, `UseCase` | Không match — **phải build thật, không đoán từ source** |
+| 29 | `rg -n "generateTx" --glob '!*.md' packages apps` | **0 kết quả** — đã xoá sạch, không còn caller lẫn khai báo |
+| 30 | `rg -n "@megawin/guard\|canonicalBody\|idem-fp" packages/game-*-application/src/use-cases/place-bet apps/api-player/src/handlers` | **0 kết quả** — đường tiền không chạm Redis/guard |
 
 ## B4 — Xác nhận thủ công (BẮT BUỘC — đường tiền)
 
 Ghi lại kết quả cụ thể, không ghi "đã kiểm tra":
 
-1. **Đếm trùng trên dữ liệu thật TRƯỚC khi tạo unique index** (Bước 5): aggregate `group by tx` + `count > 1`
-   trên **cả 7** collection. Ghi lại con số. Có trùng → phải xử lý dữ liệu trước, nếu không
-   `createIndex` sẽ **fail** và deploy đứt.
-2. **Double-tap tay**: gửi 2 request giống hệt từ client thật (curl/Postman) trong < 1s, rồi query DB
-   đếm vé. Ghi số.
-3. **Xác nhận ví**: kiểm tra số dư tenant thay đổi **đúng 1 lần** ở case #14. Đây là điều test spy
+1. **Tạo unique index trên staging**: chạy migration index cho **cả 7** collection. Nếu fail vì trùng
+   → drop collection ticket staging (được phép, chưa có dữ liệu thật) rồi chạy lại. Ghi lại
+   collection nào phải drop.
+2. **Double-tap tay**: gửi 2 request giống hệt (cùng `Idempotency-Key`) từ client thật (curl/Postman)
+   trong < 1s, rồi query DB đếm vé. Ghi số.
+3. **Thiếu header tay**: gửi request **không** có `Idempotency-Key` → phải nhận `400`; query DB xác
+   nhận **0 vé, 0 WAL**. Ghi lại response body.
+4. **Xác nhận ví**: kiểm tra số dư tenant thay đổi **đúng 1 lần** ở case #11. Đây là điều test spy
    không chứng minh được hoàn toàn.
-4. **Rollback plan**: xác nhận biết cách tắt nhanh nhánh B (env) nếu gây chặn oan ở prod.
+5. **Xác nhận SDK thật**: build SDK rồi gọi `placeBet` từ một script tenant mô phỏng — xác nhận header
+   `Idempotency-Key` **thực sự** xuất hiện trên wire (đọc network log), không chỉ có trong type.
 
 ## Definition of done
 
 **Phần A (code):**
 
 - [ ] `deriveTx` có JSDoc cảnh báo "công thức là contract"; là hàm **pure** (điều kiện để B1 tồn tại).
-- [ ] `Idempotency-Key` đọc được, validate, truyền tới use-case ở **cả 7** game.
+- [ ] `generateTx()` **đã xoá**; 5 chỗ JSDoc của `DebitPlayerService` mô tả flow cũ đã cập nhật.
+- [ ] `Idempotency-Key` **bắt buộc**, đọc case-insensitive, validate, truyền tới use-case ở **cả 7**
+      game; `idempotencyKey: string` là **required** trong DTO (không `?`).
 - [ ] Duplicate key nhận diện theo **code 11000**, không theo message; `insertWal` không còn nuốt nó
       thành `serviceUnavailable`.
 - [ ] Replay trả **đủ** `PlaceBetOutput`; nhánh `DEBIT_PENDING` trả 409.
 - [ ] `IDEMPOTENCY_CONFLICT` → 409 trong `http-status.ts`.
-- [ ] Nhánh A **không** import gì từ `@megawin/guard`/Redis — kiểm bằng grep, không bằng niềm tin.
-- [ ] `player-sdk` đã đồng bộ 7 game + CHANGELOG (MINOR), không leak backend, `@example` compile được.
+- [ ] Đường `place-bet` **không** import gì từ `@megawin/guard`/`@megawin/cache`/Redis — kiểm bằng grep
+      (B3 #30), không bằng niềm tin. **Không** có `canonicalBody`/fingerprint code nào tồn tại.
+- [ ] `player-sdk` đã đồng bộ 7 game với `idempotencyKey` **required** + CHANGELOG **BREAKING**
+      (`### Changed` + Migration), không leak backend, `@example` compile được.
 - [ ] Mọi lỗi throw là `AppException`, message **tiếng Việt cho người dùng cuối**.
 - [ ] Không `oxlint-disable` cho `no-floating-promises`/`no-misused-promises` ở bất kỳ file nào.
 - [ ] `oxlint` + `prettier` đã chạy trên mọi path đã sửa.
 
 **Phần B (test):**
 
-- [ ] B0: 4 xác nhận môi trường xong (đặc biệt 0c replica set, 0d scope cleanup).
-- [ ] 13 unit test (B1) xanh — gồm **vector cố định #1** và canonical #7–10.
-- [ ] 13 integration test (B2) xanh — gồm **#19 (song song `Promise.all`)** và **#23 (Redis chết vẫn
-      idempotent)**. Hai test này là điều kiện bắt buộc, không được hoãn.
-- [ ] #26 xác nhận index unique ở **cả 7** game.
-- [ ] B3 #31: build TypeDoc **thật** và grep `docs/`, không đọc source rồi đoán.
-- [ ] B4: **đã ghi số đếm trùng thật** trên 7 collection trước khi tạo unique index.
+- [ ] B0: 4 xác nhận môi trường xong (0c replica set, 0d scope cleanup). **Không** dùng Redis.
+- [ ] 10 unit test (B1) xanh — gồm **vector cố định #1**, #9 (thiếu header → 400), #10 (case-insensitive).
+- [ ] 13 integration test (B2) xanh — gồm **#16 (song song `Promise.all`)**, **#17 (thiếu header → 0 vé,
+      0 WAL)**, **#19 (không Redis vẫn idempotent)**, **#23 (`generateTx` đã biến mất)**. Không hoãn cái nào.
+- [ ] #22 xác nhận index unique ở **cả 7** game.
+- [ ] B3 #28: build TypeDoc **thật** và grep `docs/`, không đọc source rồi đoán.
+- [ ] B3 #29–30: grep xác nhận `generateTx` = 0 match và đường tiền không chạm guard/Redis.
+- [ ] B4: đã tạo unique index trên staging thành công (ghi rõ có phải drop collection nào không).
 - [ ] B4: đã xác nhận ví tenant chỉ bị trừ 1 lần (bằng số dư thật, không chỉ spy).
+- [ ] B4: đã xác nhận header thật xuất hiện trên wire khi gọi qua SDK.
 - [ ] Mọi `A-fix` phát sinh đã ghi lại.
 
 ## Không làm trong plan này
 
 - ❌ Rate limit → `p1-01`.
 - ❌ Idempotency cho endpoint khác `place-bet` → `p3-01`.
-- ❌ Bắt buộc `Idempotency-Key` — đã chốt **tùy chọn** (analysis §5.2).
-- ❌ **Bật chặn** fingerprint guard — shadow mode trước, bật là quyết định riêng sau `p2-01`.
+- ❌ **Fingerprint guard / `canonicalBody` / cửa sổ 5s** — đã loại khỏi scope (xem đầu plan). Không
+  implement, không test, không để lại code chờ.
+- ❌ Back-compat cho client không gửi header — hệ thống chưa deploy, không có client cũ cần chiều.
+- ❌ Giữ `generateTx()` "để dùng sau" — xoá hẳn.

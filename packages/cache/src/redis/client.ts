@@ -14,6 +14,12 @@
  * `connecting` dedupe lời gọi concurrent cùng env key → đúng 1 connection (đo:
  * không có nó, `Promise.all` 2 cache call mở 2 connection, 1 leak vĩnh viễn).
  *
+ * `commandsQueueMaxLength` (truyền vào `createClient`) là lớp bảo vệ THÊM,
+ * KHÁC 3 gap ở trên (những gap đó ở PHA CONNECT): chặn internal command queue
+ * của node-redis (`#toWrite` + `#waitingForReply`) phình vô hạn RAM khi client
+ * đang reconnect (`isOpen && !isReady`) mà traffic dồn dập — xem
+ * `DEFAULT_REDIS_COMMANDS_QUEUE_MAX_LENGTH` (`constants.ts`) cho chi tiết.
+ *
  * Phân mức log theo "có cần người xử lý không", không theo "có lỗi không": vượt
  * deadline pha connect → `logError` (có thể trần đặt thấp, cần người xem lại);
  * connect fail thường (ECONNREFUSED/DNS) → `logWarn` vì fail-open + circuit đã
@@ -28,6 +34,7 @@ import { isDevNextJs, logError, logWarn } from "@megawin/shared/utils";
 import { createClient, type RedisClientType } from "redis";
 
 import {
+  DEFAULT_REDIS_COMMANDS_QUEUE_MAX_LENGTH,
   DEFAULT_REDIS_CONNECT_DEADLINE_MS,
   DEFAULT_REDIS_CONNECT_MAX_RETRIES,
   DEFAULT_REDIS_CONNECT_TIMEOUT_MS,
@@ -110,6 +117,12 @@ async function connectClient(envKey: string, url: string, state: RedisProcessSta
       connectTimeout: DEFAULT_REDIS_CONNECT_TIMEOUT_MS,
       reconnectStrategy: (retries) => (retries >= DEFAULT_REDIS_CONNECT_MAX_RETRIES ? false : 50),
     },
+    // Chặn internal command queue (`#toWrite` + `#waitingForReply`) phình vô hạn
+    // RAM khi client đang reconnect và traffic dồn dập — KHÔNG liên quan pha
+    // connect (đã có `connectTimeout` + circuit riêng). Vượt ngưỡng → node-redis
+    // reject "The queue is full" ngay, rơi vào nhánh fail-open bình thường của
+    // RedisCacheStore. Xem DEFAULT_REDIS_COMMANDS_QUEUE_MAX_LENGTH (constants.ts).
+    commandsQueueMaxLength: DEFAULT_REDIS_COMMANDS_QUEUE_MAX_LENGTH,
   }).on("error", (err) => logError("RedisClient", err, { redisEnvKey: envKey }));
 
   try {

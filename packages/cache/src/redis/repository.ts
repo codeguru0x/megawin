@@ -434,4 +434,63 @@ export class RedisRepository {
     const client = await this.getClient();
     return client.multi();
   }
+
+  // ── Scripting ──────────────────────────────────────────────────────────────
+
+  /**
+   * EVAL — chạy Lua script (gửi full script mỗi lần).
+   *
+   * Dùng khi chưa cache SHA, hoặc sau `NOSCRIPT` (Redis restart / `SCRIPT FLUSH`).
+   * Reply là `unknown` — caller tự narrow theo contract của script (Lua có thể
+   * trả number, string, array…). FAIL-FAST: throw khi connect/command lỗi.
+   *
+   * ⚠️ `EVAL` **tự nạp** script vào script cache của Redis — sau lệnh này `evalSha` với SHA1 của
+   * chính script đó đã hit. KHÔNG gọi `scriptLoad` sau `eval` (RTT thừa).
+   *
+   * ⚠️ Trần thời gian là việc của caller (`withDeadline` ở adapter fail-open).
+   * Repo không nhận `commandOptions` — xem JSDoc đầu file.
+   *
+   * @param script - Nguồn Lua đầy đủ.
+   * @param keys   - `KEYS[1..N]` truyền vào script.
+   * @param args   - `ARGV[1..N]` — luôn string (Redis ép mọi ARGV về string).
+   */
+  public async eval(script: string, keys: string[], args: string[]): Promise<unknown> {
+    const client = await this.getClient();
+    return await client.eval(script, { keys, arguments: args });
+  }
+
+  /**
+   * EVALSHA — chạy script đã nạp theo SHA1 digest.
+   *
+   * Rẻ hơn `eval` (1 RTT, không gửi lại body script). Throw `NOSCRIPT` nếu Redis
+   * chưa có script trong script cache — caller bắt rồi fallback **chỉ** `eval`
+   * (`EVAL` tự nạp cache; không cần `scriptLoad`). FAIL-FAST như mọi method khác.
+   *
+   * SHA1 tính **local** bằng `node:crypto` từ đúng text script — không hỏi Redis.
+   *
+   * @param sha  - SHA1 hex tính local (hoặc trả về từ `scriptLoad`).
+   * @param keys - `KEYS[1..N]`.
+   * @param args - `ARGV[1..N]` (string).
+   */
+  public async evalSha(sha: string, keys: string[], args: string[]): Promise<unknown> {
+    const client = await this.getClient();
+    return await client.evalSha(sha, { keys, arguments: args });
+  }
+
+  /**
+   * SCRIPT LOAD — nạp script vào script cache của Redis, trả SHA1 để dùng với
+   * `evalSha`. SHA sống đến khi Redis restart / `SCRIPT FLUSH`.
+   *
+   * ⚠️ Hầu hết trường hợp **KHÔNG cần** method này. Pattern đúng (node-redis cũng làm vậy):
+   * tính SHA1 local bằng `node:crypto` → `evalSha` → bắt `NOSCRIPT` → `eval` (tự nạp lại).
+   * Xem `RateLimiter.evalGcra` (`packages/guard`). Chỉ dùng `scriptLoad` khi cần **preload** script
+   * ở thời điểm tách rời lần chạy đầu (VD warmup job), không dùng trên hot path.
+   *
+   * @param script - Nguồn Lua đầy đủ.
+   * @returns SHA1 hex (40 chars).
+   */
+  public async scriptLoad(script: string): Promise<string> {
+    const client = await this.getClient();
+    return await client.scriptLoad(script);
+  }
 }
