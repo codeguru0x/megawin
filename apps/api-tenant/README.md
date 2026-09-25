@@ -29,6 +29,36 @@ Các tác vụ chính:
 - **API Key** — verify qua `tenant-api-key-auth` middleware
 - Tenant gửi API key trong header, middleware xác thực và inject tenant context
 
+## Rate limit
+
+Ba endpoint đang deploy đều có trần GCRA. Vượt ngưỡng → **HTTP 429**, body envelope
+`{ success: false, error: { code: "TOO_MANY_REQUESTS", message } }`, kèm header
+`Retry-After` (giây, làm tròn lên, tối thiểu 1).
+
+Quota **theo `tenantId`** — tenant A bị 429 không ảnh hưởng tenant B.
+
+| Endpoint                      | Lớp        | `route`                      | Rule                     | `subject`                   |
+| ----------------------------- | ---------- | ---------------------------- | ------------------------ | --------------------------- |
+| `POST /tenant/players/login`  | Per-tenant | `tenant.player-login`        | 10 req / 1 giây, burst 0 | tenant                      |
+| `POST /tenant/players/login`  | Per-player | `tenant.player-login.player` | 5 req / 60 giây, burst 0 | tenant + `playerExternalId` |
+| `GET /tenant/bets/feed`       | 1 lớp      | `tenant.bets-feed`           | 3 req / 60 giây, burst 2 | tenant                      |
+| `GET /tenant/reports/revenue` | 1 lớp      | `tenant.reports-revenue`     | 20 req / 60 giây         | tenant                      |
+
+### Xử lý 429
+
+1. Đọc `Retry-After` (giây). **Không** retry ngay.
+2. Chờ đúng số giây rồi gọi lại. Retry storm làm cạn quota thêm.
+3. Login: 5 lần / phút cho **một** player là đủ login + retry. Trần cả tenant là 10 login/giây
+   (mỗi request cách nhau ít nhất 100ms).
+
+### `GET /tenant/bets/feed` — dùng cursor, đừng poll lại từ đầu
+
+Scheduler ghi feed **1 lần/phút**. Khi `hasMore = false`, chờ interval rồi poll lại — poll dày
+hơn không nhận thêm data. Khi `hasMore = true`, được xả tối đa **3 page liền** (`1 + burst 2`),
+mỗi page `limit` tối đa 200. Hết burst thì giãn ~20 giây.
+
+Đừng reset `afterVersion` về đầu khi nhận 429 — giữ cursor, chờ `Retry-After`, poll tiếp.
+
 ## Endpoints
 
 | Method  | Path                                | Handler             | Mô tả                                       |

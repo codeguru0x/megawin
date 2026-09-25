@@ -18,6 +18,8 @@ export {
   validatorZodMiddleware,
 } from "@megawin/app-core/lambda/middleware";
 
+export { GuardSubjectType } from "@megawin/guard";
+
 /** Authorization core */
 export {
   type ApiGatewayEventWithAuthorizer,
@@ -44,6 +46,7 @@ export {
 export {
   buildHandler,
   type BuildHandlerOptions,
+  buildRateLimitDeniedResponse,
   type HandlerRateLimitOptions,
   type InferSchema,
   RateLimitMode,

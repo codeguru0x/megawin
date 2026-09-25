@@ -4,9 +4,9 @@ Lớp phòng thủ dùng chung: **rate limit GCRA** (đã có) + **idempotency**
 Rate limit **không phải correctness** — Redis chết thì **cho qua** (`fail-open`), không được tự
 gây outage. Đường tiền (`place-bet`) **không** phụ thuộc package này.
 
-> **Phạm vi hiện tại (p0-01 / p0-01b):** primitive `RateLimiter.checkRateLimit`.
-> Subpath `./middleware` còn trống — hook `buildHandler` là việc của `p1-01`.
-> App (`api-player` / `api-tenant`) **chưa** import cho tới khi rollout plan tương ứng xong.
+> **Phạm vi hiện tại:** primitive `RateLimiter.checkRateLimit` + middleware `buildHandler`
+> (`p1-01`, `@megawin/auth`). App khai `rateLimit` trên handler (`p1-02` / `p1-03`).
+> Chỉ import `@megawin/guard` trực tiếp khi gọi `RateLimiter` (vd lớp per-player login).
 
 ---
 
@@ -35,12 +35,12 @@ gây outage. Đường tiền (`place-bet`) **không** phụ thuộc package nà
 Mỗi lần gọi `checkRateLimit` = **1 quyết định** cho **1 cặp** `(route, subject)`:
 
 ```
-"keno.place-bet" + account "acc-001"  →  1 xô riêng
-"keno.place-bet" + account "acc-002"  →  xô khác (không chung quota)
-"mega645.place-bet" + account "acc-001" → xô khác (chơi 2 game cùng lúc là hợp lệ)
+"player.place-bet" + account "acc-001"  →  1 xô cho mọi game của player đó
+"player.place-bet" + account "acc-002"  →  xô khác (không chung quota)
 ```
 
-Rule `{ limit: 30, windowSec: 60, burst: 5 }` nghĩa là:
+Rule `{ limit: 30, windowSec: 60, burst: 5 }` dưới đây chỉ để **minh hoạ burst**, không phải rule
+`place-bet`. Rule cược đã chốt là `{ limit: 1, windowSec: 5, burst: 0 }` — xem §9.1.
 
 | Ý                          | Số                                                      |
 | -------------------------- | ------------------------------------------------------- |
@@ -125,8 +125,7 @@ Hai đường dùng — **đừng lẫn**:
 | **Khai báo trên handler** (`rateLimit: { … }` trong options wrapper) | ~76 endpoint `api-player` / `api-tenant` — **đường chính** sau `p1-01`           | Không import `@megawin/guard` ở app; `@megawin/auth` gọi hộ |
 | **Gọi `RateLimiter` trực tiếp**                                      | Subject lấy từ **body** (sau Zod), hoặc worker / chỗ không đi qua `buildHandler` | `@megawin/guard`                                            |
 
-Hiện tại chỉ đường 2 tồn tại. Đường 1 chưa hook — khai báo dưới đây là **hình dạng đích** để
-chọn số đúng từ bây giờ, tránh phải đoán lại khi rollout.
+Đường 1 là mặc định sau `p1-01`. Đường 2 chỉ khi subject lấy từ body (sau Zod).
 
 ### 3.1. Gọi trực tiếp (API đã ship)
 
@@ -159,16 +158,16 @@ if (!decision.allowed) {
 `checkRateLimit` **không bao giờ throw**. Config sai (`limit: 0`, `route` chứa `:`) cũng
 fail-open — xem [§11](#11-anti-pattern--lỗi-dễ-mắc).
 
-### 3.2. Khai báo handler (hình dạng sau `p1-01`)
+### 3.2. Khai báo handler (`@megawin/auth`)
 
 ```ts
 export const handler = withPlayerAuth(async (event) => useCase.run({/* … */}), {
   schemas: { body: kenoPlaceBetBodySchema },
   rateLimit: {
-    route: "keno.place-bet",
-    limit: 30,
-    windowSec: 60,
-    burst: 5,
+    route: "player.place-bet",
+    limit: 1,
+    windowSec: 5,
+    burst: 0,
     subject: GuardSubjectType.Account, // KHÔNG viết "account" trần
   },
 });
@@ -190,13 +189,13 @@ cho 1 endpoint.
 
 ```ts
 // Lớp 1 — middleware (trước Zod): per-tenant
-//   { route: "tenant.player-login", limit: 600, windowSec: 60, subject: tenant }
+//   { route: "tenant.player-login", limit: 10, windowSec: 1, burst: 0, subject: tenant }
 
 // Lớp 2 — trong handler (sau Zod): per-player
 const perPlayer = await limiter.checkRateLimit({
   route: "tenant.player-login.player",
   subject: { type: GuardSubjectType.Tenant, id: `${tenantId}:${playerExternalId}` },
-  rule: { limit: 10, windowSec: 60 },
+  rule: { limit: 5, windowSec: 60, burst: 0 },
 });
 ```
 
@@ -291,13 +290,13 @@ Ghép discriminator vào `id` (composite) chỉ khi **cùng** `type` nhưng cầ
 
 `route` là **hằng do developer viết**, không lấy từ URL / header / body.
 
-| Luật                    | Lý do                                                         | Ví dụ đúng                                  | Ví dụ sai                                            |
-| ----------------------- | ------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------- |
-| Duy nhất toàn app       | 2 endpoint trùng `route` = **chung quota**, chặn oan lẫn nhau | `"keno.place-bet"` vs `"keno.list-tickets"` | Mọi handler `"api"`                                  |
-| 1 game = 1 route prefix | Chơi nhiều game cùng lúc là hành vi hợp lệ                    | `"keno.place-bet"`, `"mega645.place-bet"`   | `"place-bet"` chung 7 game                           |
-| Không chứa `:`          | `:` là separator tầng key (`cache-design`)                    | `"keno.place-bet"`                          | `"keno:place-bet"` → throw → fail-open               |
-| Tĩnh, đọc được          | Debug Redis bằng mắt                                          | `"tenant.bets-feed"`                        | `` `req.path` ``, `` `${game}.${action}` từ query `` |
-| Format `{ns}.{action}`  | Quy ước debug + test regex                                    | `"keno.get-current-draw"`                   | `"GetCurrentDraw"`, `"keno_current"`                 |
+| Luật                    | Lý do                                                                                              | Ví dụ đúng                                  | Ví dụ sai                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------------- |
+| Duy nhất toàn app       | 2 endpoint trùng `route` = **chung quota**, chặn oan lẫn nhau                                      | `"keno.place-bet"` vs `"keno.list-tickets"` | Mọi handler `"api"`                                  |
+| 1 game = 1 route prefix | Chơi nhiều game cùng lúc là hành vi hợp lệ — **trừ** `place-bet` (cố ý chung `"player.place-bet"`) | `"keno.tickets"`, `"mega645.tickets"`       | `"tickets"` chung mọi game không chủ đích            |
+| Không chứa `:`          | `:` là separator tầng key (`cache-design`)                                                         | `"keno.place-bet"`                          | `"keno:place-bet"` → throw → fail-open               |
+| Tĩnh, đọc được          | Debug Redis bằng mắt                                                                               | `"tenant.bets-feed"`                        | `` `req.path` ``, `` `${game}.${action}` từ query `` |
+| Format `{ns}.{action}`  | Quy ước debug + test regex                                                                         | `"keno.get-current-draw"`                   | `"GetCurrentDraw"`, `"keno_current"`                 |
 
 Hai lớp trên cùng 1 endpoint (login tenant) = **hai** `route`:
 `"tenant.player-login"` và `"tenant.player-login.player"`.
@@ -414,10 +413,10 @@ Nguyên tắc xếp hạng: endpoint càng **đắt mỗi request** → ngưỡn
 
 ### 9.1. `api-player` — mutation / auth
 
-| Endpoint                   | `route`                                  | Rule                                     | `subject` | Vì sao số này                                                                           |
-| -------------------------- | ---------------------------------------- | ---------------------------------------- | --------- | --------------------------------------------------------------------------------------- |
-| `POST …/bets` × 7 game     | `"{game}.place-bet"` **riêng từng game** | `{ limit: 30, windowSec: 60, burst: 5 }` | `Account` | Đường tiền. Burst 5 = chọn xong bấm liền vài vé. 30/phút đủ chơi thật, chặn script spam |
-| `POST /auth/refresh-token` | `"auth.refresh-token"`                   | `{ limit: 10, windowSec: 60 }`           | **`Ip`**  | `withPublicHandler` — không identity. Chống brute-force token                           |
+| Endpoint                   | `route`                               | Rule                                   | `subject` | Vì sao số này                                                                                                                                    |
+| -------------------------- | ------------------------------------- | -------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `POST …/bets` × 7 game     | `"player.place-bet"` **chung 7 game** | `{ limit: 1, windowSec: 5, burst: 0 }` | `Account` | 1 lần / 5 giây mỗi player. Chọn số + tiền không nhanh hơn thế; chơi 1 game tại một thời điểm. Tách route theo game cho tool bắn 7 game song song |
+| `POST /auth/refresh-token` | `"auth.refresh-token"`                | `{ limit: 10, windowSec: 60 }`         | **`Ip`**  | `withPublicHandler` — không identity. Chống brute-force token                                                                                    |
 
 `refresh-token` là endpoint **dễ chặn oan nhất** (CGNAT). `limit: 10` phải load-test ca
 “nhiều player chung 1 IP” trước khi chốt. Không chịu được → nâng `limit`, **không** đổi
@@ -457,12 +456,12 @@ Khác player ở 3 điểm: identity là `tenantId`; burst cao là bình thườ
 IP whitelist ở auth → rủi ro là **tenant hợp lệ hành xử sai** (poll loop, retry storm,
 enumeration), không phải kẻ lạ. Ngưỡng **rộng tay**, message phải giúp tenant tự sửa.
 
-| Endpoint                      | Lớp                        | `route`                        | Rule                                      | `subject`                                        | Vì sao                                                                                                                                                   |
-| ----------------------------- | -------------------------- | ------------------------------ | ----------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /player/login`          | Per-tenant (middleware)    | `"tenant.player-login"`        | `{ limit: 600, windowSec: 60 }`           | `Tenant`                                         | Enumeration hàng loạt. 10 login/s / tenant                                                                                                               |
-| `POST /player/login`          | Per-player (trong handler) | `"tenant.player-login.player"` | `{ limit: 10, windowSec: 60 }`            | `Tenant` + `id` ghép `tenantId:playerExternalId` | Brute-force 1 player. **Không** trừ lớp kia khi denied                                                                                                   |
-| `GET /tenant/bets/feed`       | 1 lớp                      | `"tenant.bets-feed"`           | `{ limit: 60, windowSec: 60, burst: 10 }` | `Tenant`                                         | Tenant poll liên tục + cursor pagination (nhiều page liền). Burst 10 = batch-poll hợp lệ. 429 biến poll storm thành lỗi **rõ** thay vì đốt Mongo âm thầm |
-| `GET /tenant/reports/revenue` | 1 lớp                      | `"tenant.reports-revenue"`     | `{ limit: 20, windowSec: 60 }`            | `Tenant`                                         | Query nặng nhất app. Gọi theo giờ/ngày → 20/phút đã rộng                                                                                                 |
+| Endpoint                      | Lớp                        | `route`                        | Rule                                    | `subject`                                        | Vì sao                                                                          |
+| ----------------------------- | -------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `POST /player/login`          | Per-tenant (middleware)    | `"tenant.player-login"`        | `{ limit: 10, windowSec: 1, burst: 0 }` | `Tenant`                                         | **10 login/giây**, spacing 100ms. Không bắn 10 cái cùng một nhịp                |
+| `POST /player/login`          | Per-player (trong handler) | `"tenant.player-login.player"` | `{ limit: 5, windowSec: 60, burst: 0 }` | `Tenant` + `id` ghép `tenantId:playerExternalId` | Login + retry. **Không** trừ lớp kia khi denied                                 |
+| `GET /tenant/bets/feed`       | 1 lớp                      | `"tenant.bets-feed"`           | `{ limit: 3, windowSec: 60, burst: 2 }` | `Tenant`                                         | Scheduler feed 1 lần/phút. Trần = 3× nhịp đó; burst 2 = xả 3 page khi `hasMore` |
+| `GET /tenant/reports/revenue` | 1 lớp                      | `"tenant.reports-revenue"`     | `{ limit: 20, windowSec: 60 }`          | `Tenant`                                         | Query nặng nhất app. Gọi theo giờ/ngày → 20/phút đã rộng                        |
 
 Cô lập tenant là ràng buộc **hợp đồng**: tenant A 429 **không** được làm tenant B 429.
 `subject.id = tenantId` (hash) đảm bảo điều này — test bắt buộc khi rollout.
@@ -483,8 +482,8 @@ Có identity player? ──không──► Public / IP
         │                         │
         │ có                      ├── Auth yếu (refresh, OTP) → Ip, burst 0, limit thấp (5–15/phút)
         ▼                         └── Còn lại → cân nhắc chưa bật (CGNAT)
-Mutation (POST bet / debit)?
-        │ có  → Account, burst 3–5, limit 20–30/phút, route per-game
+Mutation (POST bet)?
+        │ có  → Account, burst 0, 1 lần / 5 giây, route CHUNG mọi game (`player.place-bet`)
         │
 Đắt (aggregate / report)?
         │ có  → Account|Tenant, burst 0, limit 10–30/phút
@@ -510,7 +509,8 @@ Còn lại (đọc thường)
 2. **Hành vi liền mạch có hợp lệ không?** Có (bấm 5 vé, kéo 10 page) → `burst` = số lần liền
    **trừ 1 không đủ**, nhớ `1 + burst`. Không → bỏ `burst` (mặc định 0).
 3. **Nhịp bền client thật là bao nhiêu?** Countdown 1s → 60/phút. Đặt `limit` ≥ **2×** nhịp
-   đó (headroom). Place-bet thủ công → vài lần/phút → `30` đã rộng.
+   đó (headroom) cho endpoint **đọc**. `place-bet` là ngoại lệ đã chốt: 1 lần / 5 giây, `burst: 0`,
+   không nới vì headroom.
 4. **1 request đắt cỡ nào?** Fan-out / aggregate / scan → hạ `limit`. Cache hit / 1 find →
    có thể lỏng.
 5. **`route` đã tồn tại chưa?** Trùng = bug. Per-game nếu cùng action trên nhiều game.
@@ -538,12 +538,12 @@ ms-precision; làm ở tầng khác).
 | --- | ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
 | 1   | `limit: 0` / quên `limit`                               | Throw → **fail-open vĩnh viễn** cho route đó, không 500        | `limit > 0`. Test tĩnh assert mọi rule                 |
 | 2   | `route` chứa `:`                                        | Throw → fail-open vĩnh viễn                                    | Dấu `.` (`keno.place-bet`)                             |
-| 3   | Trùng `route` 2 endpoint                                | Chung quota, chặn oan lẫn nhau                                 | 1 endpoint = 1 route; test `Set`                       |
-| 4   | 7 game chung `"place-bet"`                              | Chơi 2 game cùng lúc hết quota                                 | `"{game}.place-bet"`                                   |
+| 3   | Trùng `route` 2 endpoint không chủ đích                 | Chung quota, chặn oan lẫn nhau                                 | 1 endpoint = 1 route, trừ 7 `place-bet` cố ý chung     |
+| 4   | 7 game **tách** `"{game}.place-bet"`                    | Tool bắn 7 game song song                                      | Chung `"player.place-bet"` theo account                |
 | 5   | `subject: Ip` trên `place-bet`                          | CGNAT chặn hàng nghìn player                                   | `Account`                                              |
 | 6   | `subject: Tenant` trên player API                       | 1 player spam khoá cả tenant                                   | `Account`                                              |
 | 7   | Polling `limit: 20`                                     | Countdown 1s bị 429 sau 20s                                    | `limit: 120` nhóm current/jackpot                      |
-| 8   | Quên `burst` trên place-bet                             | Vé 2 (bấm liền) bị 429 — user thật                             | `burst: 5`                                             |
+| 8   | `burst > 0` trên place-bet                              | Bắn liền nhiều vé — tool flood                                 | `burst: 0`, spacing 5 giây                             |
 | 9   | `burst = limit` (30/30)                                 | Bắn 31 request một phát, gần như không có steady               | `burst` là phần _vượt_, thường 10–20% `limit`          |
 | 10  | `{ limit: 2000, windowSec: 1 }`                         | `ei` clamp 1ms, gần như không chặn                             | Đừng rate-limit > 1000 req/s bằng GCRA ms              |
 | 11  | Bỏ qua `failedOpen`                                     | Redis down = mất phòng thủ, không alert                        | Đếm metric + alert (p2-01)                             |
@@ -647,9 +647,9 @@ Image Redis pin **`redis:8.6`** (khớp prod). Tag `redis:8` đang resolve ra 8.
 
 | Việc                                             | Ở đâu                                                    |
 | ------------------------------------------------ | -------------------------------------------------------- |
-| Hook `buildHandler` + 429 envelope + env mode    | `p1-01` (`@megawin/auth`)                                |
-| Bật khai báo `api-player`                        | `p1-02`                                                  |
-| Bật khai báo `api-tenant` + docs tích hợp tenant | `p1-03`                                                  |
+| Hook `buildHandler` + 429 envelope + env mode    | `p1-01` — **đã ship** (`@megawin/auth`)                  |
+| Bật khai báo `api-player`                        | `p1-02` — **đã ship**                                    |
+| Bật khai báo `api-tenant` + docs tích hợp tenant | `p1-03` — **đã ship** (`apps/api-tenant/README.md`)      |
 | Metric / alert `failedOpen`                      | `p2-01`                                                  |
 | Idempotency `place-bet`                          | `p0-02` — **Mongo-native**, 0 Redis, độc lập package này |
 | Generic idempotency store                        | `p3-01` (deferred)                                       |
@@ -674,5 +674,5 @@ export { GuardSubjectType, DEFAULT_RATE_LIMIT_BURST, DEFAULT_RATE_LIMIT_TIMEOUT_
 export type { RateLimiterOptions, GcraParams, GuardSubject, RateLimitDecision, RateLimitInput, RateLimitRule };
 
 // @megawin/guard/rate-limit   — cùng RateLimiter + math, không kéo keys/types barrel
-// @megawin/guard/middleware   — placeholder, export rỗng tới p1-01
+// @megawin/guard/middleware   — placeholder; hook thật sống ở @megawin/auth
 ```

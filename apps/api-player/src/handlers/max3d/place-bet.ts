@@ -22,6 +22,8 @@ import {
 } from "@megawin/shared/utils/api-gateway-v2";
 import z from "zod";
 
+import { PLACE_BET_RATE_LIMIT } from "#lib/rate-limit";
+
 import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───
@@ -92,5 +94,8 @@ export const handler = withPlayerAuth(
       boards,
     });
   },
-  { schemas: { body: max3dPlaceBetBodySchema } },
+  {
+    schemas: { body: max3dPlaceBetBodySchema },
+    rateLimit: PLACE_BET_RATE_LIMIT,
+  },
 );

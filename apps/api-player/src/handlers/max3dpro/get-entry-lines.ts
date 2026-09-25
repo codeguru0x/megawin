@@ -8,6 +8,7 @@ import { withPlayerAuth } from "@megawin/auth";
 import { GetEntryLinesPlayerUseCase } from "@megawin/game-max3dpro-application/use-cases/player";
 import { z } from "zod";
 
+import { READ_RATE_LIMIT } from "#lib/rate-limit";
 import { lineCursorQuerySchema, objectIdSchema } from "#lib/schemas";
 
 const pathSchema = z.object({
@@ -24,5 +25,8 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, entryId, size, cursor });
   },
-  { schemas: { path: pathSchema, query: lineCursorQuerySchema } },
+  {
+    schemas: { path: pathSchema, query: lineCursorQuerySchema },
+    rateLimit: { route: "max3dpro.entry-lines", ...READ_RATE_LIMIT },
+  },
 );

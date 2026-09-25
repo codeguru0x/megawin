@@ -84,4 +84,24 @@ describe("429 response", () => {
     const response = await deny(100);
     expect(response.headers["Retry-After"]).toBe("1");
   });
+
+  it("retryAfterMs 0 hoặc âm → Retry-After vẫn 1", async () => {
+    expect((await deny(0)).headers["Retry-After"]).toBe("1");
+    expect((await deny(-50)).headers["Retry-After"]).toBe("1");
+  });
+
+  it("retryAfterMs đúng 1000 → Retry-After 1; 2000 → 2", async () => {
+    expect((await deny(1000)).headers["Retry-After"]).toBe("1");
+    expect((await deny(2000)).headers["Retry-After"]).toBe("2");
+    expect((await deny(2001)).headers["Retry-After"]).toBe("3");
+  });
+
+  it("body.error không chứa route / limit / class name", async () => {
+    const response = await deny(1500);
+    const raw = response.body;
+    expect(raw).not.toMatch(/keno\.place-bet/);
+    expect(raw).not.toMatch(/RateLimiter/);
+    expect(raw).not.toMatch(/30\/60/);
+    expect(JSON.parse(raw).error).not.toHaveProperty("details");
+  });
 });

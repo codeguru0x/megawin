@@ -2,11 +2,13 @@
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   "globalPassThroughEnv": ["*"],
+  "cacheMaxAge": "14d",
+  "cacheMaxSize": "2GB",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
     "check-types": {
       "dependsOn": ["^check-types"]

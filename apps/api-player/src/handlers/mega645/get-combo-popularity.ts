@@ -16,6 +16,8 @@ import { DRAW_ID_REGEX } from "@megawin/shared/constants";
 import { multiValueQuery } from "@megawin/shared/validation";
 import { z } from "zod";
 
+import { AGGREGATE_RATE_LIMIT } from "#lib/rate-limit";
+
 const pathSchema = z.object({
   drawId: z.string().regex(DRAW_ID_REGEX, "Expected drawId format YYYY-MM-DD.NNN"),
 });
@@ -38,5 +40,8 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ accountId, drawId, numbers });
   },
-  { schemas: { path: pathSchema, query: querySchema } },
+  {
+    schemas: { path: pathSchema, query: querySchema },
+    rateLimit: { route: "mega645.combo-popularity", ...AGGREGATE_RATE_LIMIT },
+  },
 );

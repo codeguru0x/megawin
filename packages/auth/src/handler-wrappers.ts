@@ -49,7 +49,12 @@ import {
 import { rateLimitMiddleware, type HandlerRateLimitOptions } from "./rate-limit";
 
 export type { HandlerRateLimitOptions };
-export { RateLimitMode, resolveRateLimitMode, resolveRateLimitSubject } from "./rate-limit";
+export {
+  buildRateLimitDeniedResponse,
+  RateLimitMode,
+  resolveRateLimitMode,
+  resolveRateLimitSubject,
+} from "./rate-limit";
 
 export type { CompanyUserEvent, TenantUserEvent };
 

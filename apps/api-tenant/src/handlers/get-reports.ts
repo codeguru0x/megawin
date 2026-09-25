@@ -4,6 +4,7 @@
  * Auth: API Key (server-to-server).
  */
 
+import { GuardSubjectType } from "@megawin/auth";
 import { withTenantAuth } from "@megawin/auth/tenant";
 import { z } from "zod";
 
@@ -39,5 +40,13 @@ export const handler = withTenantAuth(
       },
     };
   },
-  { schemas: { query: querySchema } },
+  {
+    schemas: { query: querySchema },
+    rateLimit: {
+      route: "tenant.reports-revenue",
+      limit: 20,
+      windowSec: 60,
+      subject: GuardSubjectType.Tenant,
+    },
+  },
 );

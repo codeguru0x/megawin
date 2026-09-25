@@ -163,4 +163,17 @@ describe("rate limit mode", () => {
     await wrapped(EVENT, {} as never);
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  it("RateLimitMode chỉ có enforce và off — không có shadow", () => {
+    expect(Object.values(RateLimitMode).toSorted()).toEqual(["enforce", "off"]);
+    expect(RateLimitMode).not.toHaveProperty("Shadow");
+    expect(RateLimitMode).not.toHaveProperty("shadow");
+  });
+
+  it("env viết hoa / có khoảng trắng → rác → enforce + log", () => {
+    expect(resolveRateLimitMode("ENFORCE")).toBe(RateLimitMode.Enforce);
+    expect(resolveRateLimitMode("Off")).toBe(RateLimitMode.Enforce);
+    expect(resolveRateLimitMode(" off ")).toBe(RateLimitMode.Enforce);
+    expect(logError).toHaveBeenCalled();
+  });
 });

@@ -9,6 +9,7 @@ import { withPlayerAuth } from "@megawin/auth";
 import { GetTicketEntriesPlayerUseCase } from "@megawin/game-power655-application/use-cases/player";
 import { z } from "zod";
 
+import { READ_RATE_LIMIT } from "#lib/rate-limit";
 import { objectIdSchema } from "#lib/schemas";
 
 const pathSchema = z.object({
@@ -24,5 +25,8 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, ticketId });
   },
-  { schemas: { path: pathSchema } },
+  {
+    schemas: { path: pathSchema },
+    rateLimit: { route: "power655.ticket-entries", ...READ_RATE_LIMIT },
+  },
 );

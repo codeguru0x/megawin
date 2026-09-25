@@ -63,7 +63,9 @@ export const handler = withPlayerAuth(
   async (event) => useCase.run({ /* … */ }),
   {
     schemas: { body: kenoPlaceBetBodySchema },
-    rateLimit: { route: "keno.place-bet", limit: 30, windowSec: 60, burst: 5, subject: "account" },
+    // Số thật của place-bet chốt ở p1-02: 1 lần / 5 giây, route chung 7 game, burst 0.
+    // Snippet này chỉ minh hoạ shape — đừng copy limit/route cũ (30/phút, burst 5, route theo game).
+    rateLimit: { route: "player.place-bet", limit: 1, windowSec: 5, burst: 0, subject: "account" },
   },
 );
 ```

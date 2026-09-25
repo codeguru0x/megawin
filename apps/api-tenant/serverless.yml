@@ -17,17 +17,13 @@ custom:
 
 stages:
   dev:
-    observability:
-      provider: axiom
-      dataset: megawin-internal-dev
+    observability: false
     params:
       ### Mặc định dev sẽ là 0 không cấu hình ở prod mà chỉ định luôn khi cấu hình func
       provisionedConcurrency: 0
 
   prod:
-    observability:
-      provider: axiom
-      dataset: megawin-internal-prod
+    observability: false
 
   default:
     observability: false

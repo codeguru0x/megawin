@@ -4,7 +4,7 @@
  * Endpoint này KHÔNG yêu cầu Cognito JWT auth — chỉ cần refreshToken hợp lệ.
  */
 
-import { withPublicHandler } from "@megawin/auth";
+import { GuardSubjectType, withPublicHandler } from "@megawin/auth";
 import { PlayerRefreshTokenUseCase } from "@megawin/identity-application/use-cases/players";
 import { z } from "zod";
 
@@ -22,5 +22,8 @@ export const handler = withPublicHandler(
       COGNITO_PLAYER_POOL_CLIENT_ID: process.env.COGNITO_PLAYER_POOL_CLIENT_ID!,
     });
   },
-  { schemas: { body: bodySchema } },
+  {
+    schemas: { body: bodySchema },
+    rateLimit: { route: "auth.refresh-token", limit: 10, windowSec: 60, subject: GuardSubjectType.Ip },
+  },
 );

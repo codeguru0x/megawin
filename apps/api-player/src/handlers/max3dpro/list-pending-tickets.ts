@@ -7,6 +7,7 @@ import { withPlayerAuth } from "@megawin/auth";
 import { ListPendingTicketsPlayerUseCase } from "@megawin/game-max3dpro-application/use-cases/player";
 import { z } from "zod";
 
+import { READ_RATE_LIMIT } from "#lib/rate-limit";
 import { objectIdSchema, sizeSchema } from "#lib/schemas";
 
 const querySchema = z.object({
@@ -23,5 +24,8 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, size, cursor });
   },
-  { schemas: { query: querySchema } },
+  {
+    schemas: { query: querySchema },
+    rateLimit: { route: "max3dpro.tickets-pending", ...READ_RATE_LIMIT },
+  },
 );

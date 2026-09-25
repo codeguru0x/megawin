@@ -125,9 +125,15 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@megawin/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
       '@megawin/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      '@megawin/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
       '@types/node':
         specifier: ^25.9.6
         version: 25.9.6
@@ -204,6 +210,9 @@ importers:
       '@megawin/game-core-application':
         specifier: workspace:*
         version: link:../../packages/game-core-application
+      '@megawin/guard':
+        specifier: workspace:*
+        version: link:../../packages/guard
       '@megawin/identity':
         specifier: workspace:*
         version: link:../../packages/identity
@@ -220,9 +229,15 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@megawin/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
       '@megawin/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      '@megawin/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
       '@types/node':
         specifier: ^25.9.6
         version: 25.9.6

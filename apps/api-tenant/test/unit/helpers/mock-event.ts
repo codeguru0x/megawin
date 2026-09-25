@@ -27,10 +27,14 @@ export function createMockEvent(options: MockEventOptions = {}) {
 
   return {
     httpMethod: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": tenant.apiKey,
+    },
     body: options.body ? JSON.stringify(options.body) : null,
     pathParameters: options.pathParameters ?? {},
     queryStringParameters: options.queryStringParameters ?? {},
+    requestContext: { http: { method: "GET", sourceIp: "203.0.113.80" } },
     tenant,
     schema: {
       body: options.body ?? {},

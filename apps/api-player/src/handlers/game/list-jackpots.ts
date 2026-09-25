@@ -8,10 +8,12 @@
  * Handler chỉ auth + delegate; toàn bộ orchestration/mapping nằm ở {@link ListJackpotsUseCase}.
  */
 
-import { withPlayerAuth } from "@megawin/auth";
+import { GuardSubjectType, withPlayerAuth } from "@megawin/auth";
 
 import { ListJackpotsUseCase } from "../../use-cases/game/list-jackpots";
 
 const useCase = new ListJackpotsUseCase();
 
-export const handler = withPlayerAuth(async () => useCase.run());
+export const handler = withPlayerAuth(async () => useCase.run(), {
+  rateLimit: { route: "game.jackpots", limit: 30, windowSec: 60, subject: GuardSubjectType.Account },
+});

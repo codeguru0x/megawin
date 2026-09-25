@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # p1-02 — Rollout Rate Limit: `apps/api-player`
 
 > Nguồn: `.cursor/analysis/system-ratelimit-idempotency.analysis.md` §4.1
@@ -25,23 +32,50 @@ Bật `rateLimit` cho endpoint `api-player`. **Một lần, tất cả endpoint 
 ## Nguyên tắc
 
 1. **Bật hết trong 1 PR, `enforce` ngay.** Không chia đợt, không shadow.
-2. Ngưỡng dưới đây là **điểm khởi đầu suy đoán** — phải hiệu chỉnh bằng **load test staging** (B4)
-   trước khi coi là chốt.
-3. Endpoint càng **đắt mỗi request** thì ngưỡng càng **chặt** — tiêu chí xếp hạng chính.
-4. **Rộng tay khi chưa chắc.** Chưa có số liệu thật → chọn ngưỡng cao hơn mức nghi ngờ: chặn oan tốn
-   uy tín hơn là để lọt vài request thừa. Siết lại luôn dễ hơn nới ra.
+2. **`place-bet` không phải số suy đoán.** Ngưỡng là ràng buộc thao tác người chơi (chốt 2026-09-25,
+   xem Nhóm 1). Load test chỉ xác nhận người chọn số thật không bị 429, và script nhanh hơn 5 giây
+   thì bị chặn. **Không** nới lên 30/phút vì "rộng tay".
+3. Các endpoint còn lại: ngưỡng là điểm khởi đầu, hiệu chỉnh bằng **load test staging** (B4).
+4. Endpoint càng **đắt mỗi request** thì ngưỡng càng **chặt** — trừ `place-bet`, nơi tiêu chí chính
+   là thời gian thao tác người, không phải giá query.
+5. **Rộng tay khi chưa chắc** chỉ áp dụng nhóm polling / aggregate. Không áp dụng `place-bet`.
 
 ## Nhóm 1 — Mutation / auth (rủi ro cao nhất)
 
 | Endpoint | Handler | Rule |
 |---|---|---|
-| `POST /games/{game}/bets` ×7 | `handlers/{game}/place-bet.ts` | `limit: 30, windowSec: 60, burst: 5, subject: "account"` |
+| `POST /games/{game}/bets` ×7 | `handlers/{game}/place-bet.ts` | `limit: 1, windowSec: 5, burst: 0, subject: "account"` |
 | `POST /auth/refresh-token` | `handlers/auth/refresh-token.ts` | `limit: 10, windowSec: 60, subject: "ip"` |
 
-- `place-bet`: `route` **riêng cho từng game** (`"keno.place-bet"`, `"mega645.place-bet"`…) — không
-  dùng chung 1 route key, vì player chơi nhiều game cùng lúc là hành vi hợp lệ.
-- `burst: 5`: đặt nhiều vé liên tiếp là hành vi thật (chọn xong bấm liền). Đây là lý do chọn GCRA —
-  tách `limit` (rate) khỏi `burst` (analysis §3.2).
+### `place-bet` — 1 lần / 5 giây, **chung** mọi game, theo player
+
+Chốt 2026-09-25. Thay số cũ của analysis (`30/phút`, `burst: 5`, route riêng từng game).
+
+Người chơi phải chọn số và tiền cược trước khi bấm. Cùng lúc chỉ chơi được **một** game. Hai lần
+đặt cách nhau dưới 5 giây không phải thao tác người — đó là client viết tool bắn cược để flood
+đường tiền (mỗi request còn debit ví).
+
+GCRA với `burst: 0` (mặc định repo) = **spacing tuyệt đối**:
+
+| | |
+|---|---|
+| Rule | `{ limit: 1, windowSec: 5, burst: 0 }` |
+| `emissionIntervalMs` | `floor(5000 / 1) = 5000` |
+| Lần 1 | Cho qua ngay |
+| Lần 2 trước khi đủ 5 giây | **429**, `Retry-After` làm tròn lên từ thời gian còn lại |
+
+- `route` **chung** cả 7 handler: `"player.place-bet"`. `subject: "account"`. Quota là **mỗi player**,
+  không phải mỗi game.
+- **Không** tách `"keno.place-bet"` / `"mega645.place-bet"`. Tách route thì tool bắn 7 game song song
+  vẫn được 7 vé mỗi 5 giây (= 84 vé/phút) — đúng kiểu flood cần chặn. Player không chơi 2 game cùng
+  lúc nên chung quota không chặn oan.
+- `burst: 0` bắt buộc, khai tường minh (đừng dựa mặc định rồi ai đó thêm burst sau). "Chọn xong bấm
+  liền vài vé" **không** còn là hành vi được phép.
+- Cả 7 handler dùng **một hằng** `PLACE_BET_RATE_LIMIT` ở `apps/api-player/src/lib/` — cùng `route`,
+  cùng số. Literal rải 7 chỗ sẽ lệch.
+- Idempotency (`p0-02`) vẫn độc lập: bấm lại **cùng** vé trong 5 giây là replay, không phải lần cược
+  mới. Rate limit chặn lần **mới** quá sớm; idempotency chặn trừ tiền hai lần.
+
 - `refresh-token` dùng `withPublicHandler` → **không có identity**, chỉ IP. Chống brute-force token.
   ⚠️ Đây là endpoint dễ chặn oan nhất vì CGNAT (hàng nghìn player mobile chung IP). `limit: 10` là
   **điểm khởi đầu cần load test kỹ nhất** — phải thử ca "nhiều player chung 1 IP" (B4 #3) trước khi chốt.
@@ -91,9 +125,12 @@ một nửa không) — đó là trạng thái không ai theo dõi được.
 - File config tập trung tạo indirection: sửa ngưỡng ở file A ảnh hưởng endpoint ở file B mà review
   không thấy.
 
-Nhưng **hằng số chia sẻ** (vd `POLLING_RATE_LIMIT`) đặt trong `apps/api-player/src/lib/` là hợp lý khi
-≥3 endpoint dùng đúng cùng một bộ số — tránh 20 chỗ ghi `limit: 120` rồi lệch nhau. Nhóm 3 có ≥3
-endpoint cùng bộ số → **dùng hằng chia sẻ**, đây không phải lựa chọn tùy ý.
+Nhưng **hằng số chia sẻ** đặt trong `apps/api-player/src/lib/` là hợp lý khi ≥3 endpoint dùng đúng
+cùng một bộ số — tránh 20 chỗ ghi `limit: 120` rồi lệch nhau.
+
+- Nhóm 3: ≥3 endpoint cùng bộ số → hằng chia sẻ (`POLLING_RATE_LIMIT` và anh em), không phải tùy ý.
+- Nhóm 1 `place-bet`: **bắt buộc** một hằng `PLACE_BET_RATE_LIMIT` cho cả 7 game (cùng route
+  `"player.place-bet"`). Đây là ngoại lệ có chủ đích của quy tắc "route duy nhất" — xem B1 #1.
 
 ---
 
@@ -111,15 +148,15 @@ Import options của từng handler rồi assert — không cần Redis, không 
 
 | # | Test | Cách xác nhận PASS | Vì sao tồn tại |
 |---|---|---|---|
-| 1 | Mọi `route` là **duy nhất** toàn app | Gom tất cả `route` → `new Set(routes).size === routes.length` | 2 endpoint trùng `route` → **dùng chung quota**, chặn oan lẫn nhau. Bug này không thể phát hiện bằng mắt khi có 76 endpoint |
+| 1 | Mọi `route` là **duy nhất**, **trừ** 7 handler `place-bet` cùng `"player.place-bet"` | Gom route; `Set` bằng số route sau khi gộp 7 `place-bet` thành 1. Assert cả 7 đều là đúng chuỗi đó | Trùng route ngoài nhóm này = chung quota, chặn oan. Riêng `place-bet` **phải** trùng — tách theo game cho tool bắn 7 game song song |
 | 2 | `route` đúng format `"{game}.{action}"` | Regex `/^[a-z0-9]+\.[a-z-]+$/` | Sai format phá quy ước debug |
 | 3 | `subject` dùng `GuardSubjectType`, **không** string literal | Đối chiếu với `Object.values(GuardSubjectType)` | `code-quality-standards.mdc` §5.3 |
 | 4 | `limit` > 0, `windowSec` > 0, `burst` >= 0 | Vòng lặp mọi khai báo | `limit: 0` = chặn 100% → **outage tức thì** vì `enforce` là mặc định |
 | 5 | Endpoint `place-bet` **không** dùng `subject: "ip"` | — | Mobile NAT/CGNAT: hàng nghìn player chung IP → chặn oan hàng loạt |
-| 6 | Endpoint polling có `limit` **cao hơn** endpoint mutation | So cặp cụ thể | Ngưỡng ngược nhau là lỗi copy-paste điển hình |
+| 6 | Nhịp polling (req/phút = `limit / windowSec * 60`) **cao hơn** nhịp `place-bet` (12/phút) | So cặp cụ thể, **không** so field `limit` trần (`1` của cửa sổ 5 giây sẽ "thua" `120` một cách vô nghĩa) | Ngưỡng ngược nhau là lỗi copy-paste điển hình |
 | 7 | Số endpoint bật rate limit **khớp** danh sách 3 nhóm trong plan | `toBe(<số>)` | Chống bật thừa (endpoint không có trong plan) và bật thiếu |
 | 8 | **Mọi** endpoint mutation (`POST`/`PUT`/`DELETE`) của app đều có `rateLimit` | Liệt kê handler từ `functions/*.yml`, assert không sót | Sót 1 mutation = lỗ. Không còn đợt/shadow để "làm sau" nên phải đủ ngay |
-| 9 | Nhóm 3 dùng **hằng chia sẻ** từ `src/lib/`, không literal rải rác | So reference, không so giá trị | Sửa hằng phải lan tới mọi endpoint; literal rải rác sẽ lệch |
+| 9 | Nhóm 3 **và** 7 `place-bet` dùng **hằng chia sẻ** từ `src/lib/`, không literal rải rác | So reference, không so giá trị. `place-bet` phải là cùng một object `PLACE_BET_RATE_LIMIT` | Sửa hằng phải lan tới mọi endpoint; literal rải rác sẽ lệch — với cược thì lệch = một game lỏng hơn 5 giây |
 
 ## B2 — Integration test (Redis 8.6 thật)
 
@@ -127,7 +164,7 @@ Chỉ cần **1 endpoint tiêu biểu mỗi nhóm** — không nhân 3 lần cù
 
 | # | Test | Cách xác nhận PASS | Vì sao tồn tại |
 |---|---|---|---|
-| 10 | Nhóm 1 (`place-bet`): vượt ngưỡng → **429** ở request n+1 | `statusCode === 429` | Xác nhận endpoint **thật** được wire đúng, không chỉ config đẹp |
+| 10 | `place-bet`: request thứ 2 **trước 5 giây** → **429**; sau ≥5 giây → 200 | `statusCode === 429` rồi 200. Cùng account, **khác game** (vd keno rồi mega645) vẫn 429 | Xác nhận spacing 5 giây và quota **chung** 7 game, không chỉ config đẹp |
 | 11 | Cùng endpoint, dưới ngưỡng → **200** suốt | Gọi n lần | Không chặn oan |
 | 12 | 2 account khác nhau → quota độc lập | A 429, B 200 | Cô lập theo subject ở endpoint thật |
 | 13 | Nhóm 2 + Nhóm 3: vượt ngưỡng → 429 | 1 endpoint mỗi nhóm | Mỗi nhóm xác nhận 1 lần |
@@ -151,7 +188,9 @@ cho "đọc log shadow 7 ngày" của phương án cũ, và nó chặt hơn vì 
 
 1. **Load test từng nhóm** bằng script bắn request mô phỏng client thật — mô phỏng **đúng nhịp** client
    dự kiến, không bắn max tốc độ. Ghi bảng: endpoint | nhịp mô phỏng | ngưỡng đặt | có 429 không.
-   **Bất kỳ 429 nào ở nhịp bình thường = ngưỡng sai**, sửa ngưỡng chứ không kết luận "client sai".
+   **429 ở nhịp bình thường của nhóm 2/3 = ngưỡng sai**, sửa ngưỡng chứ không kết luận "client sai".
+   Riêng `place-bet`: nhịp người (chọn số + tiền, ≥5 giây) **không** được 429; script <5 giây
+   **phải** 429. Không nới ngưỡng để script đi qua.
 2. **Riêng endpoint polling**: chạy countdown client **thật** (không script) poll `draws/current` mỗi
    1s trong ≥5 phút → xác nhận **không** chạm ngưỡng 120. Ghi số request thực tế đã gửi.
 3. **Riêng `refresh-token`**: mô phỏng **nhiều player chung 1 IP** (đúng ca CGNAT) → xác nhận
@@ -166,6 +205,8 @@ cho "đọc log shadow 7 ngày" của phương án cũ, và nó chặt hơn vì 
 **Phần A (khai báo):**
 
 - [ ] Cả 3 nhóm đã thêm `rateLimit` đúng endpoint trong danh sách, chạy `enforce` (mặc định toàn cục).
+- [ ] 7 `place-bet` dùng chung `PLACE_BET_RATE_LIMIT`: `route: "player.place-bet"`, `limit: 1`,
+      `windowSec: 5`, `burst: 0`, `subject: "account"`.
 - [ ] Không handler nào bị sửa phần thân/use-case — chỉ thêm khai báo options.
 - [ ] Nhóm 3 dùng hằng chia sẻ ở `apps/api-player/src/lib/`, không rải 20 chỗ.
 - [ ] Không endpoint mutation nào bị sót (B1 #8).
@@ -173,8 +214,9 @@ cho "đọc log shadow 7 ngày" của phương án cũ, và nó chặt hơn vì 
 
 **Phần B (test):**
 
-- [ ] 9 unit test (B1) xanh — đặc biệt **#1 (route duy nhất)**, **#7 (số endpoint khớp plan)**,
-      **#8 (không sót mutation)**.
+- [ ] 9 unit test (B1) xanh — đặc biệt **#1 (route duy nhất, trừ 7 `place-bet` chung)**,
+      **#7 (số endpoint khớp plan)**, **#8 (không sót mutation)**.
+- [ ] Integration **#10**: request thứ 2 trước 5 giây → 429, kể cả khi đổi game.
 - [ ] 6 integration test (B2) xanh, phủ cả 3 nhóm + fail-open #14 + **#15 (429 → không tạo vé)**.
 - [ ] B3 #19 xác nhận diff **chỉ** ở options/lib; #20 xác nhận không còn `shadow`.
 - [ ] B4 #1: **đã ghi bảng load test** cho từng nhóm (không giữ số suy đoán chưa kiểm).

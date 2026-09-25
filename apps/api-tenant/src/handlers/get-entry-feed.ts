@@ -6,6 +6,7 @@
  * Auth: API Key (server-to-server).
  */
 
+import { GuardSubjectType } from "@megawin/auth";
 import { withTenantAuth } from "@megawin/auth/tenant";
 import { GetEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
@@ -37,5 +38,14 @@ export const handler = withTenantAuth(
       gameProduct,
     });
   },
-  { schemas: { query: querySchema } },
+  {
+    schemas: { query: querySchema },
+    rateLimit: {
+      route: "tenant.bets-feed",
+      limit: 3,
+      windowSec: 60,
+      burst: 2,
+      subject: GuardSubjectType.Tenant,
+    },
+  },
 );

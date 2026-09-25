@@ -8,8 +8,13 @@
 import { withPlayerAuth } from "@megawin/auth";
 import { GetJackpotPlayerUseCase } from "@megawin/game-power655-application/use-cases/player";
 
+import { POLLING_RATE_LIMIT } from "#lib/rate-limit";
+
 const useCase = new GetJackpotPlayerUseCase();
 
-export const handler = withPlayerAuth(async () => {
-  return useCase.run();
-});
+export const handler = withPlayerAuth(
+  async () => {
+    return useCase.run();
+  },
+  { rateLimit: { route: "power655.jackpot", ...POLLING_RATE_LIMIT } },
+);

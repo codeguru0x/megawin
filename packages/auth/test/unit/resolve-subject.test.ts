@@ -125,4 +125,47 @@ describe("resolveRateLimitSubject", () => {
     const ipKey = buildRateLimitKey("keno.place-bet", GuardSubjectType.Ip, "203.0.113.10");
     expect(accountKey).not.toBe(ipKey);
   });
+
+  it("subject tenant ưu tiên event.tenant hơn user.tenantId", () => {
+    const subject = resolveRateLimitSubject(
+      { tenant: { tenantId: "ten-event" }, user: { tenantId: "ten-user" } },
+      GuardSubjectType.Tenant,
+    );
+    expect(subject).toEqual({ type: GuardSubjectType.Tenant, id: "ten-event" });
+  });
+
+  it("khai tenant nhưng không có tenantId → fallback IP và logError", async () => {
+    const event = { requestContext: { http: { sourceIp: "198.51.100.9" } } };
+    const subject = resolveRateLimitSubject(event, GuardSubjectType.Tenant);
+
+    expect(subject).toEqual({ type: GuardSubjectType.Ip, id: "198.51.100.9" });
+    expect(logError).toHaveBeenCalled();
+
+    const mw = rateLimitMiddleware({ ...OPTIONS, subject: GuardSubjectType.Tenant });
+    await mw.before({ event });
+    expect(checkRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: { type: GuardSubjectType.Ip, id: "198.51.100.9" },
+      }),
+    );
+  });
+
+  it("accountId rỗng → coi như thiếu identity, fallback IP", () => {
+    const subject = resolveRateLimitSubject(
+      { user: { accountId: "" }, requestContext: { http: { sourceIp: "203.0.113.11" } } },
+      GuardSubjectType.Account,
+    );
+    expect(subject).toEqual({ type: GuardSubjectType.Ip, id: "203.0.113.11" });
+    expect(logError).toHaveBeenCalled();
+  });
+
+  it("sourceIp chỉ khoảng trắng → bỏ qua rate limit", async () => {
+    const mw = rateLimitMiddleware({ ...OPTIONS, subject: GuardSubjectType.Ip });
+    const request = { event: { requestContext: { http: { sourceIp: "   " } } } };
+    await mw.before(request);
+
+    expect(checkRateLimit).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalled();
+    expect(request).not.toHaveProperty("earlyResponse");
+  });
 });

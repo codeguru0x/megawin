@@ -6,8 +6,13 @@
 import { withPlayerAuth } from "@megawin/auth";
 import { GetCurrentDrawPlayerUseCase } from "@megawin/game-keno-application/use-cases/player";
 
+import { POLLING_RATE_LIMIT } from "#lib/rate-limit";
+
 const useCase = new GetCurrentDrawPlayerUseCase();
 
-export const handler = withPlayerAuth(async () => {
-  return useCase.run();
-});
+export const handler = withPlayerAuth(
+  async () => {
+    return useCase.run();
+  },
+  { rateLimit: { route: "keno.current-draw", ...POLLING_RATE_LIMIT } },
+);

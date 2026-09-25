@@ -30,12 +30,16 @@ export function createMockEvent(options: MockEventOptions = {}) {
 
   return {
     httpMethod: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "mw-idempotency-key": `test-idem-${user.accountId}`,
+    },
     body: options.body ? JSON.stringify(options.body) : null,
     pathParameters: options.pathParameters ?? {},
     queryStringParameters: options.queryStringParameters ?? {},
     requestContext: {
       httpMethod: "GET",
+      http: { method: "GET", sourceIp: "203.0.113.50" },
       authorizer: {
         claims: {
           [ClaimKey.Sub]: user.sub,

@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # p1-03 — Rollout Rate Limit: `apps/api-tenant`
 
 > Nguồn: `.cursor/analysis/system-ratelimit-idempotency.analysis.md` §4.2
@@ -38,13 +45,13 @@ Bật rate limit cho `api-tenant` — traffic **server-to-server** từ tenant, 
 
 1. **Identity là `tenantId`**, không phải player → `subject: "tenant"` (`event.tenant.tenantId`,
    `with-tenant-auth.ts:21`).
-2. **Traffic server-to-server**: burst cao là bình thường (batch job của tenant), nhưng số tenant ít
-   → ngưỡng per-tenant phải **cao hơn nhiều** so với per-player.
-3. **Đã có IP whitelist** ở tầng auth tenant → kẻ lạ không vào được. Rủi ro ở đây là **tenant hợp lệ
-   hành xử sai** (poll loop, retry storm, script enumeration), không phải kẻ tấn công ẩn danh.
+2. **Đang dùng private, nội bộ** — thoải mái hơn player công khai, nhưng vẫn phải có trần chống flood.
+   Không lấy số "hàng trăm request/giây" chỉ vì là server-to-server.
+3. **Đã có IP whitelist** ở tầng auth tenant → kẻ lạ không vào được. Rủi ro là **tenant hợp lệ
+   hành xử sai** (poll loop, retry storm, script enumeration).
 
-Điểm 3 đổi mục tiêu: rate limit ở `api-tenant` là **bảo vệ hạ tầng khỏi tenant vô ý**, không phải
-chống tấn công. Nên message lỗi và log phải giúp tenant tự sửa, và ngưỡng nên rộng tay.
+Mục tiêu: bảo vệ hạ tầng khỏi tenant vô ý. Message lỗi và log giúp tenant tự sửa. Ngưỡng **rộng hơn
+player ở đường đọc**, **chặt hơn ở login** (tạo/đăng nhập player là mutation).
 
 ## Endpoint 1 — `POST /player/login` (ưu tiên cao nhất)
 
@@ -53,10 +60,13 @@ hạn tần suất → tenant (hoặc code lỗi của tenant) có thể **enume
 
 Cần **2 lớp** (đây là endpoint duy nhất cần 2 lớp):
 
+Login theo **từng player** vẫn chặt: một player mở game một lần, thêm vài retry. Lớp **cả tenant**
+chốt **10 login/giây** (2026-09-25) — nội bộ, nhiều player mở game cùng lúc, nhưng không thả cửa.
+
 | Lớp | Rule | Chặn gì |
 |---|---|---|
-| Per-player | `limit: 10, windowSec: 60, subject: "tenant"` nhưng key gồm cả `playerExternalId` | Brute-force/spam 1 player cụ thể |
-| Per-tenant | `limit: 600, windowSec: 60, subject: "tenant"` | Enumeration hàng loạt |
+| Per-player | `limit: 5, windowSec: 60, burst: 0, subject: "tenant"` nhưng key gồm cả `playerExternalId` | Spam / dò 1 player. 5 lần/phút đủ login + retry |
+| Per-tenant | `limit: 10, windowSec: 1, burst: 0, subject: "tenant"` | Trần flood cả tenant: **10 login/giây**. GCRA `burst: 0` → mỗi request cách nhau 100ms (`floor(1000/10)`), không bắn 10 cái trong cùng một nhịp |
 
 ⚠️ Lớp per-player cần key gồm **giá trị từ body** (`playerExternalId`) → chỉ có sau `validatorZod`,
 nhưng `p1-01` đặt middleware **trước** `validatorZod`. **Đã chốt:** lớp per-tenant ở middleware (trước
@@ -71,15 +81,39 @@ Ghi rõ lựa chọn này vào code comment kèm lý do.
 
 ## Endpoint 2 — `GET /tenant/bets/feed`
 
-`docs/cache/04` §2.1 ghi rõ endpoint này *"bị tenant poll liên tục"*.
+Đường đọc, nội bộ, **thoải mái hơn login** — nhưng trần bám nhịp dữ liệu thật, không phải 60 lần/phút.
 
-- Rule: `limit: 60, windowSec: 60, burst: 10, subject: "tenant"`.
-- `burst: 10` cao hơn player vì tenant batch-poll nhiều page liên tiếp là hành vi hợp lệ (endpoint có
-  cursor pagination).
-- **Giá trị thật của rate limit ở đây**: biến poll storm thành **lỗi rõ ràng** (429 + log) thay vì âm
-  thầm đốt Mongo. Hiện tại tenant poll sai không ai biết cho tới khi Mongo chậm.
-- Message lỗi nên hướng tenant tới cách đúng (dùng cursor, giãn nhịp poll) — nhưng **vẫn là message
-  UI**, không lộ tên collection/hệ thống.
+### Nhịp hệ thống đang yêu cầu (đã đối chiếu code, 2026-09-25)
+
+| Nguồn | Việc nó nói | Con số |
+|---|---|---|
+| `apps/worker-*/src/functions/feed.yml` (cả 7 game) | Scheduler ghi feed | `cron(* * * * ? *)` = **1 lần/phút** |
+| `packages/game-core/src/entities/entry-feed.ts` (`hasMore`) | `false`: chờ interval rồi poll lại. `true`: poll tiếp ngay để xả page | Interval = nhịp scheduler, tức 1 phút khi đã hết data |
+| `get-entry-feed.ts` query schema | Mỗi lần lấy tối đa | `limit` 1–200, default 50 |
+
+`apps/worker-keno/README.md` ghi `rate(30s)` — **lệch** với yml. Lấy yml làm sự thật: data mới xuất
+hiện tối đa 1 lần/phút. Poll dày hơn thế khi `hasMore = false` không nhận thêm gì, chỉ đốt Mongo.
+
+Số cũ `60/phút + burst 10` = **60 lần** nhịp cần thiết. Đó là poll storm, không phải "thoải mái".
+
+### Trần: tối đa 3 lần nhịp yêu cầu
+
+Chọn **3×** (đầu thoải mái của khoảng 2–3 lần user chốt):
+
+| | |
+|---|---|
+| Rule | `{ limit: 3, windowSec: 60, burst: 2, subject: "tenant" }` |
+| Nhịp bền | 3 request/phút (1 request mỗi 20 giây) = 3× scheduler |
+| Xả page (`hasMore: true`) | `1 + burst` = **3 request liền**, rồi phải giãn 20 giây |
+| `route` | `"tenant.bets-feed"` |
+
+`burst: 2` là phần xả cursor mà contract yêu cầu ("poll tiếp ngay"), không phải cửa sổ bắn 11 phát.
+Ba page × `limit=200` = 600 item/phút — đủ bắt kịp feed sync 1 phút/lần ở volume nội bộ hiện tại.
+Load test (B4) nếu thấy backlog thật vượt 600 item/phút thì **chỉ nâng `burst`**, không kéo `limit`
+lên hàng chục: nhịp bền phải giữ ở 3× scheduler.
+
+- Message lỗi hướng tenant tới cursor + giãn nhịp khi `hasMore = false`, và `limit=200` khi cần xả.
+  Vẫn là message UI, không lộ tên collection/hệ thống.
 
 ## Endpoint 3 — `GET /tenant/reports/revenue`
 
@@ -135,7 +169,7 @@ thành sự cố tích hợp của tenant đầu tiên.
 | 4 | 2 tenant khác → 2 key khác; cùng tenant → cùng key | Tất định | Nền của test cô lập #8 |
 | 5 | Endpoint 1: **2 lớp** (per-player + per-tenant) cùng được gọi | Spy 2 lần với 2 key khác nhau | Sót 1 lớp = mất nửa phòng thủ mà không ai biết |
 | 6 | Endpoint 1: lớp per-player denied → per-tenant **không** bị trừ quota | Kiểm giá trị key per-tenant | Nếu trừ, 1 player xấu làm hụt quota cả tenant → chặn oan mọi player khác |
-| 7 | `route` của 3 endpoint **duy nhất**, đúng format | `new Set(...)` | Trùng `route` = dùng chung quota |
+| 7 | `route` của 3 endpoint **duy nhất**, đúng format, và **đúng số đã chốt** | `new Set(...)`. Login per-player `5/60 burst 0`, per-tenant `10/1 burst 0` (10/giây), feed `3/60 burst 2`, revenue `20/60` | Trùng `route` = dùng chung quota. Sai số per-tenant = không còn đúng 10 login/giây |
 
 ## B2 — Integration test (Redis 8.6 thật)
 
@@ -166,7 +200,9 @@ thành sự cố tích hợp của tenant đầu tiên.
    được **tenant lớn nhất dự kiến**, không phải tenant trung bình — không có số liệu thật thì chọn
    rộng tay.
 2. **Load test 2 lớp của Endpoint 1 cùng lúc**: bắn nhiều player khác nhau trong cùng tenant tới sát
-   `limit: 600` per-tenant → xác nhận per-player **không** bị trừ oan và ngược lại. Ghi số.
+   `limit: 10 / 1 giây` per-tenant → xác nhận per-player (`5/phút`) **không** bị trừ oan và ngược lại. Ghi số.
+   Cùng lúc: `bets/feed` ở nhịp 1 lần/phút **không** 429; lần thứ 4 trong cùng phút (sau khi đã xả
+   burst 3) **phải** 429.
 3. **Xác nhận `tenantId` không lộ**: `KEYS guard:*` trên Redis, đọc bằng mắt.
 4. **Xác nhận tài liệu tích hợp đã có bảng ngưỡng** + hướng dẫn xử lý 429 (`Retry-After`, backoff,
    cursor cho `bets/feed`). Ghi link tới trang tài liệu.
@@ -177,6 +213,8 @@ thành sự cố tích hợp của tenant đầu tiên.
 **Phần A (khai báo):**
 
 - [ ] 3 endpoint deployed đã thêm `rateLimit`, chạy `enforce` (mặc định toàn cục).
+- [ ] Login: per-player `5/60 burst 0`, per-tenant `10/1 burst 0` (10 login/giây). Feed: `3/60 burst 2`.
+      Revenue giữ `20/60` (query nặng, không phải poll — đã rà, không đổi).
 - [ ] Endpoint 1 có **cả 2 lớp**; lý do chọn vị trí lớp per-player đã ghi vào code comment.
 - [ ] `@megawin/guard` thêm vào `package.json` **chỉ khi** handler gọi trực tiếp `RateLimiter`.
 - [ ] **Tài liệu tích hợp tenant** đã có bảng ngưỡng + hướng dẫn xử lý 429 (deliverable bắt buộc).

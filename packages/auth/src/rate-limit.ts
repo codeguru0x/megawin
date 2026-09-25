@@ -61,7 +61,12 @@ function retryAfterSeconds(retryAfterMs: number): string {
   return String(Math.max(1, Math.ceil(retryAfterMs / 1000)));
 }
 
-function buildDeniedResponse(decision: RateLimitDecision) {
+/**
+ * Response 429 chuẩn envelope — dùng từ middleware và từ handler gọi `RateLimiter` trực tiếp
+ * (vd lớp per-player của `POST /player/login`). Escape hatch của `successEnvelopeMiddleware`
+ * nhận đúng `{ statusCode, body }` nên không bị bọc thêm.
+ */
+export function buildRateLimitDeniedResponse(decision: RateLimitDecision) {
   return {
     statusCode: 429,
     headers: {
@@ -84,9 +89,22 @@ type EventLike = {
   requestContext?: { http?: { sourceIp?: string } };
 };
 
+/** Thiếu identity đã khai → fallback IP; không lấy được IP thì bỏ qua (không tự gây sự cố). */
+function fallbackIpOrSkip(event: EventLike, subjectType: GuardSubjectType, reason: string): GuardSubject | null {
+  const ip = extractClientIpFromApiGatewayV2(event);
+  logError("rateLimit.resolveSubject", new Error(reason), { subjectType });
+  if (!ip) {
+    logError("rateLimit.resolveSubject", new Error("Không lấy được IP sau khi fallback — bỏ qua rate limit"), {
+      subjectType,
+    });
+    return null;
+  }
+  return { type: GuardSubjectType.Ip, id: ip };
+}
+
 /**
  * Resolve subject theo thứ tự plan: account → tenant → IP.
- * `account` thiếu identity → fallback IP + log. Không lấy được IP → skip (caller bỏ qua RL).
+ * Thiếu identity đã khai → fallback IP + log. Không lấy được IP → skip (caller bỏ qua RL).
  */
 export function resolveRateLimitSubject(event: EventLike, subjectType: GuardSubjectType): GuardSubject | null {
   if (subjectType === GuardSubjectType.Account) {
@@ -94,21 +112,7 @@ export function resolveRateLimitSubject(event: EventLike, subjectType: GuardSubj
     if (accountId) {
       return { type: GuardSubjectType.Account, id: accountId };
     }
-    const ip = extractClientIpFromApiGatewayV2(event);
-    logError(
-      "rateLimit.resolveSubject",
-      new Error("Khai subject account nhưng event không có accountId — fallback IP"),
-      { subjectType },
-    );
-    if (!ip) {
-      logError(
-        "rateLimit.resolveSubject",
-        new Error("Không lấy được IP sau khi fallback từ account — bỏ qua rate limit"),
-        { subjectType },
-      );
-      return null;
-    }
-    return { type: GuardSubjectType.Ip, id: ip };
+    return fallbackIpOrSkip(event, subjectType, "Khai subject account nhưng event không có accountId — fallback IP");
   }
 
   if (subjectType === GuardSubjectType.Tenant) {
@@ -116,12 +120,7 @@ export function resolveRateLimitSubject(event: EventLike, subjectType: GuardSubj
     if (tenantId) {
       return { type: GuardSubjectType.Tenant, id: tenantId };
     }
-    logError(
-      "rateLimit.resolveSubject",
-      new Error("Khai subject tenant nhưng event không có tenantId — bỏ qua rate limit"),
-      { subjectType },
-    );
-    return null;
+    return fallbackIpOrSkip(event, subjectType, "Khai subject tenant nhưng event không có tenantId — fallback IP");
   }
 
   const ip = extractClientIpFromApiGatewayV2(event);
@@ -175,7 +174,7 @@ export function rateLimitMiddleware(options: HandlerRateLimitOptions) {
         },
       });
 
-      request.earlyResponse = buildDeniedResponse(decision);
+      request.earlyResponse = buildRateLimitDeniedResponse(decision);
     },
   };
 }

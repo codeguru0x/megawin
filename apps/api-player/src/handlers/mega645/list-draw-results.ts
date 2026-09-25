@@ -9,6 +9,7 @@ import { DRAW_ID_REGEX, ISO_DATE_REGEX } from "@megawin/shared/constants";
 import { todayVN } from "@megawin/shared/utils";
 import { z } from "zod";
 
+import { READ_RATE_LIMIT } from "#lib/rate-limit";
 import { sizeSchema } from "#lib/schemas";
 
 const querySchema = z.object({
@@ -28,5 +29,8 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ size, from, cursor });
   },
-  { schemas: { query: querySchema } },
+  {
+    schemas: { query: querySchema },
+    rateLimit: { route: "mega645.draw-results", ...READ_RATE_LIMIT },
+  },
 );
