@@ -69,13 +69,11 @@ export function getHeaderFromApiGatewayV2(event: ApiGatewayV2EventSource, name: 
 export function extractIdempotencyKeyFromApiGatewayV2(event: ApiGatewayV2EventSource): string {
   const raw = getHeaderFromApiGatewayV2(event, IDEMPOTENCY_KEY_HEADER);
   if (raw == null) {
-    throw AppException.badRequest("Thiếu header mw-idempotency-key. Vui lòng gửi lại yêu cầu kèm mã này.");
+    throw AppException.badRequest("Thiếu idempotency key. Vui lòng gửi lại yêu cầu kèm key này.");
   }
 
   if (!IDEMPOTENCY_KEY_PATTERN.test(raw)) {
-    throw AppException.badRequest(
-      "Mã mw-idempotency-key không hợp lệ. Dùng 8–128 ký tự chữ, số, gạch ngang hoặc gạch dưới.",
-    );
+    throw AppException.badRequest("Idempotency key không hợp lệ. Dùng 8–128 ký tự chữ, số, gạch ngang hoặc gạch dưới.");
   }
 
   return raw;

@@ -23,6 +23,7 @@ import type { CSSProperties } from "react";
  * đây (đã hiện inline tại dòng qua `rowErrors`, tránh lặp thông tin — đúng góp ý "chỉ báo tổng
  * số thành/thất, không cần nhắc từng kỳ thành công").
  */
+import { GameProduct } from "@megawin/game-core/entities";
 import { formatNumber } from "@megawin/shared/utils";
 import { AlertTriangle, Ban, CheckCircle2, Loader2, PlayCircle, RotateCcw } from "lucide-react";
 
@@ -36,6 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { BatchRunnerState } from "@/hooks/use-batch-runner";
+import { GAME_COLORS } from "@/lib/game-colors";
 
 import type { DerivedRow } from "../../hub-types";
 import { BulkActionKind } from "./queue-types";
@@ -100,6 +102,7 @@ export function BulkConfirmDialog({
   // (staff bấm "Đóng bán" cho đúng 1 kỳ trong panel, thấy chữ "hàng loạt" gây hoang mang).
   const isSingle = targetRows.length === 1;
   const title = isSingle ? copy.title.replace(" hàng loạt", "") : copy.title;
+  const iconGradient = GAME_COLORS[GameProduct.Keno].iconGradient;
 
   // Job nhiều lô — CHỈ áp dụng cho bulk (Action Bar), single-row luôn `totalChunks <= 1`.
   const isMultiChunk = batchState.totalChunks > 1;
@@ -110,15 +113,21 @@ export function BulkConfirmDialog({
     <Dialog open={open} onOpenChange={isBatchRunning ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <div className="bg-primary/10 text-primary mb-1 flex size-9 items-center justify-center rounded-full">
-            <Icon className="size-5" />
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm ${iconGradient}`}
+            >
+              <Icon className="size-4.5 text-white" />
+            </div>
+            <div>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription className="text-xs">
+                {isMultiChunk
+                  ? `${copy.description} Do vượt trần 1 lần gửi, hệ thống sẽ tự chia thành ${batchState.totalChunks} lô liên tiếp.`
+                  : copy.description}
+              </DialogDescription>
+            </div>
           </div>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {isMultiChunk
-              ? `${copy.description} Do vượt trần 1 lần gửi, hệ thống sẽ tự chia thành ${batchState.totalChunks} lô liên tiếp.`
-              : copy.description}
-          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 py-2">

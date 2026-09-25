@@ -1,0 +1,19 @@
+---
+description: >-
+  Plan Mode / viết implementation plan. Lưu plan vào .cursor/plans của
+  workspace hiện tại — không dùng khi implement, debug, hay chat thường.
+alwaysApply: false
+---
+
+# Lưu plan vào `.cursor/plans`
+
+Chỉ khi đang **viết / cập nhật plan** (Plan Mode, hoặc user bảo viết plan).
+
+1. Ghi vào `.cursor/plans/` của **workspace hiện tại**. Không để plan chỉ nằm ở `~/.cursor/plans`.
+2. Nếu Plan Mode đã tạo file ở home: nhắc user bấm **Save to workspace**, hoặc copy vào `.cursor/plans/` rồi chỉnh tiếp ở đó.
+3. Feature ≥2 plan / nhiều phase / có analysis nguồn → thư mục `.cursor/plans/<feature-slug>/` + `00-overview.md`.
+4. Plan nhỏ một lần → `.cursor/plans/<topic>.plan.md`.
+5. Suffix `.plan.md`. Không ghi plan ở root repo hay `docs/plans/`.
+6. Trước khi tạo file mới: kiểm tra feature đã có thư mục chưa. Có thì thêm đúng số thứ tự và cập nhật bảng status trong `00-overview.md`.
+
+Convention đầy đủ: `.cursor/plans/others/README.md`.

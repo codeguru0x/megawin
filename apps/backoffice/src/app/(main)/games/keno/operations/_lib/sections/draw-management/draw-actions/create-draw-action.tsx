@@ -19,6 +19,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { GameProduct } from "@megawin/game-core/entities";
 import { generateKenoDrawId } from "@megawin/game-keno/helpers";
 import { KENO_CREATE_DRAW_BATCH_MAX } from "@megawin/game-keno/schemas";
 import { addDays, displayVNTime, todayVN, todayVNAsLocalDate, toVNIsoString } from "@megawin/shared/utils";
@@ -41,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
@@ -259,14 +261,20 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarPlus className="size-4.5 text-orange-500" />
-            Tạo kỳ quay Keno
-          </DialogTitle>
-          <DialogDescription>
-            Tạo nhiều kỳ quay liên tiếp cho một ngày chỉ định theo số kỳ lựa chọn, lịch quay và mã kỳ do hệ thống tự
-            tính.
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm ${GAME_COLORS[GameProduct.Keno].iconGradient}`}
+            >
+              <CalendarPlus className="size-4.5 text-white" />
+            </div>
+            <div>
+              <DialogTitle>Tạo kỳ quay Keno</DialogTitle>
+              <DialogDescription className="text-xs">
+                Tạo nhiều kỳ quay liên tiếp cho một ngày chỉ định theo số kỳ lựa chọn, lịch quay và mã kỳ do hệ thống tự
+                tính.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 py-1">

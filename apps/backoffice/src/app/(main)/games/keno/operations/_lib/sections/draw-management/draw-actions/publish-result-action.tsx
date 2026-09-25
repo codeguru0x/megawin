@@ -43,6 +43,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import {
@@ -493,23 +494,31 @@ export function PublishResultAction({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ClipboardCheck className="size-4.5 text-orange-500" />
-            {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
-            {/* Bộ đếm "kỳ X/N" (P1-06) — chỉ hiện khi đang chạy hàng đợi nhiều kỳ. Đặt NGAY SAU
-                tiêu đề (giờ quay), KHÔNG đẩy sát phải (`ml-auto`) — vị trí đó nằm cạnh nút đóng
-                (X) của dialog, dễ đọc nhầm badge là 1 phần điều khiển dialog thay vì thông tin
-                về kỳ đang nhập. `shrink-0` giữ badge không co lại khi tiêu đề dài. */}
-            {queue != null && queue.length > 1 && (
-              <span className="bg-muted text-muted-foreground text-2xs shrink-0 rounded-full px-2 py-0.5 font-mono">
-                kỳ {queue.length - remainingDraws.length}/{queue.length}
-              </span>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            Nhập {KENO_DRAW_COUNT} số trúng ({pad2(KENO_NUMBER_MIN)}–{pad2(KENO_NUMBER_MAX)}). Thứ tự nhập là thứ tự
-            quay chính thức.
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm ${GAME_COLORS[GameProduct.Keno].iconGradient}`}
+            >
+              <ClipboardCheck className="size-4.5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
+                {/* Bộ đếm "kỳ X/N" (P1-06) — chỉ hiện khi đang chạy hàng đợi nhiều kỳ. Đặt NGAY SAU
+                    tiêu đề (giờ quay), KHÔNG đẩy sát phải (`ml-auto`) — vị trí đó nằm cạnh nút đóng
+                    (X) của dialog, dễ đọc nhầm badge là 1 phần điều khiển dialog thay vì thông tin
+                    về kỳ đang nhập. `shrink-0` giữ badge không co lại khi tiêu đề dài. */}
+                {queue != null && queue.length > 1 && (
+                  <span className="bg-muted text-muted-foreground text-2xs shrink-0 rounded-full px-2 py-0.5 font-mono">
+                    kỳ {queue.length - remainingDraws.length}/{queue.length}
+                  </span>
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Nhập {KENO_DRAW_COUNT} số trúng ({pad2(KENO_NUMBER_MIN)}–{pad2(KENO_NUMBER_MAX)}). Thứ tự nhập là thứ tự
+                quay chính thức.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>

@@ -30,6 +30,25 @@ interface HubPreferencesState {
   setSellingTableExpanded: (value: boolean) => void;
 }
 
+/** Phần persist — chỉ 3 field thói quen, không gồm setter. */
+type HubPreferencesPersisted = Pick<HubPreferencesState, "dayFlowVisible" | "density" | "sellingTableExpanded">;
+
+/**
+ * Đưa storage cũ lên version hiện tại.
+ *
+ * Version 2 thêm `sellingTableExpanded`. Zustand persist **không** tự merge khi version lệch —
+ * thiếu `migrate` sẽ log "couldn't be migrated since no migrate function was provided" và bỏ
+ * qua state đã lưu.
+ */
+function migrateHubPreferences(persisted: unknown): HubPreferencesPersisted {
+  const state = persisted as Partial<HubPreferencesPersisted> | null;
+  return {
+    dayFlowVisible: state?.dayFlowVisible ?? true,
+    density: state?.density === "compact" ? "compact" : "comfortable",
+    sellingTableExpanded: state?.sellingTableExpanded ?? false,
+  };
+}
+
 /** Đọc/viết `localStorage` an toàn — không throw ra ngoài khi bị chặn (chế độ ẩn danh, quota). */
 const safeLocalStorage = {
   getItem: (name: string): string | null => {
@@ -68,6 +87,7 @@ export const useHubPreferences = create<HubPreferencesState>()(
     {
       name: "bingo18-ops-hub-preferences",
       version: 2,
+      migrate: migrateHubPreferences,
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
         dayFlowVisible: state.dayFlowVisible,

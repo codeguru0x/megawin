@@ -48,6 +48,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import {
@@ -420,19 +421,29 @@ export function PublishResultAction({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ClipboardCheck className="size-4.5 text-amber-500" />
-            {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
-            {queue != null && queue.length > 1 && (
-              <span className="bg-muted text-muted-foreground text-2xs ml-auto rounded-full px-2 py-0.5 font-mono">
-                kỳ {queue.length - remainingDraws.length}/{queue.length}
-              </span>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            Nhập {BINGO18_DRAW_COUNT} số xúc xắc ({BINGO18_DICE_MIN}–{BINGO18_DICE_MAX}). Thứ tự nhập là thứ tự quay
-            chính thức.
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm ${GAME_COLORS[GameProduct.Bingo18].iconGradient}`}
+            >
+              <ClipboardCheck className="size-4.5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="flex items-center gap-2">
+                {formatResultDialogTitle(currentDraw.drawId, currentDraw.drawTime)}
+                {/* Bộ đếm "kỳ X/N" — đặt NGAY SAU tiêu đề, KHÔNG `ml-auto` (cạnh nút X dễ đọc
+                    nhầm là điều khiển dialog). `shrink-0` giữ badge không co khi tiêu đề dài. */}
+                {queue != null && queue.length > 1 && (
+                  <span className="bg-muted text-muted-foreground text-2xs shrink-0 rounded-full px-2 py-0.5 font-mono">
+                    kỳ {queue.length - remainingDraws.length}/{queue.length}
+                  </span>
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Nhập {BINGO18_DRAW_COUNT} số xúc xắc ({BINGO18_DICE_MIN}–{BINGO18_DICE_MAX}). Thứ tự nhập là thứ tự quay
+                chính thức.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>

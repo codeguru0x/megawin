@@ -23,6 +23,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { generateBingo18DrawId } from "@megawin/game-bingo18/helpers";
 import { BINGO18_CREATE_DRAW_BATCH_MAX } from "@megawin/game-bingo18/schemas";
+import { GameProduct } from "@megawin/game-core/entities";
 import { addDays, displayVNTime, todayVN, todayVNAsLocalDate, toVNIsoString } from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -43,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { GAME_COLORS } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
 import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
@@ -261,14 +263,20 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarPlus className="size-4.5 text-amber-500" />
-            Tạo kỳ quay Bingo 18
-          </DialogTitle>
-          <DialogDescription>
-            Tạo nhiều kỳ quay liên tiếp cho một ngày chỉ định theo số kỳ lựa chọn, lịch quay và mã kỳ do hệ thống tự
-            tính.
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-sm ${GAME_COLORS[GameProduct.Bingo18].iconGradient}`}
+            >
+              <CalendarPlus className="size-4.5 text-white" />
+            </div>
+            <div>
+              <DialogTitle>Tạo kỳ quay Bingo 18</DialogTitle>
+              <DialogDescription className="text-xs">
+                Tạo nhiều kỳ quay liên tiếp cho một ngày chỉ định theo số kỳ lựa chọn, lịch quay và mã kỳ do hệ thống tự
+                tính.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
