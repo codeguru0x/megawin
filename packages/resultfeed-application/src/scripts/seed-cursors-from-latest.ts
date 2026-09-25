@@ -15,8 +15,10 @@
  *
  * ⚠️ AN TOÀN: script CHỈ seed cursor đang cold-start (`lastConfirmedPeriod === null`) — bỏ
  * qua cursor đã có tiến độ (đã từng fetch sống thành công/thất bại) để không vô tình lùi
- * hoặc ghi đè tiến độ đang chạy. Muốn ép reset cursor đã có tiến độ, dùng
- * `SourceCursorRepository.seedAnchor` qua backoffice (chưa xây) hoặc sửa cursor bằng tay.
+ * hoặc ghi đè tiến độ đang chạy. Muốn ép reset cursor đã có tiến độ (vd nguồn bị lỗ kỳ,
+ * nhảy tới kỳ còn dữ liệu), xem runbook `apps/worker-resultfeed/GUIDE.md` và plan
+ * `.cursor/plans/resultfeed/12-cursor-gap-lag-probe.plan.md`. Backoffice Skip API = P3
+ * của plan; trước đó sửa Mongo tay.
  *
  * Dùng CHUNG env `RESULTFEED_IMPORT_MONGODB_URI` với `import-historical-results.ts` (xem
  * `.env.test.example §3.1.1`) — cùng 1 DB đích, cùng tier tin cậy (ops có quyền chạy script

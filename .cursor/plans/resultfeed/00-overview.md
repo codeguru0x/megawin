@@ -19,6 +19,7 @@ nhau**, mỗi site một worker + một parser riêng, lưu vào **DB riêng**, 
 | `02-fetch-parse.plan.md` | `FetchProvider` (đổi vendor không sửa domain) + `SourceAdapter` + workers |
 | `03-consensus.plan.md` | Ưu tiên nguồn, xử lý sai lệch, human verify, publish |
 | `04-backoffice-api.plan.md` | Trang vận hành trong backoffice + API nội bộ + API public (làm sau) |
+| `12-cursor-gap-lag-probe.plan.md` | CursorLag + probe lỗ kỳ + Skip-to-period (incident Keno 2026-09). Runbook: `apps/worker-resultfeed/GUIDE.md` |
 
 ---
 
@@ -350,3 +351,5 @@ G1→G4 rủi ro tiền = 0 vì không kết quả nào chảy vào MegaWin.
 - ❌ Auto-publish ngay (G6, sau khi có số liệu tin cậy).
 - ❌ Sửa `isSameKenoResult` / logic settle của core — việc của core, không phải `resultfeed`.
 - ❌ Thêm game ngoài Keno/Bingo18 — kiến trúc mở sẵn nhưng chưa làm.
+- ❌ `seed:cursors --force` trên cursor đã có tiến độ — nhảy theo consensus mới nhất, bỏ lỗ
+  giữa (xem `12-cursor-gap-lag-probe.plan.md`).
