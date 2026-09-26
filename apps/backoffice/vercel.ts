@@ -51,12 +51,21 @@ import type { VercelConfig } from "@vercel/config/v1";
 export const config: VercelConfig = {
   // ⚠️ STATIC FIELD — literal tĩnh, xem NHÓM 1 ở header.
   git: {
-    // Branch không khai báo mặc định là `true`. `main`/`staging` liệt kê tường
-    // minh để rõ ý đồ whitelist; chỉ `dev: false` là dòng thực sự chặn deploy.
+    // `deploymentEnabled` là OPT-OUT, không phải whitelist. Docs Vercel:
+    // branch không khớp rule nào → default `true` → vẫn auto-deploy.
+    // `main: true` / `staging: true` một mình KHÔNG chặn branch khác.
+    //
+    // Muốn chỉ main + staging: phải deny-all bằng glob, rồi bật lại 2 branch.
+    // Nhiều rule khớp → chỉ cần MỘT rule `true` là deploy (docs).
+    //
+    // Minimatch: `*` không khớp `/`. Branch AI Agent kiểu `cursor/foo-bar`
+    // chỉ bị chặn bởi `*/*` / `**`, không phải bởi `*` hay `dev: false`.
     deploymentEnabled: {
+      "*": false,
+      "*/*": false,
+      "**": false,
       main: true,
       staging: true,
-      dev: false,
     },
   },
 

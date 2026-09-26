@@ -10,7 +10,7 @@ import { GuardSubjectType } from "@megawin/guard";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PLAYER_LOGIN_PER_PLAYER_RATE_LIMIT, PLAYER_LOGIN_PER_TENANT_RATE_LIMIT } from "../../src/lib/rate-limit";
-import { createTenantHttpEvent, parseBody, sleep } from "../helpers/tenant-event";
+import { createTenantHttpEvent, parseBody } from "../helpers/tenant-event";
 
 const playerLoginRun = vi.hoisted(() => vi.fn());
 const feedRun = vi.hoisted(() => vi.fn());
@@ -104,9 +104,8 @@ describe("api-tenant rateLimit rollout — Redis", () => {
     };
     expect(first.statusCode).toBe(200);
 
-    // Per-tenant burst 0 / 10/s → phải giãn >100ms để lớp tenant không chặn trước lớp player.
-    await sleep(150);
-
+    // Per-player burst 0 / 5s — request thứ 2 cùng player trong 5s bị chặn.
+    // Tenant burst 20 nên không chặn trước lớp player.
     const denied = (await handler(loginEvent("ten-9", "playerAAAA") as never, {} as never)) as {
       statusCode: number;
       headers: Record<string, string>;
@@ -116,7 +115,6 @@ describe("api-tenant rateLimit rollout — Redis", () => {
     expect(parseBody(denied).error?.code).toBe("TOO_MANY_REQUESTS");
     expect(Number(denied.headers["Retry-After"])).toBeGreaterThanOrEqual(1);
 
-    await sleep(150);
     const other = (await handler(loginEvent("ten-9", "playerBBBB") as never, {} as never)) as {
       statusCode: number;
     };
@@ -130,21 +128,24 @@ describe("api-tenant rateLimit rollout — Redis", () => {
     registerTenant("ten-b10");
     const { handler } = await import("../../src/handlers/player-login");
 
-    const first = (await handler(loginEvent("ten-a10", "playerAAAA") as never, {} as never)) as {
-      statusCode: number;
-    };
-    const denied = (await handler(loginEvent("ten-a10", "playerCCCC") as never, {} as never)) as {
-      statusCode: number;
-    };
-    expect(first.statusCode).toBe(200);
-    expect(denied.statusCode).toBe(429);
-    expect(playerLoginRun).toHaveBeenCalledTimes(1);
+    // Burst 20 → 21 login liền (player khác nhau để không dính lớp 5s) rồi mới 429.
+    const allowedCount = PLAYER_LOGIN_PER_TENANT_RATE_LIMIT.burst + 1;
+    const codes: number[] = [];
+    for (let i = 0; i < allowedCount + 1; i++) {
+      const res = (await handler(loginEvent("ten-a10", `plyr${String(i).padStart(4, "0")}`) as never, {} as never)) as {
+        statusCode: number;
+      };
+      codes.push(res.statusCode);
+    }
+    expect(codes.slice(0, allowedCount).every((c) => c === 200)).toBe(true);
+    expect(codes[allowedCount]).toBe(429);
+    expect(playerLoginRun).toHaveBeenCalledTimes(allowedCount);
 
     const other = (await handler(loginEvent("ten-b10", "playerAAAA") as never, {} as never)) as {
       statusCode: number;
     };
     expect(other.statusCode).toBe(200);
-    expect(playerLoginRun).toHaveBeenCalledTimes(2);
+    expect(playerLoginRun).toHaveBeenCalledTimes(allowedCount + 1);
   });
 
   // #11
@@ -156,8 +157,9 @@ describe("api-tenant rateLimit rollout — Redis", () => {
     expect(
       ((await login(loginEvent("ten-11", "playerAAAA") as never, {} as never)) as { statusCode: number }).statusCode,
     ).toBe(200);
+    // Cùng player trong 5s → 429 lớp per-player; không trừ quota feed.
     expect(
-      ((await login(loginEvent("ten-11", "playerBBBB") as never, {} as never)) as { statusCode: number }).statusCode,
+      ((await login(loginEvent("ten-11", "playerAAAA") as never, {} as never)) as { statusCode: number }).statusCode,
     ).toBe(429);
 
     const feedRes = (await feed(feedEvent("ten-11") as never, {} as never)) as { statusCode: number };

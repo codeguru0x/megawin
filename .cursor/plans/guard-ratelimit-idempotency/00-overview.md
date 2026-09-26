@@ -53,15 +53,19 @@ Ký hiệu: ⏳ pending · 🔄 in-progress · ✅ done · ❌ failing · 🧊 d
 
 | Plan | Phase | Code | Test | Ghi chú |
 |---|---|---|---|---|
-| `p0-00-redis-failopen-hardening` | P0 | ✅ done | ⏳ pending | Fail-open tầng connect đã vá (Phần A 2026-09-21). Phần B test để sau |
+| `p0-00-redis-failopen-hardening` | P0 | ✅ done | ✅ done | Code + Test 2026-09-21 (DoD plan đã tick hết, gồm B4 blip Redis). Overview cũ ghi Test ⏳ — lệch |
 | `p0-01-guard-package-foundation` | P0 | ✅ done | ✅ done | Code 2026-09-21, Test 2026-09-22 (13 unit + 14 integration) |
-| `p0-01b-lua-eval-review-fixes` | P0 | ✅ done | ✅ done | Code + Test 2026-09-23 (23 unit + 30 integration). Q1=B, Q2=A. **Mở `p1-01`** |
-| `p0-02-idempotent-place-bet` | P0 | ⏳ pending | ⏳ pending | **Ưu tiên nghiệp vụ cao nhất** — vá bug tài chính. **Độc lập hoàn toàn** (fingerprint guard đã bỏ → 0 Redis) |
-| `p1-01-ratelimit-middleware` | P1 | ⏳ pending | ⏳ pending | 2 mode: `enforce` (mặc định) + `off`. **Không** có shadow |
-| `p1-02-rollout-api-player` | P1 | ⏳ pending | ⏳ pending | Bật hết 1 lần, `enforce` ngay |
-| `p1-03-rollout-api-tenant` | P1 | ⏳ pending | ⏳ pending | Song song được với `p1-02` |
-| `p2-01-observability` | P2 | ⏳ pending | ⏳ pending | Không còn chặn việc bật `enforce`; giá trị chính là **alert fail-open** |
-| `p3-01-generic-idempotency-store` | P3 | 🧊 deferred | 🧊 deferred | Chỉ khi operator/mutation không-WAL xuất hiện |
+| `p0-01b-lua-eval-review-fixes` | P0 | ✅ done | ✅ done | Code + Test 2026-09-23 (23 unit + 30 integration). Q1=B, Q2=A |
+| `p0-02-idempotent-place-bet` | P0 | ✅ done | 🔄 in-progress | Code + test tự động 2026-09-24 (`deriveTx`, header `mw-idempotency-key` bắt buộc, 7 game + SDK). **Còn B4 staging**: unique index, đếm vé/ví thật, header trên wire |
+| `p1-01-ratelimit-middleware` | P1 | ✅ done | ✅ done | Middleware `enforce`/`off` trong `buildHandler`. Unit + integration đã có. B4 số đo chưa ghi vào plan nhưng integration đã cover fail-open + van `off` |
+| `p1-02-rollout-api-player` | P1 | ✅ done | 🔄 in-progress | ~70 handler đã khai `rateLimit`, `enforce` ngay. Unit + integration (gồm place-bet cross-game 429) đã có. **Còn B4 load test staging** |
+| `p1-03-rollout-api-tenant` | P1 | ✅ done | 🔄 in-progress | 3 endpoint deployed + README ngưỡng/`Retry-After`. Unit + integration (2 lớp login, cô lập tenant) đã có. **Còn B4 load test staging** |
+| `p2-01-observability` | P2 | ⏳ pending | ⏳ pending | Chưa làm. Không chặn `enforce` (đã bật). Giá trị còn lại: **alert fail-open kéo dài**. Mở được vì `p1-02` code đã xong — xem thảo luận 2026-09-25 |
+| `p3-01-generic-idempotency-store` | P3 | 🧊 deferred | 🧊 deferred | **Không làm.** Chưa có consumer không-WAL (`operator-wallet` / `operator-api` chưa tồn tại). `place-bet` đã xong bằng Mongo-native (`p0-02`) |
+
+Đối chiếu 2026-09-25 (đọc code + test file, không chạy lại suite): P0 foundation và P1 middleware/rollout
+**code đã có**. Cột Test còn 🔄 ở `p0-02` / `p1-02` / `p1-03` vì **B4 xác nhận thủ công trên staging
+chưa ghi số** — theo rule của thư mục này, đó chưa phải "xong". `p2-01` chưa viết; `p3-01` vẫn đóng.
 
 ## Thứ tự phụ thuộc
 

@@ -189,13 +189,13 @@ cho 1 endpoint.
 
 ```ts
 // Lớp 1 — middleware (trước Zod): per-tenant
-//   { route: "tenant.player-login", limit: 10, windowSec: 1, burst: 0, subject: tenant }
+//   { route: "tenant.player-login", limit: 10, windowSec: 1, burst: 20, subject: tenant }
 
 // Lớp 2 — trong handler (sau Zod): per-player
 const perPlayer = await limiter.checkRateLimit({
   route: "tenant.player-login.player",
   subject: { type: GuardSubjectType.Tenant, id: `${tenantId}:${playerExternalId}` },
-  rule: { limit: 5, windowSec: 60, burst: 0 },
+  rule: { limit: 1, windowSec: 5, burst: 0 },
 });
 ```
 
@@ -456,12 +456,12 @@ Khác player ở 3 điểm: identity là `tenantId`; burst cao là bình thườ
 IP whitelist ở auth → rủi ro là **tenant hợp lệ hành xử sai** (poll loop, retry storm,
 enumeration), không phải kẻ lạ. Ngưỡng **rộng tay**, message phải giúp tenant tự sửa.
 
-| Endpoint                      | Lớp                        | `route`                        | Rule                                    | `subject`                                        | Vì sao                                                                          |
-| ----------------------------- | -------------------------- | ------------------------------ | --------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `POST /player/login`          | Per-tenant (middleware)    | `"tenant.player-login"`        | `{ limit: 10, windowSec: 1, burst: 0 }` | `Tenant`                                         | **10 login/giây**, spacing 100ms. Không bắn 10 cái cùng một nhịp                |
-| `POST /player/login`          | Per-player (trong handler) | `"tenant.player-login.player"` | `{ limit: 5, windowSec: 60, burst: 0 }` | `Tenant` + `id` ghép `tenantId:playerExternalId` | Login + retry. **Không** trừ lớp kia khi denied                                 |
-| `GET /tenant/bets/feed`       | 1 lớp                      | `"tenant.bets-feed"`           | `{ limit: 3, windowSec: 60, burst: 2 }` | `Tenant`                                         | Scheduler feed 1 lần/phút. Trần = 3× nhịp đó; burst 2 = xả 3 page khi `hasMore` |
-| `GET /tenant/reports/revenue` | 1 lớp                      | `"tenant.reports-revenue"`     | `{ limit: 20, windowSec: 60 }`          | `Tenant`                                         | Query nặng nhất app. Gọi theo giờ/ngày → 20/phút đã rộng                        |
+| Endpoint                      | Lớp                        | `route`                        | Rule                                     | `subject`                                        | Vì sao                                                                          |
+| ----------------------------- | -------------------------- | ------------------------------ | ---------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `POST /player/login`          | Per-tenant (middleware)    | `"tenant.player-login"`        | `{ limit: 10, windowSec: 1, burst: 20 }` | `Tenant`                                         | **10 login/giây**, burst 20 — spike ~21 login liền, sau đó nhịp 100ms           |
+| `POST /player/login`          | Per-player (trong handler) | `"tenant.player-login.player"` | `{ limit: 1, windowSec: 5, burst: 0 }`   | `Tenant` + `id` ghép `tenantId:playerExternalId` | Spacing cứng 5 giây mỗi player. **Không** trừ lớp kia khi denied                |
+| `GET /tenant/bets/feed`       | 1 lớp                      | `"tenant.bets-feed"`           | `{ limit: 3, windowSec: 60, burst: 2 }`  | `Tenant`                                         | Scheduler feed 1 lần/phút. Trần = 3× nhịp đó; burst 2 = xả 3 page khi `hasMore` |
+| `GET /tenant/reports/revenue` | 1 lớp                      | `"tenant.reports-revenue"`     | `{ limit: 20, windowSec: 60 }`           | `Tenant`                                         | Query nặng nhất app. Gọi theo giờ/ngày → 20/phút đã rộng                        |
 
 Cô lập tenant là ràng buộc **hợp đồng**: tenant A 429 **không** được làm tenant B 429.
 `subject.id = tenantId` (hash) đảm bảo điều này — test bắt buộc khi rollout.

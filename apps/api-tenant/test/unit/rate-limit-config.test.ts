@@ -321,7 +321,7 @@ describe("p1-03 B1 #7 — route / số đã chốt", () => {
       route: PLAN_ROUTES.perTenant,
       limit: 10,
       windowSec: 1,
-      burst: 0,
+      burst: 20,
       subject: GuardSubjectType.Tenant,
       usesPerTenantConstant: true,
     });
@@ -341,8 +341,8 @@ describe("p1-03 B1 #7 — route / số đã chốt", () => {
 
     expect(PLAYER_LOGIN_PER_PLAYER_RATE_LIMIT).toEqual({
       route: PLAN_ROUTES.perPlayer,
-      limit: 5,
-      windowSec: 60,
+      limit: 1,
+      windowSec: 5,
       burst: 0,
     });
     expect(PLAYER_LOGIN_PER_TENANT_RATE_LIMIT.subject).toBe(GuardSubjectType.Tenant);

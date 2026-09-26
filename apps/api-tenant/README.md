@@ -37,19 +37,20 @@ Ba endpoint đang deploy đều có trần GCRA. Vượt ngưỡng → **HTTP 42
 
 Quota **theo `tenantId`** — tenant A bị 429 không ảnh hưởng tenant B.
 
-| Endpoint                      | Lớp        | `route`                      | Rule                     | `subject`                   |
-| ----------------------------- | ---------- | ---------------------------- | ------------------------ | --------------------------- |
-| `POST /tenant/players/login`  | Per-tenant | `tenant.player-login`        | 10 req / 1 giây, burst 0 | tenant                      |
-| `POST /tenant/players/login`  | Per-player | `tenant.player-login.player` | 5 req / 60 giây, burst 0 | tenant + `playerExternalId` |
-| `GET /tenant/bets/feed`       | 1 lớp      | `tenant.bets-feed`           | 3 req / 60 giây, burst 2 | tenant                      |
-| `GET /tenant/reports/revenue` | 1 lớp      | `tenant.reports-revenue`     | 20 req / 60 giây         | tenant                      |
+| Endpoint                      | Lớp        | `route`                      | Rule                      | `subject`                   |
+| ----------------------------- | ---------- | ---------------------------- | ------------------------- | --------------------------- |
+| `POST /tenant/players/login`  | Per-tenant | `tenant.player-login`        | 10 req / 1 giây, burst 20 | tenant                      |
+| `POST /tenant/players/login`  | Per-player | `tenant.player-login.player` | 1 req / 5 giây, burst 0   | tenant + `playerExternalId` |
+| `GET /tenant/bets/feed`       | 1 lớp      | `tenant.bets-feed`           | 3 req / 60 giây, burst 2  | tenant                      |
+| `GET /tenant/reports/revenue` | 1 lớp      | `tenant.reports-revenue`     | 20 req / 60 giây          | tenant                      |
 
 ### Xử lý 429
 
 1. Đọc `Retry-After` (giây). **Không** retry ngay.
 2. Chờ đúng số giây rồi gọi lại. Retry storm làm cạn quota thêm.
-3. Login: 5 lần / phút cho **một** player là đủ login + retry. Trần cả tenant là 10 login/giây
-   (mỗi request cách nhau ít nhất 100ms).
+3. Login: cùng **một** player cách nhau ít nhất 5 giây. Trần cả tenant là 10 login/giây,
+   burst 20 (spike khoảng 21 login liền, sau đó về nhịp 100ms). Cache token / dùng refresh
+   — đừng gọi login lại mỗi lần player vào game.
 
 ### `GET /tenant/bets/feed` — dùng cursor, đừng poll lại từ đầu
 
